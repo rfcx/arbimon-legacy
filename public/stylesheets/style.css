@@ -1,0 +1,6 @@
+header nav ul > li > a {
+  height: 52px;
+}
+header nav ul.nav > li a > img {
+  vertical-align: middle;
+}
