@@ -1,14 +1,130 @@
 @import "variables.less";
 @import "bootstrap/less/mixins.less";
 
+.inline{
+    display: inline-block;
+}
+
+.w5em{
+    width:6em;
+}
 
 header nav ul > li > a {
     height: 52px;
 }
 
 
-header nav ul.nav > li a > img {
+header .navbar-brand > img, header nav ul.nav > li a > img {
     vertical-align: middle;
+    margin-top:-5px;
 }
 
-.sidebar(col-lg3){}
+.logo-text{
+    position:relative;
+}
+
+.logo-text > .undertext{
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    font-family: serif;
+    z-index: -100;
+    bottom: 0px;
+    top: 20%;
+    font-size: 190%;
+    color: rgb(144, 207, 176);
+}
+
+#page{
+    position : absolute;
+    top    : 51px;
+    bottom : 0px;
+    left   : 0px;
+    right  : 0px;
+}
+
+.make-full-column(@colstart; @colend; @gutter: @grid-gutter-width) {
+    @columns: @colend - @colstart;
+    min-height: 1px;
+    padding-left:  (@gutter / 2);
+    padding-right: (@gutter / 2);
+    position: relative;
+    
+    @media (min-width: @screen-md-min) {
+        position: absolute;
+        left : percentage((@colstart / @grid-columns));
+        right: percentage(1 - (@colend   / @grid-columns));
+        top  : 0;
+        bottom: 0;
+    }
+}
+
+.sidebar{
+    .make-full-column(0; 3; 0);
+}
+
+.app-content{
+    .make-full-column(3; 12);
+}
+
+@layer-padding-left: 15px;
+@layer-padding-right: 40px;
+@layer-padding-v: 10px;
+@layer-zebra-even : #ffffff;
+@layer-zebra-odd  : #f0f0f0;
+
+.layers{
+    .layer{
+        padding-left   : @layer-padding-left;
+        padding-right  : @layer-padding-right;
+        padding-top    : @layer-padding-v;
+        padding-bottom : @layer-padding-v;
+        display : block;
+        position: relative;
+        min-height: 2em;
+        &:nth-child(even){
+            background-color:@layer-zebra-even;
+        }
+        &:nth-child(odd){
+            background-color:@layer-zebra-odd;
+        }
+        .title{
+            color:gray;
+        }
+        .layer-btns{
+            position: absolute;
+            top: @layer-padding-v;
+            right:7px;
+            button{
+                border: 0px;
+                background: transparent;
+            }
+        }
+        .detail{
+            padding-left : @layer-padding-left;
+            .make-row();
+        }
+        .sublayers{
+            .handle:before{
+                position:absolute;
+                content:"[-]";
+            }
+            &.collapsed{
+                .handle:before{
+                    content:"[+]";
+                }
+                > .layer{
+                    display: none;
+                }
+            }
+            &:empty{
+                min-height: 0px;
+            }
+            min-height: 12px;
+            margin-right: -@layer-padding-right;
+            .title{
+            }
+        }
+    }
+}
