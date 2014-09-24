@@ -1,40 +1,64 @@
-module.exports = function(grunt){
-  // Project configuration.
-  grunt.initConfig({
-    // Metadata.
-    pkg: grunt.file.readJSON('package.json'),
-    banner: '/*!\n' +
-            ' * Bootstrap v<%= pkg.version %> (<%= pkg.homepage %>)\n' +
-            ' * Copyright 2011-<%= grunt.template.today("yyyy") %> <%= pkg.author %>\n' +
-            ' * Licensed under <%= pkg.license.type %> (<%= pkg.license.url %>)\n' +
-            ' */\n',
-    less: {
-        dev: {
-            options: {
-                paths: [ "assets/less" ]
+
+module.exports = function(grunt) {
+     grunt.initConfig({
+        
+        less: {
+            main: { 
+                files: {
+                    "public/css/style.css" : "assets/less/style.less",
+                }
             },
-            files: {
-                "public/stylesheets/style.css"         : "assets/less/style.less",
-                "public/stylesheets/bootstrap.min.css" : "assets/less/bootstrap.less"
+            
+            bootstrap: {
+                options: {
+                    compress: true,
+                },
+                files: {
+                    "public/components/bootstrap/css/bootstrap.min.css": "assets/less/bootstrap.less"
+                }
+            }
+        },
+        
+        copy: { 
+            bootstrap: {
+                expand: true, 
+                cwd: 'bower_components/bootstrap/dist/',
+                src: ['fonts/*', 'js/*'],
+                dest: 'public/components/bootstrap/',
+            },
+            
+            jquery: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/jquery/dist/*',
+                dest: 'public/components/jquery/',
+            },
+            
+            fontAwesome: {
+                expand: true,
+                cwd: 'bower_components/font-awesome/',
+                src: ['css/*', 'fonts/*'],
+                dest: 'public/components/font-awesome/',
+            }
+        },
+        
+        watch: { 
+            less: {
+                files: ['assets/less/*.less'], //watched files
+                tasks: ['less'], //tasks to run
+                options: {
+                    livereload: true //reloads the browser
+                }
             }
         }
-    },
-    watch: {
-      dev: {
-        files: [ 'Gruntfile.js', 'assets/**/*.less' ],
-        tasks: [ 'less:dev'],
-        options: {
-            atBegin: true
-        }
-      }
-    }
-  });
-
-  // Load the plugin that provides the "uglify" task.
-  grunt.loadNpmTasks('grunt-contrib-less');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-
-  // Default task(s).
-  grunt.registerTask('default', ['watch']);
+    });
   
-}
+  
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-less');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+
+    grunt.registerTask('default', ['copy', 'less']);
+    grunt.registerTask('bower', ['copy:bower', 'less:bootstrap']);
+
+};

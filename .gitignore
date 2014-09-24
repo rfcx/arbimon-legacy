@@ -1,2 +1,7 @@
+#node
 node_modules
 npm-debug.log
+
+#bower
+bower_components
+public/components

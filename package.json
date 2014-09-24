@@ -1,6 +1,6 @@
 {
   "name": "arbimon2",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"
@@ -16,5 +16,11 @@
     "grunt-contrib-watch": "^0.6.1",
     "morgan": "~1.3.0",
     "serve-favicon": "~2.1.3"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-copy": "^0.6.0",
+    "grunt-contrib-less": "^0.11.4",
+    "grunt-contrib-watch": "^0.6.1"
   }
 }
