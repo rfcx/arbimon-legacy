@@ -1,30 +1,38 @@
-/**
- * Defines the models in the app
- */
+var util = require('util');
+var fs = require('fs');
+var mysql = require('mysql');
+var validator = require('validator');
+var config = require('../config');
+var sha256 = require('../utils/sha256');
 
-var fs          = require('fs')
-    , path      = require('path')
-    , Sequelize = require('sequelize')
-    , sequelize = new Sequelize('sequelize_test', 'root', null)
-    , db        = {}
- 
-fs.readdirSync(__dirname)
-    .filter(function(file) {
-        return (file.indexOf('.') !== 0) && (file !== 'index.js');
-    })
-    .forEach(function(file) {
-        var model = sequelize.import(path.join(__dirname, file))
-        db[model.name] = model;
-    })
+var dbPool = mysql.createPool({
+    host: config('db').host,
+    user: config('db').user,
+    password: config('db').password,
+    database: config('db').database
+});
+
+var queryHandler = function (query, callback) {
     
-Object.keys(db).forEach(function(modelName) {
-    if ('associate' in db[modelName]) {
-        db[modelName].associate(db);
-    }
-})
- 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+    // for debugging
+    util.puts(query); 
+    
+    dbPool.getConnection(function(err, connection) {
+        connection.query(query, function(err, rows, fields) {
+            connection.release();
+            callback(err, rows, fields);
+        });
+    });
+}
 
-module.exports = db;
+var Users = require('./users')(queryHandler);
+var Projects = require('./projects')(queryHandler);
+
+module.exports = {
+    users: Users,
+    projects: Projects
+};
+
+
+
 
