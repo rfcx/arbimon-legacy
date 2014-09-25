@@ -29,7 +29,7 @@ module.exports = function(config_file){
             var filename = files[i];
             if(fs.existsSync(filename)) {
                 var contents = fs.readFileSync(filename);
-                console.log("Fetching " + config_file + " (file : " + filename + ")");
+                console.log("Parsing config " + config_file + " (file : " + filename + ")");
                 cache[config_file] = JSON.parse(contents);
                 break;
             }
