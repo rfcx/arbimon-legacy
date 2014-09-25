@@ -5,7 +5,7 @@ module.exports = function(grunt) {
         less: {
             main: { 
                 files: {
-                    "public/css/style.css" : "assets/less/style.less",
+                    "public/assets/css/style.css" : "assets/less/style.less",
                 }
             },
             
@@ -66,7 +66,7 @@ module.exports = function(grunt) {
         concat: {
             dev: {
                 src: ['assets/js/router.js'], // add project javascript files
-                dest: 'public/js/arbimon2.js'
+                dest: 'public/assets/js/arbimon2.js'
             }
         },
         
