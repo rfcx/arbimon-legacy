@@ -65,7 +65,10 @@ module.exports = function(grunt) {
         
         concat: {
             dev: {
-                src: ['assets/js/router.js'], // add project javascript files
+                src: [
+                    'assets/js/router.js',
+                    'assets/js/visualizer.js'
+                ], // add project javascript files
                 dest: 'public/assets/js/arbimon2.js'
             }
         },
@@ -78,6 +81,10 @@ module.exports = function(grunt) {
             less: {
                 files: ['assets/less/*.less'],
                 tasks: ['less']
+            },
+            js: {
+                files: ['assets/js/*.js'],
+                tasks: ['concat:dev']
             }
         }
     });

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="visualizer">
   <head>
     <title>Arbimon 2 - <%= title %></title>
     <% include ../head %>
@@ -14,65 +14,8 @@
   <body>
     <% include ../html_app_header %>
     
-    <div id="page">
-        <div class="sidebar" >
-            <div class="layers">
-                <div class="layer">
-                    <div class="title">Recording</div>
-                    <div class="layer-btns">
-                        <button><span class="fa fa-eye"></span></button>
-                    </div>
-                    <input type="text" class="form-control" name="recording" value="test-2014-08-06_12-20.wav"/>
-                </div>
-                <div class="layer">
-                    <div class="title">Data Analysis</div>
-                    <div class="layer-btns">
-                        <button><span class="fa fa-eye"></span></button>
-                    </div>
-                    <div class="sublayers">
-                        <div class="handle"></div>
-                        <div class="layer">
-                            <div class="title">Regions of Interest</div>
-                            <div class="layer-btns">
-                                <button><span class="fa fa-eye"></span></button>
-                            </div>
-                        </div>
-                        <div class="layer">
-                            <div class="title">New Model</div>
-                            <div class="layer-btns">
-                                <button><span class="fa fa-eye"></span></button>
-                            </div>
-                        </div>
-                        <div class="layer">
-                            <div class="title">New Model Data</div>
-                            <div class="layer-btns">
-                                <button><span class="fa fa-eye"></span></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="layer">
-                    <div class="title">Frequency Filter</div>
-                    <div class="layer-btns">
-                        <button><span class="fa fa-eye"></span></button>
-                    </div>
-                    <div class="detail">
-                        <input type="number" value="5000" class="form-control inline w5em" />Hz
-                        -
-                        <input type="number" value="15000" class="form-control inline w5em" />Hz
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="app-content">
-            <div class="visualizer-root show-spectrogram show-">
-                <div class="axis-y"></div>
-                <div class="">
-                    <img src="/data/sample/test-2014-08-06_12-20.wav.bmp" />
-                </div>
-                <div class="axis-x"></div>
-            </div>
-        </div>
+    <div id="page" ng-controller="VisualizerCtrl">
+        <a2-visualizer></a2-visualizer>
     </div>
 
     <% include ../html_footer %>
