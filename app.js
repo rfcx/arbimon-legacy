@@ -1,10 +1,51 @@
+// packages
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session')
+var SessionStore = require('express-mysql-session');
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+var flash = require('connect-flash');
 
+// -- sessions
+
+passport.serializeUser(function(user, done) {
+        done(null, user);
+    });
+
+passport.deserializeUser(function(user, done) {
+    done(null, user);
+});
+
+
+passport.use(new LocalStrategy(
+    function(username, password, done) {
+        
+        // hardcoded for testing needs database 
+        if( username !== "user") {
+            return done(null, false, { message: "bad credentials" });
+        }
+        else {
+            if(password !== "1234") {
+                return done(null, false, { message: "wrong password" });
+            }
+            else {
+                return done(null, { user: username, timestamp: new Date() });
+            }
+            
+        }
+    }
+));
+
+// -- 
+
+
+
+// routes
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
@@ -21,6 +62,48 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+    key: 'session_cookie_name',
+    secret: 'session_cookie_secret',
+    resave: true,
+    saveUninitialized: false,
+    store: new SessionStore({
+        host: 'localhost',
+        user: 'root',
+        password: '9i8u7y',
+        database: 'sessions_test'
+    })
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+
+// login routes
+
+app.get('/login', function(req, res) {
+    res.render('login', { message: req.flash('error') });
+});
+                                                        
+app.post('/login', 
+    passport.authenticate('local', { 
+        successRedirect: '/',
+        failureRedirect: '/login',
+        failureFlash: true 
+    })
+);
+
+app.get('/logout', function(req, res) {
+    req.logout();
+    res.redirect('/login');
+});
+
+// end login routes
+
+
+//~ app.use(function (req, res, next) {                 // all routes after this middleware
+    //~ if (req.isAuthenticated()) { return next(); }   // are available only to logged users
+    //~ res.redirect('/login');
+//~ });
 
 app.use('/', routes);
 app.use('/users', users);
