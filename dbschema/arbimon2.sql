@@ -391,6 +391,7 @@ DROP TABLE IF EXISTS `projects`;
 CREATE TABLE `projects` (
   `project_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
+  `title` varchar(255) NOT NULL,
   `description` text NOT NULL,
   `owner_id` int(10) unsigned NOT NULL,
   `project_type_id` int(10) unsigned NOT NULL,
@@ -1016,4 +1017,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-09-24 17:59:57
+-- Dump completed on 2014-09-25 10:45:51

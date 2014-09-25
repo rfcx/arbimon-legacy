@@ -1,11 +1,11 @@
 
 module.exports = function(grunt) {
      grunt.initConfig({
-        
+        pkg: grunt.file.readJSON('package.json'),
         less: {
             main: { 
                 files: {
-                    "public/css/style.css" : "assets/less/style.less",
+                    "public/assets/css/style.css" : "assets/less/style.less",
                 }
             },
             
@@ -14,7 +14,7 @@ module.exports = function(grunt) {
                     compress: true,
                 },
                 files: {
-                    "public/components/bootstrap/css/bootstrap.min.css": "assets/less/bootstrap.less"
+                    "public/assets/bootstrap/css/bootstrap.min.css": "assets/less/bootstrap.less"
                 }
             }
         },
@@ -24,31 +24,60 @@ module.exports = function(grunt) {
                 expand: true, 
                 cwd: 'bower_components/bootstrap/dist/',
                 src: ['fonts/*', 'js/*'],
-                dest: 'public/components/bootstrap/',
+                dest: 'public/assets/bootstrap/',
             },
             
             jquery: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/jquery/dist/*',
-                dest: 'public/components/jquery/',
+                dest: 'public/assets/jquery/',
             },
             
             fontAwesome: {
                 expand: true,
                 cwd: 'bower_components/font-awesome/',
                 src: ['css/*', 'fonts/*'],
-                dest: 'public/components/font-awesome/',
+                dest: 'public/assets/font-awesome/',
+            },
+            
+            angular: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/angular/*',
+                dest: 'public/assets/angular/'
+            },
+            
+            angularBootstrap: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/angular-bootstrap/*',
+                dest: 'public/assets/angular-bootstrap/'
+            },
+            
+            angularRoute: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/angular-route/*',
+                dest: 'public/assets/angular-route/'
+            }
+        },
+        
+        concat: {
+            dev: {
+                src: ['assets/js/router.js'], // add project javascript files
+                dest: 'public/assets/js/arbimon2.js'
             }
         },
         
         watch: { 
+            options: {
+                //reloads the browser with livereload plugin
+                livereload: true 
+            },
             less: {
-                files: ['assets/less/*.less'], //watched files
-                tasks: ['less'], //tasks to run
-                options: {
-                    livereload: true //reloads the browser
-                }
+                files: ['assets/less/*.less'],
+                tasks: ['less']
             }
         }
     });
@@ -57,8 +86,8 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-concat');
 
-    grunt.registerTask('default', ['copy', 'less']);
-    grunt.registerTask('bower', ['copy:bower', 'less:bootstrap']);
-
+    grunt.registerTask('build', ['copy', 'less', 'concat']);
+    grunt.registerTask('default', ['build']);
 };
