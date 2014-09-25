@@ -48,6 +48,7 @@ passport.use(new LocalStrategy(
 
 // routes
 var routes = require('./routes/index');
+var project = require('./routes/project');
 var users = require('./routes/users');
 
 var app = express();
@@ -63,6 +64,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+
 app.use(session({
     key    : config('session').key,
     secret : config('session').secret,
@@ -107,6 +110,7 @@ app.get('/logout', function(req, res) {
 //~ });
 
 app.use('/', routes);
+app.use('/project', project);
 app.use('/users', users);
 
 // catch 404 and forward to error handler
