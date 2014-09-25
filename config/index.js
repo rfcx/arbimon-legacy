@@ -2,7 +2,7 @@
  * configuration module.
  */
 var fs   = require('fs')
-  , path = require('path')
+  , path = require('path');
 
 // config folder 
 var config_folder = __dirname;
@@ -21,14 +21,16 @@ fs.watch(config_folder, {persistent:false}, function(event, filename){
 module.exports = function(config_file){
     if(typeof cache[config_file] == 'undefined') {
         var files = [
-            path.join(config_folder, file + '.local.json'),
-            path.join(config_folder, file + '.json'      )
+            path.join(config_folder, config_file + '.local.json'),
+            path.join(config_folder, config_file + '.json'      )
         ];
         
         for(var i=0, e=files.length; i < e; ++i){
             var filename = files[i];
             if(fs.existsSync(filename)) {
-                cache[config_file] = JSON.parse(fs.readFileSync(filename));
+                var contents = fs.readFileSync(filename);
+                console.log("Fetching " + config_file + " (file : " + filename + ")");
+                cache[config_file] = JSON.parse(contents);
                 break;
             }
         }
