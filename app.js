@@ -64,15 +64,15 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-    key: 'session_cookie_name',
-    secret: 'session_cookie_secret',
-    resave: true,
-    saveUninitialized: false,
+    key    : config('session').key,
+    secret : config('session').secret,
+    resave : true,
+    saveUninitialized : false,
     store: new SessionStore({
-        host: 'localhost',
-        user: 'root',
-        password: '9i8u7y',
-        database: 'sessions_test'
+        host     : config('db').host,
+        user     : config('db').user,
+        password : config('db').password,
+        database : config('db').database
     })
 }));
 app.use(passport.initialize());
