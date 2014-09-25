@@ -1,4 +1,5 @@
 var express = require('express');
+var model = require('../models');
 var router = express.Router();
 
 
@@ -7,16 +8,36 @@ router.get('/', function(req, res)
  	res.send('no project selected');
 });
 
-router.param('project', function(req, res, next, project) {
-	// do validation on name here
-	// blah blah validation
-	// log something so we know its working
-	console.log('doing name validations on ' + project);
-
-	// once validation is done save the new item in the req
-	req.project = project;
-	// go to the next thing
-	next();	
+router.param('project', function(req, res, next, project) 
+{
+	model.projects.isValidUrl(project ,
+		function(err,rows)
+		{	
+			if(err)
+			{	
+				console.log(err);
+			}
+			else
+			{
+				if(rows.length >0)
+				{
+					req.project = project;
+					if(rows[0].is_enabled>0)
+					{
+						next();
+					}
+					else
+					{
+						res.send('your project '+project+' has been disabled. please pay');
+					}	
+				}
+				else 
+				{
+					res.send('project does not exists '+project);
+				}
+			}
+		}
+	);	
 });
 
 router.get('/:project/', function(req, res) 
