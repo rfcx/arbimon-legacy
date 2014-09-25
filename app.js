@@ -10,6 +10,7 @@ var SessionStore = require('express-mysql-session');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var flash = require('connect-flash');
+var config = require('./config');
 
 // -- sessions
 
