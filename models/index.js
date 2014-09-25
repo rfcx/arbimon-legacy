@@ -3,6 +3,7 @@ var fs = require('fs');
 var mysql = require('mysql');
 var validator = require('validator');
 var config = require('../config');
+var sha256 = require('../utils/sha256');
 
 var dbPool = mysql.createPool({
     host: config('db').host,
@@ -12,11 +13,14 @@ var dbPool = mysql.createPool({
 });
 
 var queryHandler = function (query, callback) {
-    //~ util.puts(query);
+    
+    // for debugging
+    util.puts(query); 
+    
     dbPool.getConnection(function(err, connection) {
         connection.query(query, function(err, rows, fields) {
-            connection.destroy();
-            callback(err, rows);
+            connection.release();
+            callback(err, rows, fields);
         });
     });
 }
