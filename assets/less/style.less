@@ -36,6 +36,7 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     color: rgb(144, 207, 176);
 }
 
+
 #page{
     position : absolute;
     top    : 51px;
@@ -127,4 +128,26 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
             }
         }
     }
+}
+
+@banner-padding: 60px;
+
+.login-banner {
+    background-color:#B4B4B4;
+    padding-top: @banner-padding;
+    padding-bottom: @banner-padding;
+}
+
+.login-form {
+    padding: 10px;
+    background-color: #D7D7D7;
+    border-radius: 6px;
+    
+    & h3 {
+        margin: 3px;
+    }
+}
+
+.login-top {
+    height: 60px;
 }

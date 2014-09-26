@@ -16,8 +16,7 @@ var model = require('./models');
 var login = require('./routes/login'); // includes login.routes and login.passport
 var passport = login.passport;
 var routes = require('./routes/index');
-var project = require('./routes/project');
-var users = require('./routes/users');
+
 
 var app = express();
 
@@ -32,8 +31,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-
 app.use(session({
     key    : config('session').key,
     secret : config('session').secret,
@@ -51,14 +48,11 @@ app.use(passport.session());
 app.use(flash());
 
 app.use('/', login.routes(passport));
-
-app.use(function (req, res, next) {                 // all routes after this middleware
-    if (req.isAuthenticated()) { return next(); }   // are available only to logged users
-    res.redirect('/login');
-});
 app.use('/', routes);
-app.use('/project', project);
-app.use('/users', users);
+
+app.get('/mockup/visualizer', function(req, res) {
+    res.render('mockup/visualizer', { title: 'Visualizer' });
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

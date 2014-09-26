@@ -1,27 +1,27 @@
 var util = require('util');
-var validator = require('validator');
+var mysql = require('mysql');
 
 module.exports = function(queryHandler) {
     return {
         findByUsername: function(username, callback) {
             var q = 'SELECT * ' +
                     'FROM users ' + 
-                    'WHERE login="%s"';
-            q = util.format(q, validator.escape(username))
+                    'WHERE login=%s';
+            q = util.format(q, mysql.escape(username))
             queryHandler(q, callback)
         },
         
         findById: function(user_id, callback) {
             var q = 'SELECT * ' +
                     'FROM users ' + 
-                    'WHERE user_id="%s"';
-            q = util.format(q, validator.escape(user_id))
+                    'WHERE user_id=%s';
+            q = util.format(q, mysql.escape(user_id))
             queryHandler(q, callback)
         },
         
         update: function(userData, callback) {
-            if(typeof userData.id === 'undefined') {
-                callback(new Error("userData does not contain an id"));
+            if(typeof userData.user_id === 'undefined') {
+                callback(new Error("userData does not contain an user_id"));
                 return;
             }
             
@@ -30,11 +30,8 @@ module.exports = function(queryHandler) {
             // process values to be updated
             for( var i in userData) {
                 if(i !== 'id') {
-                    userData[i] = validator.escape(userData[i]);
+                    userData[i] = mysql.escape(userData[i]);
                     
-                    if(typeof userData[i] === 'string') {
-                        userData[i] = util.format('"%s"', userData[i]);
-                    } 
                     values.push(util.format('`%s`=%s', i, userData[i]));
                 }
             }
@@ -66,11 +63,8 @@ module.exports = function(queryHandler) {
             
             for( var i in userData) {
                 if(i !== 'id') {
-                    userData[i] = validator.escape(userData[i]);
+                    userData[i] = mysql.escape(userData[i]);
                     
-                    if(typeof userData[i] === 'string') {
-                        userData[i] = util.format('"%s"', userData[i]);
-                    } 
                     values.push(util.format('`%s`=%s', i, userData[i]));
                 }
             }
@@ -80,7 +74,18 @@ module.exports = function(queryHandler) {
                     
             q = util.format(q, values.join(", "));
             
-            queryHandler(q, callback)
+            queryHandler(q, callback);
+        },
+        
+        projectList: function(user_id, callback) {
+            var q = "SELECT name, url, description, is_private "+
+                    "FROM projects as p "+
+                    "LEFT JOIN user_project_role as upr on (p.project_id = upr.project_id) "+
+                    "WHERE p.is_private = 0 "+
+                    "OR upr.user_id = %s";
+                    
+            q = util.format(q, mysql.escape(user_id));
+            queryHandler(q, callback);
         }
     };
 }

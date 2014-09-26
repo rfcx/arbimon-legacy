@@ -32,7 +32,3 @@ module.exports = {
     users: Users,
     projects: Projects
 };
-
-
-
-

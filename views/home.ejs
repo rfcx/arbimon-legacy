@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html ng-app="home">
+
+<head>
+    <% include head %>
+	<title><%= title %></title>
+</head>
+
+<body ng-controller="HomeCtrl">
+<nav class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">Arbimon II</a>
+        </div>
+
+        <ul class="nav navbar-nav navbar-right">
+            <li class=""><a href="#"><i class="fa fa-user"></i> <%= user.username %></a></li>
+            <li class=""><a href="#" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
+            <li class=""><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
+        </ul>
+
+        
+<!--
+        <ul class="nav navbar-nav navbar-right">
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    <i class="fa fa-user"></i> <%= user.username %>
+                </a>
+                <ul class="dropdown-menu" role="menu">
+                    <li class=""><a href="#"><i class="fa fa-wrench"></i> User Settings</a></li>
+                    <li class=""><a href="/logout"><i class="fa fa-sign-out"></i> Log out</a></li>
+                </ul>
+            </li>
+        </ul>
+-->
+    </div><!-- /.container-fluid -->
+</nav>
+
+<div class="container-fluid">
+    <div class="col-sm-4">
+        <h3>Projects</h3>
+        <div class="list-group">
+            <dl>
+                <a ng-href="/project/{{ project.url }}/" class="list-group-item" ng-repeat="project in projects">
+                    <dt>{{ project.name }} <i class="fa" ng-class="project.is_private ? 'fa-lock' :'fa-globe'"></i></dt>
+                    <dd>{{ project.description }}</dd>
+                </a>
+            </dl>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <h3>Project feed <i class="fa fa-newspaper-o"></i></h3>
+        <div class="list-group">
+            <ul class="list-group">
+                <li class="list-group-item" ng-repeat="news in feed track by $index">{{ news }}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+</body>
+
+</html>

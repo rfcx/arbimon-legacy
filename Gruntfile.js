@@ -65,10 +65,11 @@ module.exports = function(grunt) {
         
         concat: {
             dev: {
-                src: [
+                src: [   // add project javascript files here
                     'assets/js/router.js',
-                    'assets/js/visualizer.js'
-                ], // add project javascript files
+                    'assets/js/visualizer.js',
+                    'assets/js/home.js'
+                ], 
                 dest: 'public/assets/js/arbimon2.js'
             }
         },
