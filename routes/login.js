@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
+var model = require('../models/');
+var sha256 = require('../utils/sha256');
 
 passport.serializeUser(function(user, done) {
     done(null, user);
@@ -15,19 +17,38 @@ passport.deserializeUser(function(user, done) {
 passport.use(new LocalStrategy(
     function(username, password, done) {
         
-        // hardcoded for testing needs database 
-        if( username !== "user") {
-            return done(null, false, { message: "bad credentials" });
-        }
-        else {
-            if(password !== "1234") {
-                return done(null, false, { message: "wrong password" });
+        model.users.findByUsername(username, function(err, rows) {
+            if(err) return done(err);
+            
+            if(!rows.length) {
+                return done(null, false, { message: "bad credentials" });
             }
             else {
-                return done(null, { user: username, timestamp: new Date() });
+                user = rows[0];
+                if(sha256(password) !== user.password) {
+                    return done(null, false, { message: "wrong password" });
+                }
+                else {
+                    
+                    model.users.update({ 
+                        user_id: user.user_id,
+                        last_login: new Date()
+                    }, 
+                    function(err, rows) {
+                        if(err) return done(err);                     
+                    });
+                
+                    return done(null, {
+                        id: user.user_id,
+                        username: user.login,
+                        email: user.email,
+                        firstname: user.firstname,
+                        lastname: user.lastname,
+                        isSuper: user.is_super
+                    });
+                }
             }
-            
-        }
+        });
     }
 ));
 
