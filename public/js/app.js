@@ -1,4 +1,4 @@
-var starter = angular.module('starter', ['ui.router','controllerModule'])
+var starter = angular.module('starter', ['ui.router','controllerModule', 'visualizer'])
 .config(function($stateProvider, $urlRouterProvider) {
 
   $stateProvider
@@ -10,9 +10,10 @@ var starter = angular.module('starter', ['ui.router','controllerModule'])
       url: '/audiodata',
       template: '<h4>AUDIO DATA</h4>'
     })
-     .state('visualizer', {
-      url: '/visualizer',
-      template: '<h4>VISUALIZER</h4>'
+    .state('visualizer', {
+        url: '/visualizer',
+        controller : 'VisualizerCtrl',
+        template: '<a2-visualizer></a2-visualizer>'
     })
      .state('models', {
       url: '/models',

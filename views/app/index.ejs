@@ -1,28 +1,62 @@
 <!DOCTYPE html>
 <html data-ng-app="mainapp">
-<head lang="en">
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+    <head lang="en">
+    <link rel="stylesheet" type="text/css" href="/assets/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
+    
+    <script src="/assets/jquery/jquery.min.js"></script>
+    <script src="/assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/assets/angular/angular.min.js"></script>
+    <script src="/assets/angular-route/angular-route.min.js"></script>
+    <script src="/assets/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <script src="/assets/js/arbimon2.js"></script>
+    
     <base href="/"/>
     <title>Arbimon 2 - <%= title %></title>
-    <script src="lib/angular.min.js"></script>
-    <script src="lib/angular-ui-router.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="css/app.css"/>
-    <script src="js/app.js"></script>
-    <script src="js/controllers.js"></script>
+    <script src="/lib/angular.min.js"></script>
+    <script src="/lib/angular-ui-router.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/controllers.js"></script>
 </head>
-<body ng-app="starter">
-	<h1>Project: <%= title %> with id <%= id %></h1>
-	<div id="main" ng-controller='mainController'>
-		<nav>
-			<a ui-sref="dashboard">Dashboard</a>
-			<a ui-sref="audiodata">Audio data</a>
-			<a ui-sref="visualizer">Visualizer</a>
-			<a ui-sref="models">Models</a>
-			<a ui-sref="classify">Classify</a>
-		</nav>
+<body ng-app="starter" ng-controller="mainController">
 
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="../" class="navbar-brand">
+                    <span class="logo-text">Arbimon
+                        <span class="undertext">II</span>
+                    </span>
+                </a>
+            </div>
+            <ul class="nav navbar-nav">
+                <li><a ui-sref="dashboard"  ><i class="fa fa-dashboard"></i> Dashboard</a></li>
+                <li><a ui-sref="audiodata"  ><i class="fa fa-cloud"></i> Audio Data</a></li>
+                <li><a ui-sref="visualizer" ><i class="fa fa-cubes"></i> Taining &amp; Validation</a></li>
+                <li><a ui-sref="models"     ><i class="fa fa-send-o"></i> Models</a></li>
+                <li><a ui-sref="classy"     ><i class="fa fa-meh-o"></i> Classification</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class=""><a href="#"><i class="fa fa-cubes"></i> <%= title %></a></li>
+                <li class=""><a href="#"><i class="fa fa-user"></i> <%= user.username %></a></li>
+                <li class=""><a href="#" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
+                <li class=""><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
+            </ul>
+        </div>
+    </nav>
+	<div id="page">
 		<div ui-view>INITIAL VIEW</div>
 	</div>
 </body>
