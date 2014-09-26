@@ -1,6 +1,6 @@
 <div class="layer">
     <div class="title">{{layer.title}}</div>
     <div class="layer-btns">
-        <button><span class="fa fa-eye"></span></button>
+        <button ng-click="layer.visible = !layer.visible" ><i class="fa" ng-class="{'fa-eye': layer.visible, 'fa-eye-slash':!layer.visible}"></i></button>
     </div>
 </div>
