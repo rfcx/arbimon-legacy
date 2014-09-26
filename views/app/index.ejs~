@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html data-ng-app="mainapp">
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base href="/"/>
+    <title>Arbimon 2 - <%= title %></title>
+    <script src="lib/angular.min.js"></script>
+    <script src="lib/angular-ui-router.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/app.css"/>
+    <script src="js/app.js"></script>
+    <script src="js/controllers.js"></script>
+</head>
+<body ng-app="starter">
+	<h1>Project: <%= title %> with id <%= id %></h1>
+	<div id="main" ng-controller='mainController'>
+		<nav>
+			<a ui-sref="dashboard">Dashboard</a>
+			<a ui-sref="audiodata">Audio data</a>
+			<a ui-sref="visualizer">Visualizer</a>
+			<a ui-sref="models">Models</a>
+			<a ui-sref="classify">Classify</a>
+		</nav>
+
+		<div ui-view>INITIAL VIEW</div>
+	</div>
+</body>
+</html>

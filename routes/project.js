@@ -2,10 +2,9 @@ var express = require('express');
 var model = require('../models');
 var router = express.Router();
 
-
 router.get('/', function(req, res) 
 {
- 	res.send('no project selected');
+	res.send('<html><head><title>Select project</title></head><body>No project selected</body></html>');
 });
 
 router.param('project', function(req, res, next, project) 
@@ -21,49 +20,32 @@ router.param('project', function(req, res, next, project)
 			{
 				if(rows.length >0)
 				{
-					req.project = project;
+					
 					if(rows[0].is_enabled>0)
 					{
+						req.id = rows[0].project_id;
+						req.name = rows[0].name;
 						next();
 					}
 					else
 					{
-						res.send('your project '+project+' has been disabled. please pay');
+						res.send('<html><head><title>Project '+project+' is disabled</title></head><body>Your project '+project
+							+' has been disabled. Please pay</body></html>');
 					}	
 				}
 				else 
 				{
-					res.send('project does not exists '+project);
+					res.send('<html><head><title>Project '+project+' does not exists</title></head><body>The project '+project
+						+' does not exists. Please check  your project url.</body></html>');
 				}
 			}
 		}
 	);	
 });
 
-router.get('/:project/', function(req, res) 
+router.get('/:project*', function(req, res) 
 {
-  	res.send('DASHBOARD project '+req.project);
-});
-
-
-router.get('/:project/data', function(req, res) 
-{
-  	res.send('audio data in project '+req.project);
-});
-
-router.get('/:project/models', function(req, res) 
-{
-  	res.send('models in project '+req.project);
-});
-
-router.get('/:project/classify', function(req, res) 
-{
-  	res.send('classify in project '+req.project);
-});
-
-router.get('/:project/visualize', function(req, res) 
-{
-  	res.send('visuzlizer in models project '+req.project);
+  	res.render('app/index', { title:req.name , id:req.id });
 });
 
 module.exports = router;

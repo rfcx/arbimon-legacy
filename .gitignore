@@ -2,6 +2,9 @@
 node_modules
 npm-debug.log
 
+#gedit backup files
+*~
+  
 #bower
 bower_components
 public/assets
