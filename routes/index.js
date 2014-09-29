@@ -30,7 +30,7 @@ router.get('/', function(req, res) {
 });
 
 router.get('/home', function(req, res) {
-    res.render('home', { title: "home", user: req.session.user });
+    res.render('home', { title: "Home", user: req.session.user });
 });
 
 router.use('/api', dataApi);

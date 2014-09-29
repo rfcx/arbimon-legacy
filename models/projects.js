@@ -1,17 +1,12 @@
 var util = require('util');
-var validator = require('validator');
+var mysql = require('mysql');
 
 module.exports = function(queryHandler) {
     return {
-        isValidUrl: function (project_url, callback) {
-            var query = "select * from projects where url = '"+validator.escape(project_url)+"'";
+        findByUrl: function (project_url, callback) {
+            var query = "select * from projects where url = " + mysql.escape(project_url);
             
             return queryHandler(query , callback);
-        },
-        
-        userHaveAccess: function(user_id, callback) {
-            var q = "SELECT name "+
-                    "FROM project";
         }
     };
 }

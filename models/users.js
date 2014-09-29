@@ -78,7 +78,7 @@ module.exports = function(queryHandler) {
         },
         
         projectList: function(user_id, callback) {
-            var q = "SELECT name, url, description, is_private "+
+            var q = "SELECT name, url, description, is_private, is_enabled "+
                     "FROM projects as p "+
                     "LEFT JOIN user_project_role as upr on (p.project_id = upr.project_id) "+
                     "WHERE p.is_private = 0 "+

@@ -1,55 +1,27 @@
 <!DOCTYPE html>
-<html data-ng-app="mainapp">
-    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-        
-    <head lang="en">
-    <link rel="stylesheet" type="text/css" href="/assets/font-awesome/css/font-awesome.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
-    
-    <script src="/assets/jquery/jquery.min.js"></script>
-    <script src="/assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="/assets/angular/angular.min.js"></script>
-    <script src="/assets/angular-route/angular-route.min.js"></script>
-    <script src="/assets/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
-    <script src="/assets/js/arbimon2.js"></script>
-    
-    <base href="/"/>
-    <title>Arbimon 2 - <%= title %></title>
-    <script src="/lib/angular.min.js"></script>
-    <script src="/lib/angular-ui-router.min.js"></script>
-    <script src="/js/app.js"></script>
-    <script src="/js/controllers.js"></script>
+<html ng-app="arbimon2">
+    <% include ../head %>    
+    <title>Arbimon 2 - <%= project.name %></title>
 </head>
-<body ng-app="starter" ng-controller="mainController">
-
+<body>
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
-                <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a href="../" class="navbar-brand">
+                <a href="/home" class="navbar-brand">
                     <span class="logo-text">Arbimon
                         <span class="undertext">II</span>
                     </span>
                 </a>
             </div>
             <ul class="nav navbar-nav">
-                <li><a ui-sref="dashboard"  ><i class="fa fa-dashboard"></i> Dashboard</a></li>
-                <li><a ui-sref="audiodata"  ><i class="fa fa-cloud"></i> Audio Data</a></li>
-                <li><a ui-sref="visualizer" ><i class="fa fa-cubes"></i> Taining &amp; Validation</a></li>
-                <li><a ui-sref="models"     ><i class="fa fa-send-o"></i> Models</a></li>
-                <li><a ui-sref="classy"     ><i class="fa fa-meh-o"></i> Classification</a></li>
+                <li ui-sref-active="active"><a ui-sref="dashboard"  ><i class="fa fa-dashboard"></i> Dashboard</a></li>
+                <li ui-sref-active="active"><a ui-sref="audiodata"  ><i class="fa fa-cloud"></i> Audio Data</a></li>
+                <li ui-sref-active="active"><a ui-sref="visualizer" ><i class="fa fa-cubes"></i> Training &amp; Validation</a></li>
+                <li ui-sref-active="active"><a ui-sref="models"     ><i class="fa fa-send-o"></i> Models</a></li>
+                <li ui-sref-active="active"><a ui-sref="classify"     ><i class="fa fa-meh-o"></i> Classification</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li class=""><a href="#"><i class="fa fa-cubes"></i> <%= title %></a></li>
+                <li class=""><a href="#"><i class="fa fa-cubes"></i> <%=  project.name  %></a></li>
                 <li class=""><a href="#"><i class="fa fa-user"></i> <%= user.username %></a></li>
                 <li class=""><a href="#" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
                 <li class=""><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
@@ -57,7 +29,7 @@
         </div>
     </nav>
 	<div id="page">
-		<div ui-view>INITIAL VIEW</div>
+		<div ui-view></div>
 	</div>
 </body>
 </html>

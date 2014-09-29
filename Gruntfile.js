@@ -68,7 +68,9 @@ module.exports = function(grunt) {
                 src: [   // add project javascript files here
                     'assets/js/router.js',
                     'assets/js/visualizer.js',
-                    'assets/js/home.js'
+                    'assets/js/home.js',
+                    'assets/js/dashboard.js',
+                    'assets/js/a2services.js',
                 ], 
                 dest: 'public/assets/js/arbimon2.js'
             }
