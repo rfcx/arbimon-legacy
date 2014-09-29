@@ -53,11 +53,21 @@ LOCK TABLES `jobs` WRITE;
 UNLOCK TABLES;
 
 --
+-- Dumping data for table `model_classes`
+--
+
+LOCK TABLES `model_classes` WRITE;
+/*!40000 ALTER TABLE `model_classes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `model_classes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Dumping data for table `model_types`
 --
 
 LOCK TABLES `model_types` WRITE;
 /*!40000 ALTER TABLE `model_types` DISABLE KEYS */;
+INSERT INTO `model_types` VALUES (1,'model_for_roi_type','model_for_roi_type',1);
 /*!40000 ALTER TABLE `model_types` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -67,6 +77,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `models` WRITE;
 /*!40000 ALTER TABLE `models` DISABLE KEYS */;
+INSERT INTO `models` VALUES (1,'model1',1,'model1','2014-09-30 00:00:00',3,1,1),(2,'model2',1,'model2','2014-10-02 00:00:00',6,1,1);
 /*!40000 ALTER TABLE `models` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -141,7 +152,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `projects` WRITE;
 /*!40000 ALTER TABLE `projects` DISABLE KEYS */;
-INSERT INTO `projects` VALUES (2,'test1 project','test1','test project 1',1,1,0,1),(3,'test2','nombre_largo_proyecto','testng proyect 2',1,1,1,1),(4,'proyecto que no se pago a tiempo','mio','project that is disabled',1,1,0,0),(5,'Mi proyecto','mi_proyecto','un proyecto',1,1,0,1);
+INSERT INTO `projects` VALUES (2,'test1 project','test1','test project 1',1,1,1,1),(3,'test2','nombre_largo_proyecto','testng proyect 2',1,1,1,1),(4,'proyecto que no se pago a tiempo','mio','project that is disabled',1,1,0,0),(5,'Mi proyecto','mi_proyecto','un proyecto',1,1,0,1),(6,'rafas','rafas','rafas dev project',1,1,1,1);
 /*!40000 ALTER TABLE `projects` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -189,7 +200,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES ('X2a9tNl5apHRDf897doJ7yMJumPZe3QM',1411848545,'{\"cookie\":{\"originalMaxAge\":null,\"expires\":null,\"httpOnly\":true,\"path\":\"/\"},\"passport\":{\"user\":{\"user\":\"user\",\"timestamp\":\"2014-09-26T18:18:23.747Z\"}},\"flash\":{}}'),('YXA-6J7oWymPejvNHk1jDNPHH4_yNL1c',1411846478,'{\"cookie\":{\"originalMaxAge\":null,\"expires\":null,\"httpOnly\":true,\"path\":\"/\"},\"passport\":{\"user\":{\"username\":\"juan123\",\"email\":\"juanito@gmail.com\",\"firstname\":\"juan\",\"lastname\":\"del pueblo\",\"isSuper\":0}},\"flash\":{}}');
+INSERT INTO `sessions` VALUES ('MVuaZJZgBDQoXf4Glz3fvn9Kv7tUzCI9',1412107137,'{\"cookie\":{\"originalMaxAge\":null,\"expires\":null,\"httpOnly\":true,\"path\":\"/\"},\"loggedIn\":true,\"user\":{\"id\":1,\"username\":\"rafa\",\"email\":\"rafa.ccom@gmail.com\",\"firstname\":\"rafa\",\"lastname\":\"alvarez\",\"isSuper\":0}}'),('MxsmnA9KdyggYv1Gvbn9LnsgxUfyoUFU',1412105429,'{\"cookie\":{\"originalMaxAge\":null,\"expires\":null,\"httpOnly\":true,\"path\":\"/\"},\"passport\":{\"user\":{\"id\":5,\"username\":\"juan123\",\"email\":\"juanito@gmail.com\",\"firstname\":\"juan\",\"lastname\":\"del pueblo\",\"isSuper\":0}},\"flash\":{},\"loggedIn\":true,\"user\":{\"id\":5,\"username\":\"juan123\",\"email\":\"juanito@gmail.com\",\"firstname\":\"juan\",\"lastname\":\"del pueblo\",\"isSuper\":0}}'),('lou9HohfDM0FgQhMRiky1-NkeweW1oYt',1412103280,'{\"cookie\":{\"originalMaxAge\":null,\"expires\":null,\"httpOnly\":true,\"path\":\"/\"},\"loggedIn\":true,\"user\":{\"id\":2,\"username\":\"chino\",\"email\":\"lazy.chino@gmail.com\",\"firstname\":\"pedro\",\"lastname\":\"melendez\",\"isSuper\":1}}'),('xC2U09wq4yj9So6Lb9u-3mlE-6boMJHe',1412095532,'{\"cookie\":{\"originalMaxAge\":null,\"expires\":null,\"httpOnly\":true,\"path\":\"/\"},\"loggedIn\":true,\"user\":{\"id\":1,\"username\":\"rafa\",\"email\":\"rafa.ccom@gmail.com\",\"firstname\":\"rafa\",\"lastname\":\"alvarez\",\"isSuper\":0}}');
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -325,7 +336,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `user_project_role` WRITE;
 /*!40000 ALTER TABLE `user_project_role` DISABLE KEYS */;
-INSERT INTO `user_project_role` VALUES (5,2,4);
+INSERT INTO `user_project_role` VALUES (1,6,1),(5,2,1),(1,3,2);
 /*!40000 ALTER TABLE `user_project_role` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -335,7 +346,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'rafa','0029fb429928f25ddf3816ae0ad6d4a6','rafa','alvarez','rafa.ccom@gmail.com','2014-09-25 15:55:36',0),(2,'chino','03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4','pedro','melendez','lazy.chino@gmail.com','2014-09-25 19:54:28',1),(5,'juan123','03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4','juan','del pueblo','juanito@gmail.com','2014-09-25 20:31:23',0);
+INSERT INTO `users` VALUES (1,'rafa','98ddbaf3f1ef587cf7833374f88390327259fc5c027d8f122e424d8f0109ad3a','rafa','alvarez','rafa.ccom@gmail.com','2014-09-29 19:58:41',0),(2,'chino','03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4','pedro','melendez','lazy.chino@gmail.com','2014-09-29 15:14:10',1),(5,'juan123','03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4','juan','del pueblo','juanito@gmail.com','2014-09-29 15:13:40',0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -357,4 +368,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-09-26 16:16:34
+-- Dump completed on 2014-09-29 16:01:49
