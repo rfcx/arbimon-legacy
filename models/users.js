@@ -29,7 +29,7 @@ module.exports = function(queryHandler) {
             
             // process values to be updated
             for( var i in userData) {
-                if(i !== 'id') {
+                if(i !== 'user_id') {
                     userData[i] = mysql.escape(userData[i]);
                     
                     values.push(util.format('`%s`=%s', i, userData[i]));
@@ -40,7 +40,7 @@ module.exports = function(queryHandler) {
                     'SET %s \n'+
                     'WHERE user_id=%s';
             
-            q = util.format(q, values.join(", "), userData.id);
+            q = util.format(q, values.join(", "), mysql.escape(userData.user_id));
             
             queryHandler(q, callback);
         },
