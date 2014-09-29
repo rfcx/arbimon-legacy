@@ -7,14 +7,12 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session')
 var SessionStore = require('express-mysql-session');
-var flash = require('connect-flash');
 
 var config = require('./config');
 var model = require('./models');
 
 // routes
-var login = require('./routes/login'); // includes login.routes and login.passport
-var passport = login.passport;
+var login = require('./routes/login'); 
 var routes = require('./routes/index');
 
 
@@ -43,11 +41,8 @@ app.use(session({
         database : config('db').database
     })
 }));
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(flash());
 
-app.use('/', login.routes(passport));
+app.use('/', login);
 app.use('/', routes);
 
 app.get('/mockup/visualizer', function(req, res) {

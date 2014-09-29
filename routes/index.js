@@ -14,8 +14,14 @@ router.get('/forgot', function(req, res) {
     res.render('index', { title: 'Express' });
 });
 
-router.use(function (req, res, next) {                 // all routes after this middleware
-    if (req.isAuthenticated()) { return next(); }   // are available only to logged users
+
+// are available only to logged users
+
+// all routes after this middleware
+router.use(function(req, res, next) {                
+    if(req.session) { 
+        if(req.session.loggedIn) return next(); 
+    }   
     res.redirect('/login');
 });
 
@@ -24,7 +30,7 @@ router.get('/', function(req, res) {
 });
 
 router.get('/home', function(req, res) {
-    res.render('home', { title: "home", user: req.user });
+    res.render('home', { title: "home", user: req.session.user });
 });
 
 router.use('/api', dataApi);
