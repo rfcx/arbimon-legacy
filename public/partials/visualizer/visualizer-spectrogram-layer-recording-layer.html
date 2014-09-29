@@ -1,0 +1,4 @@
+<img
+    ng-repeat="tile in layer.tiles track by $index" ng-src="{{tile.src}}" style="position:absolute;z-index:-1"
+    ng-style="{left:tile.x + 'px', top:tile.y + 'px', height: layout.spectrogram.height, width: layout.spectrogram.width}"
+/>
