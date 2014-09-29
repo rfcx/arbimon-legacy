@@ -82,7 +82,7 @@ module.exports = function(grunt) {
                 livereload: true 
             },
             less: {
-                files: ['assets/less/*.less'],
+                files: ['assets/less/*.less', 'assets/less/a2-components/*.less'],
                 tasks: ['less']
             },
             js: {

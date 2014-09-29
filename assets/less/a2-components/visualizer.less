@@ -1,0 +1,33 @@
+.visualizer-root {
+    height: 100%;
+    overflow: auto;
+    position: relative;
+    width: 100%;
+    
+    > * {
+        position: absolute;
+    }
+    
+    > .axis-x{
+        background-color:red;
+    }
+    
+    > .axis-y{
+        background-color:blue;
+    }
+    
+    > .spectrogram-container{
+        > .spectrogram-layer {
+            position:absolute;
+            z-index:100;
+            &.frequency-adjust-layer{
+                z-index:1000;
+                > .filter-band{
+                    position:absolute;
+                    background-color:rgba(255,0,0,.4)
+                }
+            }
+        }
+    }
+    
+}
