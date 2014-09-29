@@ -55,11 +55,11 @@ module.exports = function(grunt) {
                 dest: 'public/assets/angular-bootstrap/'
             },
             
-            angularRoute: {
+            angularUiRouter: {
                 expand: true,
                 flatten: true,
-                src: 'bower_components/angular-route/*',
-                dest: 'public/assets/angular-route/'
+                src: 'bower_components/angular-ui-router/release/*',
+                dest: 'public/assets/angular-ui-router/'
             }
         },
         
