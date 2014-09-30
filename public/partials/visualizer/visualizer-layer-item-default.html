@@ -1,4 +1,4 @@
-<div class="layer">
+<div class="layer" ng-click="selection.select_layer(layer)" ng-class="{selected: selection.layer == layer}">
     <div class="title">{{layer.title}}</div>
     <div class="layer-btns">
         <button ng-click="layer.visible = !layer.visible" ><i class="fa" ng-class="{'fa-eye': layer.visible, 'fa-eye-slash':!layer.visible}"></i></button>

@@ -87,6 +87,7 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
 @layer-padding-right: 40px;
 @layer-padding-v: 10px;
 @layer-zebra-even : #ffffff;
+@layer-selection  : #d0d0ff;
 @layer-zebra-odd  : #f0f0f0;
 
 .layers{
@@ -99,9 +100,15 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
         position: relative;
         min-height: 2em;
         &:nth-child(even){
+            &.selected{
+                background-color:@layer-selection;
+            }
             background-color:@layer-zebra-even;
         }
         &:nth-child(odd){
+            &.selected{
+                background-color:@layer-selection;
+            }
             background-color:@layer-zebra-odd;
         }
         .title{

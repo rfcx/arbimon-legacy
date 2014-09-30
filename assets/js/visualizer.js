@@ -86,6 +86,12 @@
         };
         $scope.recording = test_data.recording; // current layers in the visualizer
         $scope.recording.max_freq = $scope.recording.sampling_rate / 2;
+        $scope.selection = {
+            layer: null,
+            select_layer: function(layer){
+                $scope.selection.layer = layer;
+            }
+        }
         $scope.audio_player = {
             is_playing : false,
             is_muted   : false,
