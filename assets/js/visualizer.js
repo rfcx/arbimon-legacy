@@ -175,11 +175,15 @@
                 };
                 $scope.layout.apply = function(width, height){
                     console.log('setting visualizer layout....', width, height, $scope);
-                    var spec_w = Math.ceil($scope.recording.duration * $scope.layout.scale.sec2px);
-                    var spec_h = Math.ceil($scope.recording.max_freq * $scope.layout.scale.hz2px);
+                    var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
+                    var avail_h = height - layout_tmp.axis_sizeh - 5*layout_tmp.axis_lead;
+                    var spec_w = Math.max(avail_w, Math.ceil($scope.recording.duration * $scope.layout.scale.sec2px));
+                    var spec_h = Math.max(avail_h, Math.ceil($scope.recording.max_freq * $scope.layout.scale.hz2px ));
                     var scalex = d3.scale.linear().domain([0, $scope.recording.duration]).range([0, spec_w]);
                     var scaley = d3.scale.linear().domain([0, $scope.recording.max_freq]).range([spec_h, 0]);
                     var l={};
+                    $scope.layout.scale.sec2px = spec_w / $scope.recording.duration;
+                    $scope.layout.scale.hz2px  = spec_h / $scope.recording.max_freq;
                     l.spectrogram = { selector : '.spectrogram-container', css:{
                         top    : layout_tmp.axis_lead,
                         left   : layout_tmp.axis_sizew,
