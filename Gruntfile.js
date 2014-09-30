@@ -41,6 +41,13 @@ module.exports = function(grunt) {
                 dest: 'public/assets/font-awesome/',
             },
             
+            d3: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/d3/*.js',
+                dest: 'public/assets/d3/'
+            },
+            
             angular: {
                 expand: true,
                 flatten: true,
