@@ -1,12 +1,11 @@
 var arbimon2 = angular.module('arbimon2', ['ui.router', 'visualizer', 'dashboard'])
 .config(function($stateProvider, $urlRouterProvider) {
     
-    $urlRouterProvider.otherwise("/dashboard");
+    $urlRouterProvider.otherwise("/dashboard/sites");
 
     $stateProvider.state('dashboard', {
         url: '/dashboard',
-        controller:'TestCtrl',
-        templateUrl: '/partials/dashboard/summary.html'
+        templateUrl: '/partials/dashboard/index.html',
     })
     .state('audiodata', {
         url: '/audiodata',

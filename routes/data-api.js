@@ -23,7 +23,7 @@ router.get('/project/:projectUrl/getInfo', function(req, res) {
         if(!rows.length) 
             return res.status(404).json({ error: "project not found"});
             
-        res.json(rows);
+        res.json(rows[0]);
     });
 });
 
