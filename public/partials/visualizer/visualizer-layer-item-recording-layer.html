@@ -11,5 +11,12 @@
         <div class="btn-group">
             <button class="btn btn-default btn-sm" ng-disabled="!audio_player.has_next_recording" ng-click="audio_player.next_recording()" ><i class="fa fa-step-forward" ></i></button>
         </div>
+        <div class="btn-group">
+            <span class="btn btn-sm" >
+                Playback :
+                {{audio_player.resource.currentTime | number}} s /
+                {{recording.duration | number}} s
+            </span>
+        </div>
     </div>
 </div>
