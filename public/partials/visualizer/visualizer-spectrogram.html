@@ -1,8 +1,8 @@
-<div class="visualizer-root show-spectrogram">
+<div class="visualizer-root show-spectrogram" a2-scroll="onScrolling()">
     <div class="title-bar"></div>
-    <div class="axis-y"></div>
-    <div class="spectrogram-container">
+    <svg class="axis-y"></svg>
+    <div class="spectrogram-container"l>
         <a2-visualizer-spectrogram-layer ng-repeat="layer in layers | filter:{visible:true}" ></a2-visualizer-spectrogram-layer>
     </div>
-    <div class="axis-x"></div>
+    <svg class="axis-x"></svg>
 </div>

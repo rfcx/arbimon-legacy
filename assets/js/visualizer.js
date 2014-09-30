@@ -90,6 +90,20 @@
         
         return { restrict : 'E', templateUrl: template_root + 'main.html' }
     });
+
+    visualizer.directive('a2Scroll', function() {
+        return {
+            scope: {
+                a2Scroll : '&a2Scroll'
+            },
+            link : function($scope, $element, $attrs) {
+                $element.bind("scroll", function(e) {
+                    $scope.a2Scroll(e);
+                });
+            }
+        };
+    });
+
     
     var layer_types = {
         'recording-layer' : true,
@@ -135,11 +149,10 @@
 
     visualizer.directive('a2VisualizerSpectrogram', function(){
         var layout_tmp = {
-            defaults : {
-                rec_len : 60 // seconds
-            },
             gutter    :  20,
-            axis_size : 100
+            axis_sizew :  60,
+            axis_sizeh :  30,
+            axis_lead :  15
         }
         return {
             restrict : 'E',
@@ -151,32 +164,92 @@
                 };
                 console.log('linking a2VisualizerSpectrogram ....', $scope);
                 $scope.Math = Math;
+                $scope.onScrolling = function(e){
+                    $scope.layout.y_axis.left = $element.scrollLeft();
+                    $element.children('.axis-y').css({left: $scope.layout.y_axis.left + 'px'});
+                    $scope.layout.x_axis.top = Math.min(
+                        $scope.layout.spectrogram.top + $scope.layout.spectrogram.height,
+                        $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh
+                    );
+                    $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
+                };
                 $scope.layout.apply = function(width, height){
                     console.log('setting visualizer layout....', width, height, $scope);
+                    var spec_w = Math.ceil($scope.recording.duration * $scope.layout.scale.sec2px);
+                    var spec_h = Math.ceil($scope.recording.max_freq * $scope.layout.scale.hz2px);
+                    var scalex = d3.scale.linear().domain([0, $scope.recording.duration]).range([0, spec_w]);
+                    var scaley = d3.scale.linear().domain([0, $scope.recording.max_freq]).range([spec_h, 0]);
                     var l={};
                     l.spectrogram = { selector : '.spectrogram-container', css:{
-                        top    : 0,
-                        left   : layout_tmp.gutter + layout_tmp.axis_size,
-                        width  : Math.ceil($scope.recording.duration * $scope.layout.scale.sec2px),
-                        height : Math.ceil($scope.recording.max_freq * $scope.layout.scale.hz2px),
+                        top    : layout_tmp.axis_lead,
+                        left   : layout_tmp.axis_sizew,
+                        width  : spec_w,
+                        height : spec_h,
                     }};
-                    l.y_axis = { selector : '.axis-y', css:{
+                    l.y_axis = { selector : '.axis-y',  scale : scaley, css:{
                         top    : 0,
-                        left   : layout_tmp.gutter,
-                        width  : layout_tmp.axis_size,
-                        height : l.spectrogram.css.height
+                        left   : $element.scrollLeft()
+                    }, attr:{
+                        width  : layout_tmp.axis_sizew,
+                        height : spec_h + layout_tmp.axis_lead + layout_tmp.axis_sizeh
                     }};
-                    l.x_axis = { selector : '.axis-x', css:{
-                        left : layout_tmp.gutter + layout_tmp.axis_size,
-                        top  : l.spectrogram.css.top + l.spectrogram.css.height,
-                        height : layout_tmp.axis_size,
-                        width  : l.spectrogram.css.width
+                    l.x_axis = { selector : '.axis-x',  scale : scalex,  css:{
+                        left : layout_tmp.axis_sizew -  layout_tmp.axis_lead,
+                        top  : Math.min(l.spectrogram.css.top + spec_h, $element.scrollTop() + height  - layout_tmp.axis_sizeh)
+                    }, attr:{
+                        height : layout_tmp.axis_sizeh,
+                        width  : spec_w + 2*layout_tmp.axis_lead
                     }};
                     for(var i in l){
                         var li = l[i];
                         $scope.layout[i] = li.css;
-                        $element.children(li.selector).css(li.css);
+                        var $li = $element.children(li.selector);
+                        if(li.css){ $li.css(li.css); }
+                        if(li.attr){
+                            $li.attr(li.attr);
+                            $.extend($scope.layout[i], li.attr);
+                        }
+                        if(li.scale){
+                            $scope.layout[i].scale = li.scale;
+                        }
                     }
+                    var axis = d3.select($element.children(l.x_axis.selector)[0]);
+                    axis.append("rect").attr({
+                        class : 'bg',
+                        x : 0, y : 0,
+                        width : l.x_axis.attr.width,
+                        height: spec_h + layout_tmp.axis_lead
+                    });
+                    axis.append("g").
+                        attr('class', 'axis').
+                        attr('transform', 'translate('+ layout_tmp.axis_lead +', 1)').
+                        call(d3.svg.axis().
+                            ticks($scope.recording.duration).
+                            tickFormat(function(x){return x + ' s';}).
+                            scale(scalex).
+                            orient("bottom")
+                        );
+                    axis = d3.select($element.children(l.y_axis.selector)[0]);
+                    axis.append("rect").attr({
+                        class : 'bg',
+                        x : 0, y : 0,
+                        width : l.y_axis.attr.width,
+                        height: spec_h + layout_tmp.axis_lead + 2
+                    });
+                    axis.append("rect").attr({
+                        class : 'bg',
+                        x : 0, y : 0,
+                        width : l.y_axis.attr.width - layout_tmp.axis_lead,
+                        height: spec_h + layout_tmp.axis_lead + layout_tmp.axis_sizeh
+                    });
+                    axis.append("g").
+                        attr('class', 'axis').
+                        attr('transform', 'translate('+ (layout_tmp.axis_sizew-1) +', '+ layout_tmp.axis_lead +')').
+                        call(d3.svg.axis().
+                            tickFormat(function(x){return (x/1000.0) + ' KHz';}).
+                            scale(scaley).
+                            orient("left")
+                        );
                 };
                 $scope.getElementDimensions = function () {
                     return { 'h': $element.height(), 'w': $element.width() };

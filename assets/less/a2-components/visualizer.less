@@ -8,15 +8,32 @@
         position: absolute;
     }
     
-    > .axis-x{
-        background-color:red;
+    > svg {
+        z-index:10;
+        > .bg{
+            fill: #ffffff;
+        }
+        > .axis {
+            path, line {
+                fill: none;
+                stroke: black;
+                shape-rendering: crispEdges;                
+            }
+            text {
+                font-family: sans-serif;
+                font-size: 11px;
+            }
+        }
     }
-    
     > .axis-y{
-        background-color:blue;
+        z-index : 15;
+    }
+    > .axis-x{
+        z-index : 10;
     }
     
     > .spectrogram-container{
+        z-index:1;
         > .spectrogram-layer {
             position:absolute;
             z-index:100;
