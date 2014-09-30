@@ -27,4 +27,29 @@ router.get('/project/:projectUrl/getInfo', function(req, res) {
     });
 });
 
+/**
+ * Return a list of all the sites in a project.
+ */
+router.get('/project/:projectUrl/sites', function(req, res) {
+    var project_url  = req.param('projectUrl');
+    model.projects.findByUrl(project_url, function(err, rows) {
+        if(err) return next(err);
+        
+        if(!rows.length) 
+            return res.status(404).json({ error: "project not found"});
+        
+        var project_id = rows[0].project_id;
+            
+        model.projects.getProjectSites(project_id, function(err, rows) {
+            if(err) return next(err);
+                
+            res.json(rows);
+            return null;
+        });
+        return null;
+    });
+    
+});
+
+
 module.exports = router;
