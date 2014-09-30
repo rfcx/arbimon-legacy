@@ -85,6 +85,21 @@
         };
         $scope.recording = test_data.recording; // current layers in the visualizer
         $scope.recording.max_freq = $scope.recording.sampling_rate / 2;
+        $scope.audio_player = {
+            is_playing : false,
+            has_recording : true,
+            has_next_recording : false,
+            has_prev_recording : false,
+            play: function(){
+                this.is_playing = true;
+            },
+            pause: function(){
+                this.is_playing = false;
+            },
+            stop: function(){
+                this.is_playing = false;
+            }
+        };
     }).directive('a2Visualizer', function(){
         
         
