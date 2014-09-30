@@ -1,7 +1,7 @@
 var arbimon2 = angular.module('arbimon2', ['ui.router', 'visualizer', 'dashboard'])
 .config(function($stateProvider, $urlRouterProvider) {
     
-    $urlRouterProvider.otherwise("/dashboard/sites");
+    $urlRouterProvider.otherwise("/dashboard");
 
     $stateProvider.state('dashboard', {
         url: '/dashboard',
