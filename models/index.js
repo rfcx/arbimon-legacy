@@ -25,12 +25,14 @@ var queryHandler = function (query, callback) {
     });
 }
 
-var Users = require('./users')(queryHandler);
-var Projects = require('./projects')(queryHandler);
+var Users    = require('./users'     )(queryHandler);
+var Projects = require('./projects'  )(queryHandler);
+var Recordings= require('./recordings')(queryHandler);
 
 module.exports = {
     users: Users,
-    projects: Projects
+    projects: Projects,
+    recordings: Recordings
 };
 
 
