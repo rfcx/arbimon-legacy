@@ -1,8 +1,9 @@
 <div class="visualizer-root show-spectrogram" a2-scroll="onScrolling()">
     <div class="title-bar"></div>
     <svg class="axis-y"></svg>
-    <div class="spectrogram-container"l>
+    <div class="spectrogram-container">
         <a2-visualizer-spectrogram-layer ng-repeat="layer in layers | filter:{visible:true}" ></a2-visualizer-spectrogram-layer>
+        <div class="spectrogram-layer playback-head" ng-style="{left:(audio_player.resource ? (audio_player.resource.currentTime * layout.scale.sec2px) : 0)+'px'}"></div>
     </div>
     <svg class="axis-x"></svg>
 </div>

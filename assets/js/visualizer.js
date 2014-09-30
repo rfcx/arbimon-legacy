@@ -1,9 +1,10 @@
 (function(angular){   
-    var visualizer = angular.module('visualizer', []);
+    var visualizer = angular.module('visualizer', ['ngAudio']);
     var template_root = '/partials/visualizer/';
     var test_data = {
         recording : {
             file     : "test-2014-08-06_12-20.wav",
+            audioUrl : "/data/sample/test-2014-08-06_12-20.wav",
             duration : 60,
             sampling_rate : 44000
         },
@@ -73,7 +74,7 @@
         }
     });
     
-    visualizer.controller('VisualizerCtrl', function ($scope) {
+    visualizer.controller('VisualizerCtrl', function ($scope, ngAudio) {
         $scope.layers = test_data.layers; // current layers in the visualizer
         $scope.layout = {
             scale : {
@@ -87,19 +88,44 @@
         $scope.recording.max_freq = $scope.recording.sampling_rate / 2;
         $scope.audio_player = {
             is_playing : false,
+            is_muted   : false,
             has_recording : true,
             has_next_recording : false,
             has_prev_recording : false,
+            resource: null,
+            load: function(url){
+                this.resource = ngAudio.load(url);
+                this.has_recording = true;
+            },
+            mute: function(muted){
+                if(this.resource) {
+                    this.resource[muted ? 'mute' : 'unmute']();
+                }
+                this.is_muted = muted;
+            },
             play: function(){
-                this.is_playing = true;
+                if(this.resource) {
+                    this.resource.play();
+                    this.is_playing = true;
+                }
             },
             pause: function(){
+                if(this.resource) {
+                    this.resource.pause();
+                }
                 this.is_playing = false;
             },
             stop: function(){
+                if(this.resource) {
+                    this.resource.stop();
+                }
                 this.is_playing = false;
             }
         };
+        
+        if($scope.recording.audioUrl) {
+            $scope.audio_player.load($scope.recording.audioUrl);
+        }
     }).directive('a2Visualizer', function(){
         
         
@@ -179,6 +205,15 @@
                 };
                 console.log('linking a2VisualizerSpectrogram ....', $scope);
                 $scope.Math = Math;
+                $scope.onPlaying = function(e){
+                    $scope.layout.y_axis.left = $element.scrollLeft();
+                    $element.children('.axis-y').css({left: $scope.layout.y_axis.left + 'px'});
+                    $scope.layout.x_axis.top = Math.min(
+                        $scope.layout.spectrogram.top + $scope.layout.spectrogram.height,
+                        $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh
+                    );
+                    $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
+                };
                 $scope.onScrolling = function(e){
                     $scope.layout.y_axis.left = $element.scrollLeft();
                     $element.children('.axis-y').css({left: $scope.layout.y_axis.left + 'px'});
@@ -189,7 +224,6 @@
                     $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
                 };
                 $scope.layout.apply = function(width, height){
-                    console.log('setting visualizer layout....', width, height, $scope);
                     var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
                     var avail_h = height - layout_tmp.axis_sizeh - 5*layout_tmp.axis_lead;
                     var spec_w = Math.max(avail_w, Math.ceil($scope.recording.duration * $scope.layout.scale.sec2px));
@@ -273,8 +307,22 @@
                 $scope.getElementDimensions = function () {
                     return { 'h': $element.height(), 'w': $element.width() };
                 };
+                $scope.getRecordingPlaybackTime = function () {
+                    var rsc = $scope.audio_player.resource;
+                    return rsc && rsc.currentTime;
+                };
                 $scope.$watch($scope.getElementDimensions, function (newValue, oldValue) {
                     $scope.layout.apply(newValue.w, newValue.h);
+                }, true);
+                $scope.$watch($scope.getRecordingPlaybackTime, function (newValue, oldValue) {
+                    if($scope.audio_player.is_playing) {
+                        var pbh = layout_tmp.axis_sizew + $scope.layout.scale.sec2px * newValue;
+                        var sl  = $element.scrollLeft(), slw = sl + $element.width()/2;
+                        var dx  =  pbh - slw ;
+                        if (dx > 0) {
+                            $element.scrollLeft(sl + dx);
+                        }
+                    }
                 }, true);
                 $element.bind('resize', function () {
                     $scope.$apply();

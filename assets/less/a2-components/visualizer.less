@@ -41,12 +41,21 @@
         > .spectrogram-layer {
             position:absolute;
             z-index:100;
+            &.recording-layer img{
+                pointer-events: none;
+            }
             &.frequency-adjust-layer{
                 z-index:1000;
                 > .filter-band{
                     position:absolute;
                     background-color:rgba(255,0,0,.4)
                 }
+            }
+            &.playback-head{
+                top:0;
+                bottom:0;
+                border-left:1px solid blue;
+                width:1px;
             }
         }
     }
