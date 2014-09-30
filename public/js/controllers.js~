@@ -1,7 +1,0 @@
-angular.module('controllerModule', [])
- 
-.controller('mainController', function($rootScope, $state, $stateParams , $scope) {
-    $rootScope.showOrders = function(){
-        $state.go('dashboard');
-     }
-});
