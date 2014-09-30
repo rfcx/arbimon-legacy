@@ -99,19 +99,40 @@ module.exports = function(grunt) {
                 files: ['assets/less/**/*.less'],
                 tasks: ['less']
             },
-            js: {
+            frontendjs: {
                 files: ['assets/js/*.js'],
                 tasks: ['concat:dev']
+            },
+            backendjs: {
+                files: [
+                    'app.js',
+                    'routes/**/*.js',
+                    'models/**/*.js',
+                    'utils/**/*.js',
+                    'config/**/*.js',
+                    'config/**/*.json'
+                ],
+                tasks: ['express:dev']
+            }
+        },
+        
+        express: {
+            dev: {
+                options: {
+                    script: 'bin/www'
+                }
             }
         }
     });
-  
-  
+    
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-express-server');
 
+   
     grunt.registerTask('build', ['copy', 'less', 'concat']);
     grunt.registerTask('default', ['build']);
+    grunt.registerTask('server', ['express:dev', 'watch']);
 };
