@@ -88,8 +88,15 @@ module.exports = function(grunt) {
                 //reloads the browser with livereload plugin
                 livereload: true 
             },
+            html: {
+                files: [
+                    'public/partials/**/*.html',
+                    'views/**/*.ejs'
+                ],
+                tasks:[]
+            },
             less: {
-                files: ['assets/less/*.less', 'assets/less/a2-components/*.less'],
+                files: ['assets/less/**/*.less'],
                 tasks: ['less']
             },
             js: {
