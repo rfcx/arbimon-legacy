@@ -58,7 +58,7 @@ module.exports = function(grunt) {
             angularAudio: {
                 expand: true,
                 flatten: true,
-                src: 'bower_components/angular-audio/angular-audio.js',
+                src: 'bower_components/angular-audio/angular.audio.js',
                 dest: 'public/assets/angular-audio/'
             },
             

@@ -73,7 +73,6 @@ module.exports = function(queryHandler) {
                     'SET %s';
                     
             q = util.format(q, values.join(", "));
-            
             queryHandler(q, callback);
         },
         
