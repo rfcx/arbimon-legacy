@@ -55,8 +55,8 @@
         ]
     };
     
-    visualizer.controller('VisualizerCtrl', function ($scope, ngAudio) {
-        $scope.layers = []; // current layers in the visualizer
+    visualizer.controller('VisualizerCtrl', function ($scope, ngAudio, itemSelection) {
+        $scope.layers = test_data.layers; // current layers in the visualizer
         $scope.recording = null;
         $scope.layout = {
             scale : {
@@ -66,10 +66,16 @@
                 hz2px  : 100 / 5000.0
             }
         };
+        $scope.Math = Math;
+        $scope.pointer   = {
+            x   : 0, y  : 0,
+            sec : 0, hz : 0
+        };
+        $scope.selection = itemSelection.make('layer');
         
         $scope.getLayers = function(){
             return $scope.layers;
-        }
+        };
         $scope.setRecording = function(recording){
             // fix up some stuff
             recording.max_freq = recording.sampling_rate / 2;
@@ -78,18 +84,7 @@
             if($scope.recording.audioUrl) {
                 $scope.audio_player.load($scope.recording.audioUrl);
             }
-        }
-        $scope.Math = Math;
-        $scope.pointer   = {
-            x   : 0, y  : 0,
-            sec : 0, hz : 0
         };
-        $scope.selection = {
-            layer: null,
-            select_layer: function(layer){
-                $scope.selection.layer = layer;
-            }
-        }
         $scope.audio_player = {
             is_playing : false,
             is_muted   : false,
@@ -398,6 +393,19 @@
                 $templateCache.put(templateUrl, tmp_promise);                
             }
         }
+    });
+
+    visualizer.factory('itemSelection', function(){
+        return {
+            make : function make_itemSelection_obj(item_name){
+                var sel = {};
+                sel[item_name] = null;
+                sel.select = function(newValue){
+                    sel[item_name] = newValue;
+                };
+                return sel;
+            }
+        };
     });
 
     
