@@ -15,6 +15,7 @@
         layers : [
             {   title   : "Recordings",
                 visible : true,
+                hide_visibility : true,
                 type    : "recording-layer",
                 file    : "test-2014-08-06_12-20.wav",
                 tiles   : [
