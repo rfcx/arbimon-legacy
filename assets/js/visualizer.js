@@ -7,6 +7,9 @@
             audioUrl : "/data/sample/test-2014-08-06_12-20.wav",
             duration : 60,
             sampling_rate : 44000,
+            tags    : [
+                'species://coqui', 'awesome'
+            ],
             validations : [
                 {specie: 'Eleuterodactylus coqui', present : 1},
                 {specie: 'Spp 2', present : 0}
@@ -21,9 +24,6 @@
                 tiles   : [
                     {x:0, y:0, src:'/data/sample/test-2014-08-06_12-20.wav.bmp'}
                 ],
-                tags    : [
-                    'species://coqui', 'awesome'
-                ]
             },
             {   title     : "Data Analysis",
                 visible   : false,
@@ -55,32 +55,9 @@
         ]
     };
     
-    visualizer.factory('$templateFetch', function($http, $templateCache){
-        return function $templateFetch(templateUrl, linker){
-            var template = $templateCache.get(templateUrl);
-            if(template) {
-                if (template.promise) {
-                    template.linkers.push(linker);
-                } else {
-                    linker(template);
-                }
-            } else {
-                var tmp_promise = {
-                    linkers : [linker],
-                    promise : $http.get(templateUrl).success(function(template){
-                        $templateCache.put(templateUrl, template);
-                        for(var i=0, l=tmp_promise.linkers, e=l.length; i < e; ++i){
-                            l[i](template);
-                        }
-                    })                        
-                };
-                $templateCache.put(templateUrl, tmp_promise);                
-            }
-        }
-    });
-    
     visualizer.controller('VisualizerCtrl', function ($scope, ngAudio) {
-        $scope.layers = test_data.layers; // current layers in the visualizer
+        $scope.layers = []; // current layers in the visualizer
+        $scope.recording = null;
         $scope.layout = {
             scale : {
                 def_sec2px :    5 / 100.0,
@@ -89,8 +66,19 @@
                 hz2px  : 100 / 5000.0
             }
         };
-        $scope.recording = test_data.recording; // current layers in the visualizer
-        $scope.recording.max_freq = $scope.recording.sampling_rate / 2;
+        
+        $scope.getLayers = function(){
+            return $scope.layers;
+        }
+        $scope.setRecording = function(recording){
+            // fix up some stuff
+            recording.max_freq = recording.sampling_rate / 2;
+            // set it to the scope
+            $scope.recording = recording;
+            if($scope.recording.audioUrl) {
+                $scope.audio_player.load($scope.recording.audioUrl);
+            }
+        }
         $scope.Math = Math;
         $scope.pointer   = {
             x   : 0, y  : 0,
@@ -145,9 +133,7 @@
             }
         };
         
-        if($scope.recording.audioUrl) {
-            $scope.audio_player.load($scope.recording.audioUrl);
-        }
+        // $scope.setRecording(test_data.recording);
     }).directive('a2Visualizer', function(){
         
         
@@ -243,15 +229,16 @@
                     $scope.pointer.hz  = y / $scope.layout.scale.hz2px;
                 };
                 $scope.layout.apply = function(width, height){
+                    var recording = $scope.recording || {duration:60, max_freq:44100};
                     var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
                     var avail_h = height - layout_tmp.axis_sizeh - 5*layout_tmp.axis_lead;
-                    var spec_w = Math.max(avail_w, Math.ceil($scope.recording.duration * $scope.layout.scale.sec2px));
-                    var spec_h = Math.max(avail_h, Math.ceil($scope.recording.max_freq * $scope.layout.scale.hz2px ));
-                    var scalex = d3.scale.linear().domain([0, $scope.recording.duration]).range([0, spec_w]);
-                    var scaley = d3.scale.linear().domain([0, $scope.recording.max_freq]).range([spec_h, 0]);
+                    var spec_w = Math.max(avail_w, Math.ceil(recording.duration * $scope.layout.scale.sec2px));
+                    var spec_h = Math.max(avail_h, Math.ceil(recording.max_freq * $scope.layout.scale.hz2px ));
+                    var scalex = d3.scale.linear().domain([0, recording.duration]).range([0, spec_w]);
+                    var scaley = d3.scale.linear().domain([0, recording.max_freq]).range([spec_h, 0]);
                     var l={};
-                    $scope.layout.scale.sec2px = spec_w / $scope.recording.duration;
-                    $scope.layout.scale.hz2px  = spec_h / $scope.recording.max_freq;
+                    $scope.layout.scale.sec2px = spec_w / recording.duration;
+                    $scope.layout.scale.hz2px  = spec_h / recording.max_freq;
                     l.spectrogram = { selector : '.spectrogram-container', css:{
                         top    : layout_tmp.axis_lead,
                         left   : layout_tmp.axis_sizew,
@@ -296,7 +283,7 @@
                         attr('class', 'axis').
                         attr('transform', 'translate('+ layout_tmp.axis_lead +', 1)').
                         call(d3.svg.axis().
-                            ticks($scope.recording.duration).
+                            ticks(recording.duration).
                             tickFormat(function(x){return x + ' s';}).
                             scale(scalex).
                             orient("bottom")
@@ -387,5 +374,31 @@
             }
         }
     });
+
+
+    visualizer.factory('$templateFetch', function($http, $templateCache){
+        return function $templateFetch(templateUrl, linker){
+            var template = $templateCache.get(templateUrl);
+            if(template) {
+                if (template.promise) {
+                    template.linkers.push(linker);
+                } else {
+                    linker(template);
+                }
+            } else {
+                var tmp_promise = {
+                    linkers : [linker],
+                    promise : $http.get(templateUrl).success(function(template){
+                        $templateCache.put(templateUrl, template);
+                        for(var i=0, l=tmp_promise.linkers, e=l.length; i < e; ++i){
+                            l[i](template);
+                        }
+                    })                        
+                };
+                $templateCache.put(templateUrl, tmp_promise);                
+            }
+        }
+    });
+
     
 })(angular);
