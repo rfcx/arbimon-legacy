@@ -119,7 +119,10 @@ module.exports = function(grunt) {
                     'config/**/*.js',
                     'config/**/*.json'
                 ],
-                tasks: ['express:dev']
+                tasks: ['express:dev'],
+                options: {
+                    spawn: false // for grunt-contrib-watch v0.5.0+
+                }
             }
         },
         
