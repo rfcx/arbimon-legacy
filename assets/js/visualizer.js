@@ -6,7 +6,11 @@
             file     : "test-2014-08-06_12-20.wav",
             audioUrl : "/data/sample/test-2014-08-06_12-20.wav",
             duration : 60,
-            sampling_rate : 44000
+            sampling_rate : 44000,
+            validations : [
+                {specie: 'Eleuterodactylus coqui', present : 1},
+                {specie: 'Spp 2', present : 0}
+            ]
         },
         layers : [
             {   title   : "Recordings",
@@ -86,6 +90,11 @@
         };
         $scope.recording = test_data.recording; // current layers in the visualizer
         $scope.recording.max_freq = $scope.recording.sampling_rate / 2;
+        $scope.Math = Math;
+        $scope.pointer   = {
+            x   : 0, y  : 0,
+            sec : 0, hz : 0
+        };
         $scope.selection = {
             layer: null,
             select_layer: function(layer){
@@ -99,6 +108,12 @@
             has_next_recording : false,
             has_prev_recording : false,
             resource: null,
+            setCurrentTime: function(time){
+                console.log('setCurrentTime ', time);
+                if(this.resource) {
+                    this.resource.currentTime = time;
+                }
+            },
             load: function(url){
                 this.resource = ngAudio.load(url);
                 this.has_recording = true;
@@ -174,32 +189,13 @@
             }
         }
     });
-    visualizer.directive('a2VisualizerSpectrogramLayer', function($compile, $templateFetch){
-        return {
-            restrict : 'E',
-            template : '<div class="spectrogram-layer"></div>',
-            replace  : true,
-            link     : function(scope, element, attrs){
-                var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
-                var layer_key  = layer_types[layer_type] === true ? layer_type : layer_types[layer_type];
-                element.addClass(layer_type);
-                if(layer_key && layer_key != 'default') {
-                    var layer_url  = template_root + 'visualizer-spectrogram-layer-' + layer_key + '.html';
-                    var layer_tmp  = $templateFetch(layer_url, function(layer_tmp){
-                        var layer_el   = $compile(layer_tmp)(scope);
-                        element.append(layer_el);
-                    });
-                }
-            }
-        }
-    });
 
     visualizer.directive('a2VisualizerSpectrogram', function(){
         var layout_tmp = {
-            gutter    :  20,
+            gutter     :  20,
             axis_sizew :  60,
             axis_sizeh :  30,
-            axis_lead :  15
+            axis_lead  :  15
         }
         return {
             restrict : 'E',
@@ -209,8 +205,7 @@
                 var views = {
                     viewport : $element.children('.spectrogram-container')
                 };
-                console.log('linking a2VisualizerSpectrogram ....', $scope);
-                $scope.Math = Math;
+                // console.log('linking a2VisualizerSpectrogram ....', $scope);
                 $scope.onPlaying = function(e){
                     $scope.layout.y_axis.left = $element.scrollLeft();
                     $element.children('.axis-y').css({left: $scope.layout.y_axis.left + 'px'});
@@ -228,6 +223,23 @@
                         $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh
                     );
                     $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
+                    $element.find('.a2-visualizer-spectrogram-affixed').each(function(i, el){
+                        var $el = $(el);
+                        var affix_left = $el.data('affix-left') | 0;
+                        var affix_top  = $el.data('affix-top' ) | 0;
+                        $el.css({position:'absolute', left : affix_left + $element.scrollLeft(), top  : affix_top  + $element.scrollTop()});
+                    });
+                };
+                $scope.onMouseMove = function (e) {
+                    var elOff = $element.offset();
+                    var x = e.pageX - elOff.left + $element.scrollLeft() - $scope.layout.spectrogram.left;
+                    var y = e.pageY - elOff.top  + $element.scrollTop()  - $scope.layout.spectrogram.top ;
+                    x = Math.min(Math.max(                                   x, 0), $scope.layout.spectrogram.width);
+                    y = Math.min(Math.max($scope.layout.spectrogram.height - y, 0), $scope.layout.spectrogram.height);
+                    $scope.pointer.x = x;
+                    $scope.pointer.y = y;
+                    $scope.pointer.sec = x / $scope.layout.scale.sec2px;
+                    $scope.pointer.hz  = y / $scope.layout.scale.hz2px;
                 };
                 $scope.layout.apply = function(width, height){
                     var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
@@ -333,6 +345,44 @@
                 $element.bind('resize', function () {
                     $scope.$apply();
                 });
+                $scope.layout.apply($element.width(), $element.height());
+                $scope.onScrolling();
+            }
+        }
+    });
+
+    visualizer.directive('a2VisualizerSpectrogramLayer', function($compile, $templateFetch){
+        return {
+            restrict : 'E',
+            templateUrl : template_root + 'visualizer-spectrogram-layer-default.html',
+            replace  : true,
+            link     : function(scope, element, attrs){
+                var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
+                var layer_key  = layer_types[layer_type] === true ? layer_type : layer_types[layer_type];
+                element.addClass(layer_type);
+                if(layer_key && layer_key != 'default') {
+                    var layer_url  = template_root + 'visualizer-spectrogram-layer-' + layer_key + '.html';
+                    var layer_tmp  = $templateFetch(layer_url, function(layer_tmp){
+                        var layer_el   = $compile(layer_tmp)(scope);
+                        element.append(layer_el);
+                    });
+                }
+            }
+        }
+    });
+    visualizer.directive('a2VisualizerSpectrogramAffixed', function($compile, $templateFetch){
+        return {
+            restrict :'E',
+            template : '<div class="a2-visualizer-spectrogram-affixed" ng-transclude></div>',
+            replace  : true,
+            transclude : true,
+            link     : function($scope, $element, $attrs){
+                var $root = $element.closest('.visualizer-root');
+                var $eloff = $element.offset(), $roff = $root.offset();
+                if($roff) {
+                    $element.attr('data-affix-left', $eloff.left - $roff.left);
+                    $element.attr('data-affix-top', $eloff.top - $roff.top);
+                }
             }
         }
     });

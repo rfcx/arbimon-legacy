@@ -13,9 +13,13 @@
         </div>
         <div class="btn-group">
             <span class="btn btn-sm" >
-                Playback :
                 {{audio_player.resource.currentTime | number}} s /
                 {{recording.duration | number}} s
+            </span>
+        </div>
+        <div class="btn-group pull-right">
+            <span class="btn btn-sm" >
+                {{pointer.sec}} s, {{Math.floor(pointer.hz/10)/100}} KHz
             </span>
         </div>
     </div>
