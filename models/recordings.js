@@ -51,7 +51,7 @@ module.exports = function(queryHandler) {
                 if (query['=']) {
                     return subject + ' = ' + mysql.escape(query['=']);
                 } else if (query['IN']) {
-                    return subject + ' IN [' + mysql.escape(query['IN']) + ']';
+                    return subject + ' IN (' + mysql.escape(query['IN']) + ')';
                 } else if (query['BETWEEN']) {
                     return subject + ' BETWEEN ' + mysql.escape(query['BETWEEN'][0]) + ' AND ' + mysql.escape(query['BETWEEN'][1]);
                 }
@@ -59,29 +59,85 @@ module.exports = function(queryHandler) {
             return undefined;
         },
         
-        findByUrlMatch: function (recording_url, project_id, callback) {
+        /**
+         * finds recordings matching the given url and project id.
+         * @param {String} recording_url url query selecting the set of recordings
+         * @param {Integer} project_id id of the project associated to the recordings
+         * @param {Object} options options object that modify returned results.
+         * @param {Boolean} options.count_only Whether to return the queried recordings, or to just count them
+         * @param {String} options.group_by Level in wich to group recordings (valid items : site, year, month, day, hour, auto, next)
+         * @param {Function} callback called back with the queried results.
+         */
+        findByUrlMatch: function (recording_url, project_id, options, callback) {
+            if (!options) {
+                options = {};
+            }
             var urlquery = this.parseUrlQuery(recording_url);
             var constraints = [
                 'S.project_id = ' + mysql.escape(project_id)
             ];
-            var subjects = {
-                site   : 'S.name'            ,
-                year   : 'YEAR(R.datetime)'  ,
-                month  : 'MONTH(R.datetime)' ,
-                day    : 'DAY(R.datetime)'   ,
-                hour   : 'HOUR(R.datetime)'  ,
-                minute : 'MINUTE(R.datetime)'
+            var fields = {
+                site   : {subject: 'S.name'            , project: false, level:1, next: 'year'                },
+                year   : {subject: 'YEAR(R.datetime)'  , project: true , level:2, next: 'month' , prev:'site' },
+                month  : {subject: 'MONTH(R.datetime)' , project: true , level:3, next: 'day'   , prev:'year' },
+                day    : {subject: 'DAY(R.datetime)'   , project: true , level:4, next: 'hour'  , prev:'month'},
+                hour   : {subject: 'HOUR(R.datetime)'  , project: true , level:5, next: 'minute', prev:'day'  },
+                minute : {subject: 'MINUTE(R.datetime)', project: true , level:6                , prev:'hour' }
             };
+            var count_only = options.count_only;
+            var group_by = {
+                curr    : fields[options.group_level],
+                curr_level : options.group_by,
+                level   : options.group_by,
+                projection : [],
+                columns : [],
+                clause  : '',
+                project_part : ''
+            };
+            
             for(var i in urlquery){
-                var constraint = this.applyQueryItem(subjects[i], urlquery[i]);
+                var field = fields[i];
+                var constraint = this.applyQueryItem(field && field.subject, urlquery[i]);
                 if(constraint) {
                     constraints.push(constraint);
+                    if(group_by.level == 'auto' || group_by.level == 'next') {
+                        if(!group_by.curr || group_by.curr.level < field.level) {
+                            group_by.curr = field;
+                            group_by.curr_level = i;
+                        }
+                    }
                 }
             }
-            var query = "SELECT R.recording_id AS id, R.site_id as site, R.uri, R.datetime, R.mic, R.recorder, R.version \n" +
+            console.log(options, group_by);
+            
+            if(group_by.level == 'next' && group_by.curr && group_by.curr.next) {
+                group_by.curr_level = group_by.curr.next;
+                group_by.curr = fields[group_by.curr_level];
+            }
+            
+            while(group_by.curr){
+                if(count_only || group_by.curr.project) {
+                    group_by.projection.unshift(group_by.curr.subject + ' as ' + group_by.curr_level);
+                }
+                if (count_only) {
+                    group_by.columns.unshift(group_by.curr.subject);
+                }
+                group_by.curr_level = group_by.curr.prev;
+                group_by.curr = fields[group_by.curr_level];
+            }
+            if(group_by.columns.length > 0) {
+                group_by.clause = "\n GROUP BY " + group_by.columns.join(", ");
+            }
+            if(group_by.projection.length > 0) {
+                group_by.project_part = group_by.projection.join(", ") + ",";
+            }
+            console.log(group_by);
+            var projection = count_only ? "COUNT(*) as count" : "R.recording_id AS id, R.site_id as site, R.uri, R.datetime, R.mic, R.recorder, R.version";
+            var query = "SELECT " + group_by.project_part + projection + " \n" +
                 "FROM recordings R \n" +
                 "JOIN sites S ON S.site_id = R.site_id \n" +
-                "WHERE (" + constraints.join(") AND (") + ")";
+                "WHERE (" + constraints.join(") AND (") + ")" +
+                group_by.clause;
             return queryHandler(query , callback);
         }
     };

@@ -115,6 +115,48 @@ router.get('/project/:projectUrl/sites', function(req, res) {
 /**
  * Return a list of all the sites in a project.
  */
+router.get('/project/:projectUrl/recordings/count/:recUrl?', function(req, res, next) {
+    var project_url   = req.param('projectUrl');
+    var recording_url = req.param('recUrl');
+    model.projects.findByUrl(project_url, function(err, rows) {
+        if(err) return next(err);
+        
+        if(!rows.length) 
+            return res.status(404).json({ error: "project not found"});
+        
+        var project_id = rows[0].project_id;
+            
+        model.recordings.findByUrlMatch(recording_url, project_id, {count_only:true}, function(err, count) {
+            if(err) return next(err);
+                
+            res.json(count);
+            return null;
+        });
+        return null;
+    });
+});
+
+router.get('/project/:projectUrl/recordings/available/:recUrl?', function(req, res, next) {
+    var project_url   = req.param('projectUrl');
+    var recording_url = req.param('recUrl');
+    model.projects.findByUrl(project_url, function(err, rows) {
+        if(err) return next(err);
+        
+        if(!rows.length) 
+            return res.status(404).json({ error: "project not found"});
+        
+        var project_id = rows[0].project_id;
+            
+        model.recordings.findByUrlMatch(recording_url, project_id, {count_only:true, group_by:'next'}, function(err, count) {
+            if(err) return next(err);
+                
+            res.json(count);
+            return null;
+        });
+        return null;
+    });
+});
+
 router.get('/project/:projectUrl/recordings/:recUrl?', function(req, res) {
     var project_url   = req.param('projectUrl');
     var recording_url = req.param('recUrl');
@@ -126,7 +168,7 @@ router.get('/project/:projectUrl/recordings/:recUrl?', function(req, res) {
         
         var project_id = rows[0].project_id;
             
-        model.recordings.findByUrlMatch(recording_url, project_id, function(err, rows) {
+        model.recordings.findByUrlMatch(recording_url, project_id, false, function(err, rows) {
             if(err) return next(err);
                 
             res.json(rows);
@@ -136,6 +178,5 @@ router.get('/project/:projectUrl/recordings/:recUrl?', function(req, res) {
     });
     
 });
-
 
 module.exports = router;
