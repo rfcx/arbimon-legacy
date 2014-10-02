@@ -1,5 +1,5 @@
 (function(angular){   
-    var visualizer = angular.module('visualizer', ['ngAudio']);
+    var visualizer = angular.module('visualizer', ['ngAudio', 'ui.bootstrap']);
     var template_root = '/partials/visualizer/';
     var test_data = {
         recording : {
@@ -133,6 +133,78 @@
         
         
         return { restrict : 'E', templateUrl: template_root + 'main.html' }
+    });
+
+    visualizer.factory('MockProjectInfoService', ['$location', '$http', function($location, $http){
+        return {
+            getName: function(){
+                var urlparse = document.createElement('a');
+                urlparse.href = $location.absUrl();
+                var nameRe = /\/project\/([\w\_\-]+)/;
+                
+                return nameRe.exec(urlparse.pathname)[1];
+            },
+            getSites: function(callback) {
+                var projectName = this.getName();
+                $http.get('/api/project/'+projectName+'/sites').success(function(data) {
+                    callback(data);
+                });
+            },
+            getSiteRecordingAvailability: function(site, date, mode, callback) {
+                var projectName = this.getName();
+                var key=[site];
+                switch(mode){
+                    default: case "day"   : key.shift(date.getDate());
+                    case "month" : key.shift(1 + date.getMonth());
+                    case "year"  : key.shift(date.getYear());
+                }
+                var query = key.join('-');                
+                $http.get('/api/project/'+projectName+'/recordings/available/'+query).success(function(data) {
+                    callback(data);
+                });
+            }
+        };
+    }]);
+
+    visualizer.controller('a2RecordingsBrowserCtrl', function ($scope, $timeout, itemSelection, MockProjectInfoService) {
+        var self = this;
+        this.sites = [];
+        this.dates = {
+            disabled : function(date, mode){
+                console.log('date disabled ? : ', date, mode);
+                var site = self.selection.site.value;
+                if(!site) {
+                    return false;
+                }
+                
+                var key=[];
+                switch(mode){
+                    default: case "day"   : key.shift(date.getDate());
+                    case "month" : key.shift(1 + date.getMonth());
+                    case "year"  : key.shift(date.getYear());
+                }
+                
+                if(self.dates.available[site] && self.dates.available[site][mode]) {
+                    return self.dates.available[site][mode][key.join('-')];
+                } else if(!self.dates.fetching) {
+                    MockProjectInfoService.
+                    self.dates.fetching = true;
+                }
+                return false;
+            },
+            fetching : false,
+            available : {}
+        };
+        this.selection = {
+            site : itemSelection.make(),
+            date : null
+        };
+        var project = MockProjectInfoService;
+        project.getSites(function(sites){
+            $timeout(function(){
+                    self.sites = sites;
+            });
+        });
     });
 
     visualizer.directive('a2Scroll', function() {
@@ -399,6 +471,9 @@
         return {
             make : function make_itemSelection_obj(item_name){
                 var sel = {};
+                if(typeof item_name == 'undefined') {
+                    item_name = 'value';
+                }
                 sel[item_name] = null;
                 sel.select = function(newValue){
                     sel[item_name] = newValue;
