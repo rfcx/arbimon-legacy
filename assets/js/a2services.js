@@ -15,3 +15,43 @@ angular.module('a2services',[])
         }
     };
 }]);
+
+angular.module('a2utils', [])
+.factory('$templateFetch', function($http, $templateCache){
+    return function $templateFetch(templateUrl, linker){
+        var template = $templateCache.get(templateUrl);
+        if(template) {
+            if (template.promise) {
+                template.linkers.push(linker);
+            } else {
+                linker(template);
+            }
+        } else {
+            var tmp_promise = {
+                linkers : [linker],
+                promise : $http.get(templateUrl).success(function(template){
+                    $templateCache.put(templateUrl, template);
+                    for(var i=0, l=tmp_promise.linkers, e=l.length; i < e; ++i){
+                        l[i](template);
+                    }
+                })                        
+            };
+            $templateCache.put(templateUrl, tmp_promise);                
+        }
+    }
+})
+.factory('itemSelection', function(){
+    return {
+        make : function make_itemSelection_obj(item_name){
+            var sel = {};
+            if(typeof item_name == 'undefined') {
+                item_name = 'value';
+            }
+            sel[item_name] = null;
+            sel.select = function(newValue){
+                sel[item_name] = newValue;
+            };
+            return sel;
+        }
+    };
+});

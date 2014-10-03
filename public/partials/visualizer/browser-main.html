@@ -1,0 +1,52 @@
+<div class="btn-toolbar">
+    <div class="btn-group">
+        <div class="btn-group">
+            <div class="dropdown">
+                <button class="btn btn-default" role="button" data-toggle="dropdown">
+                    <span class="fa fa-map-marker"></span>
+                    {{browser.selection.site.value.name || "[Station]"}}
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
+                    <li ng-hide="browser.sites">
+                        <a>No Stations in Project</a>
+                    </li>
+                    <li ng-repeat="site in browser.sites" ng-class="{active: browser.selection.site.value == site}">
+                        <a ng-click="browser.selection.site.select(site)">{{site.name}}</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="btn-group">
+            <div class="dropdown">
+                <button class="btn btn-default" role="button" data-toggle="dropdown">
+                    <span class="fa fa-calendar"></span>
+                    {{browser.selection.date || "[date]" | date : 'mediumDate'}}
+                    <span class="caret"></span>
+                </button>
+                <div class="dropdown-menu datepicker" role="menu" aria-labelledby="dLabel">
+                    <datepicker ng-model="browser.selection.date" min-date="minDate" show-weeks="false"
+                        datepicker-mode="browser.dates.datepickerMode" update-counter="browser.dates.update_time"
+                        date-disabled="browser.dates.disabled(date, mode, $scope)"></datepicker>
+                </div>
+            </div>
+        </div>
+        <div class="btn-group">
+            <div class="dropdown">
+                <button class="btn btn-default" role="button" data-toggle="dropdown">
+                    <span class="fa fa-clock-o"></span>
+                    {{browser.selection.recording.value.datetime || "[time]" | date : 'shortTime'}}
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
+                    <li ng-hide="browser.recordings">
+                        <a>(Empty List)</a>
+                    </li>
+                    <li ng-repeat="recording in browser.recordings | orderBy: 'datetime'" ng-class="{active: browser.selection.recording.value == recording}">
+                        <a ng-click="browser.selection.recording.select(recording)">{{recording.datetime | date : 'shortTime'}}</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

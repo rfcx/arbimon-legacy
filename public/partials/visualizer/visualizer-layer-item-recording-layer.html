@@ -1,23 +1,5 @@
 <div class="layer">
-    <div ng-controller="a2RecordingsBrowserCtrl as browser">
-        <div class="row">
-            <div class="col-md-12">
-                <input type="text" class="form-control" name="recording" ng-model="layer.file"/>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6">
-                <ul class="nav nav-pills nav-stacked nav-height-3">
-                    <li ng-repeat="site in browser.sites" ng-class="{active: browser.selection.site.value == site}">
-                        <a ng-click="browser.selection.site.select(site)">{{site.name}}</a>
-                    </li>
-                </ul>
-            </div>
-            <div class="col-md-6">
-                <datepicker ng-model="dt" min-date="minDate" show-weeks="false" date-disabled="browser.date_disabled(date, mode)"></datepicker>
-            </div>
-        </div>
-    </div>
+    <a2-recordings-browser></a2-recordings-browser>
     <div class="btn-toolbar" >
         <div class="btn-group">
             <button class="btn btn-default btn-sm" ng-disabled="!audio_player.has_prev_recording" ng-click="audio_player.prev_recording()" ><i class="fa fa-step-backward" ></i></button>

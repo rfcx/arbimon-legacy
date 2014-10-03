@@ -1,5 +1,6 @@
 var util = require('util');
 var mysql = require('mysql');
+var arrays_util = require('../utils/arrays');
 
 module.exports = function(queryHandler) {
     return {
@@ -69,10 +70,9 @@ module.exports = function(queryHandler) {
          * @param {Function} callback called back with the queried results.
          */
         findByUrlMatch: function (recording_url, project_id, options, callback) {
-            if (!options) {
-                options = {};
-            }
+            options || (options = {});
             var urlquery = this.parseUrlQuery(recording_url);
+            var keep_keys = options.keep_keys;
             var constraints = [
                 'S.project_id = ' + mysql.escape(project_id)
             ];
@@ -89,12 +89,12 @@ module.exports = function(queryHandler) {
                 curr    : fields[options.group_level],
                 curr_level : options.group_by,
                 level   : options.group_by,
+                levels  : [],
                 projection : [],
                 columns : [],
                 clause  : '',
                 project_part : ''
             };
-            
             for(var i in urlquery){
                 var field = fields[i];
                 var constraint = this.applyQueryItem(field && field.subject, urlquery[i]);
@@ -108,14 +108,26 @@ module.exports = function(queryHandler) {
                     }
                 }
             }
-            console.log(options, group_by);
             
-            if(group_by.level == 'next' && group_by.curr && group_by.curr.next) {
-                group_by.curr_level = group_by.curr.next;
-                group_by.curr = fields[group_by.curr_level];
+            if(group_by.level == 'next'){
+                if(group_by.curr){
+                    if(group_by.curr.next) {
+                        group_by.curr_level = group_by.curr.next;
+                        group_by.curr = fields[group_by.curr_level];
+                    }
+                } else {
+                    for(var i in fields){
+                        var field = fields[i];
+                        if(!group_by.curr || group_by.curr.level > field.level) {
+                            group_by.curr = field;
+                            group_by.curr_level = i;
+                        }
+                    }
+                }
             }
             
             while(group_by.curr){
+                group_by.levels.unshift(group_by.curr_level);
                 if(count_only || group_by.curr.project) {
                     group_by.projection.unshift(group_by.curr.subject + ' as ' + group_by.curr_level);
                 }
@@ -131,14 +143,18 @@ module.exports = function(queryHandler) {
             if(group_by.projection.length > 0) {
                 group_by.project_part = group_by.projection.join(", ") + ",";
             }
-            console.log(group_by);
             var projection = count_only ? "COUNT(*) as count" : "R.recording_id AS id, R.site_id as site, R.uri, R.datetime, R.mic, R.recorder, R.version";
             var query = "SELECT " + group_by.project_part + projection + " \n" +
                 "FROM recordings R \n" +
                 "JOIN sites S ON S.site_id = R.site_id \n" +
                 "WHERE (" + constraints.join(") AND (") + ")" +
                 group_by.clause;
-            return queryHandler(query , callback);
+            return queryHandler(query, function(err, data){
+                if (!err && data && group_by.levels.length > 0) {
+                    data = arrays_util.group_rows_by(data, group_by.levels, options);
+                }
+                callback(err, data);
+            });
         }
     };
 }

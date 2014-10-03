@@ -147,7 +147,7 @@ router.get('/project/:projectUrl/recordings/available/:recUrl?', function(req, r
         
         var project_id = rows[0].project_id;
             
-        model.recordings.findByUrlMatch(recording_url, project_id, {count_only:true, group_by:'next'}, function(err, count) {
+        model.recordings.findByUrlMatch(recording_url, project_id, {count_only:true, group_by:'next', collapse_single_leaves:true}, function(err, count) {
             if(err) return next(err);
                 
             res.json(count);

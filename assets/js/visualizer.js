@@ -1,5 +1,5 @@
-(function(angular){   
-    var visualizer = angular.module('visualizer', ['ngAudio', 'ui.bootstrap']);
+(function(angular){
+    var visualizer = angular.module('visualizer', ['ngAudio', 'a2utils', 'ui.bt.datepicker2']);
     var template_root = '/partials/visualizer/';
     var test_data = {
         recording : {
@@ -150,62 +150,21 @@
                     callback(data);
                 });
             },
-            getSiteRecordingAvailability: function(site, date, mode, callback) {
+            getRecordings: function(key, callback) {
                 var projectName = this.getName();
-                var key=[site];
-                switch(mode){
-                    default: case "day"   : key.shift(date.getDate());
-                    case "month" : key.shift(1 + date.getMonth());
-                    case "year"  : key.shift(date.getYear());
-                }
-                var query = key.join('-');                
-                $http.get('/api/project/'+projectName+'/recordings/available/'+query).success(function(data) {
+                $http.get('/api/project/'+projectName+'/recordings/'+key).success(function(data) {
+                    callback(data);
+                });
+            },
+            getRecordingAvailability: function(key, callback) {
+                var projectName = this.getName();
+                $http.get('/api/project/'+projectName+'/recordings/available/'+key).success(function(data) {
                     callback(data);
                 });
             }
         };
     }]);
 
-    visualizer.controller('a2RecordingsBrowserCtrl', function ($scope, $timeout, itemSelection, MockProjectInfoService) {
-        var self = this;
-        this.sites = [];
-        this.dates = {
-            disabled : function(date, mode){
-                console.log('date disabled ? : ', date, mode);
-                var site = self.selection.site.value;
-                if(!site) {
-                    return false;
-                }
-                
-                var key=[];
-                switch(mode){
-                    default: case "day"   : key.shift(date.getDate());
-                    case "month" : key.shift(1 + date.getMonth());
-                    case "year"  : key.shift(date.getYear());
-                }
-                
-                if(self.dates.available[site] && self.dates.available[site][mode]) {
-                    return self.dates.available[site][mode][key.join('-')];
-                } else if(!self.dates.fetching) {
-                    MockProjectInfoService.
-                    self.dates.fetching = true;
-                }
-                return false;
-            },
-            fetching : false,
-            available : {}
-        };
-        this.selection = {
-            site : itemSelection.make(),
-            date : null
-        };
-        var project = MockProjectInfoService;
-        project.getSites(function(sites){
-            $timeout(function(){
-                    self.sites = sites;
-            });
-        });
-    });
 
     visualizer.directive('a2Scroll', function() {
         return {
@@ -443,42 +402,99 @@
     });
 
 
-    visualizer.factory('$templateFetch', function($http, $templateCache){
-        return function $templateFetch(templateUrl, linker){
-            var template = $templateCache.get(templateUrl);
-            if(template) {
-                if (template.promise) {
-                    template.linkers.push(linker);
-                } else {
-                    linker(template);
-                }
-            } else {
-                var tmp_promise = {
-                    linkers : [linker],
-                    promise : $http.get(templateUrl).success(function(template){
-                        $templateCache.put(templateUrl, template);
-                        for(var i=0, l=tmp_promise.linkers, e=l.length; i < e; ++i){
-                            l[i](template);
-                        }
-                    })                        
-                };
-                $templateCache.put(templateUrl, tmp_promise);                
-            }
-        }
-    });
-
-    visualizer.factory('itemSelection', function(){
+    angular.module('a2recordingsbrowser', ['a2utils', 'ui.bootstrap'])
+    visualizer.directive('a2RecordingsBrowser', function ($timeout, itemSelection, MockProjectInfoService, $cacheFactory) {
+        var project = MockProjectInfoService;
         return {
-            make : function make_itemSelection_obj(item_name){
-                var sel = {};
-                if(typeof item_name == 'undefined') {
-                    item_name = 'value';
-                }
-                sel[item_name] = null;
-                sel.select = function(newValue){
-                    sel[item_name] = newValue;
+            restrict : 'E',
+            scope : {
+                selected_recording : '=recording'
+            },
+            templateUrl : template_root + 'browser-main.html',
+            link     : function($scope, $element, $attrs){
+                var browser = $scope.browser = {
+                    sites : [],
+                    dates : {
+                        update_time : 0,
+                        refreshing  : false,
+                        datepickerMode : 'year',
+                        cache : $cacheFactory('recordingsBrowserDateAvailabilityCache'),
+                        disabled : function(date, mode){
+                            var site = browser.selection.site.value;
+                            var site_name = site && site.name;
+                            if(!site_name) {
+                                return true;
+                            }
+                            
+                            var key_comps=[], fetch_mode;
+                            switch(mode){
+                                case "day"   : key_comps.unshift(date.getDate());     
+                                case "month" : key_comps.unshift(1 + date.getMonth());
+                                case "year"  : key_comps.unshift(date.getFullYear());     
+                            }
+                            key_comps.unshift(site_name);
+                            var subkey = key_comps.pop();
+                            var key = key_comps.join('-');
+                            
+                            var availability = browser.dates.cache.get(key);
+                            if(!availability) {
+                                browser.dates.fetch_availability(key);
+                            } else if(availability.data){
+                                return !availability.data[subkey];
+                            }
+                            return false;
+                        },
+                        fetch_availability: function(key){
+                            browser.dates.cache.put(key, {fetching:true});
+                            MockProjectInfoService.getRecordingAvailability(key, function(data){
+                                $timeout(function(){
+                                    var avail = data;
+                                    var comps = key.split('-');
+                                    while(comps.length > 0) {
+                                        var comp = comps.shift();
+                                        if (avail) {
+                                            avail = avail[comp];
+                                        }                                        
+                                    }
+                                    console.log(comps, avail);
+                                    browser.dates.cache.get(key).data = avail;
+                                    browser.dates.update_time = new Date();
+                                });
+                            })
+                        },
+                        fetching  : false,
+                        available : {}
+                    },
+                    recordings : [],
+                    selection : {
+                        site : itemSelection.make(),
+                        date : null,
+                        recording : itemSelection.make()
+                    }
                 };
-                return sel;
+                $scope.$watch('browser.selection.site.value', function(newValue, oldValue){
+                    browser.dates.update_time = new Date();
+                    browser.selection.date = null;
+                    browser.selection.time = null;
+                });
+                $scope.$watch('browser.selection.date', function(newValue, oldValue){
+                    $element.find('.dropdown.open').removeClass('open');
+                    browser.selection.time = null;
+                    var site = browser.selection.site.value;
+                    var date = browser.selection.date;
+                    if (site && date) {
+                        var comps = [site.name, date.getFullYear(), date.getMonth() + 1, date.getDate()];
+                        var key = comps.join('-');
+                        MockProjectInfoService.getRecordings(key, function(recordings){
+                            $timeout(function(){
+                                browser.recordings = recordings;
+                            });
+                        })
+                    }
+                });
+                $scope.$watch('browser.selection.recording', function(newValue, oldValue){
+                    // $scope.selected_recording = newValue;
+                });
             }
         };
     });

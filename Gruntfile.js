@@ -85,6 +85,7 @@ module.exports = function(grunt) {
                     'assets/js/home.js',
                     'assets/js/dashboard.js',
                     'assets/js/a2services.js',
+                    'assets/js/extras/*.js'
                 ], 
                 dest: 'public/assets/js/arbimon2.js'
             }
@@ -107,7 +108,10 @@ module.exports = function(grunt) {
                 tasks: ['less']
             },
             frontendjs: {
-                files: ['assets/js/*.js'],
+                files: [
+                    'assets/js/*.js',
+                    'assets/js/**/*.js'
+                ],
                 tasks: ['concat:dev']
             },
             backendjs: {
