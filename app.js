@@ -10,11 +10,14 @@ var SessionStore = require('express-mysql-session');
 
 var config = require('./config');
 var model = require('./models');
+var tmpfilecache = require('./utils/tmpfilecache');
 
 // routes
 var login = require('./routes/login'); 
 var routes = require('./routes/index');
 
+var AWS = require('aws-sdk');
+AWS.config.loadFromPath('./config/aws.json');
 
 var app = express();
 
