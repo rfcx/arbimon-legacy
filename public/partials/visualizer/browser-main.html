@@ -3,15 +3,18 @@
         <div class="btn-group">
             <div class="dropdown">
                 <button class="btn btn-default" role="button" data-toggle="dropdown">
-                    <span class="fa fa-map-marker"></span>
+                    <span class="fa" ng-class="{'fa-map-marker' : !browser.loading.sites, 'fa-spinner fa-spin': browser.loading.sites}"></span>
                     {{browser.selection.site.value.name || "[Station]"}}
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
-                    <li ng-hide="browser.sites">
+                    <li ng-show="browser.loading.sites">
+                        <a><i class="fa fa-spinner fa-spin"></i> Loading Sites</a>
+                    </li>
+                    <li ng-hide="browser.loading.sites || browser.sites">
                         <a>No Stations in Project</a>
                     </li>
-                    <li ng-repeat="site in browser.sites" ng-class="{active: browser.selection.site.value == site}">
+                    <li ng-hide="browser.loading.sites" ng-repeat="site in browser.sites" ng-class="{active: browser.selection.site.value == site}">
                         <a ng-click="browser.selection.site.select(site)">{{site.name}}</a>
                     </li>
                 </ul>
@@ -20,29 +23,35 @@
         <div class="btn-group">
             <div class="dropdown">
                 <button class="btn btn-default" role="button" data-toggle="dropdown">
-                    <span class="fa fa-calendar"></span>
+                    <span class="fa" ng-class="{'fa-calendar' : !browser.loading.dates, 'fa-spinner fa-spin': browser.loading.dates}"></span>
                     {{browser.selection.date || "[date]" | date : 'mediumDate'}}
                     <span class="caret"></span>
                 </button>
                 <div class="dropdown-menu datepicker" role="menu" aria-labelledby="dLabel">
-                    <datepicker ng-model="browser.selection.date" min-date="minDate" show-weeks="false"
+                    <div ng-show="browser.loading.dates">
+                        <a><i class="fa fa-spinner fa-spin"></i> Loading Times</a>
+                    </div>
+                    <datepicker2 ng-hide="browser.loading.dates" ng-model="browser.selection.date" min-date="minDate" show-weeks="false"
                         datepicker-mode="browser.dates.datepickerMode" update-counter="browser.dates.update_time"
-                        date-disabled="browser.dates.disabled(date, mode, $scope)"></datepicker>
+                        date-disabled="browser.dates.disabled(date, mode, $scope)"></datepicker2>
                 </div>
             </div>
         </div>
         <div class="btn-group">
             <div class="dropdown">
                 <button class="btn btn-default" role="button" data-toggle="dropdown">
-                    <span class="fa fa-clock-o"></span>
+                    <span class="fa" ng-class="{'fa-clock-o' : !browser.loading.times, 'fa-spinner fa-spin': browser.loading.times}""></span>
                     {{browser.selection.recording.value.datetime || "[time]" | date : 'shortTime'}}
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
-                    <li ng-hide="browser.recordings">
+                    <li ng-show="browser.loading.times">
+                        <a><i class="fa fa-spinner fa-spin"></i> Loading Times</a>
+                    </li>
+                    <li ng-hide="browser.loading.times || browser.recordings">
                         <a>(Empty List)</a>
                     </li>
-                    <li ng-repeat="recording in browser.recordings | orderBy: 'datetime'" ng-class="{active: browser.selection.recording.value == recording}">
+                    <li ng-hide="browser.loading.times" ng-repeat="recording in browser.recordings | orderBy: 'datetime'" ng-class="{active: browser.selection.recording.value == recording}">
                         <a ng-click="browser.selection.recording.select(recording)">{{recording.datetime | date : 'shortTime'}}</a>
                     </li>
                 </ul>
