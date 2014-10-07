@@ -120,16 +120,23 @@
         };
         $scope.setRecording = function(recording){
             if (recording) {
+                $scope.loading_recording = true;
                 MockProjectInfoService.getRecordingInfo(recording.id, function(data){
                     console.log('$scope.setRecording', data);
+                    $scope.loading_recording = false;
                     $scope.recording = data;
-                    recording.duration = data.stats.duration;
-                    recording.sampling_rate = data.stats.sampling_rate;
+                    $scope.recording.duration = data.stats.duration;
+                    $scope.recording.sampling_rate = data.stats.sampleRate;
                     // fix up some stuff
-                    recording.max_freq = data.sampling_rate / 2;
+                    $scope.recording.max_freq = data.sampling_rate / 2;
                     // set it to the scope
                     if($scope.recording.audioUrl) {
                         $scope.audio_player.load($scope.recording.audioUrl);
+                    }
+                    if($scope.recording.imageUrl) {
+                        $scope.recording.tiles = [
+                            {x:0, y:0, src:$scope.recording.imageUrl}
+                        ];
                     }
                 });
             } else {
@@ -464,6 +471,7 @@
                         },
                         fetch_availability: function(key){
                             browser.dates.cache.put(key, {fetching:true});
+                            browser.loading.dates = true;
                             MockProjectInfoService.getRecordingAvailability(key, function(data){
                                 $timeout(function(){
                                     var avail = data;
@@ -474,8 +482,9 @@
                                             avail = avail[comp];
                                         }                                        
                                     }
-                                    browser.dates.cache.get(key).data = avail;
+                                    browser.dates.cache.get(key).data = avail || {};
                                     browser.dates.update_time = new Date();
+                                    browser.loading.dates = false;
                                 });
                             })
                         },
@@ -483,14 +492,21 @@
                         available : {}
                     },
                     recordings : [],
+                    loading : {
+                        sites: false,
+                        dates: false,
+                        times: false
+                    },
                     selection : {
                         site : itemSelection.make(),
                         date : null,
                         recording : itemSelection.make()
                     }
                 };
+                browser.loading.sites = true;
                 project.getSites(function(sites){
                     browser.sites = sites;
+                    browser.loading.sites = false;
                 });
                 $scope.$watch('browser.selection.site.value', function(newValue, oldValue){
                     browser.dates.update_time = new Date();
@@ -505,9 +521,11 @@
                     if (site && date) {
                         var comps = [site.name, date.getFullYear(), date.getMonth() + 1, date.getDate()];
                         var key = comps.join('-');
+                        browser.loading.times = true;
                         MockProjectInfoService.getRecordings(key, function(recordings){
                             $timeout(function(){
                                 browser.recordings = recordings;
+                                browser.loading.times = false;
                             });
                         })
                     }
