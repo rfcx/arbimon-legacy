@@ -1,0 +1,23 @@
+<table class="table table-bordered table-hover a2-table">
+<thead>
+    <tr>
+        <th>
+            <input type="checkbox" ng-model="checkall" ng-change="toggleAll()">
+        </th>
+        <th ng-repeat="field in fields">{{ field.name }}</th>
+    </tr>
+</thead>
+{{ sites }}
+<tbody>
+    <tr ng-repeat="row in rows | filter: query" 
+        ng-click="sel($index)" 
+        ng-class="{ 'active': selected == row }">
+        <td><input type="checkbox" 
+                ng-model="row.checked" 
+                ng-click="check($event, $index)"
+                stop-click>
+        </td>
+        <td ng-repeat="field in fields">{{ row[field.key] }}</td>
+    </tr>
+</tbody>
+</table>
