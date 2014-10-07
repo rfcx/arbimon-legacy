@@ -428,7 +428,10 @@
 
 
     angular.module('a2recordingsbrowser', ['a2utils', 'ui.bootstrap'])
-    visualizer.directive('a2RecordingsBrowser', function ($timeout, itemSelection, MockProjectInfoService, $cacheFactory) {
+    .factory('rbDateAvailabilityCache', function ($cacheFactory) {
+        return $cacheFactory('recordingsBrowserDateAvailabilityCache');
+    })
+    .directive('a2RecordingsBrowser', function ($timeout, itemSelection, MockProjectInfoService, rbDateAvailabilityCache) {
         var project = MockProjectInfoService;
         return {
             restrict : 'E',
@@ -443,7 +446,7 @@
                         update_time : 0,
                         refreshing  : false,
                         datepickerMode : 'year',
-                        cache : $cacheFactory('recordingsBrowserDateAvailabilityCache'),
+                        cache : rbDateAvailabilityCache,
                         disabled : function(date, mode){
                             var site = browser.selection.site.value;
                             var site_name = site && site.name;
