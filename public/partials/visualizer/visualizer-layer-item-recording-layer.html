@@ -1,5 +1,5 @@
 <div class="layer">
-    <a2-recordings-browser></a2-recordings-browser>
+    <a2-recordings-browser name="browser" on-recording="setRecording(recording)" ></a2-recordings-browser>
     <div class="btn-toolbar" >
         <div class="btn-group">
             <button class="btn btn-default btn-sm" ng-disabled="!audio_player.has_prev_recording" ng-click="audio_player.prev_recording()" ><i class="fa fa-step-backward" ></i></button>
