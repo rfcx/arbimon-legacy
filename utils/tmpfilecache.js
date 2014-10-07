@@ -47,7 +47,11 @@ var cache = {
         });
     },
     put : function(key, data, callback){
-        fs.writeFile(cache.key2File(key), data, callback);
+        var file = cache.key2File(key);
+        fs.writeFile(file, data, function(err){
+            var stats = err ? null : {path : file};
+            callback(err, stats);
+        });
     },
     fetch : function(key, oncachemiss, callback){
         this.get(key, function(err, data){
