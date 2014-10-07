@@ -74,7 +74,7 @@ module.exports = function(grunt) {
                 flatten: true,
                 src: 'bower_components/angular-ui-router/release/*',
                 dest: 'public/assets/angular-ui-router/'
-            }
+            },
         },
         
         concat: {
@@ -85,7 +85,8 @@ module.exports = function(grunt) {
                     'assets/js/home.js',
                     'assets/js/dashboard.js',
                     'assets/js/a2services.js',
-                    'assets/js/extras/*.js'
+                    'assets/js/extras/*.js',
+                    'assets/js/a2directives.js',
                 ], 
                 dest: 'public/assets/js/arbimon2.js'
             }

@@ -9,6 +9,7 @@
     "angular-bootstrap": "~0.11.0",
     "angular-ui-router": "~0.2.11",
     "d3": "~3.4.11",
-    "angular-audio": "*"
+    "angular-audio": "*",
+    "angular-google-maps": "~1.2.2"
   }
 }

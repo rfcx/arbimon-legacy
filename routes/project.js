@@ -9,45 +9,50 @@ router.get('/', function(req, res)
 
 router.param('project', function(req, res, next, project) 
 {
+    console.log('hola');
     model.projects.findByUrl(project ,
         function(err,rows)
         {   
-            if(err)
-            {   
-                console.log(err);
+            if(err) return next(err);
+            
+            if(!rows.length) return res.redirect('/home');
+            
+            var project = rows[0];
+            
+            if(project.is_enabled)
+            {
+                model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
+                    
+                    if(project.is_private && !rows.length)
+                        return res.redirect('/home');
+                    
+                    if(!req.session.user.permissions)
+                        req.session.user.permissions = {};
+                    
+                    req.session.user.permissions[project.project_id] = rows;
+                    
+                    //~ console.dir(req.session.user.permissions);
+                    
+                    req.project = {
+                        id: project.project_id,
+                        name: project.name
+                    };
+                    return next();
+                });
             }
             else
             {
-                if(rows.length >0)
-                {
-                    
-                    if(rows[0].is_enabled>0)
-                    {
-                        req.project = {
-                            id: rows[0].project_id,
-                            name: rows[0].name
-                        };
-                        next();
-                    }
-                    else
-                    {
-                        res.send('<html><head><title>Project '+project+' is disabled</title></head><body>Your project '+project
-                            +' has been disabled. Please pay</body></html>');
-                    }   
-                }
-                else 
-                {
-                    res.send('<html><head><title>Project '+project+' does not exists</title></head><body>The project '+project
-                        +' does not exists. Please check  your project url.</body></html>');
-                }
-            }
+                res.send('<html><head><title>Project '+project+' is disabled</title></head><body>Your project '+project
+                    +' has been disabled.</body></html>');
+            }   
         }
     );  
 });
 
-router.get('/:project/*', function(req, res) 
+router.get('/:project?/', function(req, res) 
 {
     res.render('app/index', { project: req.project, user: req.session.user });
 });
+
 
 module.exports = router;

@@ -27,13 +27,18 @@ var queryHandler = function (query, callback) {
 
 var Users    = require('./users'     )(queryHandler);
 var Projects = require('./projects'  )(queryHandler);
-var Recordings= require('./recordings')(queryHandler);
+var Recordings = require('./recordings')(queryHandler);
+var Sites = require('./sites')(queryHandler);
 
 module.exports = {
     users: Users,
     projects: Projects,
-    recordings: Recordings
+    recordings: Recordings,
+    sites: Sites,
 };
 
-
-
+Users.getPermissions(2, 5, function(err, rows) {
+    if(err) throw err;
+    
+    console.log(rows);
+});

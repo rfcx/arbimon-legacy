@@ -27,19 +27,18 @@
                 <p>{{ project.description }}</p>
             </div>
             <ul class="list-group">
-                <li class="list-group-item">Sites: </li>
-                <li class="list-group-item">Recordings: </li>
+                <li class="list-group-item">Sites: {{ sites.length }}</li>
+                <li class="list-group-item">Recordings: {{ recsQty }}</li>
                 <li class="list-group-item">
                     Species:
                     <ul>
-                        <li>1</li>
-                        <li>2</li>
+                        <li ng-repeat="s in species">{{ s }}</li>
                     </ul>
                 </li>
             </ul>
         </div>        
     </div>
     <div class="col-md-6">
-        sites map
+        <div class="map" id="map-summary"></div>
     </div>
 </div>

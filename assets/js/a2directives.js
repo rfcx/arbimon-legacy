@@ -77,7 +77,17 @@ angular.module('a2directives', [])
                 
                 if(attrs.onSelect)
                     scope.onSelect({ $index: $index });
-            }
+            };
+            
+            scope.sortBy = function(field) {
+                if(scope.sort !== field.key) {
+                    scope.sort = field.key;
+                    scope.reverse = false;
+                }
+                else {
+                    scope.reverse = !scope.reverse;
+                }
+            };
         }
     };
 })

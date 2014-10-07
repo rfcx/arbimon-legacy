@@ -77,10 +77,12 @@ router.post('/project/create', function(req, res, next) {
     });
 });
 
-router.get('/project/:projectUrl/getInfo', function(req, res) {
+router.get('/project/:projectUrl/info', function(req, res, next) {
     var project_url  = req.param('projectUrl');
     
     model.projects.findByUrl(project_url, function(err, rows) {
+        if(err) return next(err);
+        
         if(!rows.length) 
             return res.status(404).json({ error: "project not found"});
             
@@ -91,7 +93,7 @@ router.get('/project/:projectUrl/getInfo', function(req, res) {
  /**
  * Return a list of all the sites in a project.
  */
-router.get('/project/:projectUrl/sites', function(req, res) {
+router.get('/project/:projectUrl/sites', function(req, res, next) {
     var project_url  = req.param('projectUrl');
     model.projects.findByUrl(project_url, function(err, rows) {
         if(err) return next(err);
@@ -110,6 +112,91 @@ router.get('/project/:projectUrl/sites', function(req, res) {
         return null;
     });
     
+});
+
+router.post('/project/create/site', function(req, res, next) {
+    var project = req.body.project;
+    var site = req.body.site;
+        
+    if(!req.haveAccess(project.project_id, "manage project sites")) {
+        return res.json({ error: "you dont have permission to 'manage project sites'" });
+    }
+    
+    model.sites.exists(site.name, project.project_id, function(err, exists) {
+        if(err) return next(err);
+        
+        if(exists)
+            return res.json({ error: 'site with same name already exists'});
+        
+        site.project_id = project.project_id;
+        
+        model.sites.insert(site, function(err, rows) {
+            if(err) return next(err);
+            
+            model.projects.insertNews({ 
+                news_type_id: 1, // project created
+                user_id: req.session.user.id,
+                project_id: project.project_id,
+                description: util.format("Site '%s' created by %s", site.name, req.session.user.username)
+            });
+            
+            res.json({ message: "New site created" });
+        });
+    });
+});
+
+router.post('/project/update/site', function(req, res, next) {
+    var project = req.body.project;
+    var site = req.body.site;
+    
+    if(!req.haveAccess(project.project_id, "manage project sites")) {
+        return res.json({ error: "you dont have permission to 'manage project sites'" });
+    }
+            
+    site.project_id = project.project_id;
+        
+    model.sites.update(site, function(err, rows) {
+        if(err) return next(err);
+        
+        model.projects.insertNews({ 
+            news_type_id: 1, // project created
+            user_id: req.session.user.id,
+            project_id: project.project_id,
+            description: util.format("Site '%s' update by %s", site.name, req.session.user.username)
+        });
+        
+        res.json({ message: "site updated" });
+    });
+});
+
+router.post('/project/delete/sites', function(req, res, next) {
+    var project = req.body.project;
+    var sites = req.body.sites;
+    
+    if(!req.haveAccess(project.project_id, "manage project sites")) {
+        return res.json({ error: "you dont have permission to 'manage project sites'" });
+    }
+    
+    var sitesIds = $scope.checked.map(function(site) {
+        return site.id;
+    });
+    
+    var sitesNames = $scope.checked.map(function(site) {
+        return site.name;
+    }).join(', ');
+        
+    model.sites.remove(sitesIds, function(err, rows) {
+        if(err) return next(err);
+        
+        model.projects.insertNews({ 
+            news_type_id: 1, // project created
+            user_id: req.session.user.id,
+            project_id: project.project_id,
+            description: util.format("Sites '%s' deleted by %s", sitesNames, req.session.user.username)
+        });
+        
+        res.json(rows);
+    });
 });
 
 /**
@@ -167,8 +254,8 @@ router.get('/project/:projectUrl/recordings/:recUrl?', function(req, res, next) 
             return res.status(404).json({ error: "project not found"});
         
         var project_id = rows[0].project_id;
-            
-        model.recordings.findByUrlMatch(recording_url, project_id, false, function(err, rows) {
+
+        model.recordings.findByUrlMatch(recording_url, project_id, {}, function(err, rows, fields) {
             if(err) return next(err);
                 
             res.json(rows);
@@ -254,6 +341,10 @@ router.get('/project/:projectUrl/recordings/image/:recUrl?', function(req, res, 
         return null;
     });
     
+});
+
+router.get('/project/:projectUrl/species', function(req, res, next) {
+    var project_url   = req.param('projectUrl');
 });
 
 module.exports = router;

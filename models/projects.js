@@ -17,7 +17,7 @@ module.exports = function(queryHandler) {
         
         getProjectSites: function(project_id, callback){
             var query = (
-                "SELECT S.site_id as id, S.name, S.lat, S.lon, S.site_type_id as type \n" +
+                "SELECT S.site_id as id, S.name, S.lat, S.lon, S.alt \n" +
                 "FROM sites S \n" +
                 "WHERE S.project_id = " + mysql.escape(project_id)
             );
@@ -53,6 +53,28 @@ module.exports = function(queryHandler) {
                     'SET %s';
                     
             q = util.format(q, values.join(", "));
+            
+            queryHandler(q, callback);
+        },
+        
+        update: function(project, callback) {
+            var values = [];
+            
+            if(typeof project["project_id"] === "undefined")
+                return callback(new Error("required field 'project_id' missing"));
+            
+            for( var i in project) {
+                if(i !== 'project_id') {
+                    project[i] = mysql.escape(project[i]);
+                    values.push(util.format('`%s`=%s', i, project[i]));
+                }
+            }
+            
+            var q = 'UPDATE projects \n'+
+                    'SET %s \n'+
+                    'WHERE site_id = %s';
+                    
+            q = util.format(q, values.join(", "), project.site_id);
             
             queryHandler(q, callback);
         },

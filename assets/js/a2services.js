@@ -1,16 +1,49 @@
 angular.module('a2services',[])
-.factory('ProjectInfo', ['$location', '$http', function($location, $http) {
+.factory('Project', ['$location', '$http', function($location, $http) {    
+    var urlparse = document.createElement('a');
+    urlparse.href = $location.absUrl();
+    var nameRe = /\/project\/([\w\_\-]+)/;
+    
+    var url = nameRe.exec(urlparse.pathname)[1];
+    
     return {
-        get: function(callback) {
-            var urlparse = document.createElement('a');
-            urlparse.href = $location.absUrl();
-            var nameRe = /\/project\/([\w\_\-]+)/;
-            
-            var projectName = nameRe.exec(urlparse.pathname)[1];
-            
-            $http.get('/api/project/'+projectName+'/getInfo')
+        getInfo: function(callback) {            
+            $http.get('/api/project/'+url+'/info')
             .success(function(data) {
                 callback(data);
+            });
+        },
+        
+        getSites: function(callback) {
+            $http.get('/api/project/'+url+'/sites')
+            .success(function(data) {
+                callback(data);
+            });
+        },
+        
+        getSpecies: function(callback) {
+            $http.get('/api/project/'+url+'/species')
+            .success(function(data) {
+                
+            });
+        },
+        
+        getRecs: function(query, callback) {
+            if(typeof query === "function") {
+                callback = query;
+                query = "";
+            }
+            
+            $http.get('/api/project/'+url+'/recordings/'+query)
+            .success(function(data) {
+                callback(data);
+            });
+        },
+        
+        getRecTotalQty: function(callback) {
+            $http.get('/api/project/'+url+'/recordings/count/')
+            .success(function(data) {
+                callback(data[0].count);
             });
         }
     };
