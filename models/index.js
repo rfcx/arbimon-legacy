@@ -36,9 +36,3 @@ module.exports = {
     recordings: Recordings,
     sites: Sites,
 };
-
-Users.getPermissions(2, 5, function(err, rows) {
-    if(err) throw err;
-    
-    console.log(rows);
-});

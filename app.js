@@ -51,10 +51,6 @@ app.use(session({
 app.use('/', login);
 app.use('/', routes);
 
-app.get('/mockup/visualizer', function(req, res) {
-    res.render('mockup/visualizer', { title: 'Visualizer' });
-});
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     var err = new Error('Not Found');
