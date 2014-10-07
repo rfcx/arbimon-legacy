@@ -44,18 +44,56 @@ console.log('running sox with ', args)
         options = options || {};
         
         var cp = childProcess.spawn('sox', args);
-        var stderr = "";
+        var stdout = {value:""}, stderr = {value:""};
+        if(options.stderr2stdout) {
+            stderr = stdout;
+        }
         cp.stderr.setEncoding('utf8');
         cp.stderr.on('data', function(data) {
-            stderr += data;
+            stderr.value += data;
+        });
+        cp.stdout.setEncoding('utf8');
+        cp.stdout.on('data', function(data) {
+            stdout.value += data;
         });
         
         cp.on('close', function(code){
-            console.log('sox ended with code : ', code, stderr);
-            callback(code);
-            
+            console.log('sox ended with code : ', code);
+            console.log('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
+            console.log('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
+            callback(code, stdout.value, stderr.value);
         });
     },
+    info : function(source_path, options, callback){
+        if(options instanceof Function) { callback = options; }
+        options = options || {};
+        
+        var args = ['--info', source_path];
+        audiotools.sox(args, function(code, stdout, stderr){
+            var lines = stdout.split('\n');
+            var info = {};
+            for(var i = 0, e = lines.length; i < e; ++i){
+                var m = /^\s*([^:]+?)\s*:\s*(.*)$/.exec(lines[i]);
+                if (m) {
+                    var param = m[1].toLowerCase().replace(/ /g, '_');
+                    var value = m[2];
+                    switch (param) {
+                        case 'input_file'      : value = value.substr(1, value.length-2); break;
+                        case 'channels'        : 
+                        case 'sample_rate'     : value = value | 0; break;
+                        case 'precision'       : value = /^(\d+)-bit/.exec(value)[1] | 0; break;
+                        case 'duration'        :
+                            var m = /^(\d+):(\d+):(\d+\.\d+)\s+=\s+(\d+)/.exec(value);;
+                            value = ((m[1]|0)*60 + (m[2]|0))*60 + (m[3]|0);
+                            info['samples'] = m[4] | 0;
+                        break;
+                    }
+                    info[param] = value;
+                }
+            }
+            callback(code, info);
+        });
+    },    
     transcode : function(source_path, destination_path, options, callback){
         if(options instanceof Function) { callback = options; }
         options = options || {};
@@ -93,7 +131,7 @@ console.log('running sox with ', args)
                 args.push('-W', options.window_shape); // just the raw spectrogram image
             }
         }
-        args.push('-m');
+        args.push('-lm');
         args.push('-o', destination_path);
         audiotools.sox(args, {}, callback);
     }

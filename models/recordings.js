@@ -2,7 +2,6 @@
 var async        = require('async');
 var AWS          = require('aws-sdk');
 var mysql        = require('mysql');
-var sox          = require('sox');
 var util         = require('util');
 var config       = require('../config'); 
 var arrays_util  = require('../utils/arrays');
@@ -181,32 +180,24 @@ module.exports = function(queryHandler) {
         },
         
         /** Finds out stats about a given recording and returns them.
-         * @param {String} recording_url url query selecting a recording.
+         * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
+         * @param {Object} recording.id integer that uniquely identifies the recording in the database.
+         * @param {Object} recording.uri url containing the recording's path in the bucket.
          * @param {Function} callback called with the recording info.
          */
-        fetchInfo : function(recording_url, project_id, callback){
-            var self=this, error, recording;
-            async.series([
-                function(cb){ self.findByUrlMatch(recording_url, project_id, {}, function(err, recordings){
-                    if(err) { cb(err); return; }
-                    recording = recordings[0];
-                    recording.file = recording.uri.split('/').pop();
-                    cb();
-                }) },
-                function (cb){ self.downloadAndGetPath(recording, function(err, cachedRecording){
-                    if(err || !cachedRecording) { cb(err, cachedRecording); return; }
-                    sox.identify(cachedRecording.path, function(err, recStats){
-                        recording.stats = recStats;
-                        cb();
-                    });
-                }) }
-            ], function(err){
-                err ? callback(err) : callback(null, recording);
+        fetchInfo : function(recording, callback){
+            recording.file = recording.uri.split('/').pop();
+            Recordings.fetchRecordingFile(recording, function(err, cachedRecording){
+                if(err || !cachedRecording) { callback(err, cachedRecording); return; }
+                audiotool.info(cachedRecording.path, function(err, recStats){
+                    recording.stats = recStats;
+                    callback(null, recording);
+                });
             });
         },
         
         /** Fetches the validations for a given recording.
-         * @param {Object} recording object containing the recording's data
+         * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
          * @param {Object} recording.id integer that uniquely identifies the recording in the database.
          * @param {Function} callback(err, validations) function called back with the queried results. 
          */
@@ -218,12 +209,13 @@ module.exports = function(queryHandler) {
         },
         
         /** Downloads a recording from the bucket, storing it in a temporary file cache, and returns its path.
-         * @param {Object} recording object containing the recording's data
+         * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
          * @param {Object} recording.uri url containing the recording's path in the bucket.
          * @param {Function} callback(err, path) funciton to call back with the recording's path.
          */
-        downloadAndGetPath: function(recording, callback){
+        fetchRecordingFile: function(recording, callback){
             tmpfilecache.fetch(recording.uri, function(cache_miss){
+                console.log('fetching ', recording.uri, ' from the bucket.')
                 if(!s3){
                     s3 = new AWS.S3();
                 }
@@ -238,14 +230,14 @@ module.exports = function(queryHandler) {
         },
         
         /** Returns the audio file of a given recording.
-         * @param {Object} recording object containing the recording's data
+         * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
          * @param {Object} recording.uri url containing the recording's path in the bucket.
          * @param {Function} callback(err, path) funciton to call back with the recording audio file's path.
          */
         fetchAudioFile: function (recording, callback) {
             var mp3audio_key = recording.uri.replace(/\.(wav|flac)/, '.mp3');
             tmpfilecache.fetch(mp3audio_key, function(cache_miss){
-                Recordings.downloadAndGetPath(recording, function(err, recording_path){
+                Recordings.fetchRecordingFile(recording, function(err, recording_path){
                     audiotool.transcode(recording_path.path, cache_miss.file, {
                         sample_rate: 44100, format: 'mp3', channels: 1
                     }, function(status_code){
@@ -257,14 +249,14 @@ module.exports = function(queryHandler) {
         },
         
         /** Returns the spectrogram file of a given recording.
-         * @param {Object} recording object containing the recording's data
+         * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
          * @param {Object} recording.uri url containing the recording's path in the bucket.
          * @param {Function} callback(err, path) funciton to call back with the recording spectrogram file's path.
          */
         fetchSpectrogramFile: function (recording, callback) {
             var mp3audio_key = recording.uri.replace(/\.(wav|flac)/, '.png');
             tmpfilecache.fetch(mp3audio_key, function(cache_miss){
-                Recordings.downloadAndGetPath(recording, function(err, recording_path){
+                Recordings.fetchRecordingFile(recording, function(err, recording_path){
                     audiotool.spectrogram(recording_path.path, cache_miss.file, function(status_code){
                         if(status_code) { callback({code:status_code}); return; }
                         cache_miss.retry_get();

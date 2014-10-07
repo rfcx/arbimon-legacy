@@ -270,26 +270,27 @@ router.get('/project/:projectUrl/recordings/info/:recUrl?', function(req, res, n
     var project_url   = req.param('projectUrl');
     var recording_url = req.param('recUrl');
     model.projects.findByUrl(project_url, function(err, rows) {
-        if(err) return next(err);
+        if(err){ next(err); return;}
         
-        if(!rows.length) 
-            return res.status(404).json({ error: "project not found"});
+        if(!rows.length){ res.status(404).json({ error: "project not found"}); return; }
         
         var project_id = rows[0].project_id;
             
-        model.recordings.fetchInfo(recording_url, project_id, function(err, recording) {
-            if(err) return next(err);
+        model.recordings.findByUrlMatch(recording_url, project_id, {limit:1}, function(err, recordings) {
+            if(err){ next(err); return;}
+            var recording = recordings[0];
             var url_comps = /(.*)\/([^/]+)\/([^/]+)/.exec(req.originalUrl);
             recording.audioUrl = url_comps[1] + "/audio/" + recording.id;
             recording.imageUrl = url_comps[1] + "/image/" + recording.id;
-            
-            model.recordings.fetchValidations(recording, function(err, validations){
-                recording.validations = validations;
-                res.json(recording);
-            })
-            return null;
+            model.recordings.fetchInfo(recording, function(err, recording){
+                if(err){ next(err); return;}
+                model.recordings.fetchValidations(recording, function(err, validations){
+                    if(err){ next(err); return;}
+                    recording.validations = validations;
+                    res.json(recording);
+                })
+            });
         });
-        return null;
     });
     
 });
