@@ -94,9 +94,14 @@ module.exports = function(queryHandler) {
             var limit_clause = (options.limit ?
                 " LIMIT " + (options.limit|0) + (options.offset ? " OFFSET " + (options.offset|0) : "") : ""
             );
-            var constraints = [
-                'S.project_id = ' + mysql.escape(project_id)
-            ];
+            var order_clause = (options.order ?
+                " ORDER BY S.name ASC, R.datetime ASC" : ''
+            );
+            var constraints = [];
+            if(!urlquery.id) {
+                constraints = ['S.project_id = ' + mysql.escape(project_id)];
+            }
+                
             var fields = {
                 id     : {subject: 'R.recording_id'    , project:  true},
                 site   : {subject: 'S.name'            , project: false, level:1, next: 'year'                },
@@ -177,7 +182,9 @@ module.exports = function(queryHandler) {
                 "FROM recordings R \n" +
                 "JOIN sites S ON S.site_id = R.site_id \n" +
                 "WHERE (" + constraints.join(") AND (") + ")" +
-                group_by.clause + limit_clause;
+                group_by.clause +
+                order_clause +
+                limit_clause;
                 
             var query = {
                 sql: sql,
@@ -202,9 +209,37 @@ module.exports = function(queryHandler) {
             });
         },
         
-        findNext: function (recording_url, project_id, options, callback) {
+        fetchNext: function (recording, callback) {
+            var query = "SELECT R2.recording_id as id\n" +
+                "FROM recordings R \n" +
+                "JOIN recordings R2 ON " +
+                    "R.site_id = R2.site_id " +
+                    "AND R.datetime < R2.datetime \n" +
+                "WHERE R.recording_id = " + mysql.escape(recording.id) + "\n" +
+                "ORDER BY R2.datetime ASC \n" +
+                "LIMIT 1"
+            return queryHandler(query, function(err, rows){
+                if(err) { callback(err); return; }
+                if(!rows || !rows.length) { callback(null, [recording]); return; }
+                Recordings.findByUrlMatch(rows[0].id, 0, {limit:1}, callback);                
+            });
         },
-        
+        fetchPrevious: function (recording, callback) {
+            var query = "SELECT R2.recording_id as id\n" +
+                "FROM recordings R \n" +
+                "JOIN recordings R2 ON " +
+                    "R.site_id = R2.site_id " +
+                    "AND R.datetime > R2.datetime \n" +
+                "WHERE R.recording_id = " + mysql.escape(recording.id) + "\n" +
+                "ORDER BY R2.datetime DESC \n" +
+                "LIMIT 1"
+            return queryHandler(query, function(err, rows){
+                if(err) { callback(err); return; }
+                if(!rows || !rows.length) { callback(null, [recording]); return; }
+                Recordings.findByUrlMatch(rows[0].id, 0, {limit:1}, callback);                
+            });
+        },
+                
         /** Finds out stats about a given recording and returns them.
          * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
          * @param {Object} recording.id integer that uniquely identifies the recording in the database.
@@ -227,7 +262,7 @@ module.exports = function(queryHandler) {
          * @param {Function} callback(err, validations) function called back with the queried results. 
          */
         fetchValidations: function (recording, callback) {
-            var query = "SELECT recording_validation_id as id, user_id as user, project_class_id as class, present \n" +
+            var query = "SELECT recording_validation_id as id, user_id as user, species_id as species, songtype_id as songtype, present \n" +
                 "FROM recording_validations \n" +
                 "WHERE recording_id = " + mysql.escape(recording.id)
             return queryHandler(query, callback);
