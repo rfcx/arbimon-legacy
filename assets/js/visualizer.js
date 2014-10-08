@@ -1,5 +1,5 @@
 (function(angular){
-    var visualizer = angular.module('visualizer', ['ngAudio', 'a2utils', 'ui.bt.datepicker2']);
+    var visualizer = angular.module('visualizer', ['ngAudio', 'a2utils', 'a2recordingsbrowser']);
     var template_root = '/partials/visualizer/';
     var test_data = {
         recording : {
@@ -88,6 +88,18 @@
                     callback(data);
                 });
             },
+            getNextRecording: function(key, callback) {
+                var projectName = this.getName();
+                $http.get('/api/project/'+projectName+'/recordings/next/'+key).success(function(data) {
+                    callback(data);
+                });
+            },
+            getPreviousRecording: function(key, callback) {
+                var projectName = this.getName();
+                $http.get('/api/project/'+projectName+'/recordings/previous/'+key).success(function(data) {
+                    callback(data);
+                });
+            },
         };
     }]);
     
@@ -126,7 +138,7 @@
                     $scope.loading_recording = false;
                     $scope.recording = data;
                     $scope.recording.duration = data.stats.duration;
-                    $scope.recording.sampling_rate = data.stats.sampleRate;
+                    $scope.recording.sampling_rate = data.stats.sample_rate;
                     // fix up some stuff
                     $scope.recording.max_freq = data.sampling_rate / 2;
                     // set it to the scope
@@ -146,7 +158,7 @@
         $scope.audio_player = {
             is_playing : false,
             is_muted   : false,
-            has_recording : true,
+            has_recording : false,
             has_next_recording : false,
             has_prev_recording : false,
             resource: null,
@@ -182,7 +194,14 @@
                     this.resource.stop();
                 }
                 this.is_playing = false;
-            }
+            },
+            prev_recording : function(){
+                MockProjectInfoService.
+                $scope.$broadcast('prev-recording');
+            },
+            next_recording : function(){
+                $scope.$broadcast('next-recording');
+            },
         };
         
         // $scope.setRecording(test_data.recording);
@@ -323,7 +342,7 @@
                             $scope.layout[i].scale = li.scale;
                         }
                     }
-                    var axis = d3.select($element.children(l.x_axis.selector)[0]);
+                    var axis = d3.select($element.children(l.x_axis.selector).empty()[0]);
                     axis.append("rect").attr({
                         class : 'bg',
                         x : 0, y : 0,
@@ -339,7 +358,7 @@
                             scale(scalex).
                             orient("bottom")
                         );
-                    axis = d3.select($element.children(l.y_axis.selector)[0]);
+                    axis = d3.select($element.children(l.y_axis.selector).empty()[0]);
                     axis.append("rect").attr({
                         class : 'bg',
                         x : 0, y : 0,
@@ -427,7 +446,7 @@
     });
 
 
-    angular.module('a2recordingsbrowser', ['a2utils', 'ui.bootstrap'])
+    angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     .factory('rbDateAvailabilityCache', function ($cacheFactory) {
         return $cacheFactory('recordingsBrowserDateAvailabilityCache');
     })
@@ -535,6 +554,28 @@
                 });
                 $scope.$watch('browser.selection.recording.value', function(newValue, oldValue){
                     $scope.onRecording({recording:newValue});
+                });
+                $scope.$on('prev-recording', function(){
+                    if(browser.selection.recording.value) {
+                        MockProjectInfoService.getPreviousRecording(browser.selection.recording.value.id, function(newRecording){
+                            if(newRecording) {
+                                browser.selection.site.value = browser.sites.filter(function(s){return s.id = newRecording.site;}).pop();
+                                browser.selection.date.value = newRecording.datetime;
+                                browser.selection.recording.value = newRecording;
+                            }
+                        })
+                    }
+                });
+                $scope.$on('next-recording', function(){
+                    if(browser.selection.recording.value) {
+                        MockProjectInfoService.getNextRecording(browser.selection.recording.value.id, function(newRecording){
+                            if(newRecording) {
+                                browser.selection.site.value = browser.sites.filter(function(s){return s.id = newRecording.site;}).pop();
+                                browser.selection.date.value = newRecording.datetime;
+                                browser.selection.recording.value = newRecording;
+                            }
+                        })
+                    }
                 });
                 $element.on('click', function(e){
                     var $e=$(e.target), $dm = $e.closest('.dropdown-menu.datepicker, [aria-labelledby^=datepicker]');
