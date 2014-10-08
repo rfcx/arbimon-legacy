@@ -255,7 +255,7 @@ router.get('/project/:projectUrl/recordings/:recUrl?', function(req, res, next) 
         
         var project_id = rows[0].project_id;
 
-        model.recordings.findByUrlMatch(recording_url, project_id, {}, function(err, rows, fields) {
+        model.recordings.findByUrlMatch(recording_url, project_id, {}, function(err, rows) {
             if(err) return next(err);
                 
             res.json(rows);
@@ -266,80 +266,56 @@ router.get('/project/:projectUrl/recordings/:recUrl?', function(req, res, next) 
     
 });
 
-router.get('/project/:projectUrl/recordings/info/:recUrl?', function(req, res, next) {
+
+router.get('/project/:projectUrl/recordings/:get/:recUrl?', function(req, res, next) {
     var project_url   = req.param('projectUrl');
     var recording_url = req.param('recUrl');
+    var get           = req.param('get');
     model.projects.findByUrl(project_url, function(err, rows) {
-        if(err){ next(err); return;}
+        if(err){ next(err); return; }
         
-        if(!rows.length){ res.status(404).json({ error: "project not found"}); return; }
+        if(!rows.length){
+            res.status(404).json({ error: "project not found"});
+            return;
+        }
         
         var project_id = rows[0].project_id;
             
         model.recordings.findByUrlMatch(recording_url, project_id, {limit:1}, function(err, recordings) {
-            if(err){ next(err); return;}
+            if(err){ next(err); return; }
             var recording = recordings[0];
-            var url_comps = /(.*)\/([^/]+)\/([^/]+)/.exec(req.originalUrl);
-            recording.audioUrl = url_comps[1] + "/audio/" + recording.id;
-            recording.imageUrl = url_comps[1] + "/image/" + recording.id;
-            model.recordings.fetchInfo(recording, function(err, recording){
-                if(err){ next(err); return;}
-                model.recordings.fetchValidations(recording, function(err, validations){
-                    if(err){ next(err); return;}
-                    recording.validations = validations;
+            var and_return = {
+                recording : function(err, recording){
+                    if(err){ next(err); return; }
                     res.json(recording);
-                })
-            });
+                },
+                file : function(err, file){
+                    if(err){ next(err); return; }
+                    res.sendFile(file.path);
+                },
+            };
+            switch(get){
+                case 'info'  :
+                    var url_comps = /(.*)\/([^/]+)\/([^/]+)/.exec(req.originalUrl);
+                    recording.audioUrl = url_comps[1] + "/audio/" + recording.id;
+                    recording.imageUrl = url_comps[1] + "/image/" + recording.id;
+                    model.recordings.fetchInfo(recording, function(err, recording){
+                        if(err){ next(err); return;}
+                        model.recordings.fetchValidations(recording, function(err, validations){
+                            if(err){ next(err); return;}
+                            recording.validations = validations;
+                            res.json(recording);
+                        })
+                    });
+                break;
+                case 'audio' : model.recordings.fetchAudioFile(recording, and_return.file); break;
+                case 'image' : model.recordings.fetchSpectrogramFile(recording, and_return.file); break;
+                case 'thumbnail'   : model.recordings.fetchThumbnailFile(recording, and_return.file); break;
+                case 'next'        : model.recordings.fetchNext(recording, and_return.recording); break;
+                case 'previous'    : model.recordings.fetchPrevious(recording, and_return.file); break;
+                default:  next(err); return;
+            }
         });
-    });
-    
-});
-
-router.get('/project/:projectUrl/recordings/audio/:recUrl?', function(req, res, next) {
-    var project_url   = req.param('projectUrl');
-    var recording_url = req.param('recUrl');
-    model.projects.findByUrl(project_url, function(err, rows) {
-        if(err) return next(err);
-        
-        if(!rows.length) 
-            return res.status(404).json({ error: "project not found"});
-        
-        var project_id = rows[0].project_id;
-            
-        model.recordings.findByUrlMatch(recording_url, project_id, {limit:1}, function(err, recordings) {
-            if(err) return next(err);
-            var recording = recordings[0];
-            model.recordings.fetchAudioFile(recording, function(err, audio_file){
-                res.sendFile(audio_file.path);
-            })
-            return null;
-        });
-        return null;
-    });
-    
-});
-
-router.get('/project/:projectUrl/recordings/image/:recUrl?', function(req, res, next) {
-    var project_url   = req.param('projectUrl');
-    var recording_url = req.param('recUrl');
-    model.projects.findByUrl(project_url, function(err, rows) {
-        if(err) return next(err);
-        
-        if(!rows.length) 
-            return res.status(404).json({ error: "project not found"});
-        
-        var project_id = rows[0].project_id;
-            
-        model.recordings.findByUrlMatch(recording_url, project_id, {limit:1}, function(err, recordings) {
-            if(err) return next(err);
-            var recording = recordings[0];
-            model.recordings.fetchSpectrogramFile(recording, function(err, spectrogram_file){
-                if(err) return next(err);
-                return res.sendFile(spectrogram_file.path);
-            })
-            return null;
-        });
-        return null;
     });
     
 });
