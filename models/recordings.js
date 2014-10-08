@@ -303,8 +303,8 @@ module.exports = function(queryHandler) {
                 Recordings.fetchRecordingFile(recording, function(err, recording_path){
                     audiotool.spectrogram(recording_path.path, cache_miss.file, {
                         maxfreq   : 15000,
-                        pixPerSec : (172 * .60),
-                        height    : (256 * .60)
+                        pixPerSec : (7),
+                        height    : (153)
                     },function(status_code){
                         if(status_code) { callback({code:status_code}); return; }
                         cache_miss.retry_get();
