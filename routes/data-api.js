@@ -255,7 +255,7 @@ router.get('/project/:projectUrl/recordings/:recUrl?', function(req, res, next) 
         
         var project_id = rows[0].project_id;
 
-        model.recordings.findByUrlMatch(recording_url, project_id, {}, function(err, rows) {
+        model.recordings.findByUrlMatch(recording_url, project_id, {order:true}, function(err, rows) {
             if(err) return next(err);
                 
             res.json(rows);
@@ -285,9 +285,9 @@ router.get('/project/:projectUrl/recordings/:get/:recUrl?', function(req, res, n
             if(err){ next(err); return; }
             var recording = recordings[0];
             var and_return = {
-                recording : function(err, recording){
+                recording : function(err, recordings){
                     if(err){ next(err); return; }
-                    res.json(recording);
+                    res.json(recordings ? recordings[0] : null);
                 },
                 file : function(err, file){
                     if(err){ next(err); return; }
@@ -312,7 +312,7 @@ router.get('/project/:projectUrl/recordings/:get/:recUrl?', function(req, res, n
                 case 'image' : model.recordings.fetchSpectrogramFile(recording, and_return.file); break;
                 case 'thumbnail'   : model.recordings.fetchThumbnailFile(recording, and_return.file); break;
                 case 'next'        : model.recordings.fetchNext(recording, and_return.recording); break;
-                case 'previous'    : model.recordings.fetchPrevious(recording, and_return.file); break;
+                case 'previous'    : model.recordings.fetchPrevious(recording, and_return.recording); break;
                 default:  next(err); return;
             }
         });
