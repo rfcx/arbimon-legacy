@@ -20,7 +20,7 @@ cache_miss.prototype.retry_get = function(){
 
 var cache = {
     hash_key : function(key){
-        var match = /^(.*?)(\..*)?$/.exec(key);
+        var match = /^(.*?)((\.[^.\/]*)*)?$/.exec(key);
         return sha256(match[1]) + (match[2] || '');
     },
     key2File : function(key){
