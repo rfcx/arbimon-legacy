@@ -116,20 +116,49 @@ console.log('running sox with ', args)
         args.push(destination_path);
         audiotools.sox(args, {}, callback);
     },
+    /** Generates a spectrogram of a given audio file.
+     * @param {String} source_path path to the source audio file.
+     * @param {String} destination_path output path of the spectrogram.
+     * @param {Object} options (optional) set of options.
+     * @param {Integer} options.maxfreq maximum frequency to show in the spectrogram. (optional)
+     * @param {Integer} options.height spectrogram's image height. (default: 256)
+     * @param {Integer} options.width spectrogram's image height. (optional, ignored if not set)
+     * @param {Integer} options.pixPerSec scale used to compute the spectrogram's width in terms
+     *                  of the audio file's duration. (default: 172)
+     * @param {Integer} options.quantization number of colors gradations used in the spectrogram image.
+     *                  (default: 249, the maximum)
+     * @param {String} options.window windowing function used to compute the spectrogram.
+     *                 (One of 'Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser', default: 'Hann')
+     * @param {Function} callback callback function.
+     */
     spectrogram : function(source_path, destination_path, options, callback){
         if(options instanceof Function) { callback = options; }
         options = options || {};
         
         var args = [];
         args.push(source_path);
-        args.push('-n', 'spectrogram'); // just the raw spectrogram image
-        args.push('-r', '-y', 256, '-X', 172, '-q', 249); // just the raw spectrogram image
+        if(options.maxfreq) {
+            args.push('-r', ((options.maxfreq/500)|0) + 'k'); // maximum frequency to show in spectrogram
+        }
+        args.push('-n', 'spectrogram');             // sox spectrogram filter
+        args.push('-r',                             // output just the raw spectrogram image (no axes, no nothing)
+            '-y', ((options.height    | 0) || 256)  // set the spectrogram's height
+        );
+        if(options.width) {
+            args.push(
+                '-x', (options.width | 0) // set the spectrogram's width
+            );
+        } else {
+            args.push(
+                '-X', ((options.pixPerSec | 0) || 172) // set the spectrogram's pixels/second
+            );
+        }
+        args.push(
+            '-q', ((options.quantization | 0) || 249) // color quantization
+        );
         
         if(options.window && options.window in ['Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser']) {
             args.push('-w', options.window); // just the raw spectrogram image
-            if(options.window == 'Kaiser' && options.window_shape) {
-                args.push('-W', options.window_shape); // just the raw spectrogram image
-            }
         }
         args.push('-lm');
         args.push('-o', destination_path);
