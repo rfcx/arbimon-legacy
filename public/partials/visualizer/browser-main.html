@@ -1,8 +1,8 @@
-<div class="btn-toolbar">
-    <div class="btn-group">
-        <div class="btn-group">
+<div class="content">
+    <div class="row">
+        <div class="col-sm-5">
             <div class="dropdown">
-                <button class="btn btn-default" role="button" data-toggle="dropdown">
+                <button class="btn btn-block btn-default" role="button" data-toggle="dropdown">
                     <span class="fa" ng-class="{'fa-map-marker' : !browser.loading.sites, 'fa-spinner fa-spin': browser.loading.sites}"></span>
                     {{browser.selection.site.value.name || "[Station]"}}
                     <span class="caret"></span>
@@ -20,9 +20,9 @@
                 </ul>
             </div>
         </div>
-        <div class="btn-group">
+        <div class="col-sm-offset-2 col-sm-5">
             <div class="dropdown">
-                <button class="btn btn-default" role="button" data-toggle="dropdown">
+                <button class="btn btn-block btn-default" role="button" data-toggle="dropdown">
                     <span class="fa" ng-class="{'fa-calendar' : !browser.loading.dates, 'fa-spinner fa-spin': browser.loading.dates}"></span>
                     {{browser.selection.date || "[date]" | date : 'mediumDate'}}
                     <span class="caret"></span>
@@ -37,25 +37,34 @@
                 </div>
             </div>
         </div>
-        <div class="btn-group">
-            <div class="dropdown">
-                <button class="btn btn-default" role="button" data-toggle="dropdown">
-                    <span class="fa" ng-class="{'fa-clock-o' : !browser.loading.times, 'fa-spinner fa-spin': browser.loading.times}""></span>
-                    {{browser.selection.recording.value.datetime || "[time]" | date : 'shortTime'}}
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
-                    <li ng-show="browser.loading.times">
-                        <a><i class="fa fa-spinner fa-spin"></i> Loading Times</a>
-                    </li>
-                    <li ng-hide="browser.loading.times || browser.recordings">
-                        <a>(Empty List)</a>
-                    </li>
-                    <li ng-hide="browser.loading.times" ng-repeat="recording in browser.recordings | orderBy: 'datetime'" ng-class="{active: browser.selection.recording.value == recording}">
-                        <a ng-click="browser.selection.recording.select(recording)">{{recording.datetime | date : 'shortTime'}}</a>
-                    </li>
-                </ul>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="nav nav-pills nav-stacked recording-list" role="menu" aria-labelledby="dLabel">
+                <div class="recording-list-item"
+                    ng-show="browser.loading.times">
+                    <i class="fa fa-spinner fa-spin"></i> Loading Recordings
+                </div>
+                <div class="recording-list-item"
+                    ng-hide="browser.loading.times || browser.recordings">
+                    (No recordings in list)
+                </div>
+                <div class="recording-list-item"
+                    ng-hide="browser.loading.times"
+                    ng-repeat="recording in browser.recordings | orderBy: 'datetime'"
+                    ng-class="{active: browser.selection.recording.value == recording}"
+                    ng-click="browser.selection.recording.select(recording)">
+                    <div>
+                        {{recording.datetime | date : 'shortTime'}}
+                        <div class="pull-right">
+                            {{recording.file}}
+                        </div>
+                    </div>
+                    <div class="thumbnail-viewer">
+                        <img height="153" ng-src="/api/project/nora-minas-sample/recordings/thumbnail/{{recording.id}}">
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </div>    
 </div>
