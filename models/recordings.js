@@ -298,6 +298,7 @@ module.exports = function(queryHandler) {
             var mp3audio_key = recording.uri.replace(/\.(wav|flac)/, '.mp3');
             tmpfilecache.fetch(mp3audio_key, function(cache_miss){
                 Recordings.fetchRecordingFile(recording, function(err, recording_path){
+                    if(err) { callback(err); return; }
                     audiotool.transcode(recording_path.path, cache_miss.file, {
                         sample_rate: 44100, format: 'mp3', channels: 1
                     }, function(status_code){
@@ -317,6 +318,7 @@ module.exports = function(queryHandler) {
             var spectrogram_key = recording.uri.replace(/\.(wav|flac)/, '.png');
             tmpfilecache.fetch(spectrogram_key, function(cache_miss){
                 Recordings.fetchRecordingFile(recording, function(err, recording_path){
+                    if(err) { callback(err); return; }
                     audiotool.spectrogram(recording_path.path, cache_miss.file, {
                         pixPerSec : 172,
                         height    : 256
@@ -336,6 +338,7 @@ module.exports = function(queryHandler) {
             var thumbnail_key = recording.uri.replace(/\.(wav|flac)/, '.thumbnail.png');
             tmpfilecache.fetch(thumbnail_key, function(cache_miss){
                 Recordings.fetchRecordingFile(recording, function(err, recording_path){
+                    if(err) { callback(err); return; }
                     audiotool.spectrogram(recording_path.path, cache_miss.file, {
                         maxfreq   : 15000,
                         pixPerSec : (7),
