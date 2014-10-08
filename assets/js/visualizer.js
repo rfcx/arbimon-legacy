@@ -196,7 +196,6 @@
                 this.is_playing = false;
             },
             prev_recording : function(){
-                MockProjectInfoService.
                 $scope.$broadcast('prev-recording');
             },
             next_recording : function(){
@@ -555,26 +554,27 @@
                 $scope.$watch('browser.selection.recording.value', function(newValue, oldValue){
                     $scope.onRecording({recording:newValue});
                 });
+                $scope.selectRecording = function(recording){
+                    if(recording) {
+                        var recdate = new Date(recording.datetime);
+                        browser.selection.auto = {
+                            site : browser.sites.filter(function(s){return s.name == recording.site;}).pop(),
+                            date : new Date(recdate.getFullYear(), recdate.getMonth(), recdate.getDate(), 0, 0, 0, 0),
+                            recording : browser.recordings.filter(function(r){return r.id == recording.id;}).pop() || recording
+                        }
+                        browser.selection.site.value = browser.selection.auto.site;
+                        browser.selection.date.value = browser.selection.auto.date;
+                        browser.selection.recording.value = browser.selection.auto.recording;
+                    }
+                };
                 $scope.$on('prev-recording', function(){
                     if(browser.selection.recording.value) {
-                        MockProjectInfoService.getPreviousRecording(browser.selection.recording.value.id, function(newRecording){
-                            if(newRecording) {
-                                browser.selection.site.value = browser.sites.filter(function(s){return s.id = newRecording.site;}).pop();
-                                browser.selection.date.value = newRecording.datetime;
-                                browser.selection.recording.value = newRecording;
-                            }
-                        })
+                        MockProjectInfoService.getPreviousRecording(browser.selection.recording.value.id, $scope.selectRecording);
                     }
                 });
                 $scope.$on('next-recording', function(){
                     if(browser.selection.recording.value) {
-                        MockProjectInfoService.getNextRecording(browser.selection.recording.value.id, function(newRecording){
-                            if(newRecording) {
-                                browser.selection.site.value = browser.sites.filter(function(s){return s.id = newRecording.site;}).pop();
-                                browser.selection.date.value = newRecording.datetime;
-                                browser.selection.recording.value = newRecording;
-                            }
-                        })
+                        MockProjectInfoService.getNextRecording(browser.selection.recording.value.id, $scope.selectRecording);
                     }
                 });
                 $element.on('click', function(e){
