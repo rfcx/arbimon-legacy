@@ -166,7 +166,13 @@ module.exports = function(queryHandler) {
                 group_by.project_part = group_by.projection.join(", ") + ",";
             }
             
-            var projection = count_only ? "COUNT(*) as count" : "R.recording_id AS id, S.name as site, R.uri, R.datetime, R.mic, R.recorder, R.version";
+            var projection;
+            if (count_only) {
+                projection = "COUNT(*) as count";
+            } else {
+                projection = "R.recording_id AS id, SUBSTRING_INDEX(R.uri,'/',-1) as file,S.name as site, R.uri, R.datetime, R.mic, R.recorder, R.version";
+            }
+            
             var sql = "SELECT " + group_by.project_part + projection + " \n" +
                 "FROM recordings R \n" +
                 "JOIN sites S ON S.site_id = R.site_id \n" +
@@ -206,7 +212,6 @@ module.exports = function(queryHandler) {
          * @param {Function} callback called with the recording info.
          */
         fetchInfo : function(recording, callback){
-            recording.file = recording.uri.split('/').pop();
             Recordings.fetchRecordingFile(recording, function(err, cachedRecording){
                 if(err || !cachedRecording) { callback(err, cachedRecording); return; }
                 audiotool.info(cachedRecording.path, function(err, recStats){
