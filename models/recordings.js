@@ -165,6 +165,7 @@ module.exports = function(queryHandler) {
             if(group_by.projection.length > 0) {
                 group_by.project_part = group_by.projection.join(", ") + ",";
             }
+            
             var projection = count_only ? "COUNT(*) as count" : "R.recording_id AS id, S.name as site, R.uri, R.datetime, R.mic, R.recorder, R.version";
             var sql = "SELECT " + group_by.project_part + projection + " \n" +
                 "FROM recordings R \n" +
@@ -193,6 +194,9 @@ module.exports = function(queryHandler) {
                 }
                 callback(err, data);
             });
+        },
+        
+        findNext: function (recording_url, project_id, options, callback) {
         },
         
         /** Finds out stats about a given recording and returns them.
@@ -270,10 +274,33 @@ module.exports = function(queryHandler) {
          * @param {Function} callback(err, path) funciton to call back with the recording spectrogram file's path.
          */
         fetchSpectrogramFile: function (recording, callback) {
-            var mp3audio_key = recording.uri.replace(/\.(wav|flac)/, '.png');
-            tmpfilecache.fetch(mp3audio_key, function(cache_miss){
+            var spectrogram_key = recording.uri.replace(/\.(wav|flac)/, '.png');
+            tmpfilecache.fetch(spectrogram_key, function(cache_miss){
                 Recordings.fetchRecordingFile(recording, function(err, recording_path){
-                    audiotool.spectrogram(recording_path.path, cache_miss.file, function(status_code){
+                    audiotool.spectrogram(recording_path.path, cache_miss.file, {
+                        pixPerSec : 172,
+                        height    : 256
+                    },function(status_code){
+                        if(status_code) { callback({code:status_code}); return; }
+                        cache_miss.retry_get();
+                    });
+                });
+            }, callback)
+        },
+        /** Returns the thumbnail file of a given recording.
+         * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
+         * @param {Object} recording.uri url containing the recording's path in the bucket.
+         * @param {Function} callback(err, path) funciton to call back with the recording spectrogram file's path.
+         */
+        fetchThumbnailFile: function (recording, callback) {
+            var thumbnail_key = recording.uri.replace(/\.(wav|flac)/, '.thumbnail.png');
+            tmpfilecache.fetch(thumbnail_key, function(cache_miss){
+                Recordings.fetchRecordingFile(recording, function(err, recording_path){
+                    audiotool.spectrogram(recording_path.path, cache_miss.file, {
+                        maxfreq   : 15000,
+                        pixPerSec : (172 * .60),
+                        height    : (256 * .60)
+                    },function(status_code){
                         if(status_code) { callback({code:status_code}); return; }
                         cache_miss.retry_get();
                     });
