@@ -165,12 +165,28 @@ module.exports = function(queryHandler) {
             if(group_by.projection.length > 0) {
                 group_by.project_part = group_by.projection.join(", ") + ",";
             }
-            var projection = count_only ? "COUNT(*) as count" : "R.recording_id AS id, R.site_id as site, R.uri, R.datetime, R.mic, R.recorder, R.version";
-            var query = "SELECT " + group_by.project_part + projection + " \n" +
+            var projection = count_only ? "COUNT(*) as count" : "R.recording_id AS id, S.name as site, R.uri, R.datetime, R.mic, R.recorder, R.version";
+            var sql = "SELECT " + group_by.project_part + projection + " \n" +
                 "FROM recordings R \n" +
                 "JOIN sites S ON S.site_id = R.site_id \n" +
                 "WHERE (" + constraints.join(") AND (") + ")" +
                 group_by.clause + limit_clause;
+                
+            var query = {
+                sql: sql,
+                typeCast: function (field, next) {
+                    if (field.type !== 'DATETIME') return next(); // 1 = true, 0 = false
+                    
+                    var d = new Date(field.string());
+                    //~ console.log(d);
+                    
+                    d.setTime(d.getTime() - (d.getTimezoneOffset() * 60000));
+                    
+                    //~ console.log(d);
+                    return d;
+                }
+            };
+            
             return queryHandler(query, function(err, data){
                 if (!err && data && group_by.levels.length > 0) {
                     data = arrays_util.group_rows_by(data, group_by.levels, options);

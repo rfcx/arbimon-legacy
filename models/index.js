@@ -15,7 +15,7 @@ var dbPool = mysql.createPool({
 var queryHandler = function (query, callback) {
     
     // for debugging
-    util.puts(query); 
+    console.log('query:', query); 
     
     dbPool.getConnection(function(err, connection) {
         connection.query(query, function(err, rows, fields) {
