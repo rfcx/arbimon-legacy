@@ -4,30 +4,36 @@
     <title>Arbimon 2 - <%= project.name %></title>
 </head>
 <body>
-    <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <a href="/home" class="navbar-brand">
-                    <span class="logo-text">Arbimon
-                        <span class="undertext">II</span>
-                    </span>
-                </a>
-            </div>
-            <ul class="nav navbar-nav">
-                <li ui-sref-active="active"><a ui-sref="dashboard"><i class="fa fa-dashboard"></i> Dashboard</a></li>
-                <li ui-sref-active="active"><a ui-sref="audiodata"><i class="fa fa-cloud-upload"></i> Recordings</a></li>
-                <li ui-sref-active="active"><a ui-sref="visualizer"><i class="fa fa-cubes"></i> Training &amp; Validation</a></li>
-                <li ui-sref-active="active"><a ui-sref="models"><i class="fa fa-send-o"></i> Models</a></li>
-                <li ui-sref-active="active"><a ui-sref="classify"><i class="fa fa-meh-o"></i> Classification</a></li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li class=""><a href="#"><i class="fa fa-cubes"></i> <%=  project.name  %></a></li>
-                <li class=""><a href="#"><i class="fa fa-user"></i> <%= user.username %></a></li>
-                <li class=""><a href="#" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
-                <li class=""><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
-            </ul>
+    <header class="a2-header container navbar navbar-default">
+        <div class="navbar-header">
+            <button data-target=".navbar-collapse" data-toggle="collapse" type="button" class="navbar-toggle collapsed">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="/home" class="navbar-brand">
+                <img src="/images/logo.svg">
+            </a>
         </div>
-    </nav>
+        <nav class="collapse navbar-collapse" role="navigation">
+            <div class="container-fluid">
+                <ul class="nav navbar-nav">
+                    <li ui-sref-active="active"><a ui-sref="dashboard"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+                    <li ui-sref-active="active"><a ui-sref="audiodata"><i class="fa fa-cloud-upload"></i> Recordings</a></li>
+                    <li ui-sref-active="active"><a ui-sref="visualizer"><i class="fa fa-cubes"></i> Training &amp; Validation</a></li>
+                    <li ui-sref-active="active"><a ui-sref="models"><i class="fa fa-send-o"></i> Models</a></li>
+                    <li ui-sref-active="active"><a ui-sref="classify"><i class="fa fa-meh-o"></i> Classification</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class=""><a><i class="fa fa-cubes"></i> <%=  project.name  %></a></li>
+                    <li class=""><a href="#"><i class="fa fa-user"></i> <%= user.username %></a></li>
+                    <li class=""><a href="#" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
+                    <li class=""><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
 	<div id="page">
 		<div ui-view></div>
 	</div>
