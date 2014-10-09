@@ -75,6 +75,13 @@ module.exports = function(grunt) {
                 src: 'bower_components/angular-ui-router/release/*',
                 dest: 'public/assets/angular-ui-router/'
             },
+            
+            angularUiRouterExtras: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/ui-router-extras/release/ct-ui-router-extras.min.js',
+                dest: 'public/assets/ui-router-extras/'
+            },
         },
         
         concat: {
