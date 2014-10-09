@@ -168,6 +168,7 @@
                 }
             },
             load: function(url){
+                this.stop();
                 this.resource = ngAudio.load(url);
                 this.has_recording = true;
             },
@@ -399,6 +400,10 @@
                         }
                     }
                 }, true);
+                $scope.$watch('recording', function (newValue, oldValue) {
+                    $element.scrollLeft(0);
+                    $element.scrollTop(999999);
+                }, true);
                 $element.bind('resize', function () {
                     $scope.$apply();
                 });
@@ -532,7 +537,7 @@
                 $scope.$watch('browser.selection.site.value', function(newValue, oldValue){
                     browser.dates.update_time = new Date();
                     browser.selection.date = null;
-                    browser.selection.time = null;
+                    browser.selection.recording.value = null;
                 });
                 $scope.$watch('browser.selection.date', function(newValue, oldValue){
                     $element.find('.dropdown.open').removeClass('open');
@@ -547,24 +552,46 @@
                             $timeout(function(){
                                 browser.recordings = recordings;
                                 browser.loading.times = false;
+                                var auto_select = browser.selection.auto && browser.selection.auto.recording;
+                                if(auto_select) {
+                                    var found = browser.recordings.filter(function(r){return r.id == auto_select.id;}).pop();
+                                    if (found) {
+                                        browser.selection.recording.select(found);
+                                    } else {
+                                        console.error("Could not find auto-selected recording in list.");
+                                    }
+                                }
                             });
                         })
                     }
                 });
                 $scope.$watch('browser.selection.recording.value', function(newValue, oldValue){
                     $scope.onRecording({recording:newValue});
+                    $timeout(function(){
+                        var $e = $element.find('.recording-list-item.active');
+                        if($e.length) {
+                            var $p = $e.parent();
+                            var $eo = $e.offset(), $po = $p.offset(), $dt=$eo.top-$po.top;
+                            $p.animate({scrollTop:$p.scrollTop() + $dt});
+                        }
+                    });
                 });
                 $scope.selectRecording = function(recording){
                     if(recording) {
+                        console.log("Recording Selected : ", recording);
                         var recdate = new Date(recording.datetime);
                         browser.selection.auto = {
                             site : browser.sites.filter(function(s){return s.name == recording.site;}).pop(),
                             date : new Date(recdate.getFullYear(), recdate.getMonth(), recdate.getDate(), 0, 0, 0, 0),
                             recording : browser.recordings.filter(function(r){return r.id == recording.id;}).pop() || recording
                         }
-                        browser.selection.site.value = browser.selection.auto.site;
-                        browser.selection.date.value = browser.selection.auto.date;
-                        browser.selection.recording.value = browser.selection.auto.recording;
+                        if(browser.selection.site.value != browser.selection.auto.site) {
+                            browser.selection.site.select(browser.selection.auto.site);
+                        } else if (browser.selection.date != browser.selection.auto.date) {
+                            browser.selection.date = browser.selection.auto.date
+                        } else {
+                            browser.selection.recording.select(browser.selection.auto.recording);
+                        }
                     }
                 };
                 $scope.$on('prev-recording', function(){

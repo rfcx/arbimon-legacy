@@ -290,7 +290,7 @@ router.get('/project/:projectUrl/recordings/:get/:recUrl?', function(req, res, n
                     res.json(recordings ? recordings[0] : null);
                 },
                 file : function(err, file){
-                    if(err){ next(err); return; }
+                    if(err || !file){ next(err); return; }
                     res.sendFile(file.path);
                 },
             };
