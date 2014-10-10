@@ -1,0 +1,83 @@
+var express = require('express');
+var router = express.Router();
+var model = require('../../../models');
+
+
+/** Return a list of all the recordings in a project.
+ */
+router.get('/count/:recUrl?', function(req, res, next) {
+    var recording_url = req.param('recUrl');
+    model.recordings.findByUrlMatch(recording_url, req.project.project_id, {count_only:true}, function(err, count) {
+        if(err) return next(err);
+            
+        res.json(count);
+        return null;
+    });
+});
+
+router.get('/available/:recUrl?', function(req, res, next) {
+    var recording_url = req.param('recUrl');
+    model.recordings.findByUrlMatch(recording_url, req.project.project_id, {count_only:true, group_by:'next', collapse_single_leaves:true}, function(err, count) {
+        if(err) return next(err);
+            
+        res.json(count);
+        return null;
+    });
+});
+
+
+router.get('/:get/:recUrl?', function(req, res, next) {
+    var recording_url = req.param('recUrl');
+    var get           = req.param('get');
+    model.recordings.findByUrlMatch(recording_url, req.project.project_id, {limit:1}, function(err, recordings) {
+        console.log("recordings obtained by [",recording_url,"]", recordings ? recordings.length : 0);
+        if(err){ next(err); return; }
+        var recording = recordings[0];
+        var and_return = {
+            recording : function(err, recordings){
+                if(err){ next(err); return; }
+                res.json(recordings ? recordings[0] : null);
+            },
+            file : function(err, file){
+                if(err || !file){ next(err); return; }
+                res.sendFile(file.path);
+            },
+        };
+        switch(get){
+            case 'info'  :
+                var url_comps = /(.*)\/([^/]+)\/([^/]+)/.exec(req.originalUrl);
+                recording.audioUrl = url_comps[1] + "/audio/" + recording.id;
+                recording.imageUrl = url_comps[1] + "/image/" + recording.id;
+                model.recordings.fetchInfo(recording, function(err, recording){
+                    if(err){ next(err); return;}
+                    model.recordings.fetchValidations(recording, function(err, validations){
+                        if(err){ next(err); return;}
+                        recording.validations = validations;
+                        res.json(recording);
+                    })
+                });
+            break;
+            case 'audio' : model.recordings.fetchAudioFile(recording, and_return.file); break;
+            case 'image' : model.recordings.fetchSpectrogramFile(recording, and_return.file); break;
+            case 'thumbnail'   : model.recordings.fetchThumbnailFile(recording, and_return.file); break;
+            case 'find'       : and_return.recording(null, [recording]); break;
+            case 'next'        : model.recordings.fetchNext(recording, and_return.recording); break;
+            case 'previous'    : model.recordings.fetchPrevious(recording, and_return.recording); break;
+            default:  next(); return;
+        }
+    });
+});
+
+router.get('/:recUrl?', function(req, res, next) {
+    var recording_url = req.param('recUrl');
+    console.log('recording_url', recording_url);
+    model.recordings.findByUrlMatch(recording_url, req.project.project_id, {order:true}, function(err, rows) {
+        if(err) return next(err);
+            
+        res.json(rows);
+        return null;
+    });
+});
+
+
+module.exports = router;
