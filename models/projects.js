@@ -25,6 +25,16 @@ module.exports = function(queryHandler) {
             return queryHandler(query , callback);
         },
 
+        getProjectClasses: function(project, callback){
+            var query = (
+                "SELECT PC.project_class_id as id, PC.species_id as species, PC.songtype_id as songtype \n" +
+                "FROM project_classes PC \n" +
+                "WHERE PC.project_id = " + mysql.escape(project.project_id)
+            );
+            
+            return queryHandler(query , callback);
+        },
+
         insert: function(project, callback) {
             var values = [];
             
