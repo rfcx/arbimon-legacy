@@ -28,6 +28,13 @@ angular.module('a2services',[])
             });
         },
         
+        getClasses: function(callback) {
+            $http.get('/api/project/'+url+'/classes')
+            .success(function(data) {
+                callback(data);
+            });
+        },
+        
         getRecs: function(query, callback) {
             if(typeof query === "function") {
                 callback = query;
@@ -44,6 +51,50 @@ angular.module('a2services',[])
             $http.get('/api/project/'+url+'/recordings/count/')
             .success(function(data) {
                 callback(data[0].count);
+            });
+        },
+        
+        getName: function(){
+            var urlparse = document.createElement('a');
+            urlparse.href = $location.absUrl();
+            var nameRe = /\/project\/([\w\_\-]+)/;
+            
+            return nameRe.exec(urlparse.pathname)[1];
+        },
+        getRecordings: function(key, callback) {
+            var projectName = this.getName();
+            $http.get('/api/project/'+projectName+'/recordings/'+key).success(function(data) {
+                callback(data);
+            });
+        },
+        getOneRecording: function(key, callback) {
+            var projectName = this.getName();
+            $http.get('/api/project/'+projectName+'/recordings/find/'+key).success(function(data) {
+                callback(data);
+            });
+        },
+        getRecordingAvailability: function(key, callback) {
+            var projectName = this.getName();
+            $http.get('/api/project/'+projectName+'/recordings/available/'+key).success(function(data) {
+                callback(data);
+            });
+        },
+        getRecordingInfo: function(key, callback) {
+            var projectName = this.getName();
+            $http.get('/api/project/'+projectName+'/recordings/info/'+key).success(function(data) {
+                callback(data);
+            });
+        },
+        getNextRecording: function(key, callback) {
+            var projectName = this.getName();
+            $http.get('/api/project/'+projectName+'/recordings/next/'+key).success(function(data) {
+                callback(data);
+            });
+        },
+        getPreviousRecording: function(key, callback) {
+            var projectName = this.getName();
+            $http.get('/api/project/'+projectName+'/recordings/previous/'+key).success(function(data) {
+                callback(data);
             });
         }
     };
