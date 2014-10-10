@@ -96,6 +96,12 @@ angular.module('a2services',[])
             $http.get('/api/project/'+projectName+'/recordings/previous/'+key).success(function(data) {
                 callback(data);
             });
+        },
+        validateRecording: function(recording_uri, validation, callback){
+            var projectName = this.getName();
+            $http.post('/api/project/'+projectName+'/recordings/validate/'+recording_uri, validation).success(function(data) {
+                callback(data);
+            });
         }
     };
 }]);

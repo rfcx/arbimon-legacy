@@ -66,7 +66,7 @@ window.qwe={};
         },
         'frequency-adjust-layer' : true,
         'species-presence' : {
-            title   : "Species Presence List",
+            title   : "",            
             sidebar_visible : function($scope){return !!$scope.recording;},
             visible : false,
             hide_visibility : true,
@@ -625,17 +625,44 @@ window.qwe={};
             },
             templateUrl : template_root + 'validator-main.html',
             link     : function($scope, $element, $attrs){
+                var class2key = function(project_class){
+                    var cls = $scope.classes.filter(function(pc){return pc.id = project_class}).shift();
+                    return cls && [cls.species, cls.songtype].join('-');
+                };
+                var add_validation = function(validation){
+                    var key     = [validation.species, validation.songtype].join('-');
+                    var present =  validation.present;
+                    $scope.validations[key] = present | 0;
+                };
+                
                 Project.getClasses(function(classes){
                     $scope.classes = classes;
                 });
-                var validator = $scope.validator = {
-                    validations : {},
-                    validate : function(species_id, song_id, present){
-                        var v   = validator.validations;
-                        var sp  = v[species_id] || (v[species_id] = {});
-                        sp[song_id] = present;
+                
+                $scope.classes = [];
+                $scope.validations = {};
+                $scope.validate = function(project_class, val){
+                    var key = class2key(project_class);
+                    if (key){
+                        Project.validateRecording($scope.recording.id, {
+                            'class' : key,
+                            val     : val
+                        }, function(validation){
+                            $scope.validations[key] = validation.val;
+                        })
                     }
                 };
+                $scope.val_options = [{label:"Present", val:1}, {label:"Not Present", val:0}];
+                $scope.val_state = function(project_class, val_options){
+                    if(!val_options){val_options = $scope.val_options;}
+                    var key = class2key(project_class), val = $scope.validations[key];
+                    return typeof val == 'undefined' ? val : ( val ? val_options[0]: val_options[1] );
+                }
+                $scope.$watch('recording', function(recording){
+                    console.log('validated recording : ', recording);
+                    $scope.validations = {};
+                    recording.validations && recording.validations.forEach(add_validation);
+                })
             }
         };
     });
@@ -655,18 +682,18 @@ window.qwe={};
             }
         };
     }])
-    .directive('a2Species', function (a2Infotags) {
+    .directive('a2Species', function (InfoTagService, $timeout) {
         return {
             restrict : 'E',
             scope : {
                 species : '='
             },
-            template : 'spp:{{data.scientific_name}}',
+            template : '{{data.scientific_name}}',
             link     : function($scope, $element, $attrs){
                 $scope.$watch('species', function(newVal, oldVal){
                     $scope.data = null;
                     if(newVal){
-                        a2Infotags.getSpecies(newVal, function(data){
+                        InfoTagService.getSpecies(newVal, function(data){
                             $timeout(function(){
                                 $scope.data = data;
                             })
@@ -676,19 +703,18 @@ window.qwe={};
             }
         };
     })
-    .directive('a2SongType', function (a2Infotags) {
+    .directive('a2Songtype', function (InfoTagService, $timeout) {
         return {
             restrict : 'E',
             scope : {
                 songtype : '='
             },
-            template : 'st:{{data.name}}',
+            template : '{{data.name}}',
             link     : function($scope, $element, $attrs){
                 $scope.$watch('songtype', function(newVal, oldVal){
                     $scope.data = null;
-                    console.log('st', newVal, oldVal);
                     if(newVal){
-                        a2Infotags.getSongtype(newVal, function(data){
+                        InfoTagService.getSongtype(newVal, function(data){
                             $timeout(function(){
                                 $scope.data = data;
                             })

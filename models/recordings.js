@@ -349,6 +349,56 @@ module.exports = function(queryHandler) {
                     });
                 });
             }, callback)
+        },
+        
+        /** Validates a recording.
+         * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
+         * @param {Integer} user_id id of the user to associate to this validation.
+         * @param {Integer} project_id id associated to the project that is to be validated.
+         * @param {Object}  validation object containing the validation to add to this recording.
+         * @param {String}  validation.class identifier used to obtain the class to be validated.
+         * @param {Integer} validation.val   value used to validate the class in the given recording.
+         * @param {Function} callback(err, path) funciton to call back with the validation result.
+         */
+        validate: function (recording, user_id, project_id, validation, callback) {
+            if(!validation) {
+                callback(new Error("validation is missing."));
+                return;
+            }
+            
+            var add_validation = function(species_id, songtype_id){
+                var valobj = {
+                    recording : recording.id,
+                    user      : user_id,
+                    species   : species_id,
+                    songtype  : songtype_id,
+                    val       : validation.val | 0
+                };
+                queryHandler(
+                    "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present) \n" +
+                    " VALUES (" + mysql.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val]) + ") \n" +
+                    " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
+                    if (err) { callback(err); return; }
+                    callback(null, valobj);
+                });
+            }
+            
+            var cm = /(\d+)(-(\d+))?/.exec(validation['class']);
+            if(!cm) {
+                callback(new Error("validation class is missing."));
+            } else if(!cm[2]){
+                var project_class = cm[1] | 0;
+                queryHandler(
+                    "SELECT species_id as species, songtype_id as songtype \n" +
+                    "WHERE project_class_id = " + mysql.escape(project_class) + "\n" +
+                    "  AND project_id = " + mysql.escape(project_id), function(err, data){
+                    if (err) { callback(err); return; }
+                    if (!data || !data.length) { callback(new Error("project class " + project_class + " not found")); return; }
+                    add_validation(species_id, songtype_id);
+                });
+            } else {
+                add_validation(cm[1] | 0, cm[3] | 0);
+            }
         }
     };
     
