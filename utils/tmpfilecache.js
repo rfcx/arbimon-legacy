@@ -37,7 +37,9 @@ var cache = {
                     stat : stats
                 });
             } else {
-                callback(null, null);
+                fs.unlink(file, function(){
+                    callback(null, null);
+                });                
             }
         })
     },
