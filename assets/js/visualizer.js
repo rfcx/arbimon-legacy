@@ -1,5 +1,6 @@
+window.qwe={};
 (function(angular){
-    var visualizer = angular.module('visualizer', ['ngAudio', 'a2utils', 'a2recordingsbrowser']);
+    var visualizer = angular.module('visualizer', ['ui.router', 'ngAudio', 'a2services', 'a2utils', 'a2recordingsbrowser', 'a2SpeciesValidator']);
     var template_root = '/partials/visualizer/';
     var test_data = {
         recording : {
@@ -55,62 +56,42 @@
         ]
     };
 
-    visualizer.factory('MockProjectInfoService', ['$location', '$http', function($location, $http){
-        return {
-            getName: function(){
-                var urlparse = document.createElement('a');
-                urlparse.href = $location.absUrl();
-                var nameRe = /\/project\/([\w\_\-]+)/;
-                
-                return nameRe.exec(urlparse.pathname)[1];
-            },
-            getSites: function(callback) {
-                var projectName = this.getName();
-                $http.get('/api/project/'+projectName+'/sites').success(function(data) {
-                    callback(data);
-                });
-            },
-            getRecordings: function(key, callback) {
-                var projectName = this.getName();
-                $http.get('/api/project/'+projectName+'/recordings/'+key).success(function(data) {
-                    callback(data);
-                });
-            },
-            getRecordingAvailability: function(key, callback) {
-                var projectName = this.getName();
-                $http.get('/api/project/'+projectName+'/recordings/available/'+key).success(function(data) {
-                    callback(data);
-                });
-            },
-            getRecordingInfo: function(key, callback) {
-                var projectName = this.getName();
-                $http.get('/api/project/'+projectName+'/recordings/info/'+key).success(function(data) {
-                    callback(data);
-                });
-            },
-            getNextRecording: function(key, callback) {
-                var projectName = this.getName();
-                $http.get('/api/project/'+projectName+'/recordings/next/'+key).success(function(data) {
-                    callback(data);
-                });
-            },
-            getPreviousRecording: function(key, callback) {
-                var projectName = this.getName();
-                $http.get('/api/project/'+projectName+'/recordings/previous/'+key).success(function(data) {
-                    callback(data);
-                });
-            },
-        };
-    }]);
     
-    visualizer.controller('VisualizerCtrl', function ($scope, ngAudio, itemSelection, MockProjectInfoService) {
+    visualizer.value('layer_types',{
+        'recording-layer' : {
+            title : "Recordings",
+            visible : true,
+            hide_visibility : true,
+            type    : "recording-layer"
+        },
+        'frequency-adjust-layer' : true,
+        'species-presence' : {
+            title   : "Species Presence List",
+            sidebar_visible : function($scope){return !!$scope.recording;},
+            visible : false,
+            hide_visibility : true,
+            type    : "species-presence",
+        }
+    });
+    visualizer.controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project) {
+        var new_layer = function(layer_type){
+            var layer_def = layer_types[layer_type];
+            if (layer_def) {
+                var layer_maker = function(){};
+                layer_maker.prototype = layer_def;
+                return new layer_maker();
+            } else {
+                return null;
+            }
+        }
+        window.qwe.$location = $location;
         $scope.layers = [
-            {   title   : "Recordings",
-                visible : true,
-                hide_visibility : true,
-                type    : "recording-layer",
-            },
+            new_layer('recording-layer'),
+            new_layer('species-presence')
         ]; // current layers in the visualizer
+        $scope.isSidebarVisible = function(l){
+            return !l.sidebar_visible || l.sidebar_visible($scope);
+        }
         $scope.recording = null;
         $scope.layout = {
             scale : {
@@ -133,8 +114,9 @@
         $scope.setRecording = function(recording){
             if (recording) {
                 $scope.loading_recording = true;
-                MockProjectInfoService.getRecordingInfo(recording.id, function(data){
+                Project.getRecordingInfo(recording.id, function(data){
                     console.log('$scope.setRecording', data);
+                    $location.path("/visualizer/"+recording.file);
                     $scope.loading_recording = false;
                     $scope.recording = data;
                     $scope.recording.duration = data.stats.duration;
@@ -204,6 +186,12 @@
             },
         };
         
+        $scope.$on('browser-available', function(){
+            if($state.params && $state.params.recording) {
+                $scope.$broadcast('select-recording',[$state.params.recording]);
+            }
+        });
+        
         // $scope.setRecording(test_data.recording);
     }).directive('a2Visualizer', function(){
         
@@ -225,18 +213,14 @@
     });
 
     
-    var layer_types = {
-        'recording-layer' : true,
-        'frequency-adjust-layer' : true
-    };
-    visualizer.directive('a2VisualizerLayerItem', function($compile, $templateFetch){
+    visualizer.directive('a2VisualizerLayerItem', function(layer_types, $compile, $templateFetch){
         return {
             restrict : 'E',
             replace  : true,
             templateUrl : template_root + 'visualizer-layer-item-default.html',
             link     : function(scope, element, attrs){
                 var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
-                var layer_key  = layer_types[layer_type] === true ? layer_type : layer_types[layer_type];
+                var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
                 if(layer_key && layer_key != 'default') {
                     var layer_url  = template_root + 'visualizer-layer-item-' + layer_key + '.html';
                     var layer_tmp  = $templateFetch(layer_url, function(layer_tmp){
@@ -413,14 +397,14 @@
         }
     });
 
-    visualizer.directive('a2VisualizerSpectrogramLayer', function($compile, $templateFetch){
+    visualizer.directive('a2VisualizerSpectrogramLayer', function(layer_types, $compile, $templateFetch){
         return {
             restrict : 'E',
             templateUrl : template_root + 'visualizer-spectrogram-layer-default.html',
             replace  : true,
             link     : function(scope, element, attrs){
                 var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
-                var layer_key  = layer_types[layer_type] === true ? layer_type : layer_types[layer_type];
+                var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
                 element.addClass(layer_type);
                 if(layer_key && layer_key != 'default') {
                     var layer_url  = template_root + 'visualizer-spectrogram-layer-' + layer_key + '.html';
@@ -454,8 +438,8 @@
     .factory('rbDateAvailabilityCache', function ($cacheFactory) {
         return $cacheFactory('recordingsBrowserDateAvailabilityCache');
     })
-    .directive('a2RecordingsBrowser', function ($timeout, itemSelection, MockProjectInfoService, rbDateAvailabilityCache) {
-        var project = MockProjectInfoService;
+    .directive('a2RecordingsBrowser', function ($timeout, itemSelection, Project, rbDateAvailabilityCache) {
+        var project = Project;
         return {
             restrict : 'E',
             scope : {
@@ -498,7 +482,7 @@
                         fetch_availability: function(key){
                             browser.dates.cache.put(key, {fetching:true});
                             browser.loading.dates = true;
-                            MockProjectInfoService.getRecordingAvailability(key, function(data){
+                            Project.getRecordingAvailability(key, function(data){
                                 $timeout(function(){
                                     var avail = data;
                                     var comps = key.split('-');
@@ -538,6 +522,11 @@
                     browser.dates.update_time = new Date();
                     browser.selection.date = null;
                     browser.selection.recording.value = null;
+                    var auto_select = browser.selection.auto && browser.selection.auto.date;
+                    if(auto_select) {
+                        browser.selection.auto.date = null;
+                        browser.selection.date = auto_select;
+                    }
                 });
                 $scope.$watch('browser.selection.date', function(newValue, oldValue){
                     $element.find('.dropdown.open').removeClass('open');
@@ -548,12 +537,13 @@
                         var comps = [site.name, date.getFullYear(), date.getMonth() + 1, date.getDate()];
                         var key = comps.join('-');
                         browser.loading.times = true;
-                        MockProjectInfoService.getRecordings(key, function(recordings){
+                        Project.getRecordings(key, function(recordings){
                             $timeout(function(){
                                 browser.recordings = recordings;
                                 browser.loading.times = false;
                                 var auto_select = browser.selection.auto && browser.selection.auto.recording;
                                 if(auto_select) {
+                                    browser.selection.auto.recording = null;
                                     var found = browser.recordings.filter(function(r){return r.id == auto_select.id;}).pop();
                                     if (found) {
                                         browser.selection.recording.select(found);
@@ -578,9 +568,9 @@
                 });
                 $scope.selectRecording = function(recording){
                     if(recording) {
-                        console.log("Recording Selected : ", recording);
                         var recdate = new Date(recording.datetime);
                         browser.selection.auto = {
+                            hash : recording.file,
                             site : browser.sites.filter(function(s){return s.name == recording.site;}).pop(),
                             date : new Date(recdate.getFullYear(), recdate.getMonth(), recdate.getDate(), 0, 0, 0, 0),
                             recording : browser.recordings.filter(function(r){return r.id == recording.id;}).pop() || recording
@@ -596,13 +586,23 @@
                 };
                 $scope.$on('prev-recording', function(){
                     if(browser.selection.recording.value) {
-                        MockProjectInfoService.getPreviousRecording(browser.selection.recording.value.id, $scope.selectRecording);
+                        Project.getPreviousRecording(browser.selection.recording.value.id, $scope.selectRecording);
                     }
                 });
                 $scope.$on('next-recording', function(){
                     if(browser.selection.recording.value) {
-                        MockProjectInfoService.getNextRecording(browser.selection.recording.value.id, $scope.selectRecording);
+                        Project.getNextRecording(browser.selection.recording.value.id, $scope.selectRecording);
                     }
+                });
+                $scope.$on('select-recording',function(evt, recording_path){
+                    console.log('select recording event : ', recording_path);
+                    Project.getOneRecording(recording_path, function(recording){
+                        console.log('selecting recording : ', recording);
+                        $scope.selectRecording(recording);
+                    })
+                });
+                $timeout(function(){
+                    $scope.$emit('browser-available');
                 });
                 $element.on('click', function(e){
                     var $e=$(e.target), $dm = $e.closest('.dropdown-menu.datepicker, [aria-labelledby^=datepicker]');
@@ -615,5 +615,92 @@
         };
     });
 
+    angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
+    .directive('a2SpeciesValidator', function (Project) {
+        var project = Project;
+        return {
+            restrict : 'E',
+            scope : {
+                recording : '=recording'
+            },
+            templateUrl : template_root + 'validator-main.html',
+            link     : function($scope, $element, $attrs){
+                Project.getClasses(function(classes){
+                    $scope.classes = classes;
+                });
+                var validator = $scope.validator = {
+                    validations : {},
+                    validate : function(species_id, song_id, present){
+                        var v   = validator.validations;
+                        var sp  = v[species_id] || (v[species_id] = {});
+                        sp[song_id] = present;
+                    }
+                };
+            }
+        };
+    });
+
+    angular.module('a2Infotags', [])
+    .factory('InfoTagService', ['$location', '$http', function($location, $http){
+        return {
+            getSpecies: function(species_id, callback){
+                $http.get('/api/species/'+species_id).success(function(data) {
+                    callback(data);
+                });
+            },
+            getSongtype: function(songtype_id, callback) {
+                $http.get('/api/songtypes/'+songtype_id).success(function(data) {
+                    callback(data);
+                });
+            }
+        };
+    }])
+    .directive('a2Species', function (a2Infotags) {
+        return {
+            restrict : 'E',
+            scope : {
+                species : '='
+            },
+            template : 'spp:{{data.scientific_name}}',
+            link     : function($scope, $element, $attrs){
+                $scope.$watch('species', function(newVal, oldVal){
+                    $scope.data = null;
+                    if(newVal){
+                        a2Infotags.getSpecies(newVal, function(data){
+                            $timeout(function(){
+                                $scope.data = data;
+                            })
+                        })
+                    }
+                });
+            }
+        };
+    })
+    .directive('a2SongType', function (a2Infotags) {
+        return {
+            restrict : 'E',
+            scope : {
+                songtype : '='
+            },
+            template : 'st:{{data.name}}',
+            link     : function($scope, $element, $attrs){
+                $scope.$watch('songtype', function(newVal, oldVal){
+                    $scope.data = null;
+                    console.log('st', newVal, oldVal);
+                    if(newVal){
+                        a2Infotags.getSongtype(newVal, function(data){
+                            $timeout(function(){
+                                $scope.data = data;
+                            })
+                        })
+                    }
+                });
+            }
+        };
+    });
+    ;
+//    .directive('a2Species', function(){
+//    })
+    
     
 })(angular);

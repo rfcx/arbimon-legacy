@@ -12,8 +12,9 @@ var arbimon2 = angular.module('arbimon2', ['ui.router', 'visualizer', 'dashboard
         template: '<h4>AUDIO DATA</h4>'
     })
     .state('visualizer', {
-        url: '/visualizer',
+        url: '/visualizer/:recording',
         controller : 'VisualizerCtrl',
+        reloadOnSearch : false,
         template: '<a2-visualizer></a2-visualizer>'
     })
     .state('models', {

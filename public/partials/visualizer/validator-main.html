@@ -1,0 +1,19 @@
+<div class="content">
+    <table>
+        <tr>
+            <th>Species</th>
+            <th>Song</th>
+            <th>Annotation</th>
+        </tr>
+        <tr ng-repeat="class in classes">
+            <th><a2-species species="class.species"></a2-species></th>
+            <th><a2-songtype songtype="class.songtype"></a2-songtype></th>
+            <th>
+                <label><input name="species_{{class.species}}_{{class.songtype}}_precence" ng-model="validator.validations[class.species][class.songtype]" ng-value="true"  type="radio" > Present</label>
+                
+                <label><input name="species_{{class.species}}_{{class.songtype}}_precence" ng-model="validator.validations[class.species][class.songtype]" ng-value="false" type="radio" > Not Present</label>
+            </th>
+        </tr>
+    </table>
+    {{classes}}
+</div>

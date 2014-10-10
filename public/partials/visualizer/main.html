@@ -1,6 +1,7 @@
-<div class="sidebar" >
+<div class="sidebar show" >
+    <div class="fa drawer" onclick="$(event.target).parent().toggleClass('show');" ></div>
     <div class="layers" >
-        <a2-visualizer-layer-item class="layer" ng-repeat="layer in layers"></a2-visualizer-layer-item>
+        <a2-visualizer-layer-item class="layer" ng-repeat="layer in layers | filter:isSidebarVisible"></a2-visualizer-layer-item>
     </div>
 </div>
 <div class="app-content">
