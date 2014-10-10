@@ -23,16 +23,13 @@ var queryHandler = function (query, callback) {
             callback(err, rows, fields);
         });
     });
-}
-
-var Users    = require('./users'     )(queryHandler);
-var Projects = require('./projects'  )(queryHandler);
-var Recordings = require('./recordings')(queryHandler);
-var Sites = require('./sites')(queryHandler);
-
-module.exports = {
-    users: Users,
-    projects: Projects,
-    recordings: Recordings,
-    sites: Sites,
 };
+
+var models = [
+    'users', 'projects', 'recordings', 'sites',
+    'species', 'songtypes'
+]
+
+models.forEach(function(model){
+    module.exports[model] = require('./'+model)(queryHandler);
+});
