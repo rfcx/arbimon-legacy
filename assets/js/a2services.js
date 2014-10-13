@@ -102,7 +102,26 @@ angular.module('a2services',[])
             $http.post('/api/project/'+projectName+'/recordings/validate/'+recording_uri, validation).success(function(data) {
                 callback(data);
             });
-        }
+        },
+        getTrainingSets: function(callback) {
+            var projectName = this.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/').success(function(data) {
+                callback(data);
+            });
+        },
+        addTrainingSet: function(tset_data, callback) {
+            var projectName = this.getName();
+            $http.post('/api/project/'+projectName+'/training-sets/add', tset_data).success(function(data) {
+                callback(data);
+            });
+        },
+        getTrainingSetDatas: function(training_set, recording_uri, callback) {
+            var projectName = this.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/list/'+training_set+'/'+recording_uri).success(function(data) {
+                callback(data);
+            });
+        },
+
     };
 }]);
 

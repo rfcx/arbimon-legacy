@@ -2,6 +2,7 @@ window.qwe={};
 (function(angular){
     var visualizer = angular.module('visualizer', ['ui.router', 'ngAudio', 'a2services', 'a2utils', 'a2recordingsbrowser', 'a2SpeciesValidator']);
     var template_root = '/partials/visualizer/';
+    /*
     var test_data = {
         recording : {
             file     : "test-2014-08-06_12-20.wav",
@@ -55,7 +56,7 @@ window.qwe={};
             }
         ]
     };
-
+    */
     
     visualizer.value('layer_types',{
         'recording-layer' : {
@@ -73,30 +74,42 @@ window.qwe={};
             type    : "species-presence",
         },
         'training-data' : {
-            title   : "",            
+            title   : "",
+            controller : 'a2VisualizerTrainingDataLayerController as training_data',
             sidebar_visible : function($scope){return !!$scope.recording;},
-            visible : false,
-            hide_visibility : true,
+            visible : true,
             type    : "training-data",
         }
     });
-    visualizer.controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project) {
+    visualizer.controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller) {
         var new_layer = function(layer_type){
             var layer_def = layer_types[layer_type];
             if (layer_def) {
                 var layer_maker = function(){};
                 layer_maker.prototype = layer_def;
-                return new layer_maker();
+                var layer = new layer_maker();
+                if (layer.controller && typeof layer.controller == 'string') {
+                    var cname = /^(.*?)( as (.*?))$/.exec(layer.controller);
+                    if(cname) {
+                        layer[cname[2] ? cname[3] : 'controller'] = $controller(cname[1], {$scope : $scope});
+                    }
+                }
+                return layer;
             } else {
                 return null;
             }
         }
         window.qwe.$location = $location;
-        $scope.layers = [
-            new_layer('recording-layer'),
-            new_layer('species-presence'),
-            new_layer('training-data')
-        ]; // current layers in the visualizer
+        $scope.layers = []; // current layers in the visualizer
+        $scope.addLayer = function(layer_type){
+            if(layer_types[layer_type]) {
+                $scope.layers.push(new_layer(layer_type));
+            }
+        };
+        $scope.addLayer('recording-layer');
+        $scope.addLayer('species-presence');
+        $scope.addLayer('training-data');
+
         $scope.isSidebarVisible = function(l){
             return !l.sidebar_visible || l.sidebar_visible($scope);
         }
@@ -441,6 +454,34 @@ window.qwe={};
         }
     });
 
+    visualizer.controller('a2VisualizerTrainingDataLayerController', function($scope, $modal, Project){
+        var self=this;
+        Project.getTrainingSets(function(training_sets){
+            self.training_sets = training_sets;
+        });
+        self.add_new_tset = function(){
+            $modal.open({
+                templateUrl : template_root + 'modal/add_tset.html',
+                controller  : 'a2VisualizerAddTrainingSetModalController',
+                scope : $scope
+            }).result.then(function (_1) {
+                console.log('qqwwee : ', this, arguments, _1);
+            });
+        }
+    });
+    
+    visualizer.controller('a2VisualizerAddTrainingSetModalController', function($scope, $modalInstance, Project){
+        $scope.ok = function(){
+            var tset_data = {
+                name : $scope.name
+            };
+            //Project.addTrainingSet(tset_data, function(new_tset){
+                tset_data.id = 'ficticious';
+                $modalInstance.close(tset_data);
+            //    $modalInstance.close(new_tset);
+            //});
+        };
+    });
 
     angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     .factory('rbDateAvailabilityCache', function ($cacheFactory) {

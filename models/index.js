@@ -26,8 +26,13 @@ var queryHandler = function (query, callback) {
 };
 
 var models = [
-    'users', 'projects', 'recordings', 'sites',
-    'species', 'songtypes'
+    'users',
+    'projects',
+    'recordings',
+    'sites',
+    'training_sets',
+    'species',
+    'songtypes'
 ]
 
 models.forEach(function(model){

@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var model = require('../../../models');
 var recording_routes = require('./recordings');
-
+var training_set_routes = require('./training_sets');
 
 router.post('/create', function(req, res, next) {
     var project = req.body.project;
@@ -188,5 +188,6 @@ router.get('/:projectUrl/classes', function(req, res, next) {
 });
 
 router.use('/:projectUrl/recordings', recording_routes);
+router.use('/:projectUrl/training-sets', training_set_routes);
 
 module.exports = router;

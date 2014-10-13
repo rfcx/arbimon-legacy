@@ -1,3 +1,25 @@
 <div class="layer">
-    td
+    <div class="btn-group">
+        <div class="btn-group">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-block btn-default" role="button" data-toggle="dropdown">
+                    <span class="fa fa-cubes" ></span>
+                    {{ layer.training_data.tset.name || "[No Training Set Selected]"}}
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
+                    <li ng-repeat="tset in layer.training_data.tset_list">
+                        <a ng-click="layer.training_data.tset = tset">{{tset.name}}</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <button class="btn btn-sm btn-default" tooltip="Make New Training Set" tooltip-placement="right" ng-click="layer.training_data.add_new_tset()">
+            <i class="fa fa-plus"></i>
+        </button>
+    </div>
+    
+    <div>
+        Training Data
+    </div>
 </div>
