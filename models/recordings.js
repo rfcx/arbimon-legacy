@@ -135,7 +135,7 @@ module.exports = function(queryHandler) {
                     }
                 }
             }
-            
+            console.log(group_by);
             if(group_by.level == 'next'){
                 if(group_by.curr){
                     if(group_by.curr.next) {
@@ -145,7 +145,8 @@ module.exports = function(queryHandler) {
                 } else {
                     for(var i in fields){
                         var field = fields[i];
-                        if(!group_by.curr || group_by.curr.level > field.level) {
+                        if(field.level && (!group_by.curr || group_by.curr.level > field.level)) {
+                            console.log(field);
                             group_by.curr = field;
                             group_by.curr_level = i;
                         }
