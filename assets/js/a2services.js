@@ -145,3 +145,63 @@ angular.module('a2utils', [])
         }
     };
 });
+
+
+angular.module('a2Infotags', [])
+.factory('InfoTagService', ['$location', '$http', function($location, $http){
+    return {
+        getSpecies: function(species_id, callback){
+            $http.get('/api/species/'+species_id).success(function(data) {
+                callback(data);
+            });
+        },
+        getSongtype: function(songtype_id, callback) {
+            $http.get('/api/songtypes/'+songtype_id).success(function(data) {
+                callback(data);
+            });
+        }
+    };
+}])
+.directive('a2Species', function (InfoTagService, $timeout) {
+    return {
+        restrict : 'E',
+        scope : {
+            species : '='
+        },
+        template : '{{data.scientific_name}}',
+        link     : function($scope, $element, $attrs){
+            $scope.$watch('species', function(newVal, oldVal){
+                $scope.data = null;
+                if(newVal){
+                    InfoTagService.getSpecies(newVal, function(data){
+                        $timeout(function(){
+                            $scope.data = data;
+                        })
+                    })
+                }
+            });
+        }
+    };
+})
+.directive('a2Songtype', function (InfoTagService, $timeout) {
+    return {
+        restrict : 'E',
+        scope : {
+            songtype : '='
+        },
+        template : '{{data.name}}',
+        link     : function($scope, $element, $attrs){
+            $scope.$watch('songtype', function(newVal, oldVal){
+                $scope.data = null;
+                if(newVal){
+                    InfoTagService.getSongtype(newVal, function(data){
+                        $timeout(function(){
+                            $scope.data = data;
+                        })
+                    })
+                }
+            });
+        }
+    };
+});
+;

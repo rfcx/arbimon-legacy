@@ -71,6 +71,13 @@ window.qwe={};
             visible : false,
             hide_visibility : true,
             type    : "species-presence",
+        },
+        'training-data' : {
+            title   : "",            
+            sidebar_visible : function($scope){return !!$scope.recording;},
+            visible : false,
+            hide_visibility : true,
+            type    : "training-data",
         }
     });
     visualizer.controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project) {
@@ -87,7 +94,8 @@ window.qwe={};
         window.qwe.$location = $location;
         $scope.layers = [
             new_layer('recording-layer'),
-            new_layer('species-presence')
+            new_layer('species-presence'),
+            new_layer('training-data')
         ]; // current layers in the visualizer
         $scope.isSidebarVisible = function(l){
             return !l.sidebar_visible || l.sidebar_visible($scope);
@@ -217,12 +225,12 @@ window.qwe={};
         return {
             restrict : 'E',
             replace  : true,
-            templateUrl : template_root + 'visualizer-layer-item-default.html',
+            templateUrl : template_root + 'layer-item/default.html',
             link     : function(scope, element, attrs){
                 var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
                 var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
                 if(layer_key && layer_key != 'default') {
-                    var layer_url  = template_root + 'visualizer-layer-item-' + layer_key + '.html';
+                    var layer_url  = template_root + 'layer-item/' + layer_key + '.html';
                     var layer_tmp  = $templateFetch(layer_url, function(layer_tmp){
                         var layer_el   = $compile(layer_tmp)(scope);
                         element.append(layer_el.children().unwrap());
@@ -400,14 +408,14 @@ window.qwe={};
     visualizer.directive('a2VisualizerSpectrogramLayer', function(layer_types, $compile, $templateFetch){
         return {
             restrict : 'E',
-            templateUrl : template_root + 'visualizer-spectrogram-layer-default.html',
+            templateUrl : template_root + 'spectrogram-layer/default.html',
             replace  : true,
             link     : function(scope, element, attrs){
                 var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
                 var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
                 element.addClass(layer_type);
                 if(layer_key && layer_key != 'default') {
-                    var layer_url  = template_root + 'visualizer-spectrogram-layer-' + layer_key + '.html';
+                    var layer_url  = template_root + 'spectrogram-layer/' + layer_key + '.html';
                     var layer_tmp  = $templateFetch(layer_url, function(layer_tmp){
                         var layer_el   = $compile(layer_tmp)(scope);
                         element.append(layer_el);
@@ -667,67 +675,5 @@ window.qwe={};
             }
         };
     });
-
-    angular.module('a2Infotags', [])
-    .factory('InfoTagService', ['$location', '$http', function($location, $http){
-        return {
-            getSpecies: function(species_id, callback){
-                $http.get('/api/species/'+species_id).success(function(data) {
-                    callback(data);
-                });
-            },
-            getSongtype: function(songtype_id, callback) {
-                $http.get('/api/songtypes/'+songtype_id).success(function(data) {
-                    callback(data);
-                });
-            }
-        };
-    }])
-    .directive('a2Species', function (InfoTagService, $timeout) {
-        return {
-            restrict : 'E',
-            scope : {
-                species : '='
-            },
-            template : '{{data.scientific_name}}',
-            link     : function($scope, $element, $attrs){
-                $scope.$watch('species', function(newVal, oldVal){
-                    $scope.data = null;
-                    if(newVal){
-                        InfoTagService.getSpecies(newVal, function(data){
-                            $timeout(function(){
-                                $scope.data = data;
-                            })
-                        })
-                    }
-                });
-            }
-        };
-    })
-    .directive('a2Songtype', function (InfoTagService, $timeout) {
-        return {
-            restrict : 'E',
-            scope : {
-                songtype : '='
-            },
-            template : '{{data.name}}',
-            link     : function($scope, $element, $attrs){
-                $scope.$watch('songtype', function(newVal, oldVal){
-                    $scope.data = null;
-                    if(newVal){
-                        InfoTagService.getSongtype(newVal, function(data){
-                            $timeout(function(){
-                                $scope.data = data;
-                            })
-                        })
-                    }
-                });
-            }
-        };
-    });
-    ;
-//    .directive('a2Species', function(){
-//    })
-    
     
 })(angular);
