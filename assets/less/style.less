@@ -79,13 +79,20 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     }
 }
 
+@sidebar-col-width : 2.5;
+
 .sidebar{
-    .make-full-column(0; 3; 0);
+    .make-full-column(0; @sidebar-col-width; 0);
+    @media (min-width: @grid-float-breakpoint) {
+        .drawer{
+            display: none;
+        }
+    }
     @media (max-width: @grid-float-breakpoint) {
         right : 100%;
         z-index: 910;
         &.show{
-            .make-full-column(0; 3; 0);
+            .make-full-column(0; @sidebar-col-width; 0);
             left  : 0;
             width: 100%;
             right : auto;
@@ -116,14 +123,17 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
 }
 
 .app-content{
-    .make-full-column(3; 12);
-    width : 100%;
+    .make-full-column(@sidebar-col-width; 12);
     border-left: 1px solid #d0d0d0;
+    width : 100%;
     left   : 0;
     right  : 0;
     top    : 0;
     bottom : 0;
     z-index: 900;
+    @media (min-width: @grid-float-breakpoint) {
+        width: auto;
+    }
 }
 
 @layer-padding-left: 15px;
@@ -229,4 +239,19 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
 .dropdown-menu.datepicker{
     min-width: 290px;
     padding  : 5px;
+}
+
+
+.bg {
+  min-height: 20px;
+  padding: 19px;
+  margin-bottom: 0px;
+  background-color: @well-bg;
+  border: 1px solid @well-border;
+  border-radius: @border-radius-base;
+  .box-shadow(inset 0 1px 1px rgba(0,0,0,.05));
+  blockquote {
+    border-color: #ddd;
+    border-color: rgba(0,0,0,.15);
+  }
 }

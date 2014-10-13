@@ -74,7 +74,7 @@
 
 
 .sidebar .layers .layer .recording-list{
-    max-height:15em;
+    max-height:194px;
     background-color: @body-bg;
     margin: 5px 0px;
     border: 1px solid @btn-default-border;
@@ -82,8 +82,8 @@
     overflow-y: auto;
     > .recording-list-item{
         position: relative;
-        height:14em;
-        padding : 9px;
+        height:162px;
+        padding : 6px;
         &:nth-child(even){
             background-color: @layer-zebra-even;
         }
@@ -98,6 +98,9 @@
             max-width: 422px;
             overflow-x: hidden;
             margin: 0px 5px;
+            > img {
+                height: 128px;
+            }
         }
     }
 }

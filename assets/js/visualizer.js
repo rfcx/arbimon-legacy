@@ -59,7 +59,7 @@ window.qwe={};
     
     visualizer.value('layer_types',{
         'recording-layer' : {
-            title : "Recordings",
+            title : "",
             visible : true,
             hide_visibility : true,
             type    : "recording-layer"
@@ -196,7 +196,7 @@ window.qwe={};
     }).directive('a2Visualizer', function(){
         
         
-        return { restrict : 'E', templateUrl: template_root + 'main.html' }
+        return { restrict : 'E', replace:true, templateUrl: template_root + 'main.html' }
     });
 
     visualizer.directive('a2Scroll', function() {
@@ -623,6 +623,7 @@ window.qwe={};
             scope : {
                 recording : '=recording'
             },
+            replace : true, 
             templateUrl : template_root + 'validator-main.html',
             link     : function($scope, $element, $attrs){
                 var class2key = function(project_class){
