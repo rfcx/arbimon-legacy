@@ -400,6 +400,35 @@ module.exports = function(queryHandler) {
             } else {
                 add_validation(cm[1] | 0, cm[3] | 0);
             }
+        },
+        
+        insert: function(recording, callback) {
+            var values = [];
+            
+            var requiredValues = [
+                "site_id",
+                "uri",
+                "datetime",
+                "mic",
+                "recorder",
+                "version"
+            ];
+            
+            for(var i in requiredValues) {
+                if(typeof recording[requiredValues[i]] === "undefined")
+                    return callback(new Error("required field '"+ requiredValues[i] + "' missing"));
+            }
+            
+            for( var i in recording) {
+                recording[i] = mysql.escape(recording[i]);                    
+                values.push(util.format('`%s`=%s', i, recording[i]));
+            }
+            
+            var q = 'INSERT INTO recordings \n'+
+                    'SET %s';
+                    
+            q = util.format(q, values.join(", "));
+            queryHandler(q, callback);
         }
     };
     

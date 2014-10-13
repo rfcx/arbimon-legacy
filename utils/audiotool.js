@@ -39,7 +39,7 @@ Options:
  */
 var audiotools = {
     sox : function(args, options, callback){
-console.log('running sox with ', args)
+        console.log('running sox with ', args)
         if(options instanceof Function) { callback = options; }
         options = options || {};
         

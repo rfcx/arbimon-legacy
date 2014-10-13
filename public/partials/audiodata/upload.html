@@ -1,0 +1,82 @@
+<div class="row">
+    <div class="col-sm-5">
+        <button class="btn btn-default" ng-click="batchInfo()">
+            <i class="fa fa-pencil-square-o"></i> Batch Info
+        </button>
+        <div class="btn btn-primary btn-file">
+            <i class="fa fa-plus"></i> Add files
+            <input accept="audio/x-wav,audio/wav,audio/mpeg,audio/flac" nv-file-select uploader="uploader" type="file" multiple>
+        </div>
+        <button type="button" class="btn btn-success" 
+            ng-click="verifyAndUpload()" 
+            ng-disabled="!(uploader.getNotUploadedItems().length && info)">
+            <i class="fa fa-cloud-upload"></i> Start
+        </button>
+        <button type="button" class="btn btn-warning" 
+            ng-click="uploader.cancelAll()" 
+            ng-disabled="!uploader.isUploading">
+            <i class="fa fa-ban"></i> Stop all
+        </button>
+        <button type="button" class="btn btn-danger btn-s" 
+            ng-click="uploader.clearQueue()" 
+            ng-disabled="!uploader.queue.length">
+            <i class="fa fa-trash"></i> Remove all
+        </button>
+    </div>
+    <div class="col-sm-7">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <strong>Batch Info</strong> 
+                <span ng-show="info">
+                    Site: <span class="label label-info">{{ info.site.name }}</span> 
+                    Recorder: <span class="label label-info">{{ info.recorder }}</span>
+                    Microphone: <span class="label label-info">{{ info.mic }} </span>
+                    Software version: <span class="label label-info">{{ info.sver }} </span>
+                    Filename format: <span class="label label-info">{{ info.format }}</span>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12" nv-file-over  nv-file-drop  uploader="uploader" over-class="drophere">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Size</th>
+                    <th>Progress</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="item in uploader.queue">
+                    <td><strong>{{ item.file.name }}</strong></td>
+                    <td ng-show="uploader.isHTML5" nowrap>{{ prettyBytes(item.file.size) }}</td>
+                    <td ng-show="uploader.isHTML5">
+                        <div class="progress" style="margin-bottom: 0;">
+                            <div class="progress-bar" role="progressbar" ng-style="{ 'width': item.progress + '%' }"></div>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span ng-show="item.isSuccess"><i class="fa fa-ok"></i></span>
+                        <span ng-show="item.isError"><i class="fa fa-remove"></i></span>
+                        <span ng-show="item.isDuplicate">Duplicate</span>
+                    </td>
+                    <td nowrap>
+                        <button type="button" class="btn btn-warning btn-xs" ng-click="item.cancel()" ng-disabled="!item.isUploading">
+                            <i class="fa fa-ban"></i> Stop
+                        </button>
+                        <button type="button" class="btn btn-danger btn-xs" ng-click="item.remove()">
+                            <i class="fa fa-trash"></i> Remove
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="jumbotron" ng-show="!uploader.queue.length">
+        <h3 class="text-center">Drop files here <i class="fa fa-hand-o-down"></i></h3>
+    </div>
+    </div>
+</div>

@@ -82,6 +82,20 @@ module.exports = function(grunt) {
                 src: 'bower_components/ui-router-extras/release/ct-ui-router-extras.min.js',
                 dest: 'public/assets/ui-router-extras/'
             },
+            
+            moment: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/moment/min/moment.min.js',
+                dest: 'public/assets/moment/'
+            },
+            
+            angularFileUpload: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/angular-file-upload/**/*.js',
+                dest: 'public/assets/angular-file-upload/'
+            },
         },
         
         concat: {
@@ -91,6 +105,7 @@ module.exports = function(grunt) {
                     'assets/js/visualizer.js',
                     'assets/js/home.js',
                     'assets/js/dashboard.js',
+                    'assets/js/audiodata.js',
                     'assets/js/a2services.js',
                     'assets/js/extras/*.js',
                     'assets/js/a2directives.js',
