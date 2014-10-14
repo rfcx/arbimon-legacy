@@ -46,7 +46,7 @@ CREATE TABLE `job_params_training` (
   `job_id` bigint(20) unsigned NOT NULL,
   `model_type_id` int(10) unsigned NOT NULL,
   `training_set_id` bigint(20) unsigned NOT NULL,
-  `validation_set_id` int(10) unsigned NOT NULL,
+  `validation_set_id` int(10) unsigned DEFAULT NULL,
   `trained_model_id` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`job_id`),
   KEY `model_type_id` (`model_type_id`),
@@ -92,8 +92,8 @@ CREATE TABLE `jobs` (
   `project_id` int(10) unsigned NOT NULL,
   `user_id` int(10) unsigned NOT NULL,
   `uri` varchar(255) NOT NULL,
-  `progress` double NOT NULL,
-  `completed` tinyint(1) NOT NULL,
+  `progress` double NOT NULL DEFAULT '0',
+  `completed` tinyint(1) NOT NULL DEFAULT '0',
   `remarks` text NOT NULL,
   PRIMARY KEY (`job_id`),
   KEY `user_id` (`user_id`),
@@ -102,7 +102,7 @@ CREATE TABLE `jobs` (
   CONSTRAINT `jobs_ibfk_1` FOREIGN KEY (`job_type_id`) REFERENCES `job_types` (`job_type_id`),
   CONSTRAINT `jobs_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE,
   CONSTRAINT `jobs_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -347,7 +347,7 @@ CREATE TABLE `recording_validations` (
   CONSTRAINT `recording_validations_ibfk_5` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `recording_validations_ibfk_6` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`),
   CONSTRAINT `recording_validations_ibfk_7` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -369,7 +369,7 @@ CREATE TABLE `recordings` (
   UNIQUE KEY `unique_uri` (`uri`),
   KEY `site_id` (`site_id`),
   CONSTRAINT `recordings_ibfk_1` FOREIGN KEY (`site_id`) REFERENCES `sites` (`site_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=563 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=614 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -457,7 +457,7 @@ CREATE TABLE `sites` (
   KEY `site_type_id` (`site_type_id`),
   CONSTRAINT `sites_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE,
   CONSTRAINT `sites_ibfk_2` FOREIGN KEY (`site_type_id`) REFERENCES `site_types` (`site_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -576,15 +576,15 @@ CREATE TABLE `training_set_roi_set_data` (
   `x2` double NOT NULL COMMENT 'final time in seconds',
   `y2` double NOT NULL COMMENT 'max frequency in hertz',
   PRIMARY KEY (`roi_set_data_id`),
-  UNIQUE KEY `species_id` (`species_id`),
-  UNIQUE KEY `songtype_id` (`songtype_id`),
   KEY `recording_id` (`recording_id`),
   KEY `training_set_id` (`training_set_id`),
+  KEY `species_id` (`species_id`),
+  KEY `songtype_id` (`songtype_id`),
   CONSTRAINT `training_set_roi_set_data_ibfk_1` FOREIGN KEY (`training_set_id`) REFERENCES `training_sets` (`training_set_id`) ON DELETE CASCADE,
   CONSTRAINT `training_set_roi_set_data_ibfk_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`),
   CONSTRAINT `training_set_roi_set_data_ibfk_3` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`),
   CONSTRAINT `training_set_roi_set_data_ibfk_4` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -617,11 +617,12 @@ CREATE TABLE `training_sets` (
   `date_created` date NOT NULL,
   `training_set_type_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`training_set_id`),
+  UNIQUE KEY `project_id_2` (`project_id`,`name`),
   KEY `project_id` (`project_id`),
   KEY `training_set_type_id` (`training_set_type_id`),
   CONSTRAINT `training_sets_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE,
   CONSTRAINT `training_sets_ibfk_2` FOREIGN KEY (`training_set_type_id`) REFERENCES `training_set_types` (`training_set_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -755,7 +756,7 @@ CREATE TABLE `validation_set` (
   `uri` varchar(255) NOT NULL,
   `params` text NOT NULL,
   PRIMARY KEY (`validation_set_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -767,4 +768,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-10-10 16:35:52
+-- Dump completed on 2014-10-14 16:22:16
