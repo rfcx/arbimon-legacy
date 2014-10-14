@@ -34,7 +34,7 @@ angular.module('audiodata',['a2services', 'a2directives', 'ui.bootstrap', 'angul
     });
     
 })
-.controller('UploadCtrl', function($scope, uploader, Project, $modal){ 
+.controller('UploadCtrl', function($scope, uploads, Project, $modal){ 
     $scope.prettyBytes = function(bytes) {
         
         var labels = ['B', 'kB', 'MB', 'GB'];
@@ -54,19 +54,24 @@ angular.module('audiodata',['a2services', 'a2directives', 'ui.bootstrap', 'angul
     
     $scope.verifyAndUpload = function() {
         $scope.uploader.queue.forEach(function(item) {
-            Project.getRecs(item.file.name.split('.')[0], function(result) {
-                if(result.length)
+            
+            Project.recExists($scope.info.site.id, item.file.name.split('.')[0], function(exists) {                
+                if(exists) {
+                    console.log('duplicated');
                     return item.isDuplicate = true;
-                    
+                }
+                
                 item.formData.push({ project: JSON.stringify($scope.project) });
                 item.formData.push({ info: JSON.stringify($scope.info) });
                 item.upload();
-                
             });
+
         });
+
     };
       
-    $scope.uploader = uploader.get();
+    $scope.uploader = uploads.getUploader();
+    $scope.info = uploads.getBatchInfo();
     
     
     $scope.batchInfo = function() {
@@ -81,14 +86,15 @@ angular.module('audiodata',['a2services', 'a2directives', 'ui.bootstrap', 'angul
         });
         
         modalInstance.result.then(function(newInfo) {
+            uploads.setBatchInfo(newInfo);
             $scope.info = newInfo;
         });
     };
     
     
-    
     Project.getInfo(function(info) {
         $scope.project = info;
+        $scope.uploader.url = '/uploads/audio/project/' + info.project_id;
     });
     
     $scope.uploader.filters.push({
@@ -143,15 +149,22 @@ angular.module('audiodata',['a2services', 'a2directives', 'ui.bootstrap', 'angul
         $scope.error = true;
     };
 })
-.factory('uploader', function(FileUploader){
-    var u = new FileUploader({
-        url: '/uploads/audio',
-        //~ removeAfterUpload: true
-    });
+.factory('uploads', function(FileUploader){
+    var u = new FileUploader();
+    
+    var uploadInfo = null;
     
     return {        
-        get: function() {
+        getUploader: function() {
             return u;
+        },
+        
+        getBatchInfo: function() {
+            return uploadInfo;
+        },
+        
+        setBatchInfo: function(info) {
+            uploadInfo = info;
         }
     };
 })

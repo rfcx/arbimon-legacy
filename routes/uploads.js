@@ -19,7 +19,15 @@ router.get('/audio', function(req, res) {
     res.sendStatus(200);
 });
     
-router.post('/audio', function(req, res) {
+router.post('/audio/project/:projectid', function(req, res) {
+    
+    var project_id = req.param('projectid');
+    
+    var perm = "manage project recordings";
+    
+    if(!req.haveAccess(project_id, perm)) {
+        return res.json({ error: "you dont have permission to '"+ perm +"'" });
+    }
     
     var fields = {};
     var files = [];
@@ -42,6 +50,8 @@ router.post('/audio', function(req, res) {
         //~ console.log('fields:', fields);
         //~ console.log('files:', files);
         
+        res.send("Done!");
+        
         fields.project = JSON.parse(fields.project);
         fields.info = JSON.parse(fields.info);
         
@@ -50,7 +60,9 @@ router.post('/audio', function(req, res) {
             var name = file.filename.split('.');
             var extension = name[name.length-1];
             
+           
             var fileInfo = formatParse(fields.info.format, file.filename);
+            var recTime = new Date(fileInfo.year, --fileInfo.month, fileInfo.date, fileInfo.hour, fileInfo.min);
             var inFile = file.path;
             var outFile = tmpFileCache.key2File(fileInfo.filename + '.flac');
             var thumbnail = tmpFileCache.key2File(fileInfo.filename + '.thumbnail.png');
@@ -137,9 +149,7 @@ router.post('/audio', function(req, res) {
                 }],
                 
                 insertOnDB: ['uploadFlac', 'uploadThumbnail', function(callback, results) {
-                    
-                    var recTime = new Date(fileInfo.year, --fileInfo.month, fileInfo.date, fileInfo.hour, fileInfo.min);
-                    
+                                        
                     model.recordings.insert({
                         site_id: fields.info.site.id,
                         uri: fileKey + '.flac',
@@ -149,7 +159,7 @@ router.post('/audio', function(req, res) {
                         version: fields.info.sver
                     },
                     function(err, result) {
-                        callback(null, result);
+                        callback(err, result);
                     });
                 }]
             },
@@ -163,12 +173,15 @@ router.post('/audio', function(req, res) {
         // procesar
         // subir a s3
         // entrar a db
-        
-        res.send("Done!");
     });
     
     req.pipe(req.busboy);
 });
 
+//~ router.get('/audio/project/:projectid/status', function(req, res) {
+    //~ var project_id = req.param('projectid');
+    //~ 
+    //~ model.recordings.uploadedStatus(    
+//~ });
 
 module.exports = router;

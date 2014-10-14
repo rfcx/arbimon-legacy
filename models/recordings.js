@@ -429,6 +429,27 @@ module.exports = function(queryHandler) {
                     
             q = util.format(q, values.join(", "));
             queryHandler(q, callback);
+        },
+        
+        exists: function(recording, callback) {
+            
+            if(!recording.site_id || !recording.filename)
+                callback(new Error("Missing fields"));
+            
+            var q = "SELECT count(*) as count \n"+
+                    "FROM recordings \n"+
+                    "WHERE site_id = %s \n"+
+                    "AND uri LIKE %s";
+            
+            var uri = mysql.escape('%' + recording.filename + '%');
+            var site_id = mysql.escape(Number(recording.site_id));
+            var q = util.format(q, site_id, uri);
+            queryHandler(q, function(err, rows) {
+                if(err)
+                    return callback(err);
+                    
+                callback(null, rows[0].count > 0);
+            });
         }
     };
     

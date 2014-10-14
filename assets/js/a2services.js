@@ -102,6 +102,13 @@ angular.module('a2services',[])
             $http.post('/api/project/'+projectName+'/recordings/validate/'+recording_uri, validation).success(function(data) {
                 callback(data);
             });
+        },
+        
+        recExists: function(site_id, filename, callback) {
+            $http.get('/api/project/'+url+'/recordings/exists/site/'+ site_id +'/file/' + filename)
+            .success(function(data) {
+                callback(data.exists);
+            });
         }
     };
 }]);

@@ -85,7 +85,10 @@ module.exports = function(queryHandler) {
             );
             
             queryHandler(q, function(err, rows){
-                callback(err, rows[0].count > 0);
+                if(err)
+                    return callback(err);
+                
+                callback(null, rows[0].count > 0);
             });     
         },
         

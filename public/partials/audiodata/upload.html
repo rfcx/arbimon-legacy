@@ -26,16 +26,22 @@
     <div class="col-sm-7">
         <div class="panel panel-default">
             <div class="panel-body">
-                <strong>Batch Info</strong> 
+                <div class="upload-title">Batch Info</div>
                 <span ng-show="info">
-                    Site: <span class="label label-info">{{ info.site.name }}</span> 
-                    Recorder: <span class="label label-info">{{ info.recorder }}</span>
-                    Microphone: <span class="label label-info">{{ info.mic }} </span>
-                    Software version: <span class="label label-info">{{ info.sver }} </span>
-                    Filename format: <span class="label label-info">{{ info.format }}</span>
+                    <div class="upload-info">Site: <span class="label label-info">{{ info.site.name }}</span></div>
+                    <div class="upload-info">Recorder: <span class="label label-info">{{ info.recorder }}</span></div>
+                    <div class="upload-info">Microphone: <span class="label label-info">{{ info.mic }} </span></div>
+                    <div class="upload-info">Software version: <span class="label label-info">{{ info.sver }} </span></div>
+                    <div class="upload-info">Filename format: <span class="label label-info">{{ info.format }}</span></div>
                 </span>
             </div>
         </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        Total Progress:
+        <progressbar value="uploader.progress"></progressbar>
     </div>
 </div>
 <div class="row">
@@ -50,7 +56,7 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody >
                 <tr ng-repeat="item in uploader.queue">
                     <td><strong>{{ item.file.name }}</strong></td>
                     <td ng-show="uploader.isHTML5" nowrap>{{ prettyBytes(item.file.size) }}</td>
@@ -59,9 +65,9 @@
                             <div class="progress-bar" role="progressbar" ng-style="{ 'width': item.progress + '%' }"></div>
                         </div>
                     </td>
-                    <td class="text-center">
-                        <span ng-show="item.isSuccess"><i class="fa fa-ok"></i></span>
-                        <span ng-show="item.isError"><i class="fa fa-remove"></i></span>
+                    <td>
+                        <span ng-show="item.isSuccess"><i class="fa fa-check"></i> Success</span>
+                        <span ng-show="item.isError"><i class="fa fa-remove"></i> Error</span>
                         <span ng-show="item.isDuplicate">Duplicate</span>
                     </td>
                     <td nowrap>

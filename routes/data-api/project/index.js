@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var model = require('../../../models');
 var recording_routes = require('./recordings');
+var async = require('async');
+var util = require('util');
 
 
 router.post('/create', function(req, res, next) {
