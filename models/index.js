@@ -15,11 +15,28 @@ var dbPool = mysql.createPool({
 var queryHandler = function (query, callback) {
     
     // for debugging
-    console.log('query:', query); 
-    
+    var sql = query.sql || query;
+    console.log('- query : -|', sql.replace(/\n/g,'\n             '));
     dbPool.getConnection(function(err, connection) {
         connection.query(query, function(err, rows, fields) {
             connection.release();
+            // for debugging
+            if(err) {
+                console.log('  failed :| ', err+"");
+            } else if (rows) {
+                if(rows.length != undefined) {
+                    console.log('  returned :', rows.length , " rows.");
+                }
+                if(rows.affectedRows != undefined) {
+                    console.log('  affected :', rows.affectedRows , " rows.");
+                }
+                if(rows.changedRows != undefined) {
+                    console.log('  changed  :', rows.changedRows , " rows.");
+                }
+                if(rows.insertId != undefined) {
+                    console.log('  insert id :', rows.insertId , " rows.");
+                }
+            }
             callback(err, rows, fields);
         });
     });
