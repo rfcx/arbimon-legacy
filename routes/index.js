@@ -4,6 +4,7 @@ var router = express.Router();
 
 var project = require('./project');
 var dataApi = require('./data-api');
+var uploads = require('./uploads');
 
 
 router.get('/register', function(req, res) {
@@ -34,8 +35,7 @@ router.get('/home', function(req, res) {
 });
 
 router.use('/api', dataApi);
-
 router.use('/project', project);
-
+router.use('/uploads', uploads);
 
 module.exports = router;

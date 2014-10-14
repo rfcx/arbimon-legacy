@@ -10,9 +10,11 @@ var cache_miss = function(cache, key, callback){
     this.file = cache.key2File(this.key);
     this.callback = callback;
 };
+
 cache_miss.prototype.set_file_data = function(data){
     this.cache.put(this.key, data, this.callback);
 };
+
 cache_miss.prototype.retry_get = function(){
     this.cache.get(this.key, this.callback);
 };

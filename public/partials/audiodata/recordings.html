@@ -1,0 +1,19 @@
+<div class="row toolbar">
+    <div class="col-sm-3">
+            <button class="btn btn-default" ng-click="edit()" ng-class="{ disabled: !selected }">Edit</button>
+            <button class="btn btn-danger" ng-click="del()" ng-class="{ disabled: !checked || !checked.length }">Delete</button>
+    </div>
+    <div class="col-sm-3 col-sm-offset-6">
+        <input class="form-control" type="text" placeholder="Search" ng-model="search">
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <a2-table fields="fields" rows="recs" on-select="" checked="checked" search="search"></a2-table>
+        <div class="jumbotron" ng-show="!recs || !recs.length > 0">
+            <h3>
+                This project don't have any recordings
+            </h3>
+        </div>
+    </div>
+</div>

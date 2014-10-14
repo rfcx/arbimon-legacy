@@ -49,4 +49,7 @@ run
 
 `npm start` and the app will be available in localhost:3000
 
+run and watch
+
+`grunt server` everything a file changes the project will rebuild
 

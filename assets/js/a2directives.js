@@ -91,20 +91,26 @@ angular.module('a2directives', [])
         }
     };
 })
-//~ .directive('mapita', function() {
-    //~ return {
-        //~ restrict: 'A',
-        //~ template: "",
-        //~ link: function(scope, element) {
-            //~ var mapOptions = {
-                //~ center: { lat: 18.3, lng: -66.5},
-                //~ zoom: 8
-            //~ };
-            //~ 
-            //~ scope.map = new google.maps.Map(element[0], mapOptions);
-        //~ }   
-    //~ };
-//~ })
+.directive('autoHeight', function () {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attr) {
+            
+            var updateHeight = function() {
+                console.log('inner', $(window).innerHeight());
+                console.log('normal', $(window).height());
+                console.log('outer', $(window).outerHeight());
+                console.log('outer:true', $(window).outerHeight(true));
+            }
+            
+            updateHeight();
+            
+            $( window ).resize(function() {
+                updateHeight();
+            });
+        }
+    };
+ })
 .directive('stopClick', function () {
     return {
         restrict: 'A',

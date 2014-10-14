@@ -3,6 +3,26 @@ var router = express.Router();
 var model = require('../../../models');
 
 
+
+router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
+    var site_id = req.param('siteid');
+    var filename = req.param('filename');
+    
+    model.recordings.exists(
+        {
+            site_id: site_id,
+            filename: filename
+        },
+        function(err, result) {
+            if(err)
+                next(err);
+            
+            res.json({ exists: result });
+        }
+    );
+});
+
+
 router.param('oneRecUrl', function(req, res, next, recording_url){
     model.recordings.findByUrlMatch(recording_url, req.project.project_id, {limit:1}, function(err, recordings) {
         if(err){
@@ -98,6 +118,5 @@ router.get('/:recUrl?', function(req, res, next) {
         return null;
     });
 });
-
 
 module.exports = router;

@@ -103,25 +103,34 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
+        
         getTrainingSets: function(callback) {
             var projectName = this.getName();
             $http.get('/api/project/'+projectName+'/training-sets/').success(function(data) {
                 callback(data);
             });
         },
+        
         addTrainingSet: function(tset_data, callback) {
             var projectName = this.getName();
             $http.post('/api/project/'+projectName+'/training-sets/add', tset_data).success(function(data) {
                 callback(data);
             });
         },
+        
         getTrainingSetDatas: function(training_set, recording_uri, callback) {
             var projectName = this.getName();
             $http.get('/api/project/'+projectName+'/training-sets/list/'+training_set+'/'+recording_uri).success(function(data) {
                 callback(data);
             });
         },
-
+        
+        recExists: function(site_id, filename, callback) {
+            $http.get('/api/project/'+url+'/recordings/exists/site/'+ site_id +'/file/' + filename)
+            .success(function(data) {
+                callback(data.exists);
+            });
+        }
     };
 }]);
 
