@@ -2,22 +2,22 @@ var express = require('express');
 var model = require('../models');
 var router = express.Router();
 
-router.get('/', function(req, res)
-{
-    res.redirect('/home');
-});
+// router.get('/', function(req, res)
+// {
+//     res.redirect('/home');
+// });
 
-router.get('/:project_url/|/:project_url', function(req, res, next)
+router.get('/:projecturl?/', function(req, res, next)
 {
-    var project_url = req.param('project_url');
+    var project_url = req.param('projecturl');
 
-    console.log('hola');
+    console.log(project_url);
     model.projects.findByUrl(project_url ,
         function(err,rows)
         {
             if(err) return next(err);
 
-            if(!rows.length) return res.redirect('/home');
+            if(!rows.length) return next();
 
             var project = rows[0];
 
