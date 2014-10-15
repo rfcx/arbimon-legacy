@@ -3,12 +3,12 @@ module.exports = function(grunt) {
      grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         less: {
-            main: { 
+            main: {
                 files: {
                     "public/assets/css/style.css" : "assets/less/style.less",
                 }
             },
-            
+
             bootstrap: {
                 options: {
                     compress: true,
@@ -18,78 +18,78 @@ module.exports = function(grunt) {
                 }
             }
         },
-        
-        copy: { 
+
+        copy: {
             bootstrap: {
-                expand: true, 
+                expand: true,
                 cwd: 'bower_components/bootstrap/dist/',
                 src: ['fonts/*', 'js/*'],
                 dest: 'public/assets/bootstrap/',
             },
-            
+
             jquery: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/jquery/dist/*',
                 dest: 'public/assets/jquery/',
             },
-            
+
             fontAwesome: {
                 expand: true,
                 cwd: 'bower_components/font-awesome/',
                 src: ['css/*', 'fonts/*'],
                 dest: 'public/assets/font-awesome/',
             },
-            
+
             d3: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/d3/*.js',
                 dest: 'public/assets/d3/'
             },
-            
+
             angular: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/angular/*',
                 dest: 'public/assets/angular/'
             },
-            
+
             angularAudio: {
                 expand: true,
                 flatten: true,
-                src: 'bower_components/angular-audio/angular.audio.js',
+                src: 'bower_components/angular-audio/app/angular.audio.js',
                 dest: 'public/assets/angular-audio/'
             },
-            
+
             angularBootstrap: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/angular-bootstrap/*',
                 dest: 'public/assets/angular-bootstrap/'
             },
-            
+
             angularUiRouter: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/angular-ui-router/release/*',
                 dest: 'public/assets/angular-ui-router/'
             },
-            
+
             angularUiRouterExtras: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/ui-router-extras/release/ct-ui-router-extras.min.js',
                 dest: 'public/assets/ui-router-extras/'
             },
-            
+
             moment: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/moment/min/moment.min.js',
                 dest: 'public/assets/moment/'
             },
-            
+
             angularFileUpload: {
                 expand: true,
                 flatten: true,
@@ -97,7 +97,7 @@ module.exports = function(grunt) {
                 dest: 'public/assets/angular-file-upload/'
             },
         },
-        
+
         concat: {
             dev: {
                 src: [   // add project javascript files here
@@ -109,15 +109,15 @@ module.exports = function(grunt) {
                     'assets/js/a2services.js',
                     'assets/js/extras/*.js',
                     'assets/js/a2directives.js',
-                ], 
+                ],
                 dest: 'public/assets/js/arbimon2.js'
             }
         },
-        
-        watch: { 
+
+        watch: {
             options: {
                 //reloads the browser with livereload plugin
-                livereload: true 
+                livereload: true
             },
             html: {
                 files: [
@@ -152,7 +152,7 @@ module.exports = function(grunt) {
                 }
             }
         },
-        
+
         express: {
             dev: {
                 options: {
@@ -161,14 +161,14 @@ module.exports = function(grunt) {
             }
         }
     });
-    
+
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-express-server');
 
-   
+
     grunt.registerTask('build', ['copy', 'less', 'concat']);
     grunt.registerTask('default', ['build']);
     grunt.registerTask('server', ['express:dev', 'watch']);
