@@ -11,7 +11,7 @@ angular.module('a2directives', [])
         },
         templateUrl: '/partials/directives/table.html',
         link: function(scope, element, attrs) {
-            
+
             if(attrs.search) {
                 scope.$watch(attrs.search, function(value) {
                     //~ console.log(value);
@@ -20,22 +20,22 @@ angular.module('a2directives', [])
             }
             scope.toggleAll = function() {
                 var allFalse = true;
-                
+
                 for(var i in scope.rows) {
                     if(scope.rows[i].checked) {
                         allFalse = false;
                         break;
                     }
                 }
-                
+
                 for(var i in scope.rows) {
                     scope.rows[i].checked = allFalse;
                 }
-                
+
                 scope.checkall = allFalse;
-                
+
             };
-            
+
             if(attrs.checked) {
                 scope.$watch('rows', function(rows) {
                     if(rows) {
@@ -43,42 +43,42 @@ angular.module('a2directives', [])
                             return row.checked | false;
                         });
                     }
-                }, 
+                },
                 true);
-            }   
+            }
 
-            
+
             scope.check = function($event, $index) {
                 //~ console.log('$event:', $event);
                 //~ console.log('$index:', $index);
                 //~ console.log('last checked:', scope.lastChecked);
-                
+
                 if(scope.lastChecked && $event.shiftKey) {
                     console.log('shift!');
-                
+
                     if(scope.lastChecked) {
                         var rows;
                         if(scope.lastChecked > $index)
                             rows = scope.rows.slice($index, scope.lastChecked);
                         else
                             rows = scope.rows.slice(scope.lastChecked, $index);
-                        
+
                         rows.forEach(function(row) {
                             row.checked = true;
                         });
                     }
                 }
-                
+
                 scope.lastChecked = $index;
             };
-            
-            scope.sel = function($index) {                
+
+            scope.sel = function($index) {
                 scope.selected = scope.rows[$index];
-                
+
                 if(attrs.onSelect)
                     scope.onSelect({ $index: $index });
             };
-            
+
             scope.sortBy = function(field) {
                 if(scope.sort !== field.key) {
                     scope.sort = field.key;
@@ -95,16 +95,23 @@ angular.module('a2directives', [])
     return {
         restrict: 'A',
         link: function (scope, element, attr) {
-            
+
             var updateHeight = function() {
-                console.log('inner', $(window).innerHeight());
-                console.log('normal', $(window).height());
-                console.log('outer', $(window).outerHeight());
-                console.log('outer:true', $(window).outerHeight(true));
+                // console.log('window h:', $(window).height());
+                // console.log('ele pos:',  element.offset());
+                // console.log('ele h:', element.height());
+                var h = $(window).height() - element.offset().top;
+
+                if(h < 500)
+                    return;
+
+                window.requestAnimationFrame(function() {
+                    element.height(h);
+                });
             }
-            
+
             updateHeight();
-            
+
             $( window ).resize(function() {
                 updateHeight();
             });
