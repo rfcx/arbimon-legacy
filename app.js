@@ -14,7 +14,7 @@ var model = require('./models');
 var tmpfilecache = require('./utils/tmpfilecache');
 
 // routes
-var login = require('./routes/login'); 
+var login = require('./routes/login');
 var routes = require('./routes/index');
 
 var AWS = require('aws-sdk');
@@ -55,9 +55,7 @@ app.use('/', routes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-    var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
+    res.status(404).render('not-found');
 });
 
 // error handlers
@@ -67,7 +65,12 @@ app.use(function(req, res, next) {
 if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
         res.status(err.status || 500);
-        console.log("- ERROR : ", err.stack);
+
+        console.log("- ERROR : ", err.message);
+        console.log(err.status);
+        console.log(err.stack);
+        console.dir(err);
+
         res.render('error', {
             message: err.message,
             error: err
