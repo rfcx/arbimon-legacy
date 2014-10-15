@@ -13,11 +13,15 @@ var dbPool = mysql.createPool({
 });
 
 var queryHandler = function (query, callback) {
-    
+
     // for debugging
     var sql = query.sql || query;
     console.log('- query : -|', sql.replace(/\n/g,'\n             '));
+
     dbPool.getConnection(function(err, connection) {
+        if(err)
+            return callback(err);
+
         connection.query(query, function(err, rows, fields) {
             connection.release();
             // for debugging
