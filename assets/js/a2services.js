@@ -1,64 +1,64 @@
 angular.module('a2services',[])
-.factory('Project', ['$location', '$http', function($location, $http) {    
+.factory('Project', ['$location', '$http', function($location, $http) {
     var urlparse = document.createElement('a');
     urlparse.href = $location.absUrl();
     var nameRe = /\/project\/([\w\_\-]+)/;
-    
+
     var url = nameRe.exec(urlparse.pathname)[1];
-    
+
     return {
-        getInfo: function(callback) {            
+        getInfo: function(callback) {
             $http.get('/api/project/'+url+'/info')
             .success(function(data) {
                 callback(data);
             });
         },
-        
+
         getSites: function(callback) {
             $http.get('/api/project/'+url+'/sites')
             .success(function(data) {
                 callback(data);
             });
         },
-        
+
         getSpecies: function(callback) {
             $http.get('/api/project/'+url+'/species')
             .success(function(data) {
-                
+
             });
         },
-        
+
         getClasses: function(callback) {
             $http.get('/api/project/'+url+'/classes')
             .success(function(data) {
                 callback(data);
             });
         },
-        
+
         getRecs: function(query, callback) {
             if(typeof query === "function") {
                 callback = query;
                 query = "";
             }
-            
+
             $http.get('/api/project/'+url+'/recordings/'+query)
             .success(function(data) {
                 callback(data);
             });
         },
-        
+
         getRecTotalQty: function(callback) {
             $http.get('/api/project/'+url+'/recordings/count/')
             .success(function(data) {
                 callback(data[0].count);
             });
         },
-        
+
         getName: function(){
             var urlparse = document.createElement('a');
             urlparse.href = $location.absUrl();
             var nameRe = /\/project\/([\w\_\-]+)/;
-            
+
             return nameRe.exec(urlparse.pathname)[1];
         },
         getRecordings: function(key, callback) {
@@ -103,28 +103,7 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
-        
-        getTrainingSets: function(callback) {
-            var projectName = this.getName();
-            $http.get('/api/project/'+projectName+'/training-sets/').success(function(data) {
-                callback(data);
-            });
-        },
-        
-        addTrainingSet: function(tset_data, callback) {
-            var projectName = this.getName();
-            $http.post('/api/project/'+projectName+'/training-sets/add', tset_data).success(function(data) {
-                callback(data);
-            });
-        },
-        
-        getTrainingSetDatas: function(training_set, recording_uri, callback) {
-            var projectName = this.getName();
-            $http.get('/api/project/'+projectName+'/training-sets/list/'+training_set+'/'+recording_uri).success(function(data) {
-                callback(data);
-            });
-        },
-        
+
         recExists: function(site_id, filename, callback) {
             $http.get('/api/project/'+url+'/recordings/exists/site/'+ site_id +'/file/' + filename)
             .success(function(data) {
@@ -132,7 +111,38 @@ angular.module('a2services',[])
             });
         }
     };
-}]);
+}])
+
+.factory('a2TrainingSets', function(Project, $http) {
+    return {
+        getList: function(callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/').success(function(data) {
+                callback(data);
+            });
+        },
+        add: function(tset_data, callback) {
+            var projectName = Project.getName();
+            $http.post('/api/project/'+projectName+'/training-sets/add', tset_data).success(function(data) {
+                callback(data);
+            });
+        },
+        getData: function(training_set, recording_uri, callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/list/'+training_set+'/'+recording_uri).success(function(data) {
+                callback(data);
+            });
+        },
+
+        getTypes: function(callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/types').success(function(data) {
+                callback(data);
+            });
+        },
+    };
+});
+
 
 angular.module('a2utils', [])
 .factory('$templateFetch', function($http, $templateCache){
@@ -152,9 +162,9 @@ angular.module('a2utils', [])
                     for(var i=0, l=tmp_promise.linkers, e=l.length; i < e; ++i){
                         l[i](template);
                     }
-                })                        
+                })
             };
-            $templateCache.put(templateUrl, tmp_promise);                
+            $templateCache.put(templateUrl, tmp_promise);
         }
     }
 })

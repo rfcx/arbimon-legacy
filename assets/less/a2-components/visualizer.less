@@ -42,7 +42,18 @@
             position:absolute;
             pointer-events: none;
             z-index:100;
-            > .input-source {
+            
+            .roi {
+                position: absolute;
+                border: 1px solid green;
+                background-color: rgba(0, 255, 0, 0.1);
+                &.roi-current{
+                    border: 1px solid blue;
+                    background-color: rgba(0, 0, 255, 0.2);
+                }
+            }
+            
+            .input-source {
                 position: absolute;
                 top:0;
                 left:0;

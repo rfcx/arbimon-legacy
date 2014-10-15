@@ -70,7 +70,7 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     padding-left:  (@gutter / 2);
     padding-right: (@gutter / 2);
     position: absolute;
-    
+
     @media (min-width: @screen-md-min) {
         position: absolute;
         left : percentage((@colstart / @grid-columns));
@@ -104,7 +104,7 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
                 }
             }
         }
-        
+
         .drawer{
             .button-variant(@btn-default-color; @btn-default-bg; @btn-default-border);
             position: absolute;
@@ -226,7 +226,7 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     padding: 10px;
     background-color: #D7D7D7;
     border-radius: 6px;
-    
+
     & h3 {
         margin: 3px;
     }
@@ -242,6 +242,12 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     padding  : 5px;
 }
 
+.ib{
+    display:inline-block;
+}
+.w12em{
+    width : 12em;
+}
 
 .bg {
   min-height: 20px;
@@ -256,18 +262,18 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     border-color: rgba(0,0,0,.15);
   }
 }
+
 /*
     sidebar for bootstrap
 */
-
-.sidenav { 
+.sidenav {
     width: 125px;
     height: 100%;
     float:left;
     -webkit-box-shadow: 4px 2px 5px 1px rgba(0,0,0,0.4);
     -moz-box-shadow: 4px 2px 5px 1px rgba(0,0,0,0.4);
     box-shadow: 4px 2px 5px 1px rgba(0,0,0,0.4);
-    
+
     & a {
         display:block;
         padding-left:  25px;
@@ -276,12 +282,12 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
         text-decoration: none;
         color: @gray-dark;
     }
-    
+
     & a:hover,
     & a:active {
         background-color: @gray-lighter;
     }
-    
+
     & a.active {
         color: @gray-lighter;
         background-color: @brand-primary;
@@ -293,3 +299,14 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
 }
 
 
+.has-error {
+    @text-color: @state-danger-text;
+    @border-color: @state-danger-text;
+    @background-color: @state-danger-bg;
+    // Set validation states also for addons
+    .dropdown > .btn {
+        color: @text-color;
+        border-color: @border-color;
+//        background-color: @background-color;
+    }
+}

@@ -7,12 +7,22 @@ var config       = require('../config');
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
 var audiotool    = require('../utils/audiotool');
+var sqlutil      = require('../utils/sqlutil');
 // local variables
 var s3;
 
 // exports
 module.exports = function(queryHandler) {
     var Recordings = {
+        QUERY_FIELDS : {
+            id     : {subject: 'R.recording_id'    , project:  true},
+            site   : {subject: 'S.name'            , project: false, level:1, next: 'year'                },
+            year   : {subject: 'YEAR(R.datetime)'  , project: true , level:2, next: 'month' , prev:'site' },
+            month  : {subject: 'MONTH(R.datetime)' , project: true , level:3, next: 'day'   , prev:'year' },
+            day    : {subject: 'DAY(R.datetime)'   , project: true , level:4, next: 'hour'  , prev:'month'},
+            hour   : {subject: 'HOUR(R.datetime)'  , project: true , level:5, next: 'minute', prev:'day'  },
+            minute : {subject: 'MINUTE(R.datetime)', project: true , level:6                , prev:'hour' }
+        },
         parseUrl: function(recording_url){
             var rec_match;
             if (recording_url) {
@@ -74,7 +84,6 @@ module.exports = function(queryHandler) {
             }
             return undefined;
         },
-        
         /** Finds recordings matching the given url and project id.
          * @param {String} recording_url url query selecting the set of recordings
          * @param {Integer} project_id id of the project associated to the recordings
@@ -97,83 +106,20 @@ module.exports = function(queryHandler) {
             var order_clause = (options.order ?
                 " ORDER BY S.name ASC, R.datetime ASC" : ''
             );
-            var constraints = [];
-            if(!urlquery.id) {
-                constraints = ['S.project_id = ' + mysql.escape(project_id)];
-            }
                 
-            var fields = {
-                id     : {subject: 'R.recording_id'    , project:  true},
-                site   : {subject: 'S.name'            , project: false, level:1, next: 'year'                },
-                year   : {subject: 'YEAR(R.datetime)'  , project: true , level:2, next: 'month' , prev:'site' },
-                month  : {subject: 'MONTH(R.datetime)' , project: true , level:3, next: 'day'   , prev:'year' },
-                day    : {subject: 'DAY(R.datetime)'   , project: true , level:4, next: 'hour'  , prev:'month'},
-                hour   : {subject: 'HOUR(R.datetime)'  , project: true , level:5, next: 'minute', prev:'day'  },
-                minute : {subject: 'MINUTE(R.datetime)', project: true , level:6                , prev:'hour' }
-            };
-            var count_only = options.count_only;
-            var group_by = {
-                curr    : fields[options.group_level],
-                curr_level : options.group_by,
-                level   : options.group_by,
-                levels  : [],
-                projection : [],
-                columns : [],
-                clause  : '',
-                project_part : ''
-            };
-            for(var i in urlquery){
-                var field = fields[i];
-                var constraint = this.applyQueryItem(field && field.subject, urlquery[i]);
-                if(constraint) {
-                    constraints.push(constraint);
-                    if(group_by.level == 'auto' || group_by.level == 'next') {
-                        if(!group_by.curr || group_by.curr.level < field.level) {
-                            group_by.curr = field;
-                            group_by.curr_level = i;
-                        }
-                    }
-                }
-            }
-            console.log(group_by);
-            if(group_by.level == 'next'){
-                if(group_by.curr){
-                    if(group_by.curr.next) {
-                        group_by.curr_level = group_by.curr.next;
-                        group_by.curr = fields[group_by.curr_level];
-                    }
-                } else {
-                    for(var i in fields){
-                        var field = fields[i];
-                        if(field.level && (!group_by.curr || group_by.curr.level > field.level)) {
-                            console.log(field);
-                            group_by.curr = field;
-                            group_by.curr_level = i;
-                        }
-                    }
-                }
+            var fields = Recordings.QUERY_FIELDS;
+            
+            var constraints = sqlutil.compile_query_constraints(urlquery, fields);
+            if(!urlquery.id) {
+                constraints.unshift('S.project_id = ' + mysql.escape(project_id));
             }
             
-            while(group_by.curr){
-                group_by.levels.unshift(group_by.curr_level);
-                if(count_only || group_by.curr.project) {
-                    group_by.projection.unshift(group_by.curr.subject + ' as ' + group_by.curr_level);
-                }
-                if (count_only) {
-                    group_by.columns.unshift(group_by.curr.subject);
-                }
-                group_by.curr_level = group_by.curr.prev;
-                group_by.curr = fields[group_by.curr_level];
-            }
-            if(group_by.columns.length > 0) {
-                group_by.clause = "\n GROUP BY " + group_by.columns.join(", ");
-            }
-            if(group_by.projection.length > 0) {
-                group_by.project_part = group_by.projection.join(", ") + ",";
-            }
+            var group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
+                count_only : options.count_only
+            });
             
             var projection;
-            if (count_only) {
+            if (options.count_only) {
                 projection = "COUNT(*) as count";
             } else {
                 projection = "R.recording_id AS id, SUBSTRING_INDEX(R.uri,'/',-1) as file,S.name as site, R.uri, R.datetime, R.mic, R.recorder, R.version";

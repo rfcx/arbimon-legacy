@@ -1,8 +1,7 @@
-window.qwe={};
 (function(angular){
     var visualizer = angular.module('visualizer', ['ui.router', 'ngAudio', 'a2services', 'a2utils', 'a2recordingsbrowser', 'a2SpeciesValidator']);
     var template_root = '/partials/visualizer/';
-    /*
+    /**
     var test_data = {
         recording : {
             file     : "test-2014-08-06_12-20.wav",
@@ -18,34 +17,6 @@ window.qwe={};
             ]
         },
         layers : [
-            {   title   : "Recordings",
-                visible : true,
-                hide_visibility : true,
-                type    : "recording-layer",
-                file    : "test-2014-08-06_12-20.wav",
-                tiles   : [
-                    {x:0, y:0, src:'/data/sample/test-2014-08-06_12-20.wav.bmp'}
-                ],
-            },
-            {   title     : "Data Analysis",
-                visible   : false,
-                type    : "data-analysis-layer",
-                sublayers : {
-                    collapsed : false,
-                    layers    : [
-                        {
-                            title   : "Regions of Interest",
-                            visible : true
-                        }, {
-                            title   : "New Model",
-                            visible : true
-                        }, {
-                            title   : "New Model Data",
-                            visible : true
-                        }
-                    ]
-                }
-            },
             {   title   : "Frequency Filter",
                 visible : true,
                 type    : "frequency-adjust-layer",
@@ -57,7 +28,7 @@ window.qwe={};
         ]
     };
     */
-    
+
     visualizer.value('layer_types',{
         'recording-layer' : {
             title : "",
@@ -67,7 +38,7 @@ window.qwe={};
         },
         'frequency-adjust-layer' : true,
         'species-presence' : {
-            title   : "",            
+            title   : "",
             sidebar_visible : function($scope){return !!$scope.recording;},
             visible : false,
             hide_visibility : true,
@@ -99,7 +70,6 @@ window.qwe={};
                 return null;
             }
         }
-        window.qwe.$location = $location;
         $scope.layers = []; // current layers in the visualizer
         $scope.addLayer = function(layer_type){
             if(layer_types[layer_type]) {
@@ -115,6 +85,23 @@ window.qwe={};
         }
         $scope.recording = null;
         $scope.layout = {
+            sec2x : function(seconds, round){
+                var x = seconds * this.scale.sec2px;
+                return round ? (x|0) : +x;
+            },
+            hz2y : function(hertz, round){
+                var h = (this.spectrogram && this.spectrogram.height) | 0;
+                var y = h - hertz * this.scale.hz2px;
+                return round ? (y|0) : +y;
+            },
+            dsec2width : function(seconds1, seconds2, round){
+                var w = (seconds1 - seconds2) * this.scale.sec2px;
+                return round ? (w|0) : +w;
+            },
+            dhz2height : function(hz1, hz2, round){
+                var h = (hz1 - hz2) * this.scale.hz2px;
+                return round ? (h|0) : +h;
+            },
             scale : {
                 def_sec2px :    5 / 100.0,
                 def_hz2px  : 5000 / 100.0,
@@ -128,7 +115,7 @@ window.qwe={};
             sec : 0, hz : 0
         };
         $scope.selection = itemSelection.make('layer');
-        
+
         $scope.getLayers = function(){
             return $scope.layers;
         };
@@ -155,7 +142,7 @@ window.qwe={};
                     }
                 });
             } else {
-                $scope.recording = null;                
+                $scope.recording = null;
             }
         };
         $scope.audio_player = {
@@ -206,17 +193,17 @@ window.qwe={};
                 $scope.$broadcast('next-recording');
             },
         };
-        
+
         $scope.$on('browser-available', function(){
             if($state.params && $state.params.recording) {
                 $scope.$broadcast('select-recording',[$state.params.recording]);
             }
         });
-        
+
         // $scope.setRecording(test_data.recording);
     }).directive('a2Visualizer', function(){
-        
-        
+
+
         return { restrict : 'E', replace:true, templateUrl: template_root + 'main.html' }
     });
 
@@ -233,7 +220,7 @@ window.qwe={};
         };
     });
 
-    
+
     visualizer.directive('a2VisualizerLayerItem', function(layer_types, $compile, $templateFetch){
         return {
             restrict : 'E',
@@ -437,7 +424,8 @@ window.qwe={};
             }
         }
     });
-    visualizer.directive('a2VisualizerSpectrogramAffixed', function($compile, $templateFetch){
+
+    visualizer.directive('a2VisualizerSpectrogramAffixed', function(){
         return {
             restrict :'E',
             template : '<div class="a2-visualizer-spectrogram-affixed" ng-transclude></div>',
@@ -454,32 +442,182 @@ window.qwe={};
         }
     });
 
-    visualizer.controller('a2VisualizerTrainingDataLayerController', function($scope, $modal, Project){
+    visualizer.controller('a2VisualizerTrainingDataLayerController', function($scope, $modal, $timeout, a2TrainingSets){
         var self=this;
-        Project.getTrainingSets(function(training_sets){
-            self.training_sets = training_sets;
+        self.tset      = null;
+        self.tset_type = null;
+        self.tset_list = [];
+        self.data      = null;
+
+        a2TrainingSets.getList(function(training_sets){
+            self.tset_list = training_sets;
+            if(!self.tset && training_sets && training_sets.length > 0) {
+                self.tset = training_sets[0];
+            }
         });
         self.add_new_tset = function(){
             $modal.open({
                 templateUrl : template_root + 'modal/add_tset.html',
-                controller  : 'a2VisualizerAddTrainingSetModalController',
-                scope : $scope
-            }).result.then(function (_1) {
-                console.log('qqwwee : ', this, arguments, _1);
+                controller  : 'a2VisualizerAddTrainingSetModalController'
+            }).result.then(function (new_tset) {
+                if(new_tset && new_tset.id) {
+                    self.tset_list.push(new_tset);
+                    if(!self.tset) {
+                        self.tset = new_tset;
+                    }
+                }
             });
         }
+        self.data_controller = null;
+
+        var fetchTsetData = function(){
+            var tset = self.tset && self.tset.name;
+            var tset_type = self.tset && self.tset.type;
+            var rec = $scope.recording && $scope.recording.id;
+            if(tset && rec) {
+                a2TrainingSets.getData(tset, rec, function(data){
+                    $timeout(function(){
+                        console.log(self.tset, rec);
+                        self.data = data;
+                        self.tset_type = tset_type;
+                    })
+                })
+            }
+        };
+
+        $scope.$watch(function(){return self.tset;}, fetchTsetData);
+        $scope.$watch('recording', fetchTsetData);
     });
-    
-    visualizer.controller('a2VisualizerAddTrainingSetModalController', function($scope, $modalInstance, Project){
+
+    visualizer.service('training_set_types',function(Project){
+        return {
+            'roi_set' : {
+                has_layout : true,
+                templates  : {
+                    new_modal : template_root + 'modal/new_roi_set_tset_partial.html'
+                },
+                action : {
+                    collect_new_tset_data : function(sdata, tset_data, sval){
+                        if(sdata.class){
+                            tset_data.class = $scope.class.id;
+                        } else {
+                            sval.class = "Please select a project class.";
+                        }
+                        sval.count++;
+                    }
+                },
+                controller : 'a2VisualizerSpectrogramTrainingSetRoiSetData'
+            }
+        };
+    });
+
+    visualizer.controller('a2VisualizerAddTrainingSetModalController', function($scope, $modalInstance, Project, training_set_types, a2TrainingSets){
+        $scope.data = {
+            name : '',
+            type : null
+        }
+        $scope.typedefs = training_set_types;
+        Project.getClasses(function(project_classes){
+            $scope.project_classes = project_classes;
+        });
+        a2TrainingSets.getTypes(function(tset_types){
+            $scope.tset_types = tset_types;
+            if(tset_types && tset_types.length == 1) {
+                $scope.data.type = tset_types[0];
+            }
+        });
         $scope.ok = function(){
-            var tset_data = {
-                name : $scope.name
-            };
-            //Project.addTrainingSet(tset_data, function(new_tset){
-                tset_data.id = 'ficticious';
-                $modalInstance.close(tset_data);
-            //    $modalInstance.close(new_tset);
-            //});
+            $scope.validation={count:0};
+            var sdata=$scope.data, sval = $scope.validation;
+            var tset_data = {};
+            var tst;
+
+            if(sdata.name){
+                tset_data.name = $scope.data.name;
+            } else {
+                sval.name = "Training set name is required.";
+                sval.count++;
+            }
+
+            if(sdata.type && sdata.type.id){
+                tset_data.type = sdata.type.id;
+                tst = training_set_types[sdata.type.identifier];
+            } else {
+                sval.type = "Training set type is required.";
+                sval.count++;
+            }
+
+            if(tst && tst.action && tst.action.collect_new_tset_data){
+                tst.action.collect_new_tset_data(sdata, tset_data, sval);
+            }
+
+            $scope.form_data=tset_data;
+
+            if(sval.count == 0){
+                a2TrainingSets.add(tset_data, function(new_tset){
+                    $modalInstance.close(new_tset);
+                });
+            }
+        };
+    });
+
+    visualizer.directive('a2VisualizerSpectrogramTrainingSetData', function(training_set_types, $compile, $controller, $templateFetch){
+        return {
+            restrict : 'A',
+            template : '<div class="training-set-data"></div>',
+            scope    : {
+                training_data : '=a2VisualizerSpectrogramTrainingSetData'
+            },
+            replace  : true,
+            link     : function(scope, element, attrs){
+                var cscope = scope.$parent.$new();
+                cscope.training_data = scope.training_data;
+                cscope.$watch('training_data.tset_type', function(tset_type){
+                    var type_def = training_set_types[tset_type];
+                    element.attr('data-tset-type', tset_type);
+                    if(type_def) {
+                        if(type_def.controller){
+                            cscope.controller = $controller(type_def.controller, {$scope: cscope});
+                        }
+                        if(type_def.has_layout){
+                            var tmp_url  = template_root + 'spectrogram-layer/training-sets/' + tset_type + '.html';
+                            $templateFetch(tmp_url, function(tmp){
+                                element.empty().append($compile(tmp)(cscope));
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    visualizer.controller('a2ProjectClasses', function(Project){
+        var self=this;
+        Project.getClasses(function(list){
+            self.list = list;
+        })
+    });
+
+    visualizer.controller('a2VisualizerSpectrogramTrainingSetRoiSetData', function(a2TrainingSets){
+        var self = this;
+        self.current_roi = null;
+        self.add_point = function(point){
+            if(!self.current_roi) {
+                self.current_roi = {
+                    points:[
+                        [point.sec, point.hz]
+                    ]
+                }
+            } else if(self.current_roi.points.length == 1){
+                self.current_roi.points.push([point.sec, point.hz]);
+            }
+            var secs = self.current_roi.points.map(function(x){return x[0];})
+            var hzs  = self.current_roi.points.map(function(x){return x[1];})
+            self.current_roi.x1 = Math.min.apply(null, secs);
+            self.current_roi.y1 = Math.min.apply(null, hzs);
+            self.current_roi.x2 = Math.max.apply(null, secs);
+            self.current_roi.y2 = Math.max.apply(null, hzs);
+            console.log('adding a point : ', point, self.current_roi);
         };
     });
 
@@ -509,17 +647,17 @@ window.qwe={};
                             if(!site_name) {
                                 return true;
                             }
-                            
+
                             var key_comps=[], fetch_mode;
                             switch(mode){
-                                case "day"   : key_comps.unshift(date.getDate());     
+                                case "day"   : key_comps.unshift(date.getDate());
                                 case "month" : key_comps.unshift(1 + date.getMonth());
-                                case "year"  : key_comps.unshift(date.getFullYear());     
+                                case "year"  : key_comps.unshift(date.getFullYear());
                             }
                             key_comps.unshift(site_name);
                             var subkey = key_comps.pop();
                             var key = key_comps.join('-');
-                            
+
                             var availability = browser.dates.cache.get(key);
                             if(!availability) {
                                 browser.dates.fetch_availability(key);
@@ -539,7 +677,7 @@ window.qwe={};
                                         var comp = comps.shift();
                                         if (avail) {
                                             avail = avail[comp];
-                                        }                                        
+                                        }
                                     }
                                     browser.dates.cache.get(key).data = avail || {};
                                     browser.dates.update_time = new Date();
@@ -672,7 +810,7 @@ window.qwe={};
             scope : {
                 recording : '=recording'
             },
-            replace : true, 
+            replace : true,
             templateUrl : template_root + 'validator-main.html',
             link     : function($scope, $element, $attrs){
                 var class2key = function(project_class){
@@ -684,11 +822,11 @@ window.qwe={};
                     var present =  validation.present;
                     $scope.validations[key] = present | 0;
                 };
-                
+
                 Project.getClasses(function(classes){
                     $scope.classes = classes;
                 });
-                
+
                 $scope.classes = [];
                 $scope.validations = {};
                 $scope.validate = function(project_class, val){
@@ -716,5 +854,5 @@ window.qwe={};
             }
         };
     });
-    
+
 })(angular);
