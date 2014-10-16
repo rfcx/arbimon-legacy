@@ -113,6 +113,37 @@ angular.module('a2services',[])
     };
 }])
 
+.factory('a2TrainingSets', function(Project, $http) {
+    return {
+        getList: function(callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/').success(function(data) {
+                callback(data);
+            });
+        },
+
+        add: function(tset_data, callback) {
+            var projectName = Project.getName();
+            $http.post('/api/project/'+projectName+'/training-sets/add', tset_data).success(function(data) {
+                callback(data);
+            });
+        },
+        getData: function(training_set, recording_uri, callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/list/'+training_set+'/'+recording_uri).success(function(data) {
+                callback(data);
+            });
+        },
+
+        getTypes: function(callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/types').success(function(data) {
+                callback(data);
+            });
+        },
+    };
+})
+
 .factory('Species',['$http', function($http){
     var species;
 
@@ -146,34 +177,4 @@ angular.module('a2services',[])
         }
     };
 }])
-
-.factory('a2TrainingSets', function(Project, $http) {
-    return {
-        getList: function(callback) {
-            var projectName = Project.getName();
-            $http.get('/api/project/'+projectName+'/training-sets/').success(function(data) {
-                callback(data);
-            });
-        },
-
-        add: function(tset_data, callback) {
-            var projectName = Project.getName();
-            $http.post('/api/project/'+projectName+'/training-sets/add', tset_data).success(function(data) {
-                callback(data);
-            });
-        },
-        getData: function(training_set, recording_uri, callback) {
-            var projectName = Project.getName();
-            $http.get('/api/project/'+projectName+'/training-sets/list/'+training_set+'/'+recording_uri).success(function(data) {
-                callback(data);
-            });
-        },
-
-        getTypes: function(callback) {
-            var projectName = Project.getName();
-            $http.get('/api/project/'+projectName+'/training-sets/types').success(function(data) {
-                callback(data);
-            });
-        },
-    };
-});
+;

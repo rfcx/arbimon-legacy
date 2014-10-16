@@ -1,8 +1,8 @@
 var util = require('util');
 var mysql = require('mysql');
 var dbpool = require('../utils/dbpool');
-
 var queryHandler = dbpool.queryHandler;
+
 var Projects = {
     findByUrl: function (project_url, callback) {
         var query = "SELECT * FROM projects WHERE url = " + mysql.escape(project_url);
