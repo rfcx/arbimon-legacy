@@ -40,18 +40,21 @@
         'species-presence' : {
             title   : "",
             sidebar_visible : function($scope){return !!$scope.recording;},
+            display:{spectrogram:false},
+            sidebar_only : true,
             visible : false,
             hide_visibility : true,
             type    : "species-presence",
         },
         'training-data' : {
             title   : "",
-            controller : 'a2VisualizerTrainingDataLayerController as training_data',
+            controller : 'a2VisualizerTrainingSetLayerController as training_data',
             sidebar_visible : function($scope){return !!$scope.recording;},
             visible : true,
             type    : "training-data",
         }
     });
+
     visualizer.controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller) {
         var new_layer = function(layer_type){
             var layer_def = layer_types[layer_type];
@@ -82,6 +85,9 @@
 
         $scope.isSidebarVisible = function(l){
             return !l.sidebar_visible || l.sidebar_visible($scope);
+        }
+        $scope.canDisplayInSpectrogram = function(l){
+            return !l.display || l.display.spectrogram;
         }
         $scope.recording = null;
         $scope.layout = {
@@ -442,53 +448,6 @@
         }
     });
 
-    visualizer.controller('a2VisualizerTrainingDataLayerController', function($scope, $modal, $timeout, a2TrainingSets){
-        var self=this;
-        self.tset      = null;
-        self.tset_type = null;
-        self.tset_list = [];
-        self.data      = null;
-
-        a2TrainingSets.getList(function(training_sets){
-            self.tset_list = training_sets;
-            if(!self.tset && training_sets && training_sets.length > 0) {
-                self.tset = training_sets[0];
-            }
-        });
-        self.add_new_tset = function(){
-            $modal.open({
-                templateUrl : template_root + 'modal/add_tset.html',
-                controller  : 'a2VisualizerAddTrainingSetModalController'
-            }).result.then(function (new_tset) {
-                if(new_tset && new_tset.id) {
-                    self.tset_list.push(new_tset);
-                    if(!self.tset) {
-                        self.tset = new_tset;
-                    }
-                }
-            });
-        }
-        self.data_controller = null;
-
-        var fetchTsetData = function(){
-            var tset = self.tset && self.tset.name;
-            var tset_type = self.tset && self.tset.type;
-            var rec = $scope.recording && $scope.recording.id;
-            if(tset && rec) {
-                a2TrainingSets.getData(tset, rec, function(data){
-                    $timeout(function(){
-                        console.log(self.tset, rec);
-                        self.data = data;
-                        self.tset_type = tset_type;
-                    })
-                })
-            }
-        };
-
-        $scope.$watch(function(){return self.tset;}, fetchTsetData);
-        $scope.$watch('recording', fetchTsetData);
-    });
-
     visualizer.service('training_set_types',function(Project){
         return {
             'roi_set' : {
@@ -509,6 +468,114 @@
                 controller : 'a2VisualizerSpectrogramTrainingSetRoiSetData'
             }
         };
+    });
+
+
+    visualizer.controller('a2VisualizerTrainingSetLayerController', function($scope, $modal, $controller, $timeout, a2TrainingSets){
+        var self=this;
+        self.tset      = null;
+        self.tset_type = null;
+        self.tset_list = [];
+        self.data      = null;
+
+        a2TrainingSets.getList(function(training_sets){
+            self.tset_list = training_sets;
+            if(!self.tset && training_sets && training_sets.length > 0) {
+                self.tset = training_sets[0];
+            }
+        });
+
+
+        self.add_new_tset = function(){
+            $modal.open({
+                templateUrl : template_root + 'modal/add_tset.html',
+                controller  : 'a2VisualizerAddTrainingSetModalController'
+            }).result.then(function (new_tset) {
+                if(new_tset && new_tset.id) {
+                    self.tset_list.push(new_tset);
+                    if(!self.tset) {
+                        self.tset = new_tset;
+                    }
+                }
+            });
+        }
+
+        var fetchTsetData = function(){
+            var tset = self.tset && self.tset.name;
+            var tset_type = self.tset && self.tset.type;
+            var rec = $scope.recording && $scope.recording.id;
+            if(tset && rec) {
+                if(!self.data || self.data.type != tset_type){
+                    var cont_name = tset_type.replace(/(^|-|_)(\w)/g, function(_,_1,_2,_3){ return _2.toUpperCase()});
+                    cont_name = 'a2VisualizerTrainingSetLayer'+cont_name+'DataController';
+                    self.data = $controller(cont_name,{$scope : $scope});
+console.log('data controller is now : ', self.data);
+                }
+                self.data.fetchData(tset, rec);
+            }
+        };
+
+        $scope.$watch(function(){return self.tset;}, fetchTsetData);
+        $scope.$watch('recording', fetchTsetData);
+    });
+
+    visualizer.controller('a2VisualizerTrainingSetLayerRoiSetDataController', function($timeout, a2TrainingSets){
+        var self=this;
+        self.type='roi_set';
+        self.fetchData = function(tset, rec){
+            a2TrainingSets.getData(tset, rec, function(data){
+                $timeout(function(){
+                    self.data = data;
+                })
+            })
+        };
+        self.current_roi = null;
+        self.cancel_entry = function(){
+            console.log('self.cancel_entry');
+            self.current_roi = null;
+        };
+        self.add_point = function(point){
+            if(!self.current_roi) {
+                self.current_roi = {
+                    points:[
+                        [point.sec, point.hz]
+                    ]
+                }
+            } else if(self.current_roi.points.length == 1){
+                self.current_roi.points.push([point.sec, point.hz]);
+            }
+            var secs = self.current_roi.points.map(function(x){return x[0];})
+            var hzs  = self.current_roi.points.map(function(x){return x[1];})
+            self.current_roi.x1 = Math.min.apply(null, secs);
+            self.current_roi.y1 = Math.min.apply(null, hzs);
+            self.current_roi.x2 = Math.max.apply(null, secs);
+            self.current_roi.y2 = Math.max.apply(null, hzs);
+            console.log('adding a point : ', point, self.current_roi);
+        };
+    });
+
+    visualizer.directive('a2VisualizerSpectrogramTrainingSetData', function(training_set_types, $compile, $controller, $templateFetch){
+        return {
+            restrict : 'A',
+            template : '<div class="training-set-data"></div>',
+            replace  : true,
+            link     : function(scope, element, attrs){
+                console.log('a2VisualizerSpectrogramTrainingSetData watching :', attrs.a2VisualizerSpectrogramTrainingSetData, scope);
+                scope.$watch(attrs.a2VisualizerSpectrogramTrainingSetData, function(tset_type){
+                    console.log('watching :', attrs.a2VisualizerSpectrogramTrainingSetData, " : ", tset_type);
+                    var type_def = training_set_types[tset_type];
+                    element.attr('data-tset-type', tset_type);
+                    if(type_def) {
+                        if(type_def.has_layout){
+                            var tmp_url  = template_root + 'spectrogram-layer/training-sets/' + tset_type + '.html';
+                            $templateFetch(tmp_url, function(tmp){
+                                element.empty().append($compile(tmp)(scope));
+                            });
+                        }
+                    }
+                });
+            }
+        }
     });
 
     visualizer.controller('a2VisualizerAddTrainingSetModalController', function($scope, $modalInstance, Project, training_set_types, a2TrainingSets){
@@ -561,64 +628,12 @@
         };
     });
 
-    visualizer.directive('a2VisualizerSpectrogramTrainingSetData', function(training_set_types, $compile, $controller, $templateFetch){
-        return {
-            restrict : 'A',
-            template : '<div class="training-set-data"></div>',
-            scope    : {
-                training_data : '=a2VisualizerSpectrogramTrainingSetData'
-            },
-            replace  : true,
-            link     : function(scope, element, attrs){
-                var cscope = scope.$parent.$new();
-                cscope.training_data = scope.training_data;
-                cscope.$watch('training_data.tset_type', function(tset_type){
-                    var type_def = training_set_types[tset_type];
-                    element.attr('data-tset-type', tset_type);
-                    if(type_def) {
-                        if(type_def.controller){
-                            cscope.controller = $controller(type_def.controller, {$scope: cscope});
-                        }
-                        if(type_def.has_layout){
-                            var tmp_url  = template_root + 'spectrogram-layer/training-sets/' + tset_type + '.html';
-                            $templateFetch(tmp_url, function(tmp){
-                                element.empty().append($compile(tmp)(cscope));
-                            });
-                        }
-                    }
-                });
-            }
-        }
-    });
 
     visualizer.controller('a2ProjectClasses', function(Project){
         var self=this;
         Project.getClasses(function(list){
             self.list = list;
         })
-    });
-
-    visualizer.controller('a2VisualizerSpectrogramTrainingSetRoiSetData', function(a2TrainingSets){
-        var self = this;
-        self.current_roi = null;
-        self.add_point = function(point){
-            if(!self.current_roi) {
-                self.current_roi = {
-                    points:[
-                        [point.sec, point.hz]
-                    ]
-                }
-            } else if(self.current_roi.points.length == 1){
-                self.current_roi.points.push([point.sec, point.hz]);
-            }
-            var secs = self.current_roi.points.map(function(x){return x[0];})
-            var hzs  = self.current_roi.points.map(function(x){return x[1];})
-            self.current_roi.x1 = Math.min.apply(null, secs);
-            self.current_roi.y1 = Math.min.apply(null, hzs);
-            self.current_roi.x2 = Math.max.apply(null, secs);
-            self.current_roi.y2 = Math.max.apply(null, hzs);
-            console.log('adding a point : ', point, self.current_roi);
-        };
     });
 
     angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])

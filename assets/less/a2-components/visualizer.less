@@ -3,11 +3,11 @@
     overflow: auto;
     position: relative;
     width: 100%;
-    
+
     > * {
         position: absolute;
     }
-    
+
     > svg {
         z-index:10;
         > .bg{
@@ -17,7 +17,7 @@
             path, line {
                 fill: none;
                 stroke: black;
-                shape-rendering: crispEdges;                
+                shape-rendering: crispEdges;
             }
             text {
                 font-family: sans-serif;
@@ -31,18 +31,18 @@
     > .axis-x{
         z-index : 10;
     }
-    
+
     > .btn-toolbar{
         z-index : 50;
     }
-    
+
     > .spectrogram-container{
         z-index:1;
         > .spectrogram-layer {
             position:absolute;
             pointer-events: none;
             z-index:100;
-            
+
             .roi {
                 position: absolute;
                 border: 1px solid green;
@@ -52,7 +52,7 @@
                     background-color: rgba(0, 0, 255, 0.2);
                 }
             }
-            
+
             .input-source {
                 position: absolute;
                 top:0;
@@ -80,7 +80,7 @@
             }
         }
     }
-    
+
 }
 
 
@@ -129,4 +129,16 @@
         content: "\f00d"
     }
     color: @brand-danger;
+}
+
+
+.control-point{
+    position:absolute;
+    font-size:14px;
+    &.cp-resize-tl, &.cp-resize-br{
+        cursor:nwse-resize;
+    }
+    &.cp-resize-tr, &.cp-resize-bl{
+        cursor:nesw-resize;
+    }
 }

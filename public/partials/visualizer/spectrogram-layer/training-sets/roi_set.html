@@ -1,17 +1,25 @@
 <div class="input-source"
     ng-style="{height: layout.spectrogram.height, width: layout.spectrogram.width}"
-    a2-visualizer-fit-spectrogram ng-show="selection.layer == layer" ng-click="controller.add_point(pointer)">
+    a2-visualizer-fit-spectrogram ng-show="selection.layer == layer" ng-click="layer.training_data.data.add_point(pointer)">
     <a2-visualizer-spectrogram-affixed>
         Click to add training data to this recording.
+        <div ng-show="layer.training_data.data.current_roi && !layer.training_data.data.current_roi.id" a2-global-keyup="((layer.training_data.data.keyup = $event.which) == 27) && layer.training_data.data.cancel_entry()">
+            Press <code>esc</code> to cancel training data addition.
+            {{controller.keyup}}
+        </div>
+        {{data_controller | json}}
     </a2-visualizer-spectrogram-affixed>
     <div class="roi" ng-repeat="roi in controller.data"
         ng-style="{left:layout.sec2x(roi.x1, 1) + 'px', top:layout.hz2y(roi.y2, 1) + 'px', width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px', height:layout.dhz2height(roi.y2, roi.y1) + 'px'}"
     >
         {{controller.current_roi | json}}
     </div>
-    <div class="roi roi-current"
-        ng-style="{left:layout.sec2x(controller.current_roi.x1, 1) + 'px', top:layout.hz2y(controller.current_roi.y2, 1) + 'px', width:layout.dsec2width(controller.current_roi.x2, controller.current_roi.x1, 1) + 'px', height:layout.dhz2height(controller.current_roi.y2, controller.current_roi.y1) + 'px'}"
+    <div class="roi roi-current" ng-show="layer.training_data.data.current_roi"
+        ng-style="{left:layout.sec2x(layer.training_data.data.current_roi.x1, 1) + 'px', top:layout.hz2y(layer.training_data.data.current_roi.y2, 1) + 'px', width:layout.dsec2width(layer.training_data.data.current_roi.x2, layer.training_data.data.current_roi.x1, 1) + 'px', height:layout.dhz2height(layer.training_data.data.current_roi.y2, layer.training_data.data.current_roi.y1) + 'px'}"
     >
-        {{controller.current_roi | json}}
+        <i class="fa fa-circle-o control-point cp-resize-tl" style="position:absolute;    top:-7px;  left:-6px" ></i>
+        <i class="fa fa-circle-o control-point cp-resize-tr" style="position:absolute;    top:-7px; right:-6px" ></i>
+        <i class="fa fa-circle-o control-point cp-resize-bl" style="position:absolute; bottom:-7px;  left:-6px" ></i>
+        <i class="fa fa-circle-o control-point cp-resize-br" style="position:absolute; bottom:-7px; right:-6px" ></i>
     </div>
 </div>
