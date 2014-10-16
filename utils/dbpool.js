@@ -12,9 +12,13 @@ var dbpool = {
         var query_fn = connection.query;
         connection.query = function(sql, values, cb) {
             var sql_txt = sql.sql || sql;
-            console.log('- query : -|', sql.replace(/\n/g,'\n             '));
+            console.log('- query : -|', sql_txt.replace(/\n/g,'\n             '));
+            if (values instanceof Function) {
+                cb = values;
+                values = undefined;
+            }
             if(values){
-                console.log('- values: -', values);
+                console.log('- values: ', values);
             }
             query_fn.call(connection, sql, values, function(err, rows, fields) {
                 if(err) {
@@ -23,13 +27,13 @@ var dbpool = {
                     if(rows.length != undefined) {
                         console.log('  returned :', rows.length , " rows.");
                     }
-                    if(rows.affectedRows != undefined) {
+                    if(rows.affectedRows) {
                         console.log('  affected :', rows.affectedRows , " rows.");
                     }
-                    if(rows.changedRows != undefined) {
+                    if(rows.changedRows) {
                         console.log('  changed  :', rows.changedRows , " rows.");
                     }
-                    if(rows.insertId != undefined) {
+                    if(rows.insertId) {
                         console.log('  insert id :', rows.insertId , " rows.");
                     }
                 }
@@ -48,13 +52,14 @@ var dbpool = {
     queryHandler : function (query, callback) {
         // for debugging
         var sql = query.sql || query;
-        console.log('- query : -|', sql.replace(/\n/g,'\n             '));
-        
+        console.log('- db connection from pool : fetching');
+       
         dbpool.pool.getConnection(function(err, connection) {
             if(err){
                 callback(err);
                 return;
             }
+            console.log('  query : -|', sql.replace(/\n/g,'\n             '));
             connection.query(query, function(err, rows, fields) {
                 connection.release();
                 // for debugging
