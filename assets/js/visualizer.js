@@ -499,11 +499,11 @@
                 action : {
                     collect_new_tset_data : function(sdata, tset_data, sval){
                         if(sdata.class){
-                            tset_data.class = $scope.class.id;
+                            tset_data.class = sdata.class.id;
                         } else {
                             sval.class = "Please select a project class.";
+                            sval.count++;
                         }
-                        sval.count++;
                     }
                 },
                 controller : 'a2VisualizerSpectrogramTrainingSetRoiSetData'
@@ -540,7 +540,7 @@
             }
 
             if(sdata.type && sdata.type.id){
-                tset_data.type = sdata.type.id;
+                tset_data.type = sdata.type.identifier;
                 tst = training_set_types[sdata.type.identifier];
             } else {
                 sval.type = "Training set type is required.";

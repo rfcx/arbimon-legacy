@@ -41,7 +41,7 @@ var TrainingSets = {
             "    TSRS.species_id as TT_roi_set_TT_species, TSRS.songtype_id as TT_roi_set_TT_songtype \n" +
             "FROM training_sets TS \n" +
             "JOIN training_set_types TST ON TS.training_set_type_id = TST.training_set_type_id \n" +
-            "LEFT JOIN training_set_roi_set TSRS ON TS.training_set_id = TSRS.training_set_id \n" +
+            "LEFT JOIN training_sets_roi_set TSRS ON TS.training_set_id = TSRS.training_set_id \n" +
             "WHERE " + constraints.join(" \n" +
             "  AND "
         ), function(err, data, fields){
@@ -100,32 +100,38 @@ var TrainingSets = {
         tasks.push(queryHandler.getConnection);
         tasks.push(function begin_transaction(connection, cb){
             scope.connection = connection;
-            connection.beginTransaction(cb);
+            scope.connection.beginTransaction(cb);
         });
-        tasks.push(function run_insert_query(cb){
+        tasks.push(function run_insert_query(){
+            var cb = Array.prototype.pop.call(arguments);
             scope.in_transaction = true;
-            connection.query(
+            scope.connection.query(
                 "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id) \n" +
-                "VALUES ("+mysql.escape(data.project)+", "+mysql.escape(data.name)+", NOW(), "+ mysql.escape(data.type)+")",
+                "VALUES ("+mysql.escape(data.project)+", "+mysql.escape(data.name)+", NOW(), "+ mysql.escape(typedef.id)+")",
             cb);
         });
-        tasks.push(function get_insert_id(result, cb){
+        tasks.push(function get_insert_id(result){
+            var cb = Array.prototype.pop.call(arguments);
             scope.insert_id = result.insertId;
             cb();
         });
         if(typedef_action && typedef_action.extras){
-            tasks.push(function perform_typedef_extra_validation(cb){
+            tasks.push(function perform_typedef_extra_validation(){
+                var cb = Array.prototype.pop.call(arguments);
                 typedef_action.extras(scope.connection, scope.insert_id, data, cb);
             });
         }
-        tasks.push(function commit_transaction(result, cb) {
-            connection.commit(cb);
+        tasks.push(function commit_transaction() {
+            var cb = Array.prototype.pop.call(arguments);
+            scope.connection.commit(cb);
         });
-        tasks.push(function transaction_commited(result, cb) {
+        tasks.push(function transaction_commited() {
+            var cb = Array.prototype.pop.call(arguments);
             scope.in_transaction = false;
             cb();
         });
-        tasks.push(function fetch_newly_inserted_object(result, cb) {
+        tasks.push(function fetch_newly_inserted_object(result) {
+            var cb = Array.prototype.pop.call(arguments);
             TrainingSets.find({id:scope.insert_id}, cb);
         });
         async.waterfall(tasks, function(err, tset){
@@ -192,19 +198,36 @@ var TrainingSets = {
      */
     types: {
         roi_set : {
+            id    : 1,
             table : 'training_set_roi_set_data TSD',
             primary_key : 'TSD.roi_set_data_id',
             fields: ['TSD.recording_id as recording', 'TSD.species_id as species', 'TSD.songtype_id as songtype', 'TSD.x1', 'TSD.y1', 'TSD.x2', 'TSD.y2'],
             insert : {
                 validate : function(data, callback){
-                    console.log(data, models);
-                    Projects.getProjectClasses({project_id:data.project}, data.class, function(classes){
-                        console.log(classes);
-                        callback(new Error("Nope..."));
-                    });
+                    if (data.extras && data.extras.class) {
+                        Projects.getProjectClasses({project_id:data.project}, data.extras.class, function(err, classes){
+                            if(err) {
+                                callback(err);
+                            } else if(!classes || !classes.length) {
+                                callback(new Error("Project class is invalid."));
+                            } else {
+                                data.species  = classes[0].species;
+                                data.songtype = classes[0].songtype;
+                                callback();
+                            }
+                        });
+                    } else if (data.extras && data.extras.species && data.extras.songtype) {
+                        data.species  = data.extras.species;
+                        data.songtype = data.extras.songtype;
+                    } else {
+                        callback(new Error("Project class is invalid."));
+                    }
                 },
-                extras   : function(tset_id, data, callback){
-                    callback();
+                extras   : function(connection, tset_id, data, callback){
+                    connection.query(
+                        "INSERT INTO training_sets_roi_set (training_set_id, species_id, songtype_id) \n" +
+                        "VALUES ("+mysql.escape([tset_id, data.species, data.songtype])+")",
+                    callback);
                 }
             }
         }
