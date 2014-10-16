@@ -19,7 +19,14 @@
         </button>
     </div>
     
-    <div>
-        Training Data
+    <div ng-show="layer.training_data.tset">
+        <div ng-hide="layer.training_data.data">
+            No training data for this recording.
+        </div>
+        <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
+            <li ng-repeat="data in layer.training_data.data">
+                {{data | json}}
+            </li>
+        </ul>
     </div>
 </div>

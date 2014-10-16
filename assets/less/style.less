@@ -242,6 +242,12 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     padding  : 5px;
 }
 
+.ib{
+    display:inline-block;
+}
+.w12em{
+    width : 12em;
+}
 
 .bg {
   min-height: 20px;
@@ -256,10 +262,10 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     border-color: rgba(0,0,0,.15);
   }
 }
+
 /*
     sidebar for bootstrap
 */
-
 .sidenav {
     width: 125px;
     height: 100%;
@@ -290,4 +296,16 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
 
 .container-sidenav {
     margin-left:125px;
+}
+
+.has-error {
+    @text-color: @state-danger-text;
+    @border-color: @state-danger-text;
+    @background-color: @state-danger-bg;
+    // Set validation states also for addons
+    .dropdown > .btn {
+        color: @text-color;
+        border-color: @border-color;
+//        background-color: @background-color;
+    }
 }

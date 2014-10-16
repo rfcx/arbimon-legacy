@@ -1,0 +1,30 @@
+<div class="form-group" ng-class="{'has-error': validation.class}">
+    <label class="col-sm-2 control-label">Class : </label>
+    <div class="col-sm-10" ng-controller="a2ProjectClasses as project_classes">
+        <div class="dropdown">
+            <div class="btn btn-block btn-default container" role="button" data-toggle="dropdown">
+                <div class="row">
+                    <div class="col-sm-11" ng-hide="data.class">[Select a project class]</div>
+                    <div class="col-sm-6" ng-show="data.class">
+                        <a2-species  species ="data.class.species"></a2-species>
+                    </div>
+                    <div class="col-sm-5" ng-show="data.class">
+                        <a2-songtype songtype="data.class.songtype"></a2-songtype>
+                    </div>
+                    <div class="col-sm-1" >
+                        <span class="caret"></span>
+                    </div>
+                </div>
+            </div>
+            <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
+                <li ng-repeat="pclass in project_classes.list">
+                    <a ng-click="data.class = pclass">
+                        <a2-species class="ib w12em" species="pclass.species"></a2-species>
+                        <a2-songtype songtype="pclass.songtype"></a2-songtype>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="pull-right text-danger" ng-show="validation.class">{{validation.class}}</div>
+</div>
