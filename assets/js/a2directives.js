@@ -1,4 +1,23 @@
 angular.module('a2directives', [])
+.directive('a2GlobalKeyup', function($timeout){
+    return {
+        restrict : 'A',
+        scope : {
+            onkeyup:'&a2GlobalKeyup'
+        }, link: function($scope, $element, $attrs){
+
+            var handler = function(evt){
+                $timeout(function(){
+                    $scope.onkeyup({$event:evt});
+                });
+            }
+            $(document).on('keyup', handler);
+            $element.on('$destroy', function() {
+                $(document).off('keyup', handler);
+            });
+        }
+    };
+})
 .directive('a2Table', function() {
     return {
         restrict: 'E',
