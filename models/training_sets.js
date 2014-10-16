@@ -36,7 +36,7 @@ var TrainingSets = {
             callback(new Error("TrainingSets.find called with invalid query."));
         }
 
-        return queryHandler(
+        return dbpool.queryHandler(
             "SELECT TS.training_set_id as id, TS.name, TS.date_created, TST.identifier as type, \n" +
             "    TSRS.species_id as TT_roi_set_TT_species, TSRS.songtype_id as TT_roi_set_TT_songtype \n" +
             "FROM training_sets TS \n" +
@@ -97,7 +97,7 @@ var TrainingSets = {
                 typedef_action.validate(data, cb);
             });
         };
-        tasks.push(queryHandler.getConnection);
+        tasks.push(dbpool.getConnection);
         tasks.push(function begin_transaction(connection, cb){
             scope.connection = connection;
             scope.connection.beginTransaction(cb);

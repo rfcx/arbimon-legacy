@@ -53,7 +53,7 @@ var dbpool = {
         // for debugging
         var sql = query.sql || query;
         console.log('- db connection from pool : fetching');
-       
+
         dbpool.pool.getConnection(function(err, connection) {
             if(err){
                 callback(err);
@@ -85,6 +85,5 @@ var dbpool = {
     },
 };
 
-dbpool.queryHandler.getConnection = dbpool.getConnection;
 
 module.exports = dbpool;
