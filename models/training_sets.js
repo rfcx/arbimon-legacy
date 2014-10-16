@@ -1,10 +1,15 @@
 // dependencies
 var mysql        = require('mysql');
-var models       = require('../models');
+var async        = require('async');
 var sqlutil      = require('../utils/sqlutil');
+var dbpool       = require('../utils/dbpool');
+var Recordings   = require('./recordings');
+var Projects     = require('./projects');
+// local variables
+var s3;
+var queryHandler = dbpool.queryHandler;
 
 // exports
-module.exports = function(queryHandler) {
     var TrainingSets = {
         /** Finds training sets, given a (non-empty) query.
          * @param {Object} query
@@ -71,12 +76,63 @@ module.exports = function(queryHandler) {
          * @param {Function} callback called back with the newly inserted training set, or with errors.
          */
         insert: function (data, callback) {
-            queryHandler(
-                "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id) \n" +
-                "VALUES ("+mysql.escape(data.project)+", "+mysql.escape(data.name)+", NOW(), "+ mysql.escape(data.type)+")",
-            function(err, result) {
-                if (err) throw err;
-                TrainingSets.find({id:result.insertId}, callback);
+            if(!data.project){
+                callback(new Error("Project id is invalid."));
+                return;
+            }
+            if(!data.name){
+                callback(new Error("Training set name is invalid."));
+                return;
+            }
+            var typedef = TrainingSets.types[data.type];
+            if(!data.type || !typedef){
+                callback(new Error("Training set type " + data.type + " is invalid."));
+                return;
+            }
+            var typedef_action = typedef.insert;
+            var scope={};
+            var tasks = [];
+            if(typedef_action && typedef_action.validate){
+                tasks.push(function perform_typedef_extra_validation(cb){
+                    typedef_action.validate(data, cb);
+                });
+            };
+            tasks.push(queryHandler.getConnection);
+            tasks.push(function begin_transaction(connection, cb){
+                scope.connection = connection;
+                connection.beginTransaction(cb);
+            });
+            tasks.push(function run_insert_query(cb){
+                scope.in_transaction = true;
+                connection.query(
+                    "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id) \n" +
+                    "VALUES ("+mysql.escape(data.project)+", "+mysql.escape(data.name)+", NOW(), "+ mysql.escape(data.type)+")",
+                cb);
+            });
+            tasks.push(function get_insert_id(result, cb){
+                scope.insert_id = result.insertId;
+                cb();
+            });
+            if(typedef_action && typedef_action.extras){
+                tasks.push(function perform_typedef_extra_validation(cb){
+                    typedef_action.extras(scope.connection, scope.insert_id, data, cb);
+                });
+            }
+            tasks.push(function commit_transaction(result, cb) {
+                connection.commit(cb);
+            });
+            tasks.push(function transaction_commited(result, cb) {
+                scope.in_transaction = false;
+                cb();
+            });
+            tasks.push(function fetch_newly_inserted_object(result, cb) {
+                TrainingSets.find({id:scope.insert_id}, cb);
+            });
+            async.waterfall(tasks, function(err, tset){
+                if(scope.connection){
+                    scope.connection.release();
+                }
+                callback(err, tset);
             });
         },
 
@@ -104,10 +160,10 @@ module.exports = function(queryHandler) {
             var tables = [type.table];
 
             if(query.recording) {
-                var req_query = models.recordings.parseUrlQuery(query.recording);
+                var req_query = Recordings.parseUrlQuery(query.recording);
                 constraints.push.apply(constraints, sqlutil.compile_query_constraints(
-                    models.recordings.parseUrlQuery(query.recording),
-                    models.recordings.QUERY_FIELDS
+                    Recordings.parseUrlQuery(query.recording),
+                    Recordings.QUERY_FIELDS
                 ));
                 tables.push(
                     'recordings R ON TSD.recording_id = R.recording_id',
@@ -138,10 +194,21 @@ module.exports = function(queryHandler) {
             roi_set : {
                 table : 'training_set_roi_set_data TSD',
                 primary_key : 'TSD.roi_set_data_id',
-                fields: ['TSD.recording_id as recording', 'TSD.species_id as species', 'TSD.songtype_id as songtype', 'TSD.x1', 'TSD.y1', 'TSD.x2', 'TSD.y2']
+                fields: ['TSD.recording_id as recording', 'TSD.species_id as species', 'TSD.songtype_id as songtype', 'TSD.x1', 'TSD.y1', 'TSD.x2', 'TSD.y2'],
+                insert : {
+                    validate : function(data, callback){
+                        console.log(data, models);
+                        Projects.getProjectClasses({project_id:data.project}, data.class, function(classes){
+                            console.log(classes);
+                            callback(new Error("Nope..."));
+                        });
+                    },
+                    extras   : function(tset_id, data, callback){
+                        callback();
+                    }
+                }
             }
         }
     };
 
-    return TrainingSets;
-}
+module.exports = TrainingSets;

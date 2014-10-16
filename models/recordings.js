@@ -8,11 +8,13 @@ var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
 var audiotool    = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
+var dbpool       = require('../utils/dbpool');
 // local variables
 var s3;
+var queryHandler = dbpool.queryHandler;
 
 // exports
-module.exports = function(queryHandler) {
+
     var Recordings = {
         QUERY_FIELDS : {
             id     : {subject: 'R.recording_id'    , project:  true},
@@ -399,6 +401,5 @@ module.exports = function(queryHandler) {
         }
     };
     
-    return Recordings;
-}
+module.exports = Recordings;
     
