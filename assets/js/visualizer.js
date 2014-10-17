@@ -1,6 +1,5 @@
 (function(angular){
     var visualizer = angular.module('visualizer', ['ui.router', 'ngAudio', 'a2services', 'a2utils', 'a2recordingsbrowser', 'a2SpeciesValidator']);
-    var template_root = '/partials/visualizer/';
     /**
     var test_data = {
         recording : {
@@ -209,7 +208,7 @@
         // $scope.setRecording(test_data.recording);
     })
     .directive('a2Visualizer', function(){
-        return { restrict : 'E', replace:true, templateUrl: template_root + 'main.html' }
+        return { restrict : 'E', replace:true, templateUrl: '/partials/visualizer/main.html' }
     });
 
     visualizer.directive('a2Scroll', function() {
@@ -230,12 +229,12 @@
         return {
             restrict : 'E',
             replace  : true,
-            templateUrl : template_root + 'layer-item/default.html',
+            templateUrl : '/partials/visualizer/layer-item/default.html',
             link     : function(scope, element, attrs){
                 var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
                 var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
                 if(layer_key && layer_key != 'default') {
-                    var layer_url  = template_root + 'layer-item/' + layer_key + '.html';
+                    var layer_url  = '/partials/visualizer/layer-item/' + layer_key + '.html';
                     var layer_tmp  = $templateFetch(layer_url, function(layer_tmp){
                         var layer_el   = $compile(layer_tmp)(scope);
                         element.append(layer_el.children().unwrap());
@@ -254,7 +253,7 @@
         }
         return {
             restrict : 'E',
-            templateUrl : template_root + 'visualizer-spectrogram.html',
+            templateUrl : '/partials/visualizer/visualizer-spectrogram.html',
             replace  : true,
             link     : function($scope, $element, $attrs){
                 var views = {
@@ -416,14 +415,14 @@
     visualizer.directive('a2VisualizerSpectrogramLayer', function(layer_types, $compile, $templateFetch){
         return {
             restrict : 'E',
-            templateUrl : template_root + 'spectrogram-layer/default.html',
+            templateUrl : '/partials/visualizer/spectrogram-layer/default.html',
             replace  : true,
             link     : function(scope, element, attrs){
                 var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
                 var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
                 element.addClass(layer_type);
                 if(layer_key && layer_key != 'default') {
-                    var layer_url  = template_root + 'spectrogram-layer/' + layer_key + '.html';
+                    var layer_url  = '/partials/visualizer/spectrogram-layer/' + layer_key + '.html';
                     var layer_tmp  = $templateFetch(layer_url, function(layer_tmp){
                         var layer_el   = $compile(layer_tmp)(scope);
                         element.append(layer_el);
@@ -455,8 +454,8 @@
             'roi_set' : {
                 has_layout : true,
                 templates  : {
-                    layer_item : template_root + 'layer-item/training-sets/roi_set.html',
-                    new_modal : template_root + 'modal/new_roi_set_tset_partial.html'
+                    layer_item : '/partials/visualizer/layer-item/training-sets/roi_set.html',
+                    new_modal : '/partials/visualizer/modal/new_roi_set_tset_partial.html'
                 },
                 action : {
                     collect_new_tset_data : function(sdata, tset_data, sval){
@@ -491,7 +490,7 @@
 
         self.add_new_tset = function(){
             $modal.open({
-                templateUrl : template_root + 'modal/add_tset.html',
+                templateUrl : '/partials/visualizer/modal/add_tset.html',
                 controller  : 'a2VisualizerAddTrainingSetModalController'
             }).result.then(function (new_tset) {
                 if(new_tset && new_tset.id) {
@@ -615,7 +614,7 @@
                     element.attr('data-tset-type', tset_type);
                     if(type_def) {
                         if(type_def.has_layout){
-                            var tmp_url  = template_root + 'spectrogram-layer/training-sets/' + tset_type + '.html';
+                            var tmp_url  = '/partials/visualizer/spectrogram-layer/training-sets/' + tset_type + '.html';
                             $templateFetch(tmp_url, function(tmp){
                                 element.empty().append($compile(tmp)(scope));
                             });
@@ -695,7 +694,7 @@
             scope : {
                 onRecording : '&onRecording'
             },
-            templateUrl : template_root + 'browser-main.html',
+            templateUrl : '/partials/visualizer/browser-main.html',
             link     : function($scope, $element, $attrs){
                 var browser = $scope.browser = {
                     sites : [],
@@ -874,7 +873,7 @@
                 recording : '=recording'
             },
             replace : true,
-            templateUrl : template_root + 'validator-main.html',
+            templateUrl : '/partials/visualizer/validator-main.html',
             link     : function($scope, $element, $attrs){
                 var class2key = function(project_class){
                     var cls = $scope.classes.filter(function(pc){return pc.id = project_class}).shift();
