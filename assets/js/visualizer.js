@@ -401,6 +401,7 @@
                 $scope.$watch('recording', function (newValue, oldValue) {
                     $element.scrollLeft(0);
                     $element.scrollTop(999999);
+                    $scope.layout.apply($element.width(), $element.height());
                 }, true);
                 $element.bind('resize', function () {
                     $scope.$apply();
