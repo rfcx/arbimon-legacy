@@ -2,12 +2,13 @@ var mysql = require('mysql');
 var config = require('../config');
 
 var dbpool = {
-    pool : mysql.createPool({
+    pool: mysql.createPool({
         host : config('db').host,
         user : config('db').user,
         password : config('db').password,
         database : config('db').database
     }),
+
     enable_query_debugging : function(connection){
         var query_fn = connection.query;
         connection.query = function(sql, values, cb) {
@@ -30,7 +31,7 @@ var dbpool = {
                         console.log('  changed  :', rows.changedRows , " rows.");
                     }
                     if(rows.insertId != undefined) {
-                        console.log('  insert id :', rows.insertId , " rows.");
+                        console.log('  insert id :', rows.insertId);
                     }
                 }
                 cb(err, rows, fields);
@@ -38,6 +39,7 @@ var dbpool = {
         };
         return connection;
     },
+
     getConnection : function(callback){
         dbpool.pool.getConnection(function(err, connection){
             if(err){ callback(err); return; }
@@ -45,22 +47,25 @@ var dbpool = {
             callback(null, connection);
         });
     },
-    queryHandler : function (query, callback) {
+
+    queryHandler: function (query, callback) {
         // for debugging
         var sql = query.sql || query;
         console.log('- query : -|', sql.replace(/\n/g,'\n             '));
-        
+
         dbpool.pool.getConnection(function(err, connection) {
             if(err){
                 callback(err);
                 return;
             }
+
             connection.query(query, function(err, rows, fields) {
                 connection.release();
                 // for debugging
                 if(err) {
                     console.log('  failed :| ', err+"");
-                } else if (rows) {
+                }
+                else if (rows) {
                     if(rows.length != undefined) {
                         console.log('  returned :', rows.length , " rows.");
                     }
@@ -71,7 +76,7 @@ var dbpool = {
                         console.log('  changed  :', rows.changedRows , " rows.");
                     }
                     if(rows.insertId != undefined) {
-                        console.log('  insert id :', rows.insertId , " rows.");
+                        console.log('  insert id :', rows.insertId);
                     }
                 }
                 callback(err, rows, fields);

@@ -5,9 +5,14 @@ angular.module('a2services',[])
     var nameRe = /\/project\/([\w\_\-]+)/;
 
     var url = nameRe.exec(urlparse.pathname)[1];
+    
+    var project;
 
     return {
         getInfo: function(callback) {
+            if(project)
+                return callback(project);
+            
             $http.get('/api/project/'+url+'/info')
             .success(function(data) {
                 callback(data);
@@ -18,13 +23,6 @@ angular.module('a2services',[])
             $http.get('/api/project/'+url+'/sites')
             .success(function(data) {
                 callback(data);
-            });
-        },
-
-        getSpecies: function(callback) {
-            $http.get('/api/project/'+url+'/species')
-            .success(function(data) {
-
             });
         },
 
@@ -55,12 +53,9 @@ angular.module('a2services',[])
         },
 
         getName: function(){
-            var urlparse = document.createElement('a');
-            urlparse.href = $location.absUrl();
-            var nameRe = /\/project\/([\w\_\-]+)/;
-
-            return nameRe.exec(urlparse.pathname)[1];
+            return url;
         },
+        
         getRecordings: function(key, callback) {
             var projectName = this.getName();
             $http.get('/api/project/'+projectName+'/recordings/'+key).success(function(data) {
@@ -103,13 +98,33 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
-
         recExists: function(site_id, filename, callback) {
             $http.get('/api/project/'+url+'/recordings/exists/site/'+ site_id +'/file/' + filename)
             .success(function(data) {
                 callback(data.exists);
             });
+        },
+        addClass: function(projectClass, callback) {
+            $http.post('/api/project/'+url+'/class/add', projectClass)
+            .success(function(data){
+                callback(null, data);
+            })
+            .error(function(err){
+                callback(err);
+            });
+        },
+        
+        removeClasses: function(projectClasses, callback) {
+            $http.post('/api/project/'+url+'/class/del', projectClasses)
+            .success(function(data){
+                callback(null, data);
+            })
+            .error(function(err){
+                callback(err);
+            });
         }
+        
+        
     };
 }])
 
@@ -150,12 +165,18 @@ angular.module('a2services',[])
     return {
         get: function(callback) {
             if(species)
-                callback(species);
+                return callback(species);
 
             $http.get('/api/species/list/100')
             .success(function(data) {
                 species = data;
                 callback(species);
+            });
+        },
+        search: function(query, callback) {
+            $http.get('/api/species/search/'+query)
+            .success(function(data){
+                callback(data);
             });
         }
     };

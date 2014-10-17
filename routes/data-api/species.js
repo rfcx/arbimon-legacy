@@ -13,6 +13,16 @@ router.get('/list/:limit', function(req, res, next) {
     });
 });
 
+router.get('/search/:query', function(req, res, next) {
+    var query = req.param('query');
+
+    model.species.search(query, function(err, rows){
+        if(err)
+            next(err);
+
+        res.json(rows);
+    });
+});
 
 router.param('speciesId', function(req, res, next, species_id){
     model.species.findById(species_id, function(err, rows) {

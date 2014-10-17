@@ -1,5 +1,5 @@
 angular.module('a2directives', [])
-.directive('a2Table', function() {
+.directive('a2Table', ['$filter', function($filter) {
     return {
         restrict: 'E',
         scope: {
@@ -7,17 +7,35 @@ angular.module('a2directives', [])
             rows: '=',
             onSelect: '&',
             checked: '=',
-            search: '='
+            search: '=',
+            noCheckbox: '@',
+            noSelect: '@'
         },
         templateUrl: '/partials/directives/table.html',
         link: function(scope, element, attrs) {
+
+            if(attrs.noCheckbox !== undefined)
+                scope.noCheck = true;
+
+            var updateChecked = function(rows) {
+                if(rows) {
+                    var visible = $filter('filter')(rows, scope.query);
+
+                    scope.checked = visible.filter(function(row) {
+                        return row.checked | false;
+                    });
+                }
+            };
+
 
             if(attrs.search) {
                 scope.$watch(attrs.search, function(value) {
                     //~ console.log(value);
                     scope.query = scope.search;
+                    updateChecked(scope.rows);
                 });
             }
+
             scope.toggleAll = function() {
                 var allFalse = true;
 
@@ -36,15 +54,10 @@ angular.module('a2directives', [])
 
             };
 
+
+
             if(attrs.checked) {
-                scope.$watch('rows', function(rows) {
-                    if(rows) {
-                        scope.checked = rows.filter(function(row) {
-                            return row.checked | false;
-                        });
-                    }
-                },
-                true);
+                scope.$watch('rows', updateChecked, true);
             }
 
 
@@ -73,6 +86,9 @@ angular.module('a2directives', [])
             };
 
             scope.sel = function($index) {
+                if(attrs.noSelect !== undefined)
+                    return;
+
                 scope.selected = scope.rows[$index];
 
                 if(attrs.onSelect)
@@ -90,7 +106,7 @@ angular.module('a2directives', [])
             };
         }
     };
-})
+}])
 .directive('autoHeight', function () {
     return {
         restrict: 'A',

@@ -1,21 +1,21 @@
 <table class="table table-hover a2-table">
 <thead>
     <tr>
-        <th>
+        <th ng-hide="noCheck">
             <input type="checkbox" ng-model="checkall" ng-change="toggleAll()">
         </th>
         <th ng-repeat="field in fields" ng-click="sortBy(field)">
-            {{ field.name }} 
+            {{ field.name }}
             <i class="fa" ng-class="{ 'fa-chevron-up': (sort === field.key) && (!reverse), 'fa-chevron-down': (sort === field.key) && (reverse) }"></i>
         </th>
     </tr>
 </thead>
 <tbody>
-    <tr ng-repeat="row in rows | filter: query | orderBy: sort : reverse" 
-        ng-click="sel($index)" 
+    <tr ng-repeat="row in rows | filter: query | orderBy: sort : reverse"
+        ng-click="sel($index)"
         ng-class="{ 'active': selected == row }">
-        <td><input type="checkbox" 
-                ng-model="row.checked" 
+        <td ng-hide="noCheck"><input type="checkbox"
+                ng-model="row.checked"
                 ng-click="check($event, $index)"
                 stop-click>
         </td>

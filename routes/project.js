@@ -33,7 +33,7 @@ router.get('/:projecturl?/', function(req, res, next)
 
                     req.session.user.permissions[project.project_id] = rows;
 
-                    //~ console.dir(req.session.user.permissions);
+                    console.log("project perms:", req.session.user.permissions);
 
                     req.project = {
                         id: project.project_id,
