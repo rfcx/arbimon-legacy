@@ -455,6 +455,7 @@
             'roi_set' : {
                 has_layout : true,
                 templates  : {
+                    layer_item : template_root + 'layer-item/training-data-roi_set_partial.html',
                     new_modal : template_root + 'modal/new_roi_set_tset_partial.html'
                 },
                 action : {
@@ -521,9 +522,10 @@
         $scope.$watch('recording', fetchTsetData);
     });
 
-    visualizer.controller('a2VisualizerTrainingSetLayerRoiSetDataController', function($timeout, a2TrainingSets){
+    visualizer.controller('a2VisualizerTrainingSetLayerRoiSetDataController', function($timeout, a2TrainingSets, training_set_types){
         var self=this;
         self.type='roi_set';
+        self.typedef  = training_set_types['roi_set'];
         self.fetchData = function(tset, rec){
             self.tset = tset;
             self.recording = rec;

@@ -4,6 +4,17 @@
 @import "variables.less";
 @import "../../bower_components/bootstrap/less/mixins.less";
 
+/**
+ * app variables
+ */
+@roi-border-color: #268f4b;
+@roi-bg-color: rgba(0, 255, 0, 0.1);
+@roi-current-border-color: blue;
+@roi-current-bg-color: rgba(0, 0, 255, 0.2);
+@roi-selected-border-color: rgb(0, 255, 166);
+@roi-selected-bg-color: rgba(0, 255, 174, 0.2);
+
+
 /*
  * app modules styles
 */
@@ -84,6 +95,7 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
 
 .sidebar{
     .make-full-column(0; @sidebar-col-width; 0);
+    overflow-y: auto;
     @media (min-width: @grid-float-breakpoint) {
         .drawer{
             display: none;
@@ -308,4 +320,8 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
         border-color: @border-color;
 //        background-color: @background-color;
     }
+}
+
+.pointer-events {
+    pointer-events: auto;
 }

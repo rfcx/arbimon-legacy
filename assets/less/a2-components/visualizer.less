@@ -45,13 +45,17 @@
 
             .roi {
                 position: absolute;
-                border: 1px solid green;
-                background-color: rgba(0, 255, 0, 0.1);
+                border: 1px solid @roi-border-color;
+                background-color: @roi-bg-color;
                 &.roi-current{
-                    border: 1px solid blue;
-                    background-color: rgba(0, 0, 255, 0.2);
+                    border-color: @roi-current-border-color;
+                    background-color: @roi-current-bg-color;
                 }
-                .sidepaper {
+                &.roi-selected{
+                    border-color: @roi-selected-border-color;
+                    background-color: @roi-selected-bg-color;
+                }
+                .popover {
                     &.right{
                         left: 100%;
                     }                    
@@ -90,35 +94,44 @@
 }
 
 
-.sidebar .layers .layer .recording-list{
-    max-height:194px;
-    background-color: @body-bg;
-    margin: 5px 0px;
-    border: 1px solid @btn-default-border;
-    padding-top: -1px;
-    overflow-y: auto;
-    > .recording-list-item{
-        position: relative;
-        height:162px;
-        padding : 6px;
-        &:nth-child(even){
-            background-color: @layer-zebra-even;
-        }
-        &:nth-child(odd){
-            background-color: @layer-zebra-odd;
-        }
-        &:nth-child(odd).active, &:nth-child(even).active{
+.sidebar .layers .layer{
+    table.table{
+        > tr.active, > * > tr.active{
             color: @nav-pills-active-link-hover-color;
             background-color: @nav-pills-active-link-hover-bg;
         }
-        > .thumbnail-viewer{
-            max-width: 422px;
-            overflow-x: hidden;
-            margin: 0px 5px;
-            > img {
-                height: 128px;
+    }
+    .recording-list{
+        max-height:194px;
+        background-color: @body-bg;
+        margin: 5px 0px;
+        border: 1px solid @btn-default-border;
+        padding-top: -1px;
+        overflow-y: auto;
+        > .recording-list-item{
+            position: relative;
+            height:162px;
+            padding : 6px;
+            &:nth-child(even){
+                background-color: @layer-zebra-even;
+            }
+            &:nth-child(odd){
+                background-color: @layer-zebra-odd;
+            }
+            &:nth-child(odd).active, &:nth-child(even).active{
+                color: @nav-pills-active-link-hover-color;
+                background-color: @nav-pills-active-link-hover-bg;
+            }
+            > .thumbnail-viewer{
+                max-width: 422px;
+                overflow-x: hidden;
+                margin: 0px 5px;
+                > img {
+                    height: 128px;
+                }
             }
         }
+
     }
 }
 
