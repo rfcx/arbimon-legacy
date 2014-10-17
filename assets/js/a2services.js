@@ -143,6 +143,14 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
+        
+        addData: function(training_set, tset_data, callback) {
+            var projectName = Project.getName();
+            $http.post('/api/project/'+projectName+'/training-sets/add-data/'+training_set, tset_data).success(function(data) {
+                callback(data);
+            });
+        },
+        
         getData: function(training_set, recording_uri, callback) {
             var projectName = Project.getName();
             $http.get('/api/project/'+projectName+'/training-sets/list/'+training_set+'/'+recording_uri).success(function(data) {

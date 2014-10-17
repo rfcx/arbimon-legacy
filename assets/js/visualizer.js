@@ -207,9 +207,8 @@
         });
 
         // $scope.setRecording(test_data.recording);
-    }).directive('a2Visualizer', function(){
-
-
+    })
+    .directive('a2Visualizer', function(){
         return { restrict : 'E', replace:true, templateUrl: template_root + 'main.html' }
     });
 
@@ -302,6 +301,7 @@
                     var avail_h = height - layout_tmp.axis_sizeh - 5*layout_tmp.axis_lead;
                     var spec_w = Math.max(avail_w, Math.ceil(recording.duration * $scope.layout.scale.sec2px));
                     var spec_h = Math.max(avail_h, Math.ceil(recording.max_freq * $scope.layout.scale.hz2px ));
+                    console.log('$scope.layout.apply, rec:', recording);
                     var scalex = d3.scale.linear().domain([0, recording.duration]).range([0, spec_w]);
                     var scaley = d3.scale.linear().domain([0, recording.max_freq]).range([spec_h, 0]);
                     var l={};
@@ -411,6 +411,7 @@
         }
     });
 
+
     visualizer.directive('a2VisualizerSpectrogramLayer', function(layer_types, $compile, $templateFetch){
         return {
             restrict : 'E',
@@ -509,7 +510,7 @@
                     var cont_name = tset_type.replace(/(^|-|_)(\w)/g, function(_,_1,_2,_3){ return _2.toUpperCase()});
                     cont_name = 'a2VisualizerTrainingSetLayer'+cont_name+'DataController';
                     self.data = $controller(cont_name,{$scope : $scope});
-console.log('data controller is now : ', self.data);
+                    console.log('data controller is now : ', self.data);
                 }
                 self.data.fetchData(tset, rec);
             }
@@ -523,34 +524,78 @@ console.log('data controller is now : ', self.data);
         var self=this;
         self.type='roi_set';
         self.fetchData = function(tset, rec){
+            self.tset = tset;
+            self.recording = rec;
             a2TrainingSets.getData(tset, rec, function(data){
                 $timeout(function(){
-                    self.data = data;
+                    self.rois = data;
                 })
             })
         };
-        self.current_roi = null;
-        self.cancel_entry = function(){
-            console.log('self.cancel_entry');
-            self.current_roi = null;
-        };
-        self.add_point = function(point){
-            if(!self.current_roi) {
-                self.current_roi = {
-                    points:[
-                        [point.sec, point.hz]
-                    ]
+        self.editor = {
+            roi    : null, 
+            points : null,
+            valid  : false,
+            min_eps: .001,
+            reset: function(){
+                this.roi    = null;
+                this.points = null;
+                this.tracer = null;
+                this.valid  = false;
+            },
+            make_new_roi: function(){
+                this.roi    = {};
+                this.points = [];
+                this.valid  = false;
+            },
+            add_tracer_point : function(point){
+                if(this.roi){
+                    var tracer = [point.sec, point.hz];
+                    this.tracer = tracer;
+                    this.validate([tracer]);
                 }
-            } else if(self.current_roi.points.length == 1){
-                self.current_roi.points.push([point.sec, point.hz]);
+            },
+            add_point : function(point, min_eps){
+                min_eps = min_eps || this.min_eps;
+                var similars = this.points && this.points.filter(function(pt){
+                    var dx=pt[0] - point.sec, dy=(pt[1] - point.hz)/1000.0, dd = dx*dx + dy*dy;
+                    return  dd <= min_eps;
+                });
+                if(similars && similars.length > 0){
+                    return;
+                }
+                if(!this.roi){
+                    this.make_new_roi();
+                }
+                if(this.points.length < 2){
+                    this.points.push([point.sec, point.hz]);
+                }
+                this.validate();
+            },
+            validate : function(tmp_points){
+                var secs = this.points.map(function(x){return x[0];});
+                var hzs  = this.points.map(function(x){return x[1];});
+                if(tmp_points){
+                    secs.push.apply(secs, tmp_points.map(function(x){return x[0];}));
+                    hzs .push.apply(hzs , tmp_points.map(function(x){return x[1];}));
+                }
+                this.roi.x1 = Math.min.apply(null, secs);
+                this.roi.y1 = Math.min.apply(null, hzs);
+                this.roi.x2 = Math.max.apply(null, secs);
+                this.roi.y2 = Math.max.apply(null, hzs);
+                this.valid = this.points.length >= 2;
+            },
+            submit: function(){ 
+                a2TrainingSets.addData(self.tset, {
+                    recording : self.recording,
+                    roi : this.roi
+                }, (function(new_tset_data){
+                    $timeout((function(){
+                        this.reset();
+                        self.rois.push(new_tset_data);
+                    }).bind(this));
+                }).bind(this))
             }
-            var secs = self.current_roi.points.map(function(x){return x[0];})
-            var hzs  = self.current_roi.points.map(function(x){return x[1];})
-            self.current_roi.x1 = Math.min.apply(null, secs);
-            self.current_roi.y1 = Math.min.apply(null, hzs);
-            self.current_roi.x2 = Math.max.apply(null, secs);
-            self.current_roi.y2 = Math.max.apply(null, hzs);
-            console.log('adding a point : ', point, self.current_roi);
         };
     });
 
@@ -630,7 +675,7 @@ console.log('data controller is now : ', self.data);
 
 
     visualizer.controller('a2ProjectClasses', function(Project){
-        var self=this;
+        var self = this;
         Project.getClasses(function(list){
             self.list = list;
         })

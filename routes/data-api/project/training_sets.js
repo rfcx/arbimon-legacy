@@ -58,6 +58,16 @@ router.post('/add', function(req, res, next) {
     });
 });
 
+
+/** Add a training set to a project.
+ */
+router.post('/add-data/:trainingSet', function(req, res, next) {
+    model.training_sets.addData(req.trainingSet, req.body, function(err, tset_data) {
+        if(err) return next(err);
+        return res.json(tset_data);
+    });
+});
+
 /** Return a training set's data.
  */
 router.get('/list/:trainingSet/:recUrl?', function(req, res, next) {

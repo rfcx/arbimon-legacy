@@ -1,6 +1,7 @@
 // dependencies
 var mysql        = require('mysql');
 var async        = require('async');
+var joi          = require('joi');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
@@ -142,6 +143,16 @@ var TrainingSets = {
         });
     },
 
+    /** Adds data to the given training set.
+     * @param {Object}  training_set  training set object as returned by find().
+     * @param {Object}  data data to add to the training set. The properties in
+     *                  allowed in this object depend on the type of training set.
+     * @param {Function} callback(err, path) function to call back with the results.
+     */
+    addData: function (training_set, data, callback) {
+        TrainingSets.types[training_set.type].add_data(training_set, data, callback);
+    },
+
     /** Fetches a training set's data, optionally using a query.
      * @param {Object}  training_set  training set object as returned by find().
      * @param {Object}  query (optional)
@@ -156,33 +167,10 @@ var TrainingSets = {
         if(!query) {
             query = {};
         }
+        
+        var typedef = TrainingSets.types[training_set.type];
 
-        var type = TrainingSets.types[training_set.type];
-        var fields = [type.primary_key + ' as id'];
-        if (type.fields) {
-            fields.push.apply(fields, type.fields);
-        }
-        var constraints = ['TSD.training_set_id = ' + mysql.escape(training_set.id)];
-        var tables = [type.table];
-
-        if(query.recording) {
-            var req_query = Recordings.parseUrlQuery(query.recording);
-            constraints.push.apply(constraints, sqlutil.compile_query_constraints(
-                Recordings.parseUrlQuery(query.recording),
-                Recordings.QUERY_FIELDS
-            ));
-            tables.push(
-                'recordings R ON TSD.recording_id = R.recording_id',
-                'sites S ON R.site_id = S.site_id'
-            );
-        }
-
-        return queryHandler(
-            "SELECT " + fields.join(",")+ " \n" +
-            "FROM "   + tables.join(" \n" +
-            "JOIN ")+ " \n" +
-            "WHERE " + constraints.join(" \n" +
-            "  AND "), callback);
+        return typedef.get_data(training_set, query, callback);
     },
 
     /** Fetches the available training set types.
@@ -196,42 +184,119 @@ var TrainingSets = {
 
     /** Type-specific training set function implementations.
      */
-    types: {
-        roi_set : {
-            id    : 1,
-            table : 'training_set_roi_set_data TSD',
-            primary_key : 'TSD.roi_set_data_id',
-            fields: ['TSD.recording_id as recording', 'TSD.species_id as species', 'TSD.songtype_id as songtype', 'TSD.x1', 'TSD.y1', 'TSD.x2', 'TSD.y2'],
-            insert : {
-                validate : function(data, callback){
-                    if (data.extras && data.extras.class) {
-                        Projects.getProjectClasses({project_id:data.project}, data.extras.class, function(err, classes){
-                            if(err) {
-                                callback(err);
-                            } else if(!classes || !classes.length) {
-                                callback(new Error("Project class is invalid."));
-                            } else {
-                                data.species  = classes[0].species;
-                                data.songtype = classes[0].songtype;
-                                callback();
-                            }
-                        });
-                    } else if (data.extras && data.extras.species && data.extras.songtype) {
-                        data.species  = data.extras.species;
-                        data.songtype = data.extras.songtype;
-                    } else {
-                        callback(new Error("Project class is invalid."));
-                    }
-                },
-                extras   : function(connection, tset_id, data, callback){
-                    connection.query(
-                        "INSERT INTO training_sets_roi_set (training_set_id, species_id, songtype_id) \n" +
-                        "VALUES ("+mysql.escape([tset_id, data.species, data.songtype])+")",
-                    callback);
-                }
-            }
-        }
-    }
+    types: {}
 };
+
+TrainingSets.types.roi_set = {
+    id    : 1,
+    table : 'training_set_roi_set_data TSD',
+    primary_key : 'TSD.roi_set_data_id',
+    fields: ['TSD.recording_id as recording', 'TSD.species_id as species', 'TSD.songtype_id as songtype', 'TSD.x1', 'TSD.y1', 'TSD.x2', 'TSD.y2'],
+    insert : {
+        validate : function(data, callback){
+            if (data.extras && data.extras.class) {
+                Projects.getProjectClasses({project_id:data.project}, data.extras.class, function(err, classes){
+                    if(err) {
+                        callback(err);
+                    } else if(!classes || !classes.length) {
+                        callback(new Error("Project class is invalid."));
+                    } else {
+                        data.species  = classes[0].species;
+                        data.songtype = classes[0].songtype;
+                        callback();
+                    }
+                });
+            } else if (data.extras && data.extras.species && data.extras.songtype) {
+                data.species  = data.extras.species;
+                data.songtype = data.extras.songtype;
+            } else {
+                callback(new Error("Project class is invalid."));
+            }
+        },
+        extras   : function(connection, tset_id, data, callback){
+            connection.query(
+                "INSERT INTO training_sets_roi_set (training_set_id, species_id, songtype_id) \n" +
+                "VALUES ("+mysql.escape([tset_id, data.species, data.songtype])+")",
+            callback);
+        }
+    },
+    data_schema : joi.object().keys({
+        species   : joi.number().integer().default(joi.ref('$species')),
+        songtype  : joi.number().integer().default(joi.ref('$songtype')),
+        recording : joi.number().integer(),
+        roi : joi.object().keys({
+            x1 : joi.number().unit('seconds'),
+            y1 : joi.number().unit('hertz'),
+            x2 : joi.number().unit('seconds'),
+            y2 : joi.number().unit('hertz')
+        })
+    }),
+    /** Fetches a training set's data, optionally using a query.
+     * @param {Object}  training_set  training set object as returned by find(), must be of type roi_set.
+     * @param {Object}  query (optional)
+     * @param {Object}  query.recording limit data results to those belonging to the matching recordings
+     * @param {Object}  query.id        limit tset data to the row with the given id.
+     * @param {Function} callback(err, path) function to call back with the results.
+     */
+    get_data : function(training_set, query, callback) {
+        var constraints = ['TSD.training_set_id = ' + mysql.escape(training_set.id)];
+        var tables = ['training_set_roi_set_data TSD'];
+
+        if(query.id){
+            constraints.push('TSD.roi_set_data_id = ' + mysql.escape(query.id));
+        } else if(query.recording){
+            var req_query = Recordings.parseUrlQuery(query.recording);
+            constraints.push.apply(constraints, sqlutil.compile_query_constraints(
+                Recordings.parseUrlQuery(query.recording),
+                Recordings.QUERY_FIELDS
+            ));
+            tables.push(
+                'recordings R ON TSD.recording_id = R.recording_id',
+                'sites S ON R.site_id = S.site_id'
+            );
+        }
+
+        return queryHandler(
+            "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
+            "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
+            "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 \n" +
+            "FROM "   + tables.join(" \n" +
+            "JOIN ")+ " \n" +
+            "WHERE " + constraints.join(" \n" +
+            "  AND "), callback);
+    },
+    /** Adds data to a training set.
+     * @param {Object}  training_set  training set object as returned by find(), must be of type roi_set.
+     * @param {Object}  data data to add, follows the schema in data_schema.
+     * @param {Function} callback(err, path) function to call back with the results.
+     */
+    add_data : function(training_set, data, callback){
+        async.waterfall([
+            (function(cb){
+console.log('joi.validate(data:',data,', schema:', this.data_schema,', {context:',training_set,'},cb);');
+                joi.validate(data, this.data_schema, {context:training_set},cb);
+            }).bind(this), 
+            function(vdata, cb){
+                var x1 = Math.min(vdata.roi.x1, vdata.roi.x2), y1 = Math.min(vdata.roi.y1, vdata.roi.y2);
+                var x2 = Math.max(vdata.roi.x1, vdata.roi.x2), y2 = Math.max(vdata.roi.y1, vdata.roi.y2);
+                
+                dbpool.queryHandler(
+                    "INSERT INTO training_set_roi_set_data(training_set_id, recording_id, species_id, songtype_id, x1, y1, x2, y2) \n" +
+                    "VALUES ("+mysql.escape([
+                        training_set.id, vdata.recording, vdata.species, vdata.songtype, 
+                        x1, y1, x2, y2
+                    ])+")",
+                    cb
+                );
+            }, 
+            (function(result, fields, cb){
+                this.get_data(training_set, {id:result.insertId}, function(err, rows){
+                    err ? cb(err) : cb(null, rows && rows[0]);                
+                });
+            }).bind(this),
+        ], callback);
+    },
+
+}
 
 module.exports = TrainingSets;
