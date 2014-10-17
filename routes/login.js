@@ -6,10 +6,13 @@ var sha256 = require('../utils/sha256');
 router.use(function(req, res, next) {
     
     req.haveAccess = function(project_id, permission_name) {
-        if(!req.session.user.permissions[project_id])
-            return false;
-            
+        
         var projectPerms = req.session.user.permissions[project_id];
+        
+        // console.log("project permission:", projectPerms);
+        
+        if(!projectPerms)
+            return false;
         
         var havePermission = projectPerms.filter(function(perm) {
             return perm.name === permission_name;

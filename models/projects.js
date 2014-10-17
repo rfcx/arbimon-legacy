@@ -1,7 +1,13 @@
 var util = require('util');
 var mysql = require('mysql');
+var async = require('async');
+var Joi = require('joi');
+
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
+
+var species = require('./species');
+var songtypes = require('./songtypes');
 
 var Projects = {
     findByUrl: function (project_url, callback) {
@@ -24,27 +30,6 @@ var Projects = {
         );
 
         return queryHandler(query , callback);
-    },
-
-    /** Fetches a project's classes.
-     * @param {{Object}} project project object.
-     * @param {{Integer}} project.project_id
-     * @param {{Integer}} class_id (optional) limit the query to this class
-     * @param {{Callback}} callback
-     */
-    getProjectClasses: function(project, class_id, callback){
-        if(class_id instanceof Function){
-            callback = class_id;
-            class_id = null;
-        }
-        var sql = (
-            "SELECT PC.project_class_id as id, PC.species_id as species, PC.songtype_id as songtype \n" +
-            "FROM project_classes PC \n" +
-            "WHERE PC.project_id = " + mysql.escape(project.project_id) +
-            (class_id ? "\n  AND PC.project_class_id = " + (class_id|0) : '')
-        );
-
-        return queryHandler(sql , callback);
     },
 
     insert: function(project, callback) {
@@ -129,6 +114,131 @@ var Projects = {
         q = util.format(q, user_id, project_id, description, news_type_id);
         queryHandler(q, function(err) {
             if(err) throw err;
+        });
+    },
+
+    /** Fetches a project's classes.
+     * @param {{Object}} project project object.
+     * @param {{Integer}} project.project_id
+     * @param {{Integer}} class_id (optional) limit the query to this class
+     * @param {{Callback}} callback
+     */
+    getProjectClasses: function(project, class_id, callback){
+        if(class_id instanceof Function){
+            callback = class_id;
+            class_id = null;
+        }
+        var sql = (
+            "SELECT pc.project_class_id as id, \n"+
+                "pc.species_id as species, \n"+
+                "pc.songtype_id as songtype, \n"+
+                "sp.scientific_name as species_name, \n"+
+                "so.songtype as songtype_name \n"+
+            "FROM project_classes AS pc \n"+
+            "JOIN species AS sp on sp.species_id = pc.species_id \n"+
+            "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
+            "WHERE pc.project_id = " + mysql.escape(project.project_id) +
+            (class_id ? "\n  AND pc.project_class_id = " + (class_id|0) : '')
+        );
+
+        return queryHandler(sql , callback);
+    },
+
+    insertClass: function(project_class, callback) {
+        var schema = {
+            species: Joi.string(),
+            songtype: Joi.string(),
+            project_id: Joi.number()
+        }
+
+        Joi.validate(project_class, schema, function(err, value) {
+            if(err) return callback(err);
+
+            async.auto({
+                findSpecies: function(cb) {
+                    species.findByName(value.species, function(err, rows) {
+                        if(err) return cb(err);
+
+                        if(!rows.length)
+                            return cb(new Error(util.format("species '%s' not in system", value.species)));
+
+                        cb(null, rows);
+                    });
+                },
+                findSong: function(cb) {
+                    songtypes.findByName(value.songtype, function(err, rows) {
+                        if(err) return cb(err);
+
+                        if(!rows.length)
+                            return cb(new Error(util.format("songtype '%s' not in system", value.songtype)));
+
+                        cb(null, rows);
+                    });
+                },
+
+                classExists: ['findSpecies', 'findSong', function(cb, results){
+
+                    console.log(results);
+                    var q = "SELECT count(*) as count \n"+
+                            "FROM project_classes \n"+
+                            "WHERE project_id = %s \n"+
+                            "AND species_id = %s \n"+
+                            "AND songtype_id = %s";
+
+                    var species_id = results.findSpecies[0].id;
+                    var songtype_id = results.findSong[0].id;
+                    var project_id = value.project_id;
+
+                    q = util.format(q, project_id, species_id, songtype_id);
+                    queryHandler(q , function(err, rows) {
+                        if(err) return cb(err);
+
+                        cb(null, rows[0].count > 0);
+                    });
+                }],
+
+                insert: ['classExists', function(cb, results){
+
+                    if(results.classExists)
+                        return cb(null, { error: "class already in project" });
+
+                    console.log(results);
+                    var q = 'INSERT INTO project_classes \n'+
+                            'SET project_id = %s, species_id = %s, songtype_id = %s';
+
+                    var species_id = results.findSpecies[0].id;
+                    var songtype_id = results.findSong[0].id;
+                    var project_id = value.project_id;
+
+                    q = util.format(q, project_id, species_id, songtype_id);
+                    queryHandler(q , function(err, row) {
+                        if(err) return cb(err);
+
+                        cb(null, row);
+                    });
+                }]
+            },
+            function(err, results) {
+                if(err) return callback(err);
+
+                callback(null, results.insert);
+            });
+        })
+    },
+
+    removeClasses: function(project_classes, callback) {
+        var schema = Joi.array().min(1).includes(Joi.number());
+
+        Joi.validate(project_classes, schema, function(err, value) {
+            if(err) return callback(err);
+
+            value = '(' + mysql.escape(value) + ')';
+
+            var q = "DELETE FROM project_classes \n"+
+                    "WHERE project_class_id IN %s";
+
+            q = util.format(q, value);
+            queryHandler(q, callback);
         });
     }
 };

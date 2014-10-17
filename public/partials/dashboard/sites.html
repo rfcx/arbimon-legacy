@@ -1,8 +1,18 @@
 <div class="row toolbar">
     <div class="col-sm-5">
-            <button class="btn btn-default" ng-click="create()">New Site </button>
-            <button class="btn btn-default" ng-click="edit()" ng-class="{ disabled: !selected }">Edit</button>
-            <button class="btn btn-danger" ng-click="del()" ng-class="{ disabled: !checked || !checked.length }">Delete</button>
+            <button class="btn btn-default" ng-click="create()">
+                <i class="fa fa-plus"></i>
+            </button>
+            <button class="btn btn-default"
+                ng-click="edit()"
+                ng-class="{ disabled: !selected }">
+                <i class="fa fa-pencil"></i>
+            </button>
+            <button class="btn btn-danger"
+                ng-click="del()"
+                ng-disabled="!checked || !checked.length">
+                <i class="fa fa-trash"></i>
+            </button>
     </div>
     <div class="col-sm-2">
         <input class="form-control" type="text" placeholder="Search" ng-model="search">
@@ -24,7 +34,7 @@
                     <div class="form-group">
                         <label>Name:</label><input class="form-control" type="text" ng-model="temp.name" placeholder="Name Station">
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Location:</label>
                         <div class="input-group">
@@ -39,7 +49,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <div class="input-group">   
+                        <div class="input-group">
                              <span class="input-group-addon">Alt</span>
                             <input class="form-control" id="alt" type="text" ng-model="temp.alt" placeholder="Altitude">
                         </div>

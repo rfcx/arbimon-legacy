@@ -107,6 +107,7 @@ module.exports = function(grunt) {
                     'assets/js/dashboard.js',
                     'assets/js/audiodata.js',
                     'assets/js/a2services.js',
+                    'assets/js/a2utils.js',
                     'assets/js/extras/*.js',
                     'assets/js/a2directives.js',
                 ],

@@ -5,9 +5,14 @@ angular.module('a2services',[])
     var nameRe = /\/project\/([\w\_\-]+)/;
 
     var url = nameRe.exec(urlparse.pathname)[1];
+    
+    var project;
 
     return {
         getInfo: function(callback) {
+            if(project)
+                return callback(project);
+            
             $http.get('/api/project/'+url+'/info')
             .success(function(data) {
                 callback(data);
@@ -18,13 +23,6 @@ angular.module('a2services',[])
             $http.get('/api/project/'+url+'/sites')
             .success(function(data) {
                 callback(data);
-            });
-        },
-
-        getSpecies: function(callback) {
-            $http.get('/api/project/'+url+'/species')
-            .success(function(data) {
-
             });
         },
 
@@ -55,12 +53,9 @@ angular.module('a2services',[])
         },
 
         getName: function(){
-            var urlparse = document.createElement('a');
-            urlparse.href = $location.absUrl();
-            var nameRe = /\/project\/([\w\_\-]+)/;
-
-            return nameRe.exec(urlparse.pathname)[1];
+            return url;
         },
+        
         getRecordings: function(key, callback) {
             var projectName = this.getName();
             $http.get('/api/project/'+projectName+'/recordings/'+key).success(function(data) {
@@ -103,13 +98,33 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
-
         recExists: function(site_id, filename, callback) {
             $http.get('/api/project/'+url+'/recordings/exists/site/'+ site_id +'/file/' + filename)
             .success(function(data) {
                 callback(data.exists);
             });
+        },
+        addClass: function(projectClass, callback) {
+            $http.post('/api/project/'+url+'/class/add', projectClass)
+            .success(function(data){
+                callback(null, data);
+            })
+            .error(function(err){
+                callback(err);
+            });
+        },
+        
+        removeClasses: function(projectClasses, callback) {
+            $http.post('/api/project/'+url+'/class/del', projectClasses)
+            .success(function(data){
+                callback(null, data);
+            })
+            .error(function(err){
+                callback(err);
+            });
         }
+        
+        
     };
 }])
 
@@ -121,6 +136,7 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
+
         add: function(tset_data, callback) {
             var projectName = Project.getName();
             $http.post('/api/project/'+projectName+'/training-sets/add', tset_data).success(function(data) {
@@ -141,105 +157,45 @@ angular.module('a2services',[])
             });
         },
     };
-});
-
-
-angular.module('a2utils', [])
-.factory('$templateFetch', function($http, $templateCache){
-    return function $templateFetch(templateUrl, linker){
-        var template = $templateCache.get(templateUrl);
-        if(template) {
-            if (template.promise) {
-                template.linkers.push(linker);
-            } else {
-                linker(template);
-            }
-        } else {
-            var tmp_promise = {
-                linkers : [linker],
-                promise : $http.get(templateUrl).success(function(template){
-                    $templateCache.put(templateUrl, template);
-                    for(var i=0, l=tmp_promise.linkers, e=l.length; i < e; ++i){
-                        l[i](template);
-                    }
-                })
-            };
-            $templateCache.put(templateUrl, tmp_promise);
-        }
-    }
 })
-.factory('itemSelection', function(){
-    return {
-        make : function make_itemSelection_obj(item_name){
-            var sel = {};
-            if(typeof item_name == 'undefined') {
-                item_name = 'value';
-            }
-            sel[item_name] = null;
-            sel.select = function(newValue){
-                sel[item_name] = newValue;
-            };
-            return sel;
-        }
-    };
-});
 
+.factory('Species',['$http', function($http){
+    var species;
 
-angular.module('a2Infotags', [])
-.factory('InfoTagService', ['$location', '$http', function($location, $http){
     return {
-        getSpecies: function(species_id, callback){
-            $http.get('/api/species/'+species_id).success(function(data) {
-                callback(data);
+        get: function(callback) {
+            if(species)
+                return callback(species);
+
+            $http.get('/api/species/list/100')
+            .success(function(data) {
+                species = data;
+                callback(species);
             });
         },
-        getSongtype: function(songtype_id, callback) {
-            $http.get('/api/songtypes/'+songtype_id).success(function(data) {
+        search: function(query, callback) {
+            $http.get('/api/species/search/'+query)
+            .success(function(data){
                 callback(data);
             });
         }
     };
 }])
-.directive('a2Species', function (InfoTagService, $timeout) {
+
+.factory('Songtypes',['$http', function($http){
+    var songs;
+
     return {
-        restrict : 'E',
-        scope : {
-            species : '='
-        },
-        template : '{{data.scientific_name}}',
-        link     : function($scope, $element, $attrs){
-            $scope.$watch('species', function(newVal, oldVal){
-                $scope.data = null;
-                if(newVal){
-                    InfoTagService.getSpecies(newVal, function(data){
-                        $timeout(function(){
-                            $scope.data = data;
-                        })
-                    })
-                }
+        get: function(callback) {
+            if(songs)
+                return callback(songs);
+
+            $http.get('/api/songtypes/all')
+            .success(function(data) {
+                songs = data;
+                callback(songs);
             });
         }
     };
-})
-.directive('a2Songtype', function (InfoTagService, $timeout) {
-    return {
-        restrict : 'E',
-        scope : {
-            songtype : '='
-        },
-        template : '{{data.name}}',
-        link     : function($scope, $element, $attrs){
-            $scope.$watch('songtype', function(newVal, oldVal){
-                $scope.data = null;
-                if(newVal){
-                    InfoTagService.getSongtype(newVal, function(data){
-                        $timeout(function(){
-                            $scope.data = data;
-                        })
-                    })
-                }
-            });
-        }
-    };
-});
+}])
 ;
