@@ -18,7 +18,18 @@ angular.module('a2directives', [])
         }
     };
 })
-
+.directive('a2Scroll', function() {
+    return {
+        scope: {
+            a2Scroll : '&a2Scroll'
+        },
+        link : function($scope, $element, $attrs) {
+            $element.bind("scroll", function(e) {
+                $scope.a2Scroll(e);
+            });
+        }
+    };
+})
 .directive('a2Table', ['$filter', function($filter) {
     return {
         restrict: 'E',

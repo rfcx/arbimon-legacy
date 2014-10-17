@@ -240,18 +240,7 @@ angular.module('visualizer-services', ['a2services'])
         self.list = list;
     })
 })
-.directive('a2Scroll', function() {
-    return {
-        scope: {
-            a2Scroll : '&a2Scroll'
-        },
-        link : function($scope, $element, $attrs) {
-            $element.bind("scroll", function(e) {
-                $scope.a2Scroll(e);
-            });
-        }
-    };
-})
+
 
 angular.module('visualizer-layers', ['visualizer-services', 'a2utils'])
 .directive('a2VisualizerLayerItem', function(layer_types, $compile, $templateFetch){
