@@ -53,3 +53,6 @@ run and watch
 
 `grunt server` everything a file changes the project will rebuild
 
+clean packages and builds (node_modules, bower_components, public/assets)
+
+`grunt clean` 

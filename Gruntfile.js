@@ -160,6 +160,11 @@ module.exports = function(grunt) {
                     script: 'bin/www'
                 }
             }
+        },
+        
+        clean: {
+            assets: ['public/assets/*'],
+            packages: ['bower_components', 'node_modules']
         }
     });
 
@@ -168,6 +173,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-express-server');
+    grunt.loadNpmTasks('grunt-contrib-clean');
 
 
     grunt.registerTask('build', ['copy', 'less', 'concat']);
