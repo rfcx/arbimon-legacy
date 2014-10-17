@@ -455,7 +455,7 @@
             'roi_set' : {
                 has_layout : true,
                 templates  : {
-                    layer_item : template_root + 'layer-item/training-data-roi_set_partial.html',
+                    layer_item : template_root + 'layer-item/training-sets/roi_set.html',
                     new_modal : template_root + 'modal/new_roi_set_tset_partial.html'
                 },
                 action : {
