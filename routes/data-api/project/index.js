@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var async = require('async');
 var util = require('util');
+var gravatar = require('gravatar');
 
 var model = require('../../../models');
 var recording_routes = require('./recordings');
@@ -88,8 +89,23 @@ router.get('/:projectUrl/info', function(req, res, next) {
     res.json(req.project);
 });
 
+router.post('/:projectUrl/info/update', function(req, res, next) {
+    if(!req.body.project)
+        return res.json({ error: "missing parameters" });
+    
+    
+    model.projects.update(req.body.project, function(err, result){
+        if(err) return next(err);
+        
+        console.log("update project:", result);
+        res.json({ success: true });
+    })
+});
+
+
  /** Return a list of all the sites in a project.
  */
+
 router.get('/:projectUrl/sites', function(req, res, next) {
     model.projects.getProjectSites(req.project.project_id, function(err, rows) {
         if(err) return next(err);
@@ -160,14 +176,14 @@ router.post('/delete/sites', function(req, res, next) {
     if(!req.haveAccess(project.project_id, "manage project sites")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
-
-    var sitesIds = $scope.checked.map(function(site) {
-        return site.id;
+    
+    var sitesNames = sites.map(function(row) {
+        return row.name;
     });
-
-    var sitesNames = $scope.checked.map(function(site) {
-        return site.name;
-    }).join(', ');
+    
+    var sitesIds = sites.map(function(row) {
+        return row.id;
+    });
 
     model.sites.remove(sitesIds, function(err, rows) {
         if(err) return next(err);
@@ -213,7 +229,6 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
         res.json({ success: true });
     });
 });
-
 router.post('/:projectUrl/class/del', function(req, res, next){
     if(!req.body.project_id || !req.body.project_classes) {
         return res.json({ error: "missing parameters"});
@@ -227,6 +242,92 @@ router.post('/:projectUrl/class/del', function(req, res, next){
         if(err) return next(err);
 
         console.log("insert class:", result);
+        res.json({ success: true });
+    });
+});
+
+router.get('/:projectUrl/roles', function(req, res, next) {
+    model.projects.availableRoles(function(err, roles){
+        if(err) return next(err);
+        
+        res.json(roles);
+    })
+});
+
+router.get('/:projectUrl/users', function(req, res, next) {
+    model.projects.getUsers(req.project.project_id, function(err, rows){
+        if(err) return next(err);
+        
+        var users = rows.map(function(row){
+            row.image_url = gravatar.url(row.email, { d: 'monsterid', s: 60 }, https=req.secure);
+            
+            return row;
+        });
+        
+        res.json(users);
+    });
+});
+
+router.post('/:projectUrl/user/add', function(req, res, next) {
+    if(!req.body.project_id || !req.body.user_id) {
+        return res.json({ error: "missing parameters"});
+    }
+    
+    if(!req.haveAccess(req.body.project_id, "manage project settings")) {
+        return res.json({ error: "you don't have permission to manage project settings and users" });
+    }
+    
+    model.projects.addUser({
+        project_id: req.body.project_id,
+        user_id: req.body.user_id,
+        role_id: 2 // default to normal user
+    },
+    function(err, result){
+        if(err) return next(err);
+        
+        console.log("add user:", result);
+        res.json({ success: true });
+    });
+});
+
+router.post('/:projectUrl/user/role', function(req, res, next) {
+    
+    console.log(req.body);
+    
+    if(!req.body.project_id || !req.body.user_id || !req.body.role_id) {
+        return res.json({ error: "missing parameters"});
+    }
+    
+    if(!req.haveAccess(req.body.project_id, "manage project settings")) {
+        return res.json({ error: "you don't have permission to manage project settings and users" });
+    }
+    
+    model.projects.changeUserRole({
+        project_id: req.body.project_id,
+        user_id: req.body.user_id,
+        role_id: req.body.role_id
+    },
+    function(err, result){
+        if(err) return next(err);
+        
+        console.log("change user role:", result);
+        res.json({ success: true });
+    });
+});
+
+router.post('/:projectUrl/user/del', function(req, res, next) {
+    if(!req.body.project_id || !req.body.user_id) {
+        return res.json({ error: "missing parameters"});
+    }
+    
+    if(!req.haveAccess(req.body.project_id, "manage project settings")) {
+        return res.json({ error: "you don't have permission to manage project settings and users" });
+    }
+    
+    model.projects.removeUser(req.body.user_id, req.body.project_id, function(err, result){
+        if(err) return next(err);
+        
+        console.log("remove user:", result);
         res.json({ success: true });
     });
 });

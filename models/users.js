@@ -19,6 +19,20 @@ var Users = {
         q = util.format(q, mysql.escape(user_id))
         queryHandler(q, callback)
     },
+    
+    search: function(query, callback) {
+        query = mysql.escape('%'+query+'%');
+        
+        var q = "SELECT user_id AS id, \n"+
+                "       email, \n"+
+                "       login AS username \n"+
+                "FROM users \n"+
+                "WHERE login LIKE %s \n"+
+                "OR email LIKE %s";
+        
+        q = util.format(q, query, query);
+        queryHandler(q, callback);
+    },
 
     update: function(userData, callback) {
         if(typeof userData.user_id === 'undefined') {
