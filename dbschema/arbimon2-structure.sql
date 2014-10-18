@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.38, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
 --
--- Host: 10.0.0.4    Database: arbimon2
+-- Host: localhost    Database: arbimon2
 -- ------------------------------------------------------
--- Server version	5.5.38-0ubuntu0.14.04.1
+-- Server version	5.5.40-0ubuntu0.14.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -16,6 +16,22 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `classification_results`
+--
+
+DROP TABLE IF EXISTS `classification_results`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `classification_results` (
+  `job_id` int(11) NOT NULL,
+  `recording_id` int(11) NOT NULL,
+  `species_id` int(11) NOT NULL,
+  `songtype_id` int(11) NOT NULL,
+  `present` tinyint(4) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `job_params_classification`
 --
 
@@ -25,7 +41,8 @@ DROP TABLE IF EXISTS `job_params_classification`;
 CREATE TABLE `job_params_classification` (
   `job_id` bigint(20) unsigned NOT NULL,
   `model_id` int(10) unsigned NOT NULL,
-  `playlist_id` int(10) unsigned NOT NULL,
+  `playlist_id` int(10) unsigned DEFAULT NULL,
+  `name` text NOT NULL,
   PRIMARY KEY (`job_id`),
   KEY `playlist_id` (`playlist_id`),
   KEY `model_id` (`model_id`),
@@ -48,7 +65,11 @@ CREATE TABLE `job_params_training` (
   `training_set_id` bigint(20) unsigned NOT NULL,
   `validation_set_id` int(10) unsigned DEFAULT NULL,
   `trained_model_id` int(10) unsigned DEFAULT NULL,
-  `validation_split` tinyint(3) unsigned NOT NULL DEFAULT '50',
+  `use_in_training_present` int(11) NOT NULL,
+  `use_in_training_notpresent` int(11) NOT NULL,
+  `use_in_validation_present` int(11) NOT NULL,
+  `use_in_validation_notpresent` int(11) NOT NULL,
+  `name` text NOT NULL,
   PRIMARY KEY (`job_id`),
   KEY `model_type_id` (`model_type_id`),
   KEY `training_set_id` (`training_set_id`),
@@ -96,6 +117,7 @@ CREATE TABLE `jobs` (
   `progress` double NOT NULL DEFAULT '0',
   `completed` tinyint(1) NOT NULL DEFAULT '0',
   `remarks` text NOT NULL,
+  `progress_steps` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`job_id`),
   KEY `user_id` (`user_id`),
   KEY `project_id` (`project_id`),
@@ -103,7 +125,7 @@ CREATE TABLE `jobs` (
   CONSTRAINT `jobs_ibfk_1` FOREIGN KEY (`job_type_id`) REFERENCES `job_types` (`job_type_id`),
   CONSTRAINT `jobs_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE,
   CONSTRAINT `jobs_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=155 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -123,6 +145,21 @@ CREATE TABLE `model_classes` (
   CONSTRAINT `model_classes_ibfk_1` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`),
   CONSTRAINT `model_classes_ibfk_2` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`),
   CONSTRAINT `model_classes_ibfk_3` FOREIGN KEY (`model_id`) REFERENCES `models` (`model_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `model_stats`
+--
+
+DROP TABLE IF EXISTS `model_stats`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `model_stats` (
+  `model_id` int(10) unsigned NOT NULL,
+  `json_stats` text NOT NULL,
+  UNIQUE KEY `model_id` (`model_id`),
+  CONSTRAINT `model_stats_ibfk_1` FOREIGN KEY (`model_id`) REFERENCES `models` (`model_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -167,7 +204,7 @@ CREATE TABLE `models` (
   KEY `user_id` (`user_id`),
   CONSTRAINT `models_ibfk_1` FOREIGN KEY (`model_type_id`) REFERENCES `model_types` (`model_type_id`),
   CONSTRAINT `models_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -218,7 +255,7 @@ CREATE TABLE `playlists` (
   `uri` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`playlist_id`),
   KEY `project_id` (`project_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -240,7 +277,7 @@ CREATE TABLE `project_classes` (
   CONSTRAINT `project_classes_ibfk_1` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`) ON DELETE CASCADE,
   CONSTRAINT `project_classes_ibfk_2` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`) ON DELETE CASCADE,
   CONSTRAINT `project_classes_ibfk_3` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -264,7 +301,7 @@ CREATE TABLE `project_news` (
   CONSTRAINT `project_news_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `project_news_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`),
   CONSTRAINT `project_news_ibfk_3` FOREIGN KEY (`news_type_id`) REFERENCES `project_news_types` (`news_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -334,6 +371,7 @@ DROP TABLE IF EXISTS `recording_validations`;
 CREATE TABLE `recording_validations` (
   `recording_validation_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `recording_id` bigint(20) unsigned NOT NULL,
+  `project_id` int(10) unsigned NOT NULL,
   `user_id` int(10) unsigned NOT NULL,
   `species_id` int(11) NOT NULL,
   `songtype_id` int(11) NOT NULL,
@@ -344,11 +382,12 @@ CREATE TABLE `recording_validations` (
   KEY `user_id` (`user_id`),
   KEY `species_id` (`species_id`),
   KEY `songtype_id` (`songtype_id`),
+  KEY `project_id` (`project_id`),
   CONSTRAINT `recording_validations_ibfk_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`),
   CONSTRAINT `recording_validations_ibfk_5` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `recording_validations_ibfk_6` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`),
   CONSTRAINT `recording_validations_ibfk_7` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -370,7 +409,7 @@ CREATE TABLE `recordings` (
   UNIQUE KEY `unique_uri` (`uri`),
   KEY `site_id` (`site_id`),
   CONSTRAINT `recordings_ibfk_1` FOREIGN KEY (`site_id`) REFERENCES `sites` (`site_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=683 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=688 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -458,7 +497,7 @@ CREATE TABLE `sites` (
   KEY `site_type_id` (`site_type_id`),
   CONSTRAINT `sites_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE,
   CONSTRAINT `sites_ibfk_2` FOREIGN KEY (`site_type_id`) REFERENCES `site_types` (`site_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -560,25 +599,6 @@ CREATE TABLE `species_taxons` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `training_set_roi_set`
---
-
-DROP TABLE IF EXISTS `training_set_roi_set`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `training_set_roi_set` (
-  `training_set_id` bigint(20) unsigned NOT NULL,
-  `species_id` int(11) NOT NULL,
-  `songtype_id` int(11) NOT NULL,
-  PRIMARY KEY (`training_set_id`),
-  KEY `species_id` (`species_id`),
-  KEY `songtype_id` (`songtype_id`),
-  CONSTRAINT `training_set_roi_set_ibfk_1` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`),
-  CONSTRAINT `training_set_roi_set_ibfk_2` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `training_set_roi_set_data`
 --
 
@@ -604,7 +624,7 @@ CREATE TABLE `training_set_roi_set_data` (
   CONSTRAINT `training_set_roi_set_data_ibfk_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`),
   CONSTRAINT `training_set_roi_set_data_ibfk_3` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`),
   CONSTRAINT `training_set_roi_set_data_ibfk_4` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -642,7 +662,27 @@ CREATE TABLE `training_sets` (
   KEY `training_set_type_id` (`training_set_type_id`),
   CONSTRAINT `training_sets_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE,
   CONSTRAINT `training_sets_ibfk_2` FOREIGN KEY (`training_set_type_id`) REFERENCES `training_set_types` (`training_set_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `training_sets_roi_set`
+--
+
+DROP TABLE IF EXISTS `training_sets_roi_set`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `training_sets_roi_set` (
+  `training_set_id` bigint(20) unsigned NOT NULL,
+  `species_id` int(11) NOT NULL,
+  `songtype_id` int(11) NOT NULL,
+  PRIMARY KEY (`training_set_id`),
+  KEY `species_id` (`species_id`),
+  KEY `songtype_id` (`songtype_id`),
+  CONSTRAINT `training_sets_roi_set_ibfk_3` FOREIGN KEY (`training_set_id`) REFERENCES `training_sets` (`training_set_id`) ON DELETE CASCADE,
+  CONSTRAINT `training_sets_roi_set_ibfk_1` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`),
+  CONSTRAINT `training_sets_roi_set_ibfk_2` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -775,7 +815,7 @@ CREATE TABLE `validation_set` (
   PRIMARY KEY (`validation_set_id`),
   KEY `job_id` (`job_id`),
   CONSTRAINT `validation_set_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=123 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -787,4 +827,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-10-15 15:36:59
+-- Dump completed on 2014-10-18 17:03:04
