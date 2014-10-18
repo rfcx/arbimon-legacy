@@ -14,6 +14,8 @@
     "ui-router-extras": "~0.0.10",
     "ng-table" : "~0.3.3",
     "angular-ui-select" : "~0.8.2",
-    "selectize" : "~0.8.5"
+    "selectize" : "~0.8.5",
+    "moment": "~2.8.3",
+    "angular-file-upload": "~1.1.1"
   }
 }

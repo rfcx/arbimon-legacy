@@ -1,9 +1,11 @@
 var util = require('util');
 var mysql = require('mysql');
 var validator = require('validator');
+var dbpool = require('../utils/dbpool');
+var queryHandler = dbpool.queryHandler;
 
-module.exports = function(queryHandler) {
-    return {
+module.exports =
+    {
         details: function(model_id, callback) {
             var q = "SELECT ms.`json_stats` as json, m.model_id, CONCAT(UCASE(LEFT(m.name, 1)), SUBSTRING(m.name, 2)) as mname "+
                     ", DATE_FORMAT(m.date_created,'%h:%i %p') as mtime , DATE_FORMAT(m.date_created,'%M %d %Y') as mdc "+
@@ -41,5 +43,5 @@ module.exports = function(queryHandler) {
             queryHandler(q, callback);
         }
     };
-}
+
     

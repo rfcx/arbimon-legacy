@@ -7,6 +7,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session')
 var SessionStore = require('express-mysql-session');
+var busboy = require('connect-busboy');
 
 var config = require('./config');
 var model = require('./models');
@@ -14,7 +15,7 @@ var tmpfilecache = require('./utils/tmpfilecache');
 var jobQueue = require('./utils/jobqueue');
 
 // routes
-var login = require('./routes/login'); 
+var login = require('./routes/login');
 var routes = require('./routes/index');
 
 var AWS = require('aws-sdk');
@@ -30,11 +31,12 @@ tmpfilecache.cleanup();
 
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(favicon(__dirname + '/public/images/favicon.ico'));
 app.use(logger('dev'));
+app.use(cookieParser());
+app.use(busboy());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
     key    : config('session').key,
@@ -54,9 +56,7 @@ app.use('/', routes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-    var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
+    res.status(404).render('not-found');
 });
 
 // error handlers
@@ -66,6 +66,12 @@ app.use(function(req, res, next) {
 if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
         res.status(err.status || 500);
+
+        console.log("- ERROR : ", err.message);
+        console.log(err.status);
+        console.log(err.stack);
+        console.dir(err);
+
         res.render('error', {
             message: err.message,
             error: err

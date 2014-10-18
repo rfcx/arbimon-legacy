@@ -1,0 +1,39 @@
+<div class="modal-header">
+    <h3 class="modal-title">Make New Training Set</h3>
+</div>
+<div class="modal-body" ng-form>
+    <div class="form form-horizontal">
+        <div class="form-group" ng-class="{'has-error': validation.name}" >
+            <label class="col-sm-2 control-label">Name : </label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" gn-placeholder="New Training Set" ng-model="data.name">
+            </div>
+            <div class="pull-right text-danger" ng-show="validation.name">{{validation.name}}</div>
+        </div>
+        <div class="form-group" ng-class="{'has-error': validation.type}">
+            <label class="col-sm-2 control-label">Type : </label>
+            <div class="col-sm-3">
+                <div class="dropdown">
+                    <button class="btn btn-block btn-default" role="button" data-toggle="dropdown">
+                        {{data.type.name}}
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
+                        <li ng-repeat="type in tset_types">
+                            <a ng-click="data.type = type">{{type.name}}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-sm-7">
+                {{data.type.description}}
+            </div>
+            <div class="pull-right text-danger" ng-show="validation.type">{{validation.type}}</div>
+        </div>
+        <div ng-include="typedefs[data.type.identifier].templates.new_modal" ></div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok()">OK</button>
+    <button class="btn btn-warning" ng-click="$dismiss()">Cancel</button>
+</div>

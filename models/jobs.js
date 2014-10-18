@@ -1,9 +1,11 @@
 var util = require('util');
 var mysql = require('mysql');
 var validator = require('validator');
+var dbpool = require('../utils/dbpool');
+var queryHandler = dbpool.queryHandler;
 
-module.exports = function(queryHandler) {
-    return {
+module.exports = 
+     {
         newJob: function(p,type, callback) {
 
             var q = "INSERT INTO `jobs` (`job_type_id`, `date_created`, `last_update` "+
@@ -29,6 +31,6 @@ module.exports = function(queryHandler) {
             queryHandler(q,callback);
         }
     };
-}
+
     
     

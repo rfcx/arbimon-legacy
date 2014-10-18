@@ -1,0 +1,31 @@
+<div>
+    <h4>
+        <a2-species species="layer.training_data.tset.species"></a2-species>
+        <small>
+            <a2-songtype songtype="layer.training_data.tset.songtype"></a2-songtype>
+        </small>
+    </h4>
+</div>
+<div ng-hide="layer.training_data.data.rois || layer.training_data.data.editor.roi">
+    Ther is no training data in this recording.
+</div>
+<div ng-show="layer.training_data.data.rois || layer.training_data.data.editor.roi">
+    <table class="bg table table-condensed">
+        <tr><th>x1</th><th>y1</th><th>x2</th><th>y2</th></tr>
+        <tr ng-repeat="roi in layer.training_data.data.rois" 
+            ng-class ="{'active':layer.training_data.data.selected == roi}"
+            ng-click ="layer.training_data.data.selected = roi"
+        >
+            <td>{{roi.x1         | number:2}}&nbsp;s</td>
+            <td>{{roi.y1 /1000.0 | number:2}}&nbsp;kHz</td>
+            <td>{{roi.x2         | number:2}}&nbsp;s</td>
+            <td>{{roi.y2 /1000.0 | number:2}}&nbsp;kHz</td>
+        </tr>
+        <tr class="text-info" ng-show="layer.training_data.data.editor.roi && !layer.training_data.data.editor.roi.id">
+            <td>{{layer.training_data.data.editor.roi.x1        | number:2}}&nbsp;s</td>
+            <td>{{layer.training_data.data.editor.roi.y1/1000.0 | number:2}}&nbsp;kHz</td>
+            <td>{{layer.training_data.data.editor.roi.x2        | number:2}}&nbsp;s</td>
+            <td>{{layer.training_data.data.editor.roi.y2/1000.0 | number:2}}&nbsp;kHz</td>
+        </tr>
+    </table>
+</div>

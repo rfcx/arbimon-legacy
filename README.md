@@ -4,7 +4,17 @@ Bio-Acoustic Analyzer
 ---
 
 ### System dependencies:
- - nodejs
+
+
+
+ - ### sox
+   ```
+   sudo apt-get install sox
+   sudo apt-get install libsox-fmt-mp3
+   
+   ```
+   
+ - #### nodejs
   
    Ubuntu
    
@@ -12,8 +22,7 @@ Bio-Acoustic Analyzer
    sudo add-apt-repository ppa:chris-lea/node.js
    sudo apt-get update
    sudo apt-get install nodejs
-   sudo apt-get install sox
-   sudo apt-get install libsox-fmt-mp3
+   
    ```
    
    Mac OS X
@@ -24,8 +33,7 @@ Bio-Acoustic Analyzer
    
    or download binaries from [http://nodejs.org/](http://nodejs.org/)
 
-
-node global dependencies:
+### node global dependencies:
  - bower - install with `sudo npm install -g bower`
  - grunt-cli - install with `sudo npm install -g grunt-cli`
 
@@ -49,4 +57,10 @@ run
 
 `npm start` and the app will be available in localhost:3000
 
+run and watch
 
+`grunt server` everything a file changes the project will rebuild
+
+clean packages and builds (node_modules, bower_components, public/assets)
+
+`grunt clean` 

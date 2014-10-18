@@ -1,0 +1,18 @@
+<span class="zoom-control" ng-class="horizontal ? 'horizontal' : 'vertical'">
+    <button class="btn-zoom-in btn btn-default btn-xs" ng-click="step(switched ? -1 : 1)" > 
+        <i class="fa" ng-class="switched ? 'fa-minus' : 'fa-plus'"></i>
+    </button>
+    <div class="zoom-track">
+        <div class="tick-marks"
+            ng-mousedown="$event.which==1 && set_by_mouse($event)"
+            ng-mousemove="$event.buttons==1 && set_by_mouse($event)"
+        ></div>
+        <button 
+            class="btn btn-default marker" 
+            ng-style="horizontal ? {'left':((switched ? level : (1-level))*100)+'%'} : {'top':((switched ? level : (1-level))*100)+'%'}"
+        ></button>
+    </div>
+    <button class="btn-zoom-out btn btn-default btn-xs" ng-click="step(switched ? 1 : -1)" > 
+        <i class="fa" ng-class="switched ? 'fa-plus' : 'fa-minus'"></i>
+    </button>
+</span>

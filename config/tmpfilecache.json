@@ -1,5 +1,5 @@
 {
     "path" : "tmpfilecache",
-    "maxObjectLifetime" : 14400000,
+    "maxObjectLifetime" : 86400000,
     "cleanupInterval"   : 14400000
 }

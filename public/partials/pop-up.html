@@ -2,7 +2,7 @@
 </div>
 
 <div class="modal-body">
-    {{ message }}
+    <p ng-repeat="msg in messages">{{ msg }}</p>
 </div>
 <div class="modal-footer">
     <button class="btn btn-danger" ng-click="$close(true)">{{ btnOk }}</button>

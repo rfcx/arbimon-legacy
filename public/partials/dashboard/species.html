@@ -1,10 +1,75 @@
-<div class="col-sm-5">
-    project species/song
+<div class="row">
+<div class="col-sm-6">
+    <h4>
+        Project Species
+        <button class="btn btn-default"
+            ng-click="add()"
+            tooltip="Select a species and a song"
+            tooltip-trigger="mouseenter">
+            <i class="fa fa-plus"></i>
+        </button>
+        <button class="btn btn-danger"
+            ng-disabled="!checked || !checked.length"
+            ng-click="del()">
+            <i class="fa fa-trash"></i>
+        </button>
+
+    </h4>
+    <a2-table fields="fields" rows="classes" on-select="sel($index)" checked="checked" no-select></a2-table>
 </div>
-<div class="col-sm-7">
-    <ul class="nav nav-tabs" role="tablist">
-<!--
-        <li ng-class="{ active: }"><a href="#">taxon</a></li>
--->
-    </ul>
+<div class="col-sm-6" auto-height>
+    <div class="col-sm-6">
+        <h4>
+            Species Library
+        </h4>
+    </div>
+    <div class="col-sm-6">
+        <div class="input-group">
+            <input class="form-control" type="search" placeholder="Species: name, family, alias" ng-model="search" ng-keypress="submitSearch($event)">
+            <span class="input-group-btn">
+                <button class="btn btn-default" type="button" ng-click="searchSpecies()"><i class="fa fa-search"></i></button>
+            </span>
+        </div>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th width="50%">Species</th>
+                <th width="30%">Family</th>
+                <th width="20%">Taxon</th>
+            </tr>
+        </thead>
+    </table>
+    <div class="species-lib">
+        <table class="table">
+            <tbody>
+                <tr ng-repeat="spec in species"
+                    ng-click="selectSpec($index)"
+                    ng-class="{ active: selected.species.scientific_name === spec.scientific_name }">
+                    <td width="50%">{{ spec.scientific_name }}</td>
+                    <td width="30%">{{ spec.family }}</td>
+                    <td width="20%">{{ spec.taxon }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Songs</th>
+            </tr>
+        </thead>
+    </table>
+    <div class="species-lib">
+        <table class="table">
+            <tbody>
+                <tr ng-repeat="song in songtypes"
+                    ng-click="selectSong($index)"
+                    ng-class="{ active: selected.song.name === song.name }">
+                    <td>{{ song.name }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 </div>

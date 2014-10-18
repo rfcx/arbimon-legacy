@@ -1,7 +1,7 @@
 var arbimon2 = angular.module('arbimon2', ['ui.router', 'visualizer', 'dashboard' ,'models','classification', 'a2services'])
 .config(function($stateProvider, $urlRouterProvider) {
     
-    $urlRouterProvider.otherwise("/classify");
+    $urlRouterProvider.otherwise("/dashboard");
 
     $stateProvider.state('dashboard', {
         url: '/dashboard',
@@ -9,11 +9,12 @@ var arbimon2 = angular.module('arbimon2', ['ui.router', 'visualizer', 'dashboard
     })
     .state('audiodata', {
         url: '/audiodata',
-        template: '<h4>AUDIO DATA</h4>'
+        templateUrl: '/partials/audiodata/index.html'
     })
     .state('visualizer', {
-        url: '/visualizer',
+        url: '/visualizer/:recording',
         controller : 'VisualizerCtrl',
+        reloadOnSearch : false,
         template: '<a2-visualizer></a2-visualizer>'
     })
     .state('models', {
