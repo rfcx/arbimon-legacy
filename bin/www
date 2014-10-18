@@ -4,7 +4,26 @@ var app = require('../app');
 
 app.set('port', process.env.PORT || 3000);
 
+if (app.get('env') === 'production') {
+    
+    if(!process.env.SSL_KEY || !process.env.SSL_CERT)
+        throw new Error("no ssl");
+        
+    var keyFile = process.env.SSL_KEY;
+    var certFile = process.env.SSL_CERT;
+    
+    var https = require('https');
+    var fs = require('fs');
 
-var server = app.listen(app.get('port'), function() {
-    debug('Express server listening on port ' + server.address().port);
-});
+    var options = {
+        key: fs.readFileSync(keyFile),
+        cert: fs.readFileSync(certFile)
+    };
+
+    https.createServer(options, app).listen(app.get('port'));
+}
+else {
+    var server = app.listen(app.get('port'), function() {
+        debug('Express server listening on port ' + server.address().port);
+    });
+}
