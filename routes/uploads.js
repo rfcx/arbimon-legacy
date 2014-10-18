@@ -166,6 +166,13 @@ router.post('/audio/project/:projectid', function(req, res) {
                 }]
             },
             function(err, results) {
+                // delete temp files
+                fs.unlinkSync(inFile);
+                fs.unlinkSync(outFile);
+                fs.unlinkSync(thumbnail);
+                
+                if(err) next(err);
+                
                 console.log('err = ', err);
                 console.log('results = ', results);
             });
