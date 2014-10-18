@@ -113,6 +113,7 @@ router.post('/audio/project/:projectid', function(req, res) {
                     var params = { 
                         Bucket: 'arbimon2', 
                         Key: fileKey + '.flac',
+                        ACL: 'public-read',
                         Body: fs.createReadStream(outFile)
                     };
 
@@ -135,6 +136,7 @@ router.post('/audio/project/:projectid', function(req, res) {
                     var params = { 
                         Bucket: 'arbimon2', 
                         Key: fileKey + '.thumbnail.png',
+                        ACL: 'public-read',
                         Body: fs.createReadStream(thumbnail)
                     };
 
