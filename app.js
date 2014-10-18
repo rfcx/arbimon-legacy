@@ -30,7 +30,7 @@ tmpfilecache.cleanup();
 
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(favicon(__dirname + '/public/images/favicon.ico'));
 app.use(logger('dev'));
 app.use(cookieParser());
 app.use(busboy());
