@@ -7,40 +7,11 @@
 </head>
 
 <body ng-controller="HomeCtrl">
-<nav class="navbar navbar-default" role="navigation">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <a href="/home" class="navbar-brand">
-                <img src="/images/logo.svg">
-            </a>
-        </div>
+<% include home-nav %>
 
-        <ul class="nav navbar-nav navbar-right">
-            <li class=""><a href="#"><i class="fa fa-user"></i> <%= user.username %></a></li>
-            <li class=""><a href="#" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
-            <li class=""><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
-        </ul>
-
-        
-<!--
-        <ul class="nav navbar-nav navbar-right">
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                    <i class="fa fa-user"></i> <%= user.username %>
-                </a>
-                <ul class="dropdown-menu" role="menu">
-                    <li class=""><a href="#"><i class="fa fa-wrench"></i> User Settings</a></li>
-                    <li class=""><a href="/logout"><i class="fa fa-sign-out"></i> Log out</a></li>
-                </ul>
-            </li>
-        </ul>
--->
-    </div><!-- /.container-fluid -->
-</nav>
-
-<div class="container-fluid">
+<div class="container">
     <div class="row">
-        <div class="col-sm-4">
+        <div class="col-sm-6">
             <h3>Projects <button class="btn btn-default" ng-click="createProject()"><i class="fa fa-plus"></i></button></h3>
             <div class="list-group">
                 <dl>
@@ -58,14 +29,14 @@
                 </dl>
             </div>
         </div>
-        <div class="col-sm-5">
+        <!-- <div class="col-sm-5">
             <h3>Project feed <i class="fa fa-newspaper-o"></i></h3>
             <div class="list-group">
                 <ul class="list-group">
                     <li class="list-group-item" ng-repeat="news in feed track by $index">{{ news }}</li>
                 </ul>
             </div>
-        </div>
+        </div> -->
     </div>
 </div>
 

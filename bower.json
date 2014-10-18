@@ -10,7 +10,6 @@
     "angular-ui-router": "~0.2.11",
     "d3": "~3.4.11",
     "angular-audio": "*",
-    "angular-google-maps": "~1.2.2",
     "ui-router-extras": "~0.0.10",
     "moment": "~2.8.3",
     "angular-file-upload": "~1.1.1"

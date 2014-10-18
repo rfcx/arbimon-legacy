@@ -8,11 +8,11 @@ var uploads = require('./uploads');
 
 
 router.get('/register', function(req, res) {
-    res.render('index', { title: 'Express' });
+    res.redirect('/');
 });
 
 router.get('/forgot', function(req, res) {
-    res.render('index', { title: 'Express' });
+    res.redirect('/');
 });
 
 
@@ -33,6 +33,11 @@ router.get('/', function(req, res) {
 router.get('/home', function(req, res) {
     res.render('home', { title: "Home", user: req.session.user });
 });
+
+// INCOMPLETE
+// router.get('/settings', function(req, res) {
+//     res.render('user-settings', { title: "Settings", user: req.session.user });
+// });
 
 router.use('/api', dataApi);
 router.use('/project', project);

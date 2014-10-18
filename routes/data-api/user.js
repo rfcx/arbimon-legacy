@@ -12,7 +12,7 @@ router.get('/projectlist', function(req, res, next) {
 });
 
 router.get('/feed', function(req, res) {
-    res.status(200).end();
+    res.sendStatus(200);
 });
 
 router.get('/search/:query', function(req, res, next) {
