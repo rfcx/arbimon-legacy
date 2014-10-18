@@ -3,6 +3,10 @@
     overflow: auto;
     position: relative;
     width: 100%;
+    
+    > .a2-visualizer-spectrogram-affixed{
+        z-index:1005;
+    }
 
     > * {
         position: absolute;
@@ -160,4 +164,93 @@
     &.cp-resize-tr, &.cp-resize-bl{
         cursor:nesw-resize;
     }
+}
+
+.zoom-control{
+    display:inline-block;
+    @tick-mark-size:5;
+    @tick-mark-color:black;
+    @ct:rgba(0,0,0,0);
+    @c1:@tick-mark-color;
+    @c2:@btn-default-border;
+    @c3:@btn-default-bg;
+    @half-size : .01;
+    @p1:percentage(.5 - @half-size);
+    @p2:percentage(.5 + @half-size);
+    @p3:percentage(.5 - .3);
+    @p4:percentage(.5 + .3);
+    .zoom-track{
+        position: relative;
+        overflow:hidden;
+        > .tick-marks{
+            @grad-1 : linear-gradient(to bottom,@ct 0%, @ct @p1, @c1 @p1, @c1 @p2, @ct @p2, @ct 100%);
+            @grad-2 : linear-gradient(to right ,@ct 0%, @ct @p1, @c2 @p1, @c3 50%, @c2 @p2, @ct @p2, @ct 100%);
+            position: absolute; 
+        }
+        > .marker {
+            padding: 0;
+            position: absolute;
+        }
+    }
+    &.horizontal{
+        width:200px;
+        > .btn{
+            margin-left:0;
+            margin-right:0;
+        }
+        .zoom-track{
+            display: inline-block;
+            height: 1.5em;
+            vertical-align:middle;
+            width: 140px;
+            > .tick-marks{
+                @grad-1 : linear-gradient(to right ,@ct 0%, @ct @p1, @c1 @p1, @c1 @p2, @ct @p2, @ct 100%);
+                @grad-2 : linear-gradient(to bottom,@ct 0%, @ct @p1, @c2 @p1, @c3 50%, @c2 @p2, @ct @p2, @ct 100%);
+                left:0; right:0; top:50%; height:9px;
+                margin-top: -5px;
+                background-size: 11px 9px;
+                background-image: @grad-1, @grad-2;
+            }
+            &:hover > .tick-marks{
+                @grad-1 : linear-gradient(to right ,@ct 0%, @ct @p1, @c1 @p1, @c1 @p2, @ct @p2, @ct 100%);
+                @grad-3 : linear-gradient(to bottom,@ct 0%, @ct @p3, @c2 @p3, @c3 50%, @c2 @p4, @ct @p4, @ct 100%);
+                background-image: @grad-1, @grad-3;
+            }
+            > .marker {
+                width: 10px;
+                margin-left: -5px;
+                height: 100%;    
+            }
+        }        
+    }
+    &.vertical{
+        .zoom-track{
+            height:140px;
+            > .tick-marks{
+                @grad-1 : linear-gradient(to bottom,@ct 0%, @ct @p1, @c1 @p1, @c1 @p2, @ct @p2, @ct 100%);
+                @grad-2 : linear-gradient(to right ,@ct 0%, @ct @p1, @c2 @p1, @c3 50%, @c2 @p2, @ct @p2, @ct 100%);
+                top:0; bottom:0; left:50%; width:9px;
+                margin-left: -5px;
+                background-size: 9px 11px;
+                background-image: @grad-1, @grad-2;
+            }
+            &:hover > .tick-marks{
+                @grad-1 : linear-gradient(to bottom,@ct 0%, @ct @p1, @c1 @p1, @c1 @p2, @ct @p2, @ct 100%);
+                @grad-3 : linear-gradient(to right,@ct 0%, @ct @p3, @c2 @p3, @c3 50%, @c2 @p4, @ct @p4, @ct 100%);
+                background-image: @grad-1, @grad-3;
+            }
+            > .marker {
+                height: 10px;
+                margin-top: -5px;
+                width: 100%;    
+            }
+        }
+    }
+}
+
+
+.fa-sm{
+    font-size: 10px;
+    line-height: 1em;
+    vertical-align: middle;    
 }

@@ -5,6 +5,13 @@
     <div class="title-bar" ng-show="loading_recording">
         <i class="fa fa-spinner fa-spin"></i> Loading Recording
     </div>
+    <a2-visualizer-spectrogram-affixed data-affix-top="20" data-affix-right="40" ng-show="recording">
+        <a2-zoom-control level="layout.scale.zoom.x" horizontal="true"></a2-zoom-control>
+    </a2-visualizer-spectrogram-affixed>
+    <a2-visualizer-spectrogram-affixed data-affix-top="40" data-affix-right="20" ng-show="recording">
+        <a2-zoom-control level="layout.scale.zoom.y"></a2-zoom-control>
+    </a2-visualizer-spectrogram-affixed>
+    
     <svg class="axis-y" ng-show="recording" ></svg>
     <div class="spectrogram-container" ng-show="recording" >
         <a2-visualizer-spectrogram-layer ng-repeat="layer in layers | filter: canDisplayInSpectrogram" ng-show="layer.visible" ></a2-visualizer-spectrogram-layer>
