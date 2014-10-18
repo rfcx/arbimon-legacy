@@ -1,4 +1,11 @@
-var arbimon2 = angular.module('arbimon2', ['ui.router', 'visualizer', 'dashboard' ,'models','classification', 'a2services'])
+var arbimon2 = angular.module('arbimon2', [
+    'ui.router', 
+    'visualizer', 
+    'dashboard', 
+    'audiodata',
+    'models',
+    'classification'
+])
 .config(function($stateProvider, $urlRouterProvider) {
     
     $urlRouterProvider.otherwise("/dashboard");
@@ -26,8 +33,8 @@ var arbimon2 = angular.module('arbimon2', ['ui.router', 'visualizer', 'dashboard
         template: '<a2-classification></a2-classification>'
     });
 })
-.controller('ProgressController',
-    function ($scope,$http,Project)
+.controller('StatusController',
+    function ($scope, $http, Project)
     {
         $scope.showButtonProgress = true;
         $scope.showProgressBar =
@@ -71,4 +78,5 @@ var arbimon2 = angular.module('arbimon2', ['ui.router', 'visualizer', 'dashboard
             $scope.showButtonProgress = true;
         };
     }
-);
+)
+;

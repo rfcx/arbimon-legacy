@@ -1,4 +1,4 @@
-angular.module('audiodata',['a2services', 'a2directives', 'ui.bootstrap', 'angularFileUpload']) // 'blueimp.fileupload',
+angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angularFileUpload'])
 .config(function($stateProvider, $urlRouterProvider) {
    
     $urlRouterProvider.when("/audiodata", "/audiodata/recordings");
