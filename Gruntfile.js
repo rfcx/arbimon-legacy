@@ -47,7 +47,12 @@ module.exports = function(grunt) {
                 src: 'bower_components/d3/*.js',
                 dest: 'public/assets/d3/'
             },
-            
+            ngTable: {
+                expand: true, 
+                cwd: 'bower_components/ng-table/',
+                src: ['ng-table.min.js', 'ng-table.min.css'],
+                dest: 'public/assets/ng-table/',
+            },           
             angular: {
                 expand: true,
                 flatten: true,
@@ -82,6 +87,20 @@ module.exports = function(grunt) {
                 src: 'bower_components/ui-router-extras/release/ct-ui-router-extras.min.js',
                 dest: 'public/assets/ui-router-extras/'
             },
+            
+            angularUiSelect: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/angular-ui-select/dist/select.min*',
+                dest: 'public/assets/angular-ui-select/'
+            },
+            
+            angularUiSelectSelectizeTheme: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/selectize/dist/css/selectize.default.css',
+                dest: 'public/assets/angular-ui-select/'
+            }
         },
         
         concat: {
@@ -94,6 +113,8 @@ module.exports = function(grunt) {
                     'assets/js/a2services.js',
                     'assets/js/extras/*.js',
                     'assets/js/a2directives.js',
+                    'assets/js/models.js',
+                    'assets/js/classification.js'
                 ], 
                 dest: 'public/assets/js/arbimon2.js'
             }

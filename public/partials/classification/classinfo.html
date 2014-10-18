@@ -1,0 +1,30 @@
+<div class="modal-header">  
+    <h3 class="modal-title">Classification Details</h3>  
+</div>  
+<div class="modal-body"> 
+    <table class="table">
+        <tr>
+            <th>Species</th>
+            <th>Songtype</th>
+            <th>Present/Total</th>
+            <th>Percentage</th>
+        </tr>
+        <tr ng-repeat="species in data" >
+            <td class="no-wrap-table-cell">
+                {{species.species}}
+            </td>
+             <td class="no-wrap-table-cell">
+                {{species.songtype}}
+            </td>           
+            <td>
+                {{species.data}} / {{species.total}}
+            </td>
+            <td>
+                {{species.percentage}}%
+            </td>
+        </tr>
+    </table>
+</div>  
+<div class="modal-footer">  
+    <button class="btn btn-primary" ng-click="ok()"  ng-disabled="buttonEnable()">Close</button>  
+</div>  

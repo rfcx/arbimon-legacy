@@ -29,10 +29,13 @@ var Users    = require('./users'     )(queryHandler);
 var Projects = require('./projects'  )(queryHandler);
 var Recordings = require('./recordings')(queryHandler);
 var Sites = require('./sites')(queryHandler);
-
+var Models = require('./models')(queryHandler);
+var Jobs = require('./jobs')(queryHandler);
 module.exports = {
     users: Users,
     projects: Projects,
     recordings: Recordings,
     sites: Sites,
+    models:Models,
+    jobs:Jobs
 };

@@ -11,6 +11,7 @@ var SessionStore = require('express-mysql-session');
 var config = require('./config');
 var model = require('./models');
 var tmpfilecache = require('./utils/tmpfilecache');
+var jobQueue = require('./utils/jobqueue');
 
 // routes
 var login = require('./routes/login'); 

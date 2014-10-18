@@ -11,6 +11,9 @@
     "d3": "~3.4.11",
     "angular-audio": "*",
     "angular-google-maps": "~1.2.2",
-    "ui-router-extras": "~0.0.10"
+    "ui-router-extras": "~0.0.10",
+    "ng-table" : "~0.3.3",
+    "angular-ui-select" : "~0.8.2",
+    "selectize" : "~0.8.5"
   }
 }

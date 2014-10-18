@@ -1,0 +1,149 @@
+<div class="modal-header">  
+    <h3 class="modal-title">Model Details</h3>  
+</div>  
+<div class="modal-body row">
+    <div class="col-sm-6">
+        <table>
+            <tr>
+                <td >
+                    Name: 
+                </td> <td ng-bind="data.modelmname"></td>
+            </tr>
+            <tr>
+                <td>
+                    Type: 
+                </td><td ng-bind="data.modelmtname"></td>
+            </tr>
+            <tr>
+                <td >
+                    Creation date: 
+                </td><td> <span ng-bind="data.modelmdc"></span> at <span ng-bind="data.modelmtime"></span></td>
+            </tr>
+            <tr>
+                <td >
+                    Last updated on: 
+                </td><td> <span ng-bind="data.lastupdate"></span> at <span ng-bind="data.lasttime "></span></td>
+            </tr>
+            <tr>
+                <td>
+                    Creator: 
+                </td><td ng-bind="data.modelmuser"></td>
+            </tr>
+            <tr>
+                <td>
+                    Model Class: 
+                </td><td> <span ng-bind="data.species"></span>/<span ng-bind="data.songtype"></span></td>
+            </tr>
+            <tr>
+                <td data-ng-hide="true">
+                    <span ng-bind="data.modelmodel_id"></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="col-sm-6">
+        <table>
+            <tr>
+                <td >
+                    Accuracy: 
+                </td> <td ng-bind="data.accuracy"></td>
+            </tr>
+            <tr>
+                <td>
+                    Precision: 
+                </td><td ng-bind="data.precision"></td>
+            </tr>
+            <tr>
+                <td >
+                    Recall: 
+                </td><td ng-bind="data.recall"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="model-details"></div>
+<div class="modal-body row">
+    <div class="col-sm-6">
+    <h3 class="modal-title">Training Set</h3>
+        <table>
+            <tr>
+                <td >
+                    Name: 
+                </td> <td ng-bind="data.trainingName"></td>
+            </tr>
+            <tr>
+                <td>
+                    Creation date:
+                </td><td> <span ng-bind="data.trainingDate"></span> at <span ng-bind="data.trainingTime"></span></td>
+            </tr>
+            <tr>
+                <td >
+                    Pattern ROI Count: 
+                </td><td ng-bind="data.roicount"></td>
+            </tr>
+            <tr>
+                <td>
+                    Pattern Low Frequency: 
+                </td><td><span ng-bind="data.lfreq"></span>hz</td>
+            </tr>
+            <tr>
+                <td>
+                    Pattern High Frequency: 
+                </td><td><span ng-bind="data.hfreq"></span>Hz</td>
+            </tr>
+            <tr>
+                <td >
+                    Pattern Bandwith: 
+                </td><td><span ng-bind="data.bw" ></span>Hz</td>
+            </tr>
+        </table>
+        Computed Pattern:
+        <div class="row">
+            <div class="col-sm-2 roiaxis" >
+                <p>{{data.freqMax}}Hz-</p>
+                <div class="lowaxis">     0Hz-</div>
+            </div>
+            <img class="col-sm-10 roiimage" ng-src="{{data.png}}" />
+        </div>
+        <div class="row">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-6">
+                0s
+            </div>
+            <div class="col-sm-1">{{data.rlength}}s</div>
+
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <h3 class="modal-title">Validations</h3>
+
+        <div class="row" >
+             <div class="col-sm-12 inline">
+                <strong>Total Validations Used:</strong> {{data.all}}
+            </div>
+        </div>
+        <div class="row top-buffer" >
+            <div class="col-sm-6 inline">
+                <strong>Present:</strong> {{data.p}}
+                <table>
+                    <tr><td>In Fitting:</td><td ng-bind="data.tp"></td></tr>
+                    <tr><td>In Verification:</td><td ng-bind="data.vp"></td></tr>
+                </table>         
+            </div>
+            <div class="col-sm-6 inline">
+                <strong>Not Present:</strong> {{data.np}}
+                <table>
+                    <tr><td>In Fitting:</td><td ng-bind="data.tnp"></td></tr>
+                    <tr><td>In Verification:</td><td ng-bind="data.vnp"></td></tr>
+                </table>        
+            </div>
+        </div>
+      </div>
+
+    </div>
+</div>
+<div class="modal-footer">  
+    <button class="btn btn-primary" ng-click="ok()">Close</button>  
+</div>  
+
+
