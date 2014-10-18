@@ -65,40 +65,39 @@ var Projects = {
     },
 
     update: function(project, callback) {
-        var values = [];
-
-        if(typeof project["project_id"] === "undefined")
-            return callback(new Error("required field 'project_id' missing"));
-
-        for( var i in project) {
-            if(i !== 'project_id') {
-                project[i] = mysql.escape(project[i]);
-                values.push(util.format('`%s`=%s', i, project[i]));
-            }
+        
+        var schema = {
+            project_id: Joi.number(),
+            name: Joi.string().optional(),
+            url: Joi.string().optional(),
+            description: Joi.string().optional(),
+            owner_id: Joi.number().optional(),
+            project_type_id: Joi.number().optional(),
+            is_private: Joi.number().optional(),
+            is_enabled: Joi.number().optional()
         }
+        
+        Joi.validate(project, schema, function(err, projectInfo){
+            if(err) return callback(err);
+            
+            var values = [];
+            
+            for( var i in projectInfo) {
+                if(i !== 'project_id') {
+                    projectInfo[i] = mysql.escape(projectInfo[i]);
+                    values.push(util.format('`%s`=%s', i, projectInfo[i]));
+                }
+            }
+            
+            var q = 'UPDATE projects \n'+
+                    'SET %s \n'+
+                    'WHERE project_id = %s';
 
-        var q = 'UPDATE projects \n'+
-                'SET %s \n'+
-                'WHERE site_id = %s';
-
-        q = util.format(q, values.join(", "), project.site_id);
-
-        queryHandler(q, callback);
+            q = util.format(q, values.join(", "), projectInfo.project_id);
+            queryHandler(q, callback);
+        });
     },
-
-    addUser: function(row, callback) {
-
-        var user_id = mysql.escape(row.user_id);
-        var project_id = mysql.escape(row.project_id);
-        var role_id = mysql.escape(row.role_id);
-
-        var q = 'INSERT INTO user_project_role \n'+
-                'SET user_id = %s, role_id = %s, project_id = %s';
-
-        q = util.format(q, user_id, role_id, project_id);
-        queryHandler(q, callback);
-    },
-
+    
     insertNews: function(news) {
         var user_id = mysql.escape(news.user_id);
         var project_id = mysql.escape(news.project_id);
@@ -240,6 +239,93 @@ var Projects = {
             q = util.format(q, value);
             queryHandler(q, callback);
         });
+    },
+    
+    getUsers: function(project_id, callback){ 
+        
+        if(typeof project_id !== 'number')
+            return callback(new Error("invalid type for 'project_id'"));
+        
+        var q = "SELECT u.login AS username, \n"+
+                "       u.user_id AS id, \n"+
+                "       u.email, \n"+
+                "       r.name AS rolename \n"+
+                "FROM users AS u \n"+
+                "JOIN user_project_role AS upr ON u.user_id = upr.user_id \n"+
+                "JOIN roles AS r on upr.role_id = r.role_id \n"+
+                "WHERE upr.project_id = %s";
+        
+        q = util.format(q, project_id);
+        queryHandler(q, callback);
+    },
+    
+    addUser: function(userProjectRole, callback) {
+        var schema = {
+            user_id: Joi.number(),
+            project_id: Joi.number(),
+            role_id: Joi.number()
+        };
+        
+        Joi.validate(userProjectRole, schema, function(err, upr){
+            if(err) return callback(err);
+            
+            var user_id = mysql.escape(upr.user_id);
+            var project_id = mysql.escape(upr.project_id);
+            var role_id = mysql.escape(upr.role_id);
+            
+            var q = 'INSERT INTO user_project_role \n'+
+                    'SET user_id = %s, role_id = %s, project_id = %s';
+            
+            q = util.format(q, user_id, role_id, project_id);
+            queryHandler(q, callback);
+        })
+
+    },
+    
+    changeUserRole: function(userProjectRole, callback) {
+        var schema = {
+            user_id: Joi.number(),
+            project_id: Joi.number(),
+            role_id: Joi.number()
+        };
+            
+        Joi.validate(userProjectRole, schema, function(err, upr){
+            if(err) return callback(err);
+            
+            var user_id = mysql.escape(upr.user_id);
+            var project_id = mysql.escape(upr.project_id);
+            var role_id = mysql.escape(upr.role_id);
+            
+            var q = "UPDATE user_project_role \n"+
+                    "SET role_id = %s \n"+
+                    "WHERE user_id = %s \n"+
+                    "AND project_id = %s";
+            
+            q = util.format(q, role_id, user_id, project_id);
+            queryHandler(q, callback);
+        });
+    },
+    
+    removeUser: function(user_id, project_id, callback){
+        if(typeof project_id !== 'number')
+            return callback(new Error("invalid type for 'project_id'"));
+        
+        if(typeof user_id !== 'number')
+            return callback(new Error("invalid type for 'user_id'"));
+        
+        var q = "DELETE FROM user_project_role \n"+
+                "WHERE user_id = %s AND project_id = %s";
+        
+        q = util.format(q, mysql.escape(user_id), mysql.escape(project_id));
+        queryHandler(q, callback);
+    },
+    
+    availableRoles: function(callback) {
+        var q = "SELECT role_id as id, name, description \n"+
+                "FROM roles \n"+
+                "WHERE name != 'Owner'";
+                
+        queryHandler(q, callback);
     }
 };
 

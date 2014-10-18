@@ -20,10 +20,12 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
     })
     .state('dashboard.settings', {
         url: '/settings',
+        controller:'SettingsCtrl',
         templateUrl: '/partials/dashboard/settings.html'
     })
     .state('dashboard.users', {
         url: '/users',
+        controller:'UsersCtrl',
         templateUrl: '/partials/dashboard/users.html'
     })
 
@@ -32,6 +34,10 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
 
     Project.getInfo(function(info){
          $scope.project = info;
+    });
+    
+    Project.getClasses(function(species){
+        $scope.species = species;
     });
 
     var mapOptions = {
@@ -126,7 +132,7 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
     $scope.del = function() {
         if(!$scope.checked || !$scope.checked.length)
             return;
-
+        
         var sitesNames = $scope.checked.map(function(row) {
             return row.name;
         });
@@ -347,5 +353,116 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
         });
         
     }
+})
+.controller('SettingsCtrl', function($scope, Project) {
+    Project.getInfo(function(info) {
+        $scope.project = info;
+    });
+    
+    $scope.save = function() {
+        Project.updateInfo({
+            project: $scope.project
+        }, 
+        function(err, result){
+            if(err) alert(err);
+            
+            console.log(result);
+        });
+    }
+})
+.controller('UsersCtrl', function($scope, $http, Project, $modal) {
+    
+    Project.getInfo(function(info) {
+        $scope.project = info;
+    });
+    
+    Project.getUsers(function(err, users){
+        $scope.users = users;
+    });
+    
+    Project.getRoles(function(err, roles){
+        $scope.roles = roles;
+    });
+    
+    $scope.findUser = function(query) {
+        return $http.get('/api/user/search/'+ query)
+        .then(function(response) { 
+            return response.data;
+        });
+    };
+    
+    $scope.add = function() {
+        if(!$scope.userToAdd)
+            return;
+        
+        console.log('addUser');
+        
+        Project.addUser({
+            project_id: $scope.project.project_id,
+            user_id: $scope.userToAdd.id
+        },
+        function(err, result){
+            if(err) alert(err);
+            
+            console.log(result);
+            Project.getUsers(function(err, users){
+                $scope.users = users;
+            });
+        });
+    };
+    
+    $scope.changeRole = function($index) {
+        console.log($scope.users[$index]);
+        
+        var role = $scope.roles.filter(function(value){
+            return $scope.users[$index].rolename === value.name;
+        })[0];
+        
+        Project.changeUserRole({
+            project_id: $scope.project.project_id,
+            user_id: $scope.users[$index].id,
+            role_id: role.id
+        },
+        function(err, result){
+            if(err) alert(err);
+            
+            console.log(result);
+            Project.getUsers(function(err, users){
+                $scope.users = users;
+            });
+        });
+    };
+    
+    $scope.del = function($index) {
+        
+        $scope.messages = [
+            "You are about to remove: ",
+            $scope.users[$index].username,
+            "Are you sure??"
+        ];
+        
+        $scope.btnOk = "Yes, do it!";
+        $scope.btnCancel = "No";
+        
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/pop-up.html',
+            scope: $scope
+        });
+        
+        modalInstance.result.then(function() {
+            Project.delUser({
+                project_id: $scope.project.project_id,
+                user_id: $scope.users[$index].id
+            },
+            function(err, result){
+                if(err) alert(err);
+                
+                console.log(result);
+                Project.getUsers(function(err, users){
+                    $scope.users = users;
+                });
+            });
+        });
+    };
 })
 ;

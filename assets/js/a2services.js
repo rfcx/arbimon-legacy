@@ -18,6 +18,16 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
+        
+        updateInfo: function(info, callback) {
+            $http.post('/api/project/'+url+'/info/update', info)
+            .success(function(data){
+                callback(null, data);
+            })
+            .error(function(err){
+                callback(err);
+            });
+        },
 
         getSites: function(callback) {
             $http.get('/api/project/'+url+'/sites')
@@ -113,7 +123,6 @@ angular.module('a2services',[])
                 callback(err);
             });
         },
-        
         removeClasses: function(projectClasses, callback) {
             $http.post('/api/project/'+url+'/class/del', projectClasses)
             .success(function(data){
@@ -122,10 +131,53 @@ angular.module('a2services',[])
             .error(function(err){
                 callback(err);
             });
+        },
+        getUsers: function(callback) {
+            $http.get('/api/project/'+url+'/users')
+            .success(function(data){
+                callback(null, data);
+            })
+            .error(function(err){
+                callback(err);
+            });
+        },
+        getRoles: function(callback) {
+            $http.get('/api/project/'+url+'/roles')
+            .success(function(data){
+                callback(null, data);
+            })
+            .error(function(err){
+                callback(err);
+            });
+        },
+        addUser: function(data, callback){
+            $http.post('/api/project/'+url+'/user/add', data)
+            .success(function(response){
+                callback(null, response);
+            })
+            .error(function(err){
+                callback(err);
+            });
+        },
+        delUser: function(data, callback){
+            $http.post('/api/project/'+url+'/user/del', data)
+            .success(function(response){
+                callback(null, response);
+            })
+            .error(function(err){
+                callback(err);
+            });
+        },
+        changeUserRole: function(data, callback){
+            $http.post('/api/project/'+url+'/user/role', data)
+            .success(function(response){
+                callback(null, response);
+            })
+            .error(function(err){
+                callback(err);
+            });
         }
-        
-        
-    };
+    }; 
 }])
 
 .factory('a2TrainingSets', function(Project, $http) {

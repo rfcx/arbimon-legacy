@@ -17,6 +17,7 @@
     "express": "~4.9.0",
     "express-mysql-session": "^0.2.0",
     "express-session": "^1.8.2",
+    "gravatar": "^1.1.0",
     "joi": "^4.7.0",
     "morgan": "~1.3.0",
     "mysql": "^2.5.1",

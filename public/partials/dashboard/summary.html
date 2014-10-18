@@ -1,6 +1,6 @@
-<div class="row">
+<!-- <div class="row">
     <div class="col-sm-12"><p>Progress bar</p></div>
-</div>
+</div> -->
 <div class="row">
     <div class="col-sm-6">
         <div class="panel panel-default">
@@ -23,16 +23,13 @@
                 </h3>
                 
             </div>
-            <div class="panel-body">
-                <p>{{ project.description }}</p>
-            </div>
             <ul class="list-group">
                 <li class="list-group-item">Sites: {{ sites.length }}</li>
                 <li class="list-group-item">Recordings: {{ recsQty }}</li>
                 <li class="list-group-item">
                     Species:
                     <ul>
-                        <li ng-repeat="s in species">{{ s }}</li>
+                        <li ng-repeat="s in species">{{ s.species_name }}</li>
                     </ul>
                 </li>
             </ul>
