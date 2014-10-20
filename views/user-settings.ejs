@@ -1,17 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="settings">
 
 <head>
     <% include head %>
-    <title><%= title %></title>
+    <title>Arbimon 2 - <%= title %>
+    </title>
 </head>
 
-<body ng-controller="HomeCtrl">
-<% include home-nav %>
-
-<div class="container">
-</div>
-
+<body ng-controller="UserSettingsCtrl">
+    <% include home-nav %>
+    <div class="container">
+        <div class="page-header">
+            <h1>User settings</h1>
+        </div>
+        <div class="col-sm-6">
+            <div class="well">
+                <h5><strong>Avatar</strong></h5>
+                <img src="<%- user.image_url %>" alt="gravatar">
+                <p>Change your avatar at <a href="https://gravatar.com" target="_blank">gravatar.com</a></p>
+            </div>
+            <div class="well">
+                <form name="fullname">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" 
+                            class="form-control" 
+                            id="name" 
+                            name="name" 
+                            placeholder="Name"
+                            ng-model="user.name">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastname">Lastname</label>
+                        <input type="text" 
+                            class="form-control" 
+                            id="lastname" 
+                            name="lastname" 
+                            placeholder="Lastname"
+                            ng-model="user.lastname">
+                    </div>
+                    
+                    <button class="btn btn-primary" ng-click="saveName()">
+                        <i class="fa fa-floppy-o"></i> Save
+                    </button>
+                </form>
+            </div>
+            <div class="well">
+                <form name="pass">
+                    <div class="form-group" ng-class="{ 'has-error': !pass.newpass1.$valid, 'has-success': newpass1 === newpass2 }">
+                        <label for="newpass1">New password</label>
+                        <input type="password" 
+                            class="form-control" 
+                            id="newpass1" 
+                            ng-model="newpass1" 
+                            name="newpass1" 
+                            ng-minlength="8" 
+                            required 
+                            placeholder="new password: mininum 8 characters">
+                    </div>
+                    <div class="form-group" ng-class="{ 'has-error': !pass.newpass2.$valid, 'has-success': newpass1 === newpass2 }">
+                        <input type="password" 
+                            class="form-control" 
+                            id="newpass2" 
+                            ng-model="newpass2" 
+                            name="newpass2" 
+                            required 
+                            placeholder="repeat new password">
+                    </div>
+                    <p ng-hide="(newpass1 !== newpass2) || !pass.newpass1.$valid">Passwords match!</p>
+                    <button class="btn btn-primary" ng-click="changePass()" ng-disabled="(newpass1 !== newpass2) || !pass.newpass1.$valid">
+                        <i class="fa fa-key"></i> change password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

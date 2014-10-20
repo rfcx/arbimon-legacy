@@ -44,7 +44,7 @@ var Users = {
 
         // process values to be updated
         for( var i in userData) {
-            if(i !== 'user_id') {
+            if(i !== 'user_id' && typeof userData[i] !== 'undefined') {
                 userData[i] = mysql.escape(userData[i]);
 
                 values.push(util.format('`%s`=%s', i, userData[i]));

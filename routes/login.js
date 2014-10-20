@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var model = require('../models/');
 var sha256 = require('../utils/sha256');
+var gravatar = require('gravatar');
 
 router.use(function(req, res, next) {
     
@@ -61,7 +62,8 @@ router.post('/login', function(req, res, next) {
             email: user.email,
             firstname: user.firstname,
             lastname: user.lastname,
-            isSuper: user.is_super
+            isSuper: user.is_super,
+            image_url: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure)
         };
         
         res.redirect('/home');
