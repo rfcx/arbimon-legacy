@@ -5,11 +5,21 @@ var model = require('../../models');
 var sha256 = require('../../utils/sha256');
 
 router.get('/projectlist', function(req, res, next) {
-    model.users.projectList(req.session.user.id, function(err, rows) {
-        if(err) return next(err);
-        
-        res.json(rows);
-    });
+    
+    if(req.session.user.isSuper === 1) {
+        model.projects.listAll(function(err, rows) {
+            if(err) return next(err);
+            
+            res.json(rows);
+        });
+    }
+    else {
+        model.users.projectList(req.session.user.id, function(err, rows) {
+            if(err) return next(err);
+            
+            res.json(rows);
+        });
+    }
 });
 
 router.get('/feed', function(req, res) {

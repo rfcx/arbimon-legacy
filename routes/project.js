@@ -25,7 +25,7 @@ router.get('/:projecturl?/', function(req, res, next)
             {
                 model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
 
-                    if(project.is_private && !rows.length)
+                    if(project.is_private && !rows.length && req.session.user.isSuper === 0)
                         return res.redirect('/home');
 
                     if(!req.session.user.permissions)

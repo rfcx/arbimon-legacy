@@ -10,6 +10,14 @@ var species = require('./species');
 var songtypes = require('./songtypes');
 
 var Projects = {
+    
+    listAll: function(callback) {
+        var q = "SELECT name, url, description, is_private, is_enabled \n"+
+                "FROM projects";
+
+        queryHandler(q, callback);
+    },
+    
     findByUrl: function (project_url, callback) {
         var query = "SELECT * FROM projects WHERE url = " + mysql.escape(project_url);
 
@@ -306,85 +314,83 @@ var Projects = {
         });
     },
 
-        modelList: function(project_url, callback) {
-            var q = "SELECT m.model_id, CONCAT(UCASE(LEFT(m.name, 1)), SUBSTRING(m.name, 2)) as mname "+
-                    " ,DATE_FORMAT(m.date_created,'%d-%m-%Y') as mdc "+
-                    " , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,"+
-                    "  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser " + 
-                    " , mt.name as mtname "+
-                    " FROM `models` as m,`model_types` as mt , `users` as u , `projects` as p "+
-                    " WHERE p.url  = "+mysql.escape(project_url)+
-                    " and m.`model_type_id` = mt.`model_type_id` and m.user_id = u.user_id "+
-                    " and p.project_id = m.project_id and m.deleted = 0";
+    modelList: function(project_url, callback) {
+        var q = "SELECT m.model_id, CONCAT(UCASE(LEFT(m.name, 1)), SUBSTRING(m.name, 2)) as mname "+
+                " ,DATE_FORMAT(m.date_created,'%d-%m-%Y') as mdc "+
+                " , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,"+
+                "  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser " + 
+                " , mt.name as mtname "+
+                " FROM `models` as m,`model_types` as mt , `users` as u , `projects` as p "+
+                " WHERE p.url  = "+mysql.escape(project_url)+
+                " and m.`model_type_id` = mt.`model_type_id` and m.user_id = u.user_id "+
+                " and p.project_id = m.project_id and m.deleted = 0";
 
-            queryHandler(q, callback);
-       },
-       
-        classifications: function(project_url, callback) {
-            var q = "SELECT DATE_FORMAT(j.`date_created`,'%d-%m-%Y') as date  , j.`job_id`  , "+
-                    " CONCAT(UCASE(LEFT(jpc.`name`, 1)), SUBSTRING(jpc.`name`, 2))  as cname  "+
-                    " , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,"+
-                    "  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser " + 
-                    " from `jobs` as j ,`job_params_classification` as jpc , `projects` as p , `users` as u "+
-                    " WHERE p.url  = "+mysql.escape(project_url)+" and j.`project_id` = p.`project_id`  and "+
-                    " j.`job_id` = jpc.`job_id` and j.`job_type_id` = 2 and j.`completed` = 1 and u.`user_id` = j.`user_id`";
+        queryHandler(q, callback);
+   },
+   
+    classifications: function(project_url, callback) {
+        var q = "SELECT DATE_FORMAT(j.`date_created`,'%d-%m-%Y') as date  , j.`job_id`  , "+
+                " CONCAT(UCASE(LEFT(jpc.`name`, 1)), SUBSTRING(jpc.`name`, 2))  as cname  "+
+                " , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,"+
+                "  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser " + 
+                " from `jobs` as j ,`job_params_classification` as jpc , `projects` as p , `users` as u "+
+                " WHERE p.url  = "+mysql.escape(project_url)+" and j.`project_id` = p.`project_id`  and "+
+                " j.`job_id` = jpc.`job_id` and j.`job_type_id` = 2 and j.`completed` = 1 and u.`user_id` = j.`user_id`";
 
-            queryHandler(q, callback);
-       },
-       
-       classificationDetail: function(project_url,cid, callback) {
-            var q = "select  c.`species_id` ,c.`songtype_id`,c.`present`  , "+
-                    " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
-                    " CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name  "+
-                    " from  `classification_results` c,`species` as s , `songtypes` as st where c.`job_id` = "+cid+
-                    " and c.`species_id` = s.`species_id` and c.`songtype_id` = st.`songtype_id`" ;
+        queryHandler(q, callback);
+    },
+   
+    classificationDetail: function(project_url,cid, callback) {
+        var q = "select  c.`species_id` ,c.`songtype_id`,c.`present`  , "+
+                " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
+                " CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name  "+
+                " from  `classification_results` c,`species` as s , `songtypes` as st where c.`job_id` = "+cid+
+                " and c.`species_id` = s.`species_id` and c.`songtype_id` = st.`songtype_id`" ;
 
-            queryHandler(q, callback);
-       },
-       
-       trainingSets: function(project_url, callback) {
-            var q = "SELECT ts.`training_set_id` , CONCAT(UCASE(LEFT(ts.`name`, 1)), SUBSTRING(ts.`name`, 2)) as name "+
-                    " , ts.`date_created` , CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype "+
-                    " , CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name " +
-                    " , tsrs.`species_id` , tsrs.`songtype_id` " +
-                    " FROM `training_sets` ts, `projects` p ,`training_sets_roi_set` tsrs , `songtypes` st , `species` s" +
-                    " where ts.`training_set_id` = tsrs.`training_set_id` and "+
-                    " st.`songtype_id` = tsrs.`songtype_id` and s.`species_id`  = tsrs.`species_id` " +  	
-                    " and ts.`project_id` = p.`project_id` and p.`url` = " + mysql.escape(project_url);
+        queryHandler(q, callback);
+    },
+   
+    trainingSets: function(project_url, callback) {
+        var q = "SELECT ts.`training_set_id` , CONCAT(UCASE(LEFT(ts.`name`, 1)), SUBSTRING(ts.`name`, 2)) as name "+
+                " , ts.`date_created` , CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype "+
+                " , CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name " +
+                " , tsrs.`species_id` , tsrs.`songtype_id` " +
+                " FROM `training_sets` ts, `projects` p ,`training_sets_roi_set` tsrs , `songtypes` st , `species` s" +
+                " where ts.`training_set_id` = tsrs.`training_set_id` and "+
+                " st.`songtype_id` = tsrs.`songtype_id` and s.`species_id`  = tsrs.`species_id` " +  	
+                " and ts.`project_id` = p.`project_id` and p.`url` = " + mysql.escape(project_url);
 
-            queryHandler(q, callback);
-       },
+        queryHandler(q, callback);
+    },
 
-       validationSets: function(project_url, callback) {
-            var q = "SELECT `validation_set_id` , ts.`name` " +
-                    " FROM `validation_set` ts, `projects` p " +
-                    " where ts.`project_id` = p.`project_id` and p.`url` = " + mysql.escape(project_url);
+    validationSets: function(project_url, callback) {
+        var q = "SELECT `validation_set_id` , ts.`name` " +
+                " FROM `validation_set` ts, `projects` p " +
+                " where ts.`project_id` = p.`project_id` and p.`url` = " + mysql.escape(project_url);
 
-            queryHandler(q, callback);
-       },
-       
-       validationsStats: function(project_url,species,songtype, callback) {
-            var q = "select * from "+
-                " (SELECT count(*) as total FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+" ) a, "+
-                " (SELECT count(*) as present FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+"  and present = 1) b , "+
-                " (SELECT count(*) as absent FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+"and `songtype_id` = "+mysql.escape(songtype)+"  and present = 0) c ";
-            queryHandler(q, callback);
-       },
-       
-       activeJobs: function(project_url, callback) {
-            var q = "(SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` ,jpt.`name`, 100*(j.`progress`/j.`progress_steps`) as percentage "+
-                    " FROM  `job_params_training` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0  and j.`completed`=0  "+
-                    " and jpt.`job_id` = j.`job_id` and j.`job_type_id` = 1 and p.`url` = " + mysql.escape(project_url)+" )"+
-                    " UNION "+
-                    " (SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` ,jpt.`name` , 100*(j.`progress`/j.`progress_steps`) as percentage "+
-                    " FROM  `job_params_classification` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0  and j.`completed`=0  "+
-                    " and jpt.`job_id` = j.`job_id` and j.`job_type_id` = 2 and p.`url` = " + mysql.escape(project_url)+" )";
-                    
-            queryHandler(q, callback);
-       },
+        queryHandler(q, callback);
+    },
+   
+    validationsStats: function(project_url,species,songtype, callback) {
+        var q = "select * from "+
+            " (SELECT count(*) as total FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+" ) a, "+
+            " (SELECT count(*) as present FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+"  and present = 1) b , "+
+            " (SELECT count(*) as absent FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+"and `songtype_id` = "+mysql.escape(songtype)+"  and present = 0) c ";
+        queryHandler(q, callback);
+    },
+   
+    activeJobs: function(project_url, callback) {
+        var q = "(SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` ,jpt.`name`, 100*(j.`progress`/j.`progress_steps`) as percentage "+
+                " FROM  `job_params_training` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0  and j.`completed`=0  "+
+                " and jpt.`job_id` = j.`job_id` and j.`job_type_id` = 1 and p.`url` = " + mysql.escape(project_url)+" )"+
+                " UNION "+
+                " (SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` ,jpt.`name` , 100*(j.`progress`/j.`progress_steps`) as percentage "+
+                " FROM  `job_params_classification` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0  and j.`completed`=0  "+
+                " and jpt.`job_id` = j.`job_id` and j.`job_type_id` = 2 and p.`url` = " + mysql.escape(project_url)+" )";
+                
+        queryHandler(q, callback);
+    },
     
-
-
     
     removeUser: function(user_id, project_id, callback){
         if(typeof project_id !== 'number')
