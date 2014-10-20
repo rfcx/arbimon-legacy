@@ -92,11 +92,12 @@ var Users = {
     },
 
     projectList: function(user_id, callback) {
-        var q = "SELECT name, url, description, is_private, is_enabled "+
-                "FROM projects as p "+
-                "LEFT JOIN user_project_role as upr on (p.project_id = upr.project_id) "+
-                "WHERE p.is_private = 0 "+
-                "OR upr.user_id = %s";
+        var q = "SELECT name, url, description, is_private, is_enabled \n"+
+                "FROM projects as p \n"+
+                "LEFT JOIN user_project_role as upr on (p.project_id = upr.project_id) \n"+
+                "WHERE p.is_private = 0 \n"+
+                "OR upr.user_id = %s \n"+
+                "GROUP BY p.project_id";
 
         q = util.format(q, mysql.escape(user_id));
         queryHandler(q, callback);
