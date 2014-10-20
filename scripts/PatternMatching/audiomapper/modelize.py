@@ -95,8 +95,20 @@ for i in classes:
     modelStats = classes[i].modelStats()
     pngFilename = modelFilesLocation+'job_'+str(jobId)+'_'+str(i)+'.png'
     pngKey = 'project_'+str(project_id)+'/models/job_'+str(jobId)+'_'+str(i)+'.png'
-    png.from_array(modelStats[4], 'L;8').save(pngFilename)
+    specToShow = numpy.zeros(shape=(0,int(modelStats[4].shape[1])))
+        
+    rowsInSpec = modelStats[4].shape[0]
+    spec = modelStats[4]
     
+    for j in range(0,rowsInSpec):
+        if abs(sum(spec[j,:])) > 0.0:
+            specToShow = numpy.vstack((specToShow,spec[j,:]))
+        
+    smin = min([min((specToShow[i])) for i in range(specToShow.shape[0])])
+    smax = max([max((specToShow[i])) for i in range(specToShow.shape[0])])
+    x = 255*((specToShow - smin)/(smax-smin))    
+    png.from_array(x, 'L;8').save(pngFilename)
+
     #get Amazon S3 bucket
     conn = boto.connect_s3()
     bucket = conn.get_bucket(bucketName)

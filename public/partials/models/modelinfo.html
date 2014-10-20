@@ -81,6 +81,7 @@
                     Pattern ROI Count: 
                 </td><td ng-bind="data.roicount"></td>
             </tr>
+            <!--
             <tr>
                 <td>
                     Pattern Low Frequency: 
@@ -91,6 +92,7 @@
                     Pattern High Frequency: 
                 </td><td><span ng-bind="data.hfreq"></span>Hz</td>
             </tr>
+            -->
             <tr>
                 <td >
                     Pattern Bandwith: 
@@ -100,8 +102,8 @@
         Computed Pattern:
         <div class="row">
             <div class="col-sm-2 roiaxis" >
-                <p>{{data.freqMax}}Hz-</p>
-                <div class="lowaxis">     0Hz-</div>
+                <p>{{data.hfreq}}Hz-</p>
+                <div class="lowaxis">     {{data.lfreq}}Hz-</div>
             </div>
             <img class="col-sm-10 roiimage" ng-src="{{data.png}}" />
         </div>

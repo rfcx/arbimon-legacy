@@ -66,10 +66,10 @@ class Model:
         self.recall_score = (self.recall_score[0]+self.recall_score[1])/2.0
     
     def modelStats(self):
-        smin = min([min((self.speciesSpec[i])) for i in range(self.speciesSpec.shape[0])])
-        smax = max([max((self.speciesSpec[i])) for i in range(self.speciesSpec.shape[0])])
-        x = 255*((self.speciesSpec - smin)/(smax-smin))
-        return [self.accuracy_score,self.precision_score,self.recall_score,self.obbScore,x]
+        #smin = min([min((self.speciesSpec[i])) for i in range(self.speciesSpec.shape[0])])
+        #smax = max([max((self.speciesSpec[i])) for i in range(self.speciesSpec.shape[0])])
+        #x = 255*((self.speciesSpec - smin)/(smax-smin))
+        return [self.accuracy_score,self.precision_score,self.recall_score,self.obbScore,self.speciesSpec]
     
     def save(self,filename,l,h,c):
         with open(filename, 'wb') as output:

@@ -454,10 +454,10 @@
 		precision : Math.round(json['precision'] * 100) / 100,//ok
 		recall  : Math.round(json['recall'] * 100) / 100,//ok
 		roicount : json['roicount'],//ok
-		hfreq : json['roihighfreq'],//ok
-		lfreq : json['roilowfreq'],//ok
-		rlength : json['roilength'],//ok
-		bw :  json['roihighfreq'] - json['roilowfreq'],
+		hfreq : Math.round(json['roihighfreq']* 100) / 100,//ok
+		lfreq : Math.round(json['roilowfreq']* 100) / 100,//ok
+		rlength : Math.round(json['roilength']* 100) / 100,//ok
+		bw :  Math.round( ((  parseFloat(json['roihighfreq']) - parseFloat(json['roilowfreq']) ) * 100)) / 100,
 		freqMax : json['roisamplerate']/2//ok
 	    }
             $scope.ok = function () {

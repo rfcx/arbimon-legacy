@@ -5,14 +5,16 @@ import shutil
 import os
 from contextlib import closing
 import MySQLdb
+import tempfile
 
 
 currDir = os.path.dirname(os.path.abspath(__file__))
 config = [line.strip() for line in open(currDir+'/../config')]
 db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
+tempFolders = tempfile.gettempdir()
 
 print 'results'
-
+jobId = 0
 for line in sys.stdin:
     
     line.strip('\n')
@@ -20,6 +22,7 @@ for line in sys.stdin:
     recId.strip(' ')
     presence.strip(' ')
     jId.strip(' ')
+    jobId = jId
     species.strip(' ')
     songtype.strip(' ')
     with closing(db.cursor()) as cursor:
@@ -32,3 +35,5 @@ for line in sys.stdin:
         
 print 'ended'
 db.close()
+shutil.rmtree(tempFolders+"/classification_"+str(jobId))
+
