@@ -320,11 +320,12 @@ var Recordings = {
                 user      : user_id,
                 species   : species_id,
                 songtype  : songtype_id,
-                val       : validation.val | 0
+                val       : validation.val | 0,
+                project_id: project_id
             };
             queryHandler(
-                "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present) \n" +
-                " VALUES (" + mysql.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val]) + ") \n" +
+                "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id) \n" +
+                " VALUES (" + mysql.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id]) + ") \n" +
                 " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
                 if (err) { callback(err); return; }
                 callback(null, valobj);
