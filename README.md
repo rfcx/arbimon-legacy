@@ -5,37 +5,56 @@ Bio-Acoustic Analyzer
 
 ### System dependencies:
 
-
-
- - ### sox
+ - python 2.7 - comes with Ubuntu
+ 
+ 
+ - pip - python dependencies
+   ```
+   sudo apt-get install pip
+   ```
+   
+   
+ - sox - audio conversion
    ```
    sudo apt-get install sox
    sudo apt-get install libsox-fmt-mp3
-   
    ```
    
- - #### nodejs
-  
-   Ubuntu
    
+ - nodejs
    ```
    sudo add-apt-repository ppa:chris-lea/node.js
    sudo apt-get update
    sudo apt-get install nodejs
-   
    ```
    
-   Mac OS X
    
+ - MySQL-python dependencies
    ```
-   brew install nodejs
+   sudo apt-get install libmysqlclient-dev python-dev
    ```
    
-   or download binaries from [http://nodejs.org/](http://nodejs.org/)
-
-### node global dependencies:
- - bower - install with `sudo npm install -g bower`
- - grunt-cli - install with `sudo npm install -g grunt-cli`
+   
+ - scipy dependencies
+   ```
+   sudo apt-get install gfortran libopenblas-dev liblapack-dev
+   ```
+   
+   
+ - node global dependencies(`sudo npm install -g <package>`):
+  - bower
+  - grunt-cli
+  
+  
+ - python dependencies (`sudo pip install`):
+    - numpy 
+    - scipy
+    - MySQL-python 
+    - scikit-learn 
+    - boto 
+    - pypng 
+    - pylab 
+    - matplotlib
 
 ---
 
