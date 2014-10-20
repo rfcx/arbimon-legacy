@@ -99,6 +99,9 @@ router.post('/update/name', function(req, res, next){
         function(err, result) {
             if(err) return next(err);
             
+            req.session.user.firstname = userData.name;
+            req.session.user.lastname = userData.lastname;
+            
             console.log("update user name:", result);
             res.json({ message: "success! Name updated"});
         });
