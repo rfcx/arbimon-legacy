@@ -2,6 +2,9 @@ import boto
 import audiotools
 import math
 import os
+from boto.s3.connection import S3Connection
+from config import Config
+
 
 class Rec:
 
@@ -10,6 +13,8 @@ class Rec:
     sample_rate = 0
 
     def __init__(self, uri , tempFolder,bucket = 'arbimon2'):
+        configuration = Config()
+        self.config = configuration.data()
         self.localFiles = tempFolder
         self.bucket = bucket    # bucket name
         self.uri = uri    # recording uri in bucket
@@ -52,7 +57,9 @@ class Rec:
         self.status = 'HasAudioData'
 
     def getAudioFromUri(self): #function that copies file from amazon bucket to local machine
-        conn = boto.connect_s3()
+        awsKeyId = self.config[5]
+        awsKeySecret = self.config[6]
+        conn = S3Connection(awsKeyId, awsKeySecret)
         bucket = conn.get_bucket(self.bucket)
         key = bucket.get_key(self.uri)
         if not key:

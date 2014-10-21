@@ -9,6 +9,7 @@ import boto
 import shutil
 import MySQLdb
 from contextlib import closing
+from config import Config
 jobId = sys.argv[1].strip("'");
 classificationName = sys.argv[2].strip("'");
 allRecs = sys.argv[3].strip("'");
@@ -17,7 +18,8 @@ projectId = sys.argv[6].strip("'");
 userId = sys.argv[7].strip("'");
 
 currDir = os.path.dirname(os.path.abspath(__file__))
-config = [line.strip() for line in open(currDir+'/config')]
+configuration = Config()
+config = configuration.data()
 db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
 bucketName = config[4]
 sys.stdout.flush()

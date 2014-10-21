@@ -9,15 +9,20 @@ import boto
 import os
 from contextlib import closing
 import MySQLdb
+from boto.s3.connection import S3Connection
+from config import Config
 
 models = {}
 bucket = 'arbimon2'
 tempFolders = tempfile.gettempdir()
 currDir = os.path.dirname(os.path.abspath(__file__))
 
-config = [line.strip() for line in open(currDir+'/../config')]
+configuration = Config()
+config = configuration.data()
 db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
-
+bucketName = config[4]
+awsKeyId = config[5]
+awsKeySecret = config[6]
 #reads lines from stdin
 for line in sys.stdin:
     
@@ -33,7 +38,7 @@ for line in sys.stdin:
     else:
         #get model from bucket
         modelLocal = tempFolder+'model.mod'
-        conn = boto.connect_s3()
+        conn = S3Connection(awsKeyId, awsKeySecret)
         bucket = conn.get_bucket(bucket)
         key = bucket.get_key(modelUri)     
         key.get_contents_to_filename(modelLocal)

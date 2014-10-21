@@ -8,13 +8,18 @@ import subprocess
 import boto
 import shutil
 import MySQLdb
+from boto.s3.connection import S3Connection
 from contextlib import closing
+from config import Config
 jobId = sys.argv[1];
 modelName = sys.argv[2].strip("'");
 currDir = os.path.dirname(os.path.abspath(__file__))
-config = [line.strip() for line in open(currDir+'/config')]
+configuration = Config()
+config = configuration.data()
 db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
 bucketName = config[4]
+awsKeyId = config[5]
+awsKeySecret = config[6]
 print 'started'
 sys.stdout.flush()
 with closing(db.cursor()) as cursor:
@@ -95,7 +100,7 @@ if model_type_id == 1: #Pattern Matching (modified Alvarez thesis)
                     spamwriter.writerow([rowValidation[0], rowValidation[1],rowValidation[2],rowValidation[3]])
                     
     #get Amazon S3 bucket
-    conn = boto.connect_s3()
+    conn = S3Connection(awsKeyId, awsKeySecret)
     bucket = conn.get_bucket(bucketName)
     valiKey = 'project_'+str(project_id)+'/validations/job_'+jobId+'.csv'
     #save validation file to bucket

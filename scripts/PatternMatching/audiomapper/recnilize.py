@@ -9,11 +9,13 @@ import tempfile
 from contextlib import closing
 import MySQLdb
 import os
+from config import Config
 
 tempFolders = tempfile.gettempdir()
 currDir = os.path.dirname(os.path.abspath(__file__))
 
-config = [line.strip() for line in open(currDir+'/../config')]
+configuration = Config()
+config = configuration.data()
 db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
 
 #reads lines from stdin
