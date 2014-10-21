@@ -116,10 +116,10 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
                                    res.json({ err:"Could not create training job"}); 
                                 }
                                 else
-                                {
+                                { console.log(scriptsFolder)
                                     jobQueue.push({
                                         name: 'training'+trainingId,
-                                        work: function()
+                                        work: function(callback)
                                         {
                                             var python = require('child_process').spawn
                                             (
@@ -132,6 +132,7 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
                                                 function(data)
                                                 { 
                                                     output += data
+                                                    console.log(output)
                                                 }
                                             );
                                             python.on('close',
@@ -139,6 +140,7 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
                                                 { 
                                                     if (code !== 0) { console.log('returned error')}
                                                     else console.log('no error, everything ok, training completed');
+                                                    callback();
                                                 }
                                             );
                                         }
