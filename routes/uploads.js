@@ -57,6 +57,8 @@ router.post('/audio/project/:projectid', function(req, res) {
         
         files.forEach(function(file) {
             
+            console.log("processing: ", file.filename);
+            
             var name = file.filename.split('.');
             var extension = name[name.length-1];
             
