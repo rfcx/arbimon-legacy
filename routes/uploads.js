@@ -1,11 +1,13 @@
 var express = require('express');
 var router = express.Router();
-var model = require('../models');
 var fs = require('fs');
 var path = require('path');
 var async = require('async');
 var util = require('util');
 
+
+var model = require('../models');
+var jobQueue = require('../utils/jobqueue');
 var config = require('../config');
 var audioTool = require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
@@ -14,6 +16,7 @@ var formatParse = require('../utils/format-parse');
 var AWS = require('aws-sdk');
 AWS.config.loadFromPath('./config/aws.json');
 var s3 = new AWS.S3(); 
+
 
 router.get('/audio', function(req, res) {
     res.sendStatus(200);

@@ -117,8 +117,9 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
                                 }
                                 else
                                 {
-                                    jobQueue.push({name: 'training'+trainingId},1,
-                                        function()
+                                    jobQueue.push({
+                                        name: 'training'+trainingId,
+                                        work: function()
                                         {
                                             var python = require('child_process').spawn
                                             (
@@ -141,6 +142,10 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
                                                 }
                                             );
                                         }
+                                    },
+                                    1, function() {
+                                        console.log("job done! training", trainingId);
+                                    }
                                     );
                                     res.json({ ok:"job created :"+trainingId});           
                                 }
