@@ -906,9 +906,29 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
         templateUrl : '/partials/visualizer/validator-main.html',
         link     : function($scope, $element, $attrs){
             var class2key = function(project_class){
+                
+                /*this commented line rewrites the id on $scope.classes
+                it sets the same id to all the $scope.classes
+                when there are more than one classes in the project
+                
                 var cls = $scope.classes.filter(function(pc){return pc.id = project_class}).shift();
+                
+                */
+                          
+                //quick and dirty search      
+                var i = 0;
+                while(i < $scope.classes.length)
+                {
+                    if ($scope.classes[i].id == project_class)
+                    {
+                        break;
+                    }
+                    i = i + 1;
+                }
+                var  cls = $scope.classes[i];
                 return cls && [cls.species, cls.songtype].join('-');
             };
+            
             var add_validation = function(validation){
                 var key     = [validation.species, validation.songtype].join('-');
                 var present =  validation.present;
@@ -938,6 +958,7 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 var key = class2key(project_class), val = $scope.validations[key];
                 return typeof val == 'undefined' ? val : ( val ? val_options[0]: val_options[1] );
             }
+            
             $scope.$watch('recording', function(recording){
                 console.log('validated recording : ', recording);
                 $scope.validations = {};
