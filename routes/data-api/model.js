@@ -145,10 +145,10 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
                                             );
                                         }
                                     },
-                                    1, function() {
+                                    1, // priority
+                                    function() {
                                         console.log("job done! training", trainingId);
-                                    }
-                                    );
+                                    });
                                     res.json({ ok:"job created :"+trainingId});           
                                 }
                             }
@@ -198,8 +198,9 @@ router.post('/project/:projectUrl/classification/new', function(req, res) {
                                 }
                                 else
                                 {
-                                    jobQueue.push({name: 'classification'+classificationId},1,
-                                        function()
+                                    jobQueue.push({
+                                        name: 'classification'+classificationId,
+                                        work: function()
                                         {
                                             var python = require('child_process').spawn
                                             (
@@ -222,7 +223,12 @@ router.post('/project/:projectUrl/classification/new', function(req, res) {
                                                 }
                                             );
                                         }
-                                    );
+                                    },
+                                    1,
+                                    function() {
+                                        console.log("job done! classification", classificationId);
+                                    });
+                                    
                                     res.json({ ok:"job created :"+classificationId});           
                                 }
                             }

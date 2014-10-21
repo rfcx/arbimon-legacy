@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 import json
 
+if os.path.isfile('config/db.local.json'):
+    db_config_path = 'config/db.local.json'
+else:
+    db_config_path = 'config/db.json'
+
 class Config:
 
     def __init__(self):
