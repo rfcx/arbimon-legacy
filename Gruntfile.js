@@ -132,7 +132,8 @@ module.exports = function(grunt) {
                     'assets/js/extras/*.js',
                     'assets/js/a2directives.js',
                     'assets/js/models.js',
-                    'assets/js/classification.js'
+                    'assets/js/classification.js',
+                    'assets/js/user-settings.js'
                 ], 
 
                 dest: 'public/assets/js/arbimon2.js'

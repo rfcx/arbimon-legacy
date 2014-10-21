@@ -35,9 +35,9 @@ router.get('/home', function(req, res) {
 });
 
 // INCOMPLETE
-// router.get('/settings', function(req, res) {
-//     res.render('user-settings', { title: "Settings", user: req.session.user });
-// });
+router.get('/user-settings', function(req, res) {
+    res.render('user-settings', { title: "User settings", user: req.session.user });
+});
 
 router.use('/api', dataApi);
 router.use('/project', project);

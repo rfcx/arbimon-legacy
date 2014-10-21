@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html ng-app="arbimon2">
-    <% include ../head %>    
+    <% include head %>    
     <title>Arbimon 2 - <%= project.name %></title>
 </head>
 <body>
@@ -28,8 +28,8 @@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li class=""><a><i class="fa fa-cubes"></i> <%=  project.name  %></a></li>
-                    <li class=""><a href="#"><i class="fa fa-user"></i> <%= user.username %></a></li>
-                    <li class=""><a href="#" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
+                    <li class=""><a><% if(user.isSuper) { %>Super<% } %> <i class="fa fa-user"></i> <%= user.username %></a></li>
+                    <li class=""><a href="/user-settings" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
                     <li class=""><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
                 </ul>
             </div>

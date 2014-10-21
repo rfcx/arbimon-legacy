@@ -2,10 +2,15 @@ var express = require('express');
 var router = express.Router();
 var model = require('../models/');
 var sha256 = require('../utils/sha256');
+var gravatar = require('gravatar');
 
 router.use(function(req, res, next) {
     
     req.haveAccess = function(project_id, permission_name) {
+        
+        if(req.session.user.isSuper === 1);
+            return true;
+        
         
         var projectPerms = req.session.user.permissions[project_id];
         
@@ -61,7 +66,8 @@ router.post('/login', function(req, res, next) {
             email: user.email,
             firstname: user.firstname,
             lastname: user.lastname,
-            isSuper: user.is_super
+            isSuper: user.is_super,
+            image_url: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure)
         };
         
         res.redirect('/home');
