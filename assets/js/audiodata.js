@@ -15,22 +15,23 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     });
 })
 .controller('RecsCtrl', function($scope, Project) {
+    $scope.loading = true;
     $scope.fields = [
         { name: 'Site', key: 'site' },
         { name: 'Time', key: 'datetime' },
         { name: 'Recorder', key: 'recorder' },
         { name: 'Microphone', key: 'mic' },
         { name: 'Software ver', key: 'version' },
-        { name: 'Filename', key: 'filename' },
+        { name: 'Filename', key: 'file' },
     ];
     
     Project.getRecs(function(data) {
         $scope.recs = data;
         
         $scope.recs.forEach(function(rec) {
-            rec.datetime = moment(rec.datetime).utc().format('D-MMM-YYYY HH:mm');
-            rec.filename = rec.uri.split('/')[4];
+            rec.datetime = new Date(rec.datetime);
         });
+        $scope.loading = false;
     });
     
 })

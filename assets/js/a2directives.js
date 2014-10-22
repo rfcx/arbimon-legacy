@@ -67,7 +67,8 @@ angular.module('a2directives', [])
             checked: '=',
             search: '=',
             noCheckbox: '@',
-            noSelect: '@'
+            noSelect: '@',
+            dateFormat: '@'
         },
         templateUrl: '/partials/directives/table.html',
         link: function(scope, element, attrs) {
@@ -162,6 +163,14 @@ angular.module('a2directives', [])
                     scope.reverse = !scope.reverse;
                 }
             };
+            
+            scope.formatString = function(value) {
+                
+                if(value instanceof Date){
+                    return moment(value).utc().format(attrs.dateFormat || 'MMM D YYYY, HH:mm');
+                }
+                return value;
+            }
         }
     };
 }])
@@ -202,4 +211,11 @@ angular.module('a2directives', [])
             });
         }
     };
- });
+ })
+ .directive('loader', function() {
+     return {
+         restrict: 'E',
+         templateUrl: '/partials/directives/loader.html'
+     }
+ })
+ ;
