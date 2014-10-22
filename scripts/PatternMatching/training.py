@@ -10,7 +10,7 @@ import shutil
 import MySQLdb
 from boto.s3.connection import S3Connection
 from contextlib import closing
-from config import Config
+from audiomapper.config import Config
 jobId = sys.argv[1];
 modelName = sys.argv[2].strip("'");
 currDir = os.path.dirname(os.path.abspath(__file__))

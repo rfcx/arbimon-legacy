@@ -41,6 +41,12 @@ Bio-Acoustic Analyzer
    ```
    
    
+ - matplotlib dependencies
+   ```
+   sudo apt-get install libpng12-dev libfreetype6-dev
+   ```
+   
+   
  - node global dependencies(`sudo npm install -g <package>`):
   - bower
   - grunt-cli
@@ -52,8 +58,7 @@ Bio-Acoustic Analyzer
     - MySQL-python 
     - scikit-learn 
     - boto 
-    - pypng 
-    - pylab 
+    - pypng  
     - matplotlib
 
 ---
