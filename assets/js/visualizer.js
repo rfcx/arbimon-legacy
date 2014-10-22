@@ -266,13 +266,14 @@ angular.module('visualizer-layers', ['visualizer-services', 'a2utils'])
 });
 
 angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
-.directive('a2VisualizerSpectrogram', function(){
+.directive('a2VisualizerSpectrogram', function(a2BrowserMetrics){
     var layout_tmp = {
-        gutter     :  20,
+        gutter     :  a2BrowserMetrics.scrollSize.height,
         axis_sizew :  60,
-        axis_sizeh :  30,
+        axis_sizeh :  60,
         axis_lead  :  15
     }
+    console.log('a2BrowserMetrics', a2BrowserMetrics);
     return {
         restrict : 'E',
         templateUrl : '/partials/visualizer/visualizer-spectrogram.html',
@@ -302,10 +303,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
             $scope.onScrolling = function(e){
                 $scope.layout.y_axis.left = $element.scrollLeft();
                 $element.children('.axis-y').css({left: $scope.layout.y_axis.left + 'px'});
-                $scope.layout.x_axis.top = Math.min(
-                    $scope.layout.spectrogram.top + $scope.layout.spectrogram.height,
-                    $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh
-                );
+                $scope.layout.x_axis.top = $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh - layout_tmp.gutter;
                 $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
                 $element.find('.a2-visualizer-spectrogram-affixed').each(function(i, el){
                     var $el = $(el);
@@ -342,8 +340,8 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
             $scope.layout.apply = function(width, height){
                 var recording = $scope.recording || {duration:60, max_freq:22050};
                 var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
-                var avail_h = height - layout_tmp.axis_sizeh - 5*layout_tmp.axis_lead;
-                
+                var avail_h = height - layout_tmp.axis_sizeh - layout_tmp.axis_lead - layout_tmp.gutter;
+                var cheight = $element[0].clientHeight;
                 var zoom_levels_x = [
                     avail_w/recording.duration,
                     $scope.layout.scale.max_sec2px
@@ -381,12 +379,14 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 l.x_axis = { selector : '.axis-x',  scale : scalex,  
                     css:{
                         left : layout_tmp.axis_sizew -  layout_tmp.axis_lead,
-                        top  : Math.min(l.spectrogram.css.top + spec_h, $element.scrollTop() + height  - layout_tmp.axis_sizeh)
+                        // left : layout_tmp.axis_sizew -  layout_tmp.axis_lead,
+                        top  : $element.scrollTop() + height  - layout_tmp.axis_sizeh - layout_tmp.gutter
                     }, attr:{
                         height : layout_tmp.axis_sizeh,
                         width  : spec_w + 2*layout_tmp.axis_lead
                     }
                 };
+                //l.x_axis.attr.height = cheight - l.x_axis.css.top - 1;
                 for(var i in l){
                     var li = l[i];
                     $scope.layout[i] = li.css;
@@ -400,14 +400,14 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                         $scope.layout[i].scale = li.scale;
                     }
                 }
-                var axis = d3.select($element.children(l.x_axis.selector).empty()[0]);
-                axis.append("rect").attr({
+                var d3_x_axis = d3.select($element.children(l.x_axis.selector).empty()[0]);
+                d3_x_axis.append("rect").attr({
                     class : 'bg',
                     x : 0, y : 0,
                     width : l.x_axis.attr.width,
                     height: spec_h + layout_tmp.axis_lead
                 });
-                axis.append("g").
+                d3_x_axis.append("g").
                     attr('class', 'axis').
                     attr('transform', 'translate('+ layout_tmp.axis_lead +', 1)').
                     call(d3.svg.axis().
@@ -415,20 +415,22 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                         scale(scalex).
                         orient("bottom")
                     );
-                axis = d3.select($element.children(l.y_axis.selector).empty()[0]);
-                axis.append("rect").attr({
+                
+                
+                var d3_y_axis = d3.select($element.children(l.y_axis.selector).empty()[0]);
+                d3_y_axis.append("rect").attr({
                     class : 'bg',
                     x : 0, y : 0,
                     width : l.y_axis.attr.width,
                     height: spec_h + layout_tmp.axis_lead + 2
                 });
-                axis.append("rect").attr({
+                d3_y_axis.append("rect").attr({
                     class : 'bg',
                     x : 0, y : 0,
                     width : l.y_axis.attr.width - layout_tmp.axis_lead,
                     height: spec_h + layout_tmp.axis_lead + layout_tmp.axis_sizeh
                 });
-                axis.append("g").
+                d3_y_axis.append("g").
                     attr('class', 'axis').
                     attr('transform', 'translate('+ (layout_tmp.axis_sizew-1) +', '+ layout_tmp.axis_lead +')').
                     call(d3.svg.axis().
