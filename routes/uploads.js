@@ -68,6 +68,10 @@ router.post('/audio/project/:projectid', function(req, res) {
                     
                    
                     var fileInfo = formatParse(fields.info.format, file.filename);
+                    
+                    if(typeof fileInfo === 'error') // catch error parsing filename
+                        return cb(fileInfo);
+                    
                     var recTime = new Date(fileInfo.year, --fileInfo.month, fileInfo.date, fileInfo.hour, fileInfo.min);
                     var inFile = file.path;
                     var outFile = tmpFileCache.key2File(fileInfo.filename + '.flac');
@@ -113,7 +117,7 @@ router.post('/audio/project/:projectid', function(req, res) {
                         uploadFlac: ['convert', function(callback, results) {
                             console.log('uploadFlac');
                             
-                            if(results.convert)
+                            if(results.convert !== 0)
                                 throw new Error("error processing");
                             
                             var params = { 
@@ -136,7 +140,7 @@ router.post('/audio/project/:projectid', function(req, res) {
                         uploadThumbnail: ['thumbnail', function(callback, results) {
                             console.log('uploadThumbnail');
                             
-                            if(results.thumbnail)
+                            if(results.thumbnail !== 0)
                                 throw new Error("error creating thumbnail");
                             
                             var params = { 

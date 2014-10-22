@@ -156,6 +156,16 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     var u = new FileUploader();
     
     var uploadInfo = null;
+
+    window.addEventListener("beforeunload", function (e) {
+        if(u.isUploading) {
+            var confirmationMessage = "Upload is in progress, Are you sure to exit?";
+        
+            (e || window.event).returnValue = confirmationMessage;     //Gecko + IE
+            return confirmationMessage;                                //Webkit, Safari, Chrome etc.
+        }
+    });
+
     
     return {        
         getUploader: function() {

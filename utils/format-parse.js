@@ -4,9 +4,16 @@ var formatParse = function(formatName, filename) {
         Arbimon: /\w+-(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})/
     };
     
+    if(typeof formats[formatName] === 'undefined'){
+        return new Error('invalid format: "' + formatName + '"');
+    }
+    
+    var results = formats[formatName].exec(filename);
+    
+    if(results === null)
+        return new Error('invalid filename: "' + filename + '"');
+    
     if(formatName === 'Arbimon') {
-        var results = formats[formatName].exec(filename);
-        
         return {
             filename: results[0],
             year: results[1],
@@ -16,9 +23,7 @@ var formatParse = function(formatName, filename) {
             min: results[5]
         };
     }
-    else if(formatName === 'Wildlife') {
-        var results = formats[formatName].exec(filename);
-        
+    else if(formatName === 'Wildlife') {        
         return {
             filename: results[0],
             year: results[2],
@@ -28,10 +33,12 @@ var formatParse = function(formatName, filename) {
             min: results[7]
         };
     }
-    else
-        throw new Error('invalid format');
-    
-    return;
+    else {
+        return new Error('invalid format');
+    }
 };
 
 module.exports = formatParse;
+
+// console.log(formatParse('Arbimon','fsldfjslkd'));
+// console.log(formatParse('arbimon','fsldfjslkd'));
