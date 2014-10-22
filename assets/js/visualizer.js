@@ -311,10 +311,20 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     var $el = $(el);
                     var affix_left = $el.attr('data-affix-left') | 0;
                     var affix_right = $el.attr('data-affix-right');
+                    var affix_align_h = $el.attr('data-affix-align-h');
                     if(affix_right != undefined){
                         affix_left = $element.width() - $el.width() - (affix_right|0);
+                    } else if(affix_align_h != undefined){
+                        affix_left = ($element.width() - $el.width()) * affix_align_h;
                     }
                     var affix_top  = $el.attr('data-affix-top' ) | 0;
+                    var affix_bottom = $el.attr('data-affix-bottom');
+                    var affix_align_v = $el.attr('data-affix-align-v');
+                    if(affix_bottom != undefined){
+                        affix_top = $element.height() - $el.height() - (affix_bottom|0);
+                    } else if(affix_align_v != undefined){
+                        affix_top = ($element.height() - $el.height()) * affix_align_v;
+                    }
                     $el.css({position:'absolute', left : affix_left + $element.scrollLeft(), top  : affix_top  + $element.scrollTop()});
                 });
             };
@@ -402,7 +412,6 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     attr('transform', 'translate('+ layout_tmp.axis_lead +', 1)').
                     call(d3.svg.axis().
                         ticks(recording.duration).
-                        tickFormat(function(x){return x + ' s';}).
                         scale(scalex).
                         orient("bottom")
                     );
@@ -423,7 +432,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     attr('class', 'axis').
                     attr('transform', 'translate('+ (layout_tmp.axis_sizew-1) +', '+ layout_tmp.axis_lead +')').
                     call(d3.svg.axis().
-                        tickFormat(function(x){return (x/1000.0) + ' KHz';}).
+                        tickFormat(function(x){return (x/1000.0);}).
                         scale(scaley).
                         orient("left")
                     );

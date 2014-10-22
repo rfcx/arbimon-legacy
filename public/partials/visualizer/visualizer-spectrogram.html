@@ -18,4 +18,14 @@
         <div class="spectrogram-layer playback-head" ng-style="{left:(audio_player.resource ? (audio_player.resource.currentTime * layout.scale.sec2px) : 0)+'px'}"></div>
     </div>
     <svg class="axis-x" ng-show="recording" ></svg>
+
+    <a2-visualizer-spectrogram-affixed data-affix-bottom="40" data-affix-align-h=".5" ng-show="recording" class="no-wrap">
+        Time ( s )
+    </a2-visualizer-spectrogram-affixed>
+
+    <a2-visualizer-spectrogram-affixed data-affix-left="10" data-affix-align-v=".5" ng-show="recording">
+        <div class="vertical-text">Frequency ( kHz )</div>
+    </a2-visualizer-spectrogram-affixed>
+
+
 </div>
