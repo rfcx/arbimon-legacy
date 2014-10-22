@@ -49,7 +49,7 @@ angular.module('settings', ['ui.bootstrap'])
                 password: pass
             })
             .success(function(data){
-                alert(data);
+                alert(data.message);
             })
             .error(function(err){
                 alert(err);
