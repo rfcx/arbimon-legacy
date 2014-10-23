@@ -91,8 +91,9 @@ var cache = {
                 var file = path.join(root, subfile);
                 cache.checkValidity(file, function (err, filestats){
                     if(!filestats) {
-                        fs.unlink(file);
-                        console.log('   tmpcache file removed : ', file);
+                        fs.unlink(file, function(){
+                            console.log('   tmpcache file removed : ', file);
+                        });
                     }
                 });
             }, function(err){
