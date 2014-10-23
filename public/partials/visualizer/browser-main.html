@@ -55,7 +55,7 @@
                     ng-class="{active: browser.selection.recording.value == recording}"
                     ng-click="browser.selection.recording.select(recording)">
                     <div>
-                        {{recording.datetime | date : 'shortTime'}}
+                        {{recording.datetime | moment : 'hh:mm A'}}
                         <div class="pull-right">
                             {{recording.file}}
                         </div>

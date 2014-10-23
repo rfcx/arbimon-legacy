@@ -67,6 +67,11 @@ angular.module('a2utils', [])
     
     return metrics;
 })
+.filter('moment', function(){
+    return function(x, fmt){
+        return moment(x).utc().format(fmt);
+    }
+})
 
 angular.module('a2Infotags', [])
 .factory('InfoTagService', ['$location', '$http', function($location, $http){
