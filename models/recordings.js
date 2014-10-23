@@ -90,6 +90,7 @@ var Recordings = {
      * @param {Integer} project_id id of the project associated to the recordings
      * @param {Object} options options object that modify returned results (optional).
      * @param {Boolean} options.count_only Whether to return the queried recordings, or to just count them
+     * @param {String} options.compute other (computed) attributes to show on returned recordings
      * @param {String} options.group_by Level in wich to group recordings (valid items : site, year, month, day, hour, auto, next)
      * @param {Function} callback called back with the queried results. 
      */
@@ -150,8 +151,20 @@ var Recordings = {
         };
         
         return queryHandler(query, function(err, data){
-            if (!err && data && group_by.levels.length > 0) {
-                data = arrays_util.group_rows_by(data, group_by.levels, options);
+            if (!err && data){
+                if(group_by.levels.length > 0) {
+                    data = arrays_util.group_rows_by(data, group_by.levels, options);
+                } else if(options.compute){
+                    var compute = typeof(options.compute) == 'string' ? options.compute.split(',') : options.compute;
+                    compute.forEach(function(show_item){
+                        var comp_method = '__compute_' + show_item.replace(/-/g,'_');
+                        if(Recordings[comp_method]){
+                            data.forEach(function(row){
+                                Recordings[comp_method](row);
+                            });
+                        }
+                    });
+                }
             }
             callback(err, data);
         });
@@ -398,6 +411,11 @@ var Recordings = {
                 
             callback(null, rows[0].count > 0);
         });
+    },
+    
+    
+    __compute_thumbnail_path : function(recording){
+        recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png');
     }
 };
     

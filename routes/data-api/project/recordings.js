@@ -111,9 +111,9 @@ router.post('/validate/:oneRecUrl?', function(req, res, next) {
 
 router.get('/:recUrl?', function(req, res, next) {
     var recording_url = req.param('recUrl');
-    model.recordings.findByUrlMatch(recording_url, req.project.project_id, {order:true}, function(err, rows) {
+    model.recordings.findByUrlMatch(recording_url, req.project.project_id, {order:true, compute:req.query && req.query.show}, function(err, rows) {
         if(err) return next(err);
-            
+        
         res.json(rows);
         return null;
     });

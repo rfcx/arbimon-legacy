@@ -854,7 +854,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     var comps = [site.name, date.getFullYear(), date.getMonth() + 1, date.getDate()];
                     var key = comps.join('-');
                     browser.loading.times = true;
-                    Project.getRecordings(key, function(recordings){
+                    Project.getRecordings(key, {show:'thumbnail-path'},function(recordings){
                         $timeout(function(){
                             browser.recordings = recordings;
                             browser.loading.times = false;
