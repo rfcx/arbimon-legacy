@@ -944,26 +944,9 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
         templateUrl : '/partials/visualizer/validator-main.html',
         link     : function($scope, $element, $attrs){
             var class2key = function(project_class){
-                
-                /*this commented line rewrites the id on $scope.classes
-                it sets the same id to all the $scope.classes
-                when there are more than one classes in the project
-                
-                var cls = $scope.classes.filter(function(pc){return pc.id = project_class}).shift();
-                
-                */
-                          
-                //quick and dirty search      
-                var i = 0;
-                while(i < $scope.classes.length)
-                {
-                    if ($scope.classes[i].id == project_class)
-                    {
-                        break;
-                    }
-                    i = i + 1;
-                }
-                var  cls = $scope.classes[i];
+                var cls = /number|string/.test(typeof project_class) ? 
+                    $scope.classes.filter(function(pc){return pc.id == project_class}).shift() :
+                    project_class;
                 return cls && [cls.species, cls.songtype].join('-');
             };
             
@@ -978,17 +961,55 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
             });
 
             $scope.classes = [];
+            $scope.is_selected = {};
+            $scope.select = function(project_class, $event){
+                if($($event.target).is('button, a')){
+                    return;
+                }
+                
+                if($event.shiftKey){
+                    $scope.is_selected[project_class.id] = true;
+                    var sel_range={from:1/0, to:-1/0};
+                    $scope.classes.forEach(function(pc, idx){
+                        if($scope.is_selected[pc.id]){
+                            sel_range.from = Math.min(sel_range.from, idx);
+                            sel_range.to   = Math.max(sel_range.to  , idx);
+                        }
+                    });
+                    for(var si = sel_range.from, se = sel_range.to + 1; si < se; ++si){
+                        $scope.is_selected[$scope.classes[si].id] = true;
+                    }
+                } else if($event.ctrlKey){
+                    $scope.is_selected[project_class.id] = !$scope.is_selected[project_class.id];
+                } else {
+                    $scope.is_selected={};
+                    $scope.is_selected[project_class.id] = true;
+                }
+            };
             $scope.validations = {};
             $scope.validate = function(project_class, val){
-                var key = class2key(project_class);
-                if (key){
+                var keys=[], key_idx = {};
+                var k = class2key(project_class);
+                if(k && !key_idx[k]){key_idx[k]=true; keys.push(k);}
+                for(var sel_pc_id in $scope.is_selected){
+                    if($scope.is_selected[sel_pc_id]){
+                        k = class2key(sel_pc_id);
+                        if(k && !key_idx[k]){key_idx[k]=true; keys.push(k);}
+                    }
+                }
+                
+                if(keys.length > 0){
                     Project.validateRecording($scope.recording.id, {
-                        'class' : key,
+                        'class' : keys.join(','),
                         val     : val
-                    }, function(validation){
-                        $scope.validations[key] = validation.val;
+                    }, function(validations){
+                        validations.forEach(function(validation){
+                            var key = class2key(validation);
+                            $scope.validations[key] = validation.val;
+                        });
                     })
                 }
+                
             };
             $scope.val_options = [{label:"Present", val:1}, {label:"Not Present", val:0}];
             $scope.val_state = function(project_class, val_options){

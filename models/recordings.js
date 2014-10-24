@@ -327,7 +327,7 @@ var Recordings = {
             return;
         }
         
-        var add_validation = function(species_id, songtype_id){
+        var add_one_validation = function(species_id, songtype_id, callback){
             var valobj = {
                 recording : recording.id,
                 user      : user_id,
@@ -345,22 +345,28 @@ var Recordings = {
             });
         }
         
-        var cm = /(\d+)(-(\d+))?/.exec(validation['class']);
-        if(!cm) {
-            callback(new Error("validation class is missing."));
-        } else if(!cm[2]){
-            var project_class = cm[1] | 0;
-            queryHandler(
-                "SELECT species_id as species, songtype_id as songtype \n" +
-                "WHERE project_class_id = " + mysql.escape(project_class) + "\n" +
-                "  AND project_id = " + mysql.escape(project_id), function(err, data){
-                if (err) { callback(err); return; }
-                if (!data || !data.length) { callback(new Error("project class " + project_class + " not found")); return; }
-                add_validation(species_id, songtype_id);
-            });
-        } else {
-            add_validation(cm[1] | 0, cm[3] | 0);
-        }
+        var classes = validation['class'].split(',');
+        
+        async.mapLimit(classes, 5, function(val_class, next){
+            var cm = /(\d+)(-(\d+))?/.exec(val_class);
+            if(!cm) {
+                next(new Error("validation class is missing."));
+            } else if(!cm[2]){
+                var project_class = cm[1] | 0;
+                queryHandler(
+                    "SELECT species_id as species, songtype_id as songtype \n" +
+                    "FROM project_classes \n" +
+                    "WHERE project_class_id = " + mysql.escape(project_class) + "\n" +
+                    "  AND project_id = " + mysql.escape(project_id), function(err, data){
+                    if (err) { next(err); return; }
+                    if (!data || !data.length) { next(new Error("project class " + project_class + " not found")); return; }
+                    add_one_validation(species_id, songtype_id, next);
+                });
+            } else {
+                add_one_validation(cm[1] | 0, cm[3] | 0, next);
+            }
+        }, callback);        
+        
     },
     
     insert: function(recording, callback) {

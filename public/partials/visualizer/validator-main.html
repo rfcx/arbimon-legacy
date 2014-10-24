@@ -1,16 +1,17 @@
 <div class="content">
+    {{is_selected}}
     <table class="bg table table-condensed">
         <tr>
             <th>Species</th>
             <th>Song</th>
             <th>Annotation</th>
         </tr>
-        <tr ng-repeat="class in classes">
+        <tr ng-repeat="class in classes" ng-click="select(class, $event)" ng-class="is_selected[class.id] ? 'active' : ''">
             <td ng-bind="class.species_name"></td>
             <td ng-bind="class.songtype_name"> </td>
             <td>
                 <div class="dropdown">
-                    <button class="btn btn-xs btn-block btn-default" role="button" data-toggle="dropdown">
+                    <button class="btn-a2-validate btn btn-xs btn-block btn-default" role="button" data-toggle="dropdown">
                         <span class="fa"
                             ng-class="'val-'+val_state(class.id).val"
                         ></span>

@@ -103,9 +103,9 @@ router.post('/validate/:oneRecUrl?', function(req, res, next) {
     }
 
     var recording = req.recording;
-    model.recordings.validate(recording, req.session.user.id, req.project.project_id, req.body, function(err, validation) {
+    model.recordings.validate(recording, req.session.user.id, req.project.project_id, req.body, function(err, validations) {
         if(err) return next(err);
-        return res.json(validation);
+        return res.json(validations);
     });
 });
 
