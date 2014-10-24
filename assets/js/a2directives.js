@@ -64,6 +64,7 @@ angular.module('a2directives', [])
             fields: '=',
             rows: '=',
             onSelect: '&',
+            extSort: '&',
             checked: '=',
             search: '=',
             noCheckbox: '@',
@@ -144,24 +145,31 @@ angular.module('a2directives', [])
                 scope.lastChecked = $index;
             };
 
-            scope.sel = function($index) {
+            scope.sel = function(row, $index) {
                 if(attrs.noSelect !== undefined)
                     return;
 
-                scope.selected = scope.rows[$index];
+                scope.selected = row;
 
                 if(attrs.onSelect)
                     scope.onSelect({ $index: $index });
             };
 
             scope.sortBy = function(field) {
-                if(scope.sort !== field.key) {
-                    scope.sort = field.key;
+                if(scope.sortKey !== field.key) {
+                    scope.sortKey = field.key;
+                     
+                    if(attrs.extSort === undefined)
+                        scope.sort = field.key;
+                    
                     scope.reverse = false;
                 }
                 else {
                     scope.reverse = !scope.reverse;
                 }
+                
+                if(attrs.extSort)
+                    scope.extSort({ sortBy: field.key, reverse: scope.reverse });
             };
             
             scope.formatString = function(value) {
