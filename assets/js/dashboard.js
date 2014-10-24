@@ -47,10 +47,10 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
         zoom: 8
     };
 
-    $scope.map = new google.maps.Map(document.getElementById('map-summary'), mapOptions);
-
     Project.getSites(function(sites) {
         $scope.sites = sites;
+        
+        $scope.map = new google.maps.Map(document.getElementById('map-summary'), mapOptions);
 
         var bounds = new google.maps.LatLngBounds();
 
