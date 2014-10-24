@@ -831,6 +831,18 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 }
             };
             browser.loading.sites = true;
+            var perform_auto_select = function(){
+                var auto_select = browser.selection.auto && browser.selection.auto.recording;
+                if(auto_select) {
+                    browser.selection.auto.recording = null;
+                    var found = browser.recordings.filter(function(r){return r.id == auto_select.id;}).pop();
+                    if (found) {
+                        browser.selection.recording.select(found);
+                    } else {
+                        console.error("Could not find auto-selected recording in list.");
+                    }
+                }
+            }
             project.getSites(function(sites){
                 browser.sites = sites;
                 browser.loading.sites = false;
@@ -851,6 +863,10 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 var site = browser.selection.site.value;
                 var date = browser.selection.date;
                 if (site && date) {
+                    if(newValue && oldValue && newValue.getTime() == oldValue.getTime()){
+                        perform_auto_select();
+                        return
+                    }
                     var comps = [site.name, date.getFullYear(), date.getMonth() + 1, date.getDate()];
                     var key = comps.join('-');
                     browser.loading.times = true;
@@ -858,16 +874,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                         $timeout(function(){
                             browser.recordings = recordings;
                             browser.loading.times = false;
-                            var auto_select = browser.selection.auto && browser.selection.auto.recording;
-                            if(auto_select) {
-                                browser.selection.auto.recording = null;
-                                var found = browser.recordings.filter(function(r){return r.id == auto_select.id;}).pop();
-                                if (found) {
-                                    browser.selection.recording.select(found);
-                                } else {
-                                    console.error("Could not find auto-selected recording in list.");
-                                }
-                            }
+                            perform_auto_select();
                         });
                     })
                 }
