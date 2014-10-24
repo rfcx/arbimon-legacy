@@ -94,7 +94,8 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
         { name: 'Name', key: 'name' },
         { name: 'Latidude', key:'lat' },
         { name: 'Longitude', key: 'lon' },
-        { name: 'Altitude', key: 'alt' }
+        { name: 'Altitude', key: 'alt' },
+        { name: 'Rec qty', key: 'rec_count' }
     ];
 
 

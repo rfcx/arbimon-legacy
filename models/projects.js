@@ -31,13 +31,22 @@ var Projects = {
     },
 
     getProjectSites: function(project_id, callback){
-        var query = (
-            "SELECT S.site_id as id, S.name, S.lat, S.lon, S.alt \n" +
-            "FROM sites S \n" +
-            "WHERE S.project_id = " + mysql.escape(project_id)
-        );
-
-        return queryHandler(query , callback);
+        if(typeof project_id !== 'number')
+            return callback(new Error("invalid type for 'project_id'"));
+        
+        var q = "SELECT s.site_id as id, \n"+
+                        "s.name, \n"+
+                        "s.lat, \n"+
+                        "s.lon, \n"+
+                        "s.alt, \n"+
+                        "count( r.recording_id ) as rec_count \n"+
+                "FROM sites AS s \n"+
+                "JOIN recordings AS r ON s.site_id = r.site_id \n"+
+                "WHERE s.project_id = %s \n"+
+                "GROUP BY s.site_id";
+        
+        q = util.format(q, mysql.escape(project_id));
+        return queryHandler(q , callback);
     },
 
     insert: function(project, callback) {
