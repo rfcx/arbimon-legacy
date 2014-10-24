@@ -3,6 +3,7 @@ var debug = require('debug')('arbimon2');
 var app = require('../app');
 
 app.set('port', process.env.PORT || 3000);
+app.set('tls_port', process.env.TLS_PORT || 3003);
 
 if (app.get('env') === 'production') {
     
@@ -12,6 +13,7 @@ if (app.get('env') === 'production') {
     var keyFile = process.env.SSL_KEY;
     var certFile = process.env.SSL_CERT;
     
+    var http = require('http');
     var https = require('https');
     var fs = require('fs');
 
@@ -20,7 +22,8 @@ if (app.get('env') === 'production') {
         cert: fs.readFileSync(certFile)
     };
 
-    https.createServer(options, app).listen(app.get('port'));
+    http.createServer(app).listen(app.get('port'));
+    https.createServer(options, app).listen(app.get('tls_port'));
 }
 else {
     var server = app.listen(app.get('port'), function() {
