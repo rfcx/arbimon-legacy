@@ -9,7 +9,7 @@
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <a2-table fields="fields" rows="recs" on-select="" checked="checked" search="search"></a2-table>
+        <a2-table fields="fields" rows="recs" checked="checked" search="search" ext-sort="sortRecs(sortBy, reverse)"></a2-table>
         <div class="jumbotron" ng-show="(!recs || !recs.length > 0) && !loading">
             <h3>
                 This project don't have any recordings

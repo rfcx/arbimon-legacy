@@ -92,8 +92,8 @@ var Recordings = {
      * @param {Boolean} options.count_only Whether to return the queried recordings, or to just count them
      * @param {String} options.compute other (computed) attributes to show on returned recordings
      * @param {String} options.group_by Level in wich to group recordings (valid items : site, year, month, day, hour, auto, next)
-     * @param {Function} callback called back with the queried results. 
-     */
+     * @callback {Function} callback called back with the queried results. 
+     **/
     findByUrlMatch: function (recording_url, project_id, options, callback) {
         if(options instanceof Function){
             callback = options;
@@ -413,9 +413,15 @@ var Recordings = {
         });
     },
     
-    
     __compute_thumbnail_path : function(recording){
         recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png');
+    },
+    
+    findProjectRecordings: function(params, callback) {
+        var schema = {
+            project_id: Joi.number();
+            
+        }
     }
 };
     

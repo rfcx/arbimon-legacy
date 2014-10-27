@@ -34,6 +34,9 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         $scope.loading = false;
     });
     
+    $scope.sortRecs = function(sortKey, reverse) {
+    };
+    
 })
 .controller('UploadCtrl', function($scope, uploads, Project, $modal){ 
     $scope.prettyBytes = function(bytes) {
