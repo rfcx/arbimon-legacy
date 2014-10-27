@@ -41,7 +41,7 @@ var Projects = {
                         "s.alt, \n"+
                         "count( r.recording_id ) as rec_count \n"+
                 "FROM sites AS s \n"+
-                "JOIN recordings AS r ON s.site_id = r.site_id \n"+
+                "LEFT JOIN recordings AS r ON s.site_id = r.site_id \n"+
                 "WHERE s.project_id = %s \n"+
                 "GROUP BY s.site_id";
         
