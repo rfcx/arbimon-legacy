@@ -2,9 +2,12 @@
     ng-repeat="tile in recording.tiles track by $index" ng-src="{{tile.src}}" style="position:absolute;z-index:-1"
     ng-style="{left:tile.x + 'px', top:tile.y + 'px', height: layout.spectrogram.height, width: layout.spectrogram.width}"
 />
+<div a2-visualizer-spectrogram-affixed>
+    {{recording.file}}
+</div>
 
 <div class="input-source" ng-show="selection.layer == layer" ng-click="audio_player.setCurrentTime(pointer.sec)">
-    <div a2-visualizer-spectrogram-affixed>
+    <div a2-visualizer-spectrogram-affixed data-affix-top="20">
         Click to set current play time to {{pointer.sec | number}}s <br/>
     </div>
 </div>
