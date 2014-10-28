@@ -848,15 +848,18 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     }
                 }
             }
-            var load_project_sites = function(){
+            var load_project_sites = function(cb){
                 browser.loading.sites = true;
                 project.getSites(function(sites){
                     browser.sites = sites;
                     browser.loading.sites = false;
-                });                
+                    if(cb){
+                        $timeout(cb);
+                    }
+                });       
             }            
             
-            load_project_sites();
+            
             $scope.$on('a2-persisted', load_project_sites);
 
             $scope.$watch('browser.selection.site.value', function(newValue, oldValue){
@@ -937,9 +940,6 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     $scope.selectRecording(recording);
                 })
             });
-            $timeout(function(){
-                $scope.$emit('browser-available');
-            });
             $element.on('click', function(e){
                 var $e=$(e.target), $dm = $e.closest('.dropdown-menu.datepicker, [aria-labelledby^=datepicker]');
                 if($dm.length > 0) {
@@ -947,6 +947,11 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     e.preventDefault();
                 }
             })
+            
+            load_project_sites(function(){
+                $scope.$emit('browser-available');
+            });
+            
         }
     };
 });
