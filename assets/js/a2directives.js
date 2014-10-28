@@ -184,6 +184,7 @@ angular.module('a2directives', [])
 }])
 .directive('a2Persistent', function($rootScope, $compile, $timeout){
     var counter = 0;
+    var poc = $('<div></div>');
     return { 
         restrict : 'E', scope : {},
         compile  : function(tElement, tAttrs){
@@ -205,8 +206,9 @@ angular.module('a2directives', [])
                     persisted  = false;
                 }
                 $element.append(ptag.view);
-                $element.on('$destroy', function(){
-                    ptag.view.detach();
+                $element.on('$destroy', function(e){
+                    e.stopPropagation();
+                    poc.append(ptag.view);
                 });
                 if(persisted){
                     $timeout(function(){
