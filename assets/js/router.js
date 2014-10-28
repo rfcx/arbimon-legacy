@@ -20,9 +20,8 @@ var arbimon2 = angular.module('arbimon2', [
     })
     .state('visualizer', {
         url: '/visualizer/:recording',
-        controller : 'VisualizerCtrl',
         reloadOnSearch : false,
-        template: '<a2-visualizer></a2-visualizer>'
+        template: '<a2-persistent name="visualizer"><a2-visualizer></a2-visualizer></a2-persistent>'
     })
     .state('models', {
         url: '/models',

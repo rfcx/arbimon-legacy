@@ -182,6 +182,41 @@ angular.module('a2directives', [])
         }
     };
 }])
+.directive('a2Persistent', function($rootScope, $compile, $timeout){
+    var counter = 0;
+    return { 
+        restrict : 'E', scope : {},
+        compile  : function(tElement, tAttrs){
+            var children=tElement.children().detach();
+            var tag = tAttrs.name || ('persistent-' + (counter++));
+            return function(_1, $element, _3){
+                if(!$rootScope._$persistence_){
+                    $rootScope._$persistence_={};
+                }
+                var p = $rootScope._$persistence_;
+                var ptag = p[tag];
+                var persisted = true;
+                if(!ptag){
+                    console.log('new persistent scope "%s" created in ', tag, $rootScope);
+                    p[tag] = ptag = {};
+                    ptag.scope = $rootScope.$new(true);
+                    ptag.scope._$persistence_tag_ = tag;
+                    ptag.view  = $compile(children)(ptag.scope);
+                    persisted  = false;
+                }
+                $element.append(ptag.view);
+                $element.on('$destroy', function(){
+                    ptag.view.detach();
+                });
+                if(persisted){
+                    $timeout(function(){
+                        ptag.scope.$broadcast('a2-persisted');
+                    });
+                }
+            }
+        }
+    }
+})
 .directive('autoHeight', function () {
     return {
         restrict: 'A',

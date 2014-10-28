@@ -29,10 +29,16 @@ angular.module('visualizer', [
     return { 
         restrict : 'E', 
         replace:true, 
-        templateUrl: '/partials/visualizer/main.html' 
+        scope : {},
+        controller : 'VisualizerCtrl',
+        templateUrl: '/partials/visualizer/main.html'
     }
 })
+
 .controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller) {
+    var update_location_path = function(){
+        $location.path("/visualizer/"+($scope.recording ? $scope.recording.file : '' ));
+    };
     var new_layer = function(layer_type){
         var layer_def = layer_types[layer_type];
         if (layer_def) {
@@ -110,9 +116,9 @@ angular.module('visualizer', [
             $scope.loading_recording = true;
             Project.getRecordingInfo(recording.id, function(data){
                 console.log('$scope.setRecording', data);
-                $location.path("/visualizer/"+recording.file);
                 $scope.loading_recording = false;
                 $scope.recording = data;
+                update_location_path();
                 $scope.recording.duration = data.stats.duration;
                 $scope.recording.sampling_rate = data.stats.sample_rate;
                 // fix up some stuff
@@ -179,7 +185,7 @@ angular.module('visualizer', [
             $scope.$broadcast('next-recording');
         },
     };
-
+    $scope.$on('a2-persisted', update_location_path);
     $scope.$on('browser-available', function(){
         if($state.params && $state.params.recording) {
             $scope.$broadcast('select-recording',[$state.params.recording]);
