@@ -385,3 +385,38 @@ textarea.fixed-width {
 .table > tbody > tr.active > td {
     background-color: #ccc;
 }
+
+
+//progress bar colors
+.barColor1{ //training
+    background-image: none;
+    background-color: blue;
+}
+.barColor2{ // classification
+    background-image: none;
+    background-color: red;
+}
+
+.checkSelectors{
+input[type=checkbox] { visibility: hidden; }
+.checkboxex { background: #ededed;
+              position:relative; border: 0px solid rgba(0, 0, 0, 0.15);}
+              
+.checkboxex label { background: #aeaeae; display: block; width: 10px;
+                    height: 12px; border-radius: 50%; cursor: pointer;
+                    position: absolute; top: 2px; left: 2px; z-index: 1;
+                    box-shadow: 0 0 5px rgba(0,0,0,0.7) inset;
+                    transition: all .1s ease; }
+                    
+.checkbox-1 input[type=checkbox]:checked + label { background: blue;  //training
+                width: 12px; height: 13px; top: 2px; left: 1px; }
+
+.checkbox-2 input[type=checkbox]:checked + label { background: red;  // classification
+width: 12px; height: 13px; top: 2px; left: 1px; }
+}
+.bordered{
+    border-top:1px solid #bbb;
+    padding-bottom: 12px;
+    margin-left:14px;
+    width:60%;
+}

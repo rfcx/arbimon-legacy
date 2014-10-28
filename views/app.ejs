@@ -26,6 +26,14 @@
                     <li ui-sref-active="active"><a ui-sref="models"><i class="fa fa-send-o"></i> Models</a></li>
                     <li ui-sref-active="active"><a ui-sref="classify"><i class="fa fa-tasks"></i> Classification</a></li>
                 </ul>
+		<ul class="nav navbar-nav" ng-controller="StatusBarNavIndexController">
+		    <li ng-hide="jobslength">
+			<a><i class="fa fa-cog"></i>No Active Jobs</a>
+		    </li>
+		     <li ng-show="jobslength" ui-sref-active="active">
+			<a ui-sref="jobs"><i class="fa fa-cog"></i>Show Avtive Jobs <span class="badge" ng-bind="jobslength"></span></a>
+		    </li>
+		</ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li class=""><a><i class="fa fa-cubes"></i> <%=  project.name  %></a></li>
                     <li class=""><a><% if(user.isSuper) { %>Super<% } %> <i class="fa fa-user"></i> <%= user.username %></a></li>
@@ -35,22 +43,9 @@
             </div>
         </div>
     </nav>
-	<div id="page">
-	    <div ui-view></div>
-	    <div class="progressbar" ng-controller="StatusController"> 
-		<a class="btn btn-sm btn-default"  ng-click="showProgressBar()" ng-show="showButtonProgress" >Show Jobs Progress</a>
-		<a class="btn btn-sm btn-default"  ng-click="closeProgressBar()" ng-hide="showButtonProgress" >Close Jobs Progress</a>
-		<br>
-		<div data-ng-repeat="o in jobs" class="progressbardiv">
-		    <h5>{{o.name}}</h5>
-		    <div class="progress progress-striped active">
-		     <div ng-style="{width : ( o.percentage + '%' ) }" aria-valuemax="100" aria-valuemin="0" aria-valuenow="{{o.percentage}}" role="progressbar" class="progress-bar">
-		  
-		     </div>
-		    </div>
-		</div>
-	    </div>
-	</div>
+    <div id="page">
+	<div ui-view></div>
+    </div>
 
 </body>
 </html>

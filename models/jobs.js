@@ -29,6 +29,12 @@ module.exports =
                  "  VALUES ("+mysql.escape(p.id)+","+mysql.escape(p.classifier)+",NULL, "+mysql.escape(p.name)+") ";
 
             queryHandler(q,callback);
+        },
+        hide: function(jId, callback)
+        {       
+            var q = "update `jobs` set `hidden`  = 1 where `job_id` = "+jId;
+
+            queryHandler(q,callback);
         }
     };
 

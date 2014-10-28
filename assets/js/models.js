@@ -5,8 +5,8 @@
     var amazons3 = "https://s3.amazonaws.com/arbimon2/";
     models.controller
     ('ModelsCtrl' , 
-        function ($scope,$http,$modal,$filter,$sce, ngTableParams,Project) 
-        { 	  
+        function ($scope,$http,$modal,$filter,$sce, ngTableParams,Project,JobsData) 
+        {   
             var pid=-1;
             var p = Project.getInfo(
                 function(data)
@@ -235,6 +235,7 @@
 				data = result
 				if (data.ok)
 				{
+				    JobsData.updateJobs();
 				    $scope.successInfo = "New Model Training on Queue";
 				    $scope.showSuccess = true;
 				    $("#successDiv").fadeTo(3000, 500).slideUp(500,

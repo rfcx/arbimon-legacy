@@ -4,7 +4,8 @@ var arbimon2 = angular.module('arbimon2', [
     'dashboard', 
     'audiodata',
     'models',
-    'classification'
+    'classification',
+    'jobs'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     
@@ -31,52 +32,10 @@ var arbimon2 = angular.module('arbimon2', [
     .state('classify', {
         url: '/classify',
         template: '<a2-classification></a2-classification>'
+    })
+    .state('jobs', {
+        url: '/jobs',
+        controller : 'StatusBarNavController' ,
+        templateUrl: '/partials/jobs/index.html'
     });
-})
-.controller('StatusController',
-    function ($scope, $http, Project)
-    {
-        $scope.showButtonProgress = true;
-        $scope.showProgressBar =
-        function()
-        {
-            var p = Project.getInfo(
-            function(data)
-            {                
-                $http.get('/api/project/'+data.url+'/progress')
-                .success
-                (
-                    function(data) 
-                    {
-                        $scope.jobs = data;
-                        $(".progressbar").height(250);
-                        $scope.showButtonProgress = false;
-                        /*
-                        $scope.interval = setInterval(
-                        function()
-                        {
-                            $http.get('/api/project/'+data.url+'/progress')
-                            .success
-                            (
-                            function(data) 
-                            {
-                                $scope.jobs = data;
-                            }
-                            );
-                        }, 2500);*/
-                     }
-                );
-            });
-
-        };
-        
-        $scope.closeProgressBar =
-        function()
-        {
-           // clearInterval( $scope.interval);
-            $(".progressbar").height(30);
-            $scope.showButtonProgress = true;
-        };
-    }
-)
-;
+});

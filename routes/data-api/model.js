@@ -282,4 +282,17 @@ router.get('/project/:projectUrl/progress', function(req, res) {
     });
 });
 
+router.get('/project/:projectUrl/job/hide/:jId', function(req, res) {
+
+    model.jobs.hide(req.params.jId, function(err, rows) {
+        if(err) res.json('{ "err" : "Error removing job"}');
+
+        model.projects.activeJobs(req.params.projectUrl, function(err, row) {
+            if(err) throw err;
+    
+            res.json(row);
+        });
+    });
+});
+
 module.exports = router;

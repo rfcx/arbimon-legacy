@@ -4,7 +4,7 @@
     var template_root = '/partials/classification/';
     classification.controller
     ('ClassificationCtrl' , 
-        function ($scope,$http,$modal,$filter,$sce,Project, ngTableParams) 
+        function ($scope,$http,$modal,$filter,$sce,Project, ngTableParams,JobsData) 
         {
              var p = Project.getInfo(
             function(data)
@@ -131,6 +131,7 @@
                                             data = result
                                             if (data.ok)
                                             {
+                                                JobsData.updateJobs();
                                                 $scope.successInfo = "New Classification on Queue";
                                                 $scope.showSuccess = true;
                                                 $("#successDiv").fadeTo(3000, 500).slideUp(500,

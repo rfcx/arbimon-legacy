@@ -89,9 +89,11 @@ if model_type_id == 1: #Pattern Matching (modified Alvarez thesis)
             with closing(db.cursor()) as cursor:
                 cursor.execute("SELECT r.`uri` , `species_id` , `songtype_id` , `present` "+
                         "FROM `recording_validations` rv, `recordings` r " +
-                        "WHERE r.`recording_id` = rv.`recording_id` and "+
-                        "r.`recording_id` NOT IN ("+ ','.join([str(x) for x in recordingsIds]) +") " +
+                        "WHERE r.`recording_id` = rv.`recording_id`  "+
                         "and `species_id` = "+queryString)
+                # is this condition too harsh?
+                # and r.`recording_id` NOT IN ("+ ','.join([str(x) for x in recordingsIds]) +") " +
+
                 db.commit()
                 numValidationRows = int(cursor.rowcount)
                 progress_steps = progress_steps + numValidationRows

@@ -328,7 +328,7 @@ var Projects = {
             queryHandler(q, callback);
     },
        
-        classifications: function(project_url, callback) {
+    classifications: function(project_url, callback) {
             var q = "SELECT DATE_FORMAT(j.`date_created`,'%d-%m-%Y') as date  , j.`job_id`  , "+
                      " CONCAT(UCASE(LEFT(mode.`name`, 1)), SUBSTRING(mode.`name`, 2))  as modname  " +         
                     " , CONCAT(UCASE(LEFT(jpc.`name`, 1)), SUBSTRING(jpc.`name`, 2))  as cname  "+
@@ -381,12 +381,14 @@ var Projects = {
     },
    
     activeJobs: function(project_url, callback) {
-        var q = "(SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` ,jpt.`name`, 100*(j.`progress`/j.`progress_steps`) as percentage "+
-                " FROM  `job_params_training` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0  and j.`completed`=0  "+
+        var q = "(SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` , " +
+                " CONCAT(UCASE(LEFT( jpt.`name`, 1)), SUBSTRING( jpt.`name`, 2)) as name, round(100*(j.`progress`/j.`progress_steps`),1) as percentage "+
+                " FROM  `job_params_training` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0    "+
                 " and jpt.`job_id` = j.`job_id` and j.`job_type_id` = 1 and p.`url` = " + mysql.escape(project_url)+" )"+
                 " UNION "+
-                " (SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` ,jpt.`name` , 100*(j.`progress`/j.`progress_steps`) as percentage "+
-                " FROM  `job_params_classification` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0  and j.`completed`=0  "+
+                " (SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` , "+
+                " CONCAT(UCASE(LEFT( jpt.`name`, 1)), SUBSTRING( jpt.`name`, 2)) as name , round(100*(j.`progress`/j.`progress_steps`),1) as percentage "+
+                " FROM  `job_params_classification` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0   "+
                 " and jpt.`job_id` = j.`job_id` and j.`job_type_id` = 2 and p.`url` = " + mysql.escape(project_url)+" )";
                 
         queryHandler(q, callback);

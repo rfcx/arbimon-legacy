@@ -1,0 +1,45 @@
+<div ng-controller="StatusBarNavController" data-ng-init="init()">
+    <div class="alert alert-success alert-dismissible"  role="alert" id="successDivs" ng-show="showSuccesss">
+      <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+      {{ successInfo }}
+    </div>
+    <div class="alert alert-danger alert-dismissible"  role="alert" id="errorDivs" ng-show="showErrors">
+      <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+      {{ errorInfo }}
+    </div>
+    <div class="container-fluid">
+        <div ng-show="jobs.length">
+            <h3>Active Jobs</h3>
+    
+            <div class="row checkSelectors">
+                <div class="col-lg-2 ">
+                    <span class="checkboxex checkbox-1"><input type="checkbox"  ng-model="showTrainings" id="trainings"/><label for="trainings"></label></span>
+                    <label>Show Trainings</label>
+                </div>
+                <div class="col-lg-2">
+                    <span class="checkboxex checkbox-2"><input type="checkbox"  ng-model="showClassifications"  id="classifications"/><label for="classifications"></label></span>
+                    <label>Show Classifications</label>
+                </div>
+            </div>
+            <div data-ng-repeat="o in jobs" >
+                <div class="row" ng-class="'jobtype'+o.job_type_id">
+                    <div class="bordered"></div>
+                    <div class="col-sm-2">{{o.name}}</div>
+                    <div class="col-sm-4" >
+                        <div class="progress progress-striped active">
+                         <div ng-class="'barColor'+o.job_type_id" ng-style="{width : ( o.percentage + '%' ) }" aria-valuemax="100" aria-valuemin="0" aria-valuenow="{{o.percentage}}" role="progressbar" class="progress-bar">
+                            {{o.percentage}}%
+                         </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-1" >
+                        <button class="btn btn-default btn-xs" ng-click="hideJob(o.job_id)">Hide</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="jobs.length">
+            <h3>No Running Jobs</h3>
+        </div>
+    </div>
+</div>
