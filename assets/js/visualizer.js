@@ -272,7 +272,28 @@ angular.module('visualizer-layers', ['visualizer-services', 'a2utils'])
 });
 
 angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
-.directive('a2VisualizerSpectrogram', function(a2BrowserMetrics){
+.service('a2AffixCompute', function(){
+    return function($viewport, $el){
+        var affix_left    = $el.attr('data-affix-left') | 0;
+        var affix_right   = $el.attr('data-affix-right');
+        var affix_align_h = $el.attr('data-affix-align-h');
+        if(affix_right != undefined){
+            affix_left = $viewport.width() - $el.width() - (affix_right|0);
+        } else if(affix_align_h != undefined){
+            affix_left = ($viewport.width() - $el.width()) * affix_align_h;
+        }
+        var affix_top     = $el.attr('data-affix-top' ) | 0;
+        var affix_bottom  = $el.attr('data-affix-bottom');
+        var affix_align_v = $el.attr('data-affix-align-v');
+        if(affix_bottom != undefined){
+            affix_top = $viewport.height() - $el.height() - (affix_bottom|0);
+        } else if(affix_align_v != undefined){
+            affix_top = ($viewport.height() - $el.height()) * affix_align_v;
+        }
+        $el.css({position:'absolute', left : affix_left + $viewport.scrollLeft(), top  : affix_top  + $viewport.scrollTop()});
+    }
+})
+.directive('a2VisualizerSpectrogram', function(a2BrowserMetrics, a2AffixCompute){
     var layout_tmp = {
         gutter     :  a2BrowserMetrics.scrollSize.height,
         axis_sizew :  60,
@@ -321,24 +342,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 $scope.layout.x_axis.top = $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh - layout_tmp.gutter;
                 $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
                 $element.find('.a2-visualizer-spectrogram-affixed').each(function(i, el){
-                    var $el = $(el);
-                    var affix_left = $el.attr('data-affix-left') | 0;
-                    var affix_right = $el.attr('data-affix-right');
-                    var affix_align_h = $el.attr('data-affix-align-h');
-                    if(affix_right != undefined){
-                        affix_left = $element.width() - $el.width() - (affix_right|0);
-                    } else if(affix_align_h != undefined){
-                        affix_left = ($element.width() - $el.width()) * affix_align_h;
-                    }
-                    var affix_top  = $el.attr('data-affix-top' ) | 0;
-                    var affix_bottom = $el.attr('data-affix-bottom');
-                    var affix_align_v = $el.attr('data-affix-align-v');
-                    if(affix_bottom != undefined){
-                        affix_top = $element.height() - $el.height() - (affix_bottom|0);
-                    } else if(affix_align_v != undefined){
-                        affix_top = ($element.height() - $el.height()) * affix_align_v;
-                    }
-                    $el.css({position:'absolute', left : affix_left + $element.scrollLeft(), top  : affix_top  + $element.scrollTop()});
+                    a2AffixCompute($element, $(el));
                 });
             };
             $scope.onMouseMove = function (e) {
@@ -531,7 +535,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
         }
     }
 })
-.directive('a2VisualizerSpectrogramAffixed', function(){
+.directive('a2VisualizerSpectrogramAffixed', function(a2AffixCompute){
     return {
         restrict :'A',
         link     : function($scope, $element, $attrs){
@@ -546,6 +550,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     $element.attr('data-affix-top', $eloff.top - $roff.top);
                 }
             }
+            a2AffixCompute($element.offsetParent(), $element);
         }
     }
 });
