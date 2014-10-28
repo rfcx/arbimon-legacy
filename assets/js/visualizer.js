@@ -836,7 +836,6 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     recording : itemSelection.make()
                 }
             };
-            browser.loading.sites = true;
             var perform_auto_select = function(){
                 var auto_select = browser.selection.auto && browser.selection.auto.recording;
                 if(auto_select) {
@@ -849,10 +848,17 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     }
                 }
             }
-            project.getSites(function(sites){
-                browser.sites = sites;
-                browser.loading.sites = false;
-            });
+            var load_project_sites = function(){
+                browser.loading.sites = true;
+                project.getSites(function(sites){
+                    browser.sites = sites;
+                    browser.loading.sites = false;
+                });                
+            }            
+            
+            load_project_sites();
+            $scope.$on('a2-persisted', load_project_sites);
+
             $scope.$watch('browser.selection.site.value', function(newValue, oldValue){
                 browser.dates.update_time = new Date();
                 browser.selection.date = null;
