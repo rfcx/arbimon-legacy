@@ -533,11 +533,9 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
 })
 .directive('a2VisualizerSpectrogramAffixed', function(){
     return {
-        restrict :'E',
-        template : '<div class="a2-visualizer-spectrogram-affixed" ng-transclude></div>',
-        replace  : true,
-        transclude : true,
+        restrict :'A',
         link     : function($scope, $element, $attrs){
+            $element.addClass('a2-visualizer-spectrogram-affixed');
             var $root = $element.closest('.visualizer-root');
             var $eloff = $element.offset(), $roff = $root.offset();
             if($roff) {

@@ -4,7 +4,7 @@
 />
 
 <div class="input-source" ng-show="selection.layer == layer" ng-click="audio_player.setCurrentTime(pointer.sec)">
-    <a2-visualizer-spectrogram-affixed>
-        Click to set current play time to {{pointer.sec}}s <br/>
-    </a2-visualizer-spectrogram-affixed>
+    <div a2-visualizer-spectrogram-affixed>
+        Click to set current play time to {{pointer.sec | number}}s <br/>
+    </div>
 </div>
