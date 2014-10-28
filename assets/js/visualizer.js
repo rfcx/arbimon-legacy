@@ -980,10 +980,16 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 $scope.validations[key] = present | 0;
             };
 
-            Project.getClasses(function(classes){
-                $scope.classes = classes;
-            });
-
+            var load_project_classes = function(){
+                Project.getClasses(function(classes){
+                    $scope.classes = classes;
+                });
+            };
+            
+            
+            
+            $scope.$on('a2-persisted', load_project_classes);
+            
             $scope.classes = [];
             $scope.is_selected = {};
             $scope.select = function(project_class, $event){
@@ -1041,12 +1047,13 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 var key = class2key(project_class), val = $scope.validations[key];
                 return typeof val == 'undefined' ? val : ( val ? val_options[0]: val_options[1] );
             }
-            
             $scope.$watch('recording', function(recording){
                 console.log('validated recording : ', recording);
                 $scope.validations = {};
                 recording.validations && recording.validations.forEach(add_validation);
-            })
+            });
+            
+            load_project_classes();
         }
     };
 });
