@@ -853,7 +853,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 project.getSites(function(sites){
                     browser.sites = sites;
                     browser.loading.sites = false;
-                    if(cb){
+                    if(cb instanceof Function){
                         $timeout(cb);
                     }
                 });       
