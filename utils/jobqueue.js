@@ -1,9 +1,10 @@
 var async = require('async');
+var os = require('os');
 
 var jobQueueInstance = async.priorityQueue(function (task, callback) {
     console.log('starting task ' + task.name);
-    callback();
-}, 4);
+    task.work(callback);
+}, os.cpus().length);
 
 
 jobQueueInstance.drain = function() {

@@ -64,10 +64,12 @@ angular.module('a2directives', [])
             fields: '=',
             rows: '=',
             onSelect: '&',
+            extSort: '&',
             checked: '=',
             search: '=',
             noCheckbox: '@',
-            noSelect: '@'
+            noSelect: '@',
+            dateFormat: '@'
         },
         templateUrl: '/partials/directives/table.html',
         link: function(scope, element, attrs) {
@@ -143,28 +145,80 @@ angular.module('a2directives', [])
                 scope.lastChecked = $index;
             };
 
-            scope.sel = function($index) {
+            scope.sel = function(row, $index) {
                 if(attrs.noSelect !== undefined)
                     return;
 
-                scope.selected = scope.rows[$index];
+                scope.selected = row;
 
                 if(attrs.onSelect)
                     scope.onSelect({ $index: $index });
             };
 
             scope.sortBy = function(field) {
-                if(scope.sort !== field.key) {
-                    scope.sort = field.key;
+                if(scope.sortKey !== field.key) {
+                    scope.sortKey = field.key;
+                     
+                    if(attrs.extSort === undefined)
+                        scope.sort = field.key;
+                    
                     scope.reverse = false;
                 }
                 else {
                     scope.reverse = !scope.reverse;
                 }
+                
+                if(attrs.extSort)
+                    scope.extSort({ sortBy: field.key, reverse: scope.reverse });
             };
+            
+            scope.formatString = function(value) {
+                
+                if(value instanceof Date){
+                    return moment(value).utc().format(attrs.dateFormat || 'MMM D YYYY, HH:mm');
+                }
+                return value;
+            }
         }
     };
 }])
+.directive('a2Persistent', function($rootScope, $compile, $timeout){
+    var counter = 0;
+    var poc = $('<div></div>');
+    return { 
+        restrict : 'E', scope : {},
+        compile  : function(tElement, tAttrs){
+            var children=tElement.children().detach();
+            var tag = tAttrs.name || ('persistent-' + (counter++));
+            return function(_1, $element, _3){
+                if(!$rootScope._$persistence_){
+                    $rootScope._$persistence_={};
+                }
+                var p = $rootScope._$persistence_;
+                var ptag = p[tag];
+                var persisted = true;
+                if(!ptag){
+                    console.log('new persistent scope "%s" created in ', tag, $rootScope);
+                    p[tag] = ptag = {};
+                    ptag.scope = $rootScope.$new(true);
+                    ptag.scope._$persistence_tag_ = tag;
+                    ptag.view  = $compile(children)(ptag.scope);
+                    persisted  = false;
+                }
+                $element.append(ptag.view);
+                $element.on('$destroy', function(e){
+                    e.stopPropagation();
+                    poc.append(ptag.view);
+                });
+                if(persisted){
+                    $timeout(function(){
+                        ptag.scope.$broadcast('a2-persisted');
+                    });
+                }
+            }
+        }
+    }
+})
 .directive('autoHeight', function () {
     return {
         restrict: 'A',
@@ -202,4 +256,11 @@ angular.module('a2directives', [])
             });
         }
     };
- });
+ })
+ .directive('loader', function() {
+     return {
+         restrict: 'E',
+         templateUrl: '/partials/directives/loader.html'
+     }
+ })
+ ;

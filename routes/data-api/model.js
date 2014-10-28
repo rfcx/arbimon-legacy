@@ -116,9 +116,10 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
                                    res.json({ err:"Could not create training job"}); 
                                 }
                                 else
-                                {
-                                    jobQueue.push({name: 'training'+trainingId},1,
-                                        function()
+                                { console.log(scriptsFolder)
+                                    jobQueue.push({
+                                        name: 'training'+trainingId,
+                                        work: function(callback)
                                         {
                                             var python = require('child_process').spawn
                                             (
@@ -131,6 +132,7 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
                                                 function(data)
                                                 { 
                                                     output += data
+                                                    console.log(output)
                                                 }
                                             );
                                             python.on('close',
@@ -138,10 +140,15 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
                                                 { 
                                                     if (code !== 0) { console.log('returned error')}
                                                     else console.log('no error, everything ok, training completed');
+                                                    callback();
                                                 }
                                             );
                                         }
-                                    );
+                                    },
+                                    1, // priority
+                                    function() {
+                                        console.log("job done! training", trainingId);
+                                    });
                                     res.json({ ok:"job created :"+trainingId});           
                                 }
                             }
@@ -191,8 +198,9 @@ router.post('/project/:projectUrl/classification/new', function(req, res) {
                                 }
                                 else
                                 {
-                                    jobQueue.push({name: 'classification'+classificationId},1,
-                                        function()
+                                    jobQueue.push({
+                                        name: 'classification'+classificationId,
+                                        work: function()
                                         {
                                             var python = require('child_process').spawn
                                             (
@@ -215,7 +223,12 @@ router.post('/project/:projectUrl/classification/new', function(req, res) {
                                                 }
                                             );
                                         }
-                                    );
+                                    },
+                                    1,
+                                    function() {
+                                        console.log("job done! classification", classificationId);
+                                    });
+                                    
                                     res.json({ ok:"job created :"+classificationId});           
                                 }
                             }

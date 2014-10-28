@@ -299,6 +299,9 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     border-top-right-radius: 25px;
     overflow-y: auto;
 }
+html body #page > .progressbar.ng-scope {
+    display:none;
+}
 .progressbardiv{
     width:95%;
     margin-left:45px;
@@ -419,4 +422,25 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
     padding-bottom: 12px;
     margin-left:14px;
     width:60%;
+}
+.vertical-text{
+    display: inline-block;
+    transform: rotate(-90deg);
+    white-space: nowrap;
+    width: 0;
+}
+
+.no-wrap{
+    white-space: nowrap;
+}
+
+
+.loader {
+    width: auto;
+    height: 2em;
+    vertical-align: bottom;
+    padding: 3px;
+    rect {
+        fill:#000;
+    }
 }

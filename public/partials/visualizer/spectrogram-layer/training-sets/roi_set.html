@@ -14,12 +14,12 @@
     ng-mousemove="($event.buttons == 1) && layer.training_data.data.editor.add_tracer_point(pointer)"
     ng-mouseup  ="($event.which == 1) && layer.training_data.data.editor.add_point(pointer)"
 >
-    <a2-visualizer-spectrogram-affixed>
+    <div a2-visualizer-spectrogram-affixed>
         Click to add training data to this recording.
         <div ng-show="layer.training_data.data.editor.roi && !layer.training_data.data.editor.roi.id" a2-global-keyup="($event.which == 27) && layer.training_data.data.editor.reset()">
             Press <kbd>esc</kbd> to cancel training data addition.
         </div>
-    </a2-visualizer-spectrogram-affixed>
+    </div>
     <div class="roi roi-current" ng-show="layer.training_data.data.editor.roi"
         ng-style="{left:layout.sec2x(layer.training_data.data.editor.roi.x1, 1) + 'px', top:layout.hz2y(layer.training_data.data.editor.roi.y2, 1) + 'px', width:layout.dsec2width(layer.training_data.data.editor.roi.x2, layer.training_data.data.editor.roi.x1, 1) + 'px', height:layout.dhz2height(layer.training_data.data.editor.roi.y2, layer.training_data.data.editor.roi.y1) + 'px'}"
     >

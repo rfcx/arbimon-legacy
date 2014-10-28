@@ -66,9 +66,21 @@ angular.module('a2services',[])
             return url;
         },
         
-        getRecordings: function(key, callback) {
+        getRecordings: function(key, options, callback) {
             var projectName = this.getName();
-            $http.get('/api/project/'+projectName+'/recordings/'+key).success(function(data) {
+            var query='';
+            if(options instanceof Function){
+                callback = options;
+                options = null;
+            }
+            if(options){
+                var q=[];
+                for(var i in options){
+                    q.push(i + '=' + options[i]);
+                }
+                query='?'+q.join('&');
+            }
+            $http.get('/api/project/'+projectName+'/recordings/'+key+query).success(function(data) {
                 callback(data);
             });
         },

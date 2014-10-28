@@ -99,6 +99,13 @@
 
 
 .sidebar .layers .layer{
+    .collapse-title{
+        cursor:pointer;
+        &:hover{
+            text-decoration:underline;
+        }
+    }
+    
     table.table{
         > tr.active, > * > tr.active{
             color: @nav-pills-active-link-hover-color;

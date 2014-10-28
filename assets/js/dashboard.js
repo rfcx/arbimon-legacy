@@ -31,6 +31,8 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
 
 })
 .controller('SummaryCtrl', function($scope, Project) {
+    
+    $scope.loading = true;
 
     Project.getInfo(function(info){
          $scope.project = info;
@@ -45,10 +47,10 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
         zoom: 8
     };
 
-    $scope.map = new google.maps.Map(document.getElementById('map-summary'), mapOptions);
-
     Project.getSites(function(sites) {
         $scope.sites = sites;
+        
+        $scope.map = new google.maps.Map(document.getElementById('map-summary'), mapOptions);
 
         var bounds = new google.maps.LatLngBounds();
 
@@ -66,6 +68,8 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
         }
 
         $scope.map.fitBounds(bounds);
+        
+        $scope.loading = false;
     });
 
     Project.getRecTotalQty(function(count) {
@@ -73,19 +77,25 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
     });
 })
 .controller('SitesCtrl', function($scope, Project, $http, $modal) {
-
+    $scope.loading = true;
+    
     Project.getInfo(function(info){
          $scope.project = info;
     });
 
-
+    Project.getSites(function(sites) {
+        $scope.sites = sites;
+        $scope.loading = false;
+    });
+    
     $scope.editing = false;
 
     $scope.fields = [
         { name: 'Name', key: 'name' },
         { name: 'Latidude', key:'lat' },
         { name: 'Longitude', key: 'lon' },
-        { name: 'Altitude', key: 'alt' }
+        { name: 'Altitude', key: 'alt' },
+        { name: 'Rec qty', key: 'rec_count' }
     ];
 
 
@@ -96,9 +106,7 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
 
     $scope.map = new google.maps.Map(document.getElementById('map-site'), mapOptions);
 
-    Project.getSites(function(sites) {
-        $scope.sites = sites;
-    });
+    
 
     $scope.save = function() {
         var action = $scope.editing ? 'update' : 'create';
@@ -244,6 +252,8 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
 
 })
 .controller('SpeciesCtrl', function($scope, Project, Species, Songtypes, $modal) {
+    $scope.loading = true;
+    
     $scope.fields = [
         { name: 'Species', key: 'species_name' },
         { name: 'Song', key: 'songtype_name' }
@@ -261,6 +271,7 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
 
     Project.getClasses(function(classes){
         $scope.classes = classes;
+        $scope.loading = false;
     });
 
     Project.getInfo(function(info){

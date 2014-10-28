@@ -21,11 +21,12 @@
 <div class="row">
     <div class="col-sm-7">
         <a2-table fields="fields" rows="sites" on-select="sel($index)" checked="checked" search="search"></a2-table>
-        <div class="jumbotron" ng-show="!sites || !sites.length > 0">
+        <div class="jumbotron" ng-show="(!sites || !sites.length > 0) && !loading">
             <h3 class="text-center">
                 This project don't have any <i class="fa fa-map-marker"></i> sites
             </h3>
         </div>
+        <loader ng-hide="!loading"></loader>
     </div>
     <div class="col-sm-5">
         <div ng-show="editing || creating" class="panel panel-default">

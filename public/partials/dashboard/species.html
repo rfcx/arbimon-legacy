@@ -16,6 +16,12 @@
 
     </h4>
     <a2-table fields="fields" rows="classes" on-select="sel($index)" checked="checked" no-select></a2-table>
+    <div class="jumbotron" ng-show="(!classes || !classes.length > 0) && !loading">
+        <h3 class="text-center">
+            This project don't have any species assign
+        </h3>
+    </div>
+    <loader ng-hide="!loading"></loader>
 </div>
 <div class="col-sm-6" auto-height>
     <div class="col-sm-6">

@@ -9,7 +9,7 @@ import boto
 import shutil
 import MySQLdb
 from contextlib import closing
-from config import Config
+from audiomapper.config import Config
 jobId = sys.argv[1].strip("'");
 classificationName = sys.argv[2].strip("'");
 allRecs = sys.argv[3].strip("'");

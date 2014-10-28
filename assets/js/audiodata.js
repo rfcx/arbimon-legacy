@@ -15,22 +15,23 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     });
 })
 .controller('RecsCtrl', function($scope, Project) {
+    $scope.loading = true;
     $scope.fields = [
         { name: 'Site', key: 'site' },
         { name: 'Time', key: 'datetime' },
         { name: 'Recorder', key: 'recorder' },
         { name: 'Microphone', key: 'mic' },
         { name: 'Software ver', key: 'version' },
-        { name: 'Filename', key: 'filename' },
+        { name: 'Filename', key: 'file' },
     ];
     
     Project.getRecs(function(data) {
         $scope.recs = data;
         
         $scope.recs.forEach(function(rec) {
-            rec.datetime = moment(rec.datetime).utc().format('D-MMM-YYYY HH:mm');
-            rec.filename = rec.uri.split('/')[4];
+            rec.datetime = new Date(rec.datetime);
         });
+        $scope.loading = false;
     });
     
 })
@@ -56,6 +57,9 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         $scope.uploader.queue.forEach(function(item) {
             
             Project.recExists($scope.info.site.id, item.file.name.split('.')[0], function(exists) {                
+                if(item.isSuccess) // file uploaded on current batch
+                    return;
+                
                 if(exists) {
                     console.log('duplicated');
                     return item.isDuplicate = true;
@@ -153,6 +157,16 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     var u = new FileUploader();
     
     var uploadInfo = null;
+
+    window.addEventListener("beforeunload", function (e) {
+        if(u.isUploading) {
+            var confirmationMessage = "Upload is in progress, Are you sure to exit?";
+        
+            (e || window.event).returnValue = confirmationMessage;     //Gecko + IE
+            return confirmationMessage;                                //Webkit, Safari, Chrome etc.
+        }
+    });
+
     
     return {        
         getUploader: function() {

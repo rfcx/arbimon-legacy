@@ -29,8 +29,16 @@ app.set('view engine', 'ejs');
 
 tmpfilecache.cleanup();
 
+if (app.get('env') === 'production') {
+    app.use(function(req, res, next){
+        if(!req.secure) {
+            var securePort = app.get('tls_port') == 443 ? '' : ':' + app.get('tls_port');
+            return res.redirect('https://' + req.hostname + securePort + req.originalUrl)
+        }
+        next();
+    })
+}
 
-// uncomment after placing your favicon in /public
 app.use(favicon(__dirname + '/public/images/favicon.ico'));
 app.use(logger('dev'));
 app.use(cookieParser());

@@ -29,10 +29,16 @@ angular.module('visualizer', [
     return { 
         restrict : 'E', 
         replace:true, 
-        templateUrl: '/partials/visualizer/main.html' 
+        scope : {},
+        controller : 'VisualizerCtrl',
+        templateUrl: '/partials/visualizer/main.html'
     }
 })
+
 .controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller) {
+    var update_location_path = function(){
+        $location.path("/visualizer/"+($scope.recording ? $scope.recording.id : '' ));
+    };
     var new_layer = function(layer_type){
         var layer_def = layer_types[layer_type];
         if (layer_def) {
@@ -110,9 +116,9 @@ angular.module('visualizer', [
             $scope.loading_recording = true;
             Project.getRecordingInfo(recording.id, function(data){
                 console.log('$scope.setRecording', data);
-                $location.path("/visualizer/"+recording.file);
                 $scope.loading_recording = false;
                 $scope.recording = data;
+                update_location_path();
                 $scope.recording.duration = data.stats.duration;
                 $scope.recording.sampling_rate = data.stats.sample_rate;
                 // fix up some stuff
@@ -179,7 +185,7 @@ angular.module('visualizer', [
             $scope.$broadcast('next-recording');
         },
     };
-
+    $scope.$on('a2-persisted', update_location_path);
     $scope.$on('browser-available', function(){
         if($state.params && $state.params.recording) {
             $scope.$broadcast('select-recording',[$state.params.recording]);
@@ -266,11 +272,11 @@ angular.module('visualizer-layers', ['visualizer-services', 'a2utils'])
 });
 
 angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
-.directive('a2VisualizerSpectrogram', function(){
+.directive('a2VisualizerSpectrogram', function(a2BrowserMetrics){
     var layout_tmp = {
-        gutter     :  20,
+        gutter     :  a2BrowserMetrics.scrollSize.height,
         axis_sizew :  60,
-        axis_sizeh :  30,
+        axis_sizeh :  60,
         axis_lead  :  15
     }
     return {
@@ -300,21 +306,38 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
             };
             $scope.onScrolling = function(e){
+                $scope.layout.bbox = {
+                    s1   : ($element.scrollLeft() - $scope.layout.spectrogram.left) / $scope.layout.scale.sec2px,
+                    s2   : ($element.scrollLeft() - $scope.layout.spectrogram.left + $element.width()) / $scope.layout.scale.sec2px,
+                    hz1  : ($scope.layout.spectrogram.top + $scope.layout.spectrogram.height - $element.scrollTop() - $element.height()) / $scope.layout.scale.hz2px,
+                    hz2  : ($scope.layout.spectrogram.top + $scope.layout.spectrogram.height - $element.scrollTop()) / $scope.layout.scale.hz2px
+                }
+                $scope.layout.center = {
+                    s  : ($element.scrollLeft() - $scope.layout.spectrogram.left + $element.width()/2.0) / $scope.layout.scale.sec2px,
+                    hz : ($scope.layout.spectrogram.top + $scope.layout.spectrogram.height - $element.scrollTop() - $element.height()/2.0) / $scope.layout.scale.hz2px,
+                }
                 $scope.layout.y_axis.left = $element.scrollLeft();
                 $element.children('.axis-y').css({left: $scope.layout.y_axis.left + 'px'});
-                $scope.layout.x_axis.top = Math.min(
-                    $scope.layout.spectrogram.top + $scope.layout.spectrogram.height,
-                    $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh
-                );
+                $scope.layout.x_axis.top = $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh - layout_tmp.gutter;
                 $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
                 $element.find('.a2-visualizer-spectrogram-affixed').each(function(i, el){
                     var $el = $(el);
                     var affix_left = $el.attr('data-affix-left') | 0;
                     var affix_right = $el.attr('data-affix-right');
+                    var affix_align_h = $el.attr('data-affix-align-h');
                     if(affix_right != undefined){
                         affix_left = $element.width() - $el.width() - (affix_right|0);
+                    } else if(affix_align_h != undefined){
+                        affix_left = ($element.width() - $el.width()) * affix_align_h;
                     }
                     var affix_top  = $el.attr('data-affix-top' ) | 0;
+                    var affix_bottom = $el.attr('data-affix-bottom');
+                    var affix_align_v = $el.attr('data-affix-align-v');
+                    if(affix_bottom != undefined){
+                        affix_top = $element.height() - $el.height() - (affix_bottom|0);
+                    } else if(affix_align_v != undefined){
+                        affix_top = ($element.height() - $el.height()) * affix_align_v;
+                    }
                     $el.css({position:'absolute', left : affix_left + $element.scrollLeft(), top  : affix_top  + $element.scrollTop()});
                 });
             };
@@ -329,11 +352,11 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 $scope.pointer.sec = x / $scope.layout.scale.sec2px;
                 $scope.pointer.hz  = y / $scope.layout.scale.hz2px;
             };
-            $scope.layout.apply = function(width, height){
+            $scope.layout.apply = function(width, height, fix_scroll_center){
                 var recording = $scope.recording || {duration:60, max_freq:22050};
                 var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
-                var avail_h = height - layout_tmp.axis_sizeh - 5*layout_tmp.axis_lead;
-                
+                var avail_h = height - layout_tmp.axis_sizeh - layout_tmp.axis_lead - layout_tmp.gutter;
+                var cheight = $element[0].clientHeight;
                 var zoom_levels_x = [
                     avail_w/recording.duration,
                     $scope.layout.scale.max_sec2px
@@ -350,9 +373,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
 
                 var scalex = d3.scale.linear().domain([0, recording.duration]).range([0, spec_w]);
                 var scaley = d3.scale.linear().domain([0, recording.max_freq]).range([spec_h, 0]);
-                var l={};
-                $scope.layout.scale.sec2px = spec_w / recording.duration;
-                $scope.layout.scale.hz2px  = spec_h / recording.max_freq;
+                var l={};                
                 l.spectrogram = { selector : '.spectrogram-container', css:{
                     top    : layout_tmp.axis_lead,
                     left   : layout_tmp.axis_sizew,
@@ -371,12 +392,28 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 l.x_axis = { selector : '.axis-x',  scale : scalex,  
                     css:{
                         left : layout_tmp.axis_sizew -  layout_tmp.axis_lead,
-                        top  : Math.min(l.spectrogram.css.top + spec_h, $element.scrollTop() + height  - layout_tmp.axis_sizeh)
+                        // left : layout_tmp.axis_sizew -  layout_tmp.axis_lead,
+                        top  : $element.scrollTop() + height  - layout_tmp.axis_sizeh - layout_tmp.gutter
                     }, attr:{
                         height : layout_tmp.axis_sizeh,
                         width  : spec_w + 2*layout_tmp.axis_lead
                     }
                 };
+                //l.x_axis.attr.height = cheight - l.x_axis.css.top - 1;
+                
+                $scope.layout.scale.sec2px = spec_w / recording.duration;
+                $scope.layout.scale.hz2px  = spec_h / recording.max_freq;
+                
+                var scroll_center;
+                if($scope.layout.center){
+                    var scroll_center = {
+                        left: $scope.layout.scale.sec2px * $scope.layout.center.s + l.spectrogram.css.left - width/2.0,
+                        top: -$scope.layout.scale.hz2px * $scope.layout.center.hz - height/2.0 + l.spectrogram.css.top + l.spectrogram.css.height
+                    }
+                }
+                
+
+                
                 for(var i in l){
                     var li = l[i];
                     $scope.layout[i] = li.css;
@@ -390,43 +427,50 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                         $scope.layout[i].scale = li.scale;
                     }
                 }
-                var axis = d3.select($element.children(l.x_axis.selector).empty()[0]);
-                axis.append("rect").attr({
+                var d3_x_axis = d3.select($element.children(l.x_axis.selector).empty()[0]);
+                d3_x_axis.append("rect").attr({
                     class : 'bg',
                     x : 0, y : 0,
                     width : l.x_axis.attr.width,
                     height: spec_h + layout_tmp.axis_lead
                 });
-                axis.append("g").
+                d3_x_axis.append("g").
                     attr('class', 'axis').
                     attr('transform', 'translate('+ layout_tmp.axis_lead +', 1)').
                     call(d3.svg.axis().
                         ticks(recording.duration).
-                        tickFormat(function(x){return x + ' s';}).
                         scale(scalex).
                         orient("bottom")
                     );
-                axis = d3.select($element.children(l.y_axis.selector).empty()[0]);
-                axis.append("rect").attr({
+                
+                
+                var d3_y_axis = d3.select($element.children(l.y_axis.selector).empty()[0]);
+                d3_y_axis.append("rect").attr({
                     class : 'bg',
                     x : 0, y : 0,
                     width : l.y_axis.attr.width,
                     height: spec_h + layout_tmp.axis_lead + 2
                 });
-                axis.append("rect").attr({
+                d3_y_axis.append("rect").attr({
                     class : 'bg',
                     x : 0, y : 0,
                     width : l.y_axis.attr.width - layout_tmp.axis_lead,
                     height: spec_h + layout_tmp.axis_lead + layout_tmp.axis_sizeh
                 });
-                axis.append("g").
+                d3_y_axis.append("g").
                     attr('class', 'axis').
                     attr('transform', 'translate('+ (layout_tmp.axis_sizew-1) +', '+ layout_tmp.axis_lead +')').
                     call(d3.svg.axis().
-                        tickFormat(function(x){return (x/1000.0) + ' KHz';}).
+                        tickFormat(function(x){return (x/1000.0);}).
                         scale(scaley).
                         orient("left")
                     );
+
+                if(fix_scroll_center){
+                    $element.scrollTop(scroll_center.top);
+                    $element.scrollLeft(scroll_center.left);
+                }
+
                 $scope.onScrolling();
             };
             $scope.getElementDimensions = function () {
@@ -458,10 +502,10 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 $scope.$apply();
             });
             $scope.$watch('layout.scale.zoom.x', function (newValue, oldValue) {
-                $scope.layout.apply($element.width(), $element.height());
+                $scope.layout.apply($element.width(), $element.height(), true);
             });
             $scope.$watch('layout.scale.zoom.y', function (newValue, oldValue) {
-                $scope.layout.apply($element.width(), $element.height());
+                $scope.layout.apply($element.width(), $element.height(), true);
             });
             $scope.layout.apply($element.width(), $element.height());
             $scope.onScrolling();
@@ -489,11 +533,9 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
 })
 .directive('a2VisualizerSpectrogramAffixed', function(){
     return {
-        restrict :'E',
-        template : '<div class="a2-visualizer-spectrogram-affixed" ng-transclude></div>',
-        replace  : true,
-        transclude : true,
+        restrict :'A',
         link     : function($scope, $element, $attrs){
+            $element.addClass('a2-visualizer-spectrogram-affixed');
             var $root = $element.closest('.visualizer-root');
             var $eloff = $element.offset(), $roff = $root.offset();
             if($roff) {
@@ -792,11 +834,32 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     recording : itemSelection.make()
                 }
             };
-            browser.loading.sites = true;
-            project.getSites(function(sites){
-                browser.sites = sites;
-                browser.loading.sites = false;
-            });
+            var perform_auto_select = function(){
+                var auto_select = browser.selection.auto && browser.selection.auto.recording;
+                if(auto_select) {
+                    browser.selection.auto.recording = null;
+                    var found = browser.recordings.filter(function(r){return r.id == auto_select.id;}).pop();
+                    if (found) {
+                        browser.selection.recording.select(found);
+                    } else {
+                        console.error("Could not find auto-selected recording in list.");
+                    }
+                }
+            }
+            var load_project_sites = function(cb){
+                browser.loading.sites = true;
+                project.getSites(function(sites){
+                    browser.sites = sites;
+                    browser.loading.sites = false;
+                    if(cb instanceof Function){
+                        $timeout(cb);
+                    }
+                });       
+            }            
+            
+            
+            $scope.$on('a2-persisted', load_project_sites);
+
             $scope.$watch('browser.selection.site.value', function(newValue, oldValue){
                 browser.dates.update_time = new Date();
                 browser.selection.date = null;
@@ -813,23 +876,18 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 var site = browser.selection.site.value;
                 var date = browser.selection.date;
                 if (site && date) {
+                    if(newValue && oldValue && newValue.getTime() == oldValue.getTime()){
+                        perform_auto_select();
+                        return
+                    }
                     var comps = [site.name, date.getFullYear(), date.getMonth() + 1, date.getDate()];
                     var key = comps.join('-');
                     browser.loading.times = true;
-                    Project.getRecordings(key, function(recordings){
+                    Project.getRecordings(key, {show:'thumbnail-path'},function(recordings){
                         $timeout(function(){
                             browser.recordings = recordings;
                             browser.loading.times = false;
-                            var auto_select = browser.selection.auto && browser.selection.auto.recording;
-                            if(auto_select) {
-                                browser.selection.auto.recording = null;
-                                var found = browser.recordings.filter(function(r){return r.id == auto_select.id;}).pop();
-                                if (found) {
-                                    browser.selection.recording.select(found);
-                                } else {
-                                    console.error("Could not find auto-selected recording in list.");
-                                }
-                            }
+                            perform_auto_select();
                         });
                     })
                 }
@@ -880,9 +938,6 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     $scope.selectRecording(recording);
                 })
             });
-            $timeout(function(){
-                $scope.$emit('browser-available');
-            });
             $element.on('click', function(e){
                 var $e=$(e.target), $dm = $e.closest('.dropdown-menu.datepicker, [aria-labelledby^=datepicker]');
                 if($dm.length > 0) {
@@ -890,6 +945,11 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     e.preventDefault();
                 }
             })
+            
+            load_project_sites(function(){
+                $scope.$emit('browser-available');
+            });
+            
         }
     };
 });
@@ -906,26 +966,9 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
         templateUrl : '/partials/visualizer/validator-main.html',
         link     : function($scope, $element, $attrs){
             var class2key = function(project_class){
-                
-                /*this commented line rewrites the id on $scope.classes
-                it sets the same id to all the $scope.classes
-                when there are more than one classes in the project
-                
-                var cls = $scope.classes.filter(function(pc){return pc.id = project_class}).shift();
-                
-                */
-                          
-                //quick and dirty search      
-                var i = 0;
-                while(i < $scope.classes.length)
-                {
-                    if ($scope.classes[i].id == project_class)
-                    {
-                        break;
-                    }
-                    i = i + 1;
-                }
-                var  cls = $scope.classes[i];
+                var cls = /number|string/.test(typeof project_class) ? 
+                    $scope.classes.filter(function(pc){return pc.id == project_class}).shift() :
+                    project_class;
                 return cls && [cls.species, cls.songtype].join('-');
             };
             
@@ -935,22 +978,66 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 $scope.validations[key] = present | 0;
             };
 
-            Project.getClasses(function(classes){
-                $scope.classes = classes;
-            });
-
+            var load_project_classes = function(){
+                Project.getClasses(function(classes){
+                    $scope.classes = classes;
+                });
+            };
+            
+            
+            
+            $scope.$on('a2-persisted', load_project_classes);
+            
             $scope.classes = [];
+            $scope.is_selected = {};
+            $scope.select = function(project_class, $event){
+                if($($event.target).is('button, a')){
+                    return;
+                }
+                
+                if($event.shiftKey){
+                    $scope.is_selected[project_class.id] = true;
+                    var sel_range={from:1/0, to:-1/0};
+                    $scope.classes.forEach(function(pc, idx){
+                        if($scope.is_selected[pc.id]){
+                            sel_range.from = Math.min(sel_range.from, idx);
+                            sel_range.to   = Math.max(sel_range.to  , idx);
+                        }
+                    });
+                    for(var si = sel_range.from, se = sel_range.to + 1; si < se; ++si){
+                        $scope.is_selected[$scope.classes[si].id] = true;
+                    }
+                } else if($event.ctrlKey){
+                    $scope.is_selected[project_class.id] = !$scope.is_selected[project_class.id];
+                } else {
+                    $scope.is_selected={};
+                    $scope.is_selected[project_class.id] = true;
+                }
+            };
             $scope.validations = {};
             $scope.validate = function(project_class, val){
-                var key = class2key(project_class);
-                if (key){
+                var keys=[], key_idx = {};
+                var k = class2key(project_class);
+                if(k && !key_idx[k]){key_idx[k]=true; keys.push(k);}
+                for(var sel_pc_id in $scope.is_selected){
+                    if($scope.is_selected[sel_pc_id]){
+                        k = class2key(sel_pc_id);
+                        if(k && !key_idx[k]){key_idx[k]=true; keys.push(k);}
+                    }
+                }
+                
+                if(keys.length > 0){
                     Project.validateRecording($scope.recording.id, {
-                        'class' : key,
+                        'class' : keys.join(','),
                         val     : val
-                    }, function(validation){
-                        $scope.validations[key] = validation.val;
+                    }, function(validations){
+                        validations.forEach(function(validation){
+                            var key = class2key(validation);
+                            $scope.validations[key] = validation.val;
+                        });
                     })
                 }
+                
             };
             $scope.val_options = [{label:"Present", val:1}, {label:"Not Present", val:0}];
             $scope.val_state = function(project_class, val_options){
@@ -958,12 +1045,13 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 var key = class2key(project_class), val = $scope.validations[key];
                 return typeof val == 'undefined' ? val : ( val ? val_options[0]: val_options[1] );
             }
-            
             $scope.$watch('recording', function(recording){
                 console.log('validated recording : ', recording);
                 $scope.validations = {};
                 recording.validations && recording.validations.forEach(add_validation);
-            })
+            });
+            
+            load_project_classes();
         }
     };
 });
