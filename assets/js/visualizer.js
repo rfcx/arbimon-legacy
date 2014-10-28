@@ -37,7 +37,7 @@ angular.module('visualizer', [
 
 .controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller) {
     var update_location_path = function(){
-        $location.path("/visualizer/"+($scope.recording ? $scope.recording.file : '' ));
+        $location.path("/visualizer/"+($scope.recording ? $scope.recording.id : '' ));
     };
     var new_layer = function(layer_type){
         var layer_def = layer_types[layer_type];
