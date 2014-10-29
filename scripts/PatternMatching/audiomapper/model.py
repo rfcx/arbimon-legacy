@@ -49,27 +49,47 @@ class Model:
     def validate(self):
         classSubset = [self.classes[i] for i in self.validationDataIndices]
         predictions = self.clf.predict(self.data[self.validationDataIndices])
-        self.accuracy_score = 0.0
-        for i in range(len(classSubset)):
-            if classSubset[i] == predictions[i]:
-                self.accuracy_score = self.accuracy_score + 1.0
-        self.accuracy_score = float(self.accuracy_score)/float(len(classSubset))
+
+        presentIndeces = [i for i, j in zip(count(), classSubset) if j == '1']
+        notPresentIndices = [i for i, j in zip(count(), classSubset) if j == '0']
         
-        index0 = 1
-        index1 = 0
-        if self.clf.classes_[0] == '0':
-            index0 = 0
-            index1 = 1
-        self.precision_score = metrics.precision_score(classSubset,predictions,labels=self.clf.classes_, pos_label=index0,average=None )
-        self.precision_score = (self.precision_score[0] + self.precision_score[1])/2.0
-        self.recall_score = metrics.recall_score(classSubset,predictions,labels=self.clf.classes_ , pos_label=index0 ,average=None)
-        self.recall_score = (self.recall_score[0]+self.recall_score[1])/2.0
-    
+        self.tp = 0.0
+        self.fp = 0.0
+        self.tn = 0.0
+        self.fn = 0.0
+        self.precision_score = 0.0
+        self.sensitivity_score = 0.0
+        self.specificity_score  = 0.0
+        
+        truePositives =  [classSubset[i] for i in presentIndeces]
+        truePosPredicted =  [predictions[i] for i in presentIndeces]
+        for i in range(len(truePositives)):
+            if truePositives[i] == truePosPredicted[i]:
+                self.tp = self.tp + 1.0
+            else:
+                self.fn = self.fn + 1.0
+               
+        trueNegatives = [classSubset[i] for i in notPresentIndices]
+        trueNegPrediceted = [predictions[i] for i in notPresentIndices]
+        for i in range(len(trueNegatives )):
+            if trueNegatives[i] == trueNegPrediceted[i]:
+                self.tn = self.tn + 1.0
+            else:
+                self.fp = self.fp + 1.0
+                
+        self.accuracy_score = (self.tp +  self.tn)/(self.tp+self.fp+self.tn+self.fn)
+        if (self.tp+self.fp) > 0:
+            self.precision_score = self.tp/(self.tp+self.fp)
+        if (self.tp+self.fn) > 0:
+            self.sensitivity_score = self.tp/(self.tp+self.fn)
+        if (self.tn+self.fp) > 0:
+            self.specificity_score  = self.tn/(self.tn+self.fp)
+        
     def modelStats(self):
         #smin = min([min((self.speciesSpec[i])) for i in range(self.speciesSpec.shape[0])])
         #smax = max([max((self.speciesSpec[i])) for i in range(self.speciesSpec.shape[0])])
         #x = 255*((self.speciesSpec - smin)/(smax-smin))
-        return [self.accuracy_score,self.precision_score,self.recall_score,self.obbScore,self.speciesSpec]
+        return [self.accuracy_score,self.precision_score,self.sensitivity_score,self.obbScore,self.speciesSpec,self.specificity_score ,self.tp,self.fp,self.tn,self.fn]
     
     def save(self,filename,l,h,c):
         with open(filename, 'wb') as output:

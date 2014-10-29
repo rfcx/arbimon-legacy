@@ -86,7 +86,6 @@ with closing(db.cursor()) as cursor:
 
 for i in classes:
     if not classes[i].splitData(useTrainingPresent,useTrainingNotPresent,useValidationPresent,useValidationNotPresent):
-        print 'not enough data for this class'
         continue
     
     classes[i].train()
@@ -146,11 +145,13 @@ for i in classes:
         db.commit()
         row = cursor.fetchone()
         totalRois = row[0]
-        
+             
         statsJson = '{"roicount":'+str(totalRois)+' , "roilength":'+str(lengthRoi)+' , "roilowfreq":'+str(minFrequ)+' , "roihighfreq":'+str(maxFrequ)
-        statsJson = statsJson + ',"accuracy":'+str(modelStats[0])+' ,"precision":'+str(modelStats[1])+',"recall":'+str(modelStats[2])
-        statsJson = statsJson + ', "forestoobscore" :'+str(modelStats[3])+' , "roisamplerate" : '+str(sampleRate)+' , "roipng":"'+pngKey+'"}'
-        
+        statsJson = statsJson + ',"accuracy":'+str(modelStats[0])+' ,"precision":'+str(modelStats[1])+',"sensitivity":'+str(modelStats[2])
+        statsJson = statsJson + ', "forestoobscore" :'+str(modelStats[3])+' , "roisamplerate" : '+str(sampleRate)+' , "roipng":"'+pngKey+'"'
+        statsJson = statsJson + ', "specificity":'+str(modelStats[5])+' , "tp":'+str(modelStats[6])+' , "fp":'+str(modelStats[7])+' '
+        statsJson = statsJson + ', "tn":'+str(modelStats[8])+' , "fn":'+str(modelStats[9])+' }'
+
         cursor.execute("INSERT INTO `models`(`name`, `model_type_id`, `uri`, `date_created`, `project_id`, `user_id`,"+
                        " `training_set_id`, `validation_set_id`) " +
                        " VALUES ('"+modelname+"', "+str(model_type_id)+" , '"+modKey+"' , now() , "+str(project_id)+","+
@@ -174,6 +175,6 @@ for i in classes:
         db.commit()
 
 #remore temporary directory
-shutil.rmtree(tempFolders+"/training_"+str(jobId))
+#shutil.rmtree(tempFolders+"/training_"+str(jobId))
 db.close()
 print 'ended'

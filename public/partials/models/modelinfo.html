@@ -31,8 +31,13 @@
             </tr>
             <tr>
                 <td>
-                    Model Class: 
-                </td><td> <span ng-bind="data.species"></span>/<span ng-bind="data.songtype"></span></td>
+                    Species: 
+                </td><td> <span ng-bind="data.species"></span></td>
+            </tr>
+            <tr>
+                <td>
+                    Songtype: 
+                </td><td> <span ng-bind="data.songtype"></span></td>
             </tr>
             <tr>
                 <td data-ng-hide="true">
@@ -41,7 +46,7 @@
             </tr>
         </table>
     </div>
-    <div class="col-sm-6">
+    <div class="col-sm-3">
         <table>
             <tr>
                 <td >
@@ -55,8 +60,13 @@
             </tr>
             <tr>
                 <td >
-                    Recall: 
-                </td><td ng-bind="data.recall"></td>
+                    Sensitivity: 
+                </td><td ng-bind="data.sensitivity"></td>
+            </tr>
+            <tr>
+                <td >
+                    Specificity: 
+                </td><td ng-bind="data.specificity"></td>
             </tr>
         </table>
     </div>
@@ -140,8 +150,36 @@
                 </table>        
             </div>
         </div>
-      </div>
-
+        <div class="top-buffer"><strong>Confusion Matrix:</strong></div>
+        <div class="row top-buffer">
+            <div class="col-sm-1"></div>
+            <div class="col-sm-1 rotatedtext">
+                <span><b>Actual</b></span>
+            </div>
+            <div class="col-sm-10">
+                <table >
+                    <tr>
+                        <th colspan="3">Predicted Values</th>
+                    </tr>
+                    <tr class="bottom-border">
+                        <td></td>
+                        <td><small><em>P</em></small></td>
+                        <td><small><em>NP</em></small></td>
+                    </tr>
+                    <tr>
+                        <td ><small><em>P</em></small></td>
+                        <td class="side-border spaced-td" ng-bind="data.tpos"></td>
+                        <td class="spaced-td" ng-bind="data.fneg" ></td>                
+                    </tr>
+                    <tr class="bottom-border">
+                        <td ><small><em>NP</em></small></td>
+                        <td class="side-border spaced-td" ng-bind="data.fpos" ></td>
+                        <td class="spaced-td" ng-bind="data.tneg" ></td>                
+                    </tr>
+                </table>
+                <small><em>P = Present, NP = Not Present</em></small>
+            </div>
+        </div> 
     </div>
 </div>
 <div class="modal-footer">  

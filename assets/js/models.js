@@ -453,7 +453,12 @@
 		accuracy :  Math.round(json['accuracy'] * 100) / 100 ,//ok
 		oob : Math.round(json['forestoobscore'] * 100) / 100  ,//ok
 		precision : Math.round(json['precision'] * 100) / 100,//ok
-		recall  : Math.round(json['recall'] * 100) / 100,//ok
+		sensitivity  : Math.round(json['sensitivity'] * 100) / 100,//ok
+		specificity  : Math.round(json['specificity'] * 100) / 100,//ok
+		tpos : json['tp'],
+		fpos : json['fp'],
+		tneg : json['tn'],
+		fneg : json['fn'],
 		roicount : json['roicount'],//ok
 		hfreq : Math.round(json['roihighfreq']* 100) / 100,//ok
 		lfreq : Math.round(json['roilowfreq']* 100) / 100,//ok
@@ -483,3 +488,4 @@
     );
 }
 )(angular);
+
