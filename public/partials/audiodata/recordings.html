@@ -1,20 +1,97 @@
 <div class="row toolbar">
+    <div class="col-sm-12">
+        <div class="well ">
+            <div class="filter filter-text">Filters <i class="fa fa-filter"></i></div>
+                <div class="filter">
+                    <ui-select multiple ng-model="params.sites" theme="bootstrap" style="width: 300px;">
+                        <ui-select-match placeholder="Sites...">{{$item.name}}</ui-select-match>
+                        <ui-select-choices repeat="item in sites | filter:$select.search">
+                            {{item.name}} 
+                            <span class="badge">{{ item.rec_count }}</span>
+                        </ui-select-choices>
+                    </ui-select>
+                </div>
+                <button class="btn btn-default" ng-click="applyFilters()">Apply filters</button>
+                <button class="btn btn-default" ng-click="resetFilters()">Reset</button>
+        </div>
+        
+        <!-- future filters -->
+        
+        <!-- <div class="col-sm-3">
+            <ui-select multiple ng-model="params.years" theme="bootstrap" style="width: 300px;">
+                <ui-select-match placeholder="Years...">{{$item}}</ui-select-match>
+                <ui-select-choices repeat="item in years | filter:$select.search">
+                    {{item}}
+                </ui-select-choices>
+            </ui-select>
+        </div> -->
+        <!-- <ui-select multiple ng-model="params.months" theme="bootstrap" style="width: 300px;">
+            <ui-select-match placeholder="Months...">{{$item}}</ui-select-match>
+            <ui-select-choices repeat="item in months | filter:$select.search">
+                {{item}}
+            </ui-select-choices>
+        </ui-select>
+        <ui-select multiple ng-model="params.days" theme="bootstrap" style="width: 300px;">
+            <ui-select-match placeholder="Days...">{{$item}}</ui-select-match>
+            <ui-select-choices repeat="item in days | filter:$select.search">
+                {{item}}
+            </ui-select-choices>
+        </ui-select>
+        <ui-select multiple ng-model="params.hours" theme="bootstrap" style="width: 300px;">
+            <ui-select-match placeholder="Hours...">{{$item}}</ui-select-match>
+            <ui-select-choices repeat="item in hours | filter:$select.search">
+                {{item}}
+            </ui-select-choices>
+        </ui-select> -->
+    </div>
+</div>
+<div class="row">
     <div class="col-sm-3">
-            <button class="btn btn-default" ng-click="edit()" ng-class="{ disabled: !selected }">Edit</button>
-            <button class="btn btn-danger" ng-click="del()" ng-class="{ disabled: !checked || !checked.length }">Delete</button>
+            <button class="btn btn-default" ng-click="edit()" ng-class="{ disabled: !selected }"><i class="fa fa-pencil"></i></button>
+            <button class="btn btn-danger" ng-click="del()" ng-class="{ disabled: !checked || !checked.length }"><i class="fa fa-trash"></i></button>
     </div>
     <div class="col-sm-3 col-sm-offset-6">
-        <input class="form-control" type="text" placeholder="Search" ng-model="search">
+        <!-- <input class="form-control" type="text" placeholder="Search" ng-model="search"> -->
     </div>
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <a2-table fields="fields" rows="recs" on-select="" checked="checked" search="search"></a2-table>
+        <div class="list-pagination-row">
+            <pagination total-items="totalRecs" 
+                ng-model="currentPage" 
+                class="pagination-sm" 
+                boundary-links="true" 
+                max-size="10" 
+                rotate="false"
+                num-pages="totalPages"
+                items-per-page="limitPerPage">
+            </pagination> 
+        </div>
+        <div class="list-total">{{ totalRecs }} Recordings</div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <a2-table fields="fields" rows="recs" checked="checked" search="search" ext-sort="sortRecs(sortBy, reverse)"></a2-table>
         <div class="jumbotron" ng-show="(!recs || !recs.length > 0) && !loading">
             <h3>
-                This project don't have any recordings
+                No recordings found
             </h3>
         </div>
         <loader ng-hide="!loading"></loader>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <pagination total-items="totalRecs" 
+            ng-model="currentPage" 
+            class="pagination-sm" 
+            boundary-links="true" 
+            max-size="10" 
+            rotate="false"
+            num-pages="totalPages"
+            items-per-page="limitPerPage">
+        </pagination> 
+        
     </div>
 </div>
