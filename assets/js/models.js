@@ -453,8 +453,8 @@
 		accuracy :  Math.round(json['accuracy'] * 100) / 100 ,//ok
 		oob : Math.round(json['forestoobscore'] * 100) / 100  ,//ok
 		precision : Math.round(json['precision'] * 100) / 100,//ok
-		sensitivity  : Math.round(json['sensitivity'] * 100) / 100,//ok
-		specificity  : Math.round(json['specificity'] * 100) / 100,//ok
+		sensitivity  : json['sensitivity'] != null ? Math.round(json['sensitivity'] * 100) / 100:null,//ok
+		specificity  : json['specificity'] != null ? Math.round(json['specificity'] * 100) / 100:null,//ok
 		tpos : json['tp'],
 		fpos : json['fp'],
 		tneg : json['tn'],

@@ -58,12 +58,12 @@
                     Precision: 
                 </td><td ng-bind="data.precision"></td>
             </tr>
-            <tr>
+            <tr ng-show="data.sensitivity != null">
                 <td >
                     Sensitivity: 
                 </td><td ng-bind="data.sensitivity"></td>
             </tr>
-            <tr>
+            <tr ng-show="data.specificity != null">
                 <td >
                     Specificity: 
                 </td><td ng-bind="data.specificity"></td>
@@ -150,8 +150,8 @@
                 </table>        
             </div>
         </div>
-        <div class="top-buffer"><strong>Confusion Matrix:</strong></div>
-        <div class="row top-buffer">
+        <div class="top-buffer" ng-show="data.tpos != null"><strong>Confusion Matrix:</strong></div>
+        <div class="row top-buffer" ng-show="data.tpos != null">
             <div class="col-sm-1"></div>
             <div class="col-sm-1 rotatedtext">
                 <span><b>Actual</b></span>
