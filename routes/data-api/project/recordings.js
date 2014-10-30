@@ -23,6 +23,36 @@ router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
 });
 
 
+/*
+    /search receives GET params for search recordings
+    
+    required
+        project_id
+        limit
+    
+    optional
+        range: { from, to }
+        sites
+        years
+        months
+        days
+        hours
+        offset
+        sortBy
+        sortRev
+        count
+*/
+router.get('/search', function(req, res, next) {
+    var params = req.query;
+    
+    model.recordings.findProjectRecordings(params, function(err, rows) {
+        if(err) return next(err);
+        
+        res.json(rows);
+    });
+});
+
+
 router.param('oneRecUrl', function(req, res, next, recording_url){
     model.recordings.findByUrlMatch(recording_url, req.project.project_id, {limit:1}, function(err, recordings) {
         if(err){

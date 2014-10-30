@@ -1,8 +1,11 @@
 // dependencies
-var async        = require('async');
-var AWS          = require('aws-sdk');
-var mysql        = require('mysql');
-var util         = require('util');
+var async = require('async');
+var AWS   = require('aws-sdk');
+var mysql = require('mysql');
+var util  = require('util');
+var Joi   = require('joi');
+
+
 var config       = require('../config'); 
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
@@ -419,11 +422,83 @@ var Recordings = {
     
     findProjectRecordings: function(params, callback) {
         var schema = {
-            project_id: Joi.number();
+            project_id: Joi.number().required(),
+            range: Joi.object().keys({
+                from: Joi.date(),
+                to: Joi.date()
+            }).and('from', 'to'),
+            sites:  [Joi.string(), Joi.array().includes(Joi.string())],
+            years:  [Joi.number(), Joi.array().includes(Joi.number())],
+            months: [Joi.number(), Joi.array().includes(Joi.number())],
+            days:   [Joi.number(), Joi.array().includes(Joi.number())],
+            hours:  [Joi.number(), Joi.array().includes(Joi.number())],
+            limit:  Joi.number().required(),
+            offset: Joi.number(),
+            sortBy: Joi.string(),
+            sortRev: Joi.boolean(), 
+            count:  Joi.boolean()
+        };
+        
+        Joi.validate(params, schema, function(err, parameters) {
+            if(err) return callback(err);
             
-        }
+            var list = "SELECT r.recording_id AS id, \n"+
+                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
+                       "       s.name as site, \n"+
+                       "       r.uri, \n"+
+                       "       r.datetime, \n"+
+                       "       r.mic, \n"+
+                       "       r.recorder, \n"+
+                       "       r.version \n";
+            
+            var select = parameters.count ? "SELECT COUNT(*) as count \n" : list;
+            
+            var q = select +
+                    "FROM recordings AS r \n"+
+                    "JOIN sites AS s ON s.site_id = r.site_id \n"+
+                    "WHERE s.project_id = %s \n";
+                    
+            q = util.format(q, parameters.project_id);
+            
+            if(parameters.range) {
+                q += 'AND r.datetime BETWEEN '+ mysql.escape(parameters.range.from) +' AND ' + mysql.escape(parameters.range.to) + ' \n';
+            }
+            
+            if(parameters.sites){
+                q += 'AND s.name IN (' + mysql.escape(parameters.sites) + ') \n';
+            }
+            
+            if(parameters.years){
+                q += 'AND YEAR(r.datetime) IN (' + mysql.escape(parameters.years) + ') \n';
+            }
+            
+            if(parameters.months){
+                q += 'AND MONTH(r.datetime) IN (' + mysql.escape(parameters.months) + ') \n';
+            }
+            
+            if(parameters.days){
+                q += 'AND DATE(r.datetime) IN (' + mysql.escape(parameters.days) + ') \n';
+            }
+            
+            if(parameters.hours){
+                q += 'AND HOUR(r.datetime) IN (' + mysql.escape(parameters.hours) + ') \n';
+            }
+            
+            if(parameters.count !== true) {
+                var sortBy = parameters.sortBy || 'site';
+                var sortRev = parameters.sortRev ? 'DESC' : '';
+                
+                q += 'ORDER BY ' + mysql.escapeId(sortBy) + ' ' + sortRev +' \n';
+            }
+            
+            var offset = parameters.offset || 0;
+            
+            q += 'LIMIT ' + mysql.escape(offset) + ', ' + mysql.escape(offset+ parameters.limit);
+            
+            queryHandler(q, callback);
+        });
     }
 };
-    
+
 module.exports = Recordings;
     

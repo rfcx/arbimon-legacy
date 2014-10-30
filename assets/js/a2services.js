@@ -46,10 +46,12 @@ angular.module('a2services',[])
         getRecs: function(query, callback) {
             if(typeof query === "function") {
                 callback = query;
-                query = "";
+                query = {};
             }
 
-            $http.get('/api/project/'+url+'/recordings/'+query)
+            $http.get('/api/project/'+url+'/recordings/search',{
+                params: query
+            })
             .success(function(data) {
                 callback(data);
             });

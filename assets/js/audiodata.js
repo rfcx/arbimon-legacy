@@ -14,8 +14,47 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         templateUrl: '/partials/audiodata/upload.html'
     });
 })
-.controller('RecsCtrl', function($scope, Project) {
+.controller('RecsCtrl', function($scope, Project, $http) {
     $scope.loading = true;
+    
+    var searchRecs = function(count) {
+        
+        Project.getRecs({
+            project_id: $scope.project.project_id,
+            limit: $scope.limitPerPage,
+            offset: ($scope.currentPage-1) * $scope.limitPerPage,
+            sortBy: $scope.sortKey,
+            sortRev: $scope.reverse,
+            sites: $scope.params.sites ? $scope.params.sites.map(function(site){ return site.name; }) : undefined,
+            count: count
+        },
+        function(data){
+            if(!count) {
+                $scope.recs = data;
+            
+                $scope.recs.forEach(function(rec) {
+                    rec.datetime = new Date(rec.datetime);
+                });
+                $scope.loading = false;
+            }
+            else {
+                $scope.totalRecs = data[0].count;
+            }
+        });
+    };
+    
+    $scope.params = {};
+    $scope.sites = [];
+    $scope.loading = true;
+    $scope.currentPage  = 1;
+    
+    Project.getSites(function(data){
+        $scope.sites = data
+    });
+    
+    // to do advance filters and playlist generation
+    // $scope.hours = d3.range(24);
+    
     $scope.fields = [
         { name: 'Site', key: 'site' },
         { name: 'Time', key: 'datetime' },
@@ -25,16 +64,35 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         { name: 'Filename', key: 'file' },
     ];
     
-    Project.getRecs(function(data) {
-        $scope.recs = data;
+    Project.getInfo(function(data){
+        $scope.project = data;
+        searchRecs(true);
         
-        $scope.recs.forEach(function(rec) {
-            rec.datetime = new Date(rec.datetime);
+        $scope.$watch('currentPage', function(){
+            searchRecs();
         });
-        $scope.loading = false;
+
     });
     
+    $scope.limitPerPage = 20;
+    
     $scope.sortRecs = function(sortKey, reverse) {
+        $scope.sortKey = sortKey;
+        $scope.reverse = reverse;
+        searchRecs();
+    };
+    
+    $scope.applyFilters = function() {
+        $scope.currentPage  = 1;
+        searchRecs(true);
+        searchRecs();
+    };
+    
+    $scope.resetFilters = function() {
+        $scope.currentPage  = 1;
+        $scope.params = {};
+        searchRecs(true);
+        searchRecs();
     };
     
 })
