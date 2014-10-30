@@ -1,8 +1,8 @@
 <div class="row toolbar">
     <div class="col-sm-12">
-        <div class="well ">
-            <div class="filter filter-text">Filters <i class="fa fa-filter"></i></div>
-                <div class="filter">
+        <div class="well a2-filter-well">
+            <div class="a2-filter a2-filter-text">Filters <i class="fa fa-filter"></i></div>
+                <div class="a2-filter">
                     <ui-select multiple ng-model="params.sites" theme="bootstrap" style="width: 300px;">
                         <ui-select-match placeholder="Sites...">{{$item.name}}</ui-select-match>
                         <ui-select-choices repeat="item in sites | filter:$select.search">
@@ -45,15 +45,26 @@
         </ui-select> -->
     </div>
 </div>
-<div class="row">
+
+<!-- need to fix issue #67 -->
+<!-- <div class="row">
     <div class="col-sm-3">
-            <button class="btn btn-default" ng-click="edit()" ng-class="{ disabled: !selected }"><i class="fa fa-pencil"></i></button>
-            <button class="btn btn-danger" ng-click="del()" ng-class="{ disabled: !checked || !checked.length }"><i class="fa fa-trash"></i></button>
+            <button class="btn btn-default" 
+                ng-click="edit()" 
+                ng-class="{ disabled: !checked || !checked.length }"
+                tooltip="Edit recording(s) info"
+                tooltip-trigger="mouseenter">
+                <i class="fa fa-pencil"></i>
+            </button>
+            <button class="btn btn-danger" 
+                ng-click="del()" 
+                ng-class="{ disabled: !checked || !checked.length }"
+                tooltip="Delete recording(s)"
+                tooltip-trigger="mouseenter">
+                <i class="fa fa-trash"></i>
+            </button>
     </div>
-    <div class="col-sm-3 col-sm-offset-6">
-        <!-- <input class="form-control" type="text" placeholder="Search" ng-model="search"> -->
-    </div>
-</div>
+</div> -->
 <div class="row">
     <div class="col-sm-12">
         <div class="list-pagination-row">
@@ -72,7 +83,7 @@
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <a2-table fields="fields" rows="recs" checked="checked" search="search" ext-sort="sortRecs(sortBy, reverse)"></a2-table>
+        <a2-table fields="fields" rows="recs" checked="checked" ext-sort="sortRecs(sortBy, reverse)" no-select></a2-table>
         <div class="jumbotron" ng-show="(!recs || !recs.length > 0) && !loading">
             <h3>
                 No recordings found

@@ -8,14 +8,13 @@
     "angular": "~1.2.25",
     "angular-bootstrap": "~0.11.0",
     "angular-ui-router": "~0.2.11",
-    "d3": "~3.4.11",
-    "angular-audio": "*",
-    "angular-google-maps": "~1.2.2",
     "ui-router-extras": "~0.0.10",
-    "ng-table" : "~0.3.3",
-    "angular-ui-select" : "~0.8.2",
-    "selectize" : "~0.8.5",
+    "angular-file-upload": "~1.1.1",
+    "d3": "~3.4.11",
+    "ng-table": "~0.3.3",
+    "angular-ui-select": "~0.8.2",
+    "selectize": "~0.8.5",
     "moment": "~2.8.3",
-    "angular-file-upload": "~1.1.1"
+    "angular-audio": "*"
   }
 }

@@ -1,11 +1,16 @@
 <div class="row toolbar">
     <div class="col-sm-5">
-            <button class="btn btn-default" ng-click="create()">
+            <button class="btn btn-default" 
+                ng-click="create()"
+                tooltip="Add a site"
+                tooltip-trigger="mouseenter">
                 <i class="fa fa-plus"></i>
             </button>
             <button class="btn btn-default"
                 ng-click="edit()"
-                ng-class="{ disabled: !selected }">
+                ng-class="{ disabled: !selected }"
+                tooltip="Edit site info"
+                tooltip-trigger="mouseenter">
                 <i class="fa fa-pencil"></i>
             </button>
             <!-- <button class="btn btn-danger"
@@ -20,7 +25,7 @@
 </div>
 <div class="row">
     <div class="col-sm-7">
-        <a2-table fields="fields" rows="sites" on-select="sel($index)" checked="checked" search="search"></a2-table>
+        <a2-table fields="fields" rows="sites" on-select="sel($index)" checked="checked" search="search" no-checkbox></a2-table>
         <div class="jumbotron" ng-show="(!sites || !sites.length > 0) && !loading">
             <h3 class="text-center">
                 This project don't have any <i class="fa fa-map-marker"></i> sites
