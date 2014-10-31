@@ -14,7 +14,10 @@ class Recanalizer:
         self.spectrogram()
         self.featureVector()
         self.tempFolder = tempFolder
-        
+    
+    def getVector(self ):
+        return self.distances
+    
     def features(self):
         return [numpy.mean(self.distances), (max(self.distances)-min(self.distances)),
                 max(self.distances), min(self.distances)

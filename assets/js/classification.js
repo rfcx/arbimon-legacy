@@ -1,7 +1,8 @@
 (function(angular)
 { 
-    var classification = angular.module('classification', ['ui.bootstrap' , 'a2services']);
+    var classification = angular.module('classification', ['ui.bootstrap' , 'a2services','angularCharts']);
     var template_root = '/partials/classification/';
+
     classification.controller
     ('ClassificationCtrl' , 
         function ($scope,$http,$modal,$filter,$sce,Project, ngTableParams,JobsData) 
@@ -11,7 +12,7 @@
             {
                 $scope.projectData = data;
                 pid = data.project_id;
-                
+                $scope.url = data.url;
                 $http.get('/api/project/'+data.url+'/classifications')
                 .success
                 (
@@ -50,6 +51,8 @@
                 function (classi_id)
                 {
                     var url = $scope.projectData.url;
+                    var pid = $scope.projectData.project_id;
+                    $scope.classi_id = classi_id;
                     $http.get('/api/project/'+url+'/classification/'+classi_id)
                     .success
                     (
@@ -61,11 +64,24 @@
                                 {
                                     templateUrl: template_root + 'classinfo.html',
                                     controller: 'ClassiDetailsInstanceCtrl',
+                                    windowClass: 'details-modal-window',
                                     resolve: 
                                     {
                                         data: function () 
                                         {
                                           return $scope.data;
+                                        },
+                                        url : function ()
+                                        {
+                                          return $scope.url;
+                                        },
+                                        id : function ()
+                                        {
+                                          return $scope.classi_id;
+                                        },
+                                        pid : function ()
+                                        {
+                                            return $scope.pid;
                                         }
                                     }
                                 }
@@ -75,6 +91,7 @@
                             (
                                 function () 
                                 {
+                                    
                                 }
                             );
                             
@@ -105,7 +122,7 @@
                                     (
                                         {
                                             templateUrl: template_root + 'createnewclassification.html',
-                                            controller: 'CreateNewClassificationInstanceCtrl',                        
+                                            controller: 'CreateNewClassificationInstanceCtrl',
                                             resolve: 
                                             {
                                                 data: function () 
@@ -162,14 +179,90 @@
         }
     ).controller
     ('ClassiDetailsInstanceCtrl', 
-        function ($scope, $modalInstance,$http, data) 
+        function ($scope, $modalInstance,$http, data,url,id,pid) 
         {
-            $scope.data = data;
+            $scope.data = data.data;
+            $scope.pid = pid;
+            $scope.url = url;
+            $scope.id = id;
+            $scope.recs = [];
+            $scope.showMore = false;
+            $scope.currentPage = 0;
+            $scope.maxPerPage = 1;
+            $scope.totalRecs = Math.ceil($scope.data[0].total/$scope.maxPerPage);
+           
             $scope.ok = function () {
 
 		$modalInstance.close( );
 
-            };         
+            };
+
+            $scope.next= function () {
+
+                $scope.currentPage = $scope.currentPage + 1;
+                if ($scope.currentPage*$scope.maxPerPage >= $scope.data[0].total) {
+                    
+                    $scope.currentPage = $scope.currentPage - 1;
+                }
+                else{
+                    $http.get('/api/project/'+$scope.url+'/classification/'+$scope.id+'/more/'+($scope.currentPage*$scope.maxPerPage)+"/"+$scope.maxPerPage)
+                    .success
+                    (
+                        function(dataRec) 
+                        {
+                            $scope.recs =dataRec;
+                            jsonArr = JSON.parse(dataRec[0].json_stats)
+                            $scope.minv = parseFloat(jsonArr['minv'])
+                            $scope.maxv = parseFloat(jsonArr['maxv'])
+
+                        }
+                    );
+                }
+            };
+            $scope.prev= function () {
+                $scope.currentPage = $scope.currentPage - 1;
+                if ($scope.currentPage  < 0) {
+                    $scope.currentPage =0;
+                }
+                else
+                {
+                    $http.get('/api/project/'+$scope.url+'/classification/'+$scope.id+'/more/'+($scope.currentPage*$scope.maxPerPage)+"/"+$scope.maxPerPage)
+                    .success
+                    (
+                        function(dataRec) 
+                        {
+                            $scope.recs =dataRec;
+                            jsonArr = JSON.parse(dataRec[0].json_stats)
+                            $scope.minv = parseFloat(jsonArr['minv'])
+                            $scope.maxv = parseFloat(jsonArr['maxv'])
+                        }
+                    );
+                }
+            };
+            $scope.more= function () {
+
+		$scope.showMore = true;
+                if ($scope.recs.length <1)
+                {
+                    $http.get('/api/project/'+$scope.url+'/classification/'+$scope.id+'/more/0/'+$scope.maxPerPage)
+                    .success
+                    (
+                        function(dataRec) 
+                        {
+                            $scope.recs = dataRec;
+                            jsonArr = JSON.parse(dataRec[0].json_stats)
+                            $scope.minv = parseFloat(jsonArr['minv'])
+                            $scope.maxv = parseFloat(jsonArr['maxv'])
+                        }
+                    );
+                }
+            };
+            
+            $scope.less= function () {
+
+		$scope.showMore = false;
+
+            };
         }
     ).controller
     ('CreateNewClassificationInstanceCtrl', 
@@ -271,9 +364,60 @@
     ('a2Classificationlist',
         function()
         {
-            return  {restrict : 'E', templateUrl: template_root + 'classificationlist.html'} 
+            return  {restrict : 'E',
+                    templateUrl: template_root + 'classificationlist.html'} 
 
         }
-    );
+    ).directive
+    ('a2Vectorchart',
+        function()
+        {
+            return  {restrict : 'E',
+                    scope: {
+                        vurl: '=',
+                        minvect: '=',
+                        maxvect: '='
+                    },
+                    templateUrl: template_root + 'vectorchart.html',
+                    controller: ['$scope', '$http', function($scope, $http) {
+                        $scope.getVect = function(path,minve,maxve,ctx) {
+                        $http.post('/api/project/'+$scope.url+'/classification/vector', 
+                            {
+                                v:path
+                            }
+                        ).
+                        success
+                        (
+                            function(data, status, headers, config) 
+                            {
+                                $scope.data =  data.data.split(",") ;
+                                $scope.dataLength = $scope.data.length;
+                                var canvasheight = 50;
+                                var i = 0;
+                                ctx.width = $scope.dataLength
+                                ctx.height = canvasheight 
+                                ctx = ctx.getContext('2d');
+                                ctx.beginPath();
+                                ctx.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+                                for(var i =1; i < $scope.data.length;i++)
+                                {
+                                    ctx.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+
+                                }
+                                ctx.strokeStyle = "#000";
+                                ctx.stroke();                              
+                            }
+                        );
+                        };
+                    }],
+                    link: function (scope, element) {
+                          var ctx = element.children()
+                          ctx = ctx[0];
+                          scope.getVect(scope.vurl,parseFloat(scope.minvect),parseFloat(scope.maxvect),ctx)
+                      }
+                    } 
+
+        }
+     );
 }
 )(angular);

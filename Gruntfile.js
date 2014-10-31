@@ -117,6 +117,13 @@ module.exports = function(grunt) {
                 src: 'bower_components/angular-file-upload/**/*.js',
                 dest: 'public/assets/angular-file-upload/'
             },
+
+            angularCharts: {
+                expand: true,
+                flatten: true,
+                src: ' bower_components/angular-charts/dist/angular-charts.min.js',
+                dest: 'public/assets/angular-charts/'
+            }
         },
 
         concat: {

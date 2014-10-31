@@ -354,8 +354,19 @@ var Projects = {
         var q = "select  c.`species_id` ,c.`songtype_id`,c.`present`  , "+
                 " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
                 " CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name  "+
-                " from  `classification_results` c,`species` as s , `songtypes` as st where c.`job_id` = "+cid+
+                " from  `classification_results` c,`species` as s , `songtypes` as st where c.`job_id` = "+mysql.escape(cid)+
                 " and c.`species_id` = s.`species_id` and c.`songtype_id` = st.`songtype_id`" ;
+
+        queryHandler(q, callback);
+    },
+    
+    classificationDetailMore: function(project_url,cid,from,total, callback) {
+        var q = "select cs.`json_stats`,  c.`species_id` ,c.`songtype_id`,c.`present`  , c.`recording_id`,SUBSTRING_INDEX(SUBSTRING_INDEX( r.`uri` , '.', 1 ),'/',-1 ) as recname ,CONCAT( SUBSTRING_INDEX( r.`uri` , '.', 1 ) , '.thumbnail.png') as uri,"+
+                " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
+                " CONCAT(SUBSTRING_INDEX( m.`uri` , '.', 1 ),'/classification_',c.`job_id`,'_',SUBSTRING_INDEX(r.`uri` ,'/',-1 ),'.vector') as vect,"+
+                " CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name  "+
+                " from `classification_stats`  cs , `models` m ,`job_params_classification` jpc, `recordings` r,  `classification_results` c,`species` as s , `songtypes` as st where c.`job_id` = "+mysql.escape(cid)+
+                " and c.`job_id` = cs.`job_id` and m.`model_id` = jpc.`model_id` and jpc.`job_id` = c.`job_id` and c.`species_id` = s.`species_id` and c.`songtype_id` = st.`songtype_id` and r.`recording_id` = c.`recording_id` LIMIT "+parseInt(from)+" , "+parseInt(total) ;
 
         queryHandler(q, callback);
     },

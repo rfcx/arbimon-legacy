@@ -16,6 +16,7 @@
     "angular-ui-select" : "~0.8.2",
     "selectize" : "~0.8.5",
     "moment": "~2.8.3",
-    "angular-file-upload": "~1.1.1"
+    "angular-file-upload": "~1.1.1",
+    "angular-charts" : "~0.2.6"
   }
 }

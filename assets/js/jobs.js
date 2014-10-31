@@ -145,7 +145,7 @@
                     JobsData.startTimer();
                 }
             );
-            
+
             $scope.$on('$destroy', function () { JobsData.cancelTimer() });
             
             $scope.hideJob =
@@ -196,8 +196,6 @@
                                                     JobsData.updateJobs();
                                                     $scope.successInfo = "Job Hidden Successfully";
                                                     $scope.showSuccesss = true;
-                                                    $scope.showClassifications = true;
-                                                    $scope.showTrainings = true;
                                                     $("#successDivs").fadeTo(3000, 500).slideUp(500,
                                                    function()
                                                     {
@@ -229,8 +227,6 @@
                                 JobsData.updateJobs();
                                 $scope.successInfo = "Job Hidden Successfully";
                                 $scope.showSuccesss = true;
-                                $scope.showClassifications = true;
-                                $scope.showTrainings = true;
                                 $("#successDivs").fadeTo(3000, 500).slideUp(500,
                                function()
                                 {
@@ -242,43 +238,20 @@
                 }
             };
             
-            $scope.$watch('showTrainings ',
-                function()
+            $scope.showOrHide = function(type)
+            {
+                if (type==1)
                 {
-                    if ($scope.showTrainings )
-                    {
-                        $('.jobtype1').show();
-                    }
-                    else
-                    {
-                        $('.jobtype1').hide();
-                        if (!$scope.showClassifications )
-                        {
-                           $('.jobtype2').show();
-                           $scope.showClassifications = true;
-                        }
-                    }
+                    return($scope.showTrainings )
                 }
-            );
-                        
-            $scope.$watch('showClassifications',
-                function()
+                
+                if (type==2)
                 {
-                    if ($scope.showClassifications)
-                    {
-                        $('.jobtype2').show();
-                    }
-                    else
-                    {
-                        $('.jobtype2').hide();
-                        if (!$scope.showTrainings )
-                        {
-                           $('.jobtype1').show();
-                           $scope.showTrainings = true;
-                        }
-                    }
+                    return($scope.showClassifications)
                 }
-            );
+                else return false;
+            };
+            
         }
     );   
 }

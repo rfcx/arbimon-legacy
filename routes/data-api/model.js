@@ -7,6 +7,7 @@ var mysql = require('mysql');
 var path = require('path');
 var jobQueue = require('../../utils/jobqueue');
 var scriptsFolder = __dirname+'/../../scripts/PatternMatching/'
+var config = require('../../config/aws.json');
 
 
 router.get('/project/:projectUrl/models', function(req, res) {
@@ -61,7 +62,15 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res) {
             var rr = {"species":species[key],"songtype":songtype[key],"total":total[key],"data":data[key],"percentage":per }
             results.push(rr);
         }
-        res.json(results);
+        res.json({"data":results});
+    });
+});
+
+router.get('/project/:projectUrl/classification/:cid/more/:f/:t', function(req, res) {
+console.log('here mnore')
+    model.projects.classificationDetailMore(req.params.projectUrl,req.params.cid,req.params.f,req.params.t, function(err, rows) {
+        if(err) throw err;
+        res.json(rows);
     });
 });
 
@@ -306,6 +315,22 @@ router.get('/project/:projectUrl/job/hide/:jId', function(req, res) {
             res.json(row);
         });
     });
+});
+
+router.post('/project/:projectUrl/classification/vector', function(req, res) {
+
+    var aws = require('knox').createClient({
+        key: config.accessKeyId
+      , secret: config.secretAccessKey
+      , bucket: config.bucketName
+    });
+
+    aws.getFile('/'+req.body.v, function(err, resp){
+        var outData = ''
+        resp.on('data', function(chunk) { outData = outData + chunk; });
+        resp.on('end', function(chunk) { res.json({"data":outData}); });
+    });
+
 });
 
 module.exports = router;

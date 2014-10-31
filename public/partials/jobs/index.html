@@ -22,7 +22,7 @@
                 </div>
             </div>
             <div data-ng-repeat="o in jobs" >
-                <div class="row" ng-class="'jobtype'+o.job_type_id">
+                <div class="row" ng-show="showOrHide(o.job_type_id)" >
                     <div class="bordered"></div>
                     <div class="col-sm-2">{{o.name}}</div>
                     <div class="col-sm-4" >
