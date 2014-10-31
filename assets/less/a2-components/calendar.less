@@ -1,0 +1,36 @@
+.calendar {
+    position: absolute;
+    z-index: 2000;
+    box-shadow: 0px 6px 6px 3px rgba(0, 0, 0, 0.7);
+    border-radius: 5px;
+    display: none;
+    background-color: white;
+    -moz-user-select: none;
+    -webkit-select: none;
+    user-select: none;
+}
+.cal-level-0 {
+    fill: white;
+}
+.cal-level-1 {
+    fill: #adef9c;
+}
+.cal-level-50 {
+    fill: #70dd3a;
+}
+.cal-level-100 {
+    fill: #5ec014;
+}
+.cal-disabled {
+    pointer-events: none;
+}
+.cal-disabled text {
+    stroke: #ccc;
+    pointer-events: none;
+}
+.hover rect {
+    stroke: transparent;
+}
+.hover:hover rect {
+    stroke: black;
+}
