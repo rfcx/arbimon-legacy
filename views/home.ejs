@@ -12,7 +12,15 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-6">
-            <h3>Projects <button class="btn btn-default" ng-click="createProject()"><i class="fa fa-plus"></i></button></h3>
+            <h3>
+                Projects 
+                <button class="btn btn-default" 
+                    tooltip="Create a project"
+                    tooltip-trigger="mouseenter"
+                    ng-click="createProject()">
+                    <i class="fa fa-plus"></i>
+                </button>
+            </h3>
             <div class="list-group">
                 <dl>
                     <a ng-class="{'disabled': !project.is_enabled }" 

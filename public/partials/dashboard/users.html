@@ -16,7 +16,9 @@
                         typeahead-editable="false">
                     <span class="input-group-btn">
                         <button class="btn btn-default"
-                            ng-click="add()">
+                            ng-click="add()"
+                            tooltip="Add user"
+                            tooltip-trigger="mouseenter">
                             <i class="fa fa-plus"></i>
                         </button>
                     </span>
@@ -39,7 +41,9 @@
                                         <option ng-repeat="role in roles">{{ role.name }}</option>
                                     </select>
                                     <button class="btn btn-danger"
-                                        ng-click="del($index)">
+                                        ng-click="del($index)"
+                                        tooltip="Remove user"
+                                        tooltip-trigger="mouseenter">
                                         <i class="fa fa-times"></i>
                                     </button>
                                 </span>

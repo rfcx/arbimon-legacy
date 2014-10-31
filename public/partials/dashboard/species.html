@@ -4,13 +4,15 @@
         Project Species
         <button class="btn btn-default"
             ng-click="add()"
-            tooltip="Select a species and a song"
+            tooltip="Select a species song"
             tooltip-trigger="mouseenter">
             <i class="fa fa-plus"></i>
         </button>
         <button class="btn btn-danger"
             ng-disabled="!checked || !checked.length"
-            ng-click="del()">
+            ng-click="del()"
+            tooltip="Remove species song"
+            tooltip-trigger="mouseenter">
             <i class="fa fa-trash"></i>
         </button>
 
