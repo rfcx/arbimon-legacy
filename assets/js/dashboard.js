@@ -30,7 +30,7 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
     })
 
 })
-.controller('SummaryCtrl', function($scope, Project) {
+.controller('SummaryCtrl', function($scope, Project, a2TrainingSets) {
     
     $scope.loading = true;
 
@@ -40,6 +40,26 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
     
     Project.getClasses(function(species){
         $scope.species = species;
+    });
+    
+    Project.getModels(function(err, models){
+        if(err) return alert(err);
+        
+        $scope.modelsQty = models.length;
+    });
+    
+    Project.getClassi(function(err, classi){
+        if(err) return alert(err);
+        
+        $scope.classiQty = classi.length;
+    });
+    
+    Project.validationsCount(function(count){
+        $scope.valsQty = count;
+    });
+    
+    a2TrainingSets.getList(function(trainingSets){
+        $scope.trainingSetsQty = trainingSets.length;
     });
 
     var mapOptions = {

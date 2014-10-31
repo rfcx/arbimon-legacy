@@ -332,6 +332,14 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
     });
 });
 
+router.get('/:projectUrl/validations/count', function(req, res, next) {
+    model.projects.validationsCount(req.project.project_id, function(err, result) {
+        if(err) return next(err);
+        
+        res.json({ count: result[0].count });
+    });
+});
+
 router.use('/:projectUrl/recordings', recording_routes);
 router.use('/:projectUrl/training-sets', training_set_routes);
 

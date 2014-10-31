@@ -1,28 +1,5 @@
-
 .dash-body {
     padding-top:20px;
-}
-
-.a2-table {
-
-    & th:first-child,
-    & td:first-child {
-        width:10px;
-    }
-
-    & td {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        white-space: nowrap;
-    }
-}
-
-.toolbar {
-    padding: 10px;
 }
 
 .map { height: 400px; }
@@ -39,4 +16,58 @@
 
 .username {
     font-size:1.5em;
+}
+
+.project-progress {
+    padding-top:10px;
+    padding-bottom:10px;
+    ul {
+        padding: 0px;
+    }
+    
+    li:first-child {
+        border-left: 1px solid;
+        border-color: transparent;
+        border-radius: 5px 0px 0px 5px;
+    }
+    li:last-child {
+        border-radius: 0px 5px 5px 0px;
+    }
+    
+    li {
+        display:inline-block;
+        border-top: 1px solid;
+        border-bottom: 1px solid;
+        border-right: 1px solid;
+        margin-top: px;
+        margin-left: -2px;
+        margin-right: -2px;
+        padding: 5px;
+        border-color: transparent;
+        width: 30px;
+        height: 20px;
+        vertical-align: middle;
+    }
+    
+    .project-progress-level1 {
+        border-color:#56bb47 !important;
+        &.full {
+            background-color:#98d68c;
+        }
+    }
+    
+    .project-progress-level2 {
+        border-color:#47a2c9 !important;
+        &.full {
+            background-color:#a9d4ea;
+        }
+    }
+    
+    .project-progress-level3 {
+        border-color:#b86ef5 !important;
+        &.full {
+            background-color:#bc90e9;
+        }
+    }   
+    
 }

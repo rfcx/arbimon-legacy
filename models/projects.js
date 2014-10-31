@@ -388,6 +388,13 @@ var Projects = {
             " (SELECT count(*) as absent FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+"and `songtype_id` = "+mysql.escape(songtype)+"  and present = 0) c ";
         queryHandler(q, callback);
     },
+    
+    validationsCount: function(project_id, callback) {
+        var q = "SELECT count(*) AS count \n"+
+                "FROM recording_validations AS rv\n"+
+                "WHERE rv.project_id = " + mysql.escape(project_id);
+        queryHandler(q, callback);
+    },
    
     activeJobs: function(project_url, callback) {
         var q = "(SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` , " +

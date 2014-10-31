@@ -9,28 +9,29 @@ var jobQueue = require('../../utils/jobqueue');
 var scriptsFolder = __dirname+'/../../scripts/PatternMatching/'
 
 
-router.get('/project/:projectUrl/models', function(req, res) {
+router.get('/project/:projectUrl/models', function(req, res, next) {
 
     model.projects.modelList(req.params.projectUrl, function(err, rows) {
-        if(err) throw err;
+        if(err) return next(err);
 
         res.json(rows);
     });
 });
 
-router.get('/project/:projectUrl/classifications', function(req, res) {
+router.get('/project/:projectUrl/classifications', function(req, res, next) {
 
     model.projects.classifications(req.params.projectUrl, function(err, rows) {
-        if(err) throw err;
+        if(err) return next(err);
 
         res.json(rows);
     });
 });
 
-router.get('/project/:projectUrl/classification/:cid', function(req, res) {
+router.get('/project/:projectUrl/classification/:cid', function(req, res, next) {
 
     model.projects.classificationDetail(req.params.projectUrl,req.params.cid, function(err, rows) {
-        if(err) throw err;
+        if(err) return next(err);
+        
         i = 0
         var data = []
         var total = []
@@ -65,19 +66,19 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res) {
     });
 });
 
-router.get('/project/:projectUrl/models/forminfo', function(req, res) {
+router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 
     model.models.types( function(err, row1) {
-        if(err) throw err;
+        if(err) return next(err);
         model.projects.trainingSets( req.params.projectUrl, function(err, row2) {
-            if(err) throw err;
+            if(err) return next(err);
                 res.json({ types:row1 , trainings:row2});
         });
 
     });
 });
 
-router.post('/project/:projectUrl/models/new', function(req, res) {
+router.post('/project/:projectUrl/models/new', function(req, res, next) {
 
     model.projects.findByUrl(req.params.projectUrl, 
         function(err, rows) 
@@ -161,7 +162,7 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
 
 });
 
-router.post('/project/:projectUrl/classification/new', function(req, res) {
+router.post('/project/:projectUrl/classification/new', function(req, res, next) {
     
     model.projects.findByUrl(req.params.projectUrl, 
         function(err, rows) 
@@ -240,19 +241,19 @@ router.post('/project/:projectUrl/classification/new', function(req, res) {
     );
 });
 
-router.get('/project/:projectUrl/models/:mid', function(req, res) {
+router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
 
     model.models.details(req.params.mid, function(err, row) {
-        if(err) throw err;        
+        if(err) return next(err);   
         res.json(row);
     });
 });
 
-router.get('/project/:projectUrl/models/:mid/delete', function(req, res) {
+router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
     model.projects.findByUrl(req.params.projectUrl, 
         function(err, rows) 
         {
-            if(err){ next(err); return; }
+            if(err) return next(err);
             
             if(!rows.length){
                 res.status(404).json({ error: "project not found"});
@@ -268,7 +269,7 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res) {
             model.models.delete(req.params.mid, 
                 function(err, row) 
                 {
-                    if(err) throw err;
+                    if(err) return next(err);
                     var rows = "Deleted model";
                     res.json(rows);
                 }
@@ -277,31 +278,31 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res) {
     );
 });
 
-router.get('/project/:projectUrl/validations/:species/:songtype', function(req, res) {
+router.get('/project/:projectUrl/validations/:species/:songtype', function(req, res, next) {
 
     model.projects.validationsStats(req.params.projectUrl,req.params.species,req.params.songtype, function(err, row) {
-        if(err) throw err;
+        if(err) return next(err);
 
         res.json(row);
     });
 });
 
-router.get('/project/:projectUrl/progress', function(req, res) {
+router.get('/project/:projectUrl/progress', function(req, res, next) {
 
     model.projects.activeJobs(req.params.projectUrl, function(err, row) {
-        if(err) throw err;
+        if(err) return next(err);
 
         res.json(row);
     });
 });
 
-router.get('/project/:projectUrl/job/hide/:jId', function(req, res) {
+router.get('/project/:projectUrl/job/hide/:jId', function(req, res, next) {
 
     model.jobs.hide(req.params.jId, function(err, rows) {
         if(err) res.json('{ "err" : "Error removing job"}');
 
         model.projects.activeJobs(req.params.projectUrl, function(err, row) {
-            if(err) throw err;
+            if(err) return next(err);
     
             res.json(row);
         });
