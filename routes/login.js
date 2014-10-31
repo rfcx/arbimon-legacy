@@ -30,6 +30,9 @@ router.use(function(req, res, next) {
 });
 
 router.get('/login', function(req, res) {
+    if(req.session) { 
+        if(req.session.loggedIn) return res.redirect('/home'); 
+    }   
     res.render('login', { message: '' });
 });
                                                         
