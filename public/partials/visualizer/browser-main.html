@@ -35,6 +35,25 @@
                         datepicker-mode="browser.dates.datepickerMode" update-counter="browser.dates.update_time"
                         date-disabled="browser.dates.disabled(date, mode, $scope)"></datepicker2>
                 </div>
+                <!--
+<button class="btn btn-block btn-default" role="button" data-toggle="dropdown" data-target="body > .dropdown.browser-dropdown">
+    <span class="fa" ng-class="{'fa-calendar' : !browser.loading.dates, 'fa-spinner fa-spin': browser.loading.dates}"></span>
+    {{browser.selection.date || "[date]" | date : 'mediumDate'}}
+    <span class="caret"></span>
+</button>
+<div class="browser-dropdown dropdown" a2-insert-in="body" a2-keep-position="true" >
+    <div class="dropdown-menu datepicker" role="menu" aria-labelledby="dLabel">
+        <div ng-show="browser.loading.dates">
+            <a><i class="fa fa-spinner fa-spin"></i> Loading Times</a>
+        </div>
+        <yearpick
+            ng-model="browser.selection.date"
+            year="browser.selection._year"
+            dateCount="browser.selection.dateCounts"
+        ></yearpick>
+    </div>
+</div>
+                -->
             </div>
         </div>
     </div>

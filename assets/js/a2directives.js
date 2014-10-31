@@ -1,3 +1,36 @@
+
+// add parent tag selector
+$.expr.filter.UP_PARENT_SPECIAL = function(_1){ 
+    var times = (_1 && _1.length) || 1;
+    return $.expr.createPseudo(function(seed,matches,_3,_4){
+        var dups=[];
+        seed.forEach(function(e, i){
+            var p=e;
+            for(var t=times; t > 0; --t){
+                p = p && (p.nodeType == 9 || p.parentNode.nodeType == 9  ? p : p.parentNode);
+            }
+            if(p){
+                for(var di=0, de=dups.length; di < de; ++di){
+                    if(dups[di] === p){
+                        p = null;
+                        break;
+                    }
+                }
+                if(p){
+                    dups.push(p);
+                }
+            }
+            matches[i] = p;
+            seed[i] = !p;
+        })
+        
+        return true;
+    })
+};
+$.expr.match.needsContext = new RegExp($.expr.match.needsContext.source + '|^(\^)');
+$.expr.match.UP_PARENT_SPECIAL = /^(\^+)/;
+
+
 angular.module('a2directives', [])
 .directive('a2GlobalKeyup', function($timeout){
     return {
@@ -257,6 +290,7 @@ angular.module('a2directives', [])
         }
     };
  })
+ 
  .directive('loader', function() {
      return {
          restrict: 'E',
@@ -264,29 +298,39 @@ angular.module('a2directives', [])
      }
  })
  
- /*
+ /**
   yearpick - complete year date picker
   
   example usage:
   <div class="dropdown">
-    <button ng-model="dia" yearpick disable-empty="true" date-count="dateData">
+    <button ng-model="dia" yearpick disable-empty="true" year="year" date-count="dateData">
         <span ng-hide="dia"> Select Date </span>
         {{ dia | date: short }}
     </button>
   </div>
+  or, if you just want to show the component :
+  <yearpick ng-model="dia" yearpick disable-empty="true" year="year" date-count="dateData"></yearpick>
  */
  .directive('yearpick', function() {
     return {
-        restrict: 'A',
+        restrict: 'AE',
         scope: {
             ngModel: '=',
+            year : '=',
             dateCount: '=',
             disableEmpty: '&'
         },
         link: function(scope, element, attrs) {
             // console.log(attrs);
-            var popup = $('<div></div>').insertAfter(element);
-            popup.addClass('calendar');
+            var is_a_popup = !/yearpick/i.test(element[0].tagName);
+            var popup;
+            if(is_a_popup){
+                popup = $('<div></div>').insertAfter(element)
+                popup.addClass('calendar');
+            } else {
+                popup = element;
+                popup.addClass('calendar').show();
+            }
             
             var weekOfMonth = function(d) {
                 var firstDay = new Date(d.toString());
@@ -297,7 +341,9 @@ angular.module('a2directives', [])
             var monthName = d3.time.format('%B');
             var dateFormat = d3.time.format("%Y-%m-%d");
             
-            var year = (new Date()).getFullYear();
+            if(!scope.year){
+                scope.year = (new Date()).getFullYear();
+            }
             var cubesize = 19;
             var width = 600;
             var height = 510;
@@ -314,6 +360,7 @@ angular.module('a2directives', [])
             var prev = svg.append('a');
             var next = svg.append('a');
             
+            scope.$watch('year', draw);
             
             prev.append('text')
             .attr('text-anchor', 'start')
@@ -324,8 +371,8 @@ angular.module('a2directives', [])
             .html('&#xf060');
             
             prev.on('click', function(){
-                --year;
-                draw();
+                d3.event.preventDefault();
+                --scope.year;
             });
             
             
@@ -338,9 +385,12 @@ angular.module('a2directives', [])
             .html('&#xf061');
             
             next.on('click', function(){
-                ++year;
-                draw();
+                d3.event.preventDefault();
+                ++scope.year;
             });
+            
+            var scale = {scale:[1, 50, 100], labels:['0','1','50','100']};
+            var color = d3.scale.threshold().domain(scale.scale).range(scale);
             
             var icon = legend.selectAll('g')
             .data(['1','50','100'])
@@ -390,7 +440,7 @@ angular.module('a2directives', [])
             };
             
             var draw = function() {
-                calendar = cal.selectAll('g').data([year]);
+                calendar = cal.selectAll('g').data([scope.year]);
                 
                 var title = calendar.enter().append('g');
                 
@@ -435,7 +485,7 @@ angular.module('a2directives', [])
                 
                 days = mon.selectAll('g')
                 .data(function(d) { 
-                    return d3.time.days(new Date(year, d.getMonth(), 1), new Date(year, d.getMonth() + 1, 1)); 
+                    return d3.time.days(new Date(d.getFullYear(), d.getMonth(), 1), new Date(d.getFullYear(), d.getMonth() + 1, 1)); 
                 });
                 
                 days.enter().append('a');
@@ -444,8 +494,9 @@ angular.module('a2directives', [])
                 .attr('class', 'hover')
                 .on('click', function(d){
                     scope.$apply(function() {
+                        d3.event.preventDefault();
                         scope.ngModel = d;
-                        popup.css('display', 'none');
+                        is_a_popup && popup.css('display', 'none');
                     });
                 });
                 
@@ -489,5 +540,51 @@ angular.module('a2directives', [])
             });
         }
     };
+})
+.directive('a2InsertIn', function(){
+    var count=1;
+    return {
+        restrict: 'A',
+        link: function ($scope, $element, $attr){
+            var anchor = $('<div class="a2-insert-in-anchor"></div>')
+                .attr('id', 'a2InsertInAnchor'+(count++));
+                
+            var is_truthy = function(v){
+                return (v) && ~/no|false|0/.test(''+v);
+            }
+            var keep_position = is_truthy($attr.a2KeepPosition);
+            var target = $($attr.a2InsertIn);
+            
+            console.log('inserting ', $element, ' in ', target, keep_position); 
+            $element.replaceWith(anchor).appendTo(target);
+            
+            var reposition_element=null;
+            if(keep_position){
+                var comp_pos = function(el){
+                    return $(el).offset();
+                }
+                reposition_element = function(){
+                    $('.a2-insert-in-anchor')
+                    var po = comp_pos($element.offsetParent());
+                    var ao = comp_pos(anchor);
+                    ao.position='absolute';
+                    ao.top  -= po.top;
+                    ao.left -= po.left;
+                    $element.css(ao);
+                };
+                $('.a2-insert-in-anchor').parents().each(function(i, e){
+                    var $e=$(e);
+                    if(!/visible|hidden/.test($e.css('overflow'))){
+                        $e.scroll(reposition_element);
+                    }
+                });
+                reposition_element();
+            }
+            
+            anchor.on('$destroy', function(){
+                $element.remove();
+            })
+        }        
+    }
 })
  ;
