@@ -89,6 +89,15 @@ router.get('/available/:recUrl?', function(req, res, next) {
     });
 });
 
+router.get('/tiles/:oneRecUrl/:i/:j', function(req, res, next) {
+    var i = req.param('i') | 0;
+    var j = req.param('j') | 0;
+    model.recordings.fetchOneSpectrogramTile(req.recording, i, j, function(err, file){
+        if(err || !file){ next(err); return; }
+        res.sendFile(file.path);
+    });
+});
+
 
 router.get('/:get/:oneRecUrl?', function(req, res, next) {
     var get       = req.param('get');
@@ -96,7 +105,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
     var and_return = {
         recording : function(err, recordings){
             if(err){ next(err); return; }
-            res.json(recordings ? recordings[0] : null);
+            res.json(recordings instanceof Array ? recordings[0] : recordings);
         },
         file : function(err, file){
             if(err || !file){ next(err); return; }
@@ -113,12 +122,16 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                 model.recordings.fetchValidations(recording, function(err, validations){
                     if(err){ next(err); return;}
                     recording.validations = validations;
-                    res.json(recording);
+                    model.recordings.fetchSpectrogramTiles(recording, function(err, rec){
+                        if(err){ next(err); return;}
+                        res.json(rec);
+                    });                    
                 })
             });
         break;
         case 'audio' : model.recordings.fetchAudioFile(recording, and_return.file); break;
         case 'image' : model.recordings.fetchSpectrogramFile(recording, and_return.file); break;
+        case 'tiles' : model.recordings.fetchSpectrogramTiles(recording, and_return.recording); break;
         case 'thumbnail' : model.recordings.fetchThumbnailFile(recording, and_return.file); break;
         case 'find'      : and_return.recording(null, [recording]); break;
         case 'next'      : model.recordings.fetchNext(recording, and_return.recording); break;

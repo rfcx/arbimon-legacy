@@ -4,6 +4,7 @@ var AWS   = require('aws-sdk');
 var mysql = require('mysql');
 var util  = require('util');
 var Joi   = require('joi');
+var im    = require('imagemagick');
 
 
 var config       = require('../config'); 
@@ -159,17 +160,24 @@ var Recordings = {
                     data = arrays_util.group_rows_by(data, group_by.levels, options);
                 } else if(options.compute){
                     var compute = typeof(options.compute) == 'string' ? options.compute.split(',') : options.compute;
-                    compute.forEach(function(show_item){
-                        var comp_method = '__compute_' + show_item.replace(/-/g,'_');
-                        if(Recordings[comp_method]){
-                            data.forEach(function(row){
-                                Recordings[comp_method](row);
-                            });
-                        }
-                    });
+                    Recordings.compute_properties(data, compute, callback);
+                    return;
                 }
             }
             callback(err, data);
+        });
+    },
+    
+    compute_properties : function(recording_set, property_set, callback){
+        async.eachLimit(property_set, 10, function(property, next_property){
+            var comp_method = '__compute_' + property.replace(/-/g,'_');
+            if(Recordings[comp_method]){
+                async.eachLimit(recording_set, 10, function(recording, next_recording){
+                    Recordings[comp_method](recording, next_recording);
+                }, next_property);
+            }
+        }, function(err){
+            err ? callback(err) : callback(null, recording_set);
         });
     },
     
@@ -284,8 +292,8 @@ var Recordings = {
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
                 audiotool.spectrogram(recording_path.path, cache_miss.file, {
-                    pixPerSec : 172,
-                    height    : 256
+                    pixPerSec : config("spectrograms").spectrograms.pixPerSec,
+                    height    : config("spectrograms").spectrograms.height
                 },function(status_code){
                     if(status_code) { callback({code:status_code}); return; }
                     cache_miss.retry_get();
@@ -293,6 +301,97 @@ var Recordings = {
             });
         }, callback)
     },
+
+    fetchSpectrogramTiles: function (recording, callback) {
+        var spectro_path;
+        var px2sec, px2hz, max_freq;
+        async.waterfall([
+            function(next){
+                if(!recording.stats){
+                    Recordings.fetchInfo(recording, next);
+                } else {
+                    next(null, recording);
+                }
+            },
+            function(rec_info,  next){
+                recording = rec_info;
+                Recordings.fetchSpectrogramFile(recording, next);
+            },
+            function(_1, next){
+                spectro_path = _1.path;
+                im.identify(spectro_path, next);
+            },
+            function(spectro_info, next){
+                px2sec = recording.stats.duration    / spectro_info.width ;
+                max_freq = recording.stats.sample_rate / 2;
+                px2hz  = max_freq / spectro_info.height;
+                var tile_max_w = config("spectrograms").spectrograms.tiles.max_width;
+                var tile_max_h = config("spectrograms").spectrograms.tiles.max_height;
+                var tile_count_x = Math.ceil(spectro_info.width  * 1.0 / tile_max_w) | 0;
+                var tile_count_y = Math.ceil(spectro_info.height * 1.0 / tile_max_h) | 0;
+                var tiles_x=[], tiles_y=[], tile_set=[];
+                recording.tiles = {
+                    x : tile_count_x,
+                    y : tile_count_y,
+                    set: tile_set
+                };
+
+                for(var x=0; x < tile_count_x; ++x){ tiles_x.push(x); }
+                for(var y=0; y < tile_count_y; ++y){ tiles_y.push(y); }
+                async.eachLimit(tiles_y, 5, function(tile_y, next_tile_y){
+                    var tile_y0 = Math.min( tile_y   *tile_max_h, spectro_info.height),
+                        tile_y1 = Math.min((tile_y+1)*tile_max_h, spectro_info.height),
+                        tile_h  = tile_y1 - tile_y0;
+                    async.eachLimit(tiles_x, 5, function(tile_x, next_tile_x){
+                        var tile_x0 = Math.min( tile_x   *tile_max_w, spectro_info.width),
+                            tile_x1 = Math.min((tile_x+1)*tile_max_w, spectro_info.width),
+                            tile_w  = tile_x1 - tile_x0;
+                        var tile_key = recording.uri.replace(/\.(wav|flac)/, '.tile_'+tile_x+'_'+tile_y+'.png');
+                        tmpfilecache.fetch(tile_key, function(cache_miss){
+                            var tile_file = tmpfilecache.key2File(tile_key);
+                            Recordings.fetchRecordingFile(recording, function(err, recording_path){
+                                if(err) { next_tile_x(err); return; }
+                                im.convert([
+                                    spectro_path,                                     
+                                    '-crop',
+                                    tile_w+'x'+tile_h+'+'+tile_x0+'+'+tile_y0,
+                                    '+repage',
+                                    tile_file
+                                ], function(err){
+                                    if(err) { next_tile_x(err); return; }
+                                    cache_miss.retry_get();
+                                });
+                            });
+                        }, function(err, val){
+                            if(err) { next_tile_x(err); return; }
+                            tile_set.push({
+                                j : tile_x , i : tile_y ,
+                                s  : tile_x0 * px2sec,  hz : max_freq - tile_y0 * px2hz,
+                                ds : tile_w * px2sec, dhz : tile_h * px2hz,
+                                x : tile_x0, y : tile_y0,
+                                w : tile_w , h : tile_h
+                            });
+                            next_tile_x();
+                        });
+                    }, next_tile_y);
+                }, function(){
+                    var spectrogram_key = recording.uri.replace(/\.(wav|flac)/, '.png');
+                    next(null, recording);
+                });
+            }
+        ], callback);
+    },
+    
+    fetchOneSpectrogramTile: function (recording, i, j, callback) {
+        var tile_key = recording.uri.replace(/\.(wav|flac)/, '.tile_'+j+'_'+i+'.png');
+        tmpfilecache.fetch(tile_key, function(cache_miss){
+            Recordings.fetchSpectrogramTiles(recording, function(err, recording){
+                if(err) { callback(err); return; }
+                cache_miss.retry_get();
+            });
+        }, callback);
+    },
+
     /** Returns the thumbnail file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
@@ -422,10 +521,13 @@ var Recordings = {
         });
     },
     
-    __compute_thumbnail_path : function(recording){
+    __compute_thumbnail_path : function(recording, callback){
         recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png');
+        callback();
     },
-    
+    __compute_spectrogram_tiles : function(recording, callback){
+        Recordings.fetchSpectrogramTiles(recording, callback);
+    },    
     findProjectRecordings: function(params, callback) {
         var schema = {
             project_id: Joi.number().required(),

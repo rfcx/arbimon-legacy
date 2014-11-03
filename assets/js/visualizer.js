@@ -130,11 +130,11 @@ angular.module('visualizer', [
                 if($scope.recording.audioUrl) {
                     $scope.audio_player.load($scope.recording.audioUrl);
                 }
-                if($scope.recording.imageUrl) {
-                    $scope.recording.tiles = [
-                        {x:0, y:0, src:$scope.recording.imageUrl}
-                    ];
-                }
+                // if($scope.recording.imageUrl) {
+                //     $scope.recording.tiles = [
+                //         {x:0, y:0, src:$scope.recording.imageUrl}
+                //     ];
+                // }
             });
         } else {
             $scope.recording = null;

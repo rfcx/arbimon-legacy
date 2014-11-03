@@ -1,6 +1,6 @@
 <img
-    ng-repeat="tile in recording.tiles track by $index" ng-src="{{tile.src}}" style="position:absolute;z-index:-1"
-    ng-style="{left:tile.x + 'px', top:tile.y + 'px', height: layout.spectrogram.height, width: layout.spectrogram.width}"
+    ng-repeat="tile in recording.tiles.set track by $index" ng-src="/api/project/test1/recordings/tiles/{{recording.id}}/{{tile.i}}/{{tile.j}}" style="position:absolute;z-index:-1"
+    ng-style="{left:tile.s * layout.scale.sec2px + 'px', top: (layout.spectrogram.height - tile.hz * layout.scale.hz2px) + 'px', height: tile.dhz * layout.scale.hz2px + 'px', width: tile.ds * layout.scale.sec2px + 'px'}"
 />
 <div a2-visualizer-spectrogram-affixed>
     {{recording.file}}
