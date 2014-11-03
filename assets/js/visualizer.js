@@ -779,7 +779,6 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             var browser = $scope.browser = {
                 sites : [],
                 dates : {
-                    update_time : 0,
                     refreshing  : false,
                     display_year:null,
                     date_counts:null,
@@ -878,9 +877,13 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             });
 
             $scope.$watch('browser.selection.site.value', function(newValue, oldValue){
-                browser.dates.update_time = new Date();
+                // reset the lists and whatnots
+                browser.dates.disabled(browser.dates.display_year);
+                browser.recordings = [];
+                // reset the selections and stuff
                 browser.selection.date = null;
                 browser.selection.recording.value = null;
+                // setup auto-selection
                 var auto_select = browser.selection.auto && browser.selection.auto.date;
                 if(auto_select) {
                     browser.selection.auto.date = null;
