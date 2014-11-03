@@ -412,19 +412,13 @@ angular.module('a2directives', [])
                 if(!scope.dateCount) return;
                 
                 if(scope.disableEmpty()) {
-                    days.attr('class', function(d) {
-                        if(scope.dateCount[dateFormat(d)])
-                            return 'hover';
-                        
-                        return 'cal-disabled';
+                    days.classed('cal-disabled', function(d) {
+                        return !scope.dateCount[dateFormat(d)];
                     });
                 }
                 
-                
-                var squares = days.select('rect');
-                
-                squares.attr('class', function(d) { 
-                    
+                var squares = days.select('rect');                
+                squares.attr('class', function(d) {                     
                     var color = d3.scale.threshold().domain([1, 50, 100]).range(['0','1','50','100']);
                     
                     var count = scope.dateCount[dateFormat(d)] || 0;
