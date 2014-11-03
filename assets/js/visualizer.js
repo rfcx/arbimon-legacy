@@ -1064,9 +1064,8 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 return typeof val == 'undefined' ? val : ( val ? val_options[0]: val_options[1] );
             }
             $scope.$watch('recording', function(recording){
-                console.log('validated recording : ', recording);
                 $scope.validations = {};
-                recording.validations && recording.validations.forEach(add_validation);
+                recording && recording.validations && recording.validations.forEach(add_validation);
             });
             
             load_project_classes();
