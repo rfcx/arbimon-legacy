@@ -289,17 +289,16 @@ angular.module('a2directives', [])
             });
         }
     };
- })
+})
  
- .directive('loader', function() {
+.directive('loader', function() {
      return {
          restrict: 'E',
          templateUrl: '/partials/directives/loader.html'
      }
- })
+})
  
- /**
-  yearpick - complete year date picker
+/**   yearpick - complete year date picker
   
   example usage:
   <div class="dropdown">
@@ -311,7 +310,7 @@ angular.module('a2directives', [])
   or, if you just want to show the component :
   <yearpick ng-model="dia" yearpick disable-empty="true" year="year" date-count="dateData"></yearpick>
  */
- .directive('yearpick', function() {
+.directive('yearpick', function() {
     return {
         restrict: 'AE',
         scope: {
