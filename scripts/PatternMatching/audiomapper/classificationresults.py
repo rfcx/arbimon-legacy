@@ -32,7 +32,7 @@ for line in sys.stdin:
     recId.strip(' ')
     presence.strip(' ')
     jId.strip(' ')
-    jobId = jId
+    jobId = jId.strip(' ')
     species.strip(' ')
     songtype.strip(' ')
     with closing(db.cursor()) as cursor:
@@ -49,7 +49,7 @@ with closing(db.cursor()) as cursor:
                    " (`job_id`, `json_stats`) "+
                    " VALUES ("+jobId+",'"+jsonStats+"');" )
     db.commit()    
-print 'ended'
+
 db.close()
 shutil.rmtree(tempFolders+"/classification_"+str(jobId))
-
+print 'ended'

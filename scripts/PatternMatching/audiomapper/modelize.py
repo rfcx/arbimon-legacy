@@ -175,6 +175,6 @@ for i in classes:
         db.commit()
 
 #remore temporary directory
-#shutil.rmtree(tempFolders+"/training_"+str(jobId))
+shutil.rmtree(tempFolders+"/training_"+str(jobId))
 db.close()
 print 'ended'

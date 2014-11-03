@@ -145,7 +145,7 @@
                     JobsData.startTimer();
                 }
             );
-
+            
             $scope.$on('$destroy', function () { JobsData.cancelTimer() });
             
             $scope.hideJob =

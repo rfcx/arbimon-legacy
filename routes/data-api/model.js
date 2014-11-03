@@ -125,7 +125,7 @@ router.post('/project/:projectUrl/models/new', function(req, res) {
                                    res.json({ err:"Could not create training job"}); 
                                 }
                                 else
-                                { console.log(scriptsFolder)
+                                { 
                                     jobQueue.push({
                                         name: 'training'+trainingId,
                                         work: function(callback)
@@ -209,7 +209,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res) {
                                 {
                                     jobQueue.push({
                                         name: 'classification'+classificationId,
-                                        work: function()
+                                        work: function(callback)
                                         {
                                             var python = require('child_process').spawn
                                             (
@@ -229,6 +229,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res) {
                                                 { 
                                                     if (code !== 0) { console.log('classification returned error')}
                                                     else console.log('no error, everything ok, classification completed');
+                                                    callback();
                                                 }
                                             );
                                         }
@@ -302,6 +303,19 @@ router.get('/project/:projectUrl/progress', function(req, res) {
 
         res.json(row);
     });
+});
+
+router.get('/project/:projectUrl/progress/queue', function(req, res) {
+
+    var string = "(running:"+jobQueue.running() +
+                 ") (idle: "+jobQueue.idle()+
+                 ") (concurrency: "+ jobQueue.concurrency+
+                 ") (started: "+ jobQueue.started+
+                 ") (howmanyInqueue: "+ jobQueue.length()+
+                 ") (isPaused: "+ jobQueue.paused+")"
+                 
+    res.json({"debug":string});
+
 });
 
 router.get('/project/:projectUrl/job/hide/:jId', function(req, res) {
