@@ -910,7 +910,8 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             });
             $scope.selectRecording = function(recording){
                 if(recording) {
-                    var recdate = new Date(recording.datetime);
+                    var utcdateaslocal = new Date(recording.datetime);
+                    var recdate = new Date(utcdateaslocal.getTime() + utcdateaslocal.getTimezoneOffset()*60*1000);
                     browser.selection.auto = {
                         hash : recording.file,
                         site : browser.sites.filter(function(s){return s.name == recording.site;}).pop(),
