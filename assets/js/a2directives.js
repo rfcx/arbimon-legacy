@@ -487,6 +487,9 @@ angular.module('a2directives', [])
                 //  for each day, move the text, add class hover and onclick event handler
                 days.attr('transform', function() { return 'translate(0,24)'; })
                     .classed('hover', true)
+                    .classed('selected', function(d){
+                        return scope.ngModel && (dateFormat(d) == dateFormat(scope.ngModel));
+                    })
                     .on('click', function(d){
                         scope.$apply(function() {
                             d3.event.preventDefault();
@@ -524,6 +527,9 @@ angular.module('a2directives', [])
             scope.$watch('ngModel', function(){
                 if(scope.ngModel){
                     scope.year = scope.ngModel.getFullYear();
+                    days.classed('selected', function(d){
+                        return scope.ngModel && (dateFormat(d) == dateFormat(scope.ngModel));
+                    });
                 }
             });
             
@@ -536,10 +542,9 @@ angular.module('a2directives', [])
             element.click(function() {
                 if(popup.css('display') === 'none') {
                     popup.css('display','block');
-                }
-                
-                else
+                } else {
                     popup.css('display', 'none');
+                }
             });
         }
     };
