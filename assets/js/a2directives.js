@@ -354,11 +354,10 @@ angular.module('a2directives', [])
             
             var cal = svg.append('g');
             var legend = svg.append('g');
-            var prev = svg.append('a');
-            var next = svg.append('a');
+            var prev   = svg.append('g').attr('class', 'btn');
+            var next   = svg.append('g').attr('class', 'btn');
             
-            scope.$watch('year', draw);
-            
+        
             prev.append('text')
             .attr('text-anchor', 'start')
             .attr('font-family', 'FontAwesome')
@@ -368,7 +367,6 @@ angular.module('a2directives', [])
             .html('&#xf060');
             
             prev.on('click', function(){
-                d3.event.preventDefault();
                 --scope.year;
             });
             
@@ -382,7 +380,6 @@ angular.module('a2directives', [])
             .html('&#xf061');
             
             next.on('click', function(){
-                d3.event.preventDefault();
                 ++scope.year;
             });
             
@@ -520,6 +517,14 @@ angular.module('a2directives', [])
                 days.exit().remove();
             };
             draw();
+            scope.$watch('year', function(){
+                draw();
+            });
+            scope.$watch('ngModel', function(){
+                if(scope.ngModel){
+                    scope.year = scope.ngModel.getFullYear();
+                }
+            });
             
             if(attrs.dateCount) {
                 scope.$watch('dateCount', function(value) {
