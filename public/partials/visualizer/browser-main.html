@@ -29,6 +29,7 @@
                 </button>
                 <div class="browser-dropdown dropdown" a2-insert-in="body" a2-keep-position="true" >
                     <div class="dropdown-form dropdown-menu datepicker" role="menu" aria-labelledby="dLabel">
+                        <loader class="dropdown-loader" ng-show="browser.loading.dates"></loader>
                         <yearpick
                             ng-model="browser.selection.date"
                             year="browser.dates.display_year"
