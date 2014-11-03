@@ -314,10 +314,10 @@ angular.module('a2directives', [])
     return {
         restrict: 'AE',
         scope: {
-            ngModel: '=',
-            year : '=',
-            dateCount: '=',
-            disableEmpty: '&'
+            ngModel      : '=',
+            year         : '=',
+            dateCount    : '=',
+            disableEmpty : '&'
         },
         link: function(scope, element, attrs) {
             // console.log(attrs);
@@ -348,23 +348,23 @@ angular.module('a2directives', [])
             var days;
             
             var svg = d3.select(popup[0])
-            .append('svg')
-            .attr('width', width)
-            .attr('height', height);
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
             
-            var cal = svg.append('g');
+            var cal    = svg.append('g');
             var legend = svg.append('g');
             var prev   = svg.append('g').attr('class', 'btn');
             var next   = svg.append('g').attr('class', 'btn');
             
         
             prev.append('text')
-            .attr('text-anchor', 'start')
-            .attr('font-family', 'FontAwesome')
-            .attr('font-size', 24)
-            .attr('x', 5)
-            .attr('y', 24)
-            .html('&#xf060');
+                .attr('text-anchor', 'start')
+                .attr('font-family', 'FontAwesome')
+                .attr('font-size', 24)
+                .attr('x', 5)
+                .attr('y', 24)
+                .html('&#xf060');
             
             prev.on('click', function(){
                 --scope.year;
@@ -372,12 +372,12 @@ angular.module('a2directives', [])
             
             
             next.append('text')
-            .attr('text-anchor', 'end')
-            .attr('font-family', 'FontAwesome')
-            .attr('font-size', 24)
-            .attr('x', width-5)
-            .attr('y', 24)
-            .html('&#xf061');
+                .attr('text-anchor', 'end')
+                .attr('font-family', 'FontAwesome')
+                .attr('font-size', 24)
+                .attr('x', width-5)
+                .attr('y', 24)
+                .html('&#xf061');
             
             next.on('click', function(){
                 ++scope.year;
@@ -387,25 +387,25 @@ angular.module('a2directives', [])
             var color = d3.scale.threshold().domain(scale.scale).range(scale);
             
             var icon = legend.selectAll('g')
-            .data(['1','50','100'])
-            .enter()
-            .append('g')
-            .attr('transform', 'translate(20,0)');
+                .data(['1','50','100'])
+                .enter()
+                .append('g')
+                .attr('transform', 'translate(20,0)');
             
             icon.append('rect')
-            .attr('width', cubesize)
-            .attr('height', cubesize)
-            .attr('y', height-cubesize-10)
-            .attr('x', function(d, i) { return i*45+22; })
-            .attr('class', function(d) { return 'cal-level-'+d; })
+                .attr('width', cubesize)
+                .attr('height', cubesize)
+                .attr('y', height-cubesize-10)
+                .attr('x', function(d, i) { return i*45+22; })
+                .attr('class', function(d) { return 'cal-level-'+d; })
             ;
             
             icon.append('text')
-            .attr('text-anchor', 'middle')
-            .attr('font-size', 10)
-            .attr('y', height-15)
-            .attr('x', function(d, i) { return i*45+10; })
-            .text(function(d, i) { return '+'+d; })
+                .attr('text-anchor', 'middle')
+                .attr('font-size', 10)
+                .attr('y', height-15)
+                .attr('x', function(d, i) { return i*45+10; })
+                .text(function(d, i) { return '+'+d; })
             ;
             
             var drawCounts = function() {
@@ -434,86 +434,87 @@ angular.module('a2directives', [])
             };
             
             var draw = function() {
+                // set calendar year
                 calendar = cal.selectAll('g').data([scope.year]);
-                
+                // on enter, create a new title
                 var title = calendar.enter().append('g');
-                
+                // .. and set it up
                 title.append('text')
-                .attr('text-anchor', 'middle')
-                .attr('font-size', 30)
-                .attr('x', width/2)
-                .attr('y', 30);
-                
+                    .attr('text-anchor', 'middle')
+                    .attr('font-size', 30)
+                    .attr('x', width/2)
+                    .attr('y', 30);
+                // .. and add a line underneath
                 title.append('line')
-                .attr('x1', 5)
-                .attr('y1', headerHeight)
-                .attr('x2', width-5)
-                .attr('y2', headerHeight)
-                .attr('stroke', 'rgba(0,0,0,0.5)')
-                .attr('stroke-width', 1);
-                
+                    .attr('x1', 5)
+                    .attr('y1', headerHeight)
+                    .attr('x2', width-5)
+                    .attr('y2', headerHeight)
+                    .attr('stroke', 'rgba(0,0,0,0.5)')
+                    .attr('stroke-width', 1);
+                // on exit, remove it
                 calendar.exit().remove();
-                
+                // re-set the title text on each draw
                 calendar.select('text').text(function(d) { return d; });
-                
+                // setup the months container and set the years' month date range
                 var mon = calendar.append('g').attr('transform', 'translate(0,'+ headerHeight +')')
-                .selectAll('g')
-                .data(function(d) { 
-                    // console.log(d);
-                    return d3.time.months(new Date(d, 0, 1), new Date(d+1, 0, 1));
-                });
-                
+                    .selectAll('g')
+                    .data(function(d) { 
+                        // console.log(d);
+                        return d3.time.months(new Date(d, 0, 1), new Date(d+1, 0, 1));
+                    });
+                // on enter in months, append a g
                 mon.enter().append('g');
-                
+                // in months, transform each month to their place in the yearpick
                 mon.attr('transform', function(d, i) { 
                     return 'translate('+((d.getMonth()%4)*150+5)+','+(Math.floor(d.getMonth()/4)*150+5)+')'; 
                 });
-                
+                // in months, transform each month to their place in the yearpick
                 mon.append('text')
-                .attr('text-anchor', 'middle')
-                .attr('x', cubesize*7/2)
-                .attr('y', 15)
-                .text(function(d) { return monthName(d); });
-                
+                    .attr('text-anchor', 'middle')
+                    .attr('x', cubesize*7/2)
+                    .attr('y', 15)
+                    .text(function(d) { return monthName(d); });
+                // in months, on exit, remove
                 mon.exit().remove();
-                
+                // setup day containers for each months
                 days = mon.selectAll('g')
-                .data(function(d) { 
-                    return d3.time.days(new Date(d.getFullYear(), d.getMonth(), 1), new Date(d.getFullYear(), d.getMonth() + 1, 1)); 
-                });
-                
-                days.enter().append('a');
-                
-                days.attr('transform', function() { return 'translate(0,24)'; })
-                .attr('class', 'hover')
-                .on('click', function(d){
-                    scope.$apply(function() {
-                        d3.event.preventDefault();
-                        scope.ngModel = d;
-                        is_a_popup && popup.css('display', 'none');
+                    .data(function(d) { 
+                        return d3.time.days(new Date(d.getFullYear(), d.getMonth(), 1), new Date(d.getFullYear(), d.getMonth() + 1, 1)); 
                     });
-                });
-                
+                //  in days, on enter, append a g of class btn
+                days.enter().append('g').attr('class', 'btn');
+                //  for each day, move the text, add class hover and onclick event handler
+                days.attr('transform', function() { return 'translate(0,24)'; })
+                    .classed('hover', true)
+                    .on('click', function(d){
+                        scope.$apply(function() {
+                            d3.event.preventDefault();
+                            scope.ngModel = d;
+                            is_a_popup && popup.css('display', 'none');
+                        });
+                    });
+                // .. also, add a rect on the background
                 days.append('rect')
-                .attr('width', cubesize)
-                .attr('height', cubesize)
-                .attr('y', function(d, i) { return weekOfMonth(d) * (cubesize+1); })
-                .attr('x', function(d, i) { return (d.getDay()) * (cubesize+1); })
-                .attr('fill', 'white')
-                ;
-                
+                    .attr('width', cubesize)
+                    .attr('height', cubesize)
+                    .attr('y', function(d, i) { return weekOfMonth(d) * (cubesize+1); })
+                    .attr('x', function(d, i) { return (d.getDay()) * (cubesize+1); })
+                    .attr('fill', 'white')
+                    ;
+                // .. and append a text on the foreground
                 days.append('text')
-                .attr('text-anchor', 'middle')
-                .attr('font-size', 10)
-                .attr('y', function(d, i) { return weekOfMonth(d) * (cubesize+1)+13; })
-                .attr('x', function(d, i) { return (d.getDay()+1) * (cubesize+1)-10; })
-                .text(function(d, i) { return d.getDate(); })
-                ;
-            
+                    .attr('text-anchor', 'middle')
+                    .attr('font-size', 10)
+                    .attr('y', function(d, i) { return weekOfMonth(d) * (cubesize+1)+13; })
+                    .attr('x', function(d, i) { return (d.getDay()+1) * (cubesize+1)-10; })
+                    .text(function(d, i) { return d.getDate(); })
+                    ;
+                // if we have date counts, then draw them
                 if(attrs.dateCount) {
                     drawCounts();
                 }
-                
+                // in days, on exit, remove
                 days.exit().remove();
             };
             draw();
