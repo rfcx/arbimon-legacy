@@ -1,3 +1,6 @@
+$(document)
+  .on('click.bs.dropdown.data-api', '.dropdown .dropdown-form', function (e) { e.stopPropagation() })
+
 /**
 var test_data = {
     recording : {
@@ -778,22 +781,18 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 dates : {
                     update_time : 0,
                     refreshing  : false,
+                    display_year:null,
+                    date_counts:null,
                     datepickerMode : 'year',
                     cache : rbDateAvailabilityCache,
-                    disabled : function(date, mode){
+                    disabled : function(year){
                         var site = browser.selection.site.value;
                         var site_name = site && site.name;
                         if(!site_name) {
                             return true;
                         }
 
-                        var key_comps=[], fetch_mode;
-                        switch(mode){
-                            case "day"   : key_comps.unshift(date.getDate());
-                            case "month" : key_comps.unshift(1 + date.getMonth());
-                            case "year"  : key_comps.unshift(date.getFullYear());
-                        }
-                        key_comps.unshift(site_name);
+                        var key_comps=[site_name, year, '[1:12]', '1'], fetch_mode;
                         var subkey = key_comps.pop();
                         var key = key_comps.join('-');
 
@@ -801,6 +800,8 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                         if(!availability) {
                             browser.dates.fetch_availability(key);
                         } else if(availability.data){
+                            browser.dates.date_counts = availability.data;
+                            
                             return !availability.data[subkey];
                         }
                         return false;
@@ -810,16 +811,23 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                         browser.loading.dates = true;
                         Project.getRecordingAvailability(key, function(data){
                             $timeout(function(){
-                                var avail = data;
-                                var comps = key.split('-');
-                                while(comps.length > 0) {
-                                    var comp = comps.shift();
-                                    if (avail) {
-                                        avail = avail[comp];
-                                    }
-                                }
+                                var avail = {};
+                                for(var site in data){
+                                    var site_years = data[site];
+                                    for(var year in site_years){
+                                        var year_months = site_years[year];
+                                        for(var month in year_months){
+                                            var month_days = year_months[month];
+                                            for(var day in month_days){
+                                                var akey = year + '-' + (month < 10 ? '0' : '' ) + month + '-' + (day < 10 ? '0' : '') + day;
+                                                avail[akey] = (avail[akey] | 0) + month_days[day];
+                                            };
+                                        };
+                                    };
+                                };
+                                
                                 browser.dates.cache.get(key).data = avail || {};
-                                browser.dates.update_time = new Date();
+                                browser.dates.date_counts = avail;
                                 browser.loading.dates = false;
                             });
                         })
@@ -864,6 +872,10 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             
             
             $scope.$on('a2-persisted', load_project_sites);
+            
+            $scope.$watch('browser.dates.display_year', function(new_display_year){
+                browser.dates.disabled(new_display_year);
+            });
 
             $scope.$watch('browser.selection.site.value', function(newValue, oldValue){
                 browser.dates.update_time = new Date();
@@ -876,7 +888,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 }
             });
             $scope.$watch('browser.selection.date', function(newValue, oldValue){
-                $element.find('.dropdown.open').removeClass('open');
+                $(document).find('.dropdown.open').removeClass('open');
                 browser.selection.time = null;
                 var site = browser.selection.site.value;
                 var date = browser.selection.date;
