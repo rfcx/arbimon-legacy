@@ -324,11 +324,9 @@ angular.module('a2directives', [])
             var is_a_popup = !/yearpick/i.test(element[0].tagName);
             var popup;
             if(is_a_popup){
-                popup = $('<div></div>').insertAfter(element)
-                popup.addClass('calendar');
+                popup = $('<div></div>').insertAfter(element).addClass('popup calendar');
             } else {
-                popup = element;
-                popup.addClass('calendar').show();
+                popup = element.addClass('calendar');
             }
             
             var weekOfMonth = function(d) {

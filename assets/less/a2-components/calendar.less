@@ -1,13 +1,15 @@
 .calendar {
-    position: absolute;
-    z-index: 2000;
-    box-shadow: 0px 6px 6px 3px rgba(0, 0, 0, 0.7);
-    border-radius: 5px;
-    display: none;
     background-color: white;
     -moz-user-select: none;
     -webkit-select: none;
     user-select: none;
+    &.popup{
+        position: absolute;
+        z-index: 2000;
+        box-shadow: 0px 6px 6px 3px rgba(0, 0, 0, 0.7);
+        border-radius: 5px;
+        display: none;
+    }
 }
 .cal-level-0 {
     fill: white;
