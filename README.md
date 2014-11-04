@@ -22,9 +22,9 @@ Bio-Acoustic Analyzer
 
 
  - image magick - image manipulation tool
-  ```
-  sudo apt-get install imagemagick
-  ```
+   ```
+   sudo apt-get install imagemagick
+   ```
    
    
  - nodejs
