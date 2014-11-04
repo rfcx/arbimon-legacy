@@ -231,7 +231,7 @@ angular.module('a2directives', [])
                 var ptag = p[tag];
                 var persisted = true;
                 if(!ptag){
-                    console.log('new persistent scope "%s" created in ', tag, $rootScope);
+                    // console.log('new persistent scope "%s" created in ', tag, $rootScope);
                     p[tag] = ptag = {};
                     ptag.scope = $rootScope.$new(true);
                     ptag.scope._$persistence_tag_ = tag;
@@ -310,11 +310,13 @@ angular.module('a2directives', [])
   or, if you just want to show the component :
   <yearpick ng-model="dia" yearpick disable-empty="true" year="year" date-count="dateData"></yearpick>
  */
-.directive('yearpick', function() {
+.directive('yearpick', function($timeout) {
     return {
         restrict: 'AE',
         scope: {
             ngModel      : '=',
+            maxDate      : '=',
+            minDate      : '=',
             year         : '=',
             dateCount    : '=',
             disableEmpty : '&'
@@ -367,7 +369,9 @@ angular.module('a2directives', [])
                 .html('&#xf060');
             
             prev.on('click', function(){
-                --scope.year;
+                $timeout(function(){
+                    --scope.year;
+                })
             });
             
             
@@ -380,7 +384,9 @@ angular.module('a2directives', [])
                 .html('&#xf061');
             
             next.on('click', function(){
-                ++scope.year;
+                $timeout(function(){
+                    ++scope.year;
+                })
             });
             
             var scale = {scale:[1, 50, 100], labels:['0','1','50','100']};
@@ -413,9 +419,9 @@ angular.module('a2directives', [])
                 
                 if(scope.disableEmpty()) {
                     days.classed('cal-disabled', function(d) {
-                        return !scope.dateCount[dateFormat(d)];
+                        return $(this).hasClass('cal-oor') || !scope.dateCount[dateFormat(d)] ;
                     });
-                }
+                }                
                 
                 var squares = days.select('rect');                
                 squares.attr('class', function(d) {                     
@@ -450,6 +456,10 @@ angular.module('a2directives', [])
                 calendar.exit().remove();
                 // re-set the title text on each draw
                 calendar.select('text').text(function(d) { return d; });
+                
+                prev.classed('disabled', scope.minDate && scope.minDate.getFullYear() >= scope.year);
+                next.classed('disabled', scope.maxDate && scope.year >= scope.maxDate.getFullYear());
+                
                 // setup the months container and set the years' month date range
                 var mon = calendar.append('g').attr('transform', 'translate(0,'+ headerHeight +')')
                     .selectAll('g')
@@ -481,6 +491,10 @@ angular.module('a2directives', [])
                 //  for each day, move the text, add class hover and onclick event handler
                 days.attr('transform', function() { return 'translate(0,24)'; })
                     .classed('hover', true)
+                    .classed('cal-disabled cal-oor', function(d) {
+                        return (scope.minDate ? (d < scope.minDate) : false) ||
+                               (scope.maxDate ? (scope.maxDate < d) : false);
+                    })
                     .classed('selected', function(d){
                         return scope.ngModel && (dateFormat(d) == dateFormat(scope.ngModel));
                     })
@@ -514,8 +528,23 @@ angular.module('a2directives', [])
                 // in days, on exit, remove
                 days.exit().remove();
             };
-            draw();
+            
+            scope.$watch('maxDate', function(){
+                if(scope.maxDate && scope.year > scope.maxDate.getFullYear()){
+                    scope.year = scope.maxDate.getFullYear();
+                }
+                draw();
+            });
+            scope.$watch('minDate', function(){
+                if(scope.minDate && scope.year < scope.minDate.getFullYear()){
+                    scope.year = scope.minDate.getFullYear();
+                }
+                draw();
+            });
             scope.$watch('year', function(){
+                if(!scope.year){
+                    scope.year = new Date().getFullYear();
+                }
                 draw();
             });
             scope.$watch('ngModel', function(){
@@ -557,7 +586,6 @@ angular.module('a2directives', [])
             var keep_position = is_truthy($attr.a2KeepPosition);
             var target = $($attr.a2InsertIn);
             
-            console.log('inserting ', $element, ' in ', target, keep_position); 
             $element.replaceWith(anchor).appendTo(target);
             
             var reposition_element=null;
@@ -580,6 +608,9 @@ angular.module('a2directives', [])
                         $e.scroll(reposition_element);
                     }
                 });
+                $scope.$watch(function(){
+                    return anchor.offset();
+                }, reposition_element, true);
                 reposition_element();
             }
             
