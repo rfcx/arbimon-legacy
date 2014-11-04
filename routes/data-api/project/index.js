@@ -62,7 +62,7 @@ router.post('/create', function(req, res, next) {
                     news_type_id: 1, // project created
                     user_id: project.owner_id,
                     project_id: project_id,
-                    description: util.format("Project '%s' created by %s", project.name, req.session.user.username)
+                    data: JSON.stringify({})
                 });
                 res.json({ message: util.format("Project '%s' successfully created!", project.name) });
             });
@@ -134,10 +134,10 @@ router.post('/create/site', function(req, res, next) {
             if(err) return next(err);
 
             model.projects.insertNews({
-                news_type_id: 1, // project created
+                news_type_id: 2, // site created
                 user_id: req.session.user.id,
                 project_id: project.project_id,
-                description: util.format("Site '%s' created by %s", site.name, req.session.user.username)
+                data: JSON.stringify({ site: site.name })
             });
 
             res.json({ message: "New site created" });
@@ -159,10 +159,10 @@ router.post('/update/site', function(req, res, next) {
         if(err) return next(err);
 
         model.projects.insertNews({
-            news_type_id: 1, // project created
+            news_type_id: 3, // site updated
             user_id: req.session.user.id,
             project_id: project.project_id,
-            description: util.format("Site '%s' update by %s", site.name, req.session.user.username)
+            data: JSON.stringify({ site: site.name })
         });
 
         res.json({ message: "site updated" });
@@ -189,10 +189,10 @@ router.post('/delete/sites', function(req, res, next) {
         if(err) return next(err);
 
         model.projects.insertNews({
-            news_type_id: 1, // project created
+            news_type_id: 4, // site deleted
             user_id: req.session.user.id,
             project_id: project.project_id,
-            description: util.format("Sites '%s' deleted by %s", sitesNames, req.session.user.username)
+            data: JSON.stringify({ sites: sitesNames.join(', ') })
         });
 
         res.json(rows);
@@ -200,7 +200,7 @@ router.post('/delete/sites', function(req, res, next) {
 });
 
 router.get('/:projectUrl/classes', function(req, res, next) {
-    model.projects.getProjectClasses(req.project, function(err, classes){
+    model.projects.getProjectClasses(req.project.project_id, function(err, classes){
         if(err) return next(err);
         res.json(classes);
     });
@@ -224,8 +224,15 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
 
     model.projects.insertClass(projectClass, function(err, result){
         if(err) return next(err);
-
-        console.log("insert class:", result);
+        
+        model.projects.insertNews({
+            news_type_id: 5, // class added
+            user_id: req.session.user.id,
+            project_id: req.body.project_id,
+            data: JSON.stringify({ species: projectClass.species, song: projectClass.songtype })
+        });
+        
+        console.log("class added:", result);
         res.json({ success: true });
     });
 });
@@ -237,13 +244,40 @@ router.post('/:projectUrl/class/del', function(req, res, next){
     if(!req.haveAccess(req.body.project_id, "manage project species")) {
         return res.json({ error: "you dont have permission to 'manage project species'" });
     }
-
-    model.projects.removeClasses(req.body.project_classes, function(err, result){
-        if(err) return next(err);
-
-        console.log("insert class:", result);
-        res.json({ success: true });
-    });
+    
+    
+    async.waterfall([
+        function(callback) {
+            model.projects.getProjectClasses(req.body.project_id, function(err, classes) {
+                if(err) return next(err);
+                
+                callback(null, classes);
+            });
+        },
+        function(classes) {
+            model.projects.removeClasses(req.body.project_classes, function(err, result){
+                if(err) return next(err);
+                
+                var classesDeleted = classes.filter(function(clss) {
+                    return req.body.project_classes.indexOf(clss.id) >= 0;
+                });
+                
+                var classesDeleted = classesDeleted.map(function(clss){
+                    return clss.species_name + " " + clss.songtype_name;
+                })
+                
+                model.projects.insertNews({
+                    news_type_id: 6, // class removed
+                    user_id: req.session.user.id,
+                    project_id: req.body.project_id,
+                    data: JSON.stringify({ classes: classesDeleted })
+                });
+                
+                console.log("class removed:", result);
+                res.json({ success: true });
+            });
+        }
+    ]);
 });
 
 router.get('/:projectUrl/roles', function(req, res, next) {

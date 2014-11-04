@@ -8,11 +8,18 @@ angular.module('home', ['ui.bootstrap'])
         });
     };
     
-    //~ $scope.loadUserFeed
-    
     $scope.loadProjectList();
     
+    $http.get('api/user/feed')
+    .success(function(data) {
+        $scope.newsFeed = data;
+    });
     
+    $scope.displayTime = function(d) {
+        
+        return moment(d).fromNow();
+    }
+        
     $scope.createProject = function() {
         var modalInstance = $modal.open({
             templateUrl: '/partials/home/create-project.html',
@@ -143,4 +150,5 @@ angular.module('home', ['ui.bootstrap'])
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
     };
-});
+})
+;

@@ -1,6 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var gravatar = require('gravatar');
+var async = require('async');
+var sprintf = require("sprintf-js").sprintf
+
 var model = require('../../models');
 var sha256 = require('../../utils/sha256');
 
@@ -23,7 +26,47 @@ router.get('/projectlist', function(req, res, next) {
 });
 
 router.get('/feed', function(req, res) {
-    res.sendStatus(200);
+    
+    async.parallel({
+        formats: function(callback) {
+            model.news.newsTypesFormat(function(err, rows) {
+                if(err) return callback(err);
+                
+                formats = {};
+                
+                rows.forEach(function(row){
+                    formats[row.id] = row.message_format;
+                });
+                
+                callback(null, formats);
+            });
+        },
+        news: function(callback) {
+            model.news.userFeed(req.session.user.id, function(err, rows) {
+                if(err) return callback(err);
+                
+                callback(null, rows);
+            });
+        }
+    },
+    function(err, results) {
+        
+        console.log(results);
+        
+        var feed = results.news.map(function(row){
+            row.image_url = gravatar.url(row.email, { d: 'monsterid', s: 30 }, https=req.secure);
+            
+            var data = JSON.parse(row.data);
+            
+            data.project = row.project;
+            
+            row.message = sprintf(results.formats[row.type], data);
+            
+            return row;
+        });
+        
+        res.json(feed);
+    });
 });
 
 router.get('/info', function(req, res) {

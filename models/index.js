@@ -17,3 +17,4 @@ module.exports.species       = require('./species');
 module.exports.songtypes     = require('./songtypes');
 module.exports.models      = require('./models');
 module.exports.jobs    = require('./jobs');
+module.exports.news   = require('./news');
