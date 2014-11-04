@@ -2,16 +2,29 @@
 { 
     var classification = angular.module('classification', ['ui.bootstrap' , 'a2services']);
     var template_root = '/partials/classification/';
+
     classification.controller
     ('ClassificationCtrl' , 
         function ($scope,$http,$modal,$filter,$sce,Project, ngTableParams,JobsData) 
         {
+	    $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+	    $scope.updateFlags = function()
+	    {
+		$scope.successInfo = "";
+		$scope.showSuccess = false;
+		$scope.errorInfo = "";
+		$scope.showError = false;
+		$scope.infoInfo = "";
+		$scope.showInfo = false;
+	    };
+	    
              var p = Project.getInfo(
             function(data)
             {
                 $scope.projectData = data;
                 pid = data.project_id;
-                
+                $scope.url = data.url;
                 $http.get('/api/project/'+data.url+'/classifications')
                 .success
                 (
@@ -19,6 +32,8 @@
                     {
                             $scope.classificationsOriginal = data;
                             $scope.classificationsData = data;
+			    $scope.infoInfo = "";
+                            $scope.showInfo = false;
                             $scope.infopanedata = "";			
                             if(data.length> 0)
                             {              
@@ -44,42 +59,88 @@
                                 $scope.infopanedata = "No classifications found.";
                             }       
                      }
-                );
+                ).error(
+		    function()
+		    {
+			$scope.errorInfo = "Error Communicating With Server";
+			$scope.showError = true;
+			$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			function()
+			{
+			    $scope.showError = false;
+			});
+		    }
+		);
    
                 $scope.showClassificationDetails =
                 function (classi_id)
                 {
+		    $scope.infoInfo = "Loading...";
+		    $scope.showInfo = true;
                     var url = $scope.projectData.url;
+                    var pid = $scope.projectData.project_id;
+                    $scope.classi_id = classi_id;
                     $http.get('/api/project/'+url+'/classification/'+classi_id)
                     .success
                     (
                         function(data) 
-                        {   
+                        {
                             $scope.data = data;
                             var modalInstance = $modal.open
                             (
                                 {
                                     templateUrl: template_root + 'classinfo.html',
                                     controller: 'ClassiDetailsInstanceCtrl',
+                                    windowClass: 'details-modal-window',
                                     resolve: 
                                     {
                                         data: function () 
                                         {
                                           return $scope.data;
+                                        },
+                                        url : function ()
+                                        {
+                                          return $scope.url;
+                                        },
+                                        id : function ()
+                                        {
+                                          return $scope.classi_id;
+                                        },
+                                        pid : function ()
+                                        {
+                                            return $scope.pid;
                                         }
                                     }
                                 }
                             );
-                            
+			    
+			    modalInstance.opened.then(function()
+			    {
+				$scope.infoInfo = "";
+				$scope.showInfo = false;    
+			    });
+			    
                             modalInstance.result.then
                             (
                                 function () 
                                 {
+                                    
                                 }
                             );
                             
                         }
-                    );
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
                 };
                 
                 $scope.createNewClassification =             
@@ -105,7 +166,7 @@
                                     (
                                         {
                                             templateUrl: template_root + 'createnewclassification.html',
-                                            controller: 'CreateNewClassificationInstanceCtrl',                        
+                                            controller: 'CreateNewClassificationInstanceCtrl',
                                             resolve: 
                                             {
                                                 data: function () 
@@ -123,7 +184,13 @@
                                             }
                                         }
                                     );
-                                    
+				    
+                                    modalInstance.opened.then(function()
+				    {
+					$scope.infoInfo = "";
+					$scope.showInfo = false;    
+				    });
+				    
                                     modalInstance.result.then
                                     (
                                         function (result) 
@@ -154,22 +221,153 @@
                                         }
                                     );
                                 }
-                            );
+                            ).error(
+				function()
+				{
+				    $scope.errorInfo = "Error Communicating With Server";
+				    $scope.showError = true;
+				    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+				    function()
+				    {
+					$scope.showError = false;
+				    });
+				}
+			    );
                         }
-                    );
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
                 };
             });
         }
     ).controller
     ('ClassiDetailsInstanceCtrl', 
-        function ($scope, $modalInstance,$http, data) 
+        function ($scope, $modalInstance,$http, data,url,id,pid) 
         {
-            $scope.data = data;
+            $scope.data = data.data;
+            $scope.pid = pid;
+            $scope.url = url;
+            $scope.id = id;
+            $scope.recs = [];
+            $scope.showMore = false;
+            $scope.currentPage = 0;
+            $scope.maxPerPage = 1;
+            $scope.totalRecs = Math.ceil($scope.data[0].total/$scope.maxPerPage);
+           
             $scope.ok = function () {
 
 		$modalInstance.close( );
 
-            };         
+            };
+	    
+            $scope.next= function () {
+
+                $scope.currentPage = $scope.currentPage + 1;
+                if ($scope.currentPage*$scope.maxPerPage >= $scope.data[0].total) {
+                    
+                    $scope.currentPage = $scope.currentPage - 1;
+                }
+                else{
+                    $http.get('/api/project/'+$scope.url+'/classification/'+$scope.id+'/more/'+($scope.currentPage*$scope.maxPerPage)+"/"+$scope.maxPerPage)
+                    .success
+                    (
+                        function(dataRec) 
+                        {
+                            $scope.recs =dataRec;
+                            jsonArr = JSON.parse(dataRec[0].json_stats)
+                            $scope.minv = parseFloat(jsonArr['minv'])
+                            $scope.maxv = parseFloat(jsonArr['maxv'])
+
+                        }
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
+                }
+            };
+            $scope.prev= function () {
+                $scope.currentPage = $scope.currentPage - 1;
+                if ($scope.currentPage  < 0) {
+                    $scope.currentPage =0;
+                }
+                else
+                {
+                    $http.get('/api/project/'+$scope.url+'/classification/'+$scope.id+'/more/'+($scope.currentPage*$scope.maxPerPage)+"/"+$scope.maxPerPage)
+                    .success
+                    (
+                        function(dataRec) 
+                        {
+                            $scope.recs =dataRec;
+                            jsonArr = JSON.parse(dataRec[0].json_stats)
+                            $scope.minv = parseFloat(jsonArr['minv'])
+                            $scope.maxv = parseFloat(jsonArr['maxv'])
+                        }
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
+                }
+            };
+            $scope.more= function () {
+
+		$scope.showMore = true;
+                if ($scope.recs.length <1)
+                {
+                    $http.get('/api/project/'+$scope.url+'/classification/'+$scope.id+'/more/0/'+$scope.maxPerPage)
+                    .success
+                    (
+                        function(dataRec) 
+                        {
+                            $scope.recs = dataRec;
+                            jsonArr = JSON.parse(dataRec[0].json_stats)
+                            $scope.minv = parseFloat(jsonArr['minv'])
+                            $scope.maxv = parseFloat(jsonArr['maxv'])
+                        }
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
+                }
+            };
+            
+            $scope.less= function () {
+
+		$scope.showMore = false;
+
+            };
         }
     ).controller
     ('CreateNewClassificationInstanceCtrl', 
@@ -271,9 +469,73 @@
     ('a2Classificationlist',
         function()
         {
-            return  {restrict : 'E', templateUrl: template_root + 'classificationlist.html'} 
+            return  {restrict : 'E',
+                    templateUrl: template_root + 'classificationlist.html'} 
 
         }
-    );
+    ).directive
+    ('a2Vectorchart',
+        function()
+        {
+            return  {restrict : 'E',
+                    scope: {
+                        vurl: '=',
+                        minvect: '=',
+                        maxvect: '='
+                    },
+                    templateUrl: template_root + 'vectorchart.html',
+                    controller: ['$scope', '$http', function($scope, $http) {
+			$scope.loadingflag = true;
+                        $scope.getVect = function(path,minve,maxve,ctx) {
+                        $http.post('/api/project/'+$scope.url+'/classification/vector', 
+                            {
+                                v:path
+                            }
+                        ).
+                        success
+                        (
+                            function(data, status, headers, config) 
+                            {
+                                $scope.data =  data.data.split(",") ;
+                                $scope.dataLength = $scope.data.length;
+                                var canvasheight = 50;
+                                var i = 0;
+                                ctx.width = $scope.dataLength
+                                ctx.height = canvasheight 
+                                ctxContext = ctx.getContext('2d');
+                                ctxContext.beginPath();
+                                ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+                                for(var i =1; i < $scope.data.length;i++)
+                                {
+                                    ctxContext.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+
+                                }
+                                ctxContext.strokeStyle = "#000";
+                                ctxContext.stroke();
+				$scope.loadingflag = false;
+                            }
+                        ).error(
+			    function()
+			    {
+				$scope.errorInfo = "Error Communicating With Server";
+				$scope.showError = true;
+				$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+				function()
+				{
+				    $scope.showError = false;
+				});
+			    }
+			);
+                        };
+                    }],
+                    link: function (scope, element) {
+                          var ctx = element.children()
+                          ctx = ctx[0];
+                          scope.getVect(scope.vurl,parseFloat(scope.minvect),parseFloat(scope.maxvect),ctx)
+                      }
+                    } 
+
+        }
+     );
 }
 )(angular);

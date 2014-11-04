@@ -1,3 +1,6 @@
+$(document)
+  .on('click.bs.dropdown.data-api', '.dropdown .dropdown-form', function (e) { e.stopPropagation() })
+
 /**
 var test_data = {
     recording : {
@@ -115,7 +118,7 @@ angular.module('visualizer', [
         if (recording) {
             $scope.loading_recording = true;
             Project.getRecordingInfo(recording.id, function(data){
-                console.log('$scope.setRecording', data);
+                // console.log('$scope.setRecording', data);
                 $scope.loading_recording = false;
                 $scope.recording = data;
                 update_location_path();
@@ -127,11 +130,11 @@ angular.module('visualizer', [
                 if($scope.recording.audioUrl) {
                     $scope.audio_player.load($scope.recording.audioUrl);
                 }
-                if($scope.recording.imageUrl) {
-                    $scope.recording.tiles = [
-                        {x:0, y:0, src:$scope.recording.imageUrl}
-                    ];
-                }
+                // if($scope.recording.imageUrl) {
+                //     $scope.recording.tiles = [
+                //         {x:0, y:0, src:$scope.recording.imageUrl}
+                //     ];
+                // }
             });
         } else {
             $scope.recording = null;
@@ -595,7 +598,7 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
                 var cont_name = tset_type.replace(/(^|-|_)(\w)/g, function(_,_1,_2,_3){ return _2.toUpperCase()});
                 cont_name = 'a2VisualizerTrainingSetLayer'+cont_name+'DataController';
                 self.data = $controller(cont_name,{$scope : $scope});
-                console.log('data controller is now : ', self.data);
+                // console.log('data controller is now : ', self.data);
             }
             self.data.fetchData(tset, rec);
         }
@@ -610,9 +613,9 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
         template : '<div class="training-set-data"></div>',
         replace  : true,
         link     : function(scope, element, attrs){
-            console.log('a2VisualizerSpectrogramTrainingSetData watching :', attrs.a2VisualizerSpectrogramTrainingSetData, scope);
+            // console.log('a2VisualizerSpectrogramTrainingSetData watching :', attrs.a2VisualizerSpectrogramTrainingSetData, scope);
             scope.$watch(attrs.a2VisualizerSpectrogramTrainingSetData, function(tset_type){
-                console.log('watching :', attrs.a2VisualizerSpectrogramTrainingSetData, " : ", tset_type);
+                // console.log('watching :', attrs.a2VisualizerSpectrogramTrainingSetData, " : ", tset_type);
                 var type_def = training_set_types[tset_type];
                 element.attr('data-tset-type', tset_type);
                 if(type_def) {
@@ -776,51 +779,79 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             var browser = $scope.browser = {
                 sites : [],
                 dates : {
-                    update_time : 0,
                     refreshing  : false,
+                    max_date: null,
+                    min_date: null,
+                    display_year:null,
+                    date_counts:[],
                     datepickerMode : 'year',
                     cache : rbDateAvailabilityCache,
-                    disabled : function(date, mode){
+                    get_counts_for : function(year){
                         var site = browser.selection.site.value;
                         var site_name = site && site.name;
                         if(!site_name) {
                             return true;
                         }
 
-                        var key_comps=[], fetch_mode;
-                        switch(mode){
-                            case "day"   : key_comps.unshift(date.getDate());
-                            case "month" : key_comps.unshift(1 + date.getMonth());
-                            case "year"  : key_comps.unshift(date.getFullYear());
-                        }
-                        key_comps.unshift(site_name);
-                        var subkey = key_comps.pop();
-                        var key = key_comps.join('-');
+                        var key = [site_name, year, '[1:12]'].join('-');
 
                         var availability = browser.dates.cache.get(key);
                         if(!availability) {
-                            browser.dates.fetch_availability(key);
+                            browser.dates.fetch_counts(key);
                         } else if(availability.data){
-                            return !availability.data[subkey];
+                            browser.dates.date_counts = availability.data;
                         }
-                        return false;
                     },
-                    fetch_availability: function(key){
+                    fetch_counts: function(key){
                         browser.dates.cache.put(key, {fetching:true});
                         browser.loading.dates = true;
                         Project.getRecordingAvailability(key, function(data){
                             $timeout(function(){
-                                var avail = data;
-                                var comps = key.split('-');
-                                while(comps.length > 0) {
-                                    var comp = comps.shift();
-                                    if (avail) {
-                                        avail = avail[comp];
-                                    }
-                                }
+                                var avail = {};
+                                for(var site in data){
+                                    var site_years = data[site];
+                                    for(var year in site_years){
+                                        var year_months = site_years[year];
+                                        for(var month in year_months){
+                                            var month_days = year_months[month];
+                                            for(var day in month_days){
+                                                var akey = year + '-' + (month < 10 ? '0' : '' ) + month + '-' + (day < 10 ? '0' : '') + day;
+                                                avail[akey] = (avail[akey] | 0) + month_days[day];
+                                            };
+                                        };
+                                    };
+                                };
+                                
                                 browser.dates.cache.get(key).data = avail || {};
-                                browser.dates.update_time = new Date();
+                                browser.dates.date_counts = avail;
                                 browser.loading.dates = false;
+                            });
+                        })
+                    },
+                    fetch_year_range : function(site, callback){
+                        var site_name = site && site.name;
+                        if(!site_name) {
+                            return;
+                        }
+                        Project.getRecordingAvailability(site_name, function(data){
+                            $timeout(function(){
+                                var range={max:-1/0, min:1/0, count:0};
+                                for(var site in data){
+                                    var site_years = data[site];
+                                    for(var year in site_years){
+                                        range.count++;
+                                        range.min = Math.min(year, range.min);
+                                        range.max = Math.max(year, range.max);
+                                    };
+                                };
+                                if(!range.count){
+                                    range.max = range.min = new Date().getFullYear();
+                                }
+                                browser.dates.min_date = new Date(range.min,  0,  1,  0,  0,  0,   0);
+                                browser.dates.max_date = new Date(range.max, 11, 31, 23, 59, 59, 999);
+                                
+                                browser.loading.dates = false;
+                                callback(range);
                             });
                         })
                     },
@@ -864,19 +895,32 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             
             
             $scope.$on('a2-persisted', load_project_sites);
+            
+            $scope.$watch('browser.dates.display_year', function(new_display_year){
+                browser.dates.get_counts_for(new_display_year);
+            });
 
             $scope.$watch('browser.selection.site.value', function(newValue, oldValue){
-                browser.dates.update_time = new Date();
+                browser.recordings = [];
+                // reset the selections and stuff
                 browser.selection.date = null;
                 browser.selection.recording.value = null;
+                // setup auto-selection
                 var auto_select = browser.selection.auto && browser.selection.auto.date;
                 if(auto_select) {
                     browser.selection.auto.date = null;
                     browser.selection.date = auto_select;
                 }
+                // reset date picker year range and counts
+                browser.dates.fetch_year_range(newValue, function(year_range){
+                    $timeout(function(){
+                        browser.dates.display_year = year_range.max;
+                        browser.dates.get_counts_for(browser.dates.display_year);
+                    });
+                });
             });
             $scope.$watch('browser.selection.date', function(newValue, oldValue){
-                $element.find('.dropdown.open').removeClass('open');
+                $(document).find('.dropdown.open').removeClass('open');
                 browser.selection.time = null;
                 var site = browser.selection.site.value;
                 var date = browser.selection.date;
@@ -910,7 +954,8 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             });
             $scope.selectRecording = function(recording){
                 if(recording) {
-                    var recdate = new Date(recording.datetime);
+                    var utcdateaslocal = new Date(recording.datetime);
+                    var recdate = new Date(utcdateaslocal.getTime() + utcdateaslocal.getTimezoneOffset()*60*1000);
                     browser.selection.auto = {
                         hash : recording.file,
                         site : browser.sites.filter(function(s){return s.name == recording.site;}).pop(),
@@ -937,9 +982,9 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 }
             });
             $scope.$on('select-recording',function(evt, recording_path){
-                console.log('select recording event : ', recording_path);
+                //console.log('select recording event : ', recording_path);
                 Project.getOneRecording(recording_path, function(recording){
-                    console.log('selecting recording : ', recording);
+                    //console.log('selecting recording : ', recording);
                     $scope.selectRecording(recording);
                 })
             });
@@ -1051,9 +1096,8 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 return typeof val == 'undefined' ? val : ( val ? val_options[0]: val_options[1] );
             }
             $scope.$watch('recording', function(recording){
-                console.log('validated recording : ', recording);
                 $scope.validations = {};
-                recording.validations && recording.validations.forEach(add_validation);
+                recording && recording.validations && recording.validations.forEach(add_validation);
             });
             
             load_project_classes();

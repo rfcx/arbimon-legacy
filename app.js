@@ -46,7 +46,8 @@ app.use(busboy());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
+
+var sessionConfig = {
     key    : config('session').key,
     secret : config('session').secret,
     resave : true,
@@ -57,7 +58,14 @@ app.use(session({
         password : config('db').password,
         database : config('db').database
     })
-}));
+};
+
+if (app.get('env') === 'production') {
+    app.set('trust proxy', 1) // trust first proxy
+    sessionConfig.cookie = { secure: true }; // use secure cookies
+}
+
+app.use(session(sessionConfig));
 
 app.use('/', login);
 app.use('/', routes);

@@ -1,3 +1,36 @@
+
+// add parent tag selector
+$.expr.filter.UP_PARENT_SPECIAL = function(_1){ 
+    var times = (_1 && _1.length) || 1;
+    return $.expr.createPseudo(function(seed,matches,_3,_4){
+        var dups=[];
+        seed.forEach(function(e, i){
+            var p=e;
+            for(var t=times; t > 0; --t){
+                p = p && (p.nodeType == 9 || p.parentNode.nodeType == 9  ? p : p.parentNode);
+            }
+            if(p){
+                for(var di=0, de=dups.length; di < de; ++di){
+                    if(dups[di] === p){
+                        p = null;
+                        break;
+                    }
+                }
+                if(p){
+                    dups.push(p);
+                }
+            }
+            matches[i] = p;
+            seed[i] = !p;
+        })
+        
+        return true;
+    })
+};
+$.expr.match.needsContext = new RegExp($.expr.match.needsContext.source + '|^(\^)');
+$.expr.match.UP_PARENT_SPECIAL = /^(\^+)/;
+
+
 angular.module('a2directives', [])
 .directive('a2GlobalKeyup', function($timeout){
     return {
@@ -198,7 +231,7 @@ angular.module('a2directives', [])
                 var ptag = p[tag];
                 var persisted = true;
                 if(!ptag){
-                    console.log('new persistent scope "%s" created in ', tag, $rootScope);
+                    // console.log('new persistent scope "%s" created in ', tag, $rootScope);
                     p[tag] = ptag = {};
                     ptag.scope = $rootScope.$new(true);
                     ptag.scope._$persistence_tag_ = tag;
@@ -256,11 +289,335 @@ angular.module('a2directives', [])
             });
         }
     };
- })
- .directive('loader', function() {
+})
+ 
+.directive('loader', function() {
      return {
          restrict: 'E',
          templateUrl: '/partials/directives/loader.html'
      }
- })
+})
+ 
+/**   yearpick - complete year date picker
+  
+  example usage:
+  <div class="dropdown">
+    <button ng-model="dia" yearpick disable-empty="true" year="year" date-count="dateData">
+        <span ng-hide="dia"> Select Date </span>
+        {{ dia | date: short }}
+    </button>
+  </div>
+  or, if you just want to show the component :
+  <yearpick ng-model="dia" yearpick disable-empty="true" year="year" date-count="dateData"></yearpick>
+ */
+.directive('yearpick', function($timeout) {
+    return {
+        restrict: 'AE',
+        scope: {
+            ngModel      : '=',
+            maxDate      : '=',
+            minDate      : '=',
+            year         : '=',
+            dateCount    : '=',
+            disableEmpty : '&'
+        },
+        link: function(scope, element, attrs) {
+            // console.log(attrs);
+            var is_a_popup = !/yearpick/i.test(element[0].tagName);
+            var popup;
+            if(is_a_popup){
+                popup = $('<div></div>').insertAfter(element).addClass('popup calendar');
+            } else {
+                popup = element.addClass('calendar');
+            }
+            
+            var weekOfMonth = function(d) {
+                var firstDay = new Date(d.toString());
+                firstDay.setDate(1);
+                var monthOffset = firstDay.getDay()-1;
+                return Math.floor((d.getDate()+monthOffset+7)/7)-1;
+            };
+            var monthName = d3.time.format('%B');
+            var dateFormat = d3.time.format("%Y-%m-%d");
+            
+            if(!scope.year){
+                scope.year = (new Date()).getFullYear();
+            }
+            var cubesize = 19;
+            var width = 600;
+            var height = 510;
+            var headerHeight = 40;
+            var days;
+            
+            var svg = d3.select(popup[0])
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            var cal    = svg.append('g');
+            var legend = svg.append('g');
+            var prev   = svg.append('g').attr('class', 'btn');
+            var next   = svg.append('g').attr('class', 'btn');
+            
+        
+            prev.append('text')
+                .attr('text-anchor', 'start')
+                .attr('font-family', 'FontAwesome')
+                .attr('font-size', 24)
+                .attr('x', 5)
+                .attr('y', 24)
+                .text('\uf060');
+            
+            prev.on('click', function(){
+                $timeout(function(){
+                    --scope.year;
+                })
+            });
+            
+            
+            next.append('text')
+                .attr('text-anchor', 'end')
+                .attr('font-family', 'FontAwesome')
+                .attr('font-size', 24)
+                .attr('x', width-5)
+                .attr('y', 24)
+                .text('\uf061');
+            
+            next.on('click', function(){
+                $timeout(function(){
+                    ++scope.year;
+                })
+            });
+            
+            var scale = {scale:[1, 50, 100], labels:['0','1','50','100']};
+            var color = d3.scale.threshold().domain(scale.scale).range(scale);
+            
+            var icon = legend.selectAll('g')
+                .data(['1','50','100'])
+                .enter()
+                .append('g')
+                .attr('transform', 'translate(20,0)');
+            
+            icon.append('rect')
+                .attr('width', cubesize)
+                .attr('height', cubesize)
+                .attr('y', height-cubesize-10)
+                .attr('x', function(d, i) { return i*45+22; })
+                .attr('class', function(d) { return 'cal-level-'+d; })
+            ;
+            
+            icon.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('font-size', 10)
+                .attr('y', height-15)
+                .attr('x', function(d, i) { return i*45+10; })
+                .text(function(d, i) { return '+'+d; })
+            ;
+            
+            var drawCounts = function() {
+                if(!scope.dateCount) return;
+                
+                if(scope.disableEmpty()) {
+                    days.classed('cal-disabled', function(d) {
+                        return $(this).hasClass('cal-oor') || !scope.dateCount[dateFormat(d)] ;
+                    });
+                }                
+                
+                var squares = days.select('rect');                
+                squares.attr('class', function(d) {                     
+                    var color = d3.scale.threshold().domain([1, 50, 100]).range(['0','1','50','100']);
+                    
+                    var count = scope.dateCount[dateFormat(d)] || 0;
+                    
+                    return 'cal-level-'+color(count); 
+                });
+            };
+            
+            var draw = function() {
+                // set calendar year
+                calendar = cal.selectAll('g').data([scope.year]);
+                // on enter, create a new title
+                var title = calendar.enter().append('g');
+                // .. and set it up
+                title.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('font-size', 30)
+                    .attr('x', width/2)
+                    .attr('y', 30);
+                // .. and add a line underneath
+                title.append('line')
+                    .attr('x1', 5)
+                    .attr('y1', headerHeight)
+                    .attr('x2', width-5)
+                    .attr('y2', headerHeight)
+                    .attr('stroke', 'rgba(0,0,0,0.5)')
+                    .attr('stroke-width', 1);
+                // on exit, remove it
+                calendar.exit().remove();
+                // re-set the title text on each draw
+                calendar.select('text').text(function(d) { return d; });
+                
+                prev.classed('disabled', scope.minDate && scope.minDate.getFullYear() >= scope.year);
+                next.classed('disabled', scope.maxDate && scope.year >= scope.maxDate.getFullYear());
+                
+                // setup the months container and set the years' month date range
+                var mon = calendar.append('g').attr('transform', 'translate(0,'+ headerHeight +')')
+                    .selectAll('g')
+                    .data(function(d) { 
+                        // console.log(d);
+                        return d3.time.months(new Date(d, 0, 1), new Date(d+1, 0, 1));
+                    });
+                // on enter in months, append a g
+                mon.enter().append('g');
+                // in months, transform each month to their place in the yearpick
+                mon.attr('transform', function(d, i) { 
+                    return 'translate('+((d.getMonth()%4)*150+5)+','+(Math.floor(d.getMonth()/4)*150+5)+')'; 
+                });
+                // in months, transform each month to their place in the yearpick
+                mon.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('x', cubesize*7/2)
+                    .attr('y', 15)
+                    .text(function(d) { return monthName(d); });
+                // in months, on exit, remove
+                mon.exit().remove();
+                // setup day containers for each months
+                days = mon.selectAll('g')
+                    .data(function(d) { 
+                        return d3.time.days(new Date(d.getFullYear(), d.getMonth(), 1), new Date(d.getFullYear(), d.getMonth() + 1, 1)); 
+                    });
+                //  in days, on enter, append a g of class btn
+                days.enter().append('g').attr('class', 'btn');
+                //  for each day, move the text, add class hover and onclick event handler
+                days.attr('transform', function() { return 'translate(0,24)'; })
+                    .classed('hover', true)
+                    .classed('cal-disabled cal-oor', function(d) {
+                        return (scope.minDate ? (d < scope.minDate) : false) ||
+                               (scope.maxDate ? (scope.maxDate < d) : false);
+                    })
+                    .classed('selected', function(d){
+                        return scope.ngModel && (dateFormat(d) == dateFormat(scope.ngModel));
+                    })
+                    .on('click', function(d){
+                        scope.$apply(function() {
+                            d3.event.preventDefault();
+                            scope.ngModel = d;
+                            is_a_popup && popup.css('display', 'none');
+                        });
+                    });
+                // .. also, add a rect on the background
+                days.append('rect')
+                    .attr('width', cubesize)
+                    .attr('height', cubesize)
+                    .attr('y', function(d, i) { return weekOfMonth(d) * (cubesize+1); })
+                    .attr('x', function(d, i) { return (d.getDay()) * (cubesize+1); })
+                    .attr('fill', 'white')
+                    ;
+                // .. and append a text on the foreground
+                days.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('font-size', 10)
+                    .attr('y', function(d, i) { return weekOfMonth(d) * (cubesize+1)+13; })
+                    .attr('x', function(d, i) { return (d.getDay()+1) * (cubesize+1)-10; })
+                    .text(function(d, i) { return d.getDate(); })
+                    ;
+                // if we have date counts, then draw them
+                if(attrs.dateCount) {
+                    drawCounts();
+                }
+                // in days, on exit, remove
+                days.exit().remove();
+            };
+            
+            scope.$watch('maxDate', function(){
+                if(scope.maxDate && scope.year > scope.maxDate.getFullYear()){
+                    scope.year = scope.maxDate.getFullYear();
+                }
+                draw();
+            });
+            scope.$watch('minDate', function(){
+                if(scope.minDate && scope.year < scope.minDate.getFullYear()){
+                    scope.year = scope.minDate.getFullYear();
+                }
+                draw();
+            });
+            scope.$watch('year', function(){
+                if(!scope.year){
+                    scope.year = new Date().getFullYear();
+                }
+                draw();
+            });
+            scope.$watch('ngModel', function(){
+                if(scope.ngModel){
+                    scope.year = scope.ngModel.getFullYear();
+                    days.classed('selected', function(d){
+                        return scope.ngModel && (dateFormat(d) == dateFormat(scope.ngModel));
+                    });
+                }
+            });
+            
+            if(attrs.dateCount) {
+                scope.$watch('dateCount', function(value) {
+                    drawCounts();
+                });
+            }
+            
+            element.click(function() {
+                if(popup.css('display') === 'none') {
+                    popup.css('display','block');
+                } else {
+                    popup.css('display', 'none');
+                }
+            });
+        }
+    };
+})
+.directive('a2InsertIn', function(){
+    var count=1;
+    return {
+        restrict: 'A',
+        link: function ($scope, $element, $attr){
+            var anchor = $('<div class="a2-insert-in-anchor"></div>')
+                .attr('id', 'a2InsertInAnchor'+(count++));
+                
+            var is_truthy = function(v){
+                return (v) && ~/no|false|0/.test(''+v);
+            }
+            var keep_position = is_truthy($attr.a2KeepPosition);
+            var target = $($attr.a2InsertIn);
+            
+            $element.replaceWith(anchor).appendTo(target);
+            
+            var reposition_element=null;
+            if(keep_position){
+                var comp_pos = function(el){
+                    return $(el).offset();
+                }
+                reposition_element = function(){
+                    $('.a2-insert-in-anchor')
+                    var po = comp_pos($element.offsetParent());
+                    var ao = comp_pos(anchor);
+                    ao.position='absolute';
+                    ao.top  -= po.top;
+                    ao.left -= po.left;
+                    $element.css(ao);
+                };
+                $('.a2-insert-in-anchor').parents().each(function(i, e){
+                    var $e=$(e);
+                    if(!/visible|hidden/.test($e.css('overflow'))){
+                        $e.scroll(reposition_element);
+                    }
+                });
+                $scope.$watch(function(){
+                    return anchor.offset();
+                }, reposition_element, true);
+                reposition_element();
+            }
+            
+            anchor.on('$destroy', function(){
+                $element.remove();
+            })
+        }        
+    }
+})
  ;

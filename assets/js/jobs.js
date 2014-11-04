@@ -132,6 +132,17 @@
             $scope.showSuccesss = false;
             $scope.errorInfo = "";
             $scope.showErrors = false;
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            $scope.updateFlags = function()
+	    {
+		$scope.successInfo = "";
+		$scope.showSuccess = false;
+		$scope.errorInfo = "";
+		$scope.showError = false;
+		$scope.infoInfo = "";
+		$scope.showInfo = false;
+	    };
             $scope.jobs = [];
             $scope.$watch
             (
@@ -143,6 +154,8 @@
                 {
                     $scope.jobs = JobsData.getJobs();
                     JobsData.startTimer();
+                    $scope.infoInfo = "";
+                    $scope.showInfo = false;
                 }
             );
             
@@ -151,6 +164,8 @@
             $scope.hideJob =
             function(jobId)
             {
+                $scope.infoInfo = "Loading...";
+                $scope.showInfo = true;
                 var continueFalg = true;
                 for(var i =0;i < $scope.jobs.length ; i++)
                 {
@@ -176,6 +191,12 @@
                                 }
                             );
                             
+                            modalInstance.opened.then(function()
+                            {
+                                $scope.infoInfo = "";
+                                $scope.showInfo = false;    
+                            });
+                            
                             modalInstance.result.then
                             (
                                 function (data) 
@@ -196,8 +217,6 @@
                                                     JobsData.updateJobs();
                                                     $scope.successInfo = "Job Hidden Successfully";
                                                     $scope.showSuccesss = true;
-                                                    $scope.showClassifications = true;
-                                                    $scope.showTrainings = true;
                                                     $("#successDivs").fadeTo(3000, 500).slideUp(500,
                                                    function()
                                                     {
@@ -205,6 +224,17 @@
                                                     });
                                                 }
                                              }
+                                        ).error(
+                                            function()
+                                            {
+                                                $scope.errorInfo = "Error Communicating With Server";
+                                                $scope.showError = true;
+                                                $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+                                                function()
+                                                {
+                                                    $scope.showError = false;
+                                                });
+                                            }
                                         );
                                     }
                                 }
@@ -229,8 +259,6 @@
                                 JobsData.updateJobs();
                                 $scope.successInfo = "Job Hidden Successfully";
                                 $scope.showSuccesss = true;
-                                $scope.showClassifications = true;
-                                $scope.showTrainings = true;
                                 $("#successDivs").fadeTo(3000, 500).slideUp(500,
                                function()
                                 {
@@ -238,47 +266,35 @@
                                 });
                             }
                          }
+                    ).error(
+		    function()
+		    {
+			$scope.errorInfo = "Error Communicating With Server";
+			$scope.showError = true;
+			$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			function()
+			{
+			    $scope.showError = false;
+			});
+		    }
                     );
                 }
             };
             
-            $scope.$watch('showTrainings ',
-                function()
+            $scope.showOrHide = function(type)
+            {
+                if (type==1)
                 {
-                    if ($scope.showTrainings )
-                    {
-                        $('.jobtype1').show();
-                    }
-                    else
-                    {
-                        $('.jobtype1').hide();
-                        if (!$scope.showClassifications )
-                        {
-                           $('.jobtype2').show();
-                           $scope.showClassifications = true;
-                        }
-                    }
+                    return($scope.showTrainings )
                 }
-            );
-                        
-            $scope.$watch('showClassifications',
-                function()
+                
+                if (type==2)
                 {
-                    if ($scope.showClassifications)
-                    {
-                        $('.jobtype2').show();
-                    }
-                    else
-                    {
-                        $('.jobtype2').hide();
-                        if (!$scope.showTrainings )
-                        {
-                           $('.jobtype1').show();
-                           $scope.showTrainings = true;
-                        }
-                    }
+                    return($scope.showClassifications)
                 }
-            );
+                else return false;
+            };
+            
         }
     );   
 }

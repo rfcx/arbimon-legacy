@@ -150,7 +150,7 @@ for i in classes:
         statsJson = statsJson + ',"accuracy":'+str(modelStats[0])+' ,"precision":'+str(modelStats[1])+',"sensitivity":'+str(modelStats[2])
         statsJson = statsJson + ', "forestoobscore" :'+str(modelStats[3])+' , "roisamplerate" : '+str(sampleRate)+' , "roipng":"'+pngKey+'"'
         statsJson = statsJson + ', "specificity":'+str(modelStats[5])+' , "tp":'+str(modelStats[6])+' , "fp":'+str(modelStats[7])+' '
-        statsJson = statsJson + ', "tn":'+str(modelStats[8])+' , "fn":'+str(modelStats[9])+' }'
+        statsJson = statsJson + ', "tn":'+str(modelStats[8])+' , "fn":'+str(modelStats[9])+' , "minv": '+str(modelStats[10])+', "maxv": '+str(modelStats[11])+'}'
 
         cursor.execute("INSERT INTO `models`(`name`, `model_type_id`, `uri`, `date_created`, `project_id`, `user_id`,"+
                        " `training_set_id`, `validation_set_id`) " +
@@ -175,6 +175,6 @@ for i in classes:
         db.commit()
 
 #remore temporary directory
-#shutil.rmtree(tempFolders+"/training_"+str(jobId))
+shutil.rmtree(tempFolders+"/training_"+str(jobId))
 db.close()
 print 'ended'

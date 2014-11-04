@@ -19,6 +19,12 @@ Bio-Acoustic Analyzer
    sudo apt-get install sox
    sudo apt-get install libsox-fmt-mp3
    ```
+
+
+ - image magick - image manipulation tool
+   ```
+   sudo apt-get install imagemagick
+   ```
    
    
  - nodejs

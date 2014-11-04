@@ -103,7 +103,6 @@ module.exports = function(grunt) {
                 dest: 'public/assets/angular-ui-select/'
             },
 
-
             moment: {
                 expand: true,
                 flatten: true,
@@ -116,7 +115,7 @@ module.exports = function(grunt) {
                 flatten: true,
                 src: 'bower_components/angular-file-upload/**/*.js',
                 dest: 'public/assets/angular-file-upload/'
-            },
+            }
         },
 
         concat: {

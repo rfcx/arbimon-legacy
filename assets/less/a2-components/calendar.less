@@ -1,0 +1,55 @@
+.calendar {
+    background-color: white;
+    -moz-user-select: none;
+    -webkit-select: none;
+    user-select: none;
+    &.popup{
+        position: absolute;
+        z-index: 2000;
+        box-shadow: 0px 6px 6px 3px rgba(0, 0, 0, 0.7);
+        border-radius: 5px;
+        display: none;
+    }
+}
+
+@cal-level-cl-0   : white;  
+@cal-level-cl-1   : #adef9c;
+@cal-level-cl-50  : #70dd3a;
+@cal-level-cl-100 : #5ec014;
+@cal-sel-cl : #003455;
+
+.cal-level-0 { 
+    fill: @cal-level-cl-0;
+}
+.cal-level-1 {
+    fill: @cal-level-cl-1;
+}
+.cal-level-50 {
+    fill: @cal-level-cl-50;
+}
+.cal-level-100 {
+    fill: @cal-level-cl-100;
+}
+.cal-disabled {
+    pointer-events: none;
+}
+.cal-disabled text {
+    stroke: #ccc;
+    pointer-events: none;
+}
+.hover rect {
+    stroke: transparent;
+}
+.hover:hover rect {
+    stroke: black;
+}
+
+.selected {
+    rect{
+        stroke: @cal-sel-cl;
+    }
+    text{
+        fill: @cal-sel-cl;
+    }
+    
+}

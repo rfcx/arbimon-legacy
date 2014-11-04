@@ -16,5 +16,8 @@
     "selectize": "~0.8.5",
     "moment": "~2.8.3",
     "angular-audio": "*"
+  },
+  "resolutions": {
+    "d3": "~3.4.11"
   }
 }

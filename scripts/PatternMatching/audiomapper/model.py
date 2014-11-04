@@ -14,9 +14,15 @@ class Model:
         self.speciesSpec = speciesSpec
         self.data  = numpy.zeros(shape=(0,6))
         self.classes = []
+        self.minv = 9999999
+        self.maxv = -9999999
         
     def addSample(self,present,meanfeat,difffeat,maxfeat,minfeat,stdfeat,medfeat):
         self.classes.append(present)
+        if self.minv > minfeat:
+            self.minv = minfeat
+        if self.maxv < maxfeat:
+            self.maxv = maxfeat
         row = [meanfeat,difffeat,maxfeat,minfeat,stdfeat,medfeat]
         self.data = numpy.vstack((self.data,row))
     
@@ -89,7 +95,7 @@ class Model:
         #smin = min([min((self.speciesSpec[i])) for i in range(self.speciesSpec.shape[0])])
         #smax = max([max((self.speciesSpec[i])) for i in range(self.speciesSpec.shape[0])])
         #x = 255*((self.speciesSpec - smin)/(smax-smin))
-        return [self.accuracy_score,self.precision_score,self.sensitivity_score,self.obbScore,self.speciesSpec,self.specificity_score ,self.tp,self.fp,self.tn,self.fn]
+        return [self.accuracy_score,self.precision_score,self.sensitivity_score,self.obbScore,self.speciesSpec,self.specificity_score ,self.tp,self.fp,self.tn,self.fn,self.minv,self.maxv]
     
     def save(self,filename,l,h,c):
         with open(filename, 'wb') as output:

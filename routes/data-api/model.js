@@ -7,6 +7,7 @@ var mysql = require('mysql');
 var path = require('path');
 var jobQueue = require('../../utils/jobqueue');
 var scriptsFolder = __dirname+'/../../scripts/PatternMatching/'
+var config = require('../../config/aws.json');
 
 
 router.get('/project/:projectUrl/models', function(req, res, next) {
@@ -62,7 +63,15 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
             var rr = {"species":species[key],"songtype":songtype[key],"total":total[key],"data":data[key],"percentage":per }
             results.push(rr);
         }
-        res.json(results);
+        res.json({"data":results});
+    });
+});
+
+router.get('/project/:projectUrl/classification/:cid/more/:f/:t', function(req, res) {
+console.log('here mnore')
+    model.projects.classificationDetailMore(req.params.projectUrl,req.params.cid,req.params.f,req.params.t, function(err, rows) {
+        if(err) throw err;
+        res.json(rows);
     });
 });
 
@@ -117,7 +126,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
                                    res.json({ err:"Could not create training job"}); 
                                 }
                                 else
-                                { console.log(scriptsFolder)
+                                { 
                                     jobQueue.push({
                                         name: 'training'+trainingId,
                                         work: function(callback)
@@ -210,7 +219,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                                 {
                                     jobQueue.push({
                                         name: 'classification'+classificationId,
-                                        work: function()
+                                        work: function(callback)
                                         {
                                             var python = require('child_process').spawn
                                             (
@@ -230,6 +239,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                                                 { 
                                                     if (code !== 0) { console.log('classification returned error')}
                                                     else console.log('no error, everything ok, classification completed');
+                                                    callback();
                                                 }
                                             );
                                         }
@@ -238,7 +248,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                                     function() {
                                         console.log("job done! classification", classificationId);
                                         
-                                        model.models(classifier_id, function(err, rows) {
+                                        model.models.findName(classifier_id, function(err, rows) {
                                             model.projects.insertNews({
                                                 news_type_id: 9, // model created and trained
                                                 user_id: req.session.user.id,
@@ -314,7 +324,20 @@ router.get('/project/:projectUrl/progress', function(req, res, next) {
     });
 });
 
-router.get('/project/:projectUrl/job/hide/:jId', function(req, res, next) {
+router.get('/project/:projectUrl/progress/queue', function(req, res) {
+
+    var string = "(running:"+jobQueue.running() +
+                 ") (idle: "+jobQueue.idle()+
+                 ") (concurrency: "+ jobQueue.concurrency+
+                 ") (started: "+ jobQueue.started+
+                 ") (howmanyInqueue: "+ jobQueue.length()+
+                 ") (isPaused: "+ jobQueue.paused+")"
+                 
+    res.json({"debug":string});
+
+});
+
+router.get('/project/:projectUrl/job/hide/:jId', function(req, res) {
 
     model.jobs.hide(req.params.jId, function(err, rows) {
         if(err) res.json('{ "err" : "Error removing job"}');
@@ -325,6 +348,51 @@ router.get('/project/:projectUrl/job/hide/:jId', function(req, res, next) {
             res.json(row);
         });
     });
+});
+
+router.post('/project/:projectUrl/classification/vector', function(req, res) {
+
+    var aws = require('knox').createClient({
+        key: config.accessKeyId
+      , secret: config.secretAccessKey
+      , bucket: config.bucketName
+    });
+
+    aws.getFile('/'+req.body.v, function(err, resp){
+        var outData = ''
+        resp.on('data', function(chunk) { outData = outData + chunk; });
+        resp.on('end', function(chunk) { res.json({"data":outData}); });
+    });
+
+});
+    
+router.get('/project/classification/csv/:cid', function(req, res) {
+
+    model.projects.classificationName(req.params.cid, function(err, row) {
+        if(err) throw err;
+        var cname = row[0]['name'];
+        res.set({
+            'Content-Disposition' : 'attachment; filename="'+cname+'.csv"',
+            'Content-Type' : 'text/csv'
+        });
+        
+        model.projects.classificationCsvData(req.params.cid, function(err, row) {
+            if(err) throw err;
+            var data = '"rec","presence","site","year","month","day","hour","minute","species","songtype"\n';
+            var thisrow;
+            for(var i =0;i < row.length;i++)
+            {
+                thisrow = row[i]
+                data = data + '"'+ thisrow['rec']+'",'+ thisrow['present']+','+
+                        thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
+                        thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
+                        thisrow['scientific_name']+'","'+ thisrow['songtype']+'"\n'
+            }
+            res.send(data);
+        });
+    });
+          
+
 });
 
 module.exports = router;

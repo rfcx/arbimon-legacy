@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import csv
 from recanalizer import Recanalizer
 bucket = 'arbimon2'
 import cPickle as pickle
@@ -23,6 +24,9 @@ db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[
 bucketName = config[4]
 awsKeyId = config[5]
 awsKeySecret = config[6]
+conn = S3Connection(awsKeyId, awsKeySecret)
+bucket = conn.get_bucket(bucket)
+        
 #reads lines from stdin
 for line in sys.stdin:
     
@@ -38,8 +42,6 @@ for line in sys.stdin:
     else:
         #get model from bucket
         modelLocal = tempFolder+'model.mod'
-        conn = S3Connection(awsKeyId, awsKeySecret)
-        bucket = conn.get_bucket(bucket)
         key = bucket.get_key(modelUri)     
         key.get_contents_to_filename(modelLocal)
         
@@ -52,9 +54,22 @@ for line in sys.stdin:
         
     #get rec from URI and compute feature vector using the spec vocalization
     recAnalized = Recanalizer(recUri , mod[1] ,mod[2], mod[3] ,mod[4], tempFolder , bucket)
+    featvector = recAnalized.getVector()
+    recName = recUri.split('/')
+    recName = recName[len(recName)-1]
+    vectorLocal = tempFolder+recName+'.vector'
+    myfileWrite = open(vectorLocal, 'wb')
+    wr = csv.writer(myfileWrite)
+    wr.writerow(featvector)
+    myfileWrite.close()
+   
+    vectorUri = modelUri.replace('.mod','') + '/classification_'+ str(jId)+ '_' + recName + '.vector'
+    k = bucket.new_key(vectorUri )
+    k.set_contents_from_filename(vectorLocal)
+    k.set_acl('public-read')
     fets = recAnalized.features()
     clf = mod[0]
     res = clf.predict(fets)
-    print recId,";",res[0],";",jId,";",species,";",songtype
+    print recId,";",res[0],";",jId,";",species,";",songtype,";", min(featvector) ,";",max(featvector)
 
 
