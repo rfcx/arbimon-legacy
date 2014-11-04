@@ -485,6 +485,7 @@
                     },
                     templateUrl: template_root + 'vectorchart.html',
                     controller: ['$scope', '$http', function($scope, $http) {
+			$scope.loadingflag = true;
                         $scope.getVect = function(path,minve,maxve,ctx) {
                         $http.post('/api/project/'+$scope.url+'/classification/vector', 
                             {
@@ -501,16 +502,17 @@
                                 var i = 0;
                                 ctx.width = $scope.dataLength
                                 ctx.height = canvasheight 
-                                ctx = ctx.getContext('2d');
-                                ctx.beginPath();
-                                ctx.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+                                ctxContext = ctx.getContext('2d');
+                                ctxContext.beginPath();
+                                ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
                                 for(var i =1; i < $scope.data.length;i++)
                                 {
-                                    ctx.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+                                    ctxContext.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
 
                                 }
-                                ctx.strokeStyle = "#000";
-                                ctx.stroke();                              
+                                ctxContext.strokeStyle = "#000";
+                                ctxContext.stroke();
+				$scope.loadingflag = false;
                             }
                         ).error(
 			    function()
