@@ -18,7 +18,20 @@ module.exports = function(grunt) {
                 }
             }
         },
-
+        html2js: {
+            options: {
+                base : 'assets',
+                rename: function (moduleName) {
+                    return '/' + moduleName;
+                }
+            },
+            arbimon2: {
+                src: [
+                    'assets/partials/**/*.html'
+                ],
+                dest: 'public/assets/js/arbimon2-templates.js'
+            },
+        },
         copy: {
             bootstrap: {
                 expand: true,
@@ -199,9 +212,9 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-express-server');
     grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-html2js')
 
-
-    grunt.registerTask('build', ['copy', 'less', 'concat']);
+    grunt.registerTask('build', ['copy', 'less', 'html2js', 'concat']);
     grunt.registerTask('default', ['build']);
     grunt.registerTask('server', ['express:dev', 'watch']);
 };

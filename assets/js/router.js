@@ -1,4 +1,5 @@
 var arbimon2 = angular.module('arbimon2', [
+    'templates-arbimon2',
     'ui.router', 
     'visualizer', 
     'dashboard', 
