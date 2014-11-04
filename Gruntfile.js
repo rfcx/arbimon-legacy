@@ -160,7 +160,6 @@ module.exports = function(grunt) {
             },
             html: {
                 files: [
-                    'public/partials/**/*.html',
                     'views/**/*.ejs'
                 ],
                 tasks:[]
@@ -175,6 +174,12 @@ module.exports = function(grunt) {
                     'assets/js/**/*.js'
                 ],
                 tasks: ['concat:dev']
+            },
+            html2js: {
+                files: [
+                    'public/partials/**/*.html'
+                ],
+                tasks: ['html2js']
             },
             backendjs: {
                 files: [
