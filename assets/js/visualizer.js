@@ -781,7 +781,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 dates : {
                     refreshing  : false,
                     display_year:null,
-                    date_counts:null,
+                    date_counts:[],
                     datepickerMode : 'year',
                     cache : rbDateAvailabilityCache,
                     disabled : function(year){

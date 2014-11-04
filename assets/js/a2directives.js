@@ -310,7 +310,7 @@ angular.module('a2directives', [])
   or, if you just want to show the component :
   <yearpick ng-model="dia" yearpick disable-empty="true" year="year" date-count="dateData"></yearpick>
  */
-.directive('yearpick', function() {
+.directive('yearpick', function($timeout) {
     return {
         restrict: 'AE',
         scope: {
@@ -367,7 +367,9 @@ angular.module('a2directives', [])
                 .html('&#xf060');
             
             prev.on('click', function(){
-                --scope.year;
+                $timeout(function(){
+                    --scope.year;
+                })
             });
             
             
@@ -380,7 +382,9 @@ angular.module('a2directives', [])
                 .html('&#xf061');
             
             next.on('click', function(){
-                ++scope.year;
+                $timeout(function(){
+                    ++scope.year;
+                })
             });
             
             var scale = {scale:[1, 50, 100], labels:['0','1','50','100']};
@@ -514,8 +518,12 @@ angular.module('a2directives', [])
                 // in days, on exit, remove
                 days.exit().remove();
             };
-            draw();
+            
             scope.$watch('year', function(){
+                if(!scope.year){
+                    scope.year = new Date().getFullYear();
+                }
+                
                 draw();
             });
             scope.$watch('ngModel', function(){
