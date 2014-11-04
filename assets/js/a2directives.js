@@ -588,6 +588,9 @@ angular.module('a2directives', [])
                         $e.scroll(reposition_element);
                     }
                 });
+                $scope.$watch(function(){
+                    return anchor.offset();
+                }, reposition_element, true);
                 reposition_element();
             }
             
