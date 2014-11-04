@@ -572,6 +572,35 @@ angular.module('a2directives', [])
         }
     };
 })
+.directive('a2Img', function($compile){
+    return {
+        restrict : 'E',
+        scope : {},
+        link: function ($scope, $element, $attr) {
+console.log('::1::', $scope, $scope.src, $attr);
+            var loader = $compile('<loader></loader>')($scope).appendTo($element);
+console.log('::2::');
+            var img = $('<img />')
+                .load(function(){
+                    img.show();
+                    loader.hide();
+                })
+                .appendTo($element);
+console.log('::3::');
+//            $scope.$watch('src', function(new_src){
+//console.log('::4::', new_src);
+//                img.hide();
+//                loader.show();
+//                var image = new Image();
+//                image.onload = function () {
+//                    img.attr('src', this.src);
+//                };
+//                image.src = new_src;
+//                
+//            });
+        }
+    }
+})
 .directive('a2InsertIn', function(){
     var count=1;
     return {
