@@ -27,7 +27,7 @@ module.exports = function(grunt) {
             },
             arbimon2: {
                 src: [
-                    'assets/partials/**/*.html'
+                    'public/partials/**/*.html'
                 ],
                 dest: 'public/assets/js/arbimon2-templates.js'
             },
