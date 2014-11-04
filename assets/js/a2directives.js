@@ -315,6 +315,8 @@ angular.module('a2directives', [])
         restrict: 'AE',
         scope: {
             ngModel      : '=',
+            maxDate      : '=',
+            minDate      : '=',
             year         : '=',
             dateCount    : '=',
             disableEmpty : '&'
@@ -417,9 +419,9 @@ angular.module('a2directives', [])
                 
                 if(scope.disableEmpty()) {
                     days.classed('cal-disabled', function(d) {
-                        return !scope.dateCount[dateFormat(d)];
+                        return $(this).hasClass('cal-oor') || !scope.dateCount[dateFormat(d)] ;
                     });
-                }
+                }                
                 
                 var squares = days.select('rect');                
                 squares.attr('class', function(d) {                     
@@ -454,6 +456,10 @@ angular.module('a2directives', [])
                 calendar.exit().remove();
                 // re-set the title text on each draw
                 calendar.select('text').text(function(d) { return d; });
+                
+                prev.classed('disabled', scope.minDate && scope.minDate.getFullYear() >= scope.year);
+                next.classed('disabled', scope.maxDate && scope.year >= scope.maxDate.getFullYear());
+                
                 // setup the months container and set the years' month date range
                 var mon = calendar.append('g').attr('transform', 'translate(0,'+ headerHeight +')')
                     .selectAll('g')
@@ -485,6 +491,10 @@ angular.module('a2directives', [])
                 //  for each day, move the text, add class hover and onclick event handler
                 days.attr('transform', function() { return 'translate(0,24)'; })
                     .classed('hover', true)
+                    .classed('cal-disabled cal-oor', function(d) {
+                        return (scope.minDate ? (d < scope.minDate) : false) ||
+                               (scope.maxDate ? (scope.maxDate < d) : false);
+                    })
                     .classed('selected', function(d){
                         return scope.ngModel && (dateFormat(d) == dateFormat(scope.ngModel));
                     })
@@ -519,11 +529,22 @@ angular.module('a2directives', [])
                 days.exit().remove();
             };
             
+            scope.$watch('maxDate', function(){
+                if(scope.maxDate && scope.year > scope.maxDate.getFullYear()){
+                    scope.year = scope.maxDate.getFullYear();
+                }
+                draw();
+            });
+            scope.$watch('minDate', function(){
+                if(scope.minDate && scope.year < scope.minDate.getFullYear()){
+                    scope.year = scope.minDate.getFullYear();
+                }
+                draw();
+            });
             scope.$watch('year', function(){
                 if(!scope.year){
                     scope.year = new Date().getFullYear();
                 }
-                
                 draw();
             });
             scope.$watch('ngModel', function(){
