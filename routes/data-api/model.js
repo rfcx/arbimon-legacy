@@ -346,5 +346,34 @@ router.post('/project/:projectUrl/classification/vector', function(req, res) {
     });
 
 });
+    
+router.get('/project/classification/csv/:cid', function(req, res) {
+
+    model.projects.classificationName(req.params.cid, function(err, row) {
+        if(err) throw err;
+        var cname = row[0]['name'];
+        res.set({
+            'Content-Disposition' : 'attachment; filename="'+cname+'.csv"',
+            'Content-Type' : 'text/csv'
+        });
+        
+        model.projects.classificationCsvData(req.params.cid, function(err, row) {
+            if(err) throw err;
+            var data = '"rec","presence","site","year","month","day","hour","minute","species","songtype"\n';
+            var thisrow;
+            for(var i =0;i < row.length;i++)
+            {
+                thisrow = row[i]
+                data = data + '"'+ thisrow['rec']+'",'+ thisrow['present']+','+
+                        thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
+                        thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
+                        thisrow['scientific_name']+'","'+ thisrow['songtype']+'"\n'
+            }
+            res.send(data);
+        });
+    });
+          
+
+});
 
 module.exports = router;

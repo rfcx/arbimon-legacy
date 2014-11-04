@@ -196,7 +196,7 @@
 		$modalInstance.close( );
 
             };
-
+	    
             $scope.next= function () {
 
                 $scope.currentPage = $scope.currentPage + 1;

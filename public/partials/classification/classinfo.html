@@ -2,7 +2,11 @@
     <h3 class="modal-title">Classification Details</h3>  
 </div>  
 <div class="modal-body">
-    <strong>Presence in recordings:</strong>
+    <div class="row">
+        <div class="col-sm-11"><strong>Presence in recordings:</strong></div>
+        <div class="col-sm-1"><a class="btn btn-xs btn-default" ng-href="/api/project/classification/csv/{{id}}"><i class="fa fa-download " tooltip="Download CSV" tooltip-placement="bottom"  ></i></a></div>
+    </div>
+    <div class="spacing-details-classification"></div>
     <table class="table">
         <tr>
             <th>Species</th>
@@ -25,6 +29,9 @@
             </td>
         </tr>
     </table>
+    <div>
+        
+    </div>
     <div ng-hide="showMore" class="text-centered-bordered">
         <h2><i class="fa fa-caret-down" tooltip="More Details" tooltip-placement="bottom"  ng-click="more()"></i></h2>
     </div>

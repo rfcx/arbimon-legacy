@@ -349,7 +349,31 @@ var Projects = {
 
         queryHandler(q, callback);
     },
-   
+    
+    classificationName: function(cid, callback) {
+        var q = "select  REPLACE(lower(c.`name`),' ','_')  as name  "+
+                " from   `job_params_classification`  c where c.`job_id` = "+mysql.escape(cid);
+
+        queryHandler(q, callback);
+    },
+     
+    classificationCsvData: function(cid, callback) {
+        var q = "SELECT extract(year from r.`datetime`) year , "+
+                "extract(month from r.`datetime`) month , "+
+                "extract(day from r.`datetime`) day , "+
+                "extract(hour from r.`datetime`) hour , "+
+                "extract(minute from r.`datetime`) min ,  "+
+                "SUBSTRING_INDEX(r.`uri` ,'/',-1 ) rec , cr.`present` , s.`name` , sp.`scientific_name` , st.`songtype` "+
+                "FROM `species` sp, `classification_results` cr, `recordings` r, `sites` s, `songtypes` st "+
+                "WHERE `job_id` ="+mysql.escape(cid)+" "+
+                "AND cr.`recording_id` = r.`recording_id` "+
+                "AND s.`site_id` = r.`site_id` "+
+                "AND sp.`species_id` = cr.`species_id` "+
+                "AND cr.`songtype_id` = st.`songtype_id`  "
+
+        queryHandler(q, callback);
+    },   
+    
     classificationDetail: function(project_url,cid, callback) {
         var q = "select  c.`species_id` ,c.`songtype_id`,c.`present`  , "+
                 " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
