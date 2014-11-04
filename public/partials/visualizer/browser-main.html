@@ -1,13 +1,13 @@
 <div class="content">
     <div class="row">
-        <div class="col-sm-5">
+        <div class="col-sm-7">
             <div class="dropdown">
                 <button class="btn btn-block btn-default" role="button" data-toggle="dropdown">
                     <span class="fa" ng-class="{'fa-map-marker' : !browser.loading.sites, 'fa-spinner fa-spin': browser.loading.sites}"></span>
                     {{browser.selection.site.value.name || "[Station]"}}
                     <span class="caret"></span>
                 </button>
-                <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
+                <ul class="dropdown-menu has-badges dropdown-height-7" role="menu" aria-labelledby="dLabel">
                     <li ng-show="browser.loading.sites">
                         <a><i class="fa fa-spinner fa-spin"></i> Loading Sites</a>
                     </li>
@@ -16,11 +16,12 @@
                     </li>
                     <li ng-hide="browser.loading.sites" ng-repeat="site in browser.sites" ng-class="{active: browser.selection.site.value == site}">
                         <a ng-click="browser.selection.site.select(site)">{{site.name}}</a>
+                        <span class="badge">{{site.rec_count}}</span>
                     </li>
                 </ul>
             </div>
         </div>
-        <div class="col-sm-offset-2 col-sm-5">
+        <div class="col-sm-5">
             <div class="dropdown">
                 <button class="btn btn-block btn-default" role="button" data-toggle="dropdown" data-target="body > .dropdown.browser-dropdown">
                     <span class="fa" ng-class="{'fa-calendar' : !browser.loading.dates, 'fa-spinner fa-spin': browser.loading.dates}"></span>
@@ -32,6 +33,8 @@
                         <loader class="dropdown-loader" ng-show="browser.loading.dates"></loader>
                         <yearpick
                             ng-model="browser.selection.date"
+                            max-date="browser.dates.max_date"
+                            min-date="browser.dates.min_date"
                             year="browser.dates.display_year"
                             disable-empty="true"
                             date-count="browser.dates.date_counts"
