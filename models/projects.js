@@ -154,7 +154,8 @@ var Projects = {
             "JOIN species AS sp on sp.species_id = pc.species_id \n"+
             "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
             "WHERE pc.project_id = " + mysql.escape(project.project_id) +
-            (class_id ? "\n  AND pc.project_class_id = " + (class_id|0) : '')
+            (class_id ? "\n  AND pc.project_class_id = " + (class_id|0) : '') +
+            " ORDER BY species_name"
         );
 
         return queryHandler(sql , callback);
