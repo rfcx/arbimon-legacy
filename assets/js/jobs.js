@@ -132,6 +132,17 @@
             $scope.showSuccesss = false;
             $scope.errorInfo = "";
             $scope.showErrors = false;
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            $scope.updateFlags = function()
+	    {
+		$scope.successInfo = "";
+		$scope.showSuccess = false;
+		$scope.errorInfo = "";
+		$scope.showError = false;
+		$scope.infoInfo = "";
+		$scope.showInfo = false;
+	    };
             $scope.jobs = [];
             $scope.$watch
             (
@@ -143,6 +154,8 @@
                 {
                     $scope.jobs = JobsData.getJobs();
                     JobsData.startTimer();
+                    $scope.infoInfo = "";
+                    $scope.showInfo = false;
                 }
             );
             
@@ -151,6 +164,8 @@
             $scope.hideJob =
             function(jobId)
             {
+                $scope.infoInfo = "Loading...";
+                $scope.showInfo = true;
                 var continueFalg = true;
                 for(var i =0;i < $scope.jobs.length ; i++)
                 {
@@ -175,6 +190,12 @@
                                     controller: 'UnfinishedJobInstanceCtrl',
                                 }
                             );
+                            
+                            modalInstance.opened.then(function()
+                            {
+                                $scope.infoInfo = "";
+                                $scope.showInfo = false;    
+                            });
                             
                             modalInstance.result.then
                             (
@@ -203,6 +224,17 @@
                                                     });
                                                 }
                                              }
+                                        ).error(
+                                            function()
+                                            {
+                                                $scope.errorInfo = "Error Communicating With Server";
+                                                $scope.showError = true;
+                                                $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+                                                function()
+                                                {
+                                                    $scope.showError = false;
+                                                });
+                                            }
                                         );
                                     }
                                 }
@@ -234,6 +266,17 @@
                                 });
                             }
                          }
+                    ).error(
+		    function()
+		    {
+			$scope.errorInfo = "Error Communicating With Server";
+			$scope.showError = true;
+			$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			function()
+			{
+			    $scope.showError = false;
+			});
+		    }
                     );
                 }
             };

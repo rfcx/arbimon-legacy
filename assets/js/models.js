@@ -6,7 +6,19 @@
     models.controller
     ('ModelsCtrl' , 
         function ($scope,$http,$modal,$filter,$sce, ngTableParams,Project,JobsData) 
-        {   
+        {
+	    $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+	    $scope.updateFlags = function()
+	    {
+		$scope.successInfo = "";
+		$scope.showSuccess = false;
+		$scope.errorInfo = "";
+		$scope.showError = false;
+		$scope.infoInfo = "";
+		$scope.showInfo = false;
+	    };
+	    
             var pid=-1;
             var p = Project.getInfo(
                 function(data)
@@ -24,7 +36,9 @@
                                 $scope.successInfo = "";
                                 $scope.showSuccess = false;
                                 $scope.errorInfo = "";
-                                $scope.showError = false;				
+                                $scope.showError = false;
+				$scope.infoInfo = "";
+                                $scope.showInfo = false;
                                 if(data.length> 0)
                                 {              
                                     $scope.tableParams = new ngTableParams
@@ -67,7 +81,18 @@
                                     $scope.infopanedata = "No models found.";
                                 }       
                          }
-                    );
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
                 }
             );
 
@@ -104,6 +129,9 @@
             $scope.deleteModel =
             function (model_id,model_name)
             {
+		$scope.infoInfo = "Loading...";
+		$scope.showInfo = true;
+
                 var modalInstance = $modal.open
                 (
                     {
@@ -126,7 +154,13 @@
                         }
                     }
                 );
-                
+		
+		modalInstance.opened.then(function()
+		{
+		    $scope.infoInfo = "";
+		    $scope.showInfo = false;    
+		});
+		
                 modalInstance.result.then
                 (
                     function () 
@@ -160,6 +194,8 @@
             $scope.showModelDetails =
             function (model_id)
             {
+		$scope.infoInfo = "Loading...";
+		$scope.showInfo = true;
                 var url = $scope.projectData.url;
                 $http.get('/api/project/'+url+'/models/'+model_id)
                 .success
@@ -183,6 +219,12 @@
 			    }
 			);
 			
+			modalInstance.opened.then(function()
+			{
+			    $scope.infoInfo = "";
+			    $scope.showInfo = false;    
+			});
+			
 			modalInstance.result.then
 			(
 			    function () 
@@ -191,13 +233,26 @@
 			);
 			
                     }
-                );
+                ).error(
+		    function()
+		    {
+			$scope.errorInfo = "Error Communicating With Server";
+			$scope.showError = true;
+			$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			function()
+			{
+			    $scope.showError = false;
+			});
+		    }
+		);
             };
 
 
             $scope.newModel = 
             function ()
             {
+		$scope.infoInfo = "Loading...";
+		$scope.showInfo = true;
                 var url = $scope.projectData.url;
                 $http.get('/api/project/'+url+'/models/forminfo')
                 .success
@@ -227,7 +282,12 @@
                                 }
                             }
                         );
-                        
+               		modalInstance.opened.then(function()
+			{
+			    $scope.infoInfo = "";
+			    $scope.showInfo = false;    
+			});
+			         
                         modalInstance.result.then
                         (
                             function (result) 
@@ -258,7 +318,18 @@
                             }
                         );
                     }
-                );
+		).error(
+		    function()
+		    {
+			$scope.errorInfo = "Error Communicating With Server";
+			$scope.showError = true;
+			$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			function()
+			{
+			    $scope.showError = false;
+			});
+		    }
+		);
 
             };
 
@@ -330,6 +401,17 @@
 			    $scope.data.presentValidations = data[0].present
 			    $scope.data.absentsValidations = data[0].absent
 			}
+		    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
 		    );
 		}
 	    });
@@ -398,7 +480,18 @@
                     {
                         $modalInstance.close(   );
                     }
-                );
+                ).error(
+		    function()
+		    {
+			$scope.errorInfo = "Error Communicating With Server";
+			$scope.showError = true;
+			$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			function()
+			{
+			    $scope.showError = false;
+			});
+		    }
+		);
                 
             };
 

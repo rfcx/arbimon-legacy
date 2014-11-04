@@ -1,16 +1,19 @@
 <div ng-controller="StatusBarNavController" data-ng-init="init()">
     <div class="alert alert-success alert-dismissible"  role="alert" id="successDivs" ng-show="showSuccesss">
-      <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+      <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
       {{ successInfo }}
     </div>
     <div class="alert alert-danger alert-dismissible"  role="alert" id="errorDivs" ng-show="showErrors">
-      <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+      <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
       {{ errorInfo }}
+    </div>
+    <div class="alert alert-info alert-dismissible"  role="alert" id="infoDiv" ng-show="showInfo">
+        <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        {{ infoInfo }}
     </div>
     <div class="container-fluid">
         <div ng-show="jobs.length">
             <h3>Active Jobs</h3>
-    
             <div class="row checkSelectors">
                 <div class="col-lg-2 ">
                     <span class="checkboxex checkbox-1"><input type="checkbox"  ng-model="showTrainings" id="trainings"/><label for="trainings"></label></span>
@@ -40,7 +43,7 @@
             </div>
         </div>
         <div ng-hide="jobs.length">
-            <h3>No Running Jobs</h3>
+            <h3>No Active Jobs</h3>
         </div>
     </div>
 </div>

@@ -7,6 +7,18 @@
     ('ClassificationCtrl' , 
         function ($scope,$http,$modal,$filter,$sce,Project, ngTableParams,JobsData) 
         {
+	    $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+	    $scope.updateFlags = function()
+	    {
+		$scope.successInfo = "";
+		$scope.showSuccess = false;
+		$scope.errorInfo = "";
+		$scope.showError = false;
+		$scope.infoInfo = "";
+		$scope.showInfo = false;
+	    };
+	    
              var p = Project.getInfo(
             function(data)
             {
@@ -20,6 +32,8 @@
                     {
                             $scope.classificationsOriginal = data;
                             $scope.classificationsData = data;
+			    $scope.infoInfo = "";
+                            $scope.showInfo = false;
                             $scope.infopanedata = "";			
                             if(data.length> 0)
                             {              
@@ -45,11 +59,24 @@
                                 $scope.infopanedata = "No classifications found.";
                             }       
                      }
-                );
+                ).error(
+		    function()
+		    {
+			$scope.errorInfo = "Error Communicating With Server";
+			$scope.showError = true;
+			$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			function()
+			{
+			    $scope.showError = false;
+			});
+		    }
+		);
    
                 $scope.showClassificationDetails =
                 function (classi_id)
                 {
+		    $scope.infoInfo = "Loading...";
+		    $scope.showInfo = true;
                     var url = $scope.projectData.url;
                     var pid = $scope.projectData.project_id;
                     $scope.classi_id = classi_id;
@@ -57,7 +84,7 @@
                     .success
                     (
                         function(data) 
-                        {   
+                        {
                             $scope.data = data;
                             var modalInstance = $modal.open
                             (
@@ -86,7 +113,13 @@
                                     }
                                 }
                             );
-                            
+			    
+			    modalInstance.opened.then(function()
+			    {
+				$scope.infoInfo = "";
+				$scope.showInfo = false;    
+			    });
+			    
                             modalInstance.result.then
                             (
                                 function () 
@@ -96,7 +129,18 @@
                             );
                             
                         }
-                    );
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
                 };
                 
                 $scope.createNewClassification =             
@@ -140,7 +184,13 @@
                                             }
                                         }
                                     );
-                                    
+				    
+                                    modalInstance.opened.then(function()
+				    {
+					$scope.infoInfo = "";
+					$scope.showInfo = false;    
+				    });
+				    
                                     modalInstance.result.then
                                     (
                                         function (result) 
@@ -171,9 +221,31 @@
                                         }
                                     );
                                 }
-                            );
+                            ).error(
+				function()
+				{
+				    $scope.errorInfo = "Error Communicating With Server";
+				    $scope.showError = true;
+				    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+				    function()
+				    {
+					$scope.showError = false;
+				    });
+				}
+			    );
                         }
-                    );
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
                 };
             });
         }
@@ -216,7 +288,18 @@
                             $scope.maxv = parseFloat(jsonArr['maxv'])
 
                         }
-                    );
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
                 }
             };
             $scope.prev= function () {
@@ -236,7 +319,18 @@
                             $scope.minv = parseFloat(jsonArr['minv'])
                             $scope.maxv = parseFloat(jsonArr['maxv'])
                         }
-                    );
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
                 }
             };
             $scope.more= function () {
@@ -254,7 +348,18 @@
                             $scope.minv = parseFloat(jsonArr['minv'])
                             $scope.maxv = parseFloat(jsonArr['maxv'])
                         }
-                    );
+                    ).error(
+			function()
+			{
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    function()
+			    {
+				$scope.showError = false;
+			    });
+			}
+		    );
                 }
             };
             
@@ -407,7 +512,18 @@
                                 ctx.strokeStyle = "#000";
                                 ctx.stroke();                              
                             }
-                        );
+                        ).error(
+			    function()
+			    {
+				$scope.errorInfo = "Error Communicating With Server";
+				$scope.showError = true;
+				$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+				function()
+				{
+				    $scope.showError = false;
+				});
+			    }
+			);
                         };
                     }],
                     link: function (scope, element) {
