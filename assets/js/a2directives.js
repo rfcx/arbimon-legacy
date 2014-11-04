@@ -231,7 +231,7 @@ angular.module('a2directives', [])
                 var ptag = p[tag];
                 var persisted = true;
                 if(!ptag){
-                    console.log('new persistent scope "%s" created in ', tag, $rootScope);
+                    // console.log('new persistent scope "%s" created in ', tag, $rootScope);
                     p[tag] = ptag = {};
                     ptag.scope = $rootScope.$new(true);
                     ptag.scope._$persistence_tag_ = tag;
@@ -565,7 +565,6 @@ angular.module('a2directives', [])
             var keep_position = is_truthy($attr.a2KeepPosition);
             var target = $($attr.a2InsertIn);
             
-            console.log('inserting ', $element, ' in ', target, keep_position); 
             $element.replaceWith(anchor).appendTo(target);
             
             var reposition_element=null;

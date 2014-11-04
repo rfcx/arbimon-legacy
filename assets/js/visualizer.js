@@ -118,7 +118,7 @@ angular.module('visualizer', [
         if (recording) {
             $scope.loading_recording = true;
             Project.getRecordingInfo(recording.id, function(data){
-                console.log('$scope.setRecording', data);
+                // console.log('$scope.setRecording', data);
                 $scope.loading_recording = false;
                 $scope.recording = data;
                 update_location_path();
@@ -598,7 +598,7 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
                 var cont_name = tset_type.replace(/(^|-|_)(\w)/g, function(_,_1,_2,_3){ return _2.toUpperCase()});
                 cont_name = 'a2VisualizerTrainingSetLayer'+cont_name+'DataController';
                 self.data = $controller(cont_name,{$scope : $scope});
-                console.log('data controller is now : ', self.data);
+                // console.log('data controller is now : ', self.data);
             }
             self.data.fetchData(tset, rec);
         }
@@ -613,9 +613,9 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
         template : '<div class="training-set-data"></div>',
         replace  : true,
         link     : function(scope, element, attrs){
-            console.log('a2VisualizerSpectrogramTrainingSetData watching :', attrs.a2VisualizerSpectrogramTrainingSetData, scope);
+            // console.log('a2VisualizerSpectrogramTrainingSetData watching :', attrs.a2VisualizerSpectrogramTrainingSetData, scope);
             scope.$watch(attrs.a2VisualizerSpectrogramTrainingSetData, function(tset_type){
-                console.log('watching :', attrs.a2VisualizerSpectrogramTrainingSetData, " : ", tset_type);
+                // console.log('watching :', attrs.a2VisualizerSpectrogramTrainingSetData, " : ", tset_type);
                 var type_def = training_set_types[tset_type];
                 element.attr('data-tset-type', tset_type);
                 if(type_def) {
@@ -953,9 +953,9 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 }
             });
             $scope.$on('select-recording',function(evt, recording_path){
-                console.log('select recording event : ', recording_path);
+                //console.log('select recording event : ', recording_path);
                 Project.getOneRecording(recording_path, function(recording){
-                    console.log('selecting recording : ', recording);
+                    //console.log('selecting recording : ', recording);
                     $scope.selectRecording(recording);
                 })
             });
