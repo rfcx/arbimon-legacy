@@ -52,7 +52,14 @@ router.post('/add', function(req, res, next) {
         extras  : req.body
     }, function(err, new_tset) {
         if(err) return next(err);
-
+        
+        model.projects.insertNews({
+            news_type_id: 7, // training set created
+            user_id: req.session.user.id,
+            project_id: req.project.project_id,
+            data: JSON.stringify({ training_set: req.body.name })
+        });
+        
         res.json(new_tset && new_tset[0]);
         return null;
     });

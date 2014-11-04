@@ -115,22 +115,49 @@ var Projects = {
         });
     },
     
-    insertNews: function(news) {
-        var user_id = mysql.escape(news.user_id);
-        var project_id = mysql.escape(news.project_id);
-        var description = mysql.escape(news.description);
-        var news_type_id = mysql.escape(news.news_type_id);
+    insertNews: function(news, callback) {
+        
+        var schema = {
+            user_id: Joi.number().required(), 
+            project_id: Joi.number().required(), 
+            data: Joi.string().required(), 
+            news_type_id: Joi.number().required()
+        }
+        
+        Joi.validate(news, schema, function(err, newsVal) {
+            if(err) {
+                if(callback) 
+                    return callback(err);
+                    
+                else 
+                    throw err;
+            }
+            
+            var q = 'INSERT INTO project_news \n'+
+                    'SET user_id = %s, '+
+                    'project_id = %s, '+
+                    'data = %s, '+
+                    'news_type_id = %s';
 
-        var q = 'INSERT INTO project_news \n'+
-                'SET user_id = %s, '+
-                'project_id = %s, '+
-                'description = %s, '+
-                'news_type_id = %s';
-
-        q = util.format(q, user_id, project_id, description, news_type_id);
-        queryHandler(q, function(err) {
-            if(err) throw err;
-        });
+            q = util.format(q, 
+                mysql.escape(newsVal.user_id), 
+                mysql.escape(newsVal.project_id), 
+                mysql.escape(newsVal.data), 
+                mysql.escape(newsVal.news_type_id)
+            );
+            
+            queryHandler(q, function(err, result) {
+                if(callback) {
+                    if(err) return callback(err);
+                    
+                    return callback(result);
+                }
+                else {
+                    if(err) throw err;
+                }
+            });
+            
+        })
     },
 
     /** Fetches a project's classes.
@@ -139,21 +166,21 @@ var Projects = {
      * @param {{Integer}} class_id (optional) limit the query to this class
      * @param {{Callback}} callback
      */
-    getProjectClasses: function(project, class_id, callback){
+    getProjectClasses: function(project_id, class_id, callback){
         if(class_id instanceof Function){
             callback = class_id;
             class_id = null;
         }
         var sql = (
             "SELECT pc.project_class_id as id, \n"+
-                "pc.species_id as species, \n"+
-                "pc.songtype_id as songtype, \n"+
-                "sp.scientific_name as species_name, \n"+
-                "so.songtype as songtype_name \n"+
+            "       pc.species_id as species, \n"+
+            "       pc.songtype_id as songtype, \n"+
+            "       sp.scientific_name as species_name, \n"+
+            "       so.songtype as songtype_name \n"+
             "FROM project_classes AS pc \n"+
             "JOIN species AS sp on sp.species_id = pc.species_id \n"+
             "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
-            "WHERE pc.project_id = " + mysql.escape(project.project_id) +
+            "WHERE pc.project_id = " + mysql.escape(project_id) +
             (class_id ? "\n  AND pc.project_class_id = " + (class_id|0) : '') +
             " ORDER BY species_name"
         );
@@ -422,6 +449,13 @@ var Projects = {
             " (SELECT count(*) as total FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+" ) a, "+
             " (SELECT count(*) as present FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+"  and present = 1) b , "+
             " (SELECT count(*) as absent FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+"and `songtype_id` = "+mysql.escape(songtype)+"  and present = 0) c ";
+        queryHandler(q, callback);
+    },
+    
+    validationsCount: function(project_id, callback) {
+        var q = "SELECT count(*) AS count \n"+
+                "FROM recording_validations AS rv\n"+
+                "WHERE rv.project_id = " + mysql.escape(project_id);
         queryHandler(q, callback);
     },
    

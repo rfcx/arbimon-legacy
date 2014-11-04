@@ -1,6 +1,6 @@
 (function(angular)
 { 
-    var classification = angular.module('classification', ['ui.bootstrap' , 'a2services','angularCharts']);
+    var classification = angular.module('classification', ['ui.bootstrap' , 'a2services']);
     var template_root = '/partials/classification/';
 
     classification.controller

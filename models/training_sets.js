@@ -19,6 +19,15 @@ var TrainingSets = {
      * @param {Object} query.name    find training sets with the given name (must also provide a project id);
      * @param {Function} callback called back with the queried results.
      */
+
+    findName: function(set_id, callback) {
+        var q = "SELECT name \n"+
+                "FROM training_sets \n"+
+                "WHERE training_set_id = " + mysql.escape(set_id);
+                
+            queryHandler(q, callback);
+    },
+    
     find: function (query, callback) {
         var constraints = [];
 
@@ -174,7 +183,7 @@ var TrainingSets = {
     },
 
     /** Fetches the available training set types.
-     * @param {Function} callback(err, path) funciton to call back with the results.
+     * @param {Function} callback(err, path) function to call back with the results.
      */
     getTypes: function (callback) {
         return queryHandler(
@@ -195,7 +204,7 @@ TrainingSets.types.roi_set = {
     insert : {
         validate : function(data, callback){
             if (data.extras && data.extras.class) {
-                Projects.getProjectClasses({project_id:data.project}, data.extras.class, function(err, classes){
+                Projects.getProjectClasses( data.project, data.extras.class, function(err, classes){
                     if(err) {
                         callback(err);
                     } else if(!classes || !classes.length) {

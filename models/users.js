@@ -1,5 +1,8 @@
 var util = require('util');
 var mysql = require('mysql');
+
+
+
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
@@ -92,7 +95,7 @@ var Users = {
     },
 
     projectList: function(user_id, callback) {
-        var q = "SELECT name, url, description, is_private, is_enabled \n"+
+        var q = "SELECT p.project_id AS id, name, url, description, is_private, is_enabled \n"+
                 "FROM projects as p \n"+
                 "LEFT JOIN user_project_role as upr on (p.project_id = upr.project_id) \n"+
                 "WHERE p.is_private = 0 \n"+

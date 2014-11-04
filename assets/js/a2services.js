@@ -190,6 +190,32 @@ angular.module('a2services',[])
             .error(function(err){
                 callback(err);
             });
+        },
+        
+        getModels: function(callback) {
+            $http.get('/api/project/'+url+'/models')
+            .success(function(response){
+                callback(null, response);
+            })
+            .error(function(err){
+                callback(err);
+            });
+        },
+        getClassi: function(callback) {
+            $http.get('/api/project/'+url+'/classifications')
+            .success(function(response){
+                callback(null, response);
+            })
+            .error(function(err){
+                callback(err);
+            });
+        },
+        
+        validationsCount: function(callback) {
+            $http.get('/api/project/'+url+'/validations/count')
+            .success(function(response){
+                callback(response.count);
+            });
         }
     }; 
 }])

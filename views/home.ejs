@@ -11,7 +11,7 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-sm-6">
+        <div class="col-sm-5">
             <h3>
                 Projects 
                 <button class="btn btn-default" 
@@ -37,14 +37,21 @@
                 </dl>
             </div>
         </div>
-        <!-- <div class="col-sm-5">
+        <div class="col-sm-7">
             <h3>Project feed <i class="fa fa-newspaper-o"></i></h3>
             <div class="list-group">
                 <ul class="list-group">
-                    <li class="list-group-item" ng-repeat="news in feed track by $index">{{ news }}</li>
+                    <li class="list-group-item" ng-repeat="news in newsFeed track by $index">
+                        <p>
+                            <img ng-src="{{ news.image_url }}"> 
+                            <strong>{{ news.username }}</strong>
+                            {{ news.message }} 
+                        </p>
+                        <p>{{ displayTime(news.timestamp) }}</p>
+                    </li>
                 </ul>
             </div>
-        </div> -->
+        </div>
     </div>
 </div>
 
