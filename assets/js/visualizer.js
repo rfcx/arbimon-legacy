@@ -791,19 +791,14 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                             return true;
                         }
 
-                        var key_comps=[site_name, year, '[1:12]', '1'], fetch_mode;
-                        var subkey = key_comps.pop();
-                        var key = key_comps.join('-');
+                        var key = [site_name, year, '[1:12]'].join('-');
 
                         var availability = browser.dates.cache.get(key);
                         if(!availability) {
                             browser.dates.fetch_availability(key);
                         } else if(availability.data){
                             browser.dates.date_counts = availability.data;
-                            
-                            return !availability.data[subkey];
                         }
-                        return false;
                     },
                     fetch_availability: function(key){
                         browser.dates.cache.put(key, {fetching:true});

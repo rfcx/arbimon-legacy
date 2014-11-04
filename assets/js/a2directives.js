@@ -366,7 +366,7 @@ angular.module('a2directives', [])
                 .attr('font-size', 24)
                 .attr('x', 5)
                 .attr('y', 24)
-                .html('&#xf060');
+                .text('\uf060');
             
             prev.on('click', function(){
                 $timeout(function(){
@@ -381,7 +381,7 @@ angular.module('a2directives', [])
                 .attr('font-size', 24)
                 .attr('x', width-5)
                 .attr('y', 24)
-                .html('&#xf061');
+                .text('\uf061');
             
             next.on('click', function(){
                 $timeout(function(){

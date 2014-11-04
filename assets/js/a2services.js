@@ -2,7 +2,7 @@ angular.module('a2services',[])
 .factory('Project', ['$location', '$http', function($location, $http) {
     var urlparse = document.createElement('a');
     urlparse.href = $location.absUrl();
-    var nameRe = /\/project\/([\w\_\-]+)/;
+    var nameRe = /\/?project\/([\w\_\-]+)/;
 
     var url = nameRe.exec(urlparse.pathname)[1];
     
