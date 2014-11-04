@@ -438,13 +438,28 @@ var Recordings = {
                 val       : validation.val | 0,
                 project_id: project_id
             };
-            queryHandler(
-                "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id) \n" +
-                " VALUES (" + mysql.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id]) + ") \n" +
-                " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
-                if (err) { callback(err); return; }
-                callback(null, valobj);
-            });
+
+            if (valobj.val== 2) // 0 is not present , 1 is present and 2 is clear
+            {
+                queryHandler(
+                    "DELETE FROM `recording_validations` "+
+                    " WHERE `recording_id` = "+mysql.escape(valobj.recording)+" and `project_id` = "+mysql.escape(valobj.project_id)+"  " +
+                    " and `species_id` = "+mysql.escape(valobj.species)+" and `songtype_id` = "+mysql.escape(valobj.songtype)+" ",
+                    function(err, data){
+                    if (err) { callback(err); return; }
+                    callback(null, valobj);
+                });
+            }
+            else
+            {
+                queryHandler(
+                    "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id) \n" +
+                    " VALUES (" + mysql.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id]) + ") \n" +
+                    " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
+                    if (err) { callback(err); return; }
+                    callback(null, valobj);
+                });
+            }
         }
         
         var classes = validation['class'].split(',');

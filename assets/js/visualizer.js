@@ -1089,11 +1089,16 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 }
                 
             };
-            $scope.val_options = [{label:"Present", val:1}, {label:"Not Present", val:0}];
+            $scope.val_options = [{label:"Present", val:1}, {label:"Not Present", val:0}, {label:"Clear", val:2}];
             $scope.val_state = function(project_class, val_options){
                 if(!val_options){val_options = $scope.val_options;}
                 var key = class2key(project_class), val = $scope.validations[key];
-                return typeof val == 'undefined' ? val : ( val ? val_options[0]: val_options[1] );
+                var returnVal;
+                if (val == 2) {
+                    returnVal = val_options[2];
+                }
+                else returnVal = typeof val == 'undefined' ? val : ( val ? val_options[0]: val_options[1] );
+                return returnVal;
             }
             $scope.$watch('recording', function(recording){
                 $scope.validations = {};
