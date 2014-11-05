@@ -27,7 +27,7 @@ module.exports = function(grunt) {
             },
             arbimon2: {
                 src: [
-                    'public/partials/**/*.html'
+                    'assets/partials/**/*.html'
                 ],
                 dest: 'public/assets/js/arbimon2-templates.js'
             },
@@ -177,7 +177,7 @@ module.exports = function(grunt) {
             },
             html2js: {
                 files: [
-                    'public/partials/**/*.html'
+                    'assets/partials/**/*.html'
                 ],
                 tasks: ['html2js']
             },
