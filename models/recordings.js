@@ -352,10 +352,12 @@ var Recordings = {
                             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                                 if(err) { next_tile_x(err); return; }
                                 im.convert([
-                                    spectro_path,                                     
+                                    spectro_path,
+                                    '-colorspace', 'RGB',
                                     '-crop',
                                     tile_w+'x'+tile_h+'+'+tile_x0+'+'+tile_y0,
                                     '+repage',
+                                    '-colorspace', 'RGB',
                                     tile_file
                                 ], function(err){
                                     if(err) { next_tile_x(err); return; }
