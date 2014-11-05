@@ -2,8 +2,12 @@
     <div class="title-bar" ng-hide="recording || loading_recording">
         Please select a recording :-)
     </div>
-    <div class="title-bar" ng-show="loading_recording">
-        <i class="fa fa-spinner fa-spin"></i> Loading Recording
+    <div a2-visualizer-spectrogram-affixed class="loader" ng-show="loading_recording"
+        data-affix-align-h=".5" 
+        data-affix-align-v=".5" 
+        data-affix-container="viewport"
+    >
+        <loader class="blocky big" text="Loading {{loading_recording}}"></loader>        
     </div>
     <div a2-visualizer-spectrogram-affixed data-affix-top="20" data-affix-right="40" ng-show="recording">
         <a2-zoom-control level="layout.scale.zoom.x" horizontal="true"></a2-zoom-control>

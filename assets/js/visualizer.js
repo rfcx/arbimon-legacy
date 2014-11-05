@@ -116,7 +116,7 @@ angular.module('visualizer', [
     };
     $scope.setRecording = function(recording){
         if (recording) {
-            $scope.loading_recording = true;
+            $scope.loading_recording = recording.file;
             Project.getRecordingInfo(recording.id, function(data){
                 // console.log('$scope.setRecording', data);
                 $scope.loading_recording = false;
@@ -276,22 +276,42 @@ angular.module('visualizer-layers', ['visualizer-services', 'a2utils'])
 
 angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
 .service('a2AffixCompute', function(){
-    return function($viewport, $el){
+    return function($viewport, $el, layout){
+        var v;
+        
+        var affix_c = $el.attr('data-affix-container');
+        if(affix_c){
+            v = layout[affix_c];
+        }
+        
+        if(!v){
+            v = {
+                left : 0, top : 0, 
+                width  : $viewport.width(), 
+                height : $viewport.height()
+            };
+        }
+        
+        var e = {
+            width  : $el.width(),
+            height : $el.height()
+        }
+        
         var affix_left    = $el.attr('data-affix-left') | 0;
         var affix_right   = $el.attr('data-affix-right');
         var affix_align_h = $el.attr('data-affix-align-h');
         if(affix_right != undefined){
-            affix_left = $viewport.width() - $el.width() - (affix_right|0);
+            affix_left = v.width - $el.width() - (affix_right|0);
         } else if(affix_align_h != undefined){
-            affix_left = ($viewport.width() - $el.width()) * affix_align_h;
+            affix_left = v.left + (v.width - $el.width()) * affix_align_h;
         }
         var affix_top     = $el.attr('data-affix-top' ) | 0;
         var affix_bottom  = $el.attr('data-affix-bottom');
         var affix_align_v = $el.attr('data-affix-align-v');
         if(affix_bottom != undefined){
-            affix_top = $viewport.height() - $el.height() - (affix_bottom|0);
+            affix_top = v.height - $el.height() - (affix_bottom|0);
         } else if(affix_align_v != undefined){
-            affix_top = ($viewport.height() - $el.height()) * affix_align_v;
+            affix_top = v.top + (v.height - $el.height()) * affix_align_v;
         }
         $el.css({position:'absolute', left : affix_left + $viewport.scrollLeft(), top  : affix_top  + $viewport.scrollTop()});
     }
@@ -345,7 +365,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 $scope.layout.x_axis.top = $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh - layout_tmp.gutter;
                 $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
                 $element.find('.a2-visualizer-spectrogram-affixed').each(function(i, el){
-                    a2AffixCompute($element, $(el));
+                    a2AffixCompute($element, $(el), $scope.layout);
                 });
             };
             $scope.onMouseMove = function (e) {
@@ -410,6 +430,12 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 
                 $scope.layout.scale.sec2px = spec_w / recording.duration;
                 $scope.layout.scale.hz2px  = spec_h / recording.max_freq;
+                $scope.layout.viewport = {
+                    left : l.spectrogram.css.left,
+                    top  : l.spectrogram.css.top,
+                    width  : avail_w,
+                    height : avail_h
+                }
                 
                 var scroll_center;
                 if($scope.layout.center){
@@ -553,7 +579,12 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     $element.attr('data-affix-top', $eloff.top - $roff.top);
                 }
             }
-            a2AffixCompute($element.offsetParent(), $element);
+            a2AffixCompute($element.offsetParent(), $element, $scope.layout);
+            $scope.$watch(function(){
+                return [$element.width(), $element.height()]
+            }, function(){
+                a2AffixCompute($element.offsetParent(), $element, $scope.layout);
+            }, true)
         }
     }
 });
