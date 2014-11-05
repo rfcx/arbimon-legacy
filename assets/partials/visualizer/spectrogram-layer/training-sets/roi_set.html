@@ -27,7 +27,11 @@
         <i class="fa fa-circle-o control-point cp-resize-tr" style="position:absolute;    top:-7px; right:-6px" ></i>
         <i class="fa fa-circle-o control-point cp-resize-bl" style="position:absolute; bottom:-7px;  left:-6px" ></i>
         <i class="fa fa-circle-o control-point cp-resize-br" style="position:absolute; bottom:-7px; right:-6px" ></i>
-        <div class="popover right" ng-style="{display: layer.training_data.data.editor.valid ? 'block' : 'none'}">
+    </div>
+    <div a2-insert-in=".visualizer-root">
+        <div class="popover right confirm-roi"
+            ng-style="{display: layer.training_data.data.editor.valid ? 'block' : 'none', left:(layout.viewport.left + layout.sec2x(layer.training_data.data.editor.roi.x2, 1)) + 'px', top:(layout.spectrogram.top + layout.hz2y((layer.training_data.data.editor.roi.y1 + layer.training_data.data.editor.roi.y2)/2, 1)) + 'px'}"
+        >
             <div class="arrow"></div>
             <h3 class="popover-title">
                 <a2-species species="layer.training_data.tset.species"></a2-species>

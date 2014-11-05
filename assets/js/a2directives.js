@@ -623,7 +623,8 @@ angular.module('a2directives', [])
             var keep_position = is_truthy($attr.a2KeepPosition);
             var target = $($attr.a2InsertIn);
             
-            $element.replaceWith(anchor).appendTo(target);
+            $element[0].parentNode.replaceChild(anchor[0], $element[0]);
+            $element.appendTo(target);
             
             var reposition_element=null;
             if(keep_position){

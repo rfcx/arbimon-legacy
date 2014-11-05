@@ -59,12 +59,6 @@
                     border-color: @roi-selected-border-color;
                     background-color: @roi-selected-bg-color;
                 }
-                .popover {
-                    &.right{
-                        left: 100%;
-                    }                    
-                    min-width: 14em;
-                }
             }
 
             .input-source {
@@ -301,4 +295,9 @@ a2-img {
         transform: translate(-50%, -50%);
         display:none;
     }
+}
+
+.popover.confirm-roi{
+    transform: translateY(-50%);    
+    min-width: 14em;
 }
