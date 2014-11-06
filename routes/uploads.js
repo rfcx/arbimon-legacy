@@ -50,10 +50,11 @@ router.post('/audio/project/:projectid', function(req, res) {
     });
     
     req.busboy.on('finish', function() {
-        //~ console.log('fields:', fields);
-        //~ console.log('files:', files);
-        
         res.send("Done!");
+        
+        // console.log('fields: ', fields);
+        // console.log('files: ', files);
+        
         
         fields.project = JSON.parse(fields.project);
         fields.info = JSON.parse(fields.info);
@@ -90,7 +91,7 @@ router.post('/audio/project/:projectid', function(req, res) {
                     async.auto({
                         convert: function(callback) {
                             console.log('convert');
-                            if(extension === "flac")
+                            if(extension === "flac") 
                                 return callback(null, 0);
                                 
                             audioTool.transcode(inFile, outFile, { format: 'flac' }, 
@@ -178,8 +179,10 @@ router.post('/audio/project/:projectid', function(req, res) {
                     function(err, results) {
                         // delete temp files
                         fs.unlinkSync(inFile);
-                        fs.unlinkSync(outFile);
                         fs.unlinkSync(thumbnail);
+                        
+                        if( extension !== 'flac' ) // detele outFile if it was created
+                            fs.unlinkSync(outFile);
                         
                         if(err) return cb(err);
                         
@@ -195,10 +198,6 @@ router.post('/audio/project/:projectid', function(req, res) {
                 console.log('finished processing:', file.filename);
             });
         });
-        
-        // procesar
-        // subir a s3
-        // entrar a db
     });
     
     req.pipe(req.busboy);
