@@ -135,7 +135,7 @@ module.exports = function(grunt) {
             dev: {
                 src: [   // add project javascript files here
                     'assets/js/router.js',
-                    'assets/js/visualizer.js',
+                    'assets/js/visualizer/*.js',
                     'assets/js/home.js',
                     'assets/js/dashboard.js',
                     'assets/js/audiodata.js',
