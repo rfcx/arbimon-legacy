@@ -294,6 +294,10 @@ angular.module('a2directives', [])
 .directive('loader', function() {
      return {
          restrict: 'E',
+         scope : {
+             hideText : '@',
+             text : '@'
+         },
          templateUrl: '/partials/directives/loader.html'
      }
 })
@@ -577,27 +581,31 @@ angular.module('a2directives', [])
         restrict : 'E',
         scope : {},
         link: function ($scope, $element, $attr) {
-console.log('::1::', $scope, $scope.src, $attr);
-            var loader = $compile('<loader></loader>')($scope).appendTo($element);
-console.log('::2::');
-            var img = $('<img />')
+            var loader = $compile(
+                '<loader hide-text="yes"></loader>'
+            )($scope).appendTo($element);
+            var img = $('<img style="width:100%; height:100%"/>')
                 .load(function(){
                     img.show();
-                    loader.hide();
+                    $element.removeClass('loading');
                 })
                 .appendTo($element);
-console.log('::3::');
-//            $scope.$watch('src', function(new_src){
-//console.log('::4::', new_src);
-//                img.hide();
-//                loader.show();
-//                var image = new Image();
-//                image.onload = function () {
-//                    img.attr('src', this.src);
-//                };
-//                image.src = new_src;
-//                
-//            });
+
+        $attr.$observe('a2Src', function(new_src){
+            if(!new_src){
+                img.hide();
+                img.attr('src', '');
+                return;
+            }
+            img.show();
+            $element.addClass('loading');
+            var image = new Image();
+            image.onload = function () {
+                img.attr('src', this.src);
+            };
+            image.src = new_src;
+            
+        });
         }
     }
 })
@@ -615,7 +623,8 @@ console.log('::3::');
             var keep_position = is_truthy($attr.a2KeepPosition);
             var target = $($attr.a2InsertIn);
             
-            $element.replaceWith(anchor).appendTo(target);
+            $element[0].parentNode.replaceChild(anchor[0], $element[0]);
+            $element.appendTo(target);
             
             var reposition_element=null;
             if(keep_position){

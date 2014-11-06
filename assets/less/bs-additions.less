@@ -1,0 +1,21 @@
+
+// class for 
+.no-gutter > [class*='col-'] {
+    &:not(:first-child){
+        padding-left:0;
+    }
+    &:not(:last-child){
+        padding-right:0;
+    }
+}
+
+.row.row-pad-bottom{
+    padding-bottom: 7px;
+}
+
+// for some reasong bottom left tooltips dont have the proper margin
+.tooltip {
+  &.bottom-left { margin-top:   3px; padding: @tooltip-arrow-width 0; }
+}
+
+// eof
