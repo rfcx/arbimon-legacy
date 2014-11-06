@@ -93,10 +93,18 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     }
 }
 
-@sidebar-col-width : 2.5;
+@sidebar-width : 400px;
 
-.sidebar{
-    .make-full-column(0; @sidebar-col-width; 0);
+.sidebar{ 
+    min-height : 1px;
+    position: absolute;
+    @media (min-width: @screen-md-min) {
+        position: absolute;
+        left : 0;
+        width: @sidebar-width;
+        top  : 0;
+        bottom: 0;
+    }
     overflow-y: auto;
     @media (min-width: @grid-float-breakpoint) {
         .drawer{
@@ -107,7 +115,16 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
         right : 100%;
         z-index: 910;
         &.show{
-            .make-full-column(0; @sidebar-col-width; 0);
+            min-height: 1px;
+            position: absolute;
+
+            @media (min-width: @screen-md-min) {
+                position: absolute;
+                left : 0;
+                right: @sidebar-width;
+                top  : 0;
+                bottom: 0;
+            }
             left  : 0;
             width: 100%;
             right : auto;
@@ -138,7 +155,18 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
 }
 
 .app-content{
-    .make-full-column(@sidebar-col-width; 12);
+    min-height: 1px;
+    padding-left:  (@grid-gutter-width / 2);
+    padding-right: (@grid-gutter-width / 2);
+    position: absolute;
+
+    @media (min-width: @screen-md-min) {
+        position: absolute;
+        left  : @sidebar-width; 
+        right : 0;
+        top   : 0;
+        bottom: 0;
+    }
     border-left: 1px solid #d0d0d0;
     width : 100%;
     left   : 0;
