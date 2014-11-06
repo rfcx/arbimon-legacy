@@ -1,49 +1,20 @@
 <div class="content">
-    <div class="row">
-        <div class="col-sm-7">
-            <div class="dropdown">
-                <button class="btn btn-block btn-default" role="button" data-toggle="dropdown">
-                    <span class="fa" ng-class="{'fa-map-marker' : !browser.loading.sites, 'fa-spinner fa-spin': browser.loading.sites}"></span>
-                    {{browser.selection.site.value.name || "[Station]"}}
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu has-badges dropdown-height-7" role="menu" aria-labelledby="dLabel">
-                    <li ng-show="browser.loading.sites">
-                        <a><i class="fa fa-spinner fa-spin"></i> Loading Sites</a>
-                    </li>
-                    <li ng-hide="browser.loading.sites || browser.sites">
-                        <a>No Stations in Project</a>
-                    </li>
-                    <li ng-hide="browser.loading.sites" ng-repeat="site in browser.sites" ng-class="{active: browser.selection.site.value == site}">
-                        <a ng-click="browser.selection.site.select(site)">{{site.name}}</a>
-                        <span class="badge">{{site.rec_count}}</span>
-                    </li>
-                </ul>
+    <div class="row row-pad-bottom">
+        <div class="col-sm-12 btn-toolbar">
+            <div class="btn-group" ng-repeat="type_group in browser.types">
+                <button ng-repeat="type in type_group" class="btn btn-default" 
+                    ng-class="browser.type == type ? 'active' : ''" ng-click="browser.type = type"
+                    tooltip="{{type.tooltip}}" tooltip-append-to-body="true" tooltip-placement="bottom-left"
+                ><i ng-class="type.icon"></i></button>
             </div>
-        </div>
-        <div class="col-sm-5">
-            <div class="dropdown">
-                <button class="btn btn-block btn-default" role="button" data-toggle="dropdown" data-target="body > .dropdown.browser-dropdown">
-                    <span class="fa" ng-class="{'fa-calendar' : !browser.loading.dates, 'fa-spinner fa-spin': browser.loading.dates}"></span>
-                    {{browser.selection.date || "[date]" | date : 'mediumDate'}}
-                    <span class="caret"></span>
+            <!-- <div class="btn-group">
+                <button class="btn btn-default" ng-model="browser.type" btn-radio="'soundscapes'" tooltip="View Soundscapes" tooltip-append-to-body="true" tooltip-placement="bottom-left">
+                    <span class="fa fa-area-chart"></span>
                 </button>
-                <div class="browser-dropdown dropdown" a2-insert-in="body" a2-keep-position="true" >
-                    <div class="dropdown-form dropdown-menu datepicker" role="menu" aria-labelledby="dLabel">
-                        <loader class="dropdown-loader" ng-show="browser.loading.dates"></loader>
-                        <yearpick
-                            ng-model="browser.selection.date"
-                            max-date="browser.dates.max_date"
-                            min-date="browser.dates.min_date"
-                            year="browser.dates.display_year"
-                            disable-empty="true"
-                            date-count="browser.dates.date_counts"
-                        ></yearpick>
-                    </div>
-                </div>
-            </div>
+            </div> -->
         </div>
     </div>
+    <ng-include src="browser.type ? browser.type.template : ''"></ng-include>
     <div class="row">
         <div class="col-sm-12">
             <div class="nav nav-pills nav-stacked recording-list" role="menu" aria-labelledby="dLabel">
@@ -52,14 +23,14 @@
                     <i class="fa fa-spinner fa-spin"></i> Loading Recordings
                 </div>
                 <div class="recording-list-item"
-                    ng-hide="browser.loading.times || browser.recordings">
+                    ng-hide="browser.loading.times || browser.playlist.list">
                     (No recordings in list)
                 </div>
                 <div class="recording-list-item"
                     ng-hide="browser.loading.times"
-                    ng-repeat="recording in browser.recordings | orderBy: 'datetime'"
-                    ng-class="{active: browser.selection.recording.value == recording}"
-                    ng-click="browser.selection.recording.select(recording)">
+                    ng-repeat="recording in browser.playlist.list | orderBy: 'datetime'"
+                    ng-class="{active: browser.recording == recording}"
+                    ng-click="browser.recording = recording">
                     <div>
                         {{recording.datetime | moment : 'hh:mm A'}}
                         <div class="pull-right">
