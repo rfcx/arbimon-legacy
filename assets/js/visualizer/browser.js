@@ -9,7 +9,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
         scope : {
             onRecording : '&onRecording'
         },
-        templateUrl : '/partials/visualizer/browser-main.html',
+        templateUrl : '/partials/visualizer/browser/main.html',
         link     : function($scope, $element, $attrs){
             var browser = $scope.browser = {
                 sites : [],
