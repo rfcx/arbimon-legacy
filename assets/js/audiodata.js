@@ -12,6 +12,11 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         url: '/uploads',
         controller: 'UploadCtrl',
         templateUrl: '/partials/audiodata/upload.html'
+    })
+    .state('audiodata.trainingSets', {
+        url: '/training-sets',
+        controller: 'TrainingSetsCtrl',
+        templateUrl: '/partials/audiodata/training-sets.html'
     });
 })
 .controller('RecsCtrl', function($scope, Project, $http) {
@@ -242,6 +247,30 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
             uploadInfo = info;
         }
     };
+})
+.controller('TrainingSetsCtrl', function($scope, a2TrainingSets) {
+    $scope.fields = [
+        { name: 'Name', key: 'name' },
+        { name: 'Set type', key: 'type' },
+        { name: 'Date created', key: 'date_created' },
+    ];
+    
+    a2TrainingSets.getList(function(data){
+        $scope.sets = data.map(function(d) {
+            d.date_created = new Date(d.date_created);
+            return d;
+        });
+    });
+    
+    $scope.displaySet = function($index) {
+        
+    };
+})
+.directive('dataTrainingSet', function($compile) {
+    return {
+        restrict: 'E',
+        
+    }
 })
 ;
       

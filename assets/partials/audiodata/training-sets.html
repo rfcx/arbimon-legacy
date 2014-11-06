@@ -1,0 +1,23 @@
+<div class="row toolbar">
+    <div class="col-sm-12">
+        <div class="col-sm-3">
+            <button class="btn btn-default" 
+                tooltip="Create training set"
+                tooltip-trigger="mouseenter">
+                <i class="fa fa-plus"></i>
+            </button>
+            <button class="btn btn-danger" 
+                tooltip="Delete training set"
+                tooltip-trigger="mouseenter">
+                <i class="fa fa-trash"></i>
+            </button>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-6">
+        <a2-table fields="fields" rows="sets" no-checkbox onSelect="displaySetData()"></a2-table>
+    </div>
+    <div class="col-sm-6">
+    </div>
+</div>

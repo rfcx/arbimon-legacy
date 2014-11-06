@@ -7,6 +7,7 @@ var AWS          = require('aws-sdk');
 var fs           = require('fs');
 var config       = require('../config'); 
 var tmpfilecache = require('../utils/tmpfilecache');
+var util         = require('util');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
@@ -82,7 +83,17 @@ var TrainingSets = {
             callback(err, data);
         });
     },
-
+    
+    nameInUse: function(project_id, set_name, callback) {
+        var q = "SELECT count(*) as count \n"+
+                "FROM training_sets \n"+
+                "WHERE name = %s \n" + 
+                "AND project_id = %s";
+        
+        q = util.format(q, mysql.escape(set_name), mysql.escape(project_id));
+        queryHandler(q, callback);
+    },
+    
     /** Finds training sets, given a (non-empty) query.
      * @param {Object} data
      * @param {Object} data.project id of the project associated to this training set.
@@ -91,12 +102,12 @@ var TrainingSets = {
      * @param {Function} callback called back with the newly inserted training set, or with errors.
      */
     insert: function (data, callback) {
-        if(!data.project){
-            callback(new Error("Project id is invalid."));
+        if(!data.project_id){
+            callback(new Error("Project id is missing."));
             return;
         }
         if(!data.name){
-            callback(new Error("Training set name is invalid."));
+            callback(new Error("Training set name is missing."));
             return;
         }
         var typedef = TrainingSets.types[data.type];
@@ -104,6 +115,7 @@ var TrainingSets = {
             callback(new Error("Training set type " + data.type + " is invalid."));
             return;
         }
+        
         var typedef_action = typedef.insert;
         var scope={};
         var tasks = [];
@@ -122,7 +134,7 @@ var TrainingSets = {
             scope.in_transaction = true;
             scope.connection.query(
                 "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id) \n" +
-                "VALUES ("+mysql.escape(data.project)+", "+mysql.escape(data.name)+", NOW(), "+ mysql.escape(typedef.id)+")",
+                "VALUES ("+mysql.escape(data.project_id)+", "+mysql.escape(data.name)+", NOW(), "+ mysql.escape(typedef.id)+")",
             cb);
         });
         tasks.push(function get_insert_id(result){
@@ -368,7 +380,7 @@ TrainingSets.types.roi_set = {
     add_data : function(training_set, data, callback){
         async.waterfall([
             (function(cb){
-//console.log('joi.validate(data:',data,', schema:', this.data_schema,', {context:',training_set,'},cb);');
+                // console.log('joi.validate(data:',data,', schema:', this.data_schema,', {context:',training_set,'},cb);');
                 joi.validate(data, this.data_schema, {context:training_set},cb);
             }).bind(this), 
             function(vdata, cb){

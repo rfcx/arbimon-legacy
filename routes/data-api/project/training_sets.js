@@ -45,23 +45,32 @@ router.get('/types', function(req, res, next) {
 /** Add a training set to a project.
  */
 router.post('/add', function(req, res, next) {
-    model.training_sets.insert({
-        project : req.project.project_id,
-        name    : req.body.name,
-        type    : req.body.type,
-        extras  : req.body
-    }, function(err, new_tset) {
+    
+    model.training_sets.nameInUse(req.project.project_id, req.body.name, function(err, result) {
         if(err) return next(err);
         
-        model.projects.insertNews({
-            news_type_id: 7, // training set created
-            user_id: req.session.user.id,
-            project_id: req.project.project_id,
-            data: JSON.stringify({ training_set: req.body.name })
-        });
+        if(result[0].count) {
+            return res.json({ field: "name", error: "Training set name in use" });
+        }
         
-        res.json(new_tset && new_tset[0]);
-        return null;
+        model.training_sets.insert({
+            project_id : req.project.project_id,
+            name    : req.body.name,
+            type    : req.body.type,
+            extras  : req.body
+        }, function(err, new_tset) {
+            if(err) return next(err);
+            
+            model.projects.insertNews({
+                news_type_id: 7, // training set created
+                user_id: req.session.user.id,
+                project_id: req.project.project_id,
+                data: JSON.stringify({ training_set: req.body.name })
+            });
+            
+            res.json(new_tset && new_tset[0]);
+            return null;
+        });
     });
 });
 

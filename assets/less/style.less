@@ -186,7 +186,8 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
 @layer-padding-right: 40px;
 @layer-padding-v: 10px;
 @layer-zebra-even : #ffffff;
-@layer-selection  : #d0d0ff;
+// @layer-selection  : #7ecefd;
+@layer-selection  : #73BAF4;
 @layer-zebra-odd  : #f0f0f0;
 
 .layers{
@@ -419,19 +420,19 @@ textarea.fixed-width {
     height:10em;
 }
 
-.table > tbody > tr.active > td {
-    background-color: #ccc;
-}
+
+@training-job-color: #178fd5;
+@classify-job-color: #f45151;
 
 
 //progress bar colors
 .barColor1{ //training
     background-image: none;
-    background-color: blue;
+    background-color: @training-job-color;
 }
 .barColor2{ // classification
     background-image: none;
-    background-color: red;
+    background-color: @classify-job-color;
 }
 
 .checkSelectors{
@@ -445,10 +446,10 @@ input[type=checkbox] { visibility: hidden; }
                     box-shadow: 0 0 5px rgba(0,0,0,0.7) inset;
                     transition: all .1s ease; }
                     
-.checkbox-1 input[type=checkbox]:checked + label { background: blue;  //training
+.checkbox-1 input[type=checkbox]:checked + label { background: @training-job-color;  //training
                 width: 12px; height: 13px; top: 2px; left: 1px; }
 
-.checkbox-2 input[type=checkbox]:checked + label { background: red;  // classification
+.checkbox-2 input[type=checkbox]:checked + label { background: @classify-job-color;  // classification
 width: 12px; height: 13px; top: 2px; left: 1px; }
 }
 .bordered{
@@ -557,6 +558,10 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
 }
 
 .a2-table {
+
+    & > tbody > tr.active > td {
+        background-color: #ccc;
+    }
 
     & th:first-child,
     & td:first-child {

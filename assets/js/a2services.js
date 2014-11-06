@@ -231,7 +231,8 @@ angular.module('a2services',[])
 
         add: function(tset_data, callback) {
             var projectName = Project.getName();
-            $http.post('/api/project/'+projectName+'/training-sets/add', tset_data).success(function(data) {
+            $http.post('/api/project/'+projectName+'/training-sets/add', tset_data)
+            .success(function(data) {
                 callback(data);
             });
         },
@@ -244,6 +245,11 @@ angular.module('a2services',[])
         },
         
         getData: function(training_set, recording_uri, callback) {
+            if( recording_uri instanceof Function ) {
+                callback = recording_uri;
+                recording_uri = ""
+            }
+            
             var projectName = Project.getName();
             $http.get('/api/project/'+projectName+'/training-sets/list/'+training_set+'/'+recording_uri).success(function(data) {
                 callback(data);

@@ -5,7 +5,7 @@
                 <div class="a2-filter">
                     <ui-select multiple ng-model="params.sites" theme="bootstrap" style="width: 300px;">
                         <ui-select-match placeholder="Sites...">{{$item.name}}</ui-select-match>
-                        <ui-select-choices repeat="item in sites | filter:$select.search">
+                        <ui-select-choices class="has-badges" repeat="item in sites | filter:$select.search">
                             {{item.name}} 
                             <span class="badge">{{ item.rec_count }}</span>
                         </ui-select-choices>

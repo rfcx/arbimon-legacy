@@ -678,6 +678,7 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
     });
     $scope.ok = function(){
         $scope.validation={count:0};
+        
         var sdata=$scope.data, sval = $scope.validation;
         var tset_data = {};
         var tst;
@@ -705,6 +706,11 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
 
         if(sval.count == 0){
             a2TrainingSets.add(tset_data, function(new_tset){
+                if(new_tset.error) {
+                    sval[new_tset.field] = new_tset.error;
+                    return;
+                }
+                
                 $modalInstance.close(new_tset);
             });
         }
