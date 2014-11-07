@@ -566,13 +566,15 @@ angular.module('a2directives', [])
                 });
             }
             
-            element.click(function() {
-                if(popup.css('display') === 'none') {
-                    popup.css('display','block');
-                } else {
-                    popup.css('display', 'none');
-                }
-            });
+            if(is_a_popup){
+                element.click(function() {
+                    if(popup.css('display') === 'none') {
+                        popup.css('display','block');
+                    } else {
+                        popup.css('display', 'none');
+                    }
+                });
+            }
         }
     };
 })
