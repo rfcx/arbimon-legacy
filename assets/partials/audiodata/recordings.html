@@ -67,7 +67,7 @@
 </div> -->
 <div class="row">
     <div class="col-sm-12">
-        <div class="list-pagination-row">
+        <div class="reclist-pagination-row">
             <pagination total-items="totalRecs" 
                 ng-model="currentPage" 
                 class="pagination-sm" 
@@ -78,7 +78,15 @@
                 items-per-page="limitPerPage">
             </pagination> 
         </div>
-        <div class="list-total">{{ totalRecs }} Recordings</div>
+        <div class="reclist-total">{{ totalRecs }} Recordings</div>
+        <div class="reclist-pagelimit">
+            <div class="btn-group">
+                <button class="btn btn-default btn-sm" ng-model="limitPerPage" btn-radio="10">10</button>
+                <button class="btn btn-default btn-sm" ng-model="limitPerPage" btn-radio="25">25</button>
+                <button class="btn btn-default btn-sm" ng-model="limitPerPage" btn-radio="50">50</button>
+                <button class="btn btn-default btn-sm" ng-model="limitPerPage" btn-radio="100">100</button>
+            </div>
+        </div>
     </div>
 </div>
 <div class="row">

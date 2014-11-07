@@ -545,6 +545,7 @@ var Recordings = {
     __compute_spectrogram_tiles : function(recording, callback){
         Recordings.fetchSpectrogramTiles(recording, callback);
     },    
+    
     findProjectRecordings: function(params, callback) {
         var schema = {
             project_id: Joi.number().required(),
@@ -618,7 +619,7 @@ var Recordings = {
             
             var offset = parameters.offset || 0;
             
-            q += 'LIMIT ' + mysql.escape(offset) + ', ' + mysql.escape(offset+ parameters.limit);
+            q += 'LIMIT ' + mysql.escape(offset) + ', ' + mysql.escape(parameters.limit);
             
             queryHandler(q, callback);
         });

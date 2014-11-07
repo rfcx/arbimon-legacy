@@ -52,6 +52,8 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     $scope.sites = [];
     $scope.loading = true;
     $scope.currentPage  = 1;
+    $scope.limitPerPage = 10;
+    
     
     Project.getSites(function(data){
         $scope.sites = data
@@ -73,13 +75,19 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         $scope.project = data;
         searchRecs(true);
         
-        $scope.$watch('currentPage', function(){
+        $scope.$watch(function(scope) {
+            return [
+                $scope.currentPage,
+                $scope.limitPerPage
+            ];
+        }, 
+        function(){
             searchRecs();
-        });
+        }, 
+        true);
 
     });
     
-    $scope.limitPerPage = 20;
     
     $scope.sortRecs = function(sortKey, reverse) {
         $scope.sortKey = sortKey;
