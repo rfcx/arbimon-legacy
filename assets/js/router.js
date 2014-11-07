@@ -10,8 +10,20 @@ var arbimon2 = angular.module('arbimon2', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     
-    $urlRouterProvider.otherwise("/dashboard");
-
+    $urlRouterProvider
+        .rule(function ($injector, $location) {
+            var m, path = $location.path();
+            if(m=/visualizer\/?(.*)/.exec(path)){
+                var params = {location:m[1]};
+                $injector.invoke(function($state){ 
+                    $state.go('visualizer', params, {location:false}); 
+                });
+                return m[0];
+            }
+        })
+        .otherwise("/dashboard")
+    ;
+    
     $stateProvider.state('dashboard', {
         url: '/dashboard',
         templateUrl: '/partials/dashboard/index.html',
@@ -21,7 +33,8 @@ var arbimon2 = angular.module('arbimon2', [
         templateUrl: '/partials/audiodata/index.html'
     })
     .state('visualizer', {
-        url: '/visualizer/:recording',
+        url: '/visualizer',
+        params : {location:''},
         reloadOnSearch : false,
         template: '<a2-persistent name="visualizer"><a2-visualizer></a2-visualizer></a2-persistent>'
     })

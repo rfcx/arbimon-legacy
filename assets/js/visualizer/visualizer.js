@@ -40,7 +40,11 @@ angular.module('visualizer', [
 
 .controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller) {
     var update_location_path = function(){
-        $location.path("/visualizer/"+($scope.recording ? $scope.recording.id : '' ));
+        if($scope.recording){
+            var rec  = $scope.recording;
+            var lovo = rec.lovo || 'rec';
+            $scope.set_location((rec.lovo || 'rec') + '/' + (rec.id));
+        }
     };
     var new_layer = function(layer_type){
         var layer_def = layer_types[layer_type];
@@ -76,6 +80,11 @@ angular.module('visualizer', [
         return !l.display || l.display.spectrogram;
     }
     $scope.recording = null;
+    $scope.set_location = function(location){
+        $location.path("/visualizer/"+location);
+    };
+
+    
     $scope.layout = {
         sec2x : function(seconds, round){
             var x = seconds * this.scale.sec2px;
@@ -114,14 +123,14 @@ angular.module('visualizer', [
     $scope.getLayers = function(){
         return $scope.layers;
     };
-    $scope.setRecording = function(recording){
+    $scope.setRecording = function(recording, location){
         if (recording) {
             $scope.loading_recording = recording.file;
             Project.getRecordingInfo(recording.id, function(data){
                 // console.log('$scope.setRecording', data);
                 $scope.loading_recording = false;
                 $scope.recording = data;
-                update_location_path();
+                $scope.set_location(location);
                 $scope.recording.duration = data.stats.duration;
                 $scope.recording.sampling_rate = data.stats.sample_rate;
                 // fix up some stuff
@@ -190,8 +199,8 @@ angular.module('visualizer', [
     };
     $scope.$on('a2-persisted', update_location_path);
     $scope.$on('browser-available', function(){
-        if($state.params && $state.params.recording) {
-            $scope.$broadcast('select-recording',[$state.params.recording]);
+        if($state.params && $state.params.location) {
+            $scope.$broadcast('set-browser-location', [$state.params.location]);
         }
     });
 

@@ -1,14 +1,15 @@
 angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
 .service('browser_lovos', function(){
-    var g=[], i={}, plists = {$grouping : g};
-    ([
-        {   name       : 'recordings-by-site',
+    var g=[], i={}, lovos = {$grouping : g};
+    (lovos.$list = [
+        {   name       : 'rec',
+            default    : true,
             icon       : 'fa fa-map-marker',
             tooltip    : 'Browse Recordings by Site',
             controller : 'a2BrowserRecordingsBySiteController',
             template   : '/partials/visualizer/browser/recordings-by-site.html'
         }, 
-        {   name     : 'recordings-by-playlist',
+        {   name     : 'playlist',
             icon     : 'fa fa-list',
             tooltip  : "Browse Recordings by Playlist",
             controller : 'a2BrowserRecordingsByPlaylistController',
@@ -17,10 +18,10 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     ]).forEach(function(type){
         var group = type.name.split('-')[0];
         i[group] || g.push(i[group] = []);
-        i[group].push(plists[type.name] = type);
+        i[group].push(lovos[type.name] = type);
     });
     
-    return plists;
+    return lovos;
 })
 .factory('rbDateAvailabilityCache', function ($cacheFactory) {
     return $cacheFactory('recordingsBrowserDateAvailabilityCache');
@@ -40,7 +41,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     var project = Project;
     
     this.types = browser_lovos.$grouping;
-    this.type  = browser_lovos['recordings-by-site'];
+    this.type  = browser_lovos.$list.filter(function(lovo){return lovo.default;}).shift();
     this.recordings = [];
     this.loading = {
         sites: false,
@@ -50,18 +51,6 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     this.auto={};
     this.recording = null;
     this.lovo  = null;
-    var perform_auto_select = function(){
-        var auto_select = self.auto && self.auto.recording;
-        if(auto_select) {
-            self.auto.recording = null;
-            var found = self.recordings.filter(function(r){return r.id == auto_select.id;}).pop();
-            if (found) {
-                self.recording = found;
-            } else {
-                console.error("Could not find auto-selected recording in list.");
-            }
-        }
-    }
     var initialized = false;
     var activate = function(){
         if(self.$type && self.$type.activate){
@@ -95,24 +84,40 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     
     $scope.$on('a2-persisted', activate);
     
-    $scope.$watch('browser.type', function(new_type){
-        if(self.$type && self.$type.deactivate){
-            self.$type.deactivate();
-        }
-        if(new_type && new_type.controller){
-            if(!new_type.$controller){
-                new_type.$controller = $controller(new_type.controller, {
+    var setBrowserType = function(type){
+        var new_$type, old_$type = self.$type;
+        self.type = type;
+        if(type && type.controller){
+            if(!type.$controller){
+                type.$controller = $controller(type.controller, {
                     $scope : $scope, 
                     a2RecordingsBrowser : self
                 });
             }
-            self.$type = new_type.$controller;
-            activate();
-        }        
+            new_$type = self.$type = type.$controller;
+        }
+
+        var differ = new_$type !== old_$type;
+        var d = $q.defer();
+        d.resolve();
+        return d.promise.then(function(){
+            if(differ && old_$type && old_$type.deactivate){
+                return old_$type.deactivate();
+            }
+        }).then(function(){
+            if(differ && new_$type && new_$type.activate){
+                activate();
+            }
+        });
+    }
+    
+    $scope.$watch('browser.type', function(new_type){
+        setBrowserType(new_type);
     });
 
     $scope.$watch('browser.recording', function(newValue, oldValue){
-        $scope.onRecording({recording:newValue});
+        var location = newValue && self.$type.get_location(newValue);
+        $scope.onRecording({location:location, recording:newValue});
         $timeout(function(){
             var $e = $element.find('.recording-list-item.active');
             if($e.length) {
@@ -150,10 +155,20 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             self.lovo.next(self.recording.id).then($scope.selectRecording);
         }
     });
-    $scope.$on('select-recording',function(evt, recording_path){
-        Project.getOneRecording(recording_path, function(recording){
-            $scope.selectRecording(recording);
-        })
+    $scope.$on('set-browser-location',function(evt, location){
+        var m;
+        if(m=/([\w+]+)(\/(.+))?/.exec(location)){
+            if(browser_lovos[m[1]]){
+                var loc = m[3];
+                setBrowserType(browser_lovos[m[1]]).then(function(){
+                    return self.$type.resolve_location(loc);
+                }).then(function(recording){
+                    if(recording){
+                        $scope.selectRecording(recording);
+                    }
+                });
+            }
+        }
     });
     
     activate();
@@ -312,7 +327,10 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
         return defer.promise;
     }
     this.deactivate = function(){
+        var defer = $q.defer();
+        defer.resolve();
         self.active = false;
+        return defer.promise;
     }
     this.auto_select = function(recording){
         if(recording) {
@@ -333,6 +351,17 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             }
         }
     };
+
+    this.resolve_location = function(location){
+        var defer = $q.defer();
+        Project.getOneRecording(location, function(recording){
+            defer.resolve(recording);
+        })
+        return defer.promise;
+    }
+    this.get_location = function(recording){
+        return 'rec/' + recording.id;
+    }
     
     var make_lovo = function(){
         var site = self.site;
@@ -428,6 +457,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
 .controller('a2BrowserRecordingsByPlaylistController', function($scope, itemSelection, a2RecordingsBrowser, rbDateAvailabilityCache, a2Playlists, $timeout, $q, a2PlaylistLOVO){
     var self = this;
     this.playlists = [];
+    this.active=false;
     this.loading = {
         playlists : false
     };
@@ -441,14 +471,56 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             self.playlists = playlists;
             self.loading.playlists = false;
             $timeout(function(){
+                this.active=true;
                 defer.resolve(playlists);
+                if(self.resolve.pld){
+                    self.resolve.pld.resolve(playlists);
+                    delete self.resolve.pld;
+                }
             });
         });      
         return defer.promise;
     }
+    this.resolve={};
+    
+    this.resolve_location = function(location){
+        var m = /(\d+)(\/(\d+))?/.exec(location);
+        var defer = $q.defer();
+        if(m){
+            var plid = m[1]|0, recid=m[3]|0;
+            var pld = $q.defer();
+            if(self.loading.playlists){
+                self.resolve = { pld : pld };
+            } else {
+                pld.resolve(self.playlists);
+            }
+            pld.promise.then(function(playlists){
+                var playlist = self.playlists.filter(function(playlist){
+                    return playlist.id == plid;
+                }).shift();
+                if(playlist){
+                    self.playlist = playlist;
+                    self.lovo = new a2PlaylistLOVO(playlist);
+                    self.lovo.initialize().then(function(){
+                        return self.lovo.find(recid)
+                    }).then(function(recording){
+                        defer.resolve(recording);
+                    });
+                } else {
+                    defer.resolve();
+                }
+            });
+        } else {
+            defer.resolve();
+        }
+        return defer.promise;
+    }
+    this.get_location = function(recording){
+        return 'playlist/' + this.lovo.playlist.id + "/" + recording.id;
+    }
     
     $scope.$watch('browser.$type.playlist', function(playlist){
-        if(playlist){
+        if(playlist && (self.lovo ? self.lovo.playlist != playlist : true)){
             self.lovo = new a2PlaylistLOVO(playlist);
         }
         a2RecordingsBrowser.setLOVO(self.lovo);
