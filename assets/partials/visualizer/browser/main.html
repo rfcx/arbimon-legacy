@@ -23,12 +23,12 @@
                     <i class="fa fa-spinner fa-spin"></i> Loading Recordings
                 </div>
                 <div class="recording-list-item"
-                    ng-hide="browser.loading.times || browser.playlist.list">
+                    ng-hide="browser.loading.times || browser.lovo.list">
                     (No recordings in list)
                 </div>
                 <div class="recording-list-item"
                     ng-hide="browser.loading.times"
-                    ng-repeat="recording in browser.playlist.list | orderBy: 'datetime'"
+                    ng-repeat="recording in browser.lovo.list | orderBy: 'datetime'"
                     ng-class="{active: browser.recording == recording}"
                     ng-click="browser.recording = recording">
                     <div>

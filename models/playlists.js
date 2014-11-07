@@ -97,7 +97,7 @@ var Playlists = {
             var ids = data.map(function(row){
                 return row.recording_id
             });
-            Recordings.findByUrlMatch({id:ids}, null, null, callback);
+            Recordings.findByUrlMatch({id:ids}, null, {compute:query && query.show}, callback);
         });
     }
 };

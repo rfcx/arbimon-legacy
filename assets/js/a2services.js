@@ -284,6 +284,49 @@ angular.module('a2services',[])
     };
 })
 
+.factory('a2Playlists', function(Project, $http) {
+    return {
+        getList: function(callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/playlists/').success(function(data) {
+                callback(data);
+            });
+        },
+
+        // add: function(tset_data, callback) {
+        //     var projectName = Project.getName();
+        //     $http.post('/api/project/'+projectName+'/playlist/add', tset_data).success(function(data) {
+        //         callback(data);
+        //     });
+        // },
+        
+        // addData: function(playlist, tset_data, callback) {
+        //     var projectName = Project.getName();
+        //     $http.post('/api/project/'+projectName+'/playlists/add-data/'+playlist, tset_data).success(function(data) {
+        //         callback(data);
+        //     });
+        // },
+        
+        getData: function(playlist, query, callback) {
+            var projectName = Project.getName();
+            $http({
+                method : 'GET',
+                url    : '/api/project/'+projectName+'/playlists/list/'+playlist,
+                params : query
+            }).success(function(data) {
+                callback(data);
+            });
+        },
+
+        // getTypes: function(callback) {
+        //     var projectName = Project.getName();
+        //     $http.get('/api/project/'+projectName+'/playlists/types').success(function(data) {
+        //         callback(data);
+        //     });
+        // },
+    };
+})
+
 .factory('Species',['$http', function($http){
     var species;
 
