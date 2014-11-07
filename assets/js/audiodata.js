@@ -1,8 +1,8 @@
-angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angularFileUpload'])
+angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angularFileUpload','visualizer-training-sets'])
 .config(function($stateProvider, $urlRouterProvider) {
    
     $urlRouterProvider.when("/audiodata", "/audiodata/recordings");
-    
+
     $stateProvider.state('audiodata.recordings', {
         url: '/recordings',
         controller: 'RecsCtrl',
@@ -248,13 +248,17 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         }
     };
 })
-.controller('TrainingSetsCtrl', function($scope, a2TrainingSets) {
+.controller('TrainingSetsCtrl', function($scope, a2TrainingSets,Project,$modal) {
     $scope.fields = [
         { name: 'Name', key: 'name' },
         { name: 'Set type', key: 'type' },
         { name: 'Date created', key: 'date_created' },
     ];
     
+    $scope.rois = []
+    $scope.selectedName = ''
+    $scope.species = ''
+    $scope.songtype = ''
     a2TrainingSets.getList(function(data){
         $scope.sets = data.map(function(d) {
             d.date_created = new Date(d.date_created);
@@ -262,15 +266,178 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         });
     });
     
-    $scope.displaySet = function($index) {
-        
+    $scope.roi = null;
+    $scope.currentrois = [];
+    $scope.currentPage = 0;
+    $scope.roisPerpage = 6;
+    $scope.currentRoi = 0;
+    $scope.totalRois = 0;
+    $scope.currentUri = '';
+    $scope.totalpages = 0;
+    $scope.detailedView = false;
+    $scope.currentDuration = 0;
+    $scope.currentlow = 0;
+    $scope.currenthigh = 0;
+    $scope.currentId = 0;
+    $scope.currentUrl = '';
+    $scope.norois = false;
+    $scope.toggleView = function ()
+    {
+        if ($scope.detailedView)
+        {
+            $scope.detailedView = false;
+        }
+        else
+        {
+            $scope.detailedView = true;
+        }
     };
-})
-.directive('dataTrainingSet', function($compile) {
-    return {
-        restrict: 'E',
-        
+    
+    $scope.next = function ()
+    {
+        $scope.currentRoi = $scope.currentRoi + 1;
+        if ($scope.currentRoi >= $scope.totalRois) {
+            $scope.currentRoi = $scope.currentRoi - 1;
+        }
+        else
+        {
+            $scope.roi = $scope.rois[$scope.currentRoi];
+            $scope.currentDuration = $scope.roi.dur;
+            $scope.currentlow = $scope.roi.y1;
+            $scope.currenthigh = $scope.roi.y2;
+            $scope.currentId = $scope.roi.id;
+            $scope.currentUri = $scope.roi.uri;
+        }
+    };
+    
+    $scope.prev = function ()
+    {
+        $scope.currentRoi = $scope.currentRoi- 1;
+        if ($scope.currentRoi  < 0) {
+            $scope.currentRoi = 0;
+        }
+        else
+        {
+            $scope.roi = $scope.rois[$scope.currentRoi];
+            $scope.currentDuration = $scope.roi.dur;
+            $scope.currentlow = $scope.roi.y1;
+            $scope.currenthigh = $scope.roi.y2;
+            $scope.currentId = $scope.roi.id;
+            $scope.currentUri = $scope.roi.uri;
+        }
+    };
+    
+    $scope.nextPage = function ()
+    {
+        $scope.currentPage = $scope.currentPage + 1;
+        if ($scope.currentPage*$scope.roisPerpage >= $scope.totalRois) {
+            $scope.currentPage= $scope.currentPage - 1;
+        }
+        else
+        {
+            $scope.currentrois = $scope.rois.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+        }
+    };
+    
+    $scope.prevPage = function ()
+    {
+        $scope.currentPage = $scope.currentPage- 1;
+        if ($scope.currentPage*$scope.roisPerpage  < 0) {
+            $scope.currentPage = 0;
+        }
+        else
+        {
+            $scope.currentrois = $scope.rois.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+        }
+    };
+    
+    $scope.removeRoi = function(id)
+    {
+        a2TrainingSets.removeRoi(id,function(data){
+            if (data.affectedRows) 
+            {
+                for(var i = 0 ; i < $scope.rois.length ; i++)
+                {
+                    if ($scope.rois[i].id == id){
+                        $scope.rois.splice(i,1)
+                        break;
+                    }
+                }
+
+                if ($scope.currentRoi >= $scope.rois.length) {
+                    $scope.currentRoi = $scope.rois.length -1;
+                }
+                $scope.totalRois = $scope.rois.length;
+                if ($scope.totalRois>0) {
+                
+                    $scope.roi = $scope.rois[$scope.currentRoi];
+                    $scope.currentDuration = $scope.roi.dur;
+                    $scope.currentlow = $scope.roi.y1;
+                    $scope.currenthigh = $scope.roi.y2;
+                    $scope.currentId = $scope.roi.id;
+                    $scope.currentUri = $scope.roi.uri;
+                    $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage)
+                    if($scope.currentPage>($scope.totalpages-1)){
+                        $scope.currentPage = $scope.totalpages-1;
+                    }
+                    $scope.currentrois =  $scope.rois.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+                }else {$scope.rois = [];$scope.norois = true;}
+            }
+        });
+    };
+ 
+    Project.getInfo(function(info) {
+        $scope.projecturl = info.url;
+    });
+ 
+ 
+    $scope.add_new_tset = function(){
+        $modal.open({
+            templateUrl : '/partials/visualizer/modal/add_tset.html',
+            controller  : 'a2VisualizerAddTrainingSetModalController'
+        }).result.then(function (new_tset) {
+            a2TrainingSets.getList(function(data){
+                $scope.sets = data.map(function(d) {
+                    d.date_created = new Date(d.date_created);
+                    return d;
+                });
+            });
+        });
     }
-})
-;
+    
+    $scope.displaySetData = function($index) {
+        $scope.norois = false;
+        $scope.selectedName = $scope.sets[$index].name;
+        a2TrainingSets.getSpecies($scope.sets[$index].name,
+            function(speciesData)
+            {
+                $scope.species = speciesData[0].species;
+                $scope.songtype = speciesData[0].songtype
+                a2TrainingSets.getRois($scope.sets[$index].name,
+                    function(data)
+                    {
+                        $scope.detailedView = false;
+                        $scope.totalRois = data.length;
+                        $scope.currentPage = 0;
+                        $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage)
+                        if ($scope.totalRois>0) {
+                            $scope.roi = data[0];
+                            $scope.currentDuration = $scope.roi.dur;
+                            $scope.currentRoi = 0;
+                            $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/"+$scope.roi.recording;
+                            $scope.currentUri = $scope.roi.uri;
+                            $scope.currentlow = $scope.roi.y1;
+                            $scope.currenthigh = $scope.roi.y2;
+                            $scope.currentId = $scope.roi.id;
+                            $scope.currentrois = data.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+                            $scope.rois = data;
+                        }
+                        else { $scope.rois = []; $scope.norois = true;}
+                    }
+                );
+            }
+        );
+    };
+});
+
       

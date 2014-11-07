@@ -262,6 +262,25 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
+        
+        getRois: function(training_set, callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/rois/'+training_set).success(function(data) {
+                callback(data);
+            });
+        },
+        getSpecies: function(training_set, callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/species/'+training_set).success(function(data) {
+                callback(data);
+            });
+        },
+        removeRoi: function(roi_id, callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/remove-roi/'+roi_id).success(function(data) {
+                callback(data);
+            });
+        }
     };
 })
 

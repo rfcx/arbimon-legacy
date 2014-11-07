@@ -1,23 +1,93 @@
 <div class="row toolbar">
     <div class="col-sm-12">
         <div class="col-sm-3">
-            <button class="btn btn-default" 
+            <button ng-click="add_new_tset()" class="btn btn-default" 
                 tooltip="Create training set"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-plus"></i>
-            </button>
+            </button><!--
             <button class="btn btn-danger" 
                 tooltip="Delete training set"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-trash"></i>
-            </button>
+            </button>-->
         </div>
     </div>
 </div>
 <div class="row">
     <div class="col-sm-6">
-        <a2-table fields="fields" rows="sets" no-checkbox onSelect="displaySetData()"></a2-table>
+        <a2-table fields="fields" rows="sets" no-checkbox on-select="displaySetData($index)"></a2-table>
     </div>
-    <div class="col-sm-6">
+    <div ng-show="norois">No ROIs in Training Set {{selectedName}}</div>
+    <div class="col-sm-5 panel panel-default" ng-show="rois.length">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-6">
+                   <strong>Set Name:</strong> {{selectedName}}
+                </div>
+                <div class="col-sm-6">
+                    <strong>ROI Count :</strong>  {{rois.length}}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                   <strong>Species:</strong>  {{species}}
+                </div>
+                <div class="col-sm-6">
+                   <strong>Songtype:</strong>  {{songtype}}
+                </div>
+            </div>
+            <div class="bordeder-empy-div"></div>
+            <div ng-hide="detailedView">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <ul class="pager">
+                            <li><a ng-click="prevPage()">Previous</a></li>
+                            <li><a tooltip="Pages">{{currentPage+1}} of {{totalpages}}</a></li>
+                            <li><a ng-click="nextPage()">Next</a></li>
+                            <li><a ng-click="toggleView()" tooltip="Detailed View"><i class="fa fa-search-plus"></i></a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div ng-repeat="roi in currentrois" class="roi-div-inline">
+                    <div class="roi-div-inline-remove">
+                        <i ng-click="removeRoi(roi.id)" tooltip-placement="right" tooltip="Remove ROI from Training Set" class="fa fa-times"></i>
+                    </div>
+                    <div class="roi-div-inline-vis">
+                        <a ng-href="/project/{{projecturl}}/#/visualizer/{{roi.recording}}"><i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i></a>
+                    </div>
+                    <img ng-src="{{roi.uri}}" class="roi-div-inline-img" tooltip-placement="right" tooltip="Duration: {{roi.dur}}s  Bandwidth:{{roi.y1}}-{{roi.y2}}Hz"/>
+                </div>
+            </div>
+            <div ng-show="detailedView">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <ul class="pager">
+                            <li><a ng-click="prev()">Previous</a></li>
+                            <li><a tooltip="ROIs">{{currentRoi+1}} of {{totalRois}}</a></li>
+                            <li><a ng-click="next()">Next</a></li>
+                            <li><a ng-click="toggleView()" tooltip="Gallery View"><i class="fa fa-th"></i></a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2" ></div>
+                    <div class="col-sm-8" >
+                        <div class="row">
+                            <small>
+                                <div class="col-sm-5" >Duration: {{currentDuration}}s</div>
+                                <div class="col-sm-5" >{{currentlow}}-{{currenthigh}}Hz</div>
+                                <div class="col-sm-1" ><a ng-href="{{currentUrl}}"><i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i></a></div>
+                                <div class="col-sm-1" class="roi-div-inline-remove-detail" ><i ng-click="removeRoi(currentId)" tooltip="Remove ROI from Training Set" class="fa fa-times"></i></div>
+                            </small>
+                        </div>
+                        <img ng-src="{{currentUri}}" class="roi-div-inline-img-detail"/>
+                        <div class="bordeder-empy-div"></div>
+                    </div>
+                    <div class="col-sm-2" ></div>
+                </div>
+            </div>
+            <div class="spacer-gallery"></div>
+        </div>
     </div>
 </div>

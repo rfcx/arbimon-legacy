@@ -198,7 +198,28 @@ var TrainingSets = {
 
         return typedef.get_data(training_set, query, callback);
     },
-
+    
+    /** Fetches a training set's rois
+     *  @param {Object}  training_set
+     */
+    fetchRois: function (training_set, callback) {
+        var typedef = TrainingSets.types[training_set.type];
+        return typedef.get_rois(training_set, callback);
+    },
+   
+    removeRoi: function (roi_id, callback) {
+        var typedef = TrainingSets.types['roi_set'];
+        return typedef.remove_roi(roi_id, callback);
+    },
+     
+    /** Fetches a training set's species and songtype
+     *  @param {Object}  training_set
+     */
+    fetchSpecies: function (training_set, callback) {
+        var typedef = TrainingSets.types[training_set.type];
+        return typedef.get_species(training_set, callback);
+    },
+    
     /** Fetches the available training set types.
      * @param {Function} callback(err, path) function to call back with the results.
      */
@@ -220,7 +241,7 @@ TrainingSets.types.roi_set = {
     insert : {
         validate : function(data, callback){
             if (data.extras && data.extras.class) {
-                Projects.getProjectClasses( data.project, data.extras.class, function(err, classes){
+                Projects.getProjectClasses( data.project_id, data.extras.class, function(err, classes){
                     if(err) {
                         callback(err);
                     } else if(!classes || !classes.length) {
@@ -266,7 +287,7 @@ TrainingSets.types.roi_set = {
      * @param {Object} input.y1
      * @param {Object} input.y2
      */
-    create_roi_image : function (input,cb){
+    create_roi_image : function (input,roiData,cb){
         var roiUri = 'project_'+input.project_id+'/training_sets/'+input.training_set_id+'/'+input.roi_id+'.png'
         var rec_data ;
         var rec_stats ;
@@ -335,7 +356,34 @@ TrainingSets.types.roi_set = {
                 });
             }
         ],
-        cb
+        function(){cb(roiData);}
+        );
+    },
+    get_rois : function(training_set, callback) {
+        return queryHandler(
+            "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
+            "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
+            "   TSD.x1,  ROUND(TSD.y1,0) as y1, TSD.x2,  ROUND(TSD.y2,0) as y2 , \n"+
+            "   ROUND(TSD.x2-TSD.x1,1) as dur , \n"+
+            "   CONCAT('https://s3.amazonaws.com/','"+config('aws').bucketName+"','/',TSD.uri) as uri \n" +
+            " FROM training_set_roi_set_data TSD \n"+
+            " WHERE TSD.training_set_id = " + mysql.escape(training_set.id),
+            callback
+        );
+    },
+    get_species : function(training_set, callback) {
+        return queryHandler(
+            "SELECT  S.scientific_name as species  , SG.songtype \n"+
+            " FROM  songtypes SG , species S , training_sets_roi_set TRS \n"+
+            " WHERE TRS.training_set_id = " + mysql.escape(training_set.id) + " \n"+
+            " and TRS.species_id = S.species_id and TRS.songtype_id = SG.songtype_id ",
+            callback
+        );
+    },
+    remove_roi : function(roi_id, callback) {
+        return queryHandler(
+            "delete from training_set_roi_set_data where roi_set_data_id = "+roi_id,
+            callback
         );
     },
     /** Fetches a training set's data, optionally using a query.
@@ -362,11 +410,11 @@ TrainingSets.types.roi_set = {
                 'sites S ON R.site_id = S.site_id'
             );
         }
-
         return queryHandler(
             "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
             "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
-            "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 \n" +
+            "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 , \n"+
+            "   CONCAT('https://s3.amazonaws.com/','"+config('aws').bucketName+"','/',TSD.uri) as uri \n" +
             "FROM "   + tables.join(" \n" +
             "JOIN ")+ " \n" +
             "WHERE " + constraints.join(" \n" +
@@ -410,9 +458,9 @@ TrainingSets.types.roi_set = {
                                        x2:roiData.roi.x2,
                                        y1:roiData.roi.y1,
                                        y2:roiData.roi.y2
-                                      },cb);
+                                      },roiData,cb);
             }).bind(this)
-        ], callback);
+        ], function(data){callback(null,data.roi)});
     },
 
 }
