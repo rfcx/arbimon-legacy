@@ -7,6 +7,7 @@ var gravatar = require('gravatar');
 var model = require('../../../models');
 var recording_routes = require('./recordings');
 var training_set_routes = require('./training_sets');
+var playlist_routes = require('./playlists');
 
 
 router.post('/create', function(req, res, next) {
@@ -376,5 +377,6 @@ router.get('/:projectUrl/validations/count', function(req, res, next) {
 
 router.use('/:projectUrl/recordings', recording_routes);
 router.use('/:projectUrl/training-sets', training_set_routes);
+router.use('/:projectUrl/playlists', playlist_routes);
 
 module.exports = router;
