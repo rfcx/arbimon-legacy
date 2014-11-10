@@ -417,35 +417,47 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         $scope.norois = false;
         $scope.selectedSet = $scope.sets[$index];
         $scope.selectedName = $scope.sets[$index].name;
-        a2TrainingSets.getSpecies($scope.sets[$index].name,
-            function(speciesData)
-            {
-                $scope.species = speciesData[0].species;
-                $scope.songtype = speciesData[0].songtype
-                a2TrainingSets.getRois($scope.sets[$index].name,
-                    function(data)
-                    {
-                        $scope.detailedView = false;
-                        $scope.totalRois = data.length;
-                        $scope.currentPage = 0;
-                        $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage)
-                        if ($scope.totalRois>0) {
-                            $scope.roi = data[0];
-                            $scope.currentDuration = $scope.roi.dur;
-                            $scope.currentRoi = 0;
-                            $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/"+$scope.roi.recording;
-                            $scope.currentUri = $scope.roi.uri;
-                            $scope.currentlow = $scope.roi.y1;
-                            $scope.currenthigh = $scope.roi.y2;
-                            $scope.currentId = $scope.roi.id;
-                            $scope.currentrois = data.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
-                            $scope.rois = data;
-                        }
-                        else { $scope.rois = []; $scope.norois = true;}
-                    }
-                );
-            }
-        );
+        $scope.species  = null;
+        $scope.songtype = null;
+        $scope.detailedView    = undefined;
+        $scope.totalRois       = undefined;
+        $scope.currentPage     = undefined;
+        $scope.totalpages      = undefined;
+        $scope.roi             = undefined;
+        $scope.currentDuration = undefined;
+        $scope.currentRoi      = undefined;
+        $scope.currentUrl      = undefined;
+        $scope.currentUri      = undefined;
+        $scope.currentlow      = undefined;
+        $scope.currenthigh     = undefined;
+        $scope.currentId       = undefined;
+        $scope.currentrois     = undefined;
+        $scope.rois            = undefined;
+        a2TrainingSets.getSpecies($scope.sets[$index].name, function(speciesData){
+            $scope.species = speciesData[0].species;
+            $scope.songtype = speciesData[0].songtype
+            a2TrainingSets.getRois($scope.sets[$index].name, function(data){
+                $scope.detailedView = false;
+                $scope.totalRois = data.length;
+                $scope.currentPage = 0;
+                $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage)
+                if ($scope.totalRois>0) {
+                    $scope.roi = data[0];
+                    $scope.currentDuration = $scope.roi.dur;
+                    $scope.currentRoi = 0;
+                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/"+$scope.roi.recording;
+                    $scope.currentUri = $scope.roi.uri;
+                    $scope.currentlow = $scope.roi.y1;
+                    $scope.currenthigh = $scope.roi.y2;
+                    $scope.currentId = $scope.roi.id;
+                    $scope.currentrois = data.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+                    $scope.rois = data;
+                } else { 
+                    $scope.rois = []; 
+                    $scope.norois = true;
+                }
+            });
+        });
     };
 });
 
