@@ -53,20 +53,17 @@ router.get('/feed', function(req, res) {
         
         console.log(results);
         
-	    if(results.length>0)
-        {
-	        var feed = results.news.map(function(row){
-	            row.image_url = gravatar.url(row.email, { d: 'monsterid', s: 30 }, https=req.secure);
-	            
-	            var data = JSON.parse(row.data);
-	            
-	            data.project = row.project;
-	            
-	            row.message = sprintf(results.formats[row.type], data);
-	            
-	            return row;
-	        });
-        }else var feed = {};
+        var feed = results.news.map(function(row){
+            row.image_url = gravatar.url(row.email, { d: 'monsterid', s: 30 }, https=req.secure);
+            
+            var data = JSON.parse(row.data);
+            
+            data.project = row.project;
+            
+            row.message = sprintf(results.formats[row.type], data);
+            
+            return row;
+        });
         
         res.json(feed);
     });
