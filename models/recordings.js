@@ -17,6 +17,20 @@ var dbpool       = require('../utils/dbpool');
 var s3;
 var queryHandler = dbpool.queryHandler;
 
+var date2UTC = function (field, next) {
+    if (field.type !== 'DATETIME') return next(); // 1 = true, 0 = false
+    
+    var d = new Date(field.string());
+    // console.log(d);
+    
+    d.setTime(d.getTime() - (d.getTimezoneOffset() * 60000));
+    
+    // console.log(d);
+    return d;
+}
+
+
+
 // exports
 var Recordings = {
     QUERY_FIELDS : {
@@ -141,17 +155,7 @@ var Recordings = {
             
         var query = {
             sql: sql,
-            typeCast: function (field, next) {
-                if (field.type !== 'DATETIME') return next(); // 1 = true, 0 = false
-                
-                var d = new Date(field.string());
-                //~ console.log(d);
-                
-                d.setTime(d.getTime() - (d.getTimezoneOffset() * 60000));
-                
-                //~ console.log(d);
-                return d;
-            }
+            typeCast: date2UTC,
         };
         
         return queryHandler(query, function(err, data){
@@ -562,24 +566,32 @@ var Recordings = {
             offset: Joi.number(),
             sortBy: Joi.string(),
             sortRev: Joi.boolean(), 
-            count:  Joi.boolean()
+            output:  Joi.string()
         };
         
         Joi.validate(params, schema, function(err, parameters) {
             if(err) return callback(err);
             
-            var list = "SELECT r.recording_id AS id, \n"+
-                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
-                       "       s.name as site, \n"+
-                       "       r.uri, \n"+
-                       "       r.datetime, \n"+
-                       "       r.mic, \n"+
-                       "       r.recorder, \n"+
-                       "       r.version \n";
+            if(!parameters.output)
+                parameters.output = 'list';
             
-            var select = parameters.count ? "SELECT COUNT(*) as count \n" : list;
+            var select = {
+                list: ("SELECT r.recording_id AS id, \n"+
+                      "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
+                      "       s.name as site, \n"+
+                      "       r.uri, \n"+
+                      "       r.datetime, \n"+
+                      "       r.mic, \n"+
+                      "       r.recorder, \n"+
+                      "       r.version \n"),
+                      
+                date_range: ("SELECT DATE(MIN(r.datetime)) AS min_date, \n"+
+                            "       DATE(MAX(r.datetime)) AS max_date \n"),
+                            
+                count: "SELECT COUNT(*) as count \n"
+            }
             
-            var q = select +
+            var q = select[parameters.output] +
                     "FROM recordings AS r \n"+
                     "JOIN sites AS s ON s.site_id = r.site_id \n"+
                     "WHERE s.project_id = %s \n";
@@ -599,18 +611,25 @@ var Recordings = {
             }
             
             if(parameters.months){
-                q += 'AND MONTH(r.datetime) IN (' + mysql.escape(parameters.months) + ') \n';
+                var months;
+                
+                if(months instanceof Array)
+                    months = parameters.months.map(function(m) { return m+1; });
+                else
+                    months = parameters.months+1;
+                
+                q += 'AND MONTH(r.datetime) IN (' + mysql.escape(months) + ') \n';
             }
             
             if(parameters.days){
-                q += 'AND DATE(r.datetime) IN (' + mysql.escape(parameters.days) + ') \n';
+                q += 'AND DAY(r.datetime) IN (' + mysql.escape(parameters.days) + ') \n';
             }
             
             if(parameters.hours){
                 q += 'AND HOUR(r.datetime) IN (' + mysql.escape(parameters.hours) + ') \n';
             }
             
-            if(parameters.count !== true) {
+            if(parameters.output === 'list') {
                 var sortBy = parameters.sortBy || 'site';
                 var sortRev = parameters.sortRev ? 'DESC' : '';
                 
@@ -621,7 +640,12 @@ var Recordings = {
             
             q += 'LIMIT ' + mysql.escape(offset) + ', ' + mysql.escape(parameters.limit);
             
-            queryHandler(q, callback);
+            var query = {
+                sql: q,
+                typeCast: date2UTC,
+            };
+            
+            queryHandler(query, callback);
         });
     }
 };

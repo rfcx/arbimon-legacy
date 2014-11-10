@@ -22,19 +22,42 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
 .controller('RecsCtrl', function($scope, Project, $http) {
     $scope.loading = true;
     
-    var searchRecs = function(count) {
+    var searchRecs = function(output) {
         
-        Project.getRecs({
+        var params = {
             project_id: $scope.project.project_id,
             limit: $scope.limitPerPage,
             offset: ($scope.currentPage-1) * $scope.limitPerPage,
             sortBy: $scope.sortKey,
             sortRev: $scope.reverse,
-            sites: $scope.params.sites ? $scope.params.sites.map(function(site){ return site.name; }) : undefined,
-            count: count
-        },
-        function(data){
-            if(!count) {
+            output: output
+        };
+        
+        if($scope.params.range && $scope.params.range.from && $scope.params.range.to) {
+            params.range = $scope.params.range;
+            
+            params.range.to.setHours(23);
+            params.range.to.setMinutes(59);
+        };
+        
+        if($scope.params.sites)
+            params.sites = $scope.params.sites.map(function(site){ return site.name; });
+        
+        if($scope.params.hours) 
+            params.hours = $scope.params.hours.map(function(h) { return h.value; });
+        
+        if($scope.params.months)
+            params.months = $scope.params.months.map(function(m) { return m.value; });
+        
+        if($scope.params.years)
+            params.years = $scope.params.years;
+            
+        if($scope.params.days)
+            params.days = $scope.params.days;
+            
+            
+        Project.getRecs(params, function(data) {
+            if(!output || output === 'list') {
                 $scope.recs = data;
             
                 $scope.recs.forEach(function(rec) {
@@ -42,25 +65,42 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
                 });
                 $scope.loading = false;
             }
-            else {
+            else if(output === 'count'){
                 $scope.totalRecs = data[0].count;
+            }
+            else if(output === 'date_range') {
+                $scope.minDate = new Date(data[0].min_date);
+                $scope.maxDate = new Date(data[0].max_date);
+                $scope.years = d3.range($scope.minDate.getFullYear(), ($scope.maxDate.getFullYear() + 1) );
             }
         });
     };
     
+    
+    
+    
     $scope.params = {};
     $scope.sites = [];
+    $scope.years = [];
     $scope.loading = true;
     $scope.currentPage  = 1;
     $scope.limitPerPage = 10;
-    
-    
-    Project.getSites(function(data){
-        $scope.sites = data
+    $scope.days = d3.range(1,32);
+    $scope.months =  d3.range(12).map(function(month) {
+        return { value: month, string: moment().month(month).format('MMM') };
+    });
+    $scope.hours = d3.range(24).map(function(hour) {
+        return { value: hour, string: moment().hour(hour).minute(0).format('HH:mm') };
     });
     
-    // to do advance filters and playlist generation
-    // $scope.hours = d3.range(24);
+    Project.getSites(function(data){
+        $scope.sites = data;
+    });
+    
+    
+    $scope.filters = {
+        open: false
+    };
     
     $scope.fields = [
         { name: 'Site', key: 'site' },
@@ -73,7 +113,8 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     
     Project.getInfo(function(data){
         $scope.project = data;
-        searchRecs(true);
+        searchRecs('count');
+        searchRecs('date_range');
         
         $scope.$watch(function(scope) {
             return [
@@ -97,14 +138,14 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     
     $scope.applyFilters = function() {
         $scope.currentPage  = 1;
-        searchRecs(true);
+        searchRecs('count');
         searchRecs();
     };
     
     $scope.resetFilters = function() {
         $scope.currentPage  = 1;
         $scope.params = {};
-        searchRecs(true);
+        searchRecs('count');
         searchRecs();
     };
     
