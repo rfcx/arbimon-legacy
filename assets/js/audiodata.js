@@ -19,7 +19,7 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         templateUrl: '/partials/audiodata/training-sets.html'
     });
 })
-.controller('RecsCtrl', function($scope, Project, $http) {
+.controller('RecsCtrl', function($scope, Project, $http, $modal) {
     $scope.loading = true;
     
     var searchRecs = function(output) {
@@ -76,9 +76,6 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         });
     };
     
-    
-    
-    
     $scope.params = {};
     $scope.sites = [];
     $scope.years = [];
@@ -97,11 +94,6 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         $scope.sites = data;
     });
     
-    
-    $scope.filters = {
-        open: false
-    };
-    
     $scope.fields = [
         { name: 'Site', key: 'site' },
         { name: 'Time', key: 'datetime' },
@@ -114,7 +106,6 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     Project.getInfo(function(data){
         $scope.project = data;
         searchRecs('count');
-        searchRecs('date_range');
         
         $scope.$watch(function(scope) {
             return [
@@ -127,6 +118,7 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         }, 
         true);
 
+        searchRecs('date_range');
     });
     
     
@@ -135,20 +127,41 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         $scope.reverse = reverse;
         searchRecs();
     };
-    
     $scope.applyFilters = function() {
         $scope.currentPage  = 1;
         searchRecs('count');
         searchRecs();
     };
-    
     $scope.resetFilters = function() {
         $scope.currentPage  = 1;
         $scope.params = {};
         searchRecs('count');
         searchRecs();
     };
-    
+    // $scope.edit = function() {
+    //     if(!$scope.checked || !$scope.checked.length)
+    //         return;
+    //         
+    //     // var recorders = $scope.checked.map(function(rec) {
+    //     //     return rec.recorders
+    //     // })
+    //     
+    //     
+    //     
+    //     var modalInstance = $modal.open({
+    //         templateUrl: '/partials/audiodata/edit-recs.html',
+    //         controller: 'RecsEditorCtrl',
+    //         size: 'lg',
+    //         resolve: {
+    //             data: function() {
+    //                 return data;
+    //             }
+    //         }
+    //     });
+    // }
+})
+.controller('RecsEditorCtrl', function($scope, Project, $modalInstance, recs) {
+    $scope.recs = recs;
 })
 .controller('UploadCtrl', function($scope, uploads, Project, $modal){ 
     $scope.prettyBytes = function(bytes) {

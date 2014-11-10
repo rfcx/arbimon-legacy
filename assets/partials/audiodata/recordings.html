@@ -1,19 +1,5 @@
 <div class="row toolbar">
     <div class="col-sm-12">
-        <!-- <div class="well a2-filter-well">
-            <div class="a2-filter a2-filter-text">Filters <i class="fa fa-filter"></i></div>
-                <div class="a2-filter">
-                    <ui-select multiple ng-model="params.sites" theme="bootstrap" style="width: 300px;">
-                        <ui-select-match placeholder="Sites...">{{$item.name}}</ui-select-match>
-                        <ui-select-choices class="has-badges" repeat="item in sites | filter:$select.search">
-                            {{item.name}} 
-                            <span class="badge">{{ item.rec_count }}</span>
-                        </ui-select-choices>
-                    </ui-select>
-                </div>
-                <button class="btn btn-default" ng-click="applyFilters()">Apply filters</button>
-                <button class="btn btn-default" ng-click="resetFilters()">Reset</button>
-        </div> -->
             <accordion>
                 <accordion-group is-open="filters.open" class="a2-filters-box">
                     <accordion-heading>
@@ -111,25 +97,25 @@
             </accordion>
     </div>
 </div>
-<!-- need to fix issue #67 -->
-<!-- <div class="row">
+<div class="row">
     <div class="col-sm-3">
-            <button class="btn btn-default" 
+            <!-- in progress rec editor -->
+            <!-- <button class="btn btn-default" 
                 ng-click="edit()" 
-                ng-class="{ disabled: !checked || !checked.length }"
-                tooltip="Edit recording(s) info"
+                tooltip="Edit check recordings"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-pencil"></i>
-            </button>
-            <button class="btn btn-danger" 
+            </button> -->
+            <!-- need to fix issue #67 -->
+            <!-- <button class="btn btn-danger" 
                 ng-click="del()" 
                 ng-class="{ disabled: !checked || !checked.length }"
                 tooltip="Delete recording(s)"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-trash"></i>
-            </button>
+            </button> -->
     </div>
-</div> -->
+</div>
 <div class="row">
     <div class="col-sm-12">
         <div class="reclist-pagination-row">
