@@ -1,0 +1,48 @@
+<div class="content">
+    <div class="row row-pad-bottom">
+        <div class="col-sm-12 btn-toolbar">
+            <div class="btn-group" ng-repeat="type_group in browser.types">
+                <button ng-repeat="type in type_group" class="btn btn-default" 
+                    ng-class="browser.type == type ? 'active' : ''" ng-click="browser.type = type"
+                    tooltip="{{type.tooltip}}" tooltip-append-to-body="true" tooltip-placement="bottom-left"
+                ><i ng-class="type.icon"></i></button>
+            </div>
+            <!-- <div class="btn-group">
+                <button class="btn btn-default" ng-model="browser.type" btn-radio="'soundscapes'" tooltip="View Soundscapes" tooltip-append-to-body="true" tooltip-placement="bottom-left">
+                    <span class="fa fa-area-chart"></span>
+                </button>
+            </div> -->
+        </div>
+    </div>
+    <ng-include src="browser.type ? browser.type.template : ''"></ng-include>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="nav nav-pills nav-stacked recording-list" role="menu" aria-labelledby="dLabel">
+                <div class="recording-list-item"
+                    ng-show="browser.loading.times">
+                    <i class="fa fa-spinner fa-spin"></i> Loading Recordings
+                </div>
+                <div class="recording-list-item"
+                    ng-hide="browser.loading.times || browser.lovo.list">
+                    (No recordings in list)
+                </div>
+                <div class="recording-list-item"
+                    ng-hide="browser.loading.times"
+                    ng-repeat="recording in browser.lovo.list | orderBy: 'datetime'"
+                    ng-class="{active: browser.recording == recording}"
+                    ng-click="browser.recording = recording">
+                    <div>
+                        {{recording.datetime | moment : 'hh:mm A'}}
+                        <div class="pull-right">
+                            {{recording.file}}
+                        </div>
+                    </div>
+                    <div class="thumbnail-viewer">
+                        <!-- <img ng-src="/api/project/nora-minas-sample/recordings/thumbnail/{{recording.id}}"> -->
+                        <img ng-src="{{recording.thumbnail}}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
+</div>

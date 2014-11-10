@@ -1,0 +1,45 @@
+<div class="row no-gutter">
+    <div class="col-sm-7">
+        <div class="dropdown">
+            <button class="btn btn-block btn-default" role="button" data-toggle="dropdown">
+                <span class="fa" ng-class="{'fa-map-marker' : !browser.$type.loading.sites, 'fa-spinner fa-spin': browser.$type.loading.sites}"></span>
+                {{browser.$type.site.name || "[Station]"}}
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu has-badges dropdown-height-7" role="menu" aria-labelledby="dLabel">
+                <li ng-show="browser.$type.loading.sites">
+                    <a><i class="fa fa-spinner fa-spin"></i> Loading Sites</a>
+                </li>
+                <li ng-hide="browser.$type.loading.sites || browser.$type.sites">
+                    <a>No Stations in Project</a>
+                </li>
+                <li ng-hide="browser.$type.loading.sites" ng-repeat="site in browser.$type.sites" ng-class="{active: browser.$type.site == site}">
+                    <a ng-click="browser.$type.site = site">{{site.name}}</a>
+                    <span class="badge">{{site.rec_count}}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="dropdown">
+            <button class="btn btn-block btn-default" role="button" data-toggle="dropdown" data-target="body > .dropdown.browser-dropdown">
+                <span class="fa" ng-class="{'fa-calendar' : !browser.$type.loading.dates, 'fa-spinner fa-spin': browser.$type.loading.dates}"></span>
+                {{browser.$type.date || "[date]" | date : 'mediumDate'}}
+                <span class="caret"></span>
+            </button>
+            <div class="browser-dropdown dropdown" a2-insert-in="body" a2-keep-position="true" >
+                <div class="dropdown-form dropdown-menu datepicker" role="menu" aria-labelledby="dLabel">
+                    <loader class="dropdown-loader" ng-show="browser.$type.loading.dates"></loader>
+                    <yearpick
+                        ng-model="browser.$type.date"
+                        max-date="browser.$type.dates.max_date"
+                        min-date="browser.$type.dates.min_date"
+                        year="browser.$type.dates.display_year"
+                        disable-empty="true"
+                        date-count="browser.$type.dates.date_counts"
+                    ></yearpick>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

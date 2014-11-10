@@ -45,6 +45,9 @@ var Recordings = {
     parseUrl: function(recording_url){
         var rec_match;
         if (recording_url) {
+            if(typeof recording_url == "object"){
+                return recording_url;
+            }
             rec_match = /^(\d+)$/.exec(recording_url);
             if(rec_match) return {
                 id    : rec_match[ 1] | 0
@@ -65,16 +68,23 @@ var Recordings = {
         return {};
     },
     parseQueryItem: function(item, allow_range){
-        if(item && !/^[_*?]$/.test(item)){
-            m = /^\[([^\]]*)\]$/.exec(item);
-            if(m) {
-                item = m[1];
-                if(allow_range && /:/.test(item)){
-                    return {BETWEEN : item.split(':')};
+        if(item){
+            var t_item = typeof item;  
+            if(/string|number/.test(t_item) && !/^[_*?]$/.test(item)){
+                m = /^\[([^\]]*)\]$/.exec(item);
+                if(m) {
+                    item = m[1];
+                    if(allow_range && /:/.test(item)){
+                        return {BETWEEN : item.split(':')};
+                    }
+                    return {IN  : item.split(',')};
+                } else {
+                    return {'=' : item};
                 }
-                return {IN  : item.split(',')};
-            } else {
-                return {'=' : item};
+            } else if(item instanceof Array){
+                return {IN  : item};
+            } else if(t_item == "object"){
+                return item;
             }
         }
         return undefined;

@@ -20,6 +20,9 @@ var Species = {
         Users.projectList(user_id, function(err, rows){
             if(err) return callback(err);
             
+            if(!rows.length)
+                return callback(null, []);
+            
             var project_ids = rows.map(function(row) {
                 return row.id;
             });
@@ -38,7 +41,7 @@ var Species = {
 
             
             q = util.format(q, mysql.escape(project_ids));
-            queryHandler(q, callback);
+        	queryHandler(q, callback);
         })
     }
 };

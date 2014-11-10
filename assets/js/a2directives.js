@@ -31,7 +31,7 @@ $.expr.match.needsContext = new RegExp($.expr.match.needsContext.source + '|^(\^
 $.expr.match.UP_PARENT_SPECIAL = /^(\^+)/;
 
 
-angular.module('a2directives', [])
+angular.module('a2directives', ['a2services'])
 .run(function() {
     $(document).click( function(e){
         if($(e.target).closest('.calendar.popup:visible').length)
@@ -348,8 +348,6 @@ angular.module('a2directives', [])
                     if(visible) {
                         popup.css('display','block');
                     }
-                    
-                    
                 });
             } 
             else {
@@ -587,8 +585,6 @@ angular.module('a2directives', [])
                     drawCounts();
                 });
             }
-            
-            
         }
     };
 })
@@ -597,31 +593,75 @@ angular.module('a2directives', [])
         restrict : 'E',
         scope : {},
         link: function ($scope, $element, $attr) {
+            $element.addClass('a2-img');
             var loader = $compile(
                 '<loader hide-text="yes"></loader>'
             )($scope).appendTo($element);
-            var img = $('<img style="width:100%; height:100%"/>')
+            var img = $('<img />')
                 .load(function(){
-                    img.show();
                     $element.removeClass('loading');
                 })
                 .appendTo($element);
 
-        $attr.$observe('a2Src', function(new_src){
-            if(!new_src){
-                img.hide();
-                img.attr('src', '');
-                return;
-            }
-            img.show();
-            $element.addClass('loading');
-            var image = new Image();
-            image.onload = function () {
-                img.attr('src', this.src);
-            };
-            image.src = new_src;
+            $attr.$observe('a2Src', function(new_src){
+                if(!new_src){
+                    img.attr('src', '');
+                    return;
+                }
+                $element.addClass('loading');
+                var image = new Image();
+                image.onload = function () {
+                    img.attr('src', this.src);
+                };
+                image.src = new_src;
+                
+            });
             
-        });
+            $attr.$observe('a2Src', function(new_src){
+                if(!new_src){
+                    img.hide();
+                    img.attr('src', '');
+                    return;
+                }
+                img.show();
+                $element.addClass('loading');
+                var image = new Image();
+                image.onload = function () {
+                    img.attr('src', this.src);
+                };
+                image.src = new_src;
+                
+            });
+            
+        }
+    }
+})
+.directive('a2TrainingSetDataImage', function($compile, a2TrainingSets){
+    return {
+        restrict : 'E',
+        scope : {
+            'trainingSet' : '=',
+            'datum'        : '='
+        },
+        template : '<a2-img a2-src="{{datum.uri}}" ng-class="resolving ? \'resolving-uri\' : \'\'" style="width:100%;height:100%;"></a2-img>',
+        link: function ($scope, $element, $attr) {
+            $element.addClass('a2-training-set-data-image a2-block-inline');
+            var resolve_null_uri = function(){
+                if($scope.datum && $scope.trainingSet && !$scope.datum.url){
+                    var urikey = [$scope.trainingSet.id, $scope.datum.id].join('-');
+                    if($scope.resolving != urikey){
+                        $scope.resolving = urikey;
+                        a2TrainingSets.getDataImage($scope.trainingSet.name, $scope.datum.id, function(datum2){
+                            $scope.resolving = false;
+                            if($scope.datum.id == datum2.id){
+                                $scope.datum.uri = datum2.uri;
+                            }
+                        });
+                    }
+                }
+            }
+            $scope.$watch('datum', resolve_null_uri);
+            $scope.$watch('trainingSet', resolve_null_uri);
         }
     }
 })

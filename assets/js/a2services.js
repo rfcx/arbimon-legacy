@@ -256,12 +256,81 @@ angular.module('a2services',[])
             });
         },
 
+        getDataImage: function(training_set, data_id, callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/data/'+training_set+'/get-image/'+data_id).success(function(data) {
+                callback(data);
+            });
+        },
+
         getTypes: function(callback) {
             var projectName = Project.getName();
             $http.get('/api/project/'+projectName+'/training-sets/types').success(function(data) {
                 callback(data);
             });
         },
+        
+        getRois: function(training_set, callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/rois/'+training_set).success(function(data) {
+                callback(data);
+            });
+        },
+        getSpecies: function(training_set, callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/species/'+training_set).success(function(data) {
+                callback(data);
+            });
+        },
+        removeRoi: function(roi_id, callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/remove-roi/'+roi_id).success(function(data) {
+                callback(data);
+            });
+        }
+    };
+})
+
+.factory('a2Playlists', function(Project, $http) {
+    return {
+        getList: function(callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/playlists/').success(function(data) {
+                callback(data);
+            });
+        },
+
+        // add: function(tset_data, callback) {
+        //     var projectName = Project.getName();
+        //     $http.post('/api/project/'+projectName+'/playlist/add', tset_data).success(function(data) {
+        //         callback(data);
+        //     });
+        // },
+        
+        // addData: function(playlist, tset_data, callback) {
+        //     var projectName = Project.getName();
+        //     $http.post('/api/project/'+projectName+'/playlists/add-data/'+playlist, tset_data).success(function(data) {
+        //         callback(data);
+        //     });
+        // },
+        
+        getData: function(playlist, query, callback) {
+            var projectName = Project.getName();
+            $http({
+                method : 'GET',
+                url    : '/api/project/'+projectName+'/playlists/list/'+playlist,
+                params : query
+            }).success(function(data) {
+                callback(data);
+            });
+        },
+
+        // getTypes: function(callback) {
+        //     var projectName = Project.getName();
+        //     $http.get('/api/project/'+projectName+'/playlists/types').success(function(data) {
+        //         callback(data);
+        //     });
+        // },
     };
 })
 

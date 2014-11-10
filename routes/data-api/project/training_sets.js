@@ -18,6 +18,11 @@ router.param('trainingSet', function(req, res, next, training_set){
     });
 });
 
+router.param('dataId', function(req, res, next, dataId){
+    req.dataId = dataId | 0;
+    return next();
+});
+
 
 /** Return a list of all the training sets in a project.
  */
@@ -45,7 +50,7 @@ router.get('/types', function(req, res, next) {
 /** Add a training set to a project.
  */
 router.post('/add', function(req, res, next) {
-    
+
     model.training_sets.nameInUse(req.project.project_id, req.body.name, function(err, result) {
         if(err) return next(err);
         
@@ -97,6 +102,42 @@ router.get('/list/:trainingSet/:recUrl?', function(req, res, next) {
     });
 });
 
+router.get('/rois/:trainingSet', function(req, res, next) {
+    model.training_sets.fetchRois(req.trainingSet,
+    function(err, data) {
+        if(err) return next(err);
 
+        res.json(data);
+        return null;
+    });
+});
+
+router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
+    model.training_sets.fetchDataImage(req.trainingSet, req.dataId, function(err, data) {
+        if(err) return next(err);
+        res.json(data);
+        return null;
+    });
+});
+
+router.get('/remove-roi/:roiId', function(req, res, next) {
+    model.training_sets.removeRoi(req.params.roiId,
+    function(err, data) {
+        if(err) return next(err);
+
+        res.json(data);
+        return null;
+    });
+});
+
+router.get('/species/:trainingSet', function(req, res, next) {
+    model.training_sets.fetchSpecies(req.trainingSet,
+    function(err, data) {
+        if(err) return next(err);
+
+        res.json(data);
+        return null;
+    });
+});
 
 module.exports = router;

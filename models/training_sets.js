@@ -54,7 +54,7 @@ var TrainingSets = {
 
         return dbpool.queryHandler(
             "SELECT TS.training_set_id as id, TS.name, TS.date_created, TST.identifier as type, \n" +
-            "    TSRS.species_id as TT_roi_set_TT_species, TSRS.songtype_id as TT_roi_set_TT_songtype , TS.project_id \n" +
+            "    TSRS.species_id as TT_roi_set_TT_species, TSRS.songtype_id as TT_roi_set_TT_songtype, TS.project_id as project \n" +
             "FROM training_sets TS \n" +
             "JOIN training_set_types TST ON TS.training_set_type_id = TST.training_set_type_id \n" +
             "LEFT JOIN training_sets_roi_set TSRS ON TS.training_set_id = TSRS.training_set_id \n" +
@@ -198,7 +198,44 @@ var TrainingSets = {
 
         return typedef.get_data(training_set, query, callback);
     },
-
+    
+    /** Fetches a training set's rois
+     *  @param {Object}  training_set
+     *  @param {Function} callback(err, path) function to call back with the results.
+     */
+    fetchRois: function (training_set, callback) {
+        var typedef = TrainingSets.types[training_set.type];
+        return typedef.get_rois(training_set, callback);
+    },
+    
+    /** Fetches the image of a training set's data element
+     *  @param {Object}  training_set
+     *  @param {Object}  dataId id of the data element
+     *  @param {Function} callback(err, path) function to call back with the results.
+     */
+    fetchDataImage: function(training_set, data_id, callback){
+        var typedef = TrainingSets.types[training_set.type];
+        if(typedef.fetch_data_image){
+            return typedef.fetch_data_image(training_set, data_id, callback);
+        } else {
+            callback(new Error("Not supported by training set type."));
+        }
+    },
+   
+    removeRoi: function (roi_id, callback) {
+        var typedef = TrainingSets.types[training_set.type];
+        return typedef.remove_roi(roi_id, callback);
+    },
+     
+    /** Fetches a training set's species and songtype
+     *  @param {Object}  training_set
+     *  @param {Function} callback(err, path) function to call back with the results.
+     */
+    fetchSpecies: function (training_set, callback) {
+        var typedef = TrainingSets.types[training_set.type];
+        return typedef.get_species(training_set, callback);
+    },
+    
     /** Fetches the available training set types.
      * @param {Function} callback(err, path) function to call back with the results.
      */
@@ -220,7 +257,7 @@ TrainingSets.types.roi_set = {
     insert : {
         validate : function(data, callback){
             if (data.extras && data.extras.class) {
-                Projects.getProjectClasses( data.project, data.extras.class, function(err, classes){
+                Projects.getProjectClasses( data.project_id, data.extras.class, function(err, classes){
                     if(err) {
                         callback(err);
                     } else if(!classes || !classes.length) {
@@ -257,52 +294,42 @@ TrainingSets.types.roi_set = {
         })
     }),
     /** Creates a roi image
-     * @param {Object} input.recording_id
-     * @param {Object} input.training_set_id
-     * @param {Object} input.project_id
-     * @param {Object} input.roi_id
-     * @param {Object} input.x1
-     * @param {Object} input.x2
-     * @param {Object} input.y1
-     * @param {Object} input.y2
+     * @param {Object} training_set           - training set object
+     * @param {Object} data                   - training set data element, as returned by get_data
      */
-    create_roi_image : function (input,cb){
-        var roiUri = 'project_'+input.project_id+'/training_sets/'+input.training_set_id+'/'+input.roi_id+'.png'
-        var rec_data ;
-        var rec_stats ;
+    create_data_image : function (training_set, data, callback){
+        var s3key='project_'+training_set.project+'/training_sets/'+training_set.id+'/'+data.id+'.png';
+        data.uri = 'https://s3.amazonaws.com/'+config('aws').bucketName+'/' + s3key;
+        var roi_file = tmpfilecache.key2File(s3key);
+        var rec_data;
+        var rec_stats;
         var spec_data;
-        async.waterfall(
-        [
-            function (next)
-            {
-                Recordings.findByUrlMatch(input.recording_id,0, {limit:1},next );
+        async.waterfall([
+            function find_recording(next){
+                Recordings.findByUrlMatch(data.recording,0, {limit:1}, next);
             },
-            function (data,next)
-            {
+            function get_recording(data, next){
                 rec_data = data[0];
                 Recordings.fetchInfo(rec_data, next);
             },
-            function(data,next)
-            {
+            function fetch_spectrogram(data, next){
                 rec_stats = data                
-                Recordings.fetchSpectrogramFile(rec_data,next );  
+                Recordings.fetchSpectrogramFile(rec_data, next);  
             },
-            function(data, next){
+            function get_spectrogram_identify(data, next){
                 spec_data = data
                 im.identify(spec_data.path, next);
             },
-            function (spectro_info,next)
-            {
-                roiDuration = input.x2-input.x1;
+            function crop_roi(spectro_info, next){
+                roiDuration = data.x2-data.x1;
                 px2sec = rec_stats.stats.duration    / spectro_info.width ;
                 roiWidth = Math.ceil(roiDuration/px2sec);
-                roiBanwdwith = input.y2-input.y1;
+                roiBanwdwith = data.y2-data.y1;
                 max_freq = rec_stats.stats.sample_rate / 2;
                 px2hz  = max_freq / spectro_info.height;
                 roiHeight = Math.ceil(roiBanwdwith/px2hz);
-                roiStartX = Math.floor(input.x1/px2sec);
-                roiStartY = spectro_info.height-Math.floor(input.y2/px2hz);
-                var roi_file = tmpfilecache.key2File(roiUri);
+                roiStartX = Math.floor(data.x1/px2sec);
+                roiStartY = spectro_info.height-Math.floor(data.y2/px2hz);
                 im.convert([
                     spec_data.path,
                     '-colorspace', 'RGB',
@@ -311,31 +338,81 @@ TrainingSets.types.roi_set = {
                     '+repage',
                     '-colorspace', 'RGB',
                     roi_file
-                ], function(err){
-                    if(err) { next(err); return; }
-                    console.log("file created:",roi_file)
-                    if(!s3){
-                        s3 = new AWS.S3();
-                    }
-                    var params = { 
-                        Bucket: config('aws').bucketName, 
-                        Key: roiUri,
-                        ACL: 'public-read',
-                        Body: fs.createReadStream(roi_file)
-                    };
-
-                    s3.putObject(params, function(err, data) {
-                        if (err)  next(null,err);
-                        dbpool.queryHandler(
-                            "update training_set_roi_set_data set uri = '"+roiUri+"' where roi_set_data_id = "+input.roi_id,
-                            next
-                        );                        
-                    });      
-                    
-                });
+                ], next);
+            }, 
+            function store_in_bucket(){
+                var next = arguments[arguments.length-1];
+                //console.log("file created:",roi_file)
+                if(!s3){
+                    s3 = new AWS.S3();
+                }
+                s3.putObject({ 
+                    Bucket: config('aws').bucketName, 
+                    Key: s3key,
+                    ACL: 'public-read',
+                    Body: fs.createReadStream(roi_file)
+                }, next);
+            },
+            function update_roi_data() {
+                var next = arguments[arguments.length-1];
+                dbpool.queryHandler(
+                    "UPDATE training_set_roi_set_data \n"+
+                    "SET uri = '"+s3key+"' \n"+
+                    "WHERE roi_set_data_id = " + data.id,
+                    next
+                );
+            },
+            function return_updated_roi(){
+                var next = arguments[arguments.length-1];
+                next(null, data);
             }
-        ],
-        cb
+        ], callback);
+    },
+    fetch_data_image : function (training_set, data_id, callback){
+        var self = this, data;
+        async.waterfall([
+            function fetch_tset_data(next){
+                self.get_data(training_set, {id:data_id}, next)
+            },
+            function check_and_get_tset_data(rows, fields, next){
+                if(!rows.length){ next(new Error("Requested training set data does not exists.")); return; }
+                data = rows[0];
+                next();
+            },
+            function create_img_or_just_return(next){
+                if(!data.uri){
+                    self.create_data_image(training_set, data, next);
+                } else {
+                    next(null, data);
+                }
+            }
+        ], callback);
+    },
+    get_rois : function(training_set, callback) {
+        return queryHandler(
+            "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
+            "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
+            "   TSD.x1,  ROUND(TSD.y1,0) as y1, TSD.x2,  ROUND(TSD.y2,0) as y2 , \n"+
+            "   ROUND(TSD.x2-TSD.x1,1) as dur , \n"+
+            "   CONCAT('https://s3.amazonaws.com/','"+config('aws').bucketName+"','/',TSD.uri) as uri \n" +
+            " FROM training_set_roi_set_data TSD \n"+
+            " WHERE TSD.training_set_id = " + mysql.escape(training_set.id),
+            callback
+        );
+    },
+    get_species : function(training_set, callback) {
+        return queryHandler(
+            "SELECT  S.scientific_name as species  , SG.songtype \n"+
+            " FROM  songtypes SG , species S , training_sets_roi_set TRS \n"+
+            " WHERE TRS.training_set_id = " + mysql.escape(training_set.id) + " \n"+
+            " and TRS.species_id = S.species_id and TRS.songtype_id = SG.songtype_id ",
+            callback
+        );
+    },
+    remove_roi : function(roi_id, callback) {
+        return queryHandler(
+            "delete from training_set_roi_set_data where roi_set_data_id = "+roi_id,
+            callback
         );
     },
     /** Fetches a training set's data, optionally using a query.
@@ -362,11 +439,11 @@ TrainingSets.types.roi_set = {
                 'sites S ON R.site_id = S.site_id'
             );
         }
-
         return queryHandler(
             "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
             "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
-            "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 \n" +
+            "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 , \n"+
+            "   CONCAT('https://s3.amazonaws.com/','"+config('aws').bucketName+"','/',TSD.uri) as uri \n" +
             "FROM "   + tables.join(" \n" +
             "JOIN ")+ " \n" +
             "WHERE " + constraints.join(" \n" +
@@ -378,12 +455,13 @@ TrainingSets.types.roi_set = {
      * @param {Function} callback(err, path) function to call back with the results.
      */
     add_data : function(training_set, data, callback){
+        var self = this;
         async.waterfall([
-            (function(cb){
-                // console.log('joi.validate(data:',data,', schema:', this.data_schema,', {context:',training_set,'},cb);');
-                joi.validate(data, this.data_schema, {context:training_set},cb);
-            }).bind(this), 
-            function(vdata, cb){
+            function(next){
+                // console.log('joi.validate(data:',data,', schema:', this.data_schema,', {context:',training_set,'},next);');
+                joi.validate(data, self.data_schema, {context:training_set},next);
+            }, 
+            function(vdata, next){
                 var x1 = Math.min(vdata.roi.x1, vdata.roi.x2), y1 = Math.min(vdata.roi.y1, vdata.roi.y2);
                 var x2 = Math.max(vdata.roi.x1, vdata.roi.x2), y2 = Math.max(vdata.roi.y1, vdata.roi.y2);
                                 
@@ -393,25 +471,19 @@ TrainingSets.types.roi_set = {
                         training_set.id, vdata.recording, vdata.species, vdata.songtype, 
                         x1, y1, x2, y2
                     ])+")",
-                    cb
+                    next
                 );
             }, 
-            (function(result, fields, cb){
-                this.get_data(training_set, {id:result.insertId}, function(err, rows){
-                    err ? cb(err) : cb(null, {tset:training_set, roi:rows && rows[0]});
-                });
-            }).bind(this),
-            (function (roiData,cb) {
-                this.create_roi_image({recording_id:roiData.roi.recording,
-                                       training_set_id:roiData.tset.id,
-                                       project_id:roiData.tset.project_id,
-                                       roi_id:roiData.roi.id,
-                                       x1:roiData.roi.x1,
-                                       x2:roiData.roi.x2,
-                                       y1:roiData.roi.y1,
-                                       y2:roiData.roi.y2
-                                      },cb);
-            }).bind(this)
+            function(result, fields, next){
+                self.get_data(training_set, {id:result.insertId}, next);
+            },
+            function(rows, fields, next){
+                data = rows[0];
+                next(data);
+            },
+            function (data, next) {
+                self.create_data_image(training_set, data, next);
+            }
         ], callback);
     },
 
