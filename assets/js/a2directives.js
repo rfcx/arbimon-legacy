@@ -583,23 +583,21 @@ angular.module('a2directives', ['a2services'])
         restrict : 'E',
         scope : {},
         link: function ($scope, $element, $attr) {
+            $element.addClass('a2-img');
             var loader = $compile(
                 '<loader hide-text="yes"></loader>'
             )($scope).appendTo($element);
-            var img = $('<img style="width:100%; height:100%"/>')
+            var img = $('<img />')
                 .load(function(){
-                    img.show();
                     $element.removeClass('loading');
                 })
                 .appendTo($element);
 
             $attr.$observe('a2Src', function(new_src){
                 if(!new_src){
-                    img.hide();
                     img.attr('src', '');
                     return;
                 }
-                img.show();
                 $element.addClass('loading');
                 var image = new Image();
                 image.onload = function () {
