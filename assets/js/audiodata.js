@@ -415,6 +415,7 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     
     $scope.displaySetData = function($index) {
         $scope.norois = false;
+        $scope.selectedSet = $scope.sets[$index];
         $scope.selectedName = $scope.sets[$index].name;
         a2TrainingSets.getSpecies($scope.sets[$index].name,
             function(speciesData)

@@ -256,6 +256,13 @@ angular.module('a2services',[])
             });
         },
 
+        getDataImage: function(training_set, data_id, callback) {
+            var projectName = Project.getName();
+            $http.get('/api/project/'+projectName+'/training-sets/data/'+training_set+'/get-image/'+data_id).success(function(data) {
+                callback(data);
+            });
+        },
+
         getTypes: function(callback) {
             var projectName = Project.getName();
             $http.get('/api/project/'+projectName+'/training-sets/types').success(function(data) {

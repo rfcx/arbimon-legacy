@@ -18,6 +18,11 @@ router.param('trainingSet', function(req, res, next, training_set){
     });
 });
 
+router.param('dataId', function(req, res, next, dataId){
+    req.dataId = dataId | 0;
+    return next();
+});
+
 
 /** Return a list of all the training sets in a project.
  */
@@ -102,6 +107,14 @@ router.get('/rois/:trainingSet', function(req, res, next) {
     function(err, data) {
         if(err) return next(err);
 
+        res.json(data);
+        return null;
+    });
+});
+
+router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
+    model.training_sets.fetchDataImage(req.trainingSet, req.dataId, function(err, data) {
+        if(err) return next(err);
         res.json(data);
         return null;
     });

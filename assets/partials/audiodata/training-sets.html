@@ -50,13 +50,15 @@
                     </div>
                 </div>
                 <div ng-repeat="roi in currentrois" class="roi-div-inline">
-                    <div class="roi-div-inline-remove">
-                        <i ng-click="removeRoi(roi.id)" tooltip-placement="right" tooltip="Remove ROI from Training Set" class="fa fa-times"></i>
+                    <div tooltip-placement="right" tooltip="Duration: {{roi.dur}}s  Bandwidth:{{roi.y1}}-{{roi.y2}}Hz">
+                        <div class="roi-div-inline-remove">
+                            <i ng-click="removeRoi(roi.id)" tooltip-placement="right" tooltip="Remove ROI from Training Set" class="fa fa-times"></i>
+                        </div>
+                        <div class="roi-div-inline-vis">
+                            <a ng-href="/project/{{projecturl}}/#/visualizer/rec/{{roi.recording}}"><i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i></a>
+                        </div>
+                        <a2-training-set-data-image training-set="selectedSet" datum="roi" class="roi-div-inline-img" ></a2-training-set-data-image>
                     </div>
-                    <div class="roi-div-inline-vis">
-                        <a ng-href="/project/{{projecturl}}/#/visualizer/{{roi.recording}}"><i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i></a>
-                    </div>
-                    <img ng-src="{{roi.uri}}" class="roi-div-inline-img" tooltip-placement="right" tooltip="Duration: {{roi.dur}}s  Bandwidth:{{roi.y1}}-{{roi.y2}}Hz"/>
                 </div>
             </div>
             <div ng-show="detailedView">
