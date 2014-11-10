@@ -38,7 +38,10 @@ var Species = {
 
             
             q = util.format(q, mysql.escape(project_ids));
-            queryHandler(q, callback);
+            if(project_ids.length > 0)		
+            	queryHandler(q, callback);
+            else
+                callback(null,{})
         })
     }
 };
