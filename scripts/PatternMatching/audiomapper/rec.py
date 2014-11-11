@@ -3,8 +3,6 @@ import audiotools
 import math
 import os
 from boto.s3.connection import S3Connection
-from config import Config
-
 
 class Rec:
 
@@ -12,9 +10,8 @@ class Rec:
     samples = 0
     sample_rate = 0
 
-    def __init__(self, uri , tempFolder,bucket = 'arbimon2'):
-        configuration = Config()
-        self.config = configuration.data()
+    def __init__(self, uri , tempFolder,configData,bucket = 'arbimon2'):
+        self.config = configData
         self.localFiles = tempFolder
         self.bucket = bucket    # bucket name
         self.uri = uri    # recording uri in bucket

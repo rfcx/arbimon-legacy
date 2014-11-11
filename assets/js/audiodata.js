@@ -1,7 +1,58 @@
 angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angularFileUpload','visualizer-training-sets'])
 .config(function($stateProvider, $urlRouterProvider) {
-   
-    $urlRouterProvider.when("/audiodata", "/audiodata/recordings");
+   var audiodataHistory = [];
+   var audiodataVisited = false;
+    $urlRouterProvider
+    .rule(  //audiodata HISTORY route
+       function ($injector, $location , $state)
+       {
+            var m, path = $location.path();
+
+            if(m=/audiodata\/?(.*)/.exec(path))
+            {
+                audiodataVisited  = true;
+                
+                if (audiodataHistory.length==2)
+                {
+                    var loc0 = audiodataHistory[0].split('/');
+                    var loc1 = audiodataHistory[1].split('/');
+                    if(loc0[1] != loc1[1])
+                    {
+                        audiodataHistory.pop()
+                        $location.replace().path(audiodataHistory[0]); 
+                    }
+                    else
+                    {
+                        audiodataHistory.pop()
+                        audiodataHistory.pop()
+                        if (path != "")
+                            audiodataHistory.push(path)  
+                    }
+                }
+                else
+                {
+                    audiodataHistory.pop()
+                    if (path != "")
+                        audiodataHistory.push(path)
+                }
+            }
+            else if (audiodataVisited)
+            {
+                if(audiodataHistory.length==2)
+                {
+                    audiodataHistory.pop()
+                    if (path != "")
+                        audiodataHistory.push(path)
+                }
+                else
+                {
+                    if (path != "")
+                        audiodataHistory.push(path)
+                }
+            }
+       }
+    )
+    .when("/audiodata", "/audiodata/recordings");
 
     $stateProvider.state('audiodata.recordings', {
         url: '/recordings',
@@ -256,7 +307,38 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         }
     };
 })
-.controller('TrainingSetsCtrl', function($scope, a2TrainingSets,Project,$modal) {
+.factory('a2TrainingSetHistory',
+    function(){
+        var lastSet=undefined,lastPage=undefined,lastRoi=undefined,lastRoiSet=undefined,viewState=undefined;
+        return {
+            getLastSet : function(callback)
+            {
+                callback ({ls:lastSet,lp:lastPage,lr:lastRoi,lrs:lastRoiSet,vs:viewState}) ;
+            },
+            setLastSet : function(val)
+            {
+                lastSet = val;
+            },
+            setLastPage: function(val)
+            {
+                lastPage = val;
+            },
+            setLastRoi: function(val)
+            {
+                lastRoi = val;
+            },
+            setLastRoiSet: function(val)
+            {
+                lastRoiSet = val;
+            },
+            setViewState: function(val)
+            {
+                viewState = val;
+            }
+            };
+    }
+)
+.controller('TrainingSetsCtrl', function($scope, a2TrainingSets,Project,$modal,a2TrainingSetHistory) {
     $scope.fields = [
         { name: 'Name', key: 'name' },
         { name: 'Set type', key: 'type' },
@@ -412,9 +494,71 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
             });
         });
     }
+
+    a2TrainingSetHistory.getLastSet(
+        function(data)
+        {
+            if (data.ls)
+            {
+                $scope.selectedSet = data.ls;
+                $scope.detailedView = data.vs;
+                $scope.totalRois = data.lrs.length;
+                $scope.currentPage = data.lp;
+                $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage)
+                if ($scope.totalRois>0) {
+                    if (data.lr == undefined){
+                        data.lr = 0;
+                    }
+                    $scope.roi = data.lrs[data.lr];
+                    $scope.currentDuration = $scope.roi.dur;
+                    $scope.currentRoi = data.lr;
+                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/"+$scope.roi.recording;
+                    $scope.currentUri = $scope.roi.uri;
+                    $scope.currentlow = $scope.roi.y1;
+                    $scope.currenthigh = $scope.roi.y2;
+                    $scope.currentId = $scope.roi.id;
+                    $scope.currentrois = data.lrs.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+                    $scope.rois = data.lrs;
+                } else { 
+                    $scope.rois = []; 
+                    $scope.norois = true;
+                }
+            }
+        }
+    );
     
+    $scope.$watch('detailedView',
+        function()
+        {
+            a2TrainingSetHistory.setViewState($scope.detailedView);          
+        }
+    );
+     
+    $scope.$watch('currentPage',
+        function()
+        {
+            a2TrainingSetHistory.setLastPage($scope.currentPage);          
+        }
+    );
+    
+    $scope.$watch('currentRoi',
+        function()
+        {
+            a2TrainingSetHistory.setLastRoi($scope.currentRoi);          
+        }
+    );
+    
+    $scope.$watch('rois',
+        function()
+        {
+            a2TrainingSetHistory.setLastRoiSet($scope.rois);          
+        }
+    );
+    $scope.loaderDisplay = false;
     $scope.displaySetData = function($index) {
         $scope.norois = false;
+        $scope.loaderDisplay = true;
+        a2TrainingSetHistory.setLastSet($scope.sets[$index]);
         $scope.selectedSet = $scope.sets[$index];
         $scope.selectedName = $scope.sets[$index].name;
         $scope.species  = null;
@@ -437,6 +581,7 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
             $scope.species = speciesData[0].species;
             $scope.songtype = speciesData[0].songtype
             a2TrainingSets.getRois($scope.sets[$index].name, function(data){
+                $scope.loaderDisplay = false;
                 $scope.detailedView = false;
                 $scope.totalRois = data.length;
                 $scope.currentPage = 0;
