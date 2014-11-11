@@ -277,7 +277,7 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     $scope.roi = null;
     $scope.currentrois = [];
     $scope.currentPage = 0;
-    $scope.roisPerpage = 6;
+    $scope.roisPerpage = 12;
     $scope.currentRoi = 0;
     $scope.totalRois = 0;
     $scope.currentUri = '';
@@ -360,8 +360,8 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     };
     
     $scope.removeRoi = function(id)
-    {
-        a2TrainingSets.removeRoi(id,function(data){
+    {console.log("training set", $scope.selectedSet)
+        a2TrainingSets.removeRoi(id,$scope.selectedSet,function(data){
             if (data.affectedRows) 
             {
                 for(var i = 0 ; i < $scope.rois.length ; i++)

@@ -120,8 +120,8 @@ router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
     });
 });
 
-router.get('/remove-roi/:roiId', function(req, res, next) {
-    model.training_sets.removeRoi(req.params.roiId,
+router.get('/:trainingSet/remove-roi/:roiId', function(req, res, next) {
+    model.training_sets.removeRoi(req.params.roiId,req.trainingSet,
     function(err, data) {
         if(err) return next(err);
 

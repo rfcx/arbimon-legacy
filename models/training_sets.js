@@ -222,7 +222,7 @@ var TrainingSets = {
         }
     },
    
-    removeRoi: function (roi_id, callback) {
+    removeRoi: function (roi_id, training_set, callback) {
         var typedef = TrainingSets.types[training_set.type];
         return typedef.remove_roi(roi_id, callback);
     },

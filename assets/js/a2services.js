@@ -282,9 +282,9 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
-        removeRoi: function(roi_id, callback) {
+        removeRoi: function(roi_id,training_set, callback) {
             var projectName = Project.getName();
-            $http.get('/api/project/'+projectName+'/training-sets/remove-roi/'+roi_id).success(function(data) {
+            $http.get('/api/project/'+projectName+'/training-sets/'+training_set.name+'/remove-roi/'+roi_id).success(function(data) {
                 callback(data);
             });
         }
