@@ -797,7 +797,6 @@ angular.module('visualizer-training-sets-roi_set', ['visualizer-services'])
                 recording : self.recording,
                 roi : this.roi
             }, (function(new_tset_data){
-                console.log(new_tset_data)
                 $timeout((function(){
                     this.reset();
                     self.rois.push(new_tset_data);
