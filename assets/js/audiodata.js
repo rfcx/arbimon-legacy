@@ -360,7 +360,7 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     };
     
     $scope.removeRoi = function(id)
-    {console.log("training set", $scope.selectedSet)
+    {
         a2TrainingSets.removeRoi(id,$scope.selectedSet,function(data){
             if (data.affectedRows) 
             {
