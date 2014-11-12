@@ -387,11 +387,12 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
 })
 .factory('a2TrainingSetHistory',
     function(){
-        var lastSet=undefined,lastPage=undefined,lastRoi=undefined,lastRoiSet=undefined,viewState=undefined;
+        var lastSet=undefined,lastPage=undefined,lastRoi=undefined,lastRoiSet=undefined
+            ,viewState=undefined,lastSpecie=undefined,lastSongtype=undefined;
         return {
             getLastSet : function(callback)
             {
-                callback ({ls:lastSet,lp:lastPage,lr:lastRoi,lrs:lastRoiSet,vs:viewState}) ;
+                callback ({ls:lastSet,lp:lastPage,lr:lastRoi,lrs:lastRoiSet,vs:viewState,sp:lastSpecie,sg:lastSongtype}) ;
             },
             setLastSet : function(val)
             {
@@ -412,6 +413,11 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
             setViewState: function(val)
             {
                 viewState = val;
+            },
+            setLastSpecies: function(valsp,valsg)
+            {
+                lastSpecie = valsp;
+                lastSongtype = valsg;
             }
             };
     }
@@ -579,6 +585,9 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
             if (data.ls)
             {
                 $scope.selectedSet = data.ls;
+                $scope.selectedName = $scope.selectedSet.name;
+                $scope.species = data.sp;
+                $scope.songtype = data.sg          
                 $scope.detailedView = data.vs;
                 $scope.totalRois = data.lrs.length;
                 $scope.currentPage = data.lp;
@@ -657,7 +666,8 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         $scope.rois            = undefined;
         a2TrainingSets.getSpecies($scope.sets[$index].name, function(speciesData){
             $scope.species = speciesData[0].species;
-            $scope.songtype = speciesData[0].songtype
+            $scope.songtype = speciesData[0].songtype;
+            a2TrainingSetHistory.setLastSpecies($scope.species,$scope.songtype);
             a2TrainingSets.getRois($scope.sets[$index].name, function(data){
                 $scope.loaderDisplay = false;
                 $scope.detailedView = false;
