@@ -572,7 +572,7 @@ var Recordings = {
             months: [Joi.number(), Joi.array().includes(Joi.number())],
             days:   [Joi.number(), Joi.array().includes(Joi.number())],
             hours:  [Joi.number(), Joi.array().includes(Joi.number())],
-            limit:  Joi.number().required(),
+            limit:  Joi.number(),
             offset: Joi.number(),
             sortBy: Joi.string(),
             sortRev: Joi.boolean(), 
@@ -646,15 +646,15 @@ var Recordings = {
                 q += 'ORDER BY ' + mysql.escapeId(sortBy) + ' ' + sortRev +' \n';
             }
             
-            var offset = parameters.offset || 0;
-            
-            q += 'LIMIT ' + mysql.escape(offset) + ', ' + mysql.escape(parameters.limit);
+            if(parameters.limit) {
+                var offset = parameters.offset || 0;
+                q += 'LIMIT ' + mysql.escape(offset) + ', ' + mysql.escape(parameters.limit);
+            }
             
             var query = {
                 sql: q,
                 typeCast: date2UTC,
             };
-            
             queryHandler(query, callback);
         });
     }

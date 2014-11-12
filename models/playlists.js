@@ -1,11 +1,14 @@
 // dependencies
-var mysql        = require('mysql');
-var async        = require('async');
-var joi          = require('joi');
+var mysql = require('mysql');
+var async = require('async');
+var Joi   = require('joi');
+var util  = require('util');
+
+
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
-var Recordings   = require('./recordings');
-var Projects     = require('./projects');
+var model   = require('../models');
+
 // local variables
 var s3;
 var queryHandler = dbpool.queryHandler;
@@ -30,12 +33,14 @@ var Playlists = {
             options = {};
         }
 
-        if (query) {
-            if (query.id) {
-                constraints.push('PL.playlist_id = ' + mysql.escape(query.id));
-            } else if (query.project) {
-                constraints.push('PL.project_id = ' + mysql.escape(query.project));
-            }
+        if (query.id) {
+            constraints.push('PL.playlist_id = ' + mysql.escape(query.id));
+        } 
+        if (query.project) {
+            constraints.push('PL.project_id = ' + mysql.escape(query.project));
+        }
+        if(query.name) {
+            constraints.push('PL.name = ' + mysql.escape(query.name));
         }
 
         if(constraints.length == 0){
@@ -97,7 +102,58 @@ var Playlists = {
             var ids = data.map(function(row){
                 return row.recording_id
             });
-            Recordings.findByUrlMatch({id:ids}, null, {compute:query && query.show}, callback);
+            model.recordings.findByUrlMatch({id:ids}, null, {compute:query && query.show}, callback);
+        });
+    },
+    
+    create: function(data, callback) {
+        
+        async.auto({
+            getRecs: function(cb) {
+                data.params.project_id = data.project_id;
+                model.recordings.findProjectRecordings(data.params, function(err, rows) {
+                    if(err)  return cb(err);
+                    
+                    var recIds = rows.map(function(rec) { 
+                        return rec.id;
+                    });
+                    
+                    cb(null, recIds);
+                });
+            },
+            insertPlaylist: function(cb) {
+                var q = "INSERT INTO playlists \n"+
+                        "SET project_id = %s, name = %s";
+                q = util.format(q, mysql.escape(data.project_id), mysql.escape(data.name));
+                
+                queryHandler(q, cb);
+            },
+            insertPlaylistRecs: ['getRecs', 'insertPlaylist', function(cb, results) {
+                console.log(results);
+                Playlists.addRecs(results.insertPlaylist[0].insertId, results.getRecs, cb);
+            }]
+        },
+        function(err, result) {
+            if(err)  return callback(err);
+            
+            callback(null, result);
+        });
+    },
+    
+    addRecs: function(playlist_id, rec_ids, callback) {
+        var schema =  Joi.array().includes(Joi.number());
+        
+        Joi.validate(rec_ids, schema, function(err, recs) {
+            if(err)  return callback(err);
+            
+            var values = recs.map(function(rec_id) {
+                return "(" + playlist_id + "," + rec_id + ")";
+            });
+            
+            var q = "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
+                    "VALUES " + values.join(",\n       ");
+            
+            queryHandler(q, callback);
         });
     }
 };

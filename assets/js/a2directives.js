@@ -341,7 +341,7 @@ angular.module('a2directives', ['a2services'])
                 element.click(function(e) {
                     e.stopPropagation();
                     
-                    console.log('toggle');
+                    // console.log('toggle');
                     var visible = popup.css('display') === 'none';
                     $('.calendar.popup:visible').hide();
                     
