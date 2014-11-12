@@ -1,6 +1,5 @@
-import bmpio
+from a2pyutils import bmpio, colors
 import png
-import colors
 import scidx
 from datetime import datetime
 

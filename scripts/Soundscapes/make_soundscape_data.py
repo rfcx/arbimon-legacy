@@ -1,5 +1,5 @@
 import sys
-import soundscape
+from soundscape import soundscape
 
 
 USAGE = """
