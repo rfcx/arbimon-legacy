@@ -19,3 +19,6 @@ a2.komodoproject
 
 # python compiled binaries
 *pyc
+
+# ignore test output data
+*out*.*
