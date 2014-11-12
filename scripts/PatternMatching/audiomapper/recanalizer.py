@@ -14,8 +14,13 @@ class Recanalizer:
         configuration = Config()
         config = configuration.data()
         self.rec = Rec(uri,tempFolder,config,bucket)
-        self.spectrogram()
-        self.featureVector()
+        if self.rec.status == 'HasAudioData':
+            self.spectrogram()
+            self.featureVector()
+            self.status = 'Processed'
+        else:
+            self.status = 'NoData'
+            
         self.tempFolder = tempFolder
     
     def getVector(self ):

@@ -7,16 +7,32 @@ from contextlib import closing
 import MySQLdb
 import tempfile
 from config import Config
+from logger import Logger
+
+jobId = sys.argv[1].strip("'").strip(" ");
+expectedRecordings = sys.argv[2].strip("'").strip(" ");
+
+log = Logger(jobId , 'classificationresults.py' , 'reducer')
+log.write('script started')
 
 currDir = os.path.dirname(os.path.abspath(__file__))
 configuration = Config()
 config = configuration.data()
-db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
+log.write('configuration loaded')
+log.write('trying database connection')
+try:
+    db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
+except MySQLdb.Error as e:
+    log.write('fatal error cannot connect to database with credentials: '+config[0]+' '+config[1]+' '+config[2]+' '+config[3])
+    quit()
+log.write('database connection succesful')   
+
 tempFolders = tempfile.gettempdir()
 minVectorVal = 9999999.0
 maxVectorVal = -9999999.0
 print 'results'
-jobId = 0
+log.write('start cycle to gather results (expected:'+str(expectedRecordings)+')')
+processedCount=0
 for line in sys.stdin:
     
     line = line.strip('\n')
@@ -32,7 +48,6 @@ for line in sys.stdin:
     recId.strip(' ')
     presence.strip(' ')
     jId.strip(' ')
-    jobId = jId.strip(' ')
     species.strip(' ')
     songtype.strip(' ')
     with closing(db.cursor()) as cursor:
@@ -40,16 +55,21 @@ for line in sys.stdin:
                        " (`job_id`, `recording_id`, `species_id`, `songtype_id`, `present`) "+
                        " VALUES ("+jId+","+recId+","+species+","+songtype+","+presence+");" )
         db.commit()
-        cursor.execute('update `jobs` set `progress` = `progress_steps`, `completed` = 1  where `job_id` = '+str(jId))
-        db.commit()
-
+    processedCount = processedCount + 1
+log.write('processed '+str(processedCount)+' of '+str(expectedRecordings))
+log.write('end cycle to gather results')
+log.write('saving stats to database')
 jsonStats = '{"minv": '+str(minVectorVal)+', "maxv" : '+str(maxVectorVal)+'}'
 with closing(db.cursor()) as cursor:
     cursor.execute("INSERT INTO `arbimon2`.`classification_stats` "+
                    " (`job_id`, `json_stats`) "+
                    " VALUES ("+jobId+",'"+jsonStats+"');" )
-    db.commit()    
+    db.commit()
+    cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(jobId.strip(' ')))
+    db.commit()
 
 db.close()
+log.write('removing working folder')
 shutil.rmtree(tempFolders+"/classification_"+str(jobId))
 print 'ended'
+log.close()
