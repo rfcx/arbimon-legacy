@@ -32,6 +32,14 @@ $.expr.match.UP_PARENT_SPECIAL = /^(\^+)/;
 
 
 angular.module('a2directives', ['a2services'])
+.run(function() {
+    $(document).click( function(e){
+        if($(e.target).closest('.calendar.popup:visible').length)
+            return;
+            
+        $('.calendar.popup:visible').hide();
+    });
+})
 .directive('a2GlobalKeyup', function($timeout){
     return {
         restrict : 'A',
@@ -290,7 +298,6 @@ angular.module('a2directives', ['a2services'])
         }
     };
 })
- 
 .directive('loader', function() {
      return {
          restrict: 'E',
@@ -319,19 +326,31 @@ angular.module('a2directives', ['a2services'])
         restrict: 'AE',
         scope: {
             ngModel      : '=',
-            maxDate      : '=',
-            minDate      : '=',
-            year         : '=',
-            dateCount    : '=',
+            maxDate      : '=?',
+            minDate      : '=?',
+            year         : '=?',
+            dateCount    : '=?',
             disableEmpty : '&'
         },
         link: function(scope, element, attrs) {
-            // console.log(attrs);
             var is_a_popup = !/yearpick/i.test(element[0].tagName);
             var popup;
             if(is_a_popup){
-                popup = $('<div></div>').insertAfter(element).addClass('popup calendar');
-            } else {
+                popup = $('<div></div>').insertAfter(element).addClass('calendar popup');
+                
+                element.click(function(e) {
+                    e.stopPropagation();
+                    
+                    // console.log('toggle');
+                    var visible = popup.css('display') === 'none';
+                    $('.calendar.popup:visible').hide();
+                    
+                    if(visible) {
+                        popup.css('display','block');
+                    }
+                });
+            } 
+            else {
                 popup = element.addClass('calendar');
             }
             
@@ -496,6 +515,7 @@ angular.module('a2directives', ['a2services'])
                 days.attr('transform', function() { return 'translate(0,24)'; })
                     .classed('hover', true)
                     .classed('cal-disabled cal-oor', function(d) {
+                        // console.log(d ,scope.minDate, (d < scope.minDate) );
                         return (scope.minDate ? (d < scope.minDate) : false) ||
                                (scope.maxDate ? (scope.maxDate < d) : false);
                     })
@@ -563,16 +583,6 @@ angular.module('a2directives', ['a2services'])
             if(attrs.dateCount) {
                 scope.$watch('dateCount', function(value) {
                     drawCounts();
-                });
-            }
-            
-            if(is_a_popup){
-                element.click(function() {
-                    if(popup.css('display') === 'none') {
-                        popup.css('display','block');
-                    } else {
-                        popup.css('display', 'none');
-                    }
                 });
             }
         }

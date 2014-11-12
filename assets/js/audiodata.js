@@ -70,22 +70,49 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         templateUrl: '/partials/audiodata/training-sets.html'
     });
 })
-.controller('RecsCtrl', function($scope, Project, $http) {
+.controller('RecsCtrl', function($scope, Project, $http, $modal, a2Playlists) {
     $scope.loading = true;
     
-    var searchRecs = function(count) {
+    
+    var readFilters = function() {
+        var params = {};
         
-        Project.getRecs({
-            project_id: $scope.project.project_id,
-            limit: $scope.limitPerPage,
-            offset: ($scope.currentPage-1) * $scope.limitPerPage,
-            sortBy: $scope.sortKey,
-            sortRev: $scope.reverse,
-            sites: $scope.params.sites ? $scope.params.sites.map(function(site){ return site.name; }) : undefined,
-            count: count
-        },
-        function(data){
-            if(!count) {
+        if($scope.params.range && $scope.params.range.from && $scope.params.range.to) {
+            params.range = $scope.params.range;
+            
+            params.range.to.setHours(23);
+            params.range.to.setMinutes(59);
+        }
+    
+        if($scope.params.sites && $scope.params.sites.length)
+            params.sites = $scope.params.sites.map(function(site) { return site.name; });
+        
+        if($scope.params.hours && $scope.params.hours.length) 
+            params.hours = $scope.params.hours.map(function(h) { return h.value; });
+        
+        if($scope.params.months && $scope.params.months.length)
+            params.months = $scope.params.months.map(function(m) { return m.value; });
+        
+        if($scope.params.years && $scope.params.years.length)
+            params.years = $scope.params.years;
+            
+        if($scope.params.days && $scope.params.days.length)
+            params.days = $scope.params.days;
+        
+        return params;
+    };
+    
+    var searchRecs = function(output) {
+        
+        var params = readFilters();
+        params.limit = $scope.limitPerPage;
+        params.offset = ($scope.currentPage-1) * $scope.limitPerPage;
+        params.sortBy = $scope.sortKey;
+        params.sortRev = $scope.reverse;
+        params.output = output;
+        
+        Project.getRecs(params, function(data) {
+            if(!output || output === 'list') {
                 $scope.recs = data;
             
                 $scope.recs.forEach(function(rec) {
@@ -93,25 +120,34 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
                 });
                 $scope.loading = false;
             }
-            else {
+            else if(output === 'count'){
                 $scope.totalRecs = data[0].count;
+            }
+            else if(output === 'date_range') {
+                $scope.minDate = new Date(data[0].min_date);
+                $scope.maxDate = new Date(data[0].max_date);
+                $scope.years = d3.range($scope.minDate.getFullYear(), ($scope.maxDate.getFullYear() + 1) );
             }
         });
     };
     
     $scope.params = {};
     $scope.sites = [];
+    $scope.years = [];
     $scope.loading = true;
     $scope.currentPage  = 1;
     $scope.limitPerPage = 10;
-    
-    
-    Project.getSites(function(data){
-        $scope.sites = data
+    $scope.days = d3.range(1,32);
+    $scope.months =  d3.range(12).map(function(month) {
+        return { value: month, string: moment().month(month).format('MMM') };
+    });
+    $scope.hours = d3.range(24).map(function(hour) {
+        return { value: hour, string: moment().hour(hour).minute(0).format('HH:mm') };
     });
     
-    // to do advance filters and playlist generation
-    // $scope.hours = d3.range(24);
+    Project.getSites(function(data){
+        $scope.sites = data;
+    });
     
     $scope.fields = [
         { name: 'Site', key: 'site' },
@@ -122,44 +158,86 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         { name: 'Filename', key: 'file' },
     ];
     
-    Project.getInfo(function(data){
-        $scope.project = data;
-        searchRecs(true);
-        
-        $scope.$watch(function(scope) {
-            return [
-                $scope.currentPage,
-                $scope.limitPerPage
-            ];
-        }, 
-        function(){
-            searchRecs();
-        }, 
-        true);
-
-    });
+    searchRecs('count');
     
+    $scope.$watch(function(scope) {
+        return [
+            $scope.currentPage,
+            $scope.limitPerPage
+        ];
+    }, 
+    function(){
+        searchRecs();
+    }, 
+    true);
+    
+    searchRecs('date_range');
     
     $scope.sortRecs = function(sortKey, reverse) {
         $scope.sortKey = sortKey;
         $scope.reverse = reverse;
         searchRecs();
     };
-    
     $scope.applyFilters = function() {
         $scope.currentPage  = 1;
-        searchRecs(true);
+        searchRecs('count');
         searchRecs();
     };
-    
     $scope.resetFilters = function() {
         $scope.currentPage  = 1;
         $scope.params = {};
-        searchRecs(true);
+        searchRecs('count');
         searchRecs();
     };
     
+    $scope.createPlaylist = function() {
+        
+        var listParams = readFilters();
+        
+        if($.isEmptyObject(listParams))
+            return;
+        
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/audiodata/create-playlist.html'
+        });
+        
+        modalInstance.result.then(function(playlistName) {
+            a2Playlists.add({
+                playlist_name: playlistName,
+                params: listParams
+            },
+            function(data) {
+                console.log(data);
+            });
+        });
+    }
+    
+    /* $scope.edit = function() {
+        
+        if(!$scope.checked || !$scope.checked.length)
+            return;
+        
+        var recorders = $scope.checked.map(function(rec) {
+            return rec.recorders
+        })
+        
+        
+        
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/audiodata/edit-recs.html',
+            controller: 'RecsEditorCtrl',
+            size: 'lg',
+            resolve: {
+                data: function() {
+                    return data;
+                }
+            }
+        });
+    } */
 })
+// .controller('RecsEditorCtrl', function($scope, Project, $modalInstance, recs) {
+//     $scope.recs = recs;
+// })
 .controller('UploadCtrl', function($scope, uploads, Project, $modal){ 
     $scope.prettyBytes = function(bytes) {
         

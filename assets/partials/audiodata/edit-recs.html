@@ -1,0 +1,65 @@
+<div class="modal-header">
+    <h3>Recordings Info Editor</h3>
+</div>
+
+<div class="modal-body">
+    {{ recs }}
+    <div class="container-fluid">
+        <div class="col-sm-6">
+            <h4>Date and Time offset</h4>
+            <form class="form-horizontal" role="form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">year </label>
+                    <div class="col-sm-4">
+                        <input class="form-control" type="text" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">month </label>
+                    <div class="col-sm-4">
+                        <input class="form-control" type="text" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">day </label>
+                    <div class="col-sm-4">
+                        <input class="form-control" type="text" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">hour </label>
+                    <div class="col-sm-4">
+                        <input class="form-control" type="text" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">minutes </label>
+                    <div class="col-sm-4">
+                        <input class="form-control" type="text" />
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-sm-6">
+            <h4>Metadata</h4>
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label>Recorder</label>
+                    <input class="form-control" type="text" />
+                </div>
+                <div class="form-group">
+                    <label>Microphone</label>
+                    <input class="form-control" type="text" />
+                </div>
+                <div class="form-group">
+                    <label>Recorder software version</label>
+                    <input class="form-control" type="text" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="$close()"><i class="fa fa-floppy-o"></i> Save &amp; Close </button>
+    <button class="btn" ng-click="$dismiss()"><i class="fa fa-times"></i> Close</button>
+</div>
