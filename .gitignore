@@ -1,14 +1,21 @@
-#node
+# node
 node_modules
 npm-debug.log
 
-#gedit backup files
+# gedit backup files
 *~
   
-#bower
+# bower
 bower_components
+
+# grunt build files
 public/assets
 
+#komodo specific files
 a2.komodoproject
 
+# python virtual env
+.env
+
+# python compiled binaries
 *pyc
