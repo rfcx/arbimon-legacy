@@ -719,7 +719,6 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
                     sval[new_tset.field] = new_tset.error;
                     return;
                 }
-                
                 $modalInstance.close(new_tset);
             });
         }

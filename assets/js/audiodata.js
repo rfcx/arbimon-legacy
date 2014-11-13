@@ -1,7 +1,58 @@
 angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angularFileUpload','visualizer-training-sets'])
 .config(function($stateProvider, $urlRouterProvider) {
-   
-    $urlRouterProvider.when("/audiodata", "/audiodata/recordings");
+   var audiodataHistory = [];
+   var audiodataVisited = false;
+    $urlRouterProvider
+    .rule(  //audiodata HISTORY route
+       function ($injector, $location , $state)
+       {
+            var m, path = $location.path();
+
+            if(m=/audiodata\/?(.*)/.exec(path))
+            {
+                audiodataVisited  = true;
+                
+                if (audiodataHistory.length==2)
+                {
+                    var loc0 = audiodataHistory[0].split('/');
+                    var loc1 = audiodataHistory[1].split('/');
+                    if(loc0[1] != loc1[1])
+                    {
+                        audiodataHistory.pop()
+                        $location.replace().path(audiodataHistory[0]); 
+                    }
+                    else
+                    {
+                        audiodataHistory.pop()
+                        audiodataHistory.pop()
+                        if (path != "")
+                            audiodataHistory.push(path)  
+                    }
+                }
+                else
+                {
+                    audiodataHistory.pop()
+                    if (path != "")
+                        audiodataHistory.push(path)
+                }
+            }
+            else if (audiodataVisited)
+            {
+                if(audiodataHistory.length==2)
+                {
+                    audiodataHistory.pop()
+                    if (path != "")
+                        audiodataHistory.push(path)
+                }
+                else
+                {
+                    if (path != "")
+                        audiodataHistory.push(path)
+                }
+            }
+       }
+    )
+    .when("/audiodata", "/audiodata/recordings");
 
     $stateProvider.state('audiodata.recordings', {
         url: '/recordings',
@@ -19,22 +70,49 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         templateUrl: '/partials/audiodata/training-sets.html'
     });
 })
-.controller('RecsCtrl', function($scope, Project, $http) {
+.controller('RecsCtrl', function($scope, Project, $http, $modal, a2Playlists) {
     $scope.loading = true;
     
-    var searchRecs = function(count) {
+    
+    var readFilters = function() {
+        var params = {};
         
-        Project.getRecs({
-            project_id: $scope.project.project_id,
-            limit: $scope.limitPerPage,
-            offset: ($scope.currentPage-1) * $scope.limitPerPage,
-            sortBy: $scope.sortKey,
-            sortRev: $scope.reverse,
-            sites: $scope.params.sites ? $scope.params.sites.map(function(site){ return site.name; }) : undefined,
-            count: count
-        },
-        function(data){
-            if(!count) {
+        if($scope.params.range && $scope.params.range.from && $scope.params.range.to) {
+            params.range = $scope.params.range;
+            
+            params.range.to.setHours(23);
+            params.range.to.setMinutes(59);
+        }
+    
+        if($scope.params.sites && $scope.params.sites.length)
+            params.sites = $scope.params.sites.map(function(site) { return site.name; });
+        
+        if($scope.params.hours && $scope.params.hours.length) 
+            params.hours = $scope.params.hours.map(function(h) { return h.value; });
+        
+        if($scope.params.months && $scope.params.months.length)
+            params.months = $scope.params.months.map(function(m) { return m.value; });
+        
+        if($scope.params.years && $scope.params.years.length)
+            params.years = $scope.params.years;
+            
+        if($scope.params.days && $scope.params.days.length)
+            params.days = $scope.params.days;
+        
+        return params;
+    };
+    
+    var searchRecs = function(output) {
+        
+        var params = readFilters();
+        params.limit = $scope.limitPerPage;
+        params.offset = ($scope.currentPage-1) * $scope.limitPerPage;
+        params.sortBy = $scope.sortKey;
+        params.sortRev = $scope.reverse;
+        params.output = output;
+        
+        Project.getRecs(params, function(data) {
+            if(!output || output === 'list') {
                 $scope.recs = data;
             
                 $scope.recs.forEach(function(rec) {
@@ -42,25 +120,34 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
                 });
                 $scope.loading = false;
             }
-            else {
+            else if(output === 'count'){
                 $scope.totalRecs = data[0].count;
+            }
+            else if(output === 'date_range') {
+                $scope.minDate = new Date(data[0].min_date);
+                $scope.maxDate = new Date(data[0].max_date);
+                $scope.years = d3.range($scope.minDate.getFullYear(), ($scope.maxDate.getFullYear() + 1) );
             }
         });
     };
     
     $scope.params = {};
     $scope.sites = [];
+    $scope.years = [];
     $scope.loading = true;
     $scope.currentPage  = 1;
     $scope.limitPerPage = 10;
-    
-    
-    Project.getSites(function(data){
-        $scope.sites = data
+    $scope.days = d3.range(1,32);
+    $scope.months =  d3.range(12).map(function(month) {
+        return { value: month, string: moment().month(month).format('MMM') };
+    });
+    $scope.hours = d3.range(24).map(function(hour) {
+        return { value: hour, string: moment().hour(hour).minute(0).format('HH:mm') };
     });
     
-    // to do advance filters and playlist generation
-    // $scope.hours = d3.range(24);
+    Project.getSites(function(data){
+        $scope.sites = data;
+    });
     
     $scope.fields = [
         { name: 'Site', key: 'site' },
@@ -71,44 +158,86 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         { name: 'Filename', key: 'file' },
     ];
     
-    Project.getInfo(function(data){
-        $scope.project = data;
-        searchRecs(true);
-        
-        $scope.$watch(function(scope) {
-            return [
-                $scope.currentPage,
-                $scope.limitPerPage
-            ];
-        }, 
-        function(){
-            searchRecs();
-        }, 
-        true);
-
-    });
+    searchRecs('count');
     
+    $scope.$watch(function(scope) {
+        return [
+            $scope.currentPage,
+            $scope.limitPerPage
+        ];
+    }, 
+    function(){
+        searchRecs();
+    }, 
+    true);
+    
+    searchRecs('date_range');
     
     $scope.sortRecs = function(sortKey, reverse) {
         $scope.sortKey = sortKey;
         $scope.reverse = reverse;
         searchRecs();
     };
-    
     $scope.applyFilters = function() {
         $scope.currentPage  = 1;
-        searchRecs(true);
+        searchRecs('count');
         searchRecs();
     };
-    
     $scope.resetFilters = function() {
         $scope.currentPage  = 1;
         $scope.params = {};
-        searchRecs(true);
+        searchRecs('count');
         searchRecs();
     };
     
+    $scope.createPlaylist = function() {
+        
+        var listParams = readFilters();
+        
+        if($.isEmptyObject(listParams))
+            return;
+        
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/audiodata/create-playlist.html'
+        });
+        
+        modalInstance.result.then(function(playlistName) {
+            a2Playlists.add({
+                playlist_name: playlistName,
+                params: listParams
+            },
+            function(data) {
+                console.log(data);
+            });
+        });
+    }
+    
+    /* $scope.edit = function() {
+        
+        if(!$scope.checked || !$scope.checked.length)
+            return;
+        
+        var recorders = $scope.checked.map(function(rec) {
+            return rec.recorders
+        })
+        
+        
+        
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/audiodata/edit-recs.html',
+            controller: 'RecsEditorCtrl',
+            size: 'lg',
+            resolve: {
+                data: function() {
+                    return data;
+                }
+            }
+        });
+    } */
 })
+// .controller('RecsEditorCtrl', function($scope, Project, $modalInstance, recs) {
+//     $scope.recs = recs;
+// })
 .controller('UploadCtrl', function($scope, uploads, Project, $modal){ 
     $scope.prettyBytes = function(bytes) {
         
@@ -256,7 +385,44 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         }
     };
 })
-.controller('TrainingSetsCtrl', function($scope, a2TrainingSets,Project,$modal) {
+.factory('a2TrainingSetHistory',
+    function(){
+        var lastSet=undefined,lastPage=undefined,lastRoi=undefined,lastRoiSet=undefined
+            ,viewState=undefined,lastSpecie=undefined,lastSongtype=undefined;
+        return {
+            getLastSet : function(callback)
+            {
+                callback ({ls:lastSet,lp:lastPage,lr:lastRoi,lrs:lastRoiSet,vs:viewState,sp:lastSpecie,sg:lastSongtype}) ;
+            },
+            setLastSet : function(val)
+            {
+                lastSet = val;
+            },
+            setLastPage: function(val)
+            {
+                lastPage = val;
+            },
+            setLastRoi: function(val)
+            {
+                lastRoi = val;
+            },
+            setLastRoiSet: function(val)
+            {
+                lastRoiSet = val;
+            },
+            setViewState: function(val)
+            {
+                viewState = val;
+            },
+            setLastSpecies: function(valsp,valsg)
+            {
+                lastSpecie = valsp;
+                lastSongtype = valsg;
+            }
+            };
+    }
+)
+.controller('TrainingSetsCtrl', function($scope, a2TrainingSets,Project,$modal,a2TrainingSetHistory) {
     $scope.fields = [
         { name: 'Name', key: 'name' },
         { name: 'Set type', key: 'type' },
@@ -277,7 +443,7 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     $scope.roi = null;
     $scope.currentrois = [];
     $scope.currentPage = 0;
-    $scope.roisPerpage = 6;
+    $scope.roisPerpage = 12;
     $scope.currentRoi = 0;
     $scope.totalRois = 0;
     $scope.currentUri = '';
@@ -361,7 +527,7 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
     
     $scope.removeRoi = function(id)
     {
-        a2TrainingSets.removeRoi(id,function(data){
+        a2TrainingSets.removeRoi(id,$scope.selectedSet,function(data){
             if (data.affectedRows) 
             {
                 for(var i = 0 ; i < $scope.rois.length ; i++)
@@ -412,9 +578,74 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
             });
         });
     }
+
+    a2TrainingSetHistory.getLastSet(
+        function(data)
+        {
+            if (data.ls)
+            {
+                $scope.selectedSet = data.ls;
+                $scope.selectedName = $scope.selectedSet.name;
+                $scope.species = data.sp;
+                $scope.songtype = data.sg          
+                $scope.detailedView = data.vs;
+                $scope.totalRois = data.lrs.length;
+                $scope.currentPage = data.lp;
+                $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage)
+                if ($scope.totalRois>0) {
+                    if (data.lr == undefined){
+                        data.lr = 0;
+                    }
+                    $scope.roi = data.lrs[data.lr];
+                    $scope.currentDuration = $scope.roi.dur;
+                    $scope.currentRoi = data.lr;
+                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/"+$scope.roi.recording;
+                    $scope.currentUri = $scope.roi.uri;
+                    $scope.currentlow = $scope.roi.y1;
+                    $scope.currenthigh = $scope.roi.y2;
+                    $scope.currentId = $scope.roi.id;
+                    $scope.currentrois = data.lrs.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+                    $scope.rois = data.lrs;
+                } else { 
+                    $scope.rois = []; 
+                    $scope.norois = true;
+                }
+            }
+        }
+    );
     
+    $scope.$watch('detailedView',
+        function()
+        {
+            a2TrainingSetHistory.setViewState($scope.detailedView);          
+        }
+    );
+     
+    $scope.$watch('currentPage',
+        function()
+        {
+            a2TrainingSetHistory.setLastPage($scope.currentPage);          
+        }
+    );
+    
+    $scope.$watch('currentRoi',
+        function()
+        {
+            a2TrainingSetHistory.setLastRoi($scope.currentRoi);          
+        }
+    );
+    
+    $scope.$watch('rois',
+        function()
+        {
+            a2TrainingSetHistory.setLastRoiSet($scope.rois);          
+        }
+    );
+    $scope.loaderDisplay = false;
     $scope.displaySetData = function($index) {
         $scope.norois = false;
+        $scope.loaderDisplay = true;
+        a2TrainingSetHistory.setLastSet($scope.sets[$index]);
         $scope.selectedSet = $scope.sets[$index];
         $scope.selectedName = $scope.sets[$index].name;
         $scope.species  = null;
@@ -435,8 +666,10 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
         $scope.rois            = undefined;
         a2TrainingSets.getSpecies($scope.sets[$index].name, function(speciesData){
             $scope.species = speciesData[0].species;
-            $scope.songtype = speciesData[0].songtype
+            $scope.songtype = speciesData[0].songtype;
+            a2TrainingSetHistory.setLastSpecies($scope.species,$scope.songtype);
             a2TrainingSets.getRois($scope.sets[$index].name, function(data){
+                $scope.loaderDisplay = false;
                 $scope.detailedView = false;
                 $scope.totalRois = data.length;
                 $scope.currentPage = 0;

@@ -28,6 +28,7 @@
                 <div class="row" ng-show="showOrHide(o.job_type_id)" >
                     <div class="bordered"></div>
                     <div class="col-sm-2">{{o.name}}</div>
+                    <div class="col-sm-1"><span ng-hide="o.percentage">--</span><span ng-show="o.percentage">{{o.percentage}}%</span></div>
                     <div class="col-sm-4 progress on-queue" ng-hide="o.percentage" ><small>Job in queue...</small></div>
                     <div class="col-sm-4" ng-show="o.percentage">
                         <div class="progress progress-striped active"> 

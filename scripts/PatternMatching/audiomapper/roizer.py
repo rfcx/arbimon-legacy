@@ -6,9 +6,9 @@ import math
 
 class Roizer:
 
-    def __init__(self, uri ,tempFolder ,iniSecs=5,endiSecs=15,lowFreq = 1000, highFreq = 2000,order = 6, bucket = 'arbimon2'):
+    def __init__(self, uri ,tempFolder,config ,iniSecs=5,endiSecs=15,lowFreq = 1000, highFreq = 2000,order = 6, bucket = 'arbimon2'):
 
-        slicedrec = Rec(uri,tempFolder,bucket)
+        slicedrec = Rec(uri,tempFolder,config,bucket)
 
         if  'HasAudioData' in slicedrec.status:
             self.original = slicedrec.original

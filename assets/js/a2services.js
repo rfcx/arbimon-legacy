@@ -282,9 +282,9 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
-        removeRoi: function(roi_id, callback) {
+        removeRoi: function(roi_id,training_set, callback) {
             var projectName = Project.getName();
-            $http.get('/api/project/'+projectName+'/training-sets/remove-roi/'+roi_id).success(function(data) {
+            $http.get('/api/project/'+projectName+'/training-sets/'+training_set.name+'/remove-roi/'+roi_id).success(function(data) {
                 callback(data);
             });
         }
@@ -300,12 +300,12 @@ angular.module('a2services',[])
             });
         },
 
-        // add: function(tset_data, callback) {
-        //     var projectName = Project.getName();
-        //     $http.post('/api/project/'+projectName+'/playlist/add', tset_data).success(function(data) {
-        //         callback(data);
-        //     });
-        // },
+        add: function(playlistParams, callback) {
+            var projectName = Project.getName();
+            $http.post('/api/project/'+projectName+'/playlists/add', playlistParams).success(function(data) {
+                callback(data);
+            });
+        },
         
         // addData: function(playlist, tset_data, callback) {
         //     var projectName = Project.getName();

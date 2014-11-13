@@ -1,70 +1,127 @@
 <div class="row toolbar">
-    <div class="col-sm-12">
-        <div class="well a2-filter-well">
-            <div class="a2-filter a2-filter-text">Filters <i class="fa fa-filter"></i></div>
-                <div class="a2-filter">
-                    <ui-select multiple ng-model="params.sites" theme="bootstrap" style="width: 300px;">
-                        <ui-select-match placeholder="Sites...">{{$item.name}}</ui-select-match>
-                        <ui-select-choices class="has-badges" repeat="item in sites | filter:$select.search">
-                            {{item.name}} 
-                            <span class="badge">{{ item.rec_count }}</span>
-                        </ui-select-choices>
-                    </ui-select>
+    <div class="col-sm-6">
+        <accordion>
+            <accordion-group is-open="filters.open" class="a2-filters-box">
+                <accordion-heading>
+                    <i class="fa" ng-class="filters.open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                    Filters <i class="fa fa-filter"></i>
+                </accordion-heading>
+                <div class="a2-filter-row">
+                    <div class="a2-filter a2-filter-text">
+                        Range
+                    </div>
+                    <div class="a2-filter">
+                        <button class="btn btn-default" type="text" 
+                            yearpick 
+                            min-date="minDate"
+                            max-date="params.range.to || maxDate"
+                            ng-model="params.range.from">
+                            <span ng-hide="params.range.from"> Select Date </span>
+                            {{ params.range.from | moment: 'L' }}
+                        </button>
+                    </div>
+                    <div class="a2-filter a2-filter-text">
+                        <i class="fa fa-long-arrow-right"></i>
+                    </div>
+                    <div class="a2-filter">
+                        <button class="btn btn-default" type="text" 
+                            yearpick 
+                            min-date="params.range.from || minDate"
+                            max-date="maxDate"
+                            ng-model="params.range.to">
+                            <span ng-hide="params.range.to"> Select Date </span>
+                            {{ params.range.to | moment: 'L' }}
+                        </button>
+                    </div>
                 </div>
-                <button class="btn btn-default" ng-click="applyFilters()">Apply filters</button>
-                <button class="btn btn-default" ng-click="resetFilters()">Reset</button>
-        </div>
-        
-        <!-- future filters -->
-        
-        <!-- <div class="col-sm-3">
-            <ui-select multiple ng-model="params.years" theme="bootstrap" style="width: 300px;">
-                <ui-select-match placeholder="Years...">{{$item}}</ui-select-match>
-                <ui-select-choices repeat="item in years | filter:$select.search">
-                    {{item}}
-                </ui-select-choices>
-            </ui-select>
-        </div> -->
-        <!-- <ui-select multiple ng-model="params.months" theme="bootstrap" style="width: 300px;">
-            <ui-select-match placeholder="Months...">{{$item}}</ui-select-match>
-            <ui-select-choices repeat="item in months | filter:$select.search">
-                {{item}}
-            </ui-select-choices>
-        </ui-select>
-        <ui-select multiple ng-model="params.days" theme="bootstrap" style="width: 300px;">
-            <ui-select-match placeholder="Days...">{{$item}}</ui-select-match>
-            <ui-select-choices repeat="item in days | filter:$select.search">
-                {{item}}
-            </ui-select-choices>
-        </ui-select>
-        <ui-select multiple ng-model="params.hours" theme="bootstrap" style="width: 300px;">
-            <ui-select-match placeholder="Hours...">{{$item}}</ui-select-match>
-            <ui-select-choices repeat="item in hours | filter:$select.search">
-                {{item}}
-            </ui-select-choices>
-        </ui-select> -->
+                <div class="a2-filter-row">
+                    <div class="a2-filter a2-filter-text">
+                        Sites
+                    </div>
+                    <div class="a2-filter">
+                        <ui-select multiple ng-model="params.sites" theme="bootstrap" style="width: 300px;">
+                            <ui-select-match placeholder="Site1, Site2, ...">{{$item.name}}</ui-select-match>
+                            <ui-select-choices class="has-badges" repeat="item in sites | filter:$select.search">
+                                {{item.name}} 
+                                <span class="badge">{{ item.rec_count }}</span>
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                </div>
+                <div class="a2-filter-row">
+                    <div class="a2-filter a2-filter-text">
+                        Date and Time
+                    </div>
+                    <div class="a2-filter">
+                        <ui-select multiple ng-model="params.years" theme="bootstrap" style="width: 125px;">
+                            <ui-select-match placeholder="Years...">{{$item}}</ui-select-match>
+                            <ui-select-choices repeat="item in years | filter:$select.search">
+                                {{item}}
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                    <div class="a2-filter">
+                        <ui-select multiple ng-model="params.months" theme="bootstrap" style="width: 125px;">
+                            <ui-select-match placeholder="Months...">{{ $item.string }}</ui-select-match>
+                            <ui-select-choices repeat="item in months | filter:$select.search">
+                                {{ item.string }}
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                    <div class="a2-filter">
+                        <ui-select multiple ng-model="params.days" theme="bootstrap" style="width: 125px;">
+                            <ui-select-match placeholder="Days...">{{$item}}</ui-select-match>
+                            <ui-select-choices repeat="item in days | filter:$select.search">
+                                {{item}}
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                    <div class="a2-filter">
+                        <ui-select multiple ng-model="params.hours" theme="bootstrap" style="width: 125px;">
+                            <ui-select-match placeholder="Hours...">{{ $item.string }}</ui-select-match>
+                            <ui-select-choices repeat="item in hours | filter:$select.search">
+                                {{ item.string }}
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                </div>
+                <div class="a2-filter-row">
+                    <button class="btn btn-default" ng-click="applyFilters()">
+                        Apply filters
+                    </button>
+                    <button class="btn btn-default" ng-click="resetFilters()">
+                        <i class="fa fa-undo"></i> Reset
+                    </button>
+                    <button class="btn btn-default" 
+                        ng-click="createPlaylist()" 
+                        tooltip="Save results as playlists"
+                        tooltip-trigger="mouseenter">
+                        <i class="fa fa-list-alt"></i>
+                    </button>
+                </div>
+            </accordion-group>
+        </accordion>
     </div>
 </div>
-
-<!-- need to fix issue #67 -->
-<!-- <div class="row">
+<div class="row">
     <div class="col-sm-3">
-            <button class="btn btn-default" 
-                ng-click="edit()" 
-                ng-class="{ disabled: !checked || !checked.length }"
-                tooltip="Edit recording(s) info"
-                tooltip-trigger="mouseenter">
-                <i class="fa fa-pencil"></i>
-            </button>
-            <button class="btn btn-danger" 
-                ng-click="del()" 
-                ng-class="{ disabled: !checked || !checked.length }"
-                tooltip="Delete recording(s)"
-                tooltip-trigger="mouseenter">
-                <i class="fa fa-trash"></i>
-            </button>
+        <!-- in progress rec editor -->
+        <!-- <button class="btn btn-default" 
+            ng-click="edit()" 
+            tooltip="Edit check recordings"
+            tooltip-trigger="mouseenter">
+            <i class="fa fa-pencil"></i>
+        </button> -->
+        <!-- need to fix issue #67 -->
+        <!-- <button class="btn btn-danger" 
+            ng-click="del()" 
+            ng-class="{ disabled: !checked || !checked.length }"
+            tooltip="Delete recording(s)"
+            tooltip-trigger="mouseenter">
+            <i class="fa fa-trash"></i>
+        </button> -->
     </div>
-</div> -->
+</div>
 <div class="row">
     <div class="col-sm-12">
         <div class="reclist-pagination-row">

@@ -40,7 +40,7 @@ for line in sys.stdin:
     recuri = lineArgs[7]
     jobId = int(lineArgs[8])
     tempFolder = tempFolders+"/training_"+str(jobId)+"/"
-    roi = Roizer(recuri,tempFolder,initTime,endingTime,lowFreq,highFreq)
+    roi = Roizer(recuri,tempFolder,config,initTime,endingTime,lowFreq,highFreq)
     
     with closing(db.cursor()) as cursor:
         cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(jobId))

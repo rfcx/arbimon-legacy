@@ -109,7 +109,7 @@ for i in classes:
         
     smin = min([min((specToShow[j])) for j in range(specToShow.shape[0])])
     smax = max([max((specToShow[j])) for j in range(specToShow.shape[0])])
-    x = 255*((specToShow - smin)/(smax-smin))    
+    x = 255*(1-((specToShow - smin)/(smax-smin)))    
     png.from_array(x, 'L;8').save(pngFilename)
 
     #get Amazon S3 bucket

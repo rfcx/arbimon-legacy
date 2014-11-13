@@ -222,7 +222,7 @@ var TrainingSets = {
         }
     },
    
-    removeRoi: function (roi_id, callback) {
+    removeRoi: function (roi_id, training_set, callback) {
         var typedef = TrainingSets.types[training_set.type];
         return typedef.remove_roi(roi_id, callback);
     },
@@ -297,16 +297,16 @@ TrainingSets.types.roi_set = {
      * @param {Object} training_set           - training set object
      * @param {Object} data                   - training set data element, as returned by get_data
      */
-    create_data_image : function (training_set, data, callback){
-        var s3key='project_'+training_set.project+'/training_sets/'+training_set.id+'/'+data.id+'.png';
-        data.uri = 'https://s3.amazonaws.com/'+config('aws').bucketName+'/' + s3key;
+    create_data_image : function (training_set, rdata, callback){
+        var s3key='project_'+training_set.project+'/training_sets/'+training_set.id+'/'+rdata.id+'.png';
+        rdata.uri = 'https://s3.amazonaws.com/'+config('aws').bucketName+'/' + s3key;
         var roi_file = tmpfilecache.key2File(s3key);
         var rec_data;
         var rec_stats;
         var spec_data;
         async.waterfall([
             function find_recording(next){
-                Recordings.findByUrlMatch(data.recording,0, {limit:1}, next);
+                Recordings.findByUrlMatch(rdata.recording,0, {limit:1}, next);
             },
             function get_recording(data, next){
                 rec_data = data[0];
@@ -321,15 +321,15 @@ TrainingSets.types.roi_set = {
                 im.identify(spec_data.path, next);
             },
             function crop_roi(spectro_info, next){
-                roiDuration = data.x2-data.x1;
+                roiDuration = rdata.x2-rdata.x1;
                 px2sec = rec_stats.stats.duration    / spectro_info.width ;
                 roiWidth = Math.ceil(roiDuration/px2sec);
-                roiBanwdwith = data.y2-data.y1;
+                roiBanwdwith = rdata.y2-rdata.y1;
                 max_freq = rec_stats.stats.sample_rate / 2;
                 px2hz  = max_freq / spectro_info.height;
                 roiHeight = Math.ceil(roiBanwdwith/px2hz);
-                roiStartX = Math.floor(data.x1/px2sec);
-                roiStartY = spectro_info.height-Math.floor(data.y2/px2hz);
+                roiStartX = Math.floor(rdata.x1/px2sec);
+                roiStartY = spectro_info.height-Math.floor(rdata.y2/px2hz);
                 im.convert([
                     spec_data.path,
                     '-colorspace', 'RGB',
@@ -342,7 +342,6 @@ TrainingSets.types.roi_set = {
             }, 
             function store_in_bucket(){
                 var next = arguments[arguments.length-1];
-                //console.log("file created:",roi_file)
                 if(!s3){
                     s3 = new AWS.S3();
                 }
@@ -358,13 +357,13 @@ TrainingSets.types.roi_set = {
                 dbpool.queryHandler(
                     "UPDATE training_set_roi_set_data \n"+
                     "SET uri = '"+s3key+"' \n"+
-                    "WHERE roi_set_data_id = " + data.id,
+                    "WHERE roi_set_data_id = " + rdata.id,
                     next
                 );
             },
             function return_updated_roi(){
                 var next = arguments[arguments.length-1];
-                next(null, data);
+                next(null, rdata);
             }
         ], callback);
     },
@@ -479,7 +478,7 @@ TrainingSets.types.roi_set = {
             },
             function(rows, fields, next){
                 data = rows[0];
-                next(data);
+                next(null,data);
             },
             function (data, next) {
                 self.create_data_image(training_set, data, next);

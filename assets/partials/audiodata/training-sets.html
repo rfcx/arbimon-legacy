@@ -19,6 +19,7 @@
         <a2-table fields="fields" rows="sets" no-checkbox on-select="displaySetData($index)"></a2-table>
     </div>
     <div ng-show="norois">No ROIs in Training Set {{selectedName}}</div>
+    <div class="col-sm-5 panel panel-default"  ng-show="loaderDisplay"><div class="trainingSetLoader"><loader></loader></div></div>
     <div class="col-sm-5 panel panel-default" ng-show="rois.length">
         <div class="panel-body">
             <div class="row">

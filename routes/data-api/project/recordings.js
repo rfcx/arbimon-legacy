@@ -28,7 +28,6 @@ router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
     
     required
         project_id
-        limit
     
     optional
         range: { from, to }
@@ -37,6 +36,7 @@ router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
         months
         days
         hours
+        limit
         offset
         sortBy
         sortRev
@@ -44,6 +44,8 @@ router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
 */
 router.get('/search', function(req, res, next) {
     var params = req.query;
+    
+    params.project_id = req.project.project_id;
     
     model.recordings.findProjectRecordings(params, function(err, rows) {
         if(err) return next(err);

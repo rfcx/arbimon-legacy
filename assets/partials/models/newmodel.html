@@ -22,7 +22,7 @@
         <ui-select ng-model="data.training" theme="selectize" ng-disabled="disabled">
         <ui-select-match placeholder="Select or search a training set in the list...">{{$select.selected.name}}</ui-select-match>
             <ui-select-choices repeat="train in trainings | filter: $select.search" value="train.training_set_id">
-              {{train.name}} <p><em><small><strong>Species:</strong> {{train.scientific_name}} <strong>Songtype:</strong> {{train.songtype}}</small></em></p>
+              {{train.name}} <p><em><small><strong>Species:</strong> {{train.scientific_name}} <strong>Songtype:</strong> {{train.songtype}} <span class="trainingSetRoiCountSpan"> <strong >Count:</strong>  ({{train.count}})</span></small></em></p>
             </ui-select-choices>
         </ui-select>
       </div>

@@ -69,6 +69,9 @@ angular.module('a2utils', [])
 })
 .filter('moment', function(){
     return function(x, fmt){
+        if(!x)
+            return undefined;
+            
         return moment(x).utc().format(fmt);
     }
 })

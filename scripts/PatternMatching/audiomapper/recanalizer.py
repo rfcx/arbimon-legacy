@@ -2,6 +2,7 @@ from plotter import Plotter
 from rec import Rec
 from pylab import *
 import numpy
+from config import Config
 
 class Recanalizer:
     
@@ -10,9 +11,16 @@ class Recanalizer:
         self.high = float(high)
         self.columns = speciesSurface.shape[1]#int(columns)
         self.speciesSurface = speciesSurface
-        self.rec = Rec(uri,tempFolder,bucket)
-        self.spectrogram()
-        self.featureVector()
+        configuration = Config()
+        config = configuration.data()
+        self.rec = Rec(uri,tempFolder,config,bucket)
+        if self.rec.status == 'HasAudioData':
+            self.spectrogram()
+            self.featureVector()
+            self.status = 'Processed'
+        else:
+            self.status = 'NoData'
+            
         self.tempFolder = tempFolder
     
     def getVector(self ):
