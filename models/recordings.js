@@ -173,25 +173,13 @@ var Recordings = {
                 if(group_by.levels.length > 0) {
                     data = arrays_util.group_rows_by(data, group_by.levels, options);
                 } else if(options.compute){
-                    var compute = typeof(options.compute) == 'string' ? options.compute.split(',') : options.compute;
-                    Recordings.compute_properties(data, compute, callback);
+                    arrays_util.compute_row_properties(data, options.compute, function(property){
+                        return Recordings['__compute_' + property.replace(/-/g,'_')];
+                    }, callback);
                     return;
                 }
             }
             callback(err, data);
-        });
-    },
-    
-    compute_properties : function(recording_set, property_set, callback){
-        async.eachLimit(property_set, 10, function(property, next_property){
-            var comp_method = '__compute_' + property.replace(/-/g,'_');
-            if(Recordings[comp_method]){
-                async.eachLimit(recording_set, 10, function(recording, next_recording){
-                    Recordings[comp_method](recording, next_recording);
-                }, next_property);
-            }
-        }, function(err){
-            err ? callback(err) : callback(null, recording_set);
         });
     },
     
