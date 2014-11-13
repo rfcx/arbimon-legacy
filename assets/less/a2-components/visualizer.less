@@ -70,7 +70,7 @@
                 pointer-events: auto;
                 z-index:1000;
             }
-            &.recording-layer img{
+            &.visobj-layer img{
                 pointer-events: none;
             }
             &.frequency-adjust-layer{
@@ -120,14 +120,14 @@
             background-color: @nav-pills-active-link-hover-bg;
         }
     }
-    .recording-list{
+    .visobj-list{
         max-height:194px;
         background-color: @body-bg;
         margin: 5px 0px;
         border: 1px solid @btn-default-border;
         padding-top: -1px;
         overflow-y: auto;
-        > .recording-list-item{
+        > .visobj-list-item{
             position: relative;
             height:162px;
             padding : 6px;
@@ -147,6 +147,9 @@
                 margin: 0px 5px;
                 > img {
                     height: 128px;
+                    &.visobj-soundscape{
+                        width: 100%;
+                    }
                 }
             }
         }
@@ -308,4 +311,12 @@ a2-img {
 .popover.confirm-roi{
     transform: translateY(-50%);    
     min-width: 14em;
+}
+
+
+img.visobj-soundscape {
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: optimizeSpeed;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
 }

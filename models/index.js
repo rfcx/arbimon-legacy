@@ -9,3 +9,4 @@ module.exports.models           = require('./models');
 module.exports.jobs             = require('./jobs');
 module.exports.news             = require('./news');
 module.exports.playlists        = require('./playlists');
+module.exports.soundscapes      = require('./soundscapes');

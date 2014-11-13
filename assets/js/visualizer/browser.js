@@ -3,24 +3,37 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     var g=[], i={}, lovos = {$grouping : g};
     (lovos.$list = [
         {   name       : 'rec',
+            group       : 'recordings',
             default    : true,
             icon       : 'fa fa-map-marker',
             tooltip    : 'Browse Recordings by Site',
             controller : 'a2BrowserRecordingsBySiteController',
             template   : '/partials/visualizer/browser/recordings-by-site.html'
-        }, 
-        {   name     : 'playlist',
-            icon     : 'fa fa-list',
-            tooltip  : "Browse Recordings by Playlist",
+        },
+        {   name       : 'playlist',
+            group       : 'recordings',
+            icon       : 'fa fa-list',
+            tooltip    : "Browse Recordings by Playlist",
             controller : 'a2BrowserRecordingsByPlaylistController',
             template   : '/partials/visualizer/browser/recordings-by-playlist.html'
+        },
+        {   name       : 'soundscape',
+            group       : 'soundscapes',
+            icon       : 'fa fa-area-chart',
+            tooltip    : "Show Soundscapes",
+            controller : 'a2BrowserSoundscapesController',
+            template   : '/partials/visualizer/browser/soundscapes.html'
         }
-    ]).forEach(function(type){
-        var group = type.name.split('-')[0];
-        i[group] || g.push(i[group] = []);
-        i[group].push(lovos[type.name] = type);
+    ]).forEach(function(lovodef){
+        var group = lovodef.group || '';
+
+        if(!i[group]){
+            g.push(i[group] = []);
+        }
+
+        i[group].push(lovos[lovodef.name] = lovodef);
     });
-    
+
     return lovos;
 })
 .factory('rbDateAvailabilityCache', function ($cacheFactory) {
@@ -39,7 +52,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
 .controller('a2BrowserController', function($scope, $element, $attrs, $timeout, $controller, $q, browser_lovos, itemSelection, Project){
     var self = $scope.browser = this;
     var project = Project;
-    
+
     this.types = browser_lovos.$grouping;
     this.type  = browser_lovos.$list.filter(function(lovo){return lovo.default;}).shift();
     this.recordings = [];
@@ -65,7 +78,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
         }
 
     }
-    
+
     this.setLOVO = function(lovo){
         var old_lovo = self.lovo;
         self.lovo = lovo;
@@ -81,16 +94,16 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     }
 
     // ng-controller="a2BrowserRecordingsBySiteController"
-    
+
     $scope.$on('a2-persisted', activate);
-    
+
     var setBrowserType = function(type){
         var new_$type, old_$type = self.$type;
         self.type = type;
         if(type && type.controller){
             if(!type.$controller){
                 type.$controller = $controller(type.controller, {
-                    $scope : $scope, 
+                    $scope : $scope,
                     a2RecordingsBrowser : self
                 });
             }
@@ -110,7 +123,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             }
         });
     }
-    
+
     $scope.$watch('browser.type', function(new_type){
         setBrowserType(new_type);
     });
@@ -170,18 +183,18 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
             }
         }
     });
-    
+
     activate();
-    
+
 })
 .service('a2RecordingsBySiteLOVO', function($q, Project){
-    var lovo = function(site, date){        
+    var lovo = function(site, date){
         this.initialized = false;
         this.site = site;
         this.date = date;
         this.offset = 0;
         this.count  = 0;
-        this.list   = [];        
+        this.list   = [];
     }
     lovo.prototype = {
         initialize: function(){
@@ -267,7 +280,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                             };
                         };
                     };
-                    
+
                     self.dates.cache.get(key).data = avail || {};
                     self.dates.date_counts = avail;
                     self.loading.dates = false;
@@ -295,7 +308,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     }
                     self.dates.min_date = new Date(range.min,  0,  1,  0,  0,  0,   0);
                     self.dates.max_date = new Date(range.max, 11, 31, 23, 59, 59, 999);
-                    
+
                     self.loading.dates = false;
                     callback(range);
                 });
@@ -312,7 +325,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     this.site = null;
     this.date = null;
     this.lovo = null;
-    
+
     this.activate = function(){
         var defer = $q.defer();
         self.loading.sites = true;
@@ -323,7 +336,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 self.active = true;
                 defer.resolve(sites);
             });
-        });      
+        });
         return defer.promise;
     }
     this.deactivate = function(){
@@ -336,12 +349,12 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
         if(recording) {
             var utcdateaslocal = new Date(recording.datetime);
             var recdate = new Date(utcdateaslocal.getTime() + utcdateaslocal.getTimezoneOffset()*60*1000);
-            
+
             self.auto = {
                 site  : self.sites.filter(function(s){return s.name == recording.site;}).pop(),
                 date  : new Date(recdate.getFullYear(), recdate.getMonth(), recdate.getDate(), 0, 0, 0, 0)
             }
-            
+
             if(self.site != self.auto.site) {
                 self.site = self.auto.site;
             } else if (self.date != self.auto.date) {
@@ -362,7 +375,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     this.get_location = function(recording){
         return 'rec/' + recording.id;
     }
-    
+
     var make_lovo = function(){
         var site = self.site;
         var date = self.date;
@@ -371,7 +384,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
         }
         return self.lovo;
     }
-    
+
     $scope.$watch('browser.$type.dates.display_year', function(new_display_year){
         if(!self.active){ return; }
         self.dates.get_counts_for(new_display_year);
@@ -415,7 +428,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
 .service('a2PlaylistLOVO', function($q, a2Playlists){
     var lovo = function(playlist){
         this.playlist = playlist;
-        
+
         this.offset = 0;
         this.count  = 0;
         this.list   = [];
@@ -433,7 +446,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                 }).bind(this))
             }
             return d.promise;
-        },        
+        },
         find : function(recording){
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
             d.resolve(this.list.filter(function(r){
@@ -478,11 +491,11 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
                     delete self.resolve.pld;
                 }
             });
-        });      
+        });
         return defer.promise;
     }
     this.resolve={};
-    
+
     this.resolve_location = function(location){
         var m = /(\d+)(\/(\d+))?/.exec(location);
         var defer = $q.defer();
@@ -518,7 +531,7 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
     this.get_location = function(recording){
         return 'playlist/' + this.lovo.playlist.id + "/" + recording.id;
     }
-    
+
     $scope.$watch('browser.$type.playlist', function(playlist){
         if(playlist && (self.lovo ? self.lovo.playlist != playlist : true)){
             self.lovo = new a2PlaylistLOVO(playlist);
@@ -526,4 +539,132 @@ angular.module('a2recordingsbrowser', ['a2utils', 'ui.bt.datepicker2'])
         a2RecordingsBrowser.setLOVO(self.lovo);
     });
 })
+
+
+.controller('a2BrowserSoundscapesController', function($scope, a2RecordingsBrowser, a2Soundscapes, a2ArrayLOVO, $timeout, $q){
+    var self = this;
+    this.soundscapes = [];
+    this.active=false;
+    this.loading = {
+        soundscapes : false
+    };
+    this.soundscape = null;
+    this.lovo = null;
+    this.auto = {};
+    this.activate = function(){
+        var defer = $q.defer();
+
+        a2Soundscapes.getList({show:'thumbnail-path'},function(soundscapes){
+            self.loading.soundscapes = false;
+            self.soundscapes = soundscapes;
+            if(!self.soundscapes_lovo){
+                self.soundscapes_lovo = new a2ArrayLOVO();
+            }
+            self.soundscapes_lovo.setArray(self.soundscapes, 'soundscape');
+            if(!self.lovo){
+                self.lovo = self.soundscapes_lovo;
+                a2RecordingsBrowser.setLOVO(self.lovo);
+            }
+            defer.resolve(false);
+        });
+
+        self.loading.soundscapes = true;
+
+        return defer.promise;
+    };
+    this.resolve={};
+
+    this.resolve_location = function(location){
+        var m = /(\d+)(\/(\d+))?/.exec(location);
+        var defer = $q.defer();
+        if(m){
+            var plid = m[1]|0, recid=m[3]|0;
+            var pld = $q.defer();
+            if(self.loading.soundscapes){
+                self.resolve = { pld : pld };
+            } else {
+                pld.resolve(self.soundscapes);
+            }
+            pld.promise.then(function(soundscapes){
+                var soundscape = self.soundscapes.filter(function(soundscape){
+                    return soundscape.id == plid;
+                }).shift();
+                if(soundscape){
+                    self.soundscape = soundscape;
+                } else {
+                    defer.resolve();
+                }
+            });
+        } else {
+            defer.resolve();
+        }
+        return defer.promise;
+    };
+    this.get_location = function(recording){
+        return 'soundscape/' + this.lovo.soundscape.id + "/" + recording.id;
+    };
+
+    $scope.$watch('browser.$type.soundscape', function(soundscape){
+        // if(soundscape && (self.lovo ? self.lovo.soundscape != soundscape : true)){
+        //     self.lovo = new a2PlaylistLOVO(soundscape);
+        // }
+        // a2RecordingsBrowser.setLOVO(self.lovo);
+    });
+})
+
+.service('a2ArrayLOVO', function($q){
+    var lovo = function(list, object_type){
+        this.offset = 0;
+        this.setArray(list, object_type);
+    };
+
+    lovo.prototype = {
+        initialize: function(){
+            var d = $q.defer();
+            d.resolve(true);
+            return d.promise;
+        },
+        setArray : function(list, object_type){
+            this.list   = list || [];
+            this.count  = this.list.length;
+            this.object_type = object_type;
+        },
+        find : function(soundscape){
+            var d = $q.defer(), id = (soundscape && soundscape.id) || (soundscape | 0);
+            d.resolve(this.list.filter(function(r){
+                return r.id == id;
+            }).shift());
+            return d.promise;
+        },
+        previous : function(soundscape){
+            var d = $q.defer(), id = (soundscape && soundscape.id) || (soundscape | 0);
+            var index = 0;
+            for(var l=this.list, i=0, e=l.length; i < e; ++i){
+                if(s.id == id){
+                    index = Math.min(Math.max(0, i - 1, this.list.length-1));
+                    break;
+                }
+            }
+            d.resolve(this.list[index]);
+            return d.promise;
+        },
+
+        next : function(recording){
+            var d = $q.defer(), id = (soundscape && soundscape.id) || (soundscape | 0);
+            var index = 0;
+            for(var l=this.list, i=0, e=l.length; i < e; ++i){
+                if(s.id == id){
+                    index = Math.min(Math.max(0, i + 1, this.list.length-1));
+                    break;
+                }
+            }
+            d.resolve(this.list[index]);
+            return d.promise;
+        }
+    };
+
+    return lovo;
+})
+
+
 ;
