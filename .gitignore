@@ -12,3 +12,5 @@ public/assets
 a2.komodoproject
 
 *pyc
+
+.env
