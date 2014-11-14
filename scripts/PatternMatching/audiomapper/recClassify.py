@@ -2,8 +2,7 @@
 
 import sys
 import csv
-from recanalizer import Recanalizer
-bucket = 'arbimon2'
+from a2audio.recanalizer import Recanalizer
 import cPickle as pickle
 import tempfile
 import boto
@@ -11,8 +10,8 @@ import os
 from contextlib import closing
 import MySQLdb
 from boto.s3.connection import S3Connection
-from config import Config
-from logger import Logger
+from a2pyutils.config import Config
+from a2pyutils.logger import Logger
 
 jobId = sys.argv[1].strip("'").strip(" ");
 log = Logger(jobId , 'recClassify.py' , 'worker')

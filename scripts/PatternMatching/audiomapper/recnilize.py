@@ -3,13 +3,13 @@
 import sys
 import numpy
 from pylab import *
-from recanalizer import Recanalizer
+from a2audio.recanalizer import Recanalizer
 bucket = 'arbimon2'
 import tempfile
 from contextlib import closing
 import MySQLdb
 import os
-from config import Config
+from a2pyutils.config import Config
 
 tempFolders = tempfile.gettempdir()
 currDir = os.path.dirname(os.path.abspath(__file__))

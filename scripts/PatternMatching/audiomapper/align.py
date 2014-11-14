@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from roiset import Roiset
+from a2audio.roiset import Roiset
 import numpy
 import csv
 import tempfile

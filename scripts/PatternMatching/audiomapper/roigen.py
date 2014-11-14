@@ -8,13 +8,13 @@
 #prints to stdout roi info as well as roi spectrogram
 
 import sys
-from roizer import Roizer
+from a2audio.roizer import Roizer
 from pylab import *
 import tempfile
 import os
 from contextlib import closing
 import MySQLdb
-from config import Config
+from a2pyutils.config import Config
 tempFolders = tempfile.gettempdir()
 currDir = os.path.dirname(os.path.abspath(__file__))
 

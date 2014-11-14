@@ -2,7 +2,7 @@
 
 #simple mapper
 import sys
-from logger import Logger
+from a2pyutils.logger import Logger
 
 jobId = sys.argv[1].strip("'").strip(" ");
 linesExpected = sys.argv[2].strip("'").strip(" ");

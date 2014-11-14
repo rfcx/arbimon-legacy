@@ -6,8 +6,8 @@ import os
 from contextlib import closing
 import MySQLdb
 import tempfile
-from config import Config
-from logger import Logger
+from a2pyutils.config import Config
+from a2pyutils.logger import Logger
 
 jobId = sys.argv[1].strip("'").strip(" ");
 expectedRecordings = sys.argv[2].strip("'").strip(" ");

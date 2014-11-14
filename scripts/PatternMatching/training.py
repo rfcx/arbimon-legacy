@@ -14,6 +14,8 @@ from audiomapper.config import Config
 jobId = sys.argv[1];
 modelName = sys.argv[2].strip("'");
 currDir = os.path.dirname(os.path.abspath(__file__))
+currPython = sys.executable
+
 configuration = Config()
 config = configuration.data()
 db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
@@ -123,11 +125,11 @@ if model_type_id == 1: #Pattern Matching (modified Alvarez thesis)
     print 'started pipe'
     sys.stdout.flush()
     p1 = subprocess.Popen(['/bin/cat' ,trainingFileName], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(currDir+'/audiomapper/trainMap.py', stdin=p1.stdout, stdout=subprocess.PIPE)
-    p3 = subprocess.Popen(currDir+'/audiomapper/roigen.py', stdin=p2.stdout, stdout=subprocess.PIPE)
-    p4 = subprocess.Popen(currDir+'/audiomapper/align.py', stdin=p3.stdout, stdout=subprocess.PIPE)
-    p5 = subprocess.Popen(currDir+'/audiomapper/recnilize.py', stdin=p4.stdout, stdout=subprocess.PIPE)
-    p6 = subprocess.Popen(currDir+'/audiomapper/modelize.py', stdin=p5.stdout, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen([currPython ,currDir+'/audiomapper/trainMap.py'], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p3 = subprocess.Popen([currPython ,currDir+'/audiomapper/roigen.py'], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p4 = subprocess.Popen([currPython ,currDir+'/audiomapper/align.py'], stdin=p3.stdout, stdout=subprocess.PIPE)
+    p5 = subprocess.Popen([currPython ,currDir+'/audiomapper/recnilize.py'], stdin=p4.stdout, stdout=subprocess.PIPE)
+    p6 = subprocess.Popen([currPython ,currDir+'/audiomapper/modelize.py'], stdin=p5.stdout, stdout=subprocess.PIPE)
    
     print p6.communicate( )[0].strip('\n')
     sys.stdout.flush()

@@ -5,14 +5,14 @@ import numpy
 import tempfile
 import shutil
 import os
-from model import Model
+from a2audio.model import Model
 from contextlib import closing
 import MySQLdb
 import json
 import boto
 import png
 from boto.s3.connection import S3Connection
-from config import Config
+from a2pyutils.config import Config
 
 tempFolders = tempfile.gettempdir()
 currDir = os.path.dirname(os.path.abspath(__file__))

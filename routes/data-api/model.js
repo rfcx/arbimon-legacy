@@ -110,7 +110,8 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             var user_id = req.session.user.id;
             model.jobs.newJob({name:name,train:train_id,classifier:classifier_id,user:user_id,pid:project_id},1,
                 function (err,row)
-                {
+                {console.log(__dirname+'/../../.env/bin/python',scriptsFolder+'training.py'
+                                                ,row.insertId , name)
                     if(err)
                     {
                        res.json({ err:"Could not create job"}); 
@@ -133,7 +134,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
                                         {
                                             var python = require('child_process').spawn
                                             (
-                                                'python',
+                                                __dirname+'/../../.env/bin/python',
                                                 [scriptsFolder+'training.py'
                                                 ,trainingId , name]
                                             );
@@ -148,16 +149,16 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
                                             python.on('close',
                                                 function(code)
                                                 { 
-                                                    if (code !== 0) { console.log('returned error')}
-                                                    else console.log('no error, everything ok, training completed');
-                                                    callback();
+                                                    if (code !== 0) { console.log('returned error',code)}
+                                                    else console.log('no error, everything ok, training completed',code);
+                                                    callback(code);
                                                 }
                                             );
                                         }
                                     },
                                     1, // priority
-                                    function() {
-                                        console.log("job done! training", trainingId);
+                                    function(data) {
+                                        console.log("job done! training", trainingId,data);
                                         
                                         model.training_sets.findName(train_id, function(err, rows) {
                                             model.projects.insertNews({
@@ -223,7 +224,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                                         {
                                             var python = require('child_process').spawn
                                             (
-                                                'python',
+                                                __dirname+'/../../.env/bin/python',
                                                 [scriptsFolder+'classification.py'
                                                 ,classificationId , name , allRecs, sitesString, classifier_id, project_id,user_id]
                                             );

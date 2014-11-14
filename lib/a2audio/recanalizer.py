@@ -1,8 +1,7 @@
-from plotter import Plotter
 from rec import Rec
 from pylab import *
 import numpy
-from config import Config
+from a2pyutils.config import Config
 
 class Recanalizer:
     

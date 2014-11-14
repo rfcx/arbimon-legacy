@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import time
 import sys
 import tempfile
@@ -9,8 +10,8 @@ import boto
 import shutil
 import MySQLdb
 from contextlib import closing
-from audiomapper.config import Config
-from audiomapper.logger import Logger
+from a2pyutils.config import Config
+from a2pyutils.logger import Logger
 
 
 jobId = sys.argv[1].strip("'");
@@ -24,6 +25,8 @@ log = Logger(jobId , 'classification.py' , 'main')
 log.write('script started')
 
 currDir = os.path.dirname(os.path.abspath(__file__))
+currPython = sys.executable
+
 configuration = Config()
 config = configuration.data()
 log.write('configuration loaded')
@@ -179,12 +182,12 @@ if model_type_id == 1: #Pattern Matching (modified Alvarez thesis)
     sys.stdout.flush()
     log.write('starting cat of '+classificationFileName)
     p1 = subprocess.Popen(['/bin/cat' ,classificationFileName], stdout=subprocess.PIPE)
-    log.write('audiomapper/classifyMap.py')
-    p2 = subprocess.Popen([currDir+'/audiomapper/classifyMap.py',str(jobId),str(linesInCsvFile)], stdin=p1.stdout, stdout=subprocess.PIPE)
-    log.write('audiomapper/recClassify.py')
-    p3 = subprocess.Popen([currDir+'/audiomapper/recClassify.py',str(jobId)], stdin=p2.stdout, stdout=subprocess.PIPE)
-    log.write('audiomapper/classificationresults.py')
-    p4 = subprocess.Popen([currDir+'/audiomapper/classificationresults.py',str(jobId),str(linesInCsvFile)], stdin=p3.stdout, stdout=subprocess.PIPE)
+    log.write('calling audiomapper/classifyMap.py')
+    p2 = subprocess.Popen([currPython , currDir+'/audiomapper/classifyMap.py',str(jobId),str(linesInCsvFile)], stdin=p1.stdout, stdout=subprocess.PIPE)
+    log.write('calling audiomapper/recClassify.py')
+    p3 = subprocess.Popen([currPython , currDir+'/audiomapper/recClassify.py',str(jobId)], stdin=p2.stdout, stdout=subprocess.PIPE)
+    log.write('calling audiomapper/classificationresults.py')
+    p4 = subprocess.Popen([currPython , currDir+'/audiomapper/classificationresults.py',str(jobId),str(linesInCsvFile)], stdin=p3.stdout, stdout=subprocess.PIPE)
     log.write('waiting for pipe to end')
     jOutput = p4.communicate( )[0].strip('\n')
     log.write('job output: '+jOutput)
