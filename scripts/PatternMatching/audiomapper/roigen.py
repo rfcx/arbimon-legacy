@@ -47,6 +47,9 @@ for line in sys.stdin:
         db.commit()
         
     if "NoAudio" in roi.status:
+        with closing(db.cursor()) as cursor:
+            cursor.execute('INSERT INTO `recordings_errors` (`recording_id`, `job_id`) VALUES ('+str(recId.strip(' '))+','+str(jobId.strip(' '))+') ')
+            db.commit()
         continue
     else:
         dims = roi.spec.shape

@@ -36,7 +36,11 @@ class Rec:
         if audiodata.channels()> 1:
             self.status = 'StereoNotSupported'
             return None
-
+        
+        if audiodata.total_frames() == 0 :
+            self.status = 'NoAudioInFile'
+            return None
+        
         #data reads
         pcmData = audiodata.to_pcm()
 

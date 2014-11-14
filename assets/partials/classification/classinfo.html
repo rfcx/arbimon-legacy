@@ -13,6 +13,7 @@
             <th>Songtype</th>
             <th>Present/Total</th>
             <th>Percentage</th>
+            <th>Damaged Recordings</th>
         </tr>
         <tr ng-repeat="species in data" >
             <td class="no-wrap-table-cell">
@@ -26,6 +27,9 @@
             </td>
             <td>
                 {{species.percentage}}%
+            </td>
+            <td>
+                {{species.err}}
             </td>
         </tr>
     </table>

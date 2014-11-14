@@ -50,16 +50,17 @@ for line in sys.stdin:
     
     #get rec from URI and compute feature vector using the spec vocalization
     recAnalized = Recanalizer(recUri.strip('\n') , spec ,low , high ,columns ,tempFolder, bucket)
-    fets = recAnalized.features()
-    fets.append(classs)
-    fets.append(present)
-    fets.append(specCopy)
-    fets.append(columns)
-    fets.append(low)
-    fets.append(high)
-    fets.append(jId)
-    fets.append(sRate.strip('\n'))
-    #print into stdout for next step (modelize.py)
-    print ';'.join( str(x) for x in fets )
+    if recAnalized.status == 'Processed':
+        fets = recAnalized.features()
+        fets.append(classs)
+        fets.append(present)
+        fets.append(specCopy)
+        fets.append(columns)
+        fets.append(low)
+        fets.append(high)
+        fets.append(jId)
+        fets.append(sRate.strip('\n'))
+        #print into stdout for next step (modelize.py)
+        print ';'.join( str(x) for x in fets )
 
 

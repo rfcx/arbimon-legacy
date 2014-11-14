@@ -29,41 +29,44 @@ router.get('/project/:projectUrl/classifications', function(req, res, next) {
 });
 
 router.get('/project/:projectUrl/classification/:cid', function(req, res, next) {
-
-    model.projects.classificationDetail(req.params.projectUrl,req.params.cid, function(err, rows) {
-        if(err) return next(err);
-        
-        i = 0
-        var data = []
-        var total = []
-        var species =[]
-        var songtype =[]
-        while(i < rows.length)
-        {
-            row = rows[i]
-            var index = row['species_id']+'_'+row['songtype_id'];
-            if (typeof data[index]  == 'number')
+    model.projects.classificationErrors(req.params.projectUrl,req.params.cid , function(err, rowsRecs) {
+        if(err) res.json({"data":[]});
+        rowsRecs =  rowsRecs[0]
+        model.projects.classificationDetail(req.params.projectUrl,req.params.cid, function(err, rows) {
+            if(err) res.json({"data":[]});
+            
+            i = 0
+            var data = []
+            var total = []
+            var species =[]
+            var songtype =[]
+            while(i < rows.length)
             {
-                data[index] = data[index] + parseInt(row['present'])
-                total[index] = total[index] + 1
+                row = rows[i]
+                var index = row['species_id']+'_'+row['songtype_id'];
+                if (typeof data[index]  == 'number')
+                {
+                    data[index] = data[index] + parseInt(row['present'])
+                    total[index] = total[index] + 1
+                }
+                else
+                {
+                    data[index] = parseInt(row['present'])
+                    species[index] = row['scientific_name']
+                    songtype[index] = row['songtype']
+                    total[index] = 1
+                }
+                i = i + 1
             }
-            else
+            var results = []
+            for (var key in species)
             {
-                data[index] = parseInt(row['present'])
-                species[index] = row['scientific_name']
-                songtype[index] = row['songtype']
-                total[index] = 1
+                var per = Math.round( (data[key]/total[key])*100);
+                var rr = {"err":rowsRecs['count'],"species":species[key],"songtype":songtype[key],"total":total[key],"data":data[key],"percentage":per }
+                results.push(rr);
             }
-            i = i + 1
-        }
-        var results = []
-        for (var key in species)
-        {
-            var per = Math.round( (data[key]/total[key])*100);
-            var rr = {"species":species[key],"songtype":songtype[key],"total":total[key],"data":data[key],"percentage":per }
-            results.push(rr);
-        }
-        res.json({"data":results});
+            res.json({"data":results});
+        })
     });
 });
 

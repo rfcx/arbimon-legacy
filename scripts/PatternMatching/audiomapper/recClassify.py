@@ -40,8 +40,11 @@ try:
     bucket = conn.get_bucket(bucket)
 except Exception, ex:
     log.write('fatal error cannot connect to bucket '+ex.error_message)
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `remarks` = \'Error: connecting to bucket.\' where `job_id` = '+str(jId.strip(' ')))
+        db.commit()
     quit()
-
+        
 linesProcessed = 0
 missedRecs = 0
 #reads lines from stdin
@@ -70,11 +73,17 @@ for line in sys.stdin:
             log.write('model was loaded to memory')
         else:
             log.write('fatal error cannot load model')
+            with closing(db.cursor()) as cursor:
+                cursor.execute('update `jobs` set `remarks` = \'Error: cannot load model\' where `job_id` = '+str(jId.strip(' ')))
+                db.commit()
             quit()
         
     #get rec from URI and compute feature vector using the spec vocalization
     recAnalized = Recanalizer(recUri , mod[1] ,mod[2], mod[3] ,mod[4], tempFolder , bucket)
-    
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(jId.strip(' ')))
+        db.commit()
+        
     if recAnalized.status == 'Processed':
         featvector = recAnalized.getVector()
         recName = recUri.split('/')
@@ -87,6 +96,10 @@ for line in sys.stdin:
         if not os.path.isfile(vectorLocal):
             log.write('error writing: '+vectorLocal)
             missedRecs  = missedRecs  + 1
+
+            with closing(db.cursor()) as cursor:
+                cursor.execute('INSERT INTO `recordings_errors`(`recording_id`, `job_id`) VALUES ('+str(recId.strip(' '))+','+str(jId.strip(' '))+') ')
+                db.commit()
         else:   
             vectorUri = modelUri.replace('.mod','') + '/classification_'+ str(jId)+ '_' + recName + '.vector'
             k = bucket.new_key(vectorUri )
@@ -100,19 +113,22 @@ for line in sys.stdin:
             except:
                 log.write('error predicting on recording: '+recUri)
                 noErrorFlag = False
-            
-            if noErrorFlag:
-                with closing(db.cursor()) as cursor:
-                    cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(jId.strip(' ')))
-                    db.commit()
                     
+            if noErrorFlag:
                 print recId,";",res[0],";",jId,";",species,";",songtype,";", min(featvector) ,";",max(featvector)
                 linesProcessed = linesProcessed  + 1
             else:
                 missedRecs  = missedRecs  + 1
+                log.write('error processing recording: '+recUri)
+                with closing(db.cursor()) as cursor:
+                    cursor.execute('INSERT INTO `recordings_errors`(`recording_id`, `job_id`) VALUES ('+str(recId.strip(' '))+','+str(jId.strip(' '))+') ')
+                    db.commit()
 
     else:
         log.write('error processing recording: '+recUri)
+        with closing(db.cursor()) as cursor:
+            cursor.execute('INSERT INTO `recordings_errors`(`recording_id`, `job_id`) VALUES ('+str(recId.strip(' '))+','+str(jId.strip(' '))+') ')
+            db.commit()
         missedRecs = missedRecs + 1
         
 

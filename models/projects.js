@@ -400,7 +400,14 @@ var Projects = {
                 "AND cr.`songtype_id` = st.`songtype_id`  "
 
         queryHandler(q, callback);
-    },   
+    },
+    
+    classificationErrors: function(project_url,cid, callback) {
+        var q = "select count(*) as count "+
+                " from  `recordings_errors`  where `job_id` = "+mysql.escape(cid)
+
+        queryHandler(q, callback);
+    },
     
     classificationDetail: function(project_url,cid, callback) {
         var q = "select  c.`species_id` ,c.`songtype_id`,c.`present`  , "+

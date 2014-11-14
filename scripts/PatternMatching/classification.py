@@ -199,6 +199,9 @@ else:
     print("Unkown model type requested\n");
     log.write('Unkown model type requested')
 
+with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `progress` = `progress` , `completed` = 1  where `job_id` = '+str(jobId.strip(' ')))
+        db.commit()
 db.close()
 log.write('script end')
 log.close()
