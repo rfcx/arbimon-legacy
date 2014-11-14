@@ -75,7 +75,9 @@ for line in sys.stdin:
         
     #get rec from URI and compute feature vector using the spec vocalization
     recAnalized = Recanalizer(recUri , mod[1] ,mod[2], mod[3] ,mod[4], tempFolder , bucket)
-    
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(jId.strip(' ')))
+        db.commit()    
     if recAnalized.status == 'Processed':
         featvector = recAnalized.getVector()
         recName = recUri.split('/')
@@ -102,11 +104,7 @@ for line in sys.stdin:
                 log.write('error predicting on recording: '+recUri)
                 noErrorFlag = False
             
-            if noErrorFlag:
-                with closing(db.cursor()) as cursor:
-                    cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(jId.strip(' ')))
-                    db.commit()
-                    
+            if noErrorFlag:                   
                 print recId,";",res[0],";",jId,";",species,";",songtype,";", min(featvector) ,";",max(featvector)
                 linesProcessed = linesProcessed  + 1
             else:
