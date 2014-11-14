@@ -68,7 +68,7 @@ Bio-Acoustic Analyzer
 
  - install all python dependencies and create virtual enviroment
     ```
-    npm run-script setup    
+    sudo npm run-script setup    
     ```
  - or individual python dependencies (`sudo pip install`):
     - numpy 
@@ -80,6 +80,7 @@ Bio-Acoustic Analyzer
     - matplotlib
     - wsgiref
     - argparse
+    - virtualenv
 
 ---
 
