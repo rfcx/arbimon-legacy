@@ -1,4 +1,4 @@
-angular.module('a2recordingsbrowser', [
+angular.module('a2visobjectsbrowser', [
     'a2utils', 'a2browser_common',
     'a2browser_recordings_by_site', 'a2browser_recordings_by_playlist',
     'a2browser_soundscapes'
@@ -10,23 +10,22 @@ angular.module('a2recordingsbrowser', [
             onVisObject : '&onVisObject'
         },
         templateUrl : '/partials/visualizer/browser/main.html',
-        controller  : 'a2BrowserController'
+        controller  : 'a2VisObjectBrowserController'
     };
 })
-.controller('a2BrowserController', function($scope, $element, $attrs, $timeout, $controller, $q, browser_lovos, itemSelection, Project){
+.controller('a2VisObjectBrowserController', function($scope, $element, $attrs, $timeout, $controller, $q, browser_lovos, itemSelection, Project){
     var self = $scope.browser = this;
     var project = Project;
 
     this.types = browser_lovos.$grouping;
     this.type  = browser_lovos.$list.filter(function(lovo){return lovo.default;}).shift();
-    this.recordings = [];
     this.loading = {
         sites: false,
         dates: false,
         times: false
     };
     this.auto={};
-    this.recording = null;
+    this.visobj = null;
     this.lovo  = null;
     var initialized = false;
     var activate = function(){
@@ -47,9 +46,9 @@ angular.module('a2recordingsbrowser', [
         self.lovo = lovo;
         if(lovo){
             lovo.initialize().then(function(){
-                if(self.auto.recording){
-                    lovo.find(self.auto.recording).then(function(recording){
-                        self.recording = recording;
+                if(self.auto.visobject){
+                    lovo.find(self.auto.visobject).then(function(visobject){
+                        self.visobj = visobject;
                     });
                 }
             });
@@ -65,7 +64,7 @@ angular.module('a2recordingsbrowser', [
             if(!type.$controller){
                 type.$controller = $controller(type.controller, {
                     $scope : $scope,
-                    a2RecordingsBrowser : self
+                    a2Browser : self
                 });
             }
             new_$type = self.$type = type.$controller;
@@ -104,32 +103,32 @@ angular.module('a2recordingsbrowser', [
             }
         });
     });
-    $scope.selectVisObject = function(recording){
-        if(recording) {
+    $scope.selectVisObject = function(visobject){
+        if(visobject) {
             var d = $q.defer();
             d.resolve();
             d.promise.then(function(){
-                return self.lovo && self.lovo.find(recording);
-            }).then(function(r){
-                return r || recording;
-            }).then(function(r){
+                return self.lovo && self.lovo.find(visobject);
+            }).then(function(vobj){
+                return vobj || visobject;
+            }).then(function(vobj){
                 self.auto = {
-                    recording : r
+                    visobject : vobj
                 };
                 if(self.$type.auto_select){
-                    self.$type.auto_select(recording);
+                    self.$type.auto_select(visobject);
                 }
             });
         }
     };
-    $scope.$on('prev-recording', function(){
-        if(self.recording && self.lovo) {
-            self.lovo.previous(self.recording.id).then($scope.selectVisObject);
+    $scope.$on('prev-visobject', function(){
+        if(self.visobject && self.lovo) {
+            self.lovo.previous(self.visobject.id).then($scope.selectVisObject);
         }
     });
-    $scope.$on('next-recording', function(){
-        if(self.recording && self.lovo) {
-            self.lovo.next(self.recording.id).then($scope.selectVisObject);
+    $scope.$on('next-visobject', function(){
+        if(self.visobject && self.lovo) {
+            self.lovo.next(self.visobject.id).then($scope.selectVisObject);
         }
     });
     $scope.$on('set-browser-location',function(evt, location){
@@ -139,9 +138,9 @@ angular.module('a2recordingsbrowser', [
                 var loc = m[3];
                 setBrowserType(browser_lovos[m[1]]).then(function(){
                     return self.$type.resolve_location(loc);
-                }).then(function(recording){
-                    if(recording){
-                        $scope.selectVisObject(recording);
+                }).then(function(visobject){
+                    if(visobject){
+                        $scope.selectVisObject(visobject);
                     }
                 });
             }

@@ -75,6 +75,17 @@ angular.module('a2utils', [])
         return moment(x).utc().format(fmt);
     }
 })
+/** Pluralizes singular words accoring to some heuristics that (hopefully)
+ *  look like english grammar.
+ */
+.filter('plural', function(){
+    return function(x, fmt){
+        if(!x)
+            return undefined;
+            
+        return x +'s';
+    }
+})
 
 angular.module('a2Infotags', [])
 .factory('InfoTagService', ['$location', '$http', function($location, $http){

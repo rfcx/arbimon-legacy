@@ -1,34 +1,34 @@
 <div class="visualizer-root show-spectrogram" a2-scroll="onScrolling()" ng-mousemove="onMouseMove($event)">
-    <div class="on-empty" ng-hide="recording || loading_recording">
+    <div class="on-empty" ng-hide="visobject || loading_visobject">
         Please select a {{visobject_type}}.
     </div>
-    <div a2-visualizer-spectrogram-affixed class="loader" ng-show="loading_recording"
+    <div a2-visualizer-spectrogram-affixed class="loader" ng-show="loading_visobject"
         data-affix-align-h=".5" 
         data-affix-align-v=".5" 
         data-affix-container="viewport"
     >
-        <loader class="blocky big" text="Loading {{loading_recording}}"></loader>        
+        <loader class="blocky big" text="Loading {{loading_visobject}}"></loader>        
     </div>
-    <div a2-visualizer-spectrogram-affixed data-affix-top="20" data-affix-right="40" ng-show="recording">
+    <div a2-visualizer-spectrogram-affixed data-affix-top="20" data-affix-right="40" ng-show="visobject && visobject.zoomable">
         <a2-zoom-control level="layout.scale.zoom.x" horizontal="true"></a2-zoom-control>
     </div>
-    <div a2-visualizer-spectrogram-affixed data-affix-top="40" data-affix-right="20" ng-show="recording">
+    <div a2-visualizer-spectrogram-affixed data-affix-top="40" data-affix-right="20" ng-show="visobject && visobject.zoomable">
         <a2-zoom-control level="layout.scale.zoom.y"></a2-zoom-control>
     </div>
     
-    <svg class="axis-y" ng-show="recording" ></svg>
-    <div class="spectrogram-container" ng-show="recording" >
-        <a2-visualizer-spectrogram-layer ng-repeat="layer in layers | filter: canDisplayInSpectrogram" ng-show="layer.visible" ></a2-visualizer-spectrogram-layer>
+    <svg class="axis-y" ng-show="visobject" ></svg>
+    <div class="spectrogram-container" ng-show="visobject" >
+        <a2-visualizer-spectrogram-layer ng-repeat="layer in layers | filter: canDisplayInSpectrogram" ng-show="isSpectrogramVisible(layer)" ></a2-visualizer-spectrogram-layer>
         <div class="spectrogram-layer playback-head" ng-style="{left:(audio_player.resource ? (audio_player.resource.currentTime * layout.scale.sec2px) : 0)+'px'}"></div>
     </div>
-    <svg class="axis-x" ng-show="recording" ></svg>
+    <svg class="axis-x" ng-show="visobject" ></svg>
 
-    <div a2-visualizer-spectrogram-affixed data-affix-bottom="20" data-affix-align-h=".5" ng-show="recording" class="no-wrap">
-        Time ( s )
+    <div a2-visualizer-spectrogram-affixed data-affix-bottom="20" data-affix-align-h=".5" ng-show="visobject" class="no-wrap">
+        {{ visobject.domain.x.unit || 'Time ( s )'}}
     </div>
 
-    <div a2-visualizer-spectrogram-affixed data-affix-left="10" data-affix-align-v=".5" ng-show="recording">
-        <div class="vertical-text">Frequency ( kHz )</div>
+    <div a2-visualizer-spectrogram-affixed data-affix-left="10" data-affix-align-v=".5" ng-show="visobject">
+        <div class="vertical-text">{{ visobject.domain.y.unit || 'Frequency ( kHz )'}}</div>
     </div>
 
 </div>
