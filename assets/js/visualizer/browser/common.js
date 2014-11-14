@@ -4,6 +4,7 @@ angular.module('a2browser_common', [])
     (lovos.$list = [
         {   name       : 'rec',
             group       : 'recordings',
+            vobject_type: 'recording',
             default    : true,
             icon       : 'fa fa-map-marker',
             tooltip    : 'Browse Recordings by Site',
@@ -12,6 +13,7 @@ angular.module('a2browser_common', [])
         },
         {   name       : 'playlist',
             group       : 'recordings',
+            vobject_type: 'recording',
             icon       : 'fa fa-list',
             tooltip    : "Browse Recordings by Playlist",
             controller : 'a2BrowserRecordingsByPlaylistController',
@@ -19,6 +21,7 @@ angular.module('a2browser_common', [])
         },
         {   name       : 'soundscape',
             group       : 'soundscapes',
+            vobject_type: 'soundscape',
             icon       : 'fa fa-area-chart',
             tooltip    : "Show Soundscapes",
             controller : 'a2BrowserSoundscapesController',

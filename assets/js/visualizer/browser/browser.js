@@ -1,13 +1,13 @@
 angular.module('a2recordingsbrowser', [
     'a2utils', 'a2browser_common',
-    'a2browser_recordings_by_site', 'a2browser_recordings_by_site',
+    'a2browser_recordings_by_site', 'a2browser_recordings_by_playlist',
     'a2browser_soundscapes'
 ])
-.directive('a2RecordingsBrowser', function () {
+.directive('a2VisObjectBrowser', function () {
     return {
         restrict : 'E',
         scope : {
-            onRecording : '&onRecording'
+            onVisObject : '&onVisObject'
         },
         templateUrl : '/partials/visualizer/browser/main.html',
         controller  : 'a2BrowserController'
@@ -35,9 +35,8 @@ angular.module('a2recordingsbrowser', [
                 if(!initialized){
                     initialized = true;
                     $scope.$emit('browser-available');
-                } else if(self.$type.lovo){
-                    self.setLOVO(self.$type.lovo);
                 }
+                self.setLOVO(self.$type.lovo);
             });
         }
 
@@ -56,8 +55,6 @@ angular.module('a2recordingsbrowser', [
             });
         }
     }
-
-    // ng-controller="a2BrowserRecordingsBySiteController"
 
     $scope.$on('a2-persisted', activate);
 
@@ -85,6 +82,9 @@ angular.module('a2recordingsbrowser', [
             if(differ && new_$type && new_$type.activate){
                 activate();
             }
+            
+        }).then(function(){
+            $scope.$emit('browser-vobject-type', type.vobject_type);
         });
     }
 
@@ -92,11 +92,11 @@ angular.module('a2recordingsbrowser', [
         setBrowserType(new_type);
     });
 
-    $scope.$watch('browser.recording', function(newValue, oldValue){
+    $scope.$watch('browser.visobj', function(newValue, oldValue){
         var location = newValue && self.$type.get_location(newValue);
-        $scope.onRecording({location:location, recording:newValue});
+        $scope.onVisObject({location:location, visobject:newValue, type:self.lovo ? self.lovo.object_type : null});
         $timeout(function(){
-            var $e = $element.find('.recording-list-item.active');
+            var $e = $element.find('.visobj-list-item.active');
             if($e.length) {
                 var $p = $e.parent();
                 var $eo = $e.offset(), $po = $p.offset(), $dt=$eo.top-$po.top;
@@ -104,7 +104,7 @@ angular.module('a2recordingsbrowser', [
             }
         });
     });
-    $scope.selectRecording = function(recording){
+    $scope.selectVisObject = function(recording){
         if(recording) {
             var d = $q.defer();
             d.resolve();
@@ -124,12 +124,12 @@ angular.module('a2recordingsbrowser', [
     };
     $scope.$on('prev-recording', function(){
         if(self.recording && self.lovo) {
-            self.lovo.previous(self.recording.id).then($scope.selectRecording);
+            self.lovo.previous(self.recording.id).then($scope.selectVisObject);
         }
     });
     $scope.$on('next-recording', function(){
         if(self.recording && self.lovo) {
-            self.lovo.next(self.recording.id).then($scope.selectRecording);
+            self.lovo.next(self.recording.id).then($scope.selectVisObject);
         }
     });
     $scope.$on('set-browser-location',function(evt, location){
@@ -141,7 +141,7 @@ angular.module('a2recordingsbrowser', [
                     return self.$type.resolve_location(loc);
                 }).then(function(recording){
                     if(recording){
-                        $scope.selectRecording(recording);
+                        $scope.selectVisObject(recording);
                     }
                 });
             }

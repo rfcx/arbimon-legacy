@@ -1,6 +1,6 @@
 <div class="visualizer-root show-spectrogram" a2-scroll="onScrolling()" ng-mousemove="onMouseMove($event)">
-    <div class="title-bar" ng-hide="recording || loading_recording">
-        Please select a recording :-)
+    <div class="on-empty" ng-hide="recording || loading_recording">
+        Please select a {{visobject_type}}.
     </div>
     <div a2-visualizer-spectrogram-affixed class="loader" ng-show="loading_recording"
         data-affix-align-h=".5" 

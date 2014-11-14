@@ -58,8 +58,8 @@ angular.module('a2browser_soundscapes', [])
         }
         return defer.promise;
     };
-    this.get_location = function(recording){
-        return 'soundscape/' + this.lovo.soundscape.id + "/" + recording.id;
+    this.get_location = function(soundscape){
+        return 'soundscape/' + soundscape.id;
     };
 
     $scope.$watch('browser.$type.soundscape', function(soundscape){

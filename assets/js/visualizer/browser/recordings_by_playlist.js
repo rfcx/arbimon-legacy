@@ -1,8 +1,8 @@
-angular.module('a2browser_recordings_by_site', [])
+angular.module('a2browser_recordings_by_playlist', [])
 .service('a2PlaylistLOVO', function($q, a2Playlists){
     var lovo = function(playlist){
         this.playlist = playlist;
-
+        this.object_type = "recording";
         this.offset = 0;
         this.count  = 0;
         this.list   = [];

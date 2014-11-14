@@ -38,7 +38,42 @@ angular.module('visualizer', [
     }
 })
 
-.controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller) {
+.service('VisualizerCtrl_visobj_types', function ($q) {
+    return {
+        recording : {
+            load : function(visobject, $scope){
+                var d = $q.defer();
+                Project.getRecordingInfo(visobject.id, function(data){
+                    visobject.duration = data.stats.duration;
+                    visobject.sampling_rate = data.stats.sample_rate;
+                    // fix up some stuff
+                    visobject.max_freq = data.sampling_rate / 2;
+                    // set it to the scope
+                    if(visobject.audioUrl) {
+                        $scope.audio_player.load(visobject.audioUrl);
+                    }
+                    d.resolve(visobject);
+                });
+                return d.promise;
+            }, 
+            getCaption : function(visobject){
+                return visobject.file;
+            }
+        },
+        soundscape : {
+            load : function(visobject, $scope){
+                var d = $q.defer();
+                d.resolve(visobject);
+                return d.promise;
+            }, 
+            getCaption : function(visobject){
+                return visobject.name;
+            }
+        }
+    }
+})
+
+.controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller, VisualizerCtrl_visobj_types) {
     var update_location_path = function(){
         if($scope.recording){
             var rec  = $scope.recording;
@@ -69,6 +104,7 @@ angular.module('visualizer', [
             $scope.layers.push(new_layer(layer_type));
         }
     };
+    $scope.addLayer('browser-layer');
     $scope.addLayer('recording-layer');
     $scope.addLayer('species-presence');
     $scope.addLayer('training-data');
@@ -123,30 +159,24 @@ angular.module('visualizer', [
     $scope.getLayers = function(){
         return $scope.layers;
     };
-    $scope.setRecording = function(recording, location){
-        if (recording) {
-            $scope.loading_recording = recording.file;
-            Project.getRecordingInfo(recording.id, function(data){
-                // console.log('$scope.setRecording', data);
-                $scope.loading_recording = false;
-                $scope.recording = data;
+    $scope.$on('browser-vobject-type', function(evt, type){
+        console.log("$scope.visobject_type = ",type);
+        $scope.visobject_type = type;
+    });
+    $scope.setVisObject = function(visobject, type, location){
+        console.log('$scope.setVisObject = function(visobject, type, location){', visobject, type, location);
+        if (visobject) {
+            var typedef = VisualizerCtrl_visobj_types[type];
+            
+            $scope.loading_visobject = typedef.getCaption(visobject);
+            
+            typedef.load($scope).then(function (visobject){
+                $scope.loading_visobject = false;
+                $scope.visobject = visobject;
                 $scope.set_location(location);
-                $scope.recording.duration = data.stats.duration;
-                $scope.recording.sampling_rate = data.stats.sample_rate;
-                // fix up some stuff
-                $scope.recording.max_freq = data.sampling_rate / 2;
-                // set it to the scope
-                if($scope.recording.audioUrl) {
-                    $scope.audio_player.load($scope.recording.audioUrl);
-                }
-                // if($scope.recording.imageUrl) {
-                //     $scope.recording.tiles = [
-                //         {x:0, y:0, src:$scope.recording.imageUrl}
-                //     ];
-                // }
             });
         } else {
-            $scope.recording = null;
+            $scope.visobject = null;
         }
     };
     $scope.audio_player = {
@@ -209,8 +239,19 @@ angular.module('visualizer', [
 
 angular.module('visualizer-services', ['a2services'])
 .value('layer_types',{
+    'browser-layer' : {
+        title : "",
+        visible : true,
+        display:{spectrogram:false},
+        sidebar_only : true,
+        hide_visibility : true,
+        type    : "browser-layer"
+    },
     'recording-layer' : {
         title : "",
+        sidebar_visible : function($scope){
+            return $scope.visobject_type == 'recording';
+        },
         visible : true,
         hide_visibility : true,
         type    : "recording-layer"

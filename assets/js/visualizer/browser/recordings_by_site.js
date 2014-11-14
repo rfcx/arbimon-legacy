@@ -7,6 +7,7 @@ angular.module('a2browser_recordings_by_site', [])
         this.initialized = false;
         this.site = site;
         this.date = date;
+        this.object_type = "recording";
         this.offset = 0;
         this.count  = 0;
         this.list   = [];
