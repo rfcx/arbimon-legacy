@@ -48,7 +48,7 @@ angular.module('a2browser_recordings_by_site', [])
     };
     return lovo;
 })
-.controller('a2BrowserRecordingsBySiteController', function($scope, a2RecordingsBrowser, rbDateAvailabilityCache, Project, $timeout, $q, a2RecordingsBySiteLOVO){
+.controller('a2BrowserRecordingsBySiteController', function($scope, a2Browser, rbDateAvailabilityCache, Project, $timeout, $q, a2RecordingsBySiteLOVO){
     var project = Project;
     var self = this;
     // var $scope = pscope.$new();
@@ -169,14 +169,14 @@ angular.module('a2browser_recordings_by_site', [])
             self.auto = {
                 site  : self.sites.filter(function(s){return s.name == recording.site;}).pop(),
                 date  : new Date(recdate.getFullYear(), recdate.getMonth(), recdate.getDate(), 0, 0, 0, 0)
-            }
+            };
 
             if(self.site != self.auto.site) {
                 self.site = self.auto.site;
             } else if (self.date != self.auto.date) {
-                self.date = self.auto.date
+                self.date = self.auto.date;
             } else {
-                a2RecordingsBrowser.setLOVO(make_lovo());
+                a2Browser.setLOVO(make_lovo());
             }
         }
     };
@@ -211,7 +211,7 @@ angular.module('a2browser_recordings_by_site', [])
         self.recordings = [];
         // reset the selections and stuff
         self.date = null;
-        a2RecordingsBrowser.recording = null;
+        a2Browser.recording = null;
         // setup auto-selection
         var auto_select = self.auto && self.auto.date;
         if(auto_select) {
@@ -233,10 +233,10 @@ angular.module('a2browser_recordings_by_site', [])
         var date = self.date;
         if (site && date) {
             if(newValue && oldValue && newValue.getTime() == oldValue.getTime() && self.lovo){
-                a2RecordingsBrowser.setLOVO(self.lovo);
+                a2Browser.setLOVO(self.lovo);
                 return
             } else {
-                a2RecordingsBrowser.setLOVO(make_lovo());
+                a2Browser.setLOVO(make_lovo());
             }
         }
     });

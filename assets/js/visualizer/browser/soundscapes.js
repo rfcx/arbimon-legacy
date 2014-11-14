@@ -1,5 +1,5 @@
 angular.module('a2browser_soundscapes', [])
-.controller('a2BrowserSoundscapesController', function($scope, a2RecordingsBrowser, a2Soundscapes, a2ArrayLOVO, $timeout, $q){
+.controller('a2BrowserSoundscapesController', function($scope, a2Browser, a2Soundscapes, a2ArrayLOVO, $timeout, $q){
     var self = this;
     this.soundscapes = [];
     this.active=false;
@@ -21,9 +21,12 @@ angular.module('a2browser_soundscapes', [])
             self.soundscapes_lovo.setArray(self.soundscapes, 'soundscape');
             if(!self.lovo){
                 self.lovo = self.soundscapes_lovo;
-                a2RecordingsBrowser.setLOVO(self.lovo);
+                a2Browser.setLOVO(self.lovo);
             }
             defer.resolve(false);
+            if(self.resolve.pld){
+                self.resolve.pld.resolve(self.soundscapes);
+            }
         });
 
         self.loading.soundscapes = true;
@@ -49,9 +52,8 @@ angular.module('a2browser_soundscapes', [])
                 }).shift();
                 if(soundscape){
                     self.soundscape = soundscape;
-                } else {
-                    defer.resolve();
                 }
+                defer.resolve(soundscape);
             });
         } else {
             defer.resolve();
@@ -66,6 +68,6 @@ angular.module('a2browser_soundscapes', [])
         // if(soundscape && (self.lovo ? self.lovo.soundscape != soundscape : true)){
         //     self.lovo = new a2PlaylistLOVO(soundscape);
         // }
-        // a2RecordingsBrowser.setLOVO(self.lovo);
+        // a2Browser.setLOVO(self.lovo);
     });
 })

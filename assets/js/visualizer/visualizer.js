@@ -23,7 +23,7 @@ var test_data = {
 
 angular.module('visualizer', [
     'ui.router', 'ngAudio', 
-    'a2services', 'a2utils', 'a2recordingsbrowser', 'a2SpeciesValidator', 
+    'a2services', 'a2utils', 'a2visobjectsbrowser', 'a2SpeciesValidator', 
     'visualizer-layers', 'visualizer-spectrogram', 
     'visualizer-training-sets', 'visualizer-training-sets-roi_set',        
     'visualizer-services'
@@ -38,12 +38,14 @@ angular.module('visualizer', [
     }
 })
 
-.service('VisualizerCtrl_visobj_types', function ($q) {
+.service('VisualizerCtrl_visobj_types', function ($q, Project) {
     return {
         recording : {
+            type : "recording",
             load : function(visobject, $scope){
                 var d = $q.defer();
                 Project.getRecordingInfo(visobject.id, function(data){
+                    visobject = data;
                     visobject.duration = data.stats.duration;
                     visobject.sampling_rate = data.stats.sample_rate;
                     // fix up some stuff
@@ -61,6 +63,7 @@ angular.module('visualizer', [
             }
         },
         soundscape : {
+            type : "soundscape",
             load : function(visobject, $scope){
                 var d = $q.defer();
                 d.resolve(visobject);
@@ -109,13 +112,33 @@ angular.module('visualizer', [
     $scope.addLayer('species-presence');
     $scope.addLayer('training-data');
 
+    var fullfillsRequirements = function(req){
+        if(!req){
+            return true;
+        } else if(req.selection && !$scope.visobject){
+            return false;
+        } else if(req.type && $scope.visobject_type != req.type){
+            return false;
+        }
+        return true;
+    };
     $scope.isSidebarVisible = function(l){
-        return !l.sidebar_visible || l.sidebar_visible($scope);
-    }
+        if(l.sidebar_visible && !l.sidebar_visible($scope)){
+            return false;
+        } else if(!fullfillsRequirements(l.require)){
+            return false;
+        }
+
+        return true;
+    };
+    $scope.isSpectrogramVisible = function(l){
+        return fullfillsRequirements(l.require) && l.visible;
+    };
     $scope.canDisplayInSpectrogram = function(l){
         return !l.display || l.display.spectrogram;
-    }
-    $scope.recording = null;
+    };
+    $scope.visobject = null;
+    
     $scope.set_location = function(location){
         $location.path("/visualizer/"+location);
     };
@@ -150,29 +173,32 @@ angular.module('visualizer', [
         }
     };
     $scope.Math = Math;
-    $scope.pointer   = {
+    $scope.pointer = {
         x   : 0, y  : 0,
         sec : 0, hz : 0
     };
+    
     $scope.selection = itemSelection.make('layer');
 
     $scope.getLayers = function(){
         return $scope.layers;
     };
+    
     $scope.$on('browser-vobject-type', function(evt, type){
-        console.log("$scope.visobject_type = ",type);
         $scope.visobject_type = type;
     });
+    
     $scope.setVisObject = function(visobject, type, location){
-        console.log('$scope.setVisObject = function(visobject, type, location){', visobject, type, location);
+        console.log("$scope.setVisObject = function(visobject, type, location){ :: ", visobject, type, location);
         if (visobject) {
             var typedef = VisualizerCtrl_visobj_types[type];
             
             $scope.loading_visobject = typedef.getCaption(visobject);
             
-            typedef.load($scope).then(function (visobject){
+            typedef.load(visobject, $scope).then(function (visobject){
                 $scope.loading_visobject = false;
                 $scope.visobject = visobject;
+                $scope.visobject_type = typedef.type;
                 $scope.set_location(location);
             });
         } else {
@@ -221,10 +247,10 @@ angular.module('visualizer', [
             this.is_playing = false;
         },
         prev_recording : function(){
-            $scope.$broadcast('prev-recording');
+            $scope.$broadcast('prev-visobject');
         },
         next_recording : function(){
-            $scope.$broadcast('next-recording');
+            $scope.$broadcast('next-visobject');
         },
     };
     $scope.$on('a2-persisted', update_location_path);
@@ -249,8 +275,8 @@ angular.module('visualizer-services', ['a2services'])
     },
     'recording-layer' : {
         title : "",
-        sidebar_visible : function($scope){
-            return $scope.visobject_type == 'recording';
+        require: {
+            type: 'recording'
         },
         visible : true,
         hide_visibility : true,
@@ -259,7 +285,10 @@ angular.module('visualizer-services', ['a2services'])
     'frequency-adjust-layer' : true,
     'species-presence' : {
         title   : "",
-        sidebar_visible : function($scope){return !!$scope.recording;},
+        require: {
+            selection : true,
+            type: 'recording'
+        },
         display:{spectrogram:false},
         sidebar_only : true,
         visible : false,
@@ -269,7 +298,10 @@ angular.module('visualizer-services', ['a2services'])
     'training-data' : {
         title   : "",
         controller : 'a2VisualizerTrainingSetLayerController as training_data',
-        sidebar_visible : function($scope){return !!$scope.recording;},
+        require: {
+            selection : true,
+            type: 'recording'
+        },
         visible : true,
         type    : "training-data",
     }
@@ -576,7 +608,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     }
                 }
             }, true);
-            $scope.$watch('recording', function (newValue, oldValue) {
+            $scope.$watch('visobject', function (newValue, oldValue) {
                 $element.scrollLeft(0);
                 $element.scrollTop(999999);
                 $scope.layout.apply($element.width(), $element.height());
@@ -673,20 +705,19 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
     var fetchTsetData = function(){
         var tset = self.tset && self.tset.name;
         var tset_type = self.tset && self.tset.type;
-        var rec = $scope.recording && $scope.recording.id;
+        var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
         if(tset && rec) {
             if(!self.data || self.data.type != tset_type){
                 var cont_name = tset_type.replace(/(^|-|_)(\w)/g, function(_,_1,_2,_3){ return _2.toUpperCase()});
                 cont_name = 'a2VisualizerTrainingSetLayer'+cont_name+'DataController';
                 self.data = $controller(cont_name,{$scope : $scope});
-                // console.log('data controller is now : ', self.data);
             }
             self.data.fetchData(tset, rec);
         }
     };
 
     $scope.$watch(function(){return self.tset;}, fetchTsetData);
-    $scope.$watch('recording', fetchTsetData);
+    $scope.$watch('visobject', fetchTsetData);
 })
 .directive('a2VisualizerSpectrogramTrainingSetData', function(training_set_types, $compile, $controller, $templateFetch){
     return {
@@ -694,9 +725,7 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
         template : '<div class="training-set-data"></div>',
         replace  : true,
         link     : function(scope, element, attrs){
-            // console.log('a2VisualizerSpectrogramTrainingSetData watching :', attrs.a2VisualizerSpectrogramTrainingSetData, scope);
             scope.$watch(attrs.a2VisualizerSpectrogramTrainingSetData, function(tset_type){
-                // console.log('watching :', attrs.a2VisualizerSpectrogramTrainingSetData, " : ", tset_type);
                 var type_def = training_set_types[tset_type];
                 element.attr('data-tset-type', tset_type);
                 if(type_def) {
