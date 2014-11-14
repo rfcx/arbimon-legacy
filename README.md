@@ -66,7 +66,7 @@ Bio-Acoustic Analyzer
   - grunt-cli
   
 
- - install all python dependencies 
+ - install all python dependencies and create virtual enviroment
     ```
     npm run-script setup    
     ```
@@ -78,6 +78,8 @@ Bio-Acoustic Analyzer
     - boto 
     - pypng  
     - matplotlib
+    - wsgiref
+    - argparse
 
 ---
 
