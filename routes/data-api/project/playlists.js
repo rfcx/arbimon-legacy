@@ -94,7 +94,7 @@ router.post('/add', function(req, res, next) {
 /** Return a playlist's data.
  */
 router.get('/list/:playlist', function(req, res, next) {
-    Playlists.fetchData(req.playlist, req.query, function(err, data) {
+    model.playlists.fetchData(req.playlist, req.query, function(err, data) {
         if(err) return next(err);
 
         res.json(data);
