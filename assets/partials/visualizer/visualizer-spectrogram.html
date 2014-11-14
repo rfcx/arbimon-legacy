@@ -9,10 +9,10 @@
     >
         <loader class="blocky big" text="Loading {{loading_visobject}}"></loader>        
     </div>
-    <div a2-visualizer-spectrogram-affixed data-affix-top="20" data-affix-right="40" ng-show="visobject">
+    <div a2-visualizer-spectrogram-affixed data-affix-top="20" data-affix-right="40" ng-show="visobject && visobject.zoomable">
         <a2-zoom-control level="layout.scale.zoom.x" horizontal="true"></a2-zoom-control>
     </div>
-    <div a2-visualizer-spectrogram-affixed data-affix-top="40" data-affix-right="20" ng-show="visobject">
+    <div a2-visualizer-spectrogram-affixed data-affix-top="40" data-affix-right="20" ng-show="visobject && visobject.zoomable">
         <a2-zoom-control level="layout.scale.zoom.y"></a2-zoom-control>
     </div>
     
@@ -24,11 +24,11 @@
     <svg class="axis-x" ng-show="visobject" ></svg>
 
     <div a2-visualizer-spectrogram-affixed data-affix-bottom="20" data-affix-align-h=".5" ng-show="visobject" class="no-wrap">
-        Time ( s )
+        {{ visobject.domain.x.unit || 'Time ( s )'}}
     </div>
 
     <div a2-visualizer-spectrogram-affixed data-affix-left="10" data-affix-align-v=".5" ng-show="visobject">
-        <div class="vertical-text">Frequency ( kHz )</div>
+        <div class="vertical-text">{{ visobject.domain.y.unit || 'Frequency ( kHz )'}}</div>
     </div>
 
 </div>

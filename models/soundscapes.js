@@ -39,8 +39,12 @@ var Soundscapes = {
         }
 
         return dbpool.queryHandler(
-            "SELECT SC.soundscape_id as id, SC.name, SC.project_id, SC.user_id, SC.uri \n" +
+            "SELECT SC.soundscape_id as id, SC.name, SC.project_id, SC.user_id, \n"+
+            "     SC.min_t, SC.max_t, SC.min_f, SC.max_f, \n" +
+            "     SC.bin_size, SCAT.identifier as aggregation, \n" +
+            "     SC.uri \n" +
             "FROM soundscapes SC \n" +
+            "JOIN soundscape_aggregation_types SCAT ON SC.soundscape_aggregation_type_id = SCAT.soundscape_aggregation_type_id\n" +
             "WHERE " + constraints.join(" \n  AND "), function(err, data){
             if (!err && data){
                 if(options.compute){

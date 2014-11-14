@@ -38,45 +38,131 @@ angular.module('visualizer', [
     }
 })
 
-.service('VisualizerCtrl_visobj_types', function ($q, Project) {
-    return {
-        recording : {
-            type : "recording",
-            load : function(visobject, $scope){
-                var d = $q.defer();
-                Project.getRecordingInfo(visobject.id, function(data){
-                    visobject = data;
-                    visobject.duration = data.stats.duration;
-                    visobject.sampling_rate = data.stats.sample_rate;
-                    // fix up some stuff
-                    visobject.max_freq = data.sampling_rate / 2;
-                    // set it to the scope
-                    if(visobject.audioUrl) {
-                        $scope.audio_player.load(visobject.audioUrl);
-                    }
-                    d.resolve(visobject);
-                });
-                return d.promise;
-            }, 
-            getCaption : function(visobject){
-                return visobject.file;
-            }
-        },
-        soundscape : {
-            type : "soundscape",
-            load : function(visobject, $scope){
-                var d = $q.defer();
-                d.resolve(visobject);
-                return d.promise;
-            }, 
-            getCaption : function(visobject){
-                return visobject.name;
-            }
+.service('VisualizerCtrl_visobj_types', function ($q, Project, $injector) {
+    var type_list = ["recording", "soundscape"];
+    var types = {};
+    var inject = type_list.map(function(type){return 'VisualizerCtrl_visobj_' + type + "_type";});
+    inject.push(function(){ 
+        for(var a=arguments, t=type_list, i=0, e=t.length; i < e; ++i){
+            types[t[i]] = a[i];
         }
-    }
+    });
+    $injector.invoke(inject);    
+    return types;
 })
 
-.controller('VisualizerCtrl', function (layer_types, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller, VisualizerCtrl_visobj_types) {
+.service('VisualizerCtrl_visobj_recording_type', function ($q, Project, $injector) {
+    var recording = function(data){
+        for(var i in data){ this[i] = data[i]; }
+        this.duration      = this.stats.duration;
+        this.sampling_rate = this.stats.sample_rate;
+        // fix up some stuff
+        this.max_freq = this.sampling_rate / 2;
+        // setup the domains
+        this.domain = {
+            x : {
+                from : 0,
+                to   : this.duration,
+                span : this.duration,
+                unit : 'Time ( s )',
+                ticks : 60
+            },
+            y : {
+                from : 0,
+                to   : this.max_freq,
+                span : this.max_freq,
+                unit : 'Frequency ( kHz )',
+                tick_format : function(v){return (v/1000) | 0; }
+            }
+        };
+        // set it to the scope
+        this.tiles.set.forEach((function(tile){
+            tile.src="/api/project/test1/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j;
+        }).bind(this));
+    };
+    recording.fetch = function(visobject){
+        var d = $q.defer();
+        Project.getRecordingInfo(visobject.id, function(data){
+            visobject = new recording(data);
+            d.resolve(visobject);
+        });
+        return d.promise;
+    };
+    recording.load = function(visobject, $scope){
+        return recording.fetch(visobject).then(function(visobject){
+            if(visobject.audioUrl) {
+                $scope.audio_player.load(visobject.audioUrl);
+            }
+            return visobject;
+        });
+    };
+    recording.prototype = {
+        type : "recording",
+        zoomable : true,
+        getCaption : function(){
+            return this.file;
+        }
+    };
+    return recording;
+})
+
+.service('VisualizerCtrl_visobj_soundscape_type', function ($q, Project, $injector) {
+    var soundscape = function(data){
+        for(var i in data){ this[i] = data[i]; }
+        
+        var t0=this.min_t, t1=this.max_t;
+        var f0=this.min_f, f1=this.max_f;
+        var dt= t1 - t0  , df= f1 - f0  ;
+        
+        var time_unit = ({
+            'time_of_day'   : 'Time (Hour in Day)',
+            'day_of_month'  : 'Time (Day in Month)',
+            'day_of_year'   : 'Time (Day in Year )',
+            'month_in_year' : 'Time (Month in Year)',
+            'day_of_week'   : 'Time (Weekday) ',
+            'year'          : 'Time (Year) '
+        })[this.aggregation];
+
+        // setup the domains
+        this.domain = {
+            x : {
+                from : t0, to : t1, span : dt, ticks : dt,
+                unit : time_unit || 'Time ( s )'
+            },
+            y : {
+                from : f0, to : f1, span : df,
+                unit : 'Frequency ( kHz )',
+                tick_format : function(v){return (v/1000) | 0; }
+            }
+        };
+        // set it to the scope
+        this.tiles = { x:1, y:1, set : [{
+            i:0, j:0, 
+            s : 0, hz : f1, ds  : dt, dhz : df,
+            src : this.thumbnail,
+            crisp : true
+        }]};
+        console.log(this.tiles.set[0]);
+    };
+    soundscape.fetch = function(visobject){
+        var d = $q.defer();
+        visobject = new soundscape(visobject);
+        d.resolve(visobject);
+        return d.promise;
+    };
+    soundscape.load = function(visobject, $scope){
+        return soundscape.fetch(visobject);
+    };
+    soundscape.prototype = {
+        type : "soundscape",
+        getCaption : function(){
+            return this.name;
+        }
+    };
+    return soundscape;
+})
+
+.controller('VisualizerCtrl', function (a2VisualizerLayers, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller, VisualizerCtrl_visobj_types) {
     var update_location_path = function(){
         if($scope.recording){
             var rec  = $scope.recording;
@@ -84,59 +170,26 @@ angular.module('visualizer', [
             $scope.set_location((rec.lovo || 'rec') + '/' + (rec.id));
         }
     };
-    var new_layer = function(layer_type){
-        var layer_def = layer_types[layer_type];
-        if (layer_def) {
-            var layer_maker = function(){};
-            layer_maker.prototype = layer_def;
-            var layer = new layer_maker();
-            if (layer.controller && typeof layer.controller == 'string') {
-                var cname = /^(.*?)( as (.*?))$/.exec(layer.controller);
-                if(cname) {
-                    layer[cname[2] ? cname[3] : 'controller'] = $controller(cname[1], {$scope : $scope});
-                }
-            }
-            return layer;
-        } else {
-            return null;
-        }
-    }
-    $scope.layers = []; // current layers in the visualizer
-    $scope.addLayer = function(layer_type){
-        if(layer_types[layer_type]) {
-            $scope.layers.push(new_layer(layer_type));
-        }
-    };
-    $scope.addLayer('browser-layer');
-    $scope.addLayer('recording-layer');
-    $scope.addLayer('species-presence');
-    $scope.addLayer('training-data');
 
-    var fullfillsRequirements = function(req){
-        if(!req){
-            return true;
-        } else if(req.selection && !$scope.visobject){
-            return false;
-        } else if(req.type && $scope.visobject_type != req.type){
-            return false;
-        }
-        return true;
-    };
-    $scope.isSidebarVisible = function(l){
-        if(l.sidebar_visible && !l.sidebar_visible($scope)){
-            return false;
-        } else if(!fullfillsRequirements(l.require)){
-            return false;
-        }
+    var layers = new a2VisualizerLayers($scope);
+    var layer_types = layers.types;
+    
+    $scope.layers = layers.list; // current layers in the visualizer
+    $scope.addLayer = layers.add.bind(layers);
+    $scope.fullfillsRequirements   = layers.check_requirements.bind(layers);
+    $scope.isSidebarVisible        = layers.sidebar_visible.bind(layers);
+    $scope.isSpectrogramVisible    = layers.spectrogram_visible.bind(layers);
+    $scope.canDisplayInSidebar     = layers.display_sidebar.bind(layers);
+    $scope.canDisplayInSpectrogram = layers.display_spectrogram.bind(layers);
 
-        return true;
-    };
-    $scope.isSpectrogramVisible = function(l){
-        return fullfillsRequirements(l.require) && l.visible;
-    };
-    $scope.canDisplayInSpectrogram = function(l){
-        return !l.display || l.display.spectrogram;
-    };
+    layers.add(
+        'base-image-layer',
+        'browser-layer',
+        'recording-layer',
+        'species-presence',
+        'training-data'
+    );    
+    
     $scope.visobject = null;
     
     $scope.set_location = function(location){
@@ -189,16 +242,13 @@ angular.module('visualizer', [
     });
     
     $scope.setVisObject = function(visobject, type, location){
-        console.log("$scope.setVisObject = function(visobject, type, location){ :: ", visobject, type, location);
         if (visobject) {
             var typedef = VisualizerCtrl_visobj_types[type];
-            
-            $scope.loading_visobject = typedef.getCaption(visobject);
-            
+            $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);            
             typedef.load(visobject, $scope).then(function (visobject){
                 $scope.loading_visobject = false;
                 $scope.visobject = visobject;
-                $scope.visobject_type = typedef.type;
+                $scope.visobject_type = visobject.type;
                 $scope.set_location(location);
             });
         } else {
@@ -261,7 +311,7 @@ angular.module('visualizer', [
     });
 
     // $scope.setRecording(test_data.recording);
-})
+});
 
 angular.module('visualizer-services', ['a2services'])
 .value('layer_types',{
@@ -275,20 +325,22 @@ angular.module('visualizer-services', ['a2services'])
     },
     'recording-layer' : {
         title : "",
-        require: {
-            type: 'recording'
-        },
+        require: {type:'recording'},
         visible : true,
         hide_visibility : true,
         type    : "recording-layer"
     },
+    'base-image-layer' : {
+        title   : "",
+        require : {type:['recording', 'soundscape'], selection : true},
+        display : {sidebar:false},
+        visible : true,
+        type    : "base-image-layer",
+    },    
     'frequency-adjust-layer' : true,
     'species-presence' : {
         title   : "",
-        require: {
-            selection : true,
-            type: 'recording'
-        },
+        require: {type:'recording', selection : true},
         display:{spectrogram:false},
         sidebar_only : true,
         visible : false,
@@ -298,13 +350,81 @@ angular.module('visualizer-services', ['a2services'])
     'training-data' : {
         title   : "",
         controller : 'a2VisualizerTrainingSetLayerController as training_data',
-        require: {
-            selection : true,
-            type: 'recording'
-        },
+        require: {type:'recording', selection : true},
         visible : true,
         type    : "training-data",
     }
+})
+.service('a2VisualizerLayers', function(layer_types, $controller){
+    var layers = function($scope){
+        this.$scope = $scope;
+        this.list   = [];
+    };
+    layers.prototype = {
+        types : layer_types,
+        __new_layer__ : function(layer_type){
+            var layer_def = this.types[layer_type];
+            if (layer_def) {
+                var layer_maker = function(){};
+                layer_maker.prototype = layer_def;
+                var layer = new layer_maker();
+                if (layer.controller && typeof layer.controller == 'string') {
+                    var cname = /^(.*?)( as (.*?))$/.exec(layer.controller);
+                    if(cname) {
+                        layer[cname[2] ? cname[3] : 'controller'] = $controller(cname[1], {$scope : this.$scope});
+                    }
+                }
+                return layer;
+            } else {
+                return null;
+            }
+        },
+        add   : function(){
+            for(var a=arguments, i=0, e=a.length; i < e; ++i){
+                var layer_type = a[i];
+                if(layer_types[layer_type]) {
+                    this.list.push(this.__new_layer__(layer_type));
+                }
+            }
+        },
+        check_requirements : function(req){
+            if(!req){
+                return true;
+            } else if(req.selection && !this.$scope.visobject){
+                return false;
+            } else if(req.type){
+                if(req.type instanceof Array){
+                    var idx = req.type.indexOf(this.$scope.visobject_type);
+                    if(idx==-1){
+                        return false;
+                    }
+                } else if( this.$scope.visobject_type != req.type){
+                    return false;
+                }
+            }
+            return true;
+        },
+        sidebar_visible : function(l){
+            if(l.sidebar_visible && !l.sidebar_visible($scope)){
+                return false;
+            } else if(!this.check_requirements(l.require)){
+                return false;
+            }
+
+            return true;
+        },
+        spectrogram_visible : function(l){
+            return this.check_requirements(l.require) && l.visible;
+        },
+        display_sidebar : function(l){
+            return !l.display || l.display.sidebar !== false;
+        },
+        display_spectrogram : function(l){
+            return !l.display || l.display.spectrogram !== false;
+        }
+    };
+    
+    return layers;
 })
 .service('training_set_types',function(Project){
     return {
@@ -462,26 +582,38 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 $scope.pointer.hz  = y / $scope.layout.scale.hz2px;
             };
             $scope.layout.apply = function(width, height, fix_scroll_center){
-                var recording = $scope.recording || {duration:60, max_freq:22050};
+                console.log("$scope.recording : ", $scope.visobj);
+                var visobject = $scope.visobject;
+                var domain = (visobject && visobject.domain) || {
+                    x : {
+                        from : 0, to : 60, span : 60, ticks : 60,
+                        unit : 'Time ( s )'
+                    },
+                    y : {
+                        from : 0, to : 22050, span : 22050,
+                        unit : 'Frequency ( kHz )',
+                        tick_format : function(v){return (v/1000) | 0; }
+                    }
+                }
                 var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
                 var avail_h = height - layout_tmp.axis_sizeh - layout_tmp.axis_lead - layout_tmp.gutter;
                 var cheight = $element[0].clientHeight;
                 var zoom_levels_x = [
-                    avail_w/recording.duration,
+                    avail_w/domain.x.span,
                     $scope.layout.scale.max_sec2px
                 ];
                 var zoom_levels_y = [
-                    avail_h/recording.max_freq,
+                    avail_h/domain.y.span,
                     $scope.layout.scale.max_hz2px
                 ];
                 var zoom_sec2px = interpolate($scope.layout.scale.zoom.x, zoom_levels_x);
                 var zoom_hz2px  = interpolate($scope.layout.scale.zoom.y, zoom_levels_y);
                 
-                var spec_w = Math.max(avail_w, Math.ceil(recording.duration * zoom_sec2px));
-                var spec_h = Math.max(avail_h, Math.ceil(recording.max_freq * zoom_hz2px ));
+                var spec_w = Math.max(avail_w, Math.ceil(domain.x.span * zoom_sec2px));
+                var spec_h = Math.max(avail_h, Math.ceil(domain.y.span * zoom_hz2px ));
 
-                var scalex = d3.scale.linear().domain([0, recording.duration]).range([0, spec_w]);
-                var scaley = d3.scale.linear().domain([0, recording.max_freq]).range([spec_h, 0]);
+                var scalex = d3.scale.linear().domain([domain.x.from, domain.x.to]).range([0, spec_w]);
+                var scaley = d3.scale.linear().domain([domain.y.from, domain.y.to]).range([spec_h, 0]);
                 var l={};                
                 l.spectrogram = { selector : '.spectrogram-container', css:{
                     top    : layout_tmp.axis_lead,
@@ -510,8 +642,8 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 };
                 //l.x_axis.attr.height = cheight - l.x_axis.css.top - 1;
                 
-                $scope.layout.scale.sec2px = spec_w / recording.duration;
-                $scope.layout.scale.hz2px  = spec_h / recording.max_freq;
+                $scope.layout.scale.sec2px = spec_w / domain.x.span;
+                $scope.layout.scale.hz2px  = spec_h / domain.y.span;
                 $scope.layout.viewport = {
                     left : l.spectrogram.css.left,
                     top  : l.spectrogram.css.top,
@@ -553,7 +685,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     attr('class', 'axis').
                     attr('transform', 'translate('+ layout_tmp.axis_lead +', 1)').
                     call(d3.svg.axis().
-                        ticks(recording.duration).
+                        ticks(domain.x.ticks).
                         scale(scalex).
                         orient("bottom")
                     );
@@ -576,7 +708,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     attr('class', 'axis').
                     attr('transform', 'translate('+ (layout_tmp.axis_sizew-1) +', '+ layout_tmp.axis_lead +')').
                     call(d3.svg.axis().
-                        tickFormat(function(x){return (x/1000.0);}).
+                        tickFormat(domain.y.tick_format).
                         scale(scaley).
                         orient("left")
                     );
@@ -633,6 +765,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
         templateUrl : '/partials/visualizer/spectrogram-layer/default.html',
         replace  : true,
         link     : function(scope, element, attrs){
+            console.log("link     : function(scope, element, attrs){", scope, element, attrs);
             var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
             var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
             element.addClass(layer_type);

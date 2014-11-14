@@ -14,13 +14,10 @@
         <div class="col-sm-12">
             <div class="nav nav-pills nav-stacked visobj-list" role="menu" aria-labelledby="dLabel">
                 <div class="visobj-list-item" ng-show="browser.loading.times">
-                    <i class="fa fa-spinner fa-spin"></i> Loading {{browser.lovo.type}}
+                    <i class="fa fa-spinner fa-spin"></i> Loading {{browser.type.vobject_type | plural}}
                 </div>
-                <div class="visobj-list-item" ng-show="!browser.loading.times && !browser.lovo">
-                    (No {{browser.type.group}} selected)
-                </div>
-                <div class="visobj-list-item" ng-show="!browser.loading.times && browser.lovo && !browser.lovo.list">
-                    (No {{browser.lovo.type}} in list)
+                <div class="visobj-list-item" ng-show="!browser.loading.times && !browser.lovo.list.length ">
+                    (No {{browser.type.vobject_type | plural}} in list)
                 </div>
                 <div class="visobj-list-item"
                     ng-hide="browser.loading.times"
