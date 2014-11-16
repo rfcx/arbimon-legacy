@@ -1,4 +1,4 @@
-angular.module('home', ['ui.bootstrap'])
+angular.module('home', ['templates-arbimon2', 'ui.bootstrap'])
 .controller('HomeCtrl', function($scope, $http, $modal) {
     
     $scope.loadProjectList = function() {
