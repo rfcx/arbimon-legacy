@@ -5,9 +5,9 @@ var Joi   = require('joi');
 var util  = require('util');
 
 
-var sqlutil      = require('../utils/sqlutil');
-var dbpool       = require('../utils/dbpool');
-var model   = require('../models');
+var sqlutil = require('../utils/sqlutil');
+var dbpool = require('../utils/dbpool');
+var model = require('../models');
 
 // local variables
 var s3;
@@ -100,7 +100,7 @@ var Playlists = {
         ), function(err, data){
             if(err){ callback(err); return; }
             var ids = data.map(function(row){
-                return row.recording_id
+                return row.recording_id;
             });
             model.recordings.findByUrlMatch({id:ids}, null, {compute:query && query.show}, callback);
         });
@@ -153,6 +153,34 @@ var Playlists = {
             var q = "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
                     "VALUES " + values.join(",\n       ");
             
+            queryHandler(q, callback);
+        });
+    },
+    
+    rename: function(playlist, callback) {
+        var schema = {
+            id: Joi.number().required(),
+            name: Joi.string().required()
+        };
+        
+        Joi.validate(playlist, schema, function(err, pls) {
+            var q = "UPDATE playlists \n"+
+                    "SET name = %s \n"+
+                    "WHERE playlist_id = %s";
+                    
+            q = util.format(q, mysql.escape(pls.name), mysql.escape(pls.id));
+            queryHandler(q, callback);
+        });
+    },
+    
+    remove: function(playlist_ids, callback) {
+        var schema = Joi.array().includes(Joi.number());
+        
+        Joi.validate(playlist_ids, schema, function(err, ids) {
+            var q = "DELETE FROM playlists \n"+
+                    "WHERE playlist_id IN (%s)";
+                    
+            q = util.format(q, mysql.escape(ids));
             queryHandler(q, callback);
         });
     }

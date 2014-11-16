@@ -1,0 +1,30 @@
+<div class="row">
+    <div class="col-sm-4">
+        <button class="btn btn-default" 
+            ng-click="edit()"
+            tooltip="Edit Name"
+            tooltip-trigger="mouseenter">
+            <i class="fa fa-pencil"></i>
+        </button>
+        <button class="btn btn-danger"
+            ng-click="del()"
+            tooltip="Delete"
+            tooltip-trigger="mouseenter">
+            <i class="fa fa-trash"></i>
+        </button>
+    </div>
+    <div class="col-sm-4">
+        <input class="form-control" type="text" placeholder="Search" ng-model="search.name">
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-8">
+        <a2-table fields="fields" rows="playlists" checked="checked" search="search" selected="selected"></a2-table>
+        <div class="jumbotron" ng-show="(!playlists || !playlists.length > 0) && !loading">
+            <h3>
+                No playlists found
+            </h3>
+        </div>
+        <loader ng-hide="!loading"></loader>
+    </div>
+</div>

@@ -22,10 +22,10 @@ $.expr.filter.UP_PARENT_SPECIAL = function(_1){
             }
             matches[i] = p;
             seed[i] = !p;
-        })
+        });
         
         return true;
-    })
+    });
 };
 $.expr.match.needsContext = new RegExp($.expr.match.needsContext.source + '|^(\^)');
 $.expr.match.UP_PARENT_SPECIAL = /^(\^+)/;
@@ -51,7 +51,7 @@ angular.module('a2directives', ['a2services'])
                 $timeout(function(){
                     $scope.onkeyup({$event:evt});
                 });
-            }
+            };
             $(document).on('keyup', handler);
             $element.on('$destroy', function() {
                 $(document).off('keyup', handler);
@@ -94,9 +94,9 @@ angular.module('a2directives', ['a2services'])
                 // console.log('$scope.set_by_mouse', [px,py]);
                 var level = $scope.horizontal ? px : py;
                 $scope.level = $scope.switched ? (1-level) : level;
-            }
+            };
         }
-    }
+    };
 })
 .directive('a2Table', ['$filter', function($filter) {
     return {
@@ -104,10 +104,11 @@ angular.module('a2directives', ['a2services'])
         scope: {
             fields: '=',
             rows: '=',
+            selected: '=?',
             onSelect: '&',
             extSort: '&',
-            checked: '=',
-            search: '=',
+            checked: '=?',
+            search: '=?',
             noCheckbox: '@',
             noSelect: '@',
             dateFormat: '@'
@@ -147,8 +148,8 @@ angular.module('a2directives', ['a2services'])
                     }
                 }
 
-                for(var i in scope.rows) {
-                    scope.rows[i].checked = allFalse;
+                for(var j in scope.rows) {
+                    scope.rows[j].checked = allFalse;
                 }
 
                 scope.checkall = allFalse;

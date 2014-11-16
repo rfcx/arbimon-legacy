@@ -219,7 +219,6 @@ angular.module('a2services',[])
         }
     }; 
 }])
-
 .factory('a2TrainingSets', function(Project, $http) {
     return {
         getList: function(callback) {
@@ -247,7 +246,7 @@ angular.module('a2services',[])
         getData: function(training_set, recording_uri, callback) {
             if( recording_uri instanceof Function ) {
                 callback = recording_uri;
-                recording_uri = ""
+                recording_uri = "";
             }
             
             var projectName = Project.getName();
@@ -290,50 +289,52 @@ angular.module('a2services',[])
         }
     };
 })
-
 .factory('a2Playlists', function(Project, $http) {
+    var projectName = Project.getName();
+    
     return {
         getList: function(callback) {
-            var projectName = Project.getName();
-            $http.get('/api/project/'+projectName+'/playlists/').success(function(data) {
+            $http.get('/api/project/'+projectName+'/playlists/')
+            .success(function(data) {
                 callback(data);
             });
         },
 
-        add: function(playlistParams, callback) {
-            var projectName = Project.getName();
-            $http.post('/api/project/'+projectName+'/playlists/add', playlistParams).success(function(data) {
+        create: function(playlistParams, callback) {
+            $http.post('/api/project/'+projectName+'/playlists/create', playlistParams)
+            .success(function(data) {
                 callback(data);
             });
         },
         
-        // addData: function(playlist, tset_data, callback) {
-        //     var projectName = Project.getName();
-        //     $http.post('/api/project/'+projectName+'/playlists/add-data/'+playlist, tset_data).success(function(data) {
-        //         callback(data);
-        //     });
-        // },
+        rename: function(playlist, callback) {
+            $http.post('/api/project/'+projectName+'/playlists/rename', playlist)
+            .success(function(data) {
+                callback(data);
+            });
+        },
+        
+        remove: function(playlistIds, callback) {
+            $http.post('/api/project/'+projectName+'/playlists/delete', 
+            {
+                playlists: playlistIds
+            })
+            .success(function(data) {
+                callback(data);
+            });
+        },
         
         getData: function(playlist, query, callback) {
-            var projectName = Project.getName();
             $http({
                 method : 'GET',
-                url    : '/api/project/'+projectName+'/playlists/list/'+playlist,
+                url    : '/api/project/'+projectName+'/playlists/'+playlist,
                 params : query
             }).success(function(data) {
                 callback(data);
             });
         },
-
-        // getTypes: function(callback) {
-        //     var projectName = Project.getName();
-        //     $http.get('/api/project/'+projectName+'/playlists/types').success(function(data) {
-        //         callback(data);
-        //     });
-        // },
     };
 })
-
 .factory('Species',['$http', function($http){
     var species;
 
@@ -356,7 +357,6 @@ angular.module('a2services',[])
         }
     };
 }])
-
 .factory('Songtypes',['$http', function($http){
     var songs;
 
