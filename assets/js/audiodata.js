@@ -399,7 +399,6 @@ angular.module('audiodata', [
 })
 .factory('a2TrainingSetHistory',
     function(){
-
         var lastSet, 
             lastPage,
             lastRoi,
