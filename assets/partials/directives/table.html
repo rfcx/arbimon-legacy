@@ -2,7 +2,7 @@
 <thead>
     <tr>
         <th ng-hide="noCheck">
-            <input type="checkbox" ng-model="checkall" ng-change="toggleAll()">
+            <input type="checkbox" ng-disabled="!rows.length" ng-model="checkall" ng-change="toggleAll()">
         </th>
         <th ng-repeat="field in fields" ng-click="sortBy(field)">
             {{ field.name }}

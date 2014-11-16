@@ -1,0 +1,20 @@
+<div class="modal-header">
+    <h3>Rename playlist</h3>
+</div>
+
+<div class="modal-body">
+    <form>
+        <div class="form-group">
+            <label for="name">Playlist name</label>
+            <input type="text"
+                name="name"
+                id="name" 
+                class="form-control"
+                ng-model="pname">
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="$close(pname)"><i class="fa fa-floppy-o"></i> Save &amp; Close </button>
+    <button class="btn" ng-click="$dismiss()"><i class="fa fa-times"></i> Close</button>
+</div>
