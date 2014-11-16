@@ -5,6 +5,8 @@ var util = require('util');
 var gravatar = require('gravatar');
 
 var model = require('../../../models');
+
+// routes
 var recording_routes = require('./recordings');
 var training_set_routes = require('./training_sets');
 var playlist_routes = require('./playlists');

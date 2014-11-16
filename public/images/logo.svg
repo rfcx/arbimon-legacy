@@ -66,10 +66,10 @@
          id="text2989"
          y="418.66568"
          x="226.86041"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#90cfb0;fill-opacity:1;stroke:none;font-family:Sans"
+         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#90cfb0;fill-opacity:1;stroke:none;font-family:'Times New Roman', serif;"
          xml:space="preserve"><tspan
-           style="font-size:34.20000076px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#90cfb0;fill-opacity:1;font-family:Serif;-inkscape-font-specification:Serif"
-           y="418.66568"
+           style="font-size:34.20000076px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#90cfb0;fill-opacity:1;font-family:'Times New Roman', serif;"
+           y="416.66568"
            x="226.86041"
            id="tspan2991"
            sodipodi:role="line">II</tspan></text>
@@ -78,9 +78,9 @@
          id="text2985"
          y="412.10245"
          x="204.22078"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#777777;fill-opacity:1;stroke:none;font-family:Sans"
+         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#777777;fill-opacity:1;stroke:none;font-family:Arial, sans-serif;"
          xml:space="preserve"><tspan
-           style="font-size:18px;fill:#777777;fill-opacity:1"
+           style="font-size:18px;fill:#555;fill-opacity:1"
            y="412.10245"
            x="204.22078"
            id="tspan2987"
