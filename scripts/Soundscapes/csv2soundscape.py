@@ -15,7 +15,6 @@ USAGE = """
     aggregations=', '.join(soundscape.aggregations.keys())
 )
 
-
 if len(sys.argv) < 7:
     print USAGE
     sys.exit()
@@ -38,7 +37,7 @@ using_file = (peaks_file != "-")
 
 try:
     finp = open(peaks_file, "r") if using_file else sys.stdin
-    scp = soundscape.Soundscape(finp, aggregation, bin_size, max_bins)
+    scp = soundscape.Soundscape(aggregation, bin_size, max_bins,finp)
 finally:
     if using_file:
         finp.close()

@@ -81,6 +81,7 @@ Bio-Acoustic Analyzer
     - wsgiref
     - argparse
     - virtualenv
+    - joblib
 
 ---
 

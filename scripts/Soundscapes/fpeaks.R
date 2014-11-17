@@ -1,7 +1,6 @@
-cat('started\n')
 args = commandArgs(TRUE)
-library(seewave)
-library(tuneR)
+suppressMessages(suppressWarnings(library(seewave)))
+suppressMessages(suppressWarnings(library(tuneR)))
 archivo<- readWave(args[1])
 AmplPeaks = c()
 if(length(archivo@left)>0)
@@ -21,17 +20,14 @@ if(length(archivo@left)>0)
     if (p[1]>=1)
     {
         pico<-data.frame(picos)
-    
+        aa = c()
         AmplPeaks<-lapply(1:length(pico[,1]),
                             function (ii)
                             {
-                                f<-pico[ii,1]			
-                                Amplitud<-pico[ii,2]	
-                                PeaksFrec=f
-                                aa=cbind(PeaksFrec,Amplitud)
+                                cat(pico[ii,1])
+                                cat(',')
                             }
                         )
     }
 }
-AmplPeaks
-length(AmplPeaks)
+

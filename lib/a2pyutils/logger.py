@@ -5,7 +5,7 @@ from time import gmtime, strftime
 class Logger:
     def __init__(self,jobId,script,logFor='worker'):
         tempFolders = tempfile.gettempdir()
-        self.workingFolder = tempFolders+"/logs/classification_"+str(jobId)
+        self.workingFolder = tempFolders+"/logs/job_"+str(jobId)
         if not os.path.exists(self.workingFolder):
             os.makedirs(self.workingFolder)
             
@@ -29,7 +29,9 @@ class Logger:
         self.log_file_handle.write(message)
     
     def close(self):
+        self.write('end of log')
         self.log_file_handle.close()
         
     def __exit__(self, type, value, traceback):
+        self.write('end of log')
         self.log_file_handle.close()

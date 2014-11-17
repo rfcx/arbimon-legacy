@@ -10,7 +10,7 @@ class Rec:
     samples = 0
     sample_rate = 0
 
-    def __init__(self, uri , tempFolder,configData,bucket = 'arbimon2'):
+    def __init__(self, uri , tempFolder,configData,bucket = 'arbimon2',removeFile=True):
         self.config = configData
         self.localFiles = tempFolder
         self.bucket = bucket    # bucket name
@@ -50,11 +50,15 @@ class Rec:
         #length of the original waveform
         self.samples = len(self.original)
         pcmData.close()
-
-        #remove temporary file
-        os.remove(self.localFiles+self.filename)
+        
+        self.localfilename = self.localFiles+self.filename
         if 'flac' in self.filename:
-             os.remove(self.localFiles+self.filename+".wav")
+             self.localfilename = self.localFiles+self.filename+".wav"
+             
+        #remove temporary file
+        if removeFile:
+            os.remove(self.localfilename)
+
         self.status = 'HasAudioData'
 
     def getAudioFromUri(self): #function that copies file from amazon bucket to local machine
@@ -79,6 +83,8 @@ class Rec:
             index = index + 1    
         
         return data    
-
+    
+    def getLocalFileLocation(self):
+        return self.localfilename;
 
 
