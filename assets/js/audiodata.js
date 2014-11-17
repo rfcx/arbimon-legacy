@@ -7,7 +7,7 @@ angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angu
        function ($injector, $location , $state)
        {
             var m, path = $location.path();
-
+console.log(audiodataHistory ,path)
             if(m=/audiodata\/?(.*)/.exec(path))
             {
                 audiodataVisited  = true;

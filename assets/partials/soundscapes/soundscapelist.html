@@ -1,0 +1,50 @@
+<div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">
+  <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+  {{ successInfo }}
+</div>
+<div class="alert alert-danger alert-dismissible"  role="alert" id="errorDiv" ng-show="showError">
+  <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+  {{ errorInfo }}
+</div>
+<div class="alert alert-info alert-dismissible"  role="alert" id="infoDiv" ng-show="showInfo">
+  <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+  {{ infoInfo }}
+</div>
+<div class="col-sm-8 span8" >
+    <h3>Soundscapes <a class="btn btn-sm btn-default"  tooltip="Create New Soundscape" tooltip-placement="right"  ng-click="createNewClassification()" ><i class="fa fa-plus" ></i></a></h3> 
+    <!--
+    <table ng-table="tableParams" class="table" >
+        <tr ng-repeat="classification in classificationsData" >
+            <td data-title="'Date'" >
+                {{classification.date}}
+            </td>
+            <td data-title="'Name'" ">
+                {{classification.cname}}
+            </td>
+            <td data-title="'Type'" sortable="'mtname'" filter="{ 'mtname': 'text' }">
+                {{model.mtname}}
+            </td>
+            <td data-title="'User'" class="no-wrap-table-cell">
+                {{classification.muser}}
+            </td>
+            <td data-title="'Model'" class="no-wrap-table-cell">
+                {{classification.modname}}
+            </td>         
+            <td>
+                <button class="btn btn-default btn-xs" ng-click="showClassificationDetails(classification.job_id)">Show details</button>
+            </td>
+            <td>
+                <button class="btn btn-default btn-xs" ng-click="deleteModel(model.model_id,model.mname)">Delete</button>
+            </td>
+            <td>
+                <button class="btn btn-default btn-xs" ng-click="newClassification(model.model_id,model.mname)">New Classification</button>
+            </td>
+            
+            <td data-ng-hide="true">
+                {{classification.job_id}}
+            </td>
+        </tr>
+    </table>
+    -->
+    {{ infopanedata }}
+</div>

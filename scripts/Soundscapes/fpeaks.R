@@ -20,7 +20,6 @@ if(length(archivo@left)>0)
     if (p[1]>=1)
     {
         pico<-data.frame(picos)
-        aa = c()
         AmplPeaks<-lapply(1:length(pico[,1]),
                             function (ii)
                             {

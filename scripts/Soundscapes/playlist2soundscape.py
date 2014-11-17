@@ -13,6 +13,16 @@ from soundscape import soundscape
 from a2pyutils.config import Config
 from a2pyutils.logger import Logger
 from a2audio.rec import Rec
+
+##to do
+# job progrss in jobs table
+#
+#
+#
+##
+#will change this to a external configuration file
+num_cores = int(math.floor(multiprocessing.cpu_count() /2))
+
 currDir = (os.path.dirname(os.path.realpath(__file__)))
 USAGE = """
 {prog} job_id playlist_id max_hertz bin_size aggregation imageout.png scidxout.scidx
@@ -96,7 +106,6 @@ if len(recsToProcess) < 1:
     log.close()
     sys.exit()
     
-num_cores = int(math.floor(multiprocessing.cpu_count() /2))
 
 
 def processRec(rec):
@@ -138,9 +147,14 @@ if len(resultsParallel)>0:
         if result != None:
             freqs = result['freqs'].strip(',')
             freqs = [float(i) for i in freqs.split(',')]
-            scp.insert_peaks(result['date'],freqs,result['id'])
+            if len(freqs) > 0 :
+                scp.insert_peaks(result['date'],freqs,result['id'])
     scp.write_image(imgout)
     scp.write_index(scidxout)
+    """
+    save to bucket (project_2/soundscapes/1/image.png)
+    save to database (soundscape_id 	name 	project_id 	user_id 	soundscape_aggregation_type_id 	bin_size 	uri 	min_t 	max_t 	min_f 	max_f 	min_value 	max_value )
+    """
 else:
     print 'no results from playlist id:'+playlist_id
     log.write('no results from playlist id:'+playlist_id) 

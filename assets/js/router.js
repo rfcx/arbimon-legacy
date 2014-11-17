@@ -4,8 +4,7 @@ var arbimon2 = angular.module('arbimon2', [
     'visualizer', 
     'dashboard', 
     'audiodata',
-    'models',
-    'classification',
+    'analysis',
     'jobs'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
@@ -38,13 +37,9 @@ var arbimon2 = angular.module('arbimon2', [
         reloadOnSearch : false,
         template: '<a2-persistent name="visualizer"><a2-visualizer></a2-visualizer></a2-persistent>'
     })
-    .state('models', {
-        url: '/models',
-        template: '<a2-models></a2-models>'
-    })
-    .state('classify', {
-        url: '/classify',
-        template: '<a2-classification></a2-classification>'
+    .state('analysis', {
+        url: '/analysis',
+        templateUrl: '/partials/analysis/index.html'
     })
     .state('jobs', {
         url: '/jobs',
