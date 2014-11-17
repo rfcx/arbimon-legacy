@@ -53,10 +53,17 @@
                 <div ng-repeat="roi in currentrois" class="roi-div-inline">
                     <div tooltip-placement="right" tooltip="Duration: {{roi.dur}}s  Bandwidth:{{roi.y1}}-{{roi.y2}}Hz">
                         <div class="roi-div-inline-remove">
-                            <i ng-click="removeRoi(roi.id)" tooltip-placement="right" tooltip="Remove ROI from Training Set" class="fa fa-times"></i>
+                            <button ng-click="removeRoi(roi.id)"
+                                class="roi-delete"
+                                tooltip-placement="right" 
+                                tooltip="Remove ROI from Training Set">
+                                <i class="fa fa-times"></i>
+                            </button>
                         </div>
                         <div class="roi-div-inline-vis">
-                            <a ng-href="/project/{{projecturl}}/#/visualizer/rec/{{roi.recording}}"><i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i></a>
+                            <a ng-href="/project/{{projecturl}}/#/visualizer/rec/{{roi.recording}}">
+                                <i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i>
+                            </a>
                         </div>
                         <a2-training-set-data-image training-set="selectedSet" datum="roi" class="roi-div-inline-img" ></a2-training-set-data-image>
                     </div>
@@ -80,8 +87,18 @@
                             <small>
                                 <div class="col-sm-5" >Duration: {{currentDuration}}s</div>
                                 <div class="col-sm-5" >{{currentlow}}-{{currenthigh}}Hz</div>
-                                <div class="col-sm-1" ><a ng-href="{{currentUrl}}"><i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i></a></div>
-                                <div class="col-sm-1" class="roi-div-inline-remove-detail" ><i ng-click="removeRoi(currentId)" tooltip="Remove ROI from Training Set" class="fa fa-times"></i></div>
+                                <div class="col-sm-1" >
+                                    <a ng-href="{{currentUrl}}">
+                                        <i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i>
+                                    </a>
+                                </div>
+                                <div class="col-sm-1" class="roi-div-inline-remove-detail" >
+                                    <button class="roi-delete"
+                                        ng-click="removeRoi(currentId)" 
+                                        tooltip="Remove ROI from Training Set">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
                             </small>
                         </div>
                         <img ng-src="{{currentUri}}" class="roi-div-inline-img-detail"/>
