@@ -28,7 +28,8 @@ def uint2BEbytes(x, n):
 
 
 def BEbytes2uint(b):
-    return sum([long(b[i]) << (8*(len(b) - 1 - i)) for i in range(len(b))])
+    v = sum([long(b[i]) << (8*(len(b) - 1 - i)) for i in range(len(b))])
+    return v
 
 
 def write_scidx(filename, index, recordings, offsetx, width, offsety, height):
@@ -43,7 +44,9 @@ def write_scidx(filename, index, recordings, offsetx, width, offsety, height):
     #     field 	desc
     #     "SCIDX " 	6 byte magic number
     #     version   2 byte uint
+    #     offsetx   2 byte uint
     #     width 	2 byte uint
+    #     offsety   2 byte uint
     #     height 	2 byte uint
     #     rec_count 	3 byte uint
     #     rec_bytes 	1 byte uint
@@ -86,9 +89,10 @@ def write_scidx(filename, index, recordings, offsetx, width, offsety, height):
             # update the row_pointers[y] location to the current file position
             row_pointers[y].update()
             row = index[off_y]
+            # fout.write(struct.pack(">6s", "[ROW ]"))
             # setup an array of positions relative to row (one per cell)
             cell_pointers = [
-                file_pointer_write_loc(fout, row_pointers[y].pos)
+                file_pointer_write_loc(fout)  # , row_pointers[y].pos)
                 for x in range(width)
             ]
             # write each cell
@@ -105,11 +109,24 @@ def write_scidx(filename, index, recordings, offsetx, width, offsety, height):
                     # file position, relative to row_pointers[y]
                     cell_pointers[x].update()
                     cell = row[off_x]
+                    # fout.write(struct.pack(">6s", "[CELL]"))
                     fout.write(struct.pack(">H", len(cell)))
                     for rec in cell:
                         fout.write(struct.pack(
                             rcfmt, *uint2BEbytes(rec_idx[rec], rcbytes)
                         ))
+
+
+def read_cell_recs(finp, rcfmt, rcbytes, count):
+    p = finp.tell()
+    finp.seek(0, 2)
+    fp = finp.tell()
+    finp.seek(p)
+    for i in range(count):
+        assert(finp.tell() < fp)
+        yield BEbytes2uint(struct.unpack(
+            rcfmt, finp.read(rcbytes)
+        ))
 
 
 def read_scidx(filename, filter=None):
@@ -123,13 +140,18 @@ def read_scidx(filename, filter=None):
         [float('-inf'), float('inf'), float('-inf'), float('inf')],
     )]
 
-    fin = file(filename, "rb")
+    finp = file(filename, "rb")
+    finp.seek(0, 2)
+    fendpos = finp.tell()
+    finp.seek(0)
     # read header
     # file :
     #     field 	desc
     #     "SCIDX " 	6 byte magic number
     #     version   2 byte uint
+    #     offsetx   2 byte uint
     #     width 	2 byte uint
+    #     offsety   2 byte uint
     #     height 	2 byte uint
     #     rec_count 	3 byte uint
     #     rec_bytes 	1 byte uint
@@ -140,7 +162,7 @@ def read_scidx(filename, filter=None):
     #                   begining of each entry of rows[]
     #     rows[] 	array of row structures of size height
     magic, VERSION, offsetx, width, offsety, height = struct.unpack(
-        ">6sHHHHH", fin.read(12)
+        ">6sHHHHH", finp.read(16)
     )
 
     if not filter.get("ignore_offsets", False):
@@ -149,20 +171,20 @@ def read_scidx(filename, filter=None):
         miny -= offsety
         maxy -= offsety
 
-    rcount = BEbytes2uint(struct.unpack(">BBB", fin.read(3)))
-    rcbytes, = struct.unpack(">B", fin.read(1))
+    rcount = BEbytes2uint(struct.unpack(">BBB", finp.read(3)))
+    rcbytes, = struct.unpack(">B", finp.read(1))
     rcfmt = ">" + ("B"*rcbytes)
     # read pointer of start of row pointers array
-    rows_ptr_start, = struct.unpack(">Q", fin.read(8))
+    rows_ptr_start, = struct.unpack(">Q", finp.read(8))
     # read list of recording ids
     # rec structure :
     #     field 	desc
     #     rec_id 	8 byte uint - id of the recording in the database
-    recordings = [struct.unpack(">Q", fin.read(8)) for i in range(rcount)]
+    recordings = struct.unpack(">" + ("Q" * rcount), finp.read(8 * rcount))
     # seek to pointer of start of row pointers array
-    fin.seek(rows_ptr_start)
+    finp.seek(rows_ptr_start)
     # read array of file positions of each row
-    row_pointers = [struct.unpack(">Q", fin.read(8)) for y in range(height)]
+    row_pointers = struct.unpack(">" + ("Q" * height), finp.read(8 * height))
     # read each row
     # row structure :
     #     field 	desc
@@ -176,27 +198,39 @@ def read_scidx(filename, filter=None):
             off_y = offsety + y
             row = {}
             index[off_y] = row
+            # syncer, = struct.unpack(">6s", finp.read(6))
+            # print "(%s, %s) row : %r : %s <= %s <= %s :: %s x %s" % (
+            #     hex(row_pointers[y]), hex(fendpos), syncer, miny, y,
+            #     maxy, width, height
+            # )
             # read array positions relative to row (one per cell)
-            cell_pointers = [
-                struct.unpack(">Q", fin.read(8))
-                for y in range(width)
-            ]
+            cell_pointers = struct.unpack(
+                ">" + ("Q" * width), finp.read(8 * width)
+            )
+            # print cell_pointers
             # read each cell
             # cell structure :
             #     field 	desc
             #     count 	2 byte uint - number of recordings in indices[]
             #     indices[] 	array of rec_bytes byte uints of size count -
             #                   indicates indices in recs[] lists
-            for x in range(width) and minx <= x <= maxx:
-                if cell_pointers[x]:
+            for x in range(width):
+                if cell_pointers[x] and minx <= x <= maxx:
                     # seek to cell location denoted by cell_pointers[x],
                     # relative to row_pointers[y]
-                    fin.seek(cell_pointers[x] + row_pointers[y])
-                    cell_count, = struct.unpack(">H", fin.read(2))
+                    # finp.seek(cell_pointers[x] + row_pointers[y])
+                    finp.seek(cell_pointers[x])
+                    # syncer, = struct.unpack(">6s", finp.read(6))
+                    # print "(%s, %s)   cell : %r : %s <= %s <= %s :: %s" % (
+                    #     hex(cell_pointers[x]),
+                    #     hex(fendpos),
+                    #     syncer, minx, x,
+                    #     maxx, width
+                    # )
+                    cell_count, = struct.unpack(">H", finp.read(2))
+                    # print cell_count, rcfmt, rcbytes
                     row[offsetx + x] = [
-                        recordings[BEbytes2uint(struct.pack(
-                            rcfmt, fin.read(rcbytes)
-                        ))]
-                        for i in range(cell_count)
+                        recordings[i]
+                        for i in read_cell_recs(finp, rcfmt, rcbytes, cell_count)
                     ]
-    return (index, recordings, offsetx, width, offsety, height)
+    return (index, recordings, offsetx, width, offsety, height, minx, maxx, miny, maxy)
