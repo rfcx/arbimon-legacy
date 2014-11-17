@@ -16,7 +16,7 @@ var Species = {
         queryHandler(q, callback);
     },
     
-    userFeed: function(user_id, callback) {
+    userFeed: function(user_id, page, callback) {
         Users.projectList(user_id, function(err, rows){
             if(err) return callback(err);
             
@@ -37,12 +37,13 @@ var Species = {
                     "JOIN users AS u ON u.user_id = n.user_id \n"+
                     "JOIN projects AS p ON n.project_id = p.project_id \n"+
                     "WHERE n.project_id IN ( %s ) \n"+
-                    "ORDER BY n.timestamp DESC";
+                    "ORDER BY n.timestamp DESC \n"+
+                    "LIMIT %s, 10";
 
             
-            q = util.format(q, mysql.escape(project_ids));
+            q = util.format(q, mysql.escape(project_ids), mysql.escape(page*10));
         	queryHandler(q, callback);
-        })
+        });
     }
 };
 

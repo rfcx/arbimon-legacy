@@ -25,7 +25,9 @@ router.get('/projectlist', function(req, res, next) {
     }
 });
 
-router.get('/feed', function(req, res) {
+router.get('/feed/:page', function(req, res) {
+    
+    var page = req.params.page;
     
     async.parallel({
         formats: function(callback) {
@@ -42,7 +44,7 @@ router.get('/feed', function(req, res) {
             });
         },
         news: function(callback) {
-            model.news.userFeed(req.session.user.id, function(err, rows) {
+            model.news.userFeed(req.session.user.id, page, function(err, rows) {
                 if(err) return callback(err);
                 
                 callback(null, rows);
@@ -51,7 +53,7 @@ router.get('/feed', function(req, res) {
     },
     function(err, results) {
         
-        console.log(results);
+        // console.log(results);
         
         var feed = results.news.map(function(row){
             row.image_url = gravatar.url(row.email, { d: 'monsterid', s: 30 }, https=req.secure);
