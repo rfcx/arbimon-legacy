@@ -73,7 +73,15 @@ angular.module('a2utils', [])
             return undefined;
             
         return moment(x).utc().format(fmt);
-    }
+    };
+})
+.filter('paginate', function() {
+    return function(arr, currentPage, limitPerPage) {
+        if(!arr)
+            return undefined;
+        
+        return arr.slice((currentPage-1)*limitPerPage, currentPage*limitPerPage);
+    };
 })
 /** Pluralizes singular words accoring to some heuristics that (hopefully)
  *  look like english grammar.
@@ -86,6 +94,9 @@ angular.module('a2utils', [])
         return x +'s';
     }
 })
+;
+
+
 
 angular.module('a2Infotags', [])
 .factory('InfoTagService', ['$location', '$http', function($location, $http){
@@ -143,5 +154,5 @@ angular.module('a2Infotags', [])
             });
         }
     };
-});
+})
 ;

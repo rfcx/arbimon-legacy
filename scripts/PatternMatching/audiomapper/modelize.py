@@ -171,7 +171,7 @@ for i in classes:
         
         cursor.execute('update `jobs` set `last_update` = now() where `job_id` = '+str(jobId))
         db.commit()
-        cursor.execute('update `jobs` set `progress` = `progress_steps` ,  `completed` = 1  where `job_id` = '+str(jobId))
+        cursor.execute('update `jobs` set `progress` = `progress_steps` ,  `completed` = 1 , `last_update` = now() where `job_id` = '+str(jobId))
         db.commit()
 
 #remore temporary directory

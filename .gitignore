@@ -19,3 +19,5 @@ a2.komodoproject
 
 # python compiled binaries
 *pyc
+
+.env

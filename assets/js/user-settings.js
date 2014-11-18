@@ -1,4 +1,4 @@
-angular.module('settings', ['ui.bootstrap'])
+angular.module('settings', ['templates-arbimon2', 'ui.bootstrap'])
 .controller('UserSettingsCtrl', function($scope, $modal, $http){
     
     $http.get('/api/user/info')

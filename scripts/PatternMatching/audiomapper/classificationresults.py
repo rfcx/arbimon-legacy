@@ -65,7 +65,7 @@ with closing(db.cursor()) as cursor:
                    " (`job_id`, `json_stats`) "+
                    " VALUES ("+jobId+",'"+jsonStats+"');" )
     db.commit()
-    cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(jobId.strip(' ')))
+    cursor.execute('update `jobs` set `progress` = `progress_steps` ,  `completed` = 1 , `last_update` = now() where `job_id` = '+str(jobId))
     db.commit()
 
 db.close()

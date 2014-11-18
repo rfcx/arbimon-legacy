@@ -2,6 +2,16 @@ var express = require('express');
 var router = express.Router();
 var model = require('../../../models');
 
+/** Return a list of all the playlists in a project.
+ */
+router.get('/', function(req, res, next) {
+    model.playlists.find({project:req.project.project_id}, {count:true}, function(err, count) {
+        if(err) return next(err);
+
+        res.json(count);
+        return null;
+    });
+});
 
 router.param('playlist', function(req, res, next, playlist){
     model.playlists.find({
@@ -19,35 +29,32 @@ router.param('playlist', function(req, res, next, playlist){
 });
 
 
-/** Return a list of all the playlists in a project.
+/** Return a playlist's data.
  */
-router.get('/', function(req, res, next) {
-    model.playlists.find({project:req.project.project_id}, {count:true}, function(err, count) {
+router.get('/:playlist', function(req, res, next) {
+    model.playlists.fetchData(req.playlist, req.query, function(err, data) {
         if(err) return next(err);
 
-        res.json(count);
+        res.json(data);
         return null;
     });
 });
 
-// /** Return a list of all the playlist types in a project (actually in the system).
-//  */
-// router.get('/types', function(req, res, next) {
-//     model.playlists.getTypes(function(err, types) {
-//         if(err) return next(err);
-// 
-//         res.json(types);
-//         return null;
-//     });
-// });
+
+router.use(function(req, res, next) { 
+    if(!req.haveAccess(req.project.project_id, "manage playlists"))
+        return res.json({ error: "you dont have permission to 'manage playlists'" });
+    
+    next();
+});
 
 
 /** Add a playlist to a project.
  */
-router.post('/add', function(req, res, next) {
+router.post('/create', function(req, res, next) {
     
     if(!req.body.playlist_name || !req.body.params)
-        res.json({ error: "missing parameters"})
+        return res.json({ error: "missing parameters"});
         
     model.playlists.find({ 
         name: req.body.playlist_name,
@@ -95,12 +102,25 @@ router.post('/add', function(req, res, next) {
  */
 router.get('/list/:playlist', function(req, res, next) {
     model.playlists.fetchData(req.playlist, req.query, function(err, data) {
-        if(err) return next(err);
 
+        if(err) return next(err);
+        
         res.json(data);
-        return null;
     });
 });
+
+router.post('/delete', function(req, res, next) {
+    if(!req.body.playlists)
+        return res.json({ error: "missing paramenters" });
+    
+    model.playlists.remove(req.body.playlists, function(err, results) {
+        if(err) return next(err);
+        
+        res.json({ success: true });
+    });
+    
+});
+
 
 
 

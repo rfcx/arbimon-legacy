@@ -137,6 +137,7 @@ module.exports = function(grunt) {
                     'assets/js/router.js',
                     'assets/js/visualizer/**/*.js',
                     'assets/js/home.js',
+                    'assets/js/visualizer/*.js',
                     'assets/js/dashboard.js',
                     'assets/js/audiodata.js',
                     'assets/js/a2services.js',
@@ -145,6 +146,7 @@ module.exports = function(grunt) {
                     'assets/js/a2directives.js',
                     'assets/js/models.js',
                     'assets/js/classification.js',
+                    'assets/js/jobs.js',
                     'assets/js/user-settings.js',
                     'assets/js/jobs.js',
                     'assets/js/analysis.js',
@@ -220,9 +222,9 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-express-server');
     grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks('grunt-html2js')
+    grunt.loadNpmTasks('grunt-html2js');
 
     grunt.registerTask('build', ['copy', 'less', 'html2js', 'concat']);
     grunt.registerTask('default', ['build']);
-    grunt.registerTask('server', ['express:dev', 'watch']);
+    grunt.registerTask('server', ['build', 'express:dev', 'watch']);
 };

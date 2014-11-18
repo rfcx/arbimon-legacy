@@ -37,8 +37,8 @@ class Rec:
             self.status = 'StereoNotSupported'
             return None
         
-        if audiodata.total_frames() == 0 :
-            self.status = 'NoAudioInFile'
+        if audiodata.total_frames() == 0:
+            self.status = 'NoData'
             return None
         
         #data reads

@@ -1,16 +1,22 @@
-angular.module('audiodata', ['a2services', 'a2directives', 'ui.bootstrap', 'angularFileUpload','visualizer-training-sets'])
+angular.module('audiodata', [
+    'a2services', 
+    'a2directives', 
+    'ui.bootstrap', 
+    'angularFileUpload',
+    'visualizer-training-sets'
+])
 .config(function($stateProvider, $urlRouterProvider) {
    var audiodataHistory = [];
    var audiodataVisited = false;
     $urlRouterProvider
-    .rule(  //audiodata HISTORY route
+    .rule(  //audiodata route HISTORY
        function ($injector, $location , $state)
        {
-            var m, path = $location.path();
-console.log(audiodataHistory ,path)
-            if(m=/audiodata\/?(.*)/.exec(path))
+            var path = $location.path();
+            var m =/audiodata\/?(.*)/.exec(path);
+            if(m)
             {
-                audiodataVisited  = true;
+                audiodataVisited = true;
                 
                 if (audiodataHistory.length==2)
                 {
@@ -18,36 +24,36 @@ console.log(audiodataHistory ,path)
                     var loc1 = audiodataHistory[1].split('/');
                     if(loc0[1] != loc1[1])
                     {
-                        audiodataHistory.pop()
+                        audiodataHistory.pop();
                         $location.replace().path(audiodataHistory[0]); 
                     }
                     else
                     {
-                        audiodataHistory.pop()
-                        audiodataHistory.pop()
-                        if (path != "")
-                            audiodataHistory.push(path)  
+                        audiodataHistory.pop();
+                        audiodataHistory.pop();
+                        if (path !== "")
+                            audiodataHistory.push(path);
                     }
                 }
                 else
                 {
-                    audiodataHistory.pop()
-                    if (path != "")
-                        audiodataHistory.push(path)
+                    audiodataHistory.pop();
+                    if (path !== "")
+                        audiodataHistory.push(path);
                 }
             }
             else if (audiodataVisited)
             {
                 if(audiodataHistory.length==2)
                 {
-                    audiodataHistory.pop()
-                    if (path != "")
-                        audiodataHistory.push(path)
+                    audiodataHistory.pop();
+                    if (path !== "")
+                        audiodataHistory.push(path);
                 }
                 else
                 {
-                    if (path != "")
-                        audiodataHistory.push(path)
+                    if (path !== "")
+                        audiodataHistory.push(path);
                 }
             }
        }
@@ -68,6 +74,11 @@ console.log(audiodataHistory ,path)
         url: '/training-sets',
         controller: 'TrainingSetsCtrl',
         templateUrl: '/partials/audiodata/training-sets.html'
+    })
+    .state('audiodata.playlists', {
+        url: '/playlists',
+        controller: 'PlaylistCtrl',
+        templateUrl: '/partials/audiodata/playlists.html'
     });
 })
 .controller('RecsCtrl', function($scope, Project, $http, $modal, a2Playlists) {
@@ -202,7 +213,7 @@ console.log(audiodataHistory ,path)
         });
         
         modalInstance.result.then(function(playlistName) {
-            a2Playlists.add({
+            a2Playlists.create({
                 playlist_name: playlistName,
                 params: listParams
             },
@@ -210,7 +221,7 @@ console.log(audiodataHistory ,path)
                 console.log(data);
             });
         });
-    }
+    };
     
     /* $scope.edit = function() {
         
@@ -259,13 +270,14 @@ console.log(audiodataHistory ,path)
     $scope.verifyAndUpload = function() {
         $scope.uploader.queue.forEach(function(item) {
             
-            Project.recExists($scope.info.site.id, item.file.name.split('.')[0], function(exists) {                
+            Project.recExists($scope.info.site.id, item.file.name.split('.')[0], function(exists) {
                 if(item.isSuccess) // file uploaded on current batch
                     return;
                 
                 if(exists) {
                     console.log('duplicated');
-                    return item.isDuplicate = true;
+                    item.isDuplicate = true;
+                    return;
                 }
                 
                 item.formData.push({ project: JSON.stringify($scope.project) });
@@ -387,8 +399,14 @@ console.log(audiodataHistory ,path)
 })
 .factory('a2TrainingSetHistory',
     function(){
-        var lastSet=undefined,lastPage=undefined,lastRoi=undefined,lastRoiSet=undefined
-            ,viewState=undefined,lastSpecie=undefined,lastSongtype=undefined;
+        var lastSet, 
+            lastPage,
+            lastRoi,
+            lastRoiSet,
+            viewState,
+            lastSpecie,
+            lastSongtype;
+            
         return {
             getLastSet : function(callback)
             {
@@ -422,17 +440,18 @@ console.log(audiodataHistory ,path)
             };
     }
 )
-.controller('TrainingSetsCtrl', function($scope, a2TrainingSets,Project,$modal,a2TrainingSetHistory) {
+.controller('TrainingSetsCtrl', function($scope, a2TrainingSets, Project, $modal, a2TrainingSetHistory) {
     $scope.fields = [
         { name: 'Name', key: 'name' },
         { name: 'Set type', key: 'type' },
         { name: 'Date created', key: 'date_created' },
     ];
     
-    $scope.rois = []
-    $scope.selectedName = ''
-    $scope.species = ''
-    $scope.songtype = ''
+    $scope.rois = [];
+    $scope.selectedName = '';
+    $scope.species = '';
+    $scope.songtype = '';
+    
     a2TrainingSets.getList(function(data){
         $scope.sets = data.map(function(d) {
             d.date_created = new Date(d.date_created);
@@ -509,7 +528,10 @@ console.log(audiodataHistory ,path)
         }
         else
         {
-            $scope.currentrois = $scope.rois.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+            $scope.currentrois = $scope.rois.slice( 
+                ($scope.currentPage ) * $scope.roisPerpage, 
+                ($scope.currentPage+1) * $scope.roisPerpage
+            );
         }
     };
     
@@ -521,7 +543,10 @@ console.log(audiodataHistory ,path)
         }
         else
         {
-            $scope.currentrois = $scope.rois.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+            $scope.currentrois = $scope.rois.slice(
+                ($scope.currentPage ) * $scope.roisPerpage, 
+                ($scope.currentPage+1) * $scope.roisPerpage
+            );
         }
     };
     
@@ -533,7 +558,7 @@ console.log(audiodataHistory ,path)
                 for(var i = 0 ; i < $scope.rois.length ; i++)
                 {
                     if ($scope.rois[i].id == id){
-                        $scope.rois.splice(i,1)
+                        $scope.rois.splice(i,1);
                         break;
                     }
                 }
@@ -550,11 +575,14 @@ console.log(audiodataHistory ,path)
                     $scope.currenthigh = $scope.roi.y2;
                     $scope.currentId = $scope.roi.id;
                     $scope.currentUri = $scope.roi.uri;
-                    $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage)
+                    $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage);
                     if($scope.currentPage>($scope.totalpages-1)){
                         $scope.currentPage = $scope.totalpages-1;
                     }
-                    $scope.currentrois =  $scope.rois.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+                    $scope.currentrois =  $scope.rois.slice(
+                        ($scope.currentPage ) * $scope.roisPerpage, 
+                        ($scope.currentPage+1) * $scope.roisPerpage
+                    );
                 }else {$scope.rois = [];$scope.norois = true;}
             }
         });
@@ -577,7 +605,7 @@ console.log(audiodataHistory ,path)
                 });
             });
         });
-    }
+    };
 
     a2TrainingSetHistory.getLastSet(
         function(data)
@@ -591,9 +619,10 @@ console.log(audiodataHistory ,path)
                 $scope.detailedView = data.vs;
                 $scope.totalRois = data.lrs.length;
                 $scope.currentPage = data.lp;
-                $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage)
+                $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage);
+                
                 if ($scope.totalRois>0) {
-                    if (data.lr == undefined){
+                    if (data.lr === undefined){
                         data.lr = 0;
                     }
                     $scope.roi = data.lrs[data.lr];
@@ -604,7 +633,10 @@ console.log(audiodataHistory ,path)
                     $scope.currentlow = $scope.roi.y1;
                     $scope.currenthigh = $scope.roi.y2;
                     $scope.currentId = $scope.roi.id;
-                    $scope.currentrois = data.lrs.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+                    $scope.currentrois = data.lrs.slice(
+                        ($scope.currentPage ) * $scope.roisPerpage, 
+                        ($scope.currentPage+1) * $scope.roisPerpage
+                    );
                     $scope.rois = data.lrs;
                 } else { 
                     $scope.rois = []; 
@@ -667,13 +699,15 @@ console.log(audiodataHistory ,path)
         a2TrainingSets.getSpecies($scope.sets[$index].name, function(speciesData){
             $scope.species = speciesData[0].species;
             $scope.songtype = speciesData[0].songtype;
+
             a2TrainingSetHistory.setLastSpecies($scope.species,$scope.songtype);
+
             a2TrainingSets.getRois($scope.sets[$index].name, function(data){
                 $scope.loaderDisplay = false;
                 $scope.detailedView = false;
                 $scope.totalRois = data.length;
                 $scope.currentPage = 0;
-                $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage)
+                $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage);
                 if ($scope.totalRois>0) {
                     $scope.roi = data[0];
                     $scope.currentDuration = $scope.roi.dur;
@@ -683,7 +717,10 @@ console.log(audiodataHistory ,path)
                     $scope.currentlow = $scope.roi.y1;
                     $scope.currenthigh = $scope.roi.y2;
                     $scope.currentId = $scope.roi.id;
-                    $scope.currentrois = data.slice(($scope.currentPage ) * $scope.roisPerpage, ($scope.currentPage+1) * $scope.roisPerpage)
+                    $scope.currentrois = data.slice(
+                        ($scope.currentPage ) * $scope.roisPerpage, 
+                        ($scope.currentPage+1) * $scope.roisPerpage
+                    );
                     $scope.rois = data;
                 } else { 
                     $scope.rois = []; 
@@ -692,6 +729,82 @@ console.log(audiodataHistory ,path)
             });
         });
     };
-});
-
-      
+})
+.controller('PlaylistCtrl', function($scope, a2Playlists, $modal) {
+    $scope.loading = true;
+    
+    $scope.fields = [
+        { name: 'Name', key: 'name' },
+        { name: 'Rec qty', key: 'count' }
+    ];
+    
+    a2Playlists.getList(function(data) {
+        $scope.playlists = data;
+        $scope.loading = false;
+    });
+    
+    $scope.edit = function() {
+        if(!$scope.selected)
+            return;
+        
+        $scope.pname = $scope.selected.name;
+        var playlist_id = $scope.selected.id;
+        
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/audiodata/edit-playlist.html',
+            scope: $scope
+        });
+        
+        modalInstance.result.then(function(playlistName) {
+            a2Playlists.rename({
+                id: playlist_id,
+                name: playlistName
+            }, 
+            function(data) {
+                if(data.error)
+                    return console.log(data.error);
+                
+                $scope.selected.name = playlistName;
+            });
+        });
+    };
+    $scope.del = function() {
+        if(!$scope.checked || !$scope.checked.length)
+            return;
+        
+        var playlists = $scope.checked.map(function(row) {
+            return '"'+ row.name +'"';
+        });
+        
+        var message = ["You are about to delete the following playlists: "];
+        var message2 = ["Are you sure??"];
+        
+        $scope.messages = message.concat(playlists, message2);
+        
+        $scope.btnOk = "Yes, do it!";
+        $scope.btnCancel = "No";
+        
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/pop-up.html',
+            scope: $scope
+        });
+        
+        modalInstance.result.then(function() {
+            
+            var playlistIds = $scope.checked.map(function(pl) {
+                return pl.id;
+            });
+            
+            a2Playlists.remove(playlistIds, function(data) {
+                if(data.error)
+                    return console.log(data.error);
+                
+                a2Playlists.getList(function(data) {
+                    $scope.playlists = data;
+                    $scope.loading = false;
+                });
+            });
+        });
+    };
+})
+;

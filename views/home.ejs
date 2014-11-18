@@ -12,29 +12,43 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-5">
-            <h3>
-                Projects 
-                <button class="btn btn-default" 
-                    tooltip="Create a project"
-                    tooltip-trigger="mouseenter"
-                    ng-click="createProject()">
-                    <i class="fa fa-plus"></i>
-                </button>
-            </h3>
-            <div class="list-group">
-                <dl>
-                    <a ng-class="{'disabled': !project.is_enabled }" 
-                       ng-href="/project/{{ project.url }}/" 
-                       class="list-group-item" 
-                       ng-repeat="project in projects">
-                       
-                        <dt>
-                            {{ project.name }} 
-                            <i class="fa" ng-class="project.is_private ? 'fa-lock' :'fa-globe'"></i>
-                        </dt>
-                        <dd>{{ project.description }}</dd>
-                    </a>
-                </dl>
+            <div class="row">
+                <div class="col-sm-6">
+                    <h3>
+                        Projects 
+                        <button class="btn btn-default" 
+                            tooltip="Create a project"
+                            tooltip-trigger="mouseenter"
+                            ng-click="createProject()">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </h3>
+                </div>
+                <div class="col-sm-6">
+                    <h3>
+                        <input type="search" class="form-control" ng-model="search" placeholder="Search project">
+                    </h3>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="list-group">
+                        <dl>
+                            <a ng-class="{'disabled': !project.is_enabled }" 
+                               ng-href="/project/{{ project.url }}/" 
+                               class="list-group-item" 
+                               ng-repeat="project in projects | filter: search | paginate: currentPage : 10">
+                               
+                                <dt>
+                                    {{ project.name }} 
+                                    <i class="fa" ng-class="project.is_private ? 'fa-lock' :'fa-globe'"></i>
+                                </dt>
+                                <dd>{{ project.description }}</dd>
+                            </a>
+                        </dl>
+                    </div>
+                    <pagination ng-show="projects.length > 10" total-items="projects.length" ng-model="currentPage"></pagination>
+                </div>
             </div>
         </div>
         <div class="col-sm-7" ng-show="newsFeed.length">
@@ -51,6 +65,7 @@
                     </li>
                 </ul>
             </div>
+            <button class="btn btn-default btn-block more-btn" ng-click="loadNewsPage()">More</button>
         </div>
     </div>
 </div>
