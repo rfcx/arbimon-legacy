@@ -1,4 +1,4 @@
-from a2pyutils import bmpio, colors
+from a2pyutils import bmpio
 import png
 import scidx
 from datetime import datetime
@@ -149,7 +149,7 @@ class Soundscape():
         for y in range(to_y-1, from_y-1, -1):
             yield cls.cols_gen(bins.get(y), scale, from_x, to_x)
 
-    def write_image(self, imgout):
+    def write_image(self, imgout, palette):
         "Writes the soundscape to an image file"
 
         agg_range = self.aggregation['range']
@@ -160,14 +160,8 @@ class Soundscape():
         height = self.max_bins
         bpp = 8
 
-        gradient = colors.Gradient(
-            [[240, 100, 57], [17, 100, 98]],
-            [360, 100, 100], 255, spacetx=colors.hsv2rgb
-        )
-        palette = [gradient(i / 255.0) for i in range(256)]
-
-        if imgout[:4] == ".png":
-            w = pypng.Writer(
+        if imgout[-4:] == ".png":
+            w = png.Writer(
                 width=width, height=height, bitdepth=bpp, palette=palette
             )
         else:
