@@ -27,7 +27,7 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
         url: '/users',
         controller:'UsersCtrl',
         templateUrl: '/partials/dashboard/users.html'
-    })
+    });
 
 })
 .controller('SummaryCtrl', function($scope, Project, a2TrainingSets) {
@@ -195,7 +195,7 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
                 alert(data);
             });
         });
-    }
+    };
 
     $scope.create = function() {
         $scope.temp = {};
@@ -251,7 +251,7 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
 
         $scope.selected = $scope.sites[$index];
 
-        var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon)
+        var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
 
         if(!$scope.marker) {
             $scope.marker = new google.maps.Marker({
@@ -383,7 +383,7 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
             });
         });
         
-    }
+    };
 })
 .controller('SettingsCtrl', function($scope, Project) {
     Project.getInfo(function(info) {
@@ -399,7 +399,7 @@ angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
             
             console.log(result);
         });
-    }
+    };
 })
 .controller('UsersCtrl', function($scope, $http, Project, $modal) {
     

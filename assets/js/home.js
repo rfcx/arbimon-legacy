@@ -1,24 +1,33 @@
-angular.module('home', ['ui.bootstrap'])
+angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils'])
 .controller('HomeCtrl', function($scope, $http, $modal) {
+    
+    $scope.currentPage = 1;
     
     $scope.loadProjectList = function() {
         $http.get('api/user/projectlist')
         .success(function(data) {
-                $scope.projects = data;
+            $scope.projects = data;
         });
     };
     
     $scope.loadProjectList();
     
-    $http.get('api/user/feed')
-    .success(function(data) {
-        $scope.newsFeed = data;
-    });
+    var nextNewsPage = 0;
+    $scope.newsFeed = [];
+    
+    $scope.loadNewsPage = function() {
+        $http.get('api/user/feed/'+ nextNewsPage)
+        .success(function(data) {
+            $scope.newsFeed = $scope.newsFeed.concat(data);
+            nextNewsPage++;
+        });
+    };
+    
+    $scope.loadNewsPage();
     
     $scope.displayTime = function(d) {
-        
         return moment(d).fromNow();
-    }
+    };
         
     $scope.createProject = function() {
         var modalInstance = $modal.open({
