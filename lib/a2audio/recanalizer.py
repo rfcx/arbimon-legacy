@@ -2,7 +2,7 @@ from rec import Rec
 from pylab import *
 import numpy
 import time
-from config import Config
+from a2pyutils.config import Config
 
 class Recanalizer:
     

@@ -43,6 +43,7 @@ log.write('database connection succesful')
 bucketName = config[4]
 awsKeyId = config[5]
 awsKeySecret = config[6]
+log.write('tring connection to bucket') 
 conn = S3Connection(awsKeyId, awsKeySecret)
 try:
     bucket = conn.get_bucket(bucket)
@@ -52,7 +53,7 @@ except Exception, ex:
         cursor.execute('update `jobs` set `remarks` = \'Error: connecting to bucket.\' where `job_id` = '+str(jId.strip(' ')))
         db.commit()
     quit()
-
+log.write('connect to bucket  succesful') 
     
 tempFolder = tempFolders+"/classification_"+str(jobId)+"/"
 modelLocal = tempFolder+'model.mod'
