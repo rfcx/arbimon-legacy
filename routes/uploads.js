@@ -17,12 +17,18 @@ var AWS = require('aws-sdk');
 AWS.config.loadFromPath('./config/aws.json');
 var s3 = new AWS.S3(); 
 
+var deleteFile = function(filename) {
+    fs.exists(filename, function (exists) {
+        if(exists)
+            fs.unlinkSync(filename);
+    });
+};
 
 router.get('/audio', function(req, res) {
     res.sendStatus(200);
 });
     
-router.post('/audio/project/:projectid', function(req, res) {
+router.post('/audio/project/:projectid', function(req, res, next) {
     
     var project_id = req.param('projectid');
     
@@ -50,14 +56,20 @@ router.post('/audio/project/:projectid', function(req, res) {
     });
     
     req.busboy.on('finish', function() {
-        res.send("Done!");
         
-        // console.log('fields: ', fields);
-        // console.log('files: ', files);
+        console.log('fields: ', fields);
+        console.log('files: ', files);
         
+        try {
+            fields.project = JSON.parse(fields.project);
+            fields.info = JSON.parse(fields.info);
+        }
+        catch(err) {
+            err.status =  400;
+            return next(err);
+        }
         
-        fields.project = JSON.parse(fields.project);
-        fields.info = JSON.parse(fields.info);
+        res.status(202).send("upload done!");
         
         files.forEach(function(file) {
             
@@ -70,7 +82,7 @@ router.post('/audio/project/:projectid', function(req, res) {
                    
                     var fileInfo = formatParse(fields.info.format, file.filename);
                     
-                    if(typeof fileInfo === 'error') // catch error parsing filename
+                    if(fileInfo instanceof Error) // catch error parsing filename
                         return cb(fileInfo);
                     
                     var recTime = new Date(fileInfo.year, --fileInfo.month, fileInfo.date, fileInfo.hour, fileInfo.min);
@@ -89,7 +101,25 @@ router.post('/audio/project/:projectid', function(req, res) {
                     console.log('fileKey:', fileKey);
                     
                     async.auto({
-                        convert: function(callback) {
+                        verifyNotDuplicate: function(callback) {
+                            model.recordings.exists({
+                                site_id: fields.info.site.id,
+                                filename: fileInfo.filename
+                            },
+                            function(err, exists) {
+                                if(err) return callback(err);
+                                
+                                if(exists) {
+                                    var msg = "filename "+ fileInfo.filename +
+                                              " already exists on site " + fields.info.site.id;
+                                    return callback(new Error(msg));
+                                }
+                                
+                                callback(null, false);
+                            });
+                        },
+                        
+                        convert: ['verifyNotDuplicate', function(callback) {
                             console.log('convert');
                             if(extension === "flac") 
                                 return callback(null, 0);
@@ -99,9 +129,9 @@ router.post('/audio/project/:projectid', function(req, res) {
                                     callback(null, code);
                                 }
                             );
-                        },
+                        }],
                         
-                        thumbnail: function(callback) {
+                        thumbnail: ['verifyNotDuplicate', function(callback) {
                             console.log('thumbnail');
                              audioTool.spectrogram(inFile, thumbnail, 
                                 { 
@@ -113,7 +143,7 @@ router.post('/audio/project/:projectid', function(req, res) {
                                     callback(null, code);
                                 }
                             );
-                        },
+                        }],
                         
                         uploadFlac: ['convert', function(callback, results) {
                             console.log('uploadFlac');
@@ -130,7 +160,7 @@ router.post('/audio/project/:projectid', function(req, res) {
 
                             s3.putObject(params, function(err, data) {
                                 if (err)       
-                                    return console.log(err)     
+                                    return console.log(err);
                                     
                                 console.log("Successfully uploaded flac", fileInfo.filename);
                                 callback(null, data);
@@ -153,7 +183,7 @@ router.post('/audio/project/:projectid', function(req, res) {
 
                             s3.putObject(params, function(err, data) {
                                 if (err)       
-                                    return console.log(err)     
+                                    return console.log(err);
                                     
                                 console.log("Successfully uploaded thumbnail", fileInfo.filename);
                                 callback(null, data);
@@ -178,23 +208,23 @@ router.post('/audio/project/:projectid', function(req, res) {
                     },
                     function(err, results) {
                         // delete temp files
-                        fs.unlinkSync(inFile);
-                        fs.unlinkSync(thumbnail);
+                        deleteFile(inFile);
+                        deleteFile(thumbnail);
                         
-                        if( extension !== 'flac' ) // detele outFile if it was created
-                            fs.unlinkSync(outFile);
+                        if(extension !== 'flac') {
+                            deleteFile(outFile);
+                        }
                         
                         if(err) return cb(err);
                         
-                        console.log('err = ', err);
-                        console.log('results = ', results);
+                        console.log('results:', results);
                         cb();
                     });
                 }
             },
             2,
             function(err){
-                if(err) next(err);
+                if(err) return console.error(err);
                 console.log('finished processing:', file.filename);
             });
         });

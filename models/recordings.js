@@ -203,7 +203,8 @@ var Recordings = {
                 "AND R.datetime < R2.datetime \n" +
             "WHERE R.recording_id = " + mysql.escape(recording.id) + "\n" +
             "ORDER BY R2.datetime ASC \n" +
-            "LIMIT 1"
+            "LIMIT 1";
+            
         return queryHandler(query, function(err, rows){
             if(err) { callback(err); return; }
             if(!rows || !rows.length) { callback(null, [recording]); return; }
@@ -218,7 +219,8 @@ var Recordings = {
                 "AND R.datetime > R2.datetime \n" +
             "WHERE R.recording_id = " + mysql.escape(recording.id) + "\n" +
             "ORDER BY R2.datetime DESC \n" +
-            "LIMIT 1"
+            "LIMIT 1";
+            
         return queryHandler(query, function(err, rows){
             if(err) { callback(err); return; }
             if(!rows || !rows.length) { callback(null, [recording]); return; }
@@ -250,7 +252,7 @@ var Recordings = {
     fetchValidations: function (recording, callback) {
         var query = "SELECT recording_validation_id as id, user_id as user, species_id as species, songtype_id as songtype, present \n" +
             "FROM recording_validations \n" +
-            "WHERE recording_id = " + mysql.escape(recording.id)
+            "WHERE recording_id = " + mysql.escape(recording.id);
         return queryHandler(query, callback);
     },
     
@@ -261,7 +263,7 @@ var Recordings = {
      */
     fetchRecordingFile: function(recording, callback){
         tmpfilecache.fetch(recording.uri, function(cache_miss){
-            console.log('fetching ', recording.uri, ' from the bucket.')
+            console.log('fetching ', recording.uri, ' from the bucket.');
             if(!s3){
                 s3 = new AWS.S3();
             }
@@ -272,7 +274,7 @@ var Recordings = {
                 if(err) { callback(err); return; }
                 cache_miss.set_file_data(data.Body);
             });
-        }, callback)
+        }, callback);
     },
     
     /** Returns the audio file of a given recording.
@@ -292,7 +294,7 @@ var Recordings = {
                     cache_miss.retry_get();
                 });
             });
-        }, callback)
+        }, callback);
     },
     
     /** Returns the spectrogram file of a given recording.
@@ -313,7 +315,7 @@ var Recordings = {
                     cache_miss.retry_get();
                 });
             });
-        }, callback)
+        }, callback);
     },
 
     fetchSpectrogramTiles: function (recording, callback) {
@@ -427,7 +429,7 @@ var Recordings = {
                     cache_miss.retry_get();
                 });
             });
-        }, callback)
+        }, callback);
     },
     
     /** Validates a recording.
@@ -476,7 +478,7 @@ var Recordings = {
                     callback(null, valobj);
                 });
             }
-        }
+        };
         
         var classes = validation['class'].split(',');
         
@@ -519,8 +521,8 @@ var Recordings = {
                 return callback(new Error("required field '"+ requiredValues[i] + "' missing"));
         }
         
-        for( var i in recording) {
-            recording[i] = mysql.escape(recording[i]);                    
+        for( var j in recording) {
+            recording[j] = mysql.escape(recording[i]);                    
             values.push(util.format('`%s`=%s', i, recording[i]));
         }
         
@@ -543,7 +545,7 @@ var Recordings = {
         
         var uri = mysql.escape('%' + recording.filename + '%');
         var site_id = mysql.escape(Number(recording.site_id));
-        var q = util.format(q, site_id, uri);
+        q = util.format(q, site_id, uri);
         queryHandler(q, function(err, rows) {
             if(err)
                 return callback(err);
@@ -599,7 +601,7 @@ var Recordings = {
                             "       DATE(MAX(r.datetime)) AS max_date \n"),
                             
                 count: "SELECT COUNT(*) as count \n"
-            }
+            };
             
             var q = select[parameters.output] +
                     "FROM recordings AS r \n"+
