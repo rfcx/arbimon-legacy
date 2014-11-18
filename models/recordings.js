@@ -519,8 +519,8 @@ var Recordings = {
             var values = [];
         
             for( var j in rec) {
-                recording[j] = mysql.escape(rec[j]);                    
-                values.push(util.format('`%s`=%s', j, rec[j]));
+                rec[j] = mysql.escape(rec[j]);                    
+                values.push(util.format('`%s`="%s"', j, rec[j]));
             }
             
             var q = 'INSERT INTO recordings \n'+
