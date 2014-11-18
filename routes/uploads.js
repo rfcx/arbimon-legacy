@@ -79,7 +79,6 @@ router.post('/audio/project/:projectid', function(req, res, next) {
                     var name = file.filename.split('.');
                     var extension = name[name.length-1];
                     
-                   
                     var fileInfo = formatParse(fields.info.format, file.filename);
                     
                     if(fileInfo instanceof Error) // catch error parsing filename

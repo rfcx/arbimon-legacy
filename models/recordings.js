@@ -505,32 +505,30 @@ var Recordings = {
     },
     
     insert: function(recording, callback) {
-        var values = [];
         
-        var requiredValues = [
-            "site_id",
-            "uri",
-            "datetime",
-            "mic",
-            "recorder",
-            "version"
-        ];
+        var schema = {
+            site_id: Joi.number().required(),
+            uri: Joi.string().required(),
+            datetime: Joi.date().required(),
+            mic: Joi.string().required(),
+            recorder: Joi.string().required(),
+            version: Joi.string().required()
+        };
         
-        for(var i in requiredValues) {
-            if(typeof recording[requiredValues[i]] === "undefined")
-                return callback(new Error("required field '"+ requiredValues[i] + "' missing"));
-        }
+        Joi.validate(recording, schema, function(err, rec) {
+            var values = [];
         
-        for( var j in recording) {
-            recording[j] = mysql.escape(recording[i]);                    
-            values.push(util.format('`%s`=%s', i, recording[i]));
-        }
-        
-        var q = 'INSERT INTO recordings \n'+
-                'SET %s';
-                
-        q = util.format(q, values.join(", "));
-        queryHandler(q, callback);
+            for( var j in rec) {
+                recording[j] = mysql.escape(rec[j]);                    
+                values.push(util.format('`%s`=%s', j, rec[j]));
+            }
+            
+            var q = 'INSERT INTO recordings \n'+
+                    'SET %s';
+                    
+            q = util.format(q, values.join(", "));
+            queryHandler(q, callback);
+        });
     },
     
     exists: function(recording, callback) {
