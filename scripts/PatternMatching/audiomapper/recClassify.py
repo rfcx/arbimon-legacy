@@ -17,7 +17,7 @@ from boto.s3.connection import S3Connection
 from a2pyutils.config import Config
 from a2pyutils.logger import Logger
 
-logWorkers = False
+logWorkers = True
 num_cores = int(math.floor(multiprocessing.cpu_count() /2))
 
 jobId = sys.argv[1].strip("'").strip(" ");
@@ -139,7 +139,7 @@ def processLine(line,bucket,mod,config,logWorkers):
                     db.commit()
                 noErrorFlag = False
             log.write("prediction --- seconds ---" + str(time.time() - start_time))
-            if noErrorFlag:                   
+            if noErrorFlag:
                 print recId,";",res[0],";",jId,";",species,";",songtype,";", min(featvector) ,";",max(featvector)
                 sys.stdout.flush()
                 log.write("function exec --- seconds ---" + str(time.time() - start_time_all))
