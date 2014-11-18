@@ -230,7 +230,7 @@ def read_scidx(filename, filter=None):
                     cell_count, = struct.unpack(">H", finp.read(2))
                     # print cell_count, rcfmt, rcbytes
                     row[offsetx + x] = [
-                        recordings[i]
+                        i  # recordings[i]
                         for i in read_cell_recs(finp, rcfmt, rcbytes, cell_count)
                     ]
     return (index, recordings, offsetx, width, offsety, height, minx, maxx, miny, maxy)
