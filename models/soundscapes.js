@@ -1,9 +1,13 @@
 // dependencies
 var mysql        = require('mysql');
+var AWS          = require('aws-sdk');
+var scidx        = require('../utils/scidx');
 var dbpool       = require('../utils/dbpool');
 var config       = require('../config');
 var arrays_util  = require('../utils/arrays');
+var tmpfilecache = require('../utils/tmpfilecache');
 // local variables
+var s3;
 var queryHandler = dbpool.queryHandler;
 
 // exports
@@ -39,8 +43,8 @@ var Soundscapes = {
         }
 
         return dbpool.queryHandler(
-            "SELECT SC.soundscape_id as id, SC.name, SC.project_id, SC.user_id, \n"+
-            "     SC.min_t, SC.max_t, SC.min_f, SC.max_f, \n" +
+            "SELECT SC.soundscape_id as id, SC.name, SC.project_id as project, SC.user_id as user, \n"+
+            "     SC.min_value, SC.max_value, SC.min_t, SC.max_t, SC.min_f, SC.max_f, \n" +
             "     SC.bin_size, SCAT.identifier as aggregation, \n" +
             "     SC.uri \n" +
             "FROM soundscapes SC \n" +
@@ -58,6 +62,41 @@ var Soundscapes = {
         });
 
     },
+
+    /** Downloads a the scidx file from the bucket, storing it in a temporary file cache, and returns its path.
+     * @param {Object} soundscape object.
+     * @param {Function} callback(err, path) function to call back with the file's path.
+     */
+    fetchSCIDXFile: function(soundscape, callback){
+        var scidx_uri = "project_"+(soundscape.project|0)+"/soundscapes/"+(soundscape.id|0)+"/index.scidx";
+        tmpfilecache.fetch(scidx_uri, function(cache_miss){
+            if(!s3){
+                s3 = new AWS.S3();
+            }
+            s3.getObject({
+                Bucket : config('aws').bucketName,
+                Key    : scidx_uri
+            }, function(err, data){
+                if(err) { callback(err); return; }
+                cache_miss.set_file_data(data.Body);
+            });
+        }, callback);
+    },
+    
+    /** Fetches and reads the soundscape index file.
+     * @param {Object}  soundscape    soundscape object
+     * @param {Object}  filters       options for filtering the scidx file (optional)
+     * @param {Function} callback     called back with the index file.
+     */
+    fetchSCIDX : function(soundscape, filters, callback){
+        Soundscapes.fetchSCIDXFile(soundscape, function(err, scidx_path){
+            if(err) { callback(err); return; }
+            var idx = new scidx();
+            idx.read(scidx_path.path, filters, callback);
+        });                
+    },
+
+
 
     __compute_thumbnail_path : function(soundscape, callback){
         soundscape.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + soundscape.uri;
