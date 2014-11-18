@@ -13,7 +13,6 @@ from config import Config
 
 tempFolders = tempfile.gettempdir()
 currDir = os.path.dirname(os.path.abspath(__file__))
-
 configuration = Config()
 config = configuration.data()
 db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
@@ -49,7 +48,7 @@ for line in sys.stdin:
     tempFolder = tempFolders+"/training_"+str(jId)+"/"
     
     #get rec from URI and compute feature vector using the spec vocalization
-    recAnalized = Recanalizer(recUri.strip('\n') , spec ,low , high ,columns ,tempFolder, bucket)
+    recAnalized = Recanalizer(recUri.strip('\n') , spec ,low , high ,columns ,tempFolder,None, bucket)
     fets = recAnalized.features()
     fets.append(classs)
     fets.append(present)

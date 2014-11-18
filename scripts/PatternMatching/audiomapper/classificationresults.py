@@ -34,7 +34,7 @@ print 'results'
 log.write('start cycle to gather results (expected:'+str(expectedRecordings)+')')
 processedCount=0
 for line in sys.stdin:
-    
+    print line
     line = line.strip('\n')
     recId,presence,jId,species,songtype,minV,maxV = line.split(';')
     minV = minV.strip('\n')
@@ -70,6 +70,6 @@ with closing(db.cursor()) as cursor:
 
 db.close()
 log.write('removing working folder')
-shutil.rmtree(tempFolders+"/classification_"+str(jobId))
+##shutil.rmtree(tempFolders+"/classification_"+str(jobId))
 print 'ended'
 log.close()
