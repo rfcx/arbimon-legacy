@@ -76,7 +76,8 @@ angular.module('a2visobjects', [
         
         var t0=this.min_t, t1=this.max_t;
         var f0=this.min_f, f1=this.max_f;
-        var dt= t1 - t0  , df= f1 - f0  ;
+        var v0=this.min_value, v1=this.max_value;
+        var dt= t1 - t0  , df= f1 - f0, dv = v1 - v0;
         
         var time_unit = ({
             'time_of_day'   : 'Time (Hour in Day)',
@@ -97,7 +98,14 @@ angular.module('a2visobjects', [
                 from : f0, to : f1, span : df,
                 unit : 'Frequency ( kHz )',
                 tick_format : function(v){return (v/1000) | 0; }
+            },
+            legend : {
+                from : v0, to : v1, span : dv,
+                ticks: Math.max(2, Math.min(dv|0, 10)),
+                unit : 'Count',
+                src  : '/images/soundscape-palette.png'
             }
+
         };
         // set it to the scope
         this.tiles = { x:1, y:1, set : [{

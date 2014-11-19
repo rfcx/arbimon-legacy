@@ -190,148 +190,6 @@ angular.module('visualizer', [
     // $scope.setRecording(test_data.recording);
 });
 
-angular.module('visualizer-services', ['a2services'])
-.value('layer_types',{
-    'browser-layer' : {
-        title : "",
-        visible : true,
-        display:{spectrogram:false},
-        sidebar_only : true,
-        hide_visibility : true,
-        type    : "browser-layer"
-    },
-    'recording-layer' : {
-        title : "",
-        require: {type:'recording'},
-        visible : true,
-        hide_visibility : true,
-        type    : "recording-layer"
-    },
-    'base-image-layer' : {
-        title   : "",
-        require : {type:['recording', 'soundscape'], selection : true},
-        display : {sidebar:false},
-        visible : true,
-        type    : "base-image-layer",
-    },    
-    'frequency-adjust-layer' : true,
-    'species-presence' : {
-        title   : "",
-        require: {type:'recording', selection : true},
-        display:{spectrogram:false},
-        sidebar_only : true,
-        visible : false,
-        hide_visibility : true,
-        type    : "species-presence",
-    },
-    'training-data' : {
-        title   : "",
-        controller : 'a2VisualizerTrainingSetLayerController as training_data',
-        require: {type:'recording', selection : true},
-        visible : true,
-        type    : "training-data",
-    }
-})
-.service('a2VisualizerLayers', function(layer_types, $controller){
-    var layers = function($scope){
-        this.$scope = $scope;
-        this.list   = [];
-    };
-    layers.prototype = {
-        types : layer_types,
-        __new_layer__ : function(layer_type){
-            var layer_def = this.types[layer_type];
-            if (layer_def) {
-                var layer_maker = function(){};
-                layer_maker.prototype = layer_def;
-                var layer = new layer_maker();
-                if (layer.controller && typeof layer.controller == 'string') {
-                    var cname = /^(.*?)( as (.*?))$/.exec(layer.controller);
-                    if(cname) {
-                        layer[cname[2] ? cname[3] : 'controller'] = $controller(cname[1], {$scope : this.$scope});
-                    }
-                }
-                return layer;
-            } else {
-                return null;
-            }
-        },
-        add   : function(){
-            for(var a=arguments, i=0, e=a.length; i < e; ++i){
-                var layer_type = a[i];
-                if(layer_types[layer_type]) {
-                    this.list.push(this.__new_layer__(layer_type));
-                }
-            }
-        },
-        check_requirements : function(req){
-            if(!req){
-                return true;
-            } else if(req.selection && !this.$scope.visobject){
-                return false;
-            } else if(req.type){
-                if(req.type instanceof Array){
-                    var idx = req.type.indexOf(this.$scope.visobject_type);
-                    if(idx==-1){
-                        return false;
-                    }
-                } else if( this.$scope.visobject_type != req.type){
-                    return false;
-                }
-            }
-            return true;
-        },
-        sidebar_visible : function(l){
-            if(l.sidebar_visible && !l.sidebar_visible($scope)){
-                return false;
-            } else if(!this.check_requirements(l.require)){
-                return false;
-            }
-
-            return true;
-        },
-        spectrogram_visible : function(l){
-            return this.check_requirements(l.require) && l.visible;
-        },
-        display_sidebar : function(l){
-            return !l.display || l.display.sidebar !== false;
-        },
-        display_spectrogram : function(l){
-            return !l.display || l.display.spectrogram !== false;
-        }
-    };
-    
-    return layers;
-})
-.service('training_set_types',function(Project){
-    return {
-        'roi_set' : {
-            has_layout : true,
-            templates  : {
-                layer_item : '/partials/visualizer/layer-item/training-sets/roi_set.html',
-                new_modal : '/partials/visualizer/modal/new_roi_set_tset_partial.html'
-            },
-            action : {
-                collect_new_tset_data : function(sdata, tset_data, sval){
-                    if(sdata.class){
-                        tset_data.class = sdata.class.id;
-                    } else {
-                        sval.class = "Please select a project class.";
-                        sval.count++;
-                    }
-                }
-            },
-            controller : 'a2VisualizerSpectrogramTrainingSetRoiSetData'
-        }
-    };
-})
-.controller('a2ProjectClasses', function(Project){
-    var self = this;
-    Project.getClasses(function(list){
-        self.list = list;
-    })
-})
-
 
 angular.module('visualizer-layers', ['visualizer-services', 'a2utils'])
 .directive('a2VisualizerLayerItem', function(layer_types, $compile, $templateFetch){
@@ -397,11 +255,15 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
 })
 .directive('a2VisualizerSpectrogram', function(a2BrowserMetrics, a2AffixCompute){
     var layout_tmp = {
-        gutter     :  a2BrowserMetrics.scrollSize.height,
-        axis_sizew :  60,
-        axis_sizeh :  60,
-        axis_lead  :  15
-    }
+        gutter       :  a2BrowserMetrics.scrollSize.height,
+        axis_sizew   :  60,
+        axis_sizeh   :  60,
+        legend_axis_w : 45,
+        legend_width  : 60,
+        legend_gutter : 30,
+        axis_lead    :  15
+    };
+    
     return {
         restrict : 'E',
         templateUrl : '/partials/visualizer/visualizer-spectrogram.html',
@@ -415,7 +277,8 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 var f=Math.floor(l), c=Math.ceil(l), m=l-f;
                 
                 return levels[f] * (1-m) + levels[c] * m;
-            }
+            };
+            
             var interpolate = linear_interpolate;
             
             
@@ -434,15 +297,19 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     s2   : ($element.scrollLeft() - $scope.layout.spectrogram.left + $element.width()) / $scope.layout.scale.sec2px,
                     hz1  : ($scope.layout.spectrogram.top + $scope.layout.spectrogram.height - $element.scrollTop() - $element.height()) / $scope.layout.scale.hz2px,
                     hz2  : ($scope.layout.spectrogram.top + $scope.layout.spectrogram.height - $element.scrollTop()) / $scope.layout.scale.hz2px
-                }
+                };
                 $scope.layout.center = {
                     s  : ($element.scrollLeft() - $scope.layout.spectrogram.left + $element.width()/2.0) / $scope.layout.scale.sec2px,
                     hz : ($scope.layout.spectrogram.top + $scope.layout.spectrogram.height - $element.scrollTop() - $element.height()/2.0) / $scope.layout.scale.hz2px,
-                }
+                };
                 $scope.layout.y_axis.left = $element.scrollLeft();
                 $element.children('.axis-y').css({left: $scope.layout.y_axis.left + 'px'});
                 $scope.layout.x_axis.top = $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh - layout_tmp.gutter;
                 $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
+                if($scope.layout.legend){
+                    $scope.layout.legend.left = $element.scrollLeft() + $element.width() - a2BrowserMetrics.scrollSize.width - layout_tmp.legend_width - layout_tmp.legend_gutter;
+                    $element.children('.legend').css({left: $scope.layout.legend.left + 'px'});
+                }
                 $element.find('.a2-visualizer-spectrogram-affixed').each(function(i, el){
                     a2AffixCompute($element, $(el), $scope.layout);
                 });
@@ -459,7 +326,6 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 $scope.pointer.hz  = y / $scope.layout.scale.hz2px;
             };
             $scope.layout.apply = function(width, height, fix_scroll_center){
-                console.log("$scope.recording : ", $scope.visobj);
                 var visobject = $scope.visobject;
                 var domain = (visobject && visobject.domain) || {
                     x : {
@@ -471,8 +337,12 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                         unit : 'Frequency ( kHz )',
                         tick_format : function(v){return (v/1000) | 0; }
                     }
-                }
+                };
+                
                 var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
+                if(domain.legend){
+                    avail_w -= layout_tmp.legend_width + layout_tmp.legend_gutter;
+                }
                 var avail_h = height - layout_tmp.axis_sizeh - layout_tmp.axis_lead - layout_tmp.gutter;
                 var cheight = $element[0].clientHeight;
                 var zoom_levels_x = [
@@ -491,6 +361,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
 
                 var scalex = d3.scale.linear().domain([domain.x.from, domain.x.to]).range([0, spec_w]);
                 var scaley = d3.scale.linear().domain([domain.y.from, domain.y.to]).range([spec_h, 0]);
+                var scalelegend;
                 var l={};                
                 l.spectrogram = { selector : '.spectrogram-container', css:{
                     top    : layout_tmp.axis_lead,
@@ -517,6 +388,23 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                         width  : spec_w + 2*layout_tmp.axis_lead
                     }
                 };
+                
+                $scope.has_legend = !!domain.legend;
+                
+                if(domain.legend){
+                    l.legend = { selector : '.legend', scale : scalelegend, 
+                        css:{
+                            top  : 0,
+                            left : $element.scrollLeft() + width - a2BrowserMetrics.scrollSize.width - layout_tmp.legend_width - layout_tmp.legend_gutter
+                        }, attr:{
+                            width  : layout_tmp.legend_width,
+                            height : spec_h + 2*layout_tmp.axis_lead
+                        }
+                    };
+                    scalelegend = d3.scale.linear().domain([domain.legend.from, domain.legend.to]).range([spec_h-2, 0]);
+                } else {
+                    l.legend = { selector : '.legend'};
+                }
                 //l.x_axis.attr.height = cheight - l.x_axis.css.top - 1;
                 
                 $scope.layout.scale.sec2px = spec_w / domain.x.span;
@@ -526,14 +414,14 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     top  : l.spectrogram.css.top,
                     width  : avail_w,
                     height : avail_h
-                }
+                };
                 
                 var scroll_center;
                 if($scope.layout.center){
-                    var scroll_center = {
+                    scroll_center = {
                         left: $scope.layout.scale.sec2px * $scope.layout.center.s + l.spectrogram.css.left - width/2.0,
                         top: -$scope.layout.scale.hz2px * $scope.layout.center.hz - height/2.0 + l.spectrogram.css.top + l.spectrogram.css.height
-                    }
+                    };
                 }
                 
 
@@ -589,6 +477,38 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                         scale(scaley).
                         orient("left")
                     );
+                    
+                if(domain.legend){
+                    var d3_legend = d3.select($element.children(l.legend.selector).empty()[0]);
+                    d3_legend.append("rect").attr({
+                        class : 'bg',
+                        x : layout_tmp.axis_lead, y : 0,
+                        width : l.legend.attr.width,
+                        height: l.legend.attr.height
+                    });
+                    d3_legend.append("image").attr({
+                        class : 'legend-image',
+                        x : layout_tmp.legend_axis_w, y : layout_tmp.axis_lead,
+                        width : layout_tmp.legend_width - layout_tmp.legend_axis_w,
+                        height: spec_h,
+                        preserveAspectRatio : 'none',
+                        'xlink:href' : domain.legend.src
+                    });
+                    d3_legend.append("rect").attr({
+                        class : 'border',
+                        x : layout_tmp.legend_axis_w, y : layout_tmp.axis_lead,
+                        width : layout_tmp.legend_width - layout_tmp.legend_axis_w,
+                        height: spec_h,
+                    });
+                    d3_legend.append("g").
+                        attr('class', 'axis').
+                        attr('transform', 'translate('+ layout_tmp.legend_axis_w +', '+(layout_tmp.axis_lead+1)+')').
+                        call(d3.svg.axis().
+                            ticks(domain.legend.ticks).
+                            scale(scalelegend).
+                            orient("left")
+                        );
+                }
 
                 if(fix_scroll_center){
                     $element.scrollTop(scroll_center.top);
