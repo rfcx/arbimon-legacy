@@ -66,6 +66,7 @@ Bio-Acoustic Analyzer
     - boto 
     - pypng  
     - matplotlib
+    - scikits.audiolab
 
 ---
 

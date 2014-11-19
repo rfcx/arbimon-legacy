@@ -29,8 +29,11 @@ class Logger:
             if self.log_file_handle:
                 self.log_file_handle.write(currTime +':\t'+message+'\n')
             else :
-                self.log_file_handle = open(self.filePath,'w')
+                self.log_file_handle = open(self.filePath,'a')
                 self.log_file_handle.write(currTime +':\t'+message+'\n')
+            if self.log_file_handle:
+                self.log_file_handle.close()
+                self.log_file_handle = None
 
     def write_clean(self,message):
         if self.logON:
@@ -38,8 +41,10 @@ class Logger:
     
     def close(self):
         if self.logON:
-            self.log_file_handle.close()
+            if self.log_file_handle:
+                self.log_file_handle.close()
         
     def __exit__(self, type, value, traceback):
         if self.logON:
-            self.log_file_handle.close()
+            if self.log_file_handle:
+                self.log_file_handle.close()

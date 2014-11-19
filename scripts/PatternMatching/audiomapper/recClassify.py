@@ -17,7 +17,7 @@ import MySQLdb
 from boto.s3.connection import S3Connection
 from config import Config
 from logger import Logger
-
+start_time_all = time.time()
 logWorkers = True
 num_cores = int(math.floor(multiprocessing.cpu_count() /2))
 
@@ -44,17 +44,22 @@ log.write('database connection succesful')
 bucketName = config[4]
 awsKeyId = config[5]
 awsKeySecret = config[6]
+start_time = time.time()
+
 conn = S3Connection(awsKeyId, awsKeySecret)
 try:
     bucket = conn.get_bucket(bucket)
 except Exception, ex:
     log.write('fatal error cannot connect to bucket '+ex.error_message)
     quit()
-    
+log.write('bucket config took:'+str(time.time()-start_time))   
+  
 tempFolder = tempFolders+"/classification_"+str(jobId)+"/"
 modelLocal = tempFolder+'model.mod'
 modelUri = sys.argv[2].strip("'").strip(" ");
 log.write('fetching model from bucket ('+modelUri+') to ('+modelLocal+')')
+start_time = time.time()
+
 key = bucket.get_key(modelUri)     
 key.get_contents_to_filename(modelLocal)
 mod = None
@@ -64,17 +69,19 @@ if os.path.isfile(modelLocal):
 else:
     log.write('fatal error cannot load model')
     quit()
-            
+log.write('model retrieve took:'+str(time.time()-start_time))   
+           
 linesProcessed = 0
 missedRecs = 0
 #reads lines from stdin
-log.write('start processing cycle')   
+log.write('start processing cycle. configuration took:'+str(time.time()-start_time_all))   
 #for line in sys.stdin:
 def processLine(line,bucket,mod,config,logWorkers):
     start_time_all = time.time()
     log = Logger(jobId , 'recClassify.py' , 'worker-thread',logWorkers)
     
     log.write('worker-thread started')
+    
     try:
         db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
     except MySQLdb.Error as e:
@@ -90,6 +97,7 @@ def processLine(line,bucket,mod,config,logWorkers):
     tempFolder = tempFolders+"/classification_"+str(jId)+"/"
     #get rec from URI and compute feature vector using the spec vocalization
     start_time = time.time()
+    log.write(str(type(bucket)))
     recAnalized = Recanalizer(recUri , mod[1] ,mod[2], mod[3] ,mod[4], tempFolder,log , bucket)
     log.write("recAnalized --- seconds ---" + str(time.time() - start_time))
     with closing(db.cursor()) as cursor:
@@ -117,6 +125,7 @@ def processLine(line,bucket,mod,config,logWorkers):
         else:
             start_time = time.time()
             vectorUri = modelUri.replace('.mod','') + '/classification_'+ str(jId)+ '_' + recName + '.vector'
+            log.write(str(type(bucket)))
             k = bucket.new_key(vectorUri )
             k.set_contents_from_filename(vectorLocal)
             k.set_acl('public-read')
