@@ -7,12 +7,14 @@ import os
 import csv
 import subprocess
 import boto
+import time
 import shutil
 import MySQLdb
 from contextlib import closing
 from a2pyutils.config import Config
 from a2pyutils.logger import Logger
 
+start_time = time.time()
 
 jobId = sys.argv[1].strip("'");
 classificationName = sys.argv[2].strip("'");
@@ -190,8 +192,8 @@ if model_type_id == 1: #Pattern Matching (modified Alvarez thesis)
     p4 = subprocess.Popen([currPython , currDir+'/audiomapper/classificationresults.py',str(jobId),str(linesInCsvFile)], stdin=p3.stdout, stdout=subprocess.PIPE)
     log.write('waiting for pipe to end')
     jOutput = p4.communicate( )[0].strip('\n')
-    log.write('job output: '+jOutput)
-    print jOutput
+    #log.write('job output: '+jOutput)
+    #print jOutput
     sys.stdout.flush()
     #update job progress
     
@@ -199,9 +201,10 @@ else:
     print("Unkown model type requested\n");
     log.write('Unkown model type requested')
 
-with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` , `completed` = 1  where `job_id` = '+str(jobId.strip(' ')))
-        db.commit()
+        
+timestr = 'execution time: '+str(time.time() - start_time)
 db.close()
 log.write('script end')
+log.write(timestr)
 log.close()
+print timestr

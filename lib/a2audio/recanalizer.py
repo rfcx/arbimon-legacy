@@ -18,7 +18,7 @@ class Recanalizer:
         if self.logs :
             self.logs.write("configuration time --- seconds ---" + str(time.time() - start_time))
         start_time = time.time()
-        self.rec = Rec(uri,tempFolder,config,bucket)
+        self.rec = Rec(uri,tempFolder,config,bucket,logs)
         if self.logs:
             self.logs.write("retrieving recording from bucket --- seconds ---" + str(time.time() - start_time))
         if self.rec.status == 'HasAudioData':

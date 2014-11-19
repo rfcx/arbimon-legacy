@@ -82,6 +82,7 @@ Bio-Acoustic Analyzer
     - argparse
     - virtualenv
     - joblib
+    - scikits.audiolab
 
 ---
 
