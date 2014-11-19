@@ -77,7 +77,7 @@ angular.module('a2visobjects', [
         var t0=this.min_t, t1=this.max_t;
         var f0=this.min_f, f1=this.max_f;
         var v0=this.min_value, v1=this.max_value;
-        var dt= t1 - t0  , df= f1 - f0, dv = v1 - v0;
+        var dt= t1 - t0 + 1, df= f1 - f0, dv = v1 - v0;
         
         var time_unit = ({
             'time_of_day'   : 'Time (Hour in Day)',
@@ -91,7 +91,9 @@ angular.module('a2visobjects', [
         // setup the domains
         this.domain = {
             x : {
+                // from : t0, to : t1 + 1, span : dt + 1, ticks : dt + 1,
                 from : t0, to : t1, span : dt, ticks : dt,
+                ordinal : true, 
                 unit : time_unit || 'Time ( s )'
             },
             y : {

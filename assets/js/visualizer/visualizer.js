@@ -63,6 +63,7 @@ angular.module('visualizer', [
         'base-image-layer',
         'browser-layer',
         'recording-layer',
+        'soundscape-layer',
         'species-presence',
         'training-data'
     );    
@@ -325,6 +326,22 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 $scope.pointer.sec = x / $scope.layout.scale.sec2px;
                 $scope.pointer.hz  = y / $scope.layout.scale.hz2px;
             };
+            
+            var make_scale = function(domain, range){
+                var s;
+                if(domain.ordinal){
+                    var dd = domain.to - domain.from;
+                    var dr = range[1] - range[0];
+                    var scale = dr / dd;
+                    s = d3.scale.linear().domain([domain.from, domain.to]).range([
+                        scale/2 + range[0], range[1] - scale/2
+                    ]);
+                } else {
+                    s = d3.scale.linear().domain([domain.from, domain.to]).range(range);
+                }
+                return s;
+            };
+            
             $scope.layout.apply = function(width, height, fix_scroll_center){
                 var visobject = $scope.visobject;
                 var domain = (visobject && visobject.domain) || {
@@ -358,9 +375,10 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 
                 var spec_w = Math.max(avail_w, Math.ceil(domain.x.span * zoom_sec2px));
                 var spec_h = Math.max(avail_h, Math.ceil(domain.y.span * zoom_hz2px ));
-
-                var scalex = d3.scale.linear().domain([domain.x.from, domain.x.to]).range([0, spec_w]);
-                var scaley = d3.scale.linear().domain([domain.y.from, domain.y.to]).range([spec_h, 0]);
+                
+                
+                var scalex = make_scale(domain.x, [0, spec_w]);
+                var scaley = make_scale(domain.y, [spec_h, 0]);
                 var scalelegend;
                 var l={};                
                 l.spectrogram = { selector : '.spectrogram-container', css:{

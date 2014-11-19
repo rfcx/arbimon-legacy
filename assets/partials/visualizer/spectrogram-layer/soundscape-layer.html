@@ -1,0 +1,14 @@
+<div class="input-source"
+    ng-style="{height: layout.spectrogram.height, width: layout.spectrogram.width}"
+    a2-visualizer-fit-spectrogram
+>
+    <div class="selection-rect"
+        style="color:white"
+        ng-style="{
+            left   : layout.sec2x(Math.floor(pointer.sec), 1) + 'px', 
+            top    : layout.hz2y(visobject.bin_size * Math.ceil(pointer.hz / visobject.bin_size), 1) + 'px', 
+            width  : layout.dsec2width(1, 0, 1) + 'px', 
+            height : layout.dhz2height(visobject.bin_size, 0, 1) + 'px'
+        }"
+    ></div>
+</div>
