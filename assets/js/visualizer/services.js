@@ -147,3 +147,64 @@ angular.module('visualizer-services', ['a2services'])
         self.list = list;
     })
 })
+.service('a22PointBBoxEditor', function($timeout, a2TrainingSets, training_set_types){
+    var editor = function(){
+        this.min_eps =  0.001;
+        this.scalex  =  1.0;
+        this.scaley  =  0.001;
+        this.reset();
+    };
+    editor.prototype = {
+        reset: function(){
+            this.bbox   = null;
+            this.points = null;
+            this.tracer = null;
+            this.valid  = false;
+        },
+        make_new_bbox: function(){
+            this.bbox    = {};
+            this.points = [];
+            this.valid  = false;
+        },
+        add_tracer_point : function(x, y){
+            if(this.bbox){
+                var tracer = [x, y];
+                this.tracer = tracer;
+                this.validate([tracer]);
+            }
+        },
+        add_point : function(x, y, min_eps){
+            min_eps = min_eps || this.min_eps;
+            var similars = this.points && this.points.filter(function(pt){
+                var dx=(pt[0] - x)*this.scalex, dy=(pt[1] - y)*this.scaley, dd = dx*dx + dy*dy;
+                return  dd <= min_eps;
+            });
+            if(similars && similars.length > 0){
+                return;
+            }
+            if(!this.bbox){
+                this.make_new_bbox();
+            }
+            if(this.points.length < 2){
+                this.points.push([x, y]);
+            }
+            this.validate();
+        },
+        validate : function(tmp_points){
+            var pts_x = this.points.map(function(x){return x[0];});
+            var pts_y  = this.points.map(function(x){return x[1];});
+            if(tmp_points){
+                pts_x.push.apply(pts_x, tmp_points.map(function(x){return x[0];}));
+                pts_y .push.apply(pts_y , tmp_points.map(function(x){return x[1];}));
+            }
+            this.bbox.x1 = Math.min.apply(null, pts_x);
+            this.bbox.y1 = Math.min.apply(null, pts_y);
+            this.bbox.x2 = Math.max.apply(null, pts_x);
+            this.bbox.y2 = Math.max.apply(null, pts_y);
+            this.valid = this.points.length >= 2;
+        }
+    };
+    editor.prototype.super = editor.prototype;
+    
+    return editor;
+})
