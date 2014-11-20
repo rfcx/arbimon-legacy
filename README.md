@@ -6,21 +6,22 @@ Bio-Acoustic Analyzer
 
  - python 2.7 - comes with Ubuntu
  
- - all dependencies  in one line
+ - All dependencies  in one line
    ```
    sudo add-apt-repository ppa:chris-lea/node.js
    sudo apt-get update
    sudo apt-get install python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev gfortran libopenblas-dev liblapack-dev  libpng12-dev libfreetype6-dev libsndfile-dev
    ```
    
- - install all python dependencies, create python virtual enviroment and build
+ - Install all python dependencies, create python virtual enviroment and build
     ```
     sudo npm run-script setup    
     ```
     
-run
-
-`npm start` and the app will be available in localhost:3000
+ - Run app (the app will be available in localhost:3000)
+    ```
+    npm start
+    ```
 
 ---
 
