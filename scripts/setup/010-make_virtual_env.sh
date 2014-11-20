@@ -51,8 +51,11 @@ fi
 
 ## Install the pip dependencies
 if [ -f "$requirementspath" ]; then
-    echo "Installing dependencies from $requirementspath"
-    "$envpath/bin/pip" install -r "$requirementspath"
+   echo "Installing dependencies from $requirementspath"
+   ##"$envpath/bin/pip" install -r "$requirementspath"
+   for line in `cat "$requirementspath"`; do
+       "$envpath/bin/pip" install "$line"
+   done
 else
     echo "Not installing dependencies since no requirements file was found in $node_root"
 fi
