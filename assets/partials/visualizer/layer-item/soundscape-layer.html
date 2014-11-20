@@ -1,0 +1,32 @@
+<div ng-show="layer.is_open">
+    <div class="clearfix">
+        <div class="pull-right">
+            <i class="fa fa-sm fa-crosshairs"></i>
+            {{visobject.domain.x.unit_format(pointer.sec)}},
+            {{visobject.domain.y.unit_format(pointer.hz)}}
+        </div>
+    </div>
+    <div ng-hide="layer.soundscape.regions || layer.soundscape.selection.bbox">
+        There are no regions defined in this soundscape.
+    </div>
+    <div ng-show="layer.soundscape.regions || layer.soundscape.selection.bbox">
+        <table class="bg table table-condensed">
+            <tr><th>x1</th><th>y1</th><th>x2</th><th>y2</th></tr>
+            <tr ng-repeat="region in layer.soundscape.regions" 
+                ng-class ="{'active':layer.soundscape.selected == region}"
+                ng-click ="layer.soundscape.selected = region"
+            >
+                <td>{{visobject.domain.x.unit_format(region.x1)}}</td>
+                <td>{{visobject.domain.y.unit_format(region.y1)}}</td>
+                <td>{{visobject.domain.x.unit_format(region.x2)}}</td>
+                <td>{{visobject.domain.y.unit_format(region.y2)}}</td>
+            </tr>
+            <tr class="text-info" ng-show="layer.soundscape.selection.bbox && !layer.soundscape.selection.bbox.id">
+                <td>{{visobject.domain.x.unit_format(layer.soundscape.selection.bbox.x1)}}</td>
+                <td>{{visobject.domain.y.unit_format(layer.soundscape.selection.bbox.y1)}}</td>
+                <td>{{visobject.domain.x.unit_format(layer.soundscape.selection.bbox.x2)}}</td>
+                <td>{{visobject.domain.y.unit_format(layer.soundscape.selection.bbox.y2)}}</td>
+            </tr>
+        </table>
+    </div>
+</div>

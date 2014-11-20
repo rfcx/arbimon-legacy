@@ -106,12 +106,12 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 var elOff = $element.offset();
                 var x = e.pageX - elOff.left + $element.scrollLeft() - $scope.layout.spectrogram.left;
                 var y = e.pageY - elOff.top  + $element.scrollTop()  - $scope.layout.spectrogram.top ;
-                x = Math.min(Math.max(                                   x, 0), $scope.layout.spectrogram.width);
-                y = Math.min(Math.max($scope.layout.spectrogram.height - y, 0), $scope.layout.spectrogram.height);
+                x = Math.min(Math.max(x, 0), $scope.layout.spectrogram.width);
+                y = Math.min(Math.max(y, 0), $scope.layout.spectrogram.height);
                 $scope.pointer.x = x;
                 $scope.pointer.y = y;
-                $scope.pointer.sec = x / $scope.layout.scale.sec2px;
-                $scope.pointer.hz  = y / $scope.layout.scale.hz2px;
+                $scope.pointer.sec = $scope.layout.x2sec(x);
+                $scope.pointer.hz  = $scope.layout.y2hz(y);
             };
             
             var make_scale = function(domain, range){
@@ -127,6 +127,20 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     s = d3.scale.linear().domain([domain.from, domain.to]).range(range);
                 }
                 return s;
+            };
+
+            var make_axis  = function(domain, scale, orientation){
+                var axis = d3.svg.axis();
+                if(domain.ticks){
+                    axis.ticks(domain.ticks);
+                }
+                if(domain.tick_format){
+                    axis.tickFormat(domain.tick_format);
+                } else if(domain.unit_format){
+                    axis.tickFormat(domain.unit_format);
+                }
+                axis.scale(scale).orient(orientation);
+                return axis;
             };
             
             $scope.layout.apply = function(width, height, fix_scroll_center){
@@ -212,6 +226,8 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 }
                 //l.x_axis.attr.height = cheight - l.x_axis.css.top - 1;
                 
+                $scope.layout.offset.sec = domain.x.from;
+                $scope.layout.offset.hz  = domain.y.from;
                 $scope.layout.scale.sec2px = spec_w / domain.x.span;
                 $scope.layout.scale.hz2px  = spec_h / domain.y.span;
                 $scope.layout.viewport = {
@@ -254,11 +270,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 d3_x_axis.append("g").
                     attr('class', 'axis').
                     attr('transform', 'translate('+ layout_tmp.axis_lead +', 1)').
-                    call(d3.svg.axis().
-                        ticks(domain.x.ticks).
-                        scale(scalex).
-                        orient("bottom")
-                    );
+                    call(make_axis(domain.x, scalex, "bottom"));
                 
                 
                 var d3_y_axis = d3.select($element.children(l.y_axis.selector).empty()[0]);
@@ -277,11 +289,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 d3_y_axis.append("g").
                     attr('class', 'axis').
                     attr('transform', 'translate('+ (layout_tmp.axis_sizew-1) +', '+ layout_tmp.axis_lead +')').
-                    call(d3.svg.axis().
-                        tickFormat(domain.y.tick_format).
-                        scale(scaley).
-                        orient("left")
-                    );
+                    call(make_axis(domain.y, scaley, "left"));
                     
                 if(domain.legend){
                     var d3_legend = d3.select($element.children(l.legend.selector).empty()[0]);
@@ -308,11 +316,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     d3_legend.append("g").
                         attr('class', 'axis').
                         attr('transform', 'translate('+ layout_tmp.legend_axis_w +', '+(layout_tmp.axis_lead+1)+')').
-                        call(d3.svg.axis().
-                            ticks(domain.legend.ticks).
-                            scale(scalelegend).
-                            orient("left")
-                        );
+                        call(make_axis(domain.legend, scalelegend, "left"));
                 }
 
                 if(fix_scroll_center){

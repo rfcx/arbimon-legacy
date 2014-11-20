@@ -387,12 +387,35 @@ angular.module('a2services',[])
         getList: function(query, callback) {
             if(query instanceof Function){
                 callback = query;
-                query = {}
+                query = {};
             }
             var projectName = Project.getName();
             $http({
                 method : 'GET',
                 url    : '/api/project/'+projectName+'/soundscapes/',
+                params : query
+            }).success(function(data) {
+                callback(data);
+            });
+        },
+        getRegions: function(soundscape, callback) {
+            var projectName = Project.getName();
+            $http({
+                method : 'GET',
+                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions'
+            }).success(function(data) {
+                callback(data);
+            });
+        },
+        getRecordings: function(soundscape, query, callback) {
+            if(query instanceof Function){
+                callback = query;
+                query = {};
+            }
+            var projectName = Project.getName();
+            $http({
+                method : 'GET',
+                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/',
                 params : query
             }).success(function(data) {
                 callback(data);

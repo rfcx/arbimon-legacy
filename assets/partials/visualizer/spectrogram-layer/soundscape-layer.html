@@ -1,14 +1,18 @@
 <div class="input-source"
     ng-style="{height: layout.spectrogram.height, width: layout.spectrogram.width}"
     a2-visualizer-fit-spectrogram
+    ng-mousedown= "($event.which   == 1) && layer.soundscape.selection.reset().add_point(pointer.sec, pointer.hz)"
+    ng-mousemove= "($event.buttons == 1) && layer.soundscape.selection.add_tracer_point(pointer.sec, pointer.hz)"
+    ng-mouseup  = "($event.which   == 1) && layer.soundscape.selection.add_point(pointer.sec, pointer.hz)"
 >
     <div class="selection-rect"
         style="color:white"
         ng-style="{
-            left   : layout.sec2x(Math.floor(pointer.sec), 1) + 'px', 
-            top    : layout.hz2y(visobject.bin_size * Math.ceil(pointer.hz / visobject.bin_size), 1) + 'px', 
-            width  : layout.dsec2width(1, 0, 1) + 'px', 
-            height : layout.dhz2height(visobject.bin_size, 0, 1) + 'px'
+            left   : layout.sec2x(layer.soundscape.selection.selbox.x1, 1) + 'px', 
+            top    : layout.hz2y(layer.soundscape.selection.selbox.y2, 1) + 'px', 
+            width  : layout.dsec2width(layer.soundscape.selection.selbox.x2, layer.soundscape.selection.selbox.x1, 1) + 'px', 
+            height : layout.dhz2height(layer.soundscape.selection.selbox.y2, layer.soundscape.selection.selbox.y1, 1) + 'px'
         }"
     ></div>
+
 </div>
