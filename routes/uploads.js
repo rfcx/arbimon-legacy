@@ -24,10 +24,9 @@ var deleteFile = function(filename) {
     });
 };
 
-router.get('/audio', function(req, res) {
-    res.sendStatus(200);
-});
-    
+
+// routes
+
 router.post('/audio/project/:projectid', function(req, res, next) {
     
     var project_id = req.param('projectid');
@@ -232,10 +231,5 @@ router.post('/audio/project/:projectid', function(req, res, next) {
     req.pipe(req.busboy);
 });
 
-//~ router.get('/audio/project/:projectid/status', function(req, res) {
-    //~ var project_id = req.param('projectid');
-    //~ 
-    //~ model.recordings.uploadedStatus(    
-//~ });
 
 module.exports = router;

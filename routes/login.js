@@ -8,9 +8,8 @@ router.use(function(req, res, next) {
     
     req.haveAccess = function(project_id, permission_name) {
         
-        if(req.session.user.isSuper === 1);
+        if(req.session.user.isSuper === 1)
             return true;
-        
         
         var projectPerms = req.session.user.permissions[project_id];
         

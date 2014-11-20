@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html ng-app="admin">
+
+<head>
+    <% include head %>
+    <title>Arbimon 2 - <%=title %></title>
+</head>
+
+<body ng-controller="AdminCtrl">
+    <% include home-nav %>
+    <div class="container">
+        <!-- <div class="row">
+            <div class="col-sm-5">
+            <div class="well">
+                last update: {{ lastUpdate | date : 'M/d/yy HH:mm:ss' }}
+            </div>
+            </div>
+        </div> -->
+        <div class="row">
+            <div class="col-sm-5">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        JobsQueue
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item">concurrency: {{ jobsStatus.concurrency }}</li>
+                        <li class="list-group-item">jobs in queue: {{ jobsStatus.length }}</li>
+                        <li class="list-group-item">jobs running: {{ jobsStatus.running }}</li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="col-sm-5">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Active jobs
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>id</th>
+                                <th>Name</th>
+                                <th>Progress</th>
+                            </tr>
+                        <thead>
+                        <tbody>
+                            <tr ng-repeat="job in activeJobs">
+                                <td>{{ job.job_id }}</td>
+                                <td>{{ job.name }}</td>
+                                <td><progressbar value="job.percentage"></progressbar></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

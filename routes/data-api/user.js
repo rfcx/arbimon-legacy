@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var gravatar = require('gravatar');
 var async = require('async');
-var sprintf = require("sprintf-js").sprintf
+var sprintf = require("sprintf-js").sprintf;
 
 var model = require('../../models');
 var sha256 = require('../../utils/sha256');

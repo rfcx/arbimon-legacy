@@ -147,6 +147,7 @@ module.exports = function(grunt) {
                     'assets/js/jobs.js',
                     'assets/js/user-settings.js',
                     'assets/js/home.js',
+                    'assets/js/admin.js',
                 ], 
 
                 dest: 'public/assets/js/arbimon2.js'
@@ -194,7 +195,7 @@ module.exports = function(grunt) {
                 options: {
                     spawn: false // for grunt-contrib-watch v0.5.0+
                 }
-            }
+            },
         },
 
         express: {
