@@ -8,7 +8,7 @@ class Logger:
         self.logON = logON
         if self.logON:
             tempFolders = tempfile.gettempdir()
-            self.workingFolder = tempFolders+"/logs/classification_"+str(jobId)
+            self.workingFolder = tempFolders+"/logs/job_"+str(jobId)
             if not os.path.exists(self.workingFolder):
                 os.makedirs(self.workingFolder)
                 

@@ -36,7 +36,7 @@ class Rec:
         
         start_time = time.time()
         #
-        #if 'flac' in self.filename: #if flac convert to wav
+
          #   audiotools.open(self.localFiles+self.filename).convert(self.localFiles+self.filename+".wav",audiotools.WaveAudio)
           #  audiodata = audiotools.open(self.localFiles+self.filename+".wav")
         #else:
@@ -54,7 +54,18 @@ class Rec:
             self.original = f.read_frames(f.nframes)
             if self.logs :
                 self.logs.write(str(type(self.original)))
-                        
+        
+        self.localfilename = self.localFiles+self.filename
+        
+        if 'flac' in self.filename: #if flac convert to wav
+            if not removeFile:
+                format = Format('wav')
+                f = Sndfile(self.localfilename+".wav", 'w', format, self.channs, self.sample_rate)
+                f.write_frames(self.original)
+                f.close()
+                os.remove(self.localfilename)
+                self.localfilename = self.localfilename+".wav"
+                
         if self.logs :
             self.logs.write("opened file:" + str(time.time() - start_time))
             
@@ -81,8 +92,6 @@ class Rec:
             
         #length of the original waveform
         
-        self.localfilename = self.localFiles+self.filename
-
         #remove temporary file
         if removeFile:
             os.remove(self.localfilename)
@@ -144,6 +153,9 @@ class Rec:
         return data    
     
     def getLocalFileLocation(self):
-        return self.localfilename;
+        if os.path.isfile(self.localfilename):
+            return self.localfilename;
+        else:
+            return None;
 
 
