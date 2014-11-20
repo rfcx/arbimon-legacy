@@ -53,12 +53,15 @@ Bio-Acoustic Analyzer
    ```
    sudo apt-get install libpng12-dev libfreetype6-dev
    ```
- 
+ - scikits.audiolab dependencies
+   ```
+   sudo apt-get install libsndfile-dev
+   ```
  - all dependencies  in one line
    ```
    sudo add-apt-repository ppa:chris-lea/node.js
    sudo apt-get update
-   sudo apt-get install python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev gfortran libopenblas-dev liblapack-dev  libpng12-dev libfreetype6-dev
+   sudo apt-get install python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev gfortran libopenblas-dev liblapack-dev  libpng12-dev libfreetype6-dev libsndfile-dev
    ```  
    
  - node global dependencies(`sudo npm install -g <package>`):
@@ -70,6 +73,7 @@ Bio-Acoustic Analyzer
     ```
     sudo npm run-script setup    
     ```
+
  - or individual python dependencies (`sudo pip install`):
     - numpy 
     - scipy
