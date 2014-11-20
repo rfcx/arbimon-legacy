@@ -69,14 +69,14 @@ class LinearGradient(AbstractGradient):
         f, c = map(int, [math.floor(i), math.ceil(i)])
         a = i - f
         cl = [(c1*(1-a) + c2*a) for (c1, c2) in zip(colors[f], colors[c])]
-        print "  {0} color[{1}] : {2} * {3} + {4} * {5} = {6}".format(
-            self.__class__.__name__, p, 1-a, colors[f], a, colors[c], cl
-        )
+        # print "  {0} color[{1}] : {2} * {3} + {4} * {5} = {6}".format(
+        #     self.__class__.__name__, p, 1-a, colors[f], a, colors[c], cl
+        # )
         return cl
 
     def __call__(self, i):
         cl = self.spacetx(self._grad_(i))
-        print "    - ", cl
+        # print "    - ", cl
         return quantize(cl, self.quant_scale) if self.quant_scale else cl
 
 
@@ -90,9 +90,9 @@ class MultiGradient(AbstractGradient):
         j = i * c
         q = min(math.floor(j), c-1)
         cl = self.gradients[int(q)](j-q)
-        print "{0} color[{1}] : {2}, {3}, {4}, {5}, {6}".format(
-            self.__class__.__name__, i, c, j, q, cl, j-q
-        )
+        # print "{0} color[{1}] : {2}, {3}, {4}, {5}, {6}".format(
+        #     self.__class__.__name__, i, c, j, q, cl, j-q
+        # )
         return quantize(cl, self.quant_scale) if self.quant_scale else cl
 
 

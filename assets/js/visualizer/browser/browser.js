@@ -117,6 +117,8 @@ angular.module('a2visobjectsbrowser', [
                 };
                 if(self.$type.auto_select){
                     self.$type.auto_select(visobject);
+                } else {
+                    self.visobj = visobject;
                 }
             });
         }

@@ -22,6 +22,7 @@
         <div class="spectrogram-layer playback-head" ng-style="{left:(audio_player.resource ? (audio_player.resource.currentTime * layout.scale.sec2px) : 0)+'px'}"></div>
     </div>
     <svg class="axis-x" ng-show="visobject" ></svg>
+    <svg class="legend" ng-show="visobject && has_legend" ></svg>
 
     <div a2-visualizer-spectrogram-affixed data-affix-bottom="20" data-affix-align-h=".5" ng-show="visobject" class="no-wrap">
         {{ visobject.domain.x.unit || 'Time ( s )'}}

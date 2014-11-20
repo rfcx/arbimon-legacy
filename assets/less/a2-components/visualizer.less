@@ -28,6 +28,12 @@
                 font-size: 11px;
             }
         }
+        rect.border{
+            stroke : black;
+            fill   : none;
+            shape-rendering: crispEdges;
+            stroke-width:1px;
+        }
     }
     > .axis-y{
         z-index : 15;
@@ -59,6 +65,12 @@
                     border-color: @roi-selected-border-color;
                     background-color: @roi-selected-bg-color;
                 }
+            }
+            
+            .selection-rect{
+                position: absolute;
+                outline: 3px solid @selbox-border-color;
+                background-color: @selbox-bg-color;
             }
 
             .input-source {
