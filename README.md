@@ -53,10 +53,12 @@ Bio-Acoustic Analyzer
    ```
    sudo apt-get install libpng12-dev libfreetype6-dev
    ```
+   
  - scikits.audiolab dependencies
    ```
    sudo apt-get install libsndfile-dev
    ```
+   
  - all dependencies  in one line
    ```
    sudo add-apt-repository ppa:chris-lea/node.js
