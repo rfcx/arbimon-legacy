@@ -202,6 +202,12 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
         padding-right  : @layer-padding-right;
         padding-top    : @layer-padding-v;
         padding-bottom : @layer-padding-v;
+        &.layer.hide-btns {
+            padding-right: @layer-padding-left;
+            .layer-btns{
+                display:none;
+            }
+        }
         display : block;
         position: relative;
         min-height: 2em;
