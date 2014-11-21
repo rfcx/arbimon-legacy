@@ -7,6 +7,7 @@ import shutil
 import math
 import multiprocessing
 import subprocess
+import boto
 from joblib import Parallel, delayed  
 from datetime import datetime
 from contextlib import closing
@@ -15,6 +16,7 @@ from a2pyutils.config import Config
 from a2pyutils.logger import Logger
 from a2audio.rec import Rec
 from a2pyutils import palette
+from boto.s3.connection import S3Connection
 
 ##to do
 # job progrss in jobs table
@@ -27,29 +29,17 @@ num_cores = int(math.floor(multiprocessing.cpu_count() /2))
 
 currDir = (os.path.dirname(os.path.realpath(__file__)))
 USAGE = """
-{prog} job_id playlist_id max_hertz bin_size aggregation imageout.png scidxout.scidx
+{prog} job_id 
     job_id - job id in database
-    playlist_id - playlist id in database
-    max_hertz - maximum hertz to represent
-    bin_size  - size of bins in hertz 
-    aggregation - one of : {aggregations}
-""".format(
-    prog=sys.argv[0],
-    aggregations=', '.join(soundscape.aggregations.keys())
-)
+"""
 
 
-if len(sys.argv) < 6:
+if len(sys.argv) < 2:
     print USAGE
     sys.exit()
 
-job_id = int(sys.argv[1])
-playlist_id = int(sys.argv[2])
-max_hertz = int(sys.argv[3])
-bin_size = int(sys.argv[4])
-aggregation = soundscape.aggregations.get(sys.argv[5])
-imgout = 'image.png'
-scidxout = 'index.scidx'
+job_id = int(sys.argv[1].strip("'"))
+
 tempFolders = tempfile.gettempdir()
 workingFolder = tempFolders+"/soundscape_"+str(job_id)+"/"
 if os.path.exists(workingFolder):
@@ -59,6 +49,27 @@ os.makedirs(workingFolder)
 log = Logger(job_id , 'playlist2soundscape.py' , 'main')
 log.write('script started')
 
+
+playlist_id = int(sys.argv[2].strip("'"))
+max_hertz = int(sys.argv[3].strip("'"))
+bin_size = int(sys.argv[4].strip("'"))
+agrrid = sys.argv[5].strip("'")
+threshold = float(sys.argv[6].strip("'"))
+pid = int(sys.argv[7].strip("'"))
+uid = int(sys.argv[8].strip("'"))
+name = sys.argv[9]
+aggregation = soundscape.aggregations.get(agrrid)
+if not aggregation:
+    print "# Wrong agregation."
+    print USAGE
+    log.write('Wrong agregation')
+    log.close()
+    sys.exit()
+    
+imgout = 'image.png'
+scidxout = 'index.scidx'
+
+
 if bin_size < 0 :
     print "# Bin size must be a positive number. Input was: " +str(bin_size)
     print USAGE
@@ -67,13 +78,8 @@ if bin_size < 0 :
     sys.exit()
     
 max_bins = int(max_hertz / bin_size)
+log.write('max_bins '+str(max_bins))
 
-if not aggregation:
-    print "# Wrong agregation."
-    print USAGE
-    log.write('Wrong agregation')
-    log.close()
-    sys.exit()
 
 configuration = Config()
 config = configuration.data()
@@ -87,6 +93,24 @@ except MySQLdb.Error as e:
     log.close()
     quit()
 log.write('database connection succesful')
+
+bucketName = config[4]
+awsKeyId = config[5]
+awsKeySecret = config[6]
+log.write('tring connection to bucket') 
+
+start_time = time.time()
+bucket = ''
+conn = S3Connection(awsKeyId, awsKeySecret)
+try:
+    bucket = conn.get_bucket(bucketName)
+except Exception, ex:
+    log.write('fatal error cannot connect to bucket '+ex.error_message)
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `remarks` = \'Error: connecting to bucket.\' where `job_id` = '+str(jId.strip(' ')))
+        db.commit()
+    quit()
+log.write('connect to bucket  succesful')
 
 q=("SELECT r.`recording_id`,`uri`, DATE_FORMAT( `datetime` , '%Y-%m-%d %H:%i:%s' ) as date FROM `playlist_recordings` pr , `recordings` r "+
   "WHERE `playlist_id` = "+str(playlist_id)+" and pr.`recording_id` = r.`recording_id`")
@@ -105,6 +129,7 @@ if len(recsToProcess) < 1:
     log.write('Invalid playlist or no recordings on playlist')
     log.close()
     sys.exit()
+
     
 scp = soundscape.Soundscape(aggregation, bin_size, max_bins)
 
@@ -113,6 +138,7 @@ def processRec(rec):
     date = datetime.strptime( rec['date'], '%Y-%m-%d %H:%M:%S')
     id = rec['id']
     uri = rec['uri']
+    log.write('rec uri:'+uri)
     start_time_rec = time.time()
     recobject = Rec(uri,workingFolder,config,config[4],log,False)
     log.write('rec from uri'+ str(time.time()-start_time_rec))
@@ -120,8 +146,9 @@ def processRec(rec):
         localFile = recobject.getLocalFileLocation()
         if localFile is None:
             return None;
+        log.write('/usr/bin/Rscript'+"   "+ currDir+'/fpeaks.R' +"   "+ localFile +"  "+ 'a')
         start_time_rec = time.time()
-        proc = subprocess.Popen(['/usr/bin/Rscript',currDir+'/fpeaks.R' , localFile , 'a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(['/usr/bin/Rscript',currDir+'/fpeaks.R' , localFile , 'a' , str(threshold)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
         if stderr:
             log.write('fpeaks.R:'+ str(time.time()-start_time_rec))
@@ -135,6 +162,8 @@ def processRec(rec):
         elif stdout:
             log.write('fpeaks.R:'+ str(time.time()-start_time_rec))
             os.remove(localFile)
+            if 'err' in stdout:
+                return None
             freqs = stdout.strip(',')
             freqs = [float(i) for i in freqs.split(',')]
             results = {"date":date,"id":id,"freqs":freqs}
@@ -159,16 +188,38 @@ if len(resultsParallel)>0:
                 scp.insert_peaks(result['date'],result['freqs'],result['id'])
     log.write("inserting peaks:" + str(time.time() - start_time_all))
     start_time_all = time.time()
-    scp.write_image(workingFolder+imgout,palette=palette.get_palette())
-    log.write("writing image:" + str(time.time() - start_time_all))
-    start_time_all = time.time()
     scp.write_index(workingFolder+scidxout)
     log.write("writing index:" + str(time.time() - start_time_all))
-
-    """
-    save to bucket (project_2/soundscapes/1/image.png)
-    save to database (soundscape_id 	name 	project_id 	user_id 	soundscape_aggregation_type_id 	bin_size 	uri 	min_t 	max_t 	min_f 	max_f 	min_value 	max_value )
-    """
+ 
+    query = ("INSERT INTO `soundscapes`( `name`, `project_id`, `user_id`, " +
+            " `soundscape_aggregation_type_id`, `bin_size`, `uri`, `min_t`, `max_t`, `min_f`, `max_f`, `min_value`, `max_value`, `date_created`, `playlist_id`) "+
+            " VALUES ('"+name+"',"+str(pid)+","+str(uid)+", (SELECT `soundscape_aggregation_type_id` FROM `soundscape_aggregation_types` WHERE `identifier` = '"+agrrid+"' )" +
+            " ,"+str(bin_size)+",'stillUnkown',"+str(scp.stats['min_idx'])+","+str(scp.stats['max_idx'])+
+            " ,0,"+str(max_hertz)+",0,"+str(scp.stats['max_count'])+",now(),"+str(playlist_id)+")"  
+            )
+    scpId = -1;
+    print query
+    with closing(db.cursor()) as cursor:
+        cursor.execute(query)
+        db.commit()
+        scpId = cursor.lastrowid
+        
+    soundscapeId = scpId
+    start_time_all = time.time()
+    scp.write_image(workingFolder+imgout,palette.get_palette())
+    log.write("writing image:" + str(time.time() - start_time_all))
+    imageUri = 'project_'+str(pid)+'/soundscapes/'+str(soundscapeId)+'/image.png'
+    indexUri = 'project_'+str(pid)+'/soundscapes/'+str(soundscapeId)+'/index.scidx'
+    k = bucket.new_key(imageUri )
+    k.set_contents_from_filename(workingFolder+imgout)
+    k.set_acl('public-read')
+    
+    k = bucket.new_key(indexUri )
+    k.set_contents_from_filename(workingFolder+scidxout)
+    k.set_acl('public-read')
+    with closing(db.cursor()) as cursor:
+        cursor.execute("update `soundscapes` set `uri` = '"+imageUri+"' where  `soundscape_id` = "+str(soundscapeId))
+        db.commit()
 else:
     print 'no results from playlist id:'+playlist_id
     log.write('no results from playlist id:'+playlist_id) 

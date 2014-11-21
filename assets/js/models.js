@@ -341,6 +341,7 @@
             $scope.types = types;
             $scope.projectData = projectData;
             $scope.trainings = trainings;
+	    $scope.nameMsg = '';
             $scope.data = 
             {
                 training : '',
@@ -431,7 +432,7 @@
 
             $scope.ok = function () {
                 var url = $scope.projectData.url;
-		
+		$scope.nameMsg = '';
                 $http.post('/api/project/'+url+'/models/new', 
                     {
                         n:$scope.data.name,
@@ -447,7 +448,11 @@
                 (
                     function(data, status, headers, config) 
                     {
-			$modalInstance.close( data );
+			if (data.name)
+			{
+			    $scope.nameMsg = 'Name exists';
+			}
+			else $modalInstance.close( data );
                     }
                 ).
                 error(

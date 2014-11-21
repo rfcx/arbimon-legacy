@@ -33,7 +33,7 @@ class Soundscape():
         self.start_bin = 0
         self.max_bins = max_bins
         self.bin_size = bin_size
-
+        self.max_list_global = None
         bins = {}
         recordings = {}
         self.recstemp = {}
@@ -76,7 +76,7 @@ class Soundscape():
         aggregation = self.aggregation
         max_bins = self.max_bins
         bin_size = self.bin_size
-        max_list = None
+        max_list = self.max_list_global
         idx = int(sum([
            float(date.strftime(x)) * y for (x, y) in
            zip(aggregation['date'], aggregation['projection'])
@@ -101,7 +101,7 @@ class Soundscape():
 
             if not max_list or len(max_list) < len(recs):
                 max_list = recs
-
+        self.max_list_global = max_list
         self.stats['max_count'] = len(max_list) if max_list else 0
         self.recordings = self.recstemp
         self.recordings = self.recordings.keys()

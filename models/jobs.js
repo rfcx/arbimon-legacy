@@ -30,12 +30,46 @@ module.exports =
 
             queryHandler(q,callback);
         },
+         newSoundscapeJob: function(p, callback)
+        {
+         
+            var q = "INSERT INTO `job_params_soundscape`(`job_id`, `playlist_id`, `max_hertz`, `bin_size`, `soundscape_aggregation_type_id`, `name`, `threshold`) "+
+                  " VALUES ("+mysql.escape(p.id)+","+mysql.escape(p.playlist)+","+mysql.escape(p.maxhertz)+
+                  " ,"+mysql.escape(p.bin)+",  (SELECT `soundscape_aggregation_type_id` FROM `soundscape_aggregation_types` WHERE `identifier` = "+mysql.escape(p.aggregation)+") "+
+                  ","+mysql.escape(p.name)+","+mysql.escape(p.threshold)+")"
+            queryHandler(q,callback);
+        },
         hide: function(jId, callback)
         {       
             var q = "update `jobs` set `hidden`  = 1 where `job_id` = "+jId;
 
             queryHandler(q,callback);
-        }
+        },
+        classificationNameExists :
+        function(p, callback)
+        {       
+            var q = "SELECT count(*) as count FROM `jobs` J ,  `job_params_classification` JPC " +
+            " WHERE `project_id` = "+mysql.escape(p.pid)+" and `job_type_id` = 2 and J.`job_id` = JPC.`job_id` "+
+            " and `name` like "+mysql.escape(p.name)+" "
+
+            queryHandler(q,callback);
+        },
+        modelNameExists :
+        function(p, callback)
+        {       
+            var q = "SELECT count(*) as count FROM `jobs` J ,  `job_params_training` JPC " +
+            " WHERE `project_id` = "+mysql.escape(p.pid)+" and `job_type_id` = 1 and J.`job_id` = JPC.`job_id` "+
+            " and `name` like "+mysql.escape(p.name)+" "
+
+            queryHandler(q,callback);
+        },
+        soundscapeNameExists :
+        function(p, callback)
+        {
+            var q = "SELECT count(*) as count FROM `soundscapes` WHERE `project_id` = "+mysql.escape(p.pid)+" and `name` LIKE "+mysql.escape(p.name)
+
+            queryHandler(q,callback);
+        },
     };
 
     

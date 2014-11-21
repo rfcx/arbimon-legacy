@@ -63,6 +63,17 @@ var Soundscapes = {
 
     },
 
+    details: function(project, callback)
+    {
+        var q = "SELECT S.`soundscape_id`,  CONCAT(UCASE(LEFT(S.`name`, 1)), SUBSTRING(S.`name`, 2)) name , "+
+                " CONCAT(UCASE(LEFT(P.`name`, 1)), SUBSTRING(P.`name`, 2)) playlist, "+
+                " DATE_FORMAT(S.`date_created`,'%h:%i %p') as time , DATE_FORMAT(S.`date_created`,'%M %d %Y') as date, "+
+                " CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2))  ,' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) user " +
+                " FROM `soundscapes` S ,`users` U , `playlists` P  " +
+                " WHERE S.`project_id` = "+mysql.escape(project)+" and S.`user_id` = U.`user_id` and P.`playlist_id`  =S.`playlist_id` " 
+
+        queryHandler(q, callback);
+    },
     /** Downloads a the scidx file from the bucket, storing it in a temporary file cache, and returns its path.
      * @param {Object} soundscape object.
      * @param {Function} callback(err, path) function to call back with the file's path.

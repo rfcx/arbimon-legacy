@@ -46,7 +46,14 @@ module.exports = function(grunt) {
                 src: 'bower_components/jquery/dist/*',
                 dest: 'public/assets/jquery/',
             },
-
+            
+            jqueryUi: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/jquery-ui/jquery-ui.min.js',
+                dest: 'public/assets/jquery/',
+            },
+            
             fontAwesome: {
                 expand: true,
                 cwd: 'bower_components/font-awesome/',
@@ -115,7 +122,12 @@ module.exports = function(grunt) {
                 src: 'bower_components/selectize/dist/css/selectize.default.css',
                 dest: 'public/assets/angular-ui-select/'
             },
-
+            angularRangeSlider: {
+                expand: true,
+                cwd: 'bower_components/angular-rangeslider/',
+                src: ['angular.rangeSlider.js', 'angular.rangeSlider.css'],
+                dest: 'public/assets/angular-range-slider/'
+            },
             moment: {
                 expand: true,
                 flatten: true,

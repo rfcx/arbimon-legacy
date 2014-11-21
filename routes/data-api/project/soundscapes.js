@@ -64,5 +64,15 @@ router.use('/:soundscape/recordings/:bbox', function(req, res, next) {
     });
 });
 
+router.get('/details', function(req, res, next) {
+    model.soundscapes.details(req.project.project_id,
+    function(err, data) {
+        if(err) return next(err);
+
+        res.json(data);
+        return null;
+    });
+});
+
 
 module.exports = router;

@@ -378,6 +378,7 @@
             $scope.recselected = '';
             $scope.showselection = false;
             $scope.sites = sites;
+	    $scope.nameMsg = ''
             $scope.datas = {
               name : '' ,
               classifier: ''
@@ -391,6 +392,7 @@
                 }
             );
             $scope.ok = function () {
+		$scope.nameMsg = ''
                 var url = $scope.projectData.url;
                 $scope.all = 0;
                 $scope.selectedSites = []
@@ -420,7 +422,11 @@
                 (
                     function(data, status, headers, config) 
                     {
-			$modalInstance.close( data );
+			if (data.name)
+			{
+			    $scope.nameMsg = 'Name exists';
+			}
+			else $modalInstance.close( data );
                     }
                 ).
                 error(

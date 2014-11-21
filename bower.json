@@ -15,7 +15,9 @@
     "angular-ui-select": "~0.8.2",
     "selectize": "~0.8.5",
     "moment": "~2.8.3",
-    "angular-audio": "*"
+    "angular-audio": "*",
+    "jquery-ui" : "~1.11.2",
+    "angular-rangeslider": "~0.0.11"
   },
   "resolutions": {
     "d3": "~3.4.11"

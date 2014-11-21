@@ -11,25 +11,23 @@
   {{ infoInfo }}
 </div>
 <div class="col-sm-8 span8" >
-    <h3>Soundscapes <a class="btn btn-sm btn-default"  tooltip="Create New Soundscape" tooltip-placement="right"  ng-click="createNewClassification()" ><i class="fa fa-plus" ></i></a></h3> 
-    <!--
+    <h3>Soundscapes <a class="btn btn-sm btn-default"  tooltip="Create New Soundscape" tooltip-placement="right"  ng-click="createNewSoundscape()" ><i class="fa fa-plus" ></i></a></h3> 
+    
     <table ng-table="tableParams" class="table" >
-        <tr ng-repeat="classification in classificationsData" >
-            <td data-title="'Date'" >
-                {{classification.date}}
-            </td>
-            <td data-title="'Name'" ">
-                {{classification.cname}}
-            </td>
-            <td data-title="'Type'" sortable="'mtname'" filter="{ 'mtname': 'text' }">
-                {{model.mtname}}
+        <tr ng-repeat="soundscape in soundscapesData" >
+            <td data-title="'Date'" class="no-wrap-table-cell">
+                {{soundscape.date}} {{soundscape.time}}
+            </td> 
+            <td data-title="'Name'" class="no-wrap-table-cell">
+                {{soundscape.name}}
             </td>
             <td data-title="'User'" class="no-wrap-table-cell">
-                {{classification.muser}}
+                {{soundscape.user}}
             </td>
-            <td data-title="'Model'" class="no-wrap-table-cell">
-                {{classification.modname}}
-            </td>         
+            <td data-title="'Playlist'" class="no-wrap-table-cell">
+                {{soundscape.playlist}}
+            </td>
+<!--        
             <td>
                 <button class="btn btn-default btn-xs" ng-click="showClassificationDetails(classification.job_id)">Show details</button>
             </td>
@@ -40,11 +38,8 @@
                 <button class="btn btn-default btn-xs" ng-click="newClassification(model.model_id,model.mname)">New Classification</button>
             </td>
             
-            <td data-ng-hide="true">
-                {{classification.job_id}}
-            </td>
+-->
         </tr>
     </table>
-    -->
     {{ infopanedata }}
 </div>
