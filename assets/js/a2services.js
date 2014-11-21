@@ -398,6 +398,17 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
+        addRegion: function(soundscape, bbox, params, callback) {
+            var projectName = Project.getName();
+            params.bbox = bbox;
+            $http({
+                method : 'POST',
+                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/add',
+                data   : params
+            }).success(function(data) {
+                callback(data);
+            });
+        },
         getRegions: function(soundscape, callback) {
             var projectName = Project.getName();
             $http({
@@ -407,7 +418,7 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
-        getRecordings: function(soundscape, query, callback) {
+        getRecordings: function(soundscape, bbox, query, callback) {
             if(query instanceof Function){
                 callback = query;
                 query = {};
@@ -415,7 +426,7 @@ angular.module('a2services',[])
             var projectName = Project.getName();
             $http({
                 method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/',
+                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/recordings/'+bbox,
                 params : query
             }).success(function(data) {
                 callback(data);

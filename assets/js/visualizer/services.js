@@ -169,7 +169,7 @@ angular.module('visualizer-services', ['a2services'])
             this.valid  = false;
         },
         add_tracer_point : function(x, y){
-            if(this.bbox){
+            if(this.bbox && !this.valid){
                 var tracer = [x, y];
                 this.tracer = tracer;
                 this.validate([tracer]);

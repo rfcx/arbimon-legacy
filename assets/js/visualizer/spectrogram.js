@@ -226,6 +226,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 }
                 //l.x_axis.attr.height = cheight - l.x_axis.css.top - 1;
                 
+                $scope.layout.domain = domain;
                 $scope.layout.offset.sec = domain.x.from;
                 $scope.layout.offset.hz  = domain.y.from;
                 $scope.layout.scale.sec2px = spec_w / domain.x.span;

@@ -1,6 +1,8 @@
 // dependencies
 var mysql        = require('mysql');
 var AWS          = require('aws-sdk');
+var async        = require('async');
+var joi          = require('joi');
 var scidx        = require('../utils/scidx');
 var dbpool       = require('../utils/dbpool');
 var config       = require('../config');
@@ -96,8 +98,89 @@ var Soundscapes = {
         });                
     },
 
-
-
+    region_schema : joi.object().keys({
+        name      : joi.string(),
+        bbox      : joi.object().keys({
+            x1 : joi.number(),
+            y1 : joi.number(),
+            x2 : joi.number(),
+            y2 : joi.number()
+        })
+    }),
+    
+    /** Adds a region to a soundscape.
+     * @param {Object}  soundscape soundscape object as returned by find().
+     * @param {Object}  region region to add, follows the schema in region_schema.
+     * @param {Function} callback(err, path) function to call back with the results.
+     */
+    addRegion: function(soundscape, region, callback){
+        var self = this;
+        var data;
+        var x1, y1, x2, y2, count;
+        async.waterfall([
+            function(next){
+                joi.validate(region, self.region_schema, next);
+            }, 
+            function(vdata, next){
+                data = vdata;
+                x1 = Math.min(vdata.bbox.x1, vdata.bbox.x2);
+                y1 = Math.min(vdata.bbox.y1, vdata.bbox.y2);
+                x2 = Math.max(vdata.bbox.x1, vdata.bbox.x2);
+                y2 = Math.max(vdata.bbox.y1, vdata.bbox.y2);
+                next();
+            },
+            function(next){
+                Soundscapes.fetchSCIDX(soundscape, {
+                    ignore_offsets : true,
+                    minx : ((x1 - soundscape.min_t)) | 0,
+                    maxx : ((x2 - soundscape.min_t)) | 0,
+                    miny : ((y1 - soundscape.min_f) / soundscape.bin_size) | 0,
+                    maxy : ((y2 - soundscape.min_f) / soundscape.bin_size - 1) | 0
+                }, next);
+            },
+            function(scidx, next){
+                count = scidx.count();
+                next();
+            },
+            function(next){
+                dbpool.queryHandler(
+                    "INSERT INTO soundscape_regions(soundscape_id, name, x1, y1, x2, y2, count) \n" +
+                    "VALUES (" + mysql.escape([soundscape.id, data.name, x1, y1, x2, y2, count]) + ")\n", 
+                    next
+                );
+            },
+            function(results, fields, next){
+                self.getRegions(soundscape, {region:results.insertId}, next);
+            },
+            function(rows, fields, next){
+                data = rows[0];
+                next(null, data);
+            }
+        ], callback);
+    },
+    
+    getRegions: function(soundscape, params, callback){
+        if(params instanceof Function){
+            callback = params;
+            params = null;
+        }
+        if(!params){
+            params={};
+        }
+        
+        var constraints=[
+            'SCR.soundscape_id = ' + (soundscape.id | 0)
+        ];
+        if(params.region){
+            constraints.push('SCR.soundscape_region_id = ' + mysql.escape(params.region));
+        }
+        
+        return dbpool.queryHandler(
+            "SELECT SCR.soundscape_region_id as id, SCR.soundscape_id as soundscape, SCR.name, SCR.x1, SCR.y1, SCR.x2, SCR.y2, SCR.count\n" +
+            "FROM soundscape_regions SCR \n" +
+            "WHERE " + constraints.join(' AND '), callback);
+    },
+    
     __compute_thumbnail_path : function(soundscape, callback){
         soundscape.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + soundscape.uri;
         callback();
