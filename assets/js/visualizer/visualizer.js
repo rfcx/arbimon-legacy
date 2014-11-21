@@ -6,7 +6,8 @@ angular.module('visualizer', [
     'ui.router', 'ngAudio', 
     'a2services', 'a2utils', 'a2visobjects', 'a2visobjectsbrowser', 'a2SpeciesValidator', 
     'visualizer-layers', 'visualizer-spectrogram', 
-    'visualizer-training-sets', 'visualizer-training-sets-roi_set',        
+    'visualizer-training-sets', 'visualizer-training-sets-roi_set',
+    'visualizer-soundscapes',
     'visualizer-services'
 ])
 .directive('a2Visualizer', function(){
@@ -18,9 +19,8 @@ angular.module('visualizer', [
         templateUrl: '/partials/visualizer/main.html'
     }
 })
-
 .controller('VisualizerCtrl', function (a2VisualizerLayers, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller, 
-    VisualizerObjectTypes) {
+    VisualizerObjectTypes, VisualizerLayout) {
     var update_location_path = function(){
         if($scope.recording){
             var rec  = $scope.recording;
@@ -56,34 +56,7 @@ angular.module('visualizer', [
     };
 
     
-    $scope.layout = {
-        sec2x : function(seconds, round){
-            var x = seconds * this.scale.sec2px;
-            return round ? (x|0) : +x;
-        },
-        hz2y : function(hertz, round){
-            var h = (this.spectrogram && this.spectrogram.height) | 0;
-            var y = h - hertz * this.scale.hz2px;
-            return round ? (y|0) : +y;
-        },
-        dsec2width : function(seconds1, seconds2, round){
-            var w = (seconds1 - seconds2) * this.scale.sec2px;
-            return round ? (w|0) : +w;
-        },
-        dhz2height : function(hz1, hz2, round){
-            var h = (hz1 - hz2) * this.scale.hz2px;
-            return round ? (h|0) : +h;
-        },
-        scale : {
-            def_sec2px : 100 / 1.0,
-            def_hz2px  : 100 / 5000.0,
-            max_sec2px : 100 / (1.0    / 8),
-            max_hz2px  : 100 / (5000.0 / 8),
-            zoom   : {x:0, y:0},
-            sec2px : 100 / 1.0,
-            hz2px  : 100 / 5000.0
-        }
-    };
+    $scope.layout = new VisualizerLayout();
     $scope.Math = Math;
     $scope.pointer = {
         x   : 0, y  : 0,
@@ -170,4 +143,71 @@ angular.module('visualizer', [
     });
 
     // $scope.setRecording(test_data.recording);
-});
+})
+
+.factory('VisualizerLayout', function(){
+    var layout = function(){};
+    var align_to_interval = function(unit, domain, align){
+        if(align === undefined || !domain || !domain.unit_interval){
+            return unit;
+        } else {
+            var f = domain.from || 0, u = domain.unit_interval;
+            unit = Math.floor((unit - f)/u) * u + f;
+            return unit + align * u;
+        }
+    };
+    layout.prototype = {
+        domain: {},
+        x2sec : function(x, interval_align){
+            var seconds = x / this.scale.sec2px;
+            seconds += this.offset.sec;
+            return align_to_interval(+seconds, this.domain.x, interval_align);
+        },
+        y2hz : function(y, interval_align){
+            var h = (this.spectrogram && this.spectrogram.height) | 0;
+            var hertz = (h - y) / this.scale.hz2px;
+            hertz += this.offset.hz;
+            return align_to_interval(+hertz, this.domain.y, interval_align);
+        },
+        sec2x : function(seconds, round, interval_align){
+            seconds = align_to_interval(seconds - this.offset.sec, this.domain.x, interval_align);
+            var x = seconds * this.scale.sec2px;
+            return round ? (x|0) : +x;
+        },
+        hz2y : function(hertz, round, interval_align){
+            hertz = align_to_interval(hertz - this.offset.hz, this.domain.y, interval_align);
+            var h = (this.spectrogram && this.spectrogram.height) | 0;
+            var y = h - hertz * this.scale.hz2px;
+            return round ? (y|0) : +y;
+        },
+        dsec2width : function(seconds1, seconds2, round, inclusive){
+            if(inclusive){
+                seconds1 = align_to_interval(seconds1, this.domain.x, 1);
+            }
+            var w = (seconds1 - seconds2) * this.scale.sec2px;
+            return round ? (w|0) : +w;
+        },
+        dhz2height : function(hz1, hz2, round, inclusive){
+            if(inclusive){
+                hz1 = align_to_interval(hz1, this.domain.y, 1);
+            }
+            var h = (hz1 - hz2) * this.scale.hz2px;
+            return round ? (h|0) : +h;
+        },
+        scale : {
+            def_sec2px : 100 / 1.0,
+            def_hz2px  : 100 / 5000.0,
+            max_sec2px : 100 / (1.0    / 8),
+            max_hz2px  : 100 / (5000.0 / 8),
+            zoom   : {x:0, y:0},
+            sec2px : 100 / 1.0,
+            hz2px  : 100 / 5000.0
+        },
+        offset : {
+            sec : 0,
+            hz :0
+        }
+    };
+    return layout;
+})
+;

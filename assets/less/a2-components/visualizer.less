@@ -69,8 +69,29 @@
             
             .selection-rect{
                 position: absolute;
-                outline: 3px solid @selbox-border-color;
+                outline: 2px dotted @selbox-border-color;
                 background-color: @selbox-bg-color;
+            }
+            
+            .rect-holder{
+                position:absolute;
+                > .text{
+                    positon:absolute;
+                    color: @rect-color;
+                }
+                &.selected > .text{
+                    color: @rect-select-color;
+                }
+            }
+
+            .rect{
+                position: absolute;
+                outline: 2px solid @rect-border-color;
+                background-color: @rect-bg-color;
+            }
+            .rect.selected, .rect-holder.selected > .rect {
+                outline: 2px solid @rect-select-border-color;
+                background-color: @rect-select-bg-color;
             }
 
             .input-source {

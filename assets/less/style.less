@@ -15,7 +15,15 @@
 @roi-selected-bg-color: rgba(0, 255, 174, 0.2);
 
 @selbox-border-color: #ffffff;
-@selbox-bg-color: rgba(0, 0, 0, 0.35);
+@selbox-bg-color: rgba(0, 0, 0, 0.30);
+
+@rect-color: #ffffff;
+@rect-border-color: #080035;
+@rect-bg-color: rgba(0, 0, 0, 0.30);
+@rect-select-color: #44ff00;
+@rect-select-border-color: #44ff00;
+@rect-select-bg-color: rgba(10, 30, 4, 0.36);
+
 
 /*
  * additions to bootstrap styles
@@ -202,6 +210,12 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
         padding-right  : @layer-padding-right;
         padding-top    : @layer-padding-v;
         padding-bottom : @layer-padding-v;
+        &.layer.hide-btns {
+            padding-right: @layer-padding-left;
+            .layer-btns{
+                display:none;
+            }
+        }
         display : block;
         position: relative;
         min-height: 2em;

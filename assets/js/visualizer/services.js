@@ -17,9 +17,10 @@ angular.module('visualizer-services', ['a2services'])
     },
     'soundscape-layer' : {
         title : "",
+        controller : 'a2VisualizerSoundscapeLayerController as soundscape',
         require : {type:'soundscape', selection : true},
         visible : true,
-        display : {sidebar:false},
+        hide_visibility : true,
         type    : "soundscape-layer"
     },    
     'base-image-layer' : {
@@ -160,6 +161,7 @@ angular.module('visualizer-services', ['a2services'])
             this.points = null;
             this.tracer = null;
             this.valid  = false;
+            return this;
         },
         make_new_bbox: function(){
             this.bbox    = {};
@@ -167,7 +169,7 @@ angular.module('visualizer-services', ['a2services'])
             this.valid  = false;
         },
         add_tracer_point : function(x, y){
-            if(this.bbox){
+            if(this.bbox && !this.valid){
                 var tracer = [x, y];
                 this.tracer = tracer;
                 this.validate([tracer]);

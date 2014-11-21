@@ -1,0 +1,38 @@
+<div ng-show="layer.is_open">
+    <div class="clearfix">
+        <div class="pull-right">
+            <i class="fa fa-sm fa-crosshairs"></i>
+            {{visobject.domain.x.unit_format(pointer.sec)}},
+            {{visobject.domain.y.unit_format(pointer.hz)}}
+        </div>
+    </div>
+    <div ng-hide="layer.soundscape.regions.length">
+        There are no regions defined in this soundscape.
+    </div>
+    <div ng-show="layer.soundscape.regions.length">
+        <table class="bg table table-condensed">
+            <tr><th>
+                name
+                <button class="btn btn-xs" ng-click="layer.soundscape.show.names = !layer.soundscape.show.names"><i class="fa" ng-class="layer.soundscape.show.names ? 'fa-eye' : 'fa-eye-slash'"></i></button> 
+            </th><th>
+                labels
+                <button class="btn btn-xs" ng-click="layer.soundscape.show.labels = !layer.soundscape.show.labels"><i class="fa" ng-class="layer.soundscape.show.labels ? 'fa-eye' : 'fa-eye-slash'"></i></button> 
+            </th><th></th></tr>
+            <tr ng-repeat="region in layer.soundscape.regions" 
+                ng-class ="{'active':layer.soundscape.selection.bbox == region}"
+                ng-click ="layer.soundscape.selection.bbox = region"
+            >
+                <td>{{region.name}}</td>
+                <td>
+                    <span ng-hide="region.labels">[None]</span>
+                    <span ng-repeat="label in region.labels | limitTo:3" class="label" ng-class="label.class" >{{label.name}}</span>
+                </td>
+                <td>
+                    <button class="btn btn-default btn-sm" tooltip="View Sampled Recordings" ng-show="layer.soundscape.selection.bbox.samples"
+                        ng-click="layer.soundscape.selection.view_samples()"
+                    ><i class="fa fa-list"></i></button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

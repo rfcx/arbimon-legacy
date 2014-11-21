@@ -18,17 +18,25 @@ router.param('soundscape', function(req, res, next, soundscape){
     });
 });
 
-router.param('bbox', function(req, res, next, bbox){
-    var m=/^((\d+)?,(\d+)?-(\d+)?,(\d+)?|all)?$/.exec(bbox);
+var parse_bbox = function(bbox){
+    var m=/^((\d+)?,(\d+)?-(\d+)?,(\d+)?|all)?$/.exec('' + bbox);
     if(!m){
-        return res.status(404).json({ error: "Invalid bounding box."});
+        return null;
     }
-    req.bbox = {
+    return {
         x1 : m[2] === undefined ? undefined : (m[2] | 0),
         y1 : m[3] === undefined ? undefined : (m[3] | 0),
         x2 : m[4] === undefined ? undefined : (m[4] | 0),
         y2 : m[5] === undefined ? undefined : (m[5] | 0)
     };
+};
+
+router.param('bbox', function(req, res, next, bbox){
+    var bb = parse_bbox(bbox);
+    if(!bb){
+        return res.status(404).json({ error: "Invalid bounding box."});
+    }
+    req.bbox = bb;
     return next();
 });
 
@@ -46,20 +54,50 @@ router.get('/', function(req, res, next) {
     });
 });
 
+router.get('/:soundscape/regions/', function(req, res, next) {
+    model.soundscapes.getRegions(req.soundscape, function(err, regions){
+        if(err){
+            next(err);
+        } else {
+            res.json(regions);
+        }
+    });
+});
 
-router.use('/:soundscape/recordings/:bbox', function(req, res, next) {
+router.post('/:soundscape/regions/add', function(req, res, next) {
+    var bbox = parse_bbox(req.body.bbox);
+    model.soundscapes.addRegion(req.soundscape, {
+        bbox : bbox,
+        name : req.body.name
+    }, function(err, region){
+        if(err){
+            next(err);
+        } else {
+            res.json(region);
+        }
+    });
+});
+
+
+router.get('/:soundscape/recordings/:bbox', function(req, res, next) {
+    var soundscape = req.soundscape;
     var filters = {
         ignore_offsets : true,
-        minx : req.bbox.x1,
-        maxx : req.bbox.x2,
-        miny : req.bbox.y1,
-        maxy : req.bbox.y2
+        minx : ((req.bbox.x1 - soundscape.min_t)) | 0,
+        maxx : ((req.bbox.x2 - soundscape.min_t)) | 0,
+        miny : ((req.bbox.y1 - soundscape.min_f) / soundscape.bin_size) | 0,
+        maxy : ((req.bbox.y2 - soundscape.min_f) / soundscape.bin_size - 1) | 0
     };
+    var just_count = req.query && req.query.count;
     model.soundscapes.fetchSCIDX(req.soundscape, filters, function(err, scidx){
         if(err){
             next(err);
         } else {
-            res.json(scidx.flatten());
+            if(just_count){
+                res.json(scidx.count());
+            } else {
+                res.json(scidx.flatten());
+            }
         }
     });
 });

@@ -1,0 +1,19 @@
+<div class="modal-header">
+    <h3 class="modal-title">Sample Region {{region.name}}</h3>
+</div>
+<div class="modal-body" ng-form>
+    <div class="form form-horizontal">
+        <div class="form-group" ng-class="{'has-error': validation.name}" >
+            <label class="col-sm-2 control-label">Percent : </label>
+            <div class="col-sm-10">
+                <input type="number" min="0" max="100" ng-model="data.percent" style="width:4em" />% 
+                <span class="badge" style="margin-left:15px">{{Math.floor(region.count * data.percent / 100)}}</span>
+            </div>
+            <div class="pull-right text-danger" ng-show="validation.name">{{validation.name}}</div>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok()">OK</button>
+    <button class="btn btn-warning" ng-click="$dismiss()">Cancel</button>
+</div>

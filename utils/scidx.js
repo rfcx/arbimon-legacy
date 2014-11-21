@@ -142,7 +142,9 @@ scidx.prototype = {
         }).bind(this));
     }, 
     __read_rows: function(_, callback){
-        var yi = 0, ye = _.height;
+        // var yi = 0, ye = _.height;
+        var yi = Math.max(0, _.box.miny);
+        var ye = Math.min(_.height, _.box.maxy + 1);
         // # read each row
         async.whilst(
             function(){ return yi < ye;}, 
@@ -205,7 +207,9 @@ scidx.prototype = {
         // #     count 	2 byte uint - number of recordings in indices[]
         // #     indices[] 	array of rec_bytes byte uints of size count -
         // #                   indicates indices in recs[] lists
-        var xi = 0, xf = _.width;
+        // var xi = 0, xf = _.width;
+        var xi = Math.max(0, _.box.minx);
+        var xf = Math.min(_.width, _.box.maxx + 1);
         var row = _.row;
         var cells_read = 0;
         async.whilst(
@@ -275,7 +279,29 @@ scidx.prototype = {
         return this.recordings.filter(function(r, i){
             return recs[i];
         });
+    },
+    
+    count : function(){
+        var recs = {}, count=0;
+        var idx = this.index, row, cell;
+        
+        for(var y in idx){
+            row = idx[y];
+            for(var x in row){
+                cell = row[x];
+                for(var z in cell){
+                    var rec = cell[z];
+                    if(!recs[rec]){
+                        recs[rec] = true;
+                        ++count;
+                    }
+                }
+            }
+        }
+        
+        return count;
     }
+
 
 };
 

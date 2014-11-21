@@ -1,14 +1,104 @@
 <div class="input-source"
     ng-style="{height: layout.spectrogram.height, width: layout.spectrogram.width}"
     a2-visualizer-fit-spectrogram
+    ng-mousedown= "($event.which   == 1) && layer.soundscape.selection.reset().add_point(pointer.sec, pointer.hz)"
+    ng-mousemove= "($event.buttons == 1) && layer.soundscape.selection.add_tracer_point(pointer.sec, pointer.hz)"
+    ng-mouseup  = "($event.which   == 1) && layer.soundscape.selection.add_point(pointer.sec, pointer.hz).query()"
 >
     <div class="selection-rect"
-        style="color:white"
+        ng-show="layer.soundscape.selection.bbox && !layer.soundscape.selection.bbox.id"
         ng-style="{
-            left   : layout.sec2x(Math.floor(pointer.sec), 1) + 'px', 
-            top    : layout.hz2y(visobject.bin_size * Math.ceil(pointer.hz / visobject.bin_size), 1) + 'px', 
-            width  : layout.dsec2width(1, 0, 1) + 'px', 
-            height : layout.dhz2height(visobject.bin_size, 0, 1) + 'px'
+            left   : layout.sec2x(layer.soundscape.selection.bbox.x1, 1, 0) + 'px', 
+            top    : layout.hz2y(layer.soundscape.selection.bbox.y2 , 1) + 'px', 
+            width  : layout.dsec2width(layer.soundscape.selection.bbox.x2, layer.soundscape.selection.bbox.x1, 1, 1) + 'px', 
+            height : layout.dhz2height(layer.soundscape.selection.bbox.y2, layer.soundscape.selection.bbox.y1, 1) + 'px'
         }"
-    ></div>
+    >
+    </div>
+    <div>
+        <div class="rect-holder" 
+        ng-click="layer.soundscape.selection.bbox = region; $event.stopPropagation();"
+        ng-class="{selected : region == layer.soundscape.selection.bbox}"
+        ng-repeat="region in layer.soundscape.regions" ng-style="{
+            left   : layout.sec2x(region.x1, 1) + 'px', 
+            top    : layout.hz2y (region.y2, 1, 1) + 'px'
+        }" >
+            <div class="rect" ng-style="{
+                width  : layout.dsec2width(region.x2, region.x1, 1, 1) + 'px', 
+                height : layout.dhz2height(region.y2, region.y1, 1, 1) + 'px'
+            }" ></div>
+            <div class="text">
+                <div ng-show="layer.soundscape.show.names">{{region.name}}</div>
+                <div ng-show="layer.soundscape.show.labels">
+                    <span ng-repeat="label in region.labels" class="label" ng-class="label.class" >{{label.name}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div a2-insert-in=".visualizer-root">
+        <div class="popover confirm-roi"
+            ng-class="(
+                    layout.sec2x(layer.soundscape.selection.bbox.x1, 1, 0)+
+                    layout.sec2x(layer.soundscape.selection.bbox.x2, 1, 1)
+            )/2 > layout.viewport.width/2 ? 'left' : 'right'"
+            ng-style="{
+                display : layer.soundscape.selection.valid || layer.soundscape.selection.bbox.id ? 'block' : 'none',
+                left : (
+                    layout.viewport.left + 
+                    (
+                            layout.sec2x(layer.soundscape.selection.bbox.x1, 1, 0)+
+                            layout.sec2x(layer.soundscape.selection.bbox.x2, 1, 1)
+                    )/2 +
+                    (
+                        (
+                                layout.sec2x(layer.soundscape.selection.bbox.x1, 1, 0)+
+                                layout.sec2x(layer.soundscape.selection.bbox.x2, 1, 1)
+                        )/2 > layout.viewport.width/2 ? -210 : 0)
+                ) + 'px',
+                top  : (
+                    layout.spectrogram.top + layout.hz2y((layer.soundscape.selection.bbox.y1 + layer.soundscape.selection.bbox.y2)/2, 1)
+                ) + 'px'
+            }"
+        >
+            <div class="arrow"></div>
+            <div class="popover-content" ng-hide="layer.soundscape.selection.bbox.id">
+                <input ng-model="layer.soundscape.selection.bbox.name" 
+                    placeholder="Selected Region" 
+                /><br/>
+                <br />
+                {{
+                    visobject.domain.x.unit_format(layer.soundscape.selection.bbox.x1) + (
+                    layer.soundscape.selection.bbox.x1 != layer.soundscape.selection.bbox.x2 ?
+                        ' - ' + visobject.domain.x.unit_format(layer.soundscape.selection.bbox.x2) : ''
+                    )
+                }} <br />
+                {{
+                    visobject.domain.y.unit_format(layer.soundscape.selection.bbox.y1) + (
+                    layer.soundscape.selection.bbox.y1 != layer.soundscape.selection.bbox.y2 ?
+                        ' - ' + visobject.domain.y.unit_format(layer.soundscape.selection.bbox.y2) : ''
+                    )
+                }} <br />
+                Recordings : {{layer.soundscape.selection.bbox.q}}<br/>
+                <br />
+                <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.submit()"><i class="fa fa-plus text-success"></i> Add</button>
+                <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset()"><i class="fa fa-ban text-danger"></i> Cancel</button>
+            </div>
+            
+            <div class="popover-content" ng-show="layer.soundscape.selection.bbox.id">
+                {{layer.soundscape.selection.bbox.name}}<br />
+                <br />
+                Recordings : <span class="badge" >{{layer.soundscape.selection.bbox.count}}</span> <br />
+                <br />
+                <div ng-hide="layer.soundscape.selection.bbox.samples">
+                    <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.sample()"><i class="fa fa-plus text-success"></i> Sample</button>
+                    <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset()"><i class="fa fa-ban text-danger"></i> Cancel</button>
+                </div>
+                <div ng-show="layer.soundscape.selection.bbox.samples">
+                    <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.view_samples()"><i class="fa fa-list"></i> View</button>
+                    <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset()"><i class="fa fa-ban text-danger"></i> Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
