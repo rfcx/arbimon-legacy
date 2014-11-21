@@ -280,7 +280,6 @@ angular.module('audiodata', [
                     return;
                 }
                 
-                item.formData.push({ project: JSON.stringify($scope.project) });
                 item.formData.push({ info: JSON.stringify($scope.info) });
                 item.upload();
             });
@@ -361,7 +360,6 @@ angular.module('audiodata', [
     
     $scope.close = function(){
         if($scope.uploadInfo.$valid) {
-            $scope.info.site = $scope.sites[$scope.info.site];
             $modalInstance.close($scope.info);
         }
         

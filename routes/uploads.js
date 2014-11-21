@@ -7,7 +7,6 @@ var util = require('util');
 
 
 var model = require('../models');
-var jobQueue = require('../utils/jobqueue');
 var config = require('../config');
 var audioTool = require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
@@ -16,6 +15,162 @@ var formatParse = require('../utils/format-parse');
 var AWS = require('aws-sdk');
 AWS.config.loadFromPath('./config/aws.json');
 var s3 = new AWS.S3(); 
+
+
+var processUpload = function(upload, cb) {
+    
+    var file = upload.file;
+    
+    console.log("processUpload:", file.filename);
+    
+    var siteId = upload.info.site.id;
+    var fileNameFormat = upload.info.format;
+    
+    var name = file.filename.split('.');
+    var extension = name[name.length-1];
+    
+    var fileInfo = formatParse(fileNameFormat, file.filename);
+    
+    if(fileInfo instanceof Error) // catch error parsing filename
+        return cb(fileInfo);
+    
+    var recTime = new Date(fileInfo.year, --fileInfo.month, fileInfo.date, fileInfo.hour, fileInfo.min);
+    var inFile = file.path;
+    var outFile = tmpFileCache.key2File(fileInfo.filename + '.flac');
+    var thumbnail = tmpFileCache.key2File(fileInfo.filename + '.thumbnail.png');
+
+    var fileURI = util.format('project_%d/site_%d/%d/%d/%s', 
+                    upload.project_id,
+                    siteId,
+                    fileInfo.year,
+                    fileInfo.month,
+                    fileInfo.filename
+                );
+    
+    console.log('fileURI:', fileURI);
+    
+    async.auto({
+        verifyNotDuplicate: function(callback) {
+            model.recordings.exists({
+                site_id: siteId,
+                filename: fileInfo.filename
+            },
+            function(err, exists) {
+                if(err) return callback(err);
+                
+                if(exists) {
+                    var msg = "filename "+ fileInfo.filename +
+                              " already exists on site " + siteId;
+                    return callback(new Error(msg));
+                }
+                
+                callback(null, false);
+            });
+        },
+        
+        convert: ['verifyNotDuplicate', function(callback) {
+            if(extension === "flac") 
+                return callback(null, 0);
+                
+            console.log('convert to flac:', file.filename);
+            
+            audioTool.transcode(inFile, outFile, { format: 'flac' }, 
+                function(code, stdout, stderr) {
+                    if(code !== 0)
+                        return callback(new Error("error transcoding: \n" + stderr));
+                    
+                    callback(null, code);
+                }
+            );
+        }],
+        
+        thumbnail: ['verifyNotDuplicate', function(callback) {
+            console.log('gen thumbnail:', file.filename);
+             audioTool.spectrogram(inFile, thumbnail, 
+                { 
+                    maxfreq : 15000,
+                    pixPerSec : (7),
+                    height : (153)
+                },  
+                function(code, stdout, stderr){
+                    if(code !== 0)
+                        return callback(new Error("error generating spectrogram: \n" + stderr));
+                        
+                    callback(null, code);
+                }
+            );
+        }],
+        
+        uploadFlac: ['convert', function(callback, results) {
+            console.log('uploadFlac:', file.filename);
+            
+            var params = { 
+                Bucket: 'arbimon2', 
+                Key: fileURI + '.flac',
+                ACL: 'public-read',
+                Body: fs.createReadStream(outFile)
+            };
+
+            s3.putObject(params, function(err, data) {
+                if (err)       
+                    return console.log(err);
+                    
+                console.log("Successfully uploaded flac", fileInfo.filename);
+                callback(null, data);
+            });
+
+        }],
+        
+        uploadThumbnail: ['thumbnail', function(callback, results) {
+            console.log('uploadThumbnail:', file.filename);
+            
+            var params = { 
+                Bucket: 'arbimon2', 
+                Key: fileURI + '.thumbnail.png',
+                ACL: 'public-read',
+                Body: fs.createReadStream(thumbnail)
+            };
+
+            s3.putObject(params, function(err, data) {
+                if (err)       
+                    return console.log(err);
+                    
+                console.log("Successfully uploaded thumbnail:", fileInfo.filename);
+                callback(null, data);
+            });
+
+        }],
+        
+        insertOnDB: ['uploadFlac', 'uploadThumbnail', function(callback, results) {
+            console.log("inserting to DB", file.filename);
+            model.recordings.insert({
+                site_id: siteId,
+                uri: fileURI + '.flac',
+                datetime: recTime,
+                mic: upload.info.mic,
+                recorder: upload.info.recorder,
+                version: upload.info.sver
+            },
+            callback);
+        }]
+    },
+    function(err, results) {
+        // delete temp files
+        deleteFile(inFile);
+        deleteFile(thumbnail);
+        
+        if(extension !== 'flac') {
+            deleteFile(outFile);
+        }
+        
+        if(err) return cb(err);
+        
+        console.log('process upload results:');
+        console.log(results);
+        
+        cb(null, file.filename);
+    });
+};
 
 var deleteFile = function(filename) {
     fs.exists(filename, function (exists) {
@@ -37,195 +192,49 @@ router.post('/audio/project/:projectid', function(req, res, next) {
         return res.json({ error: "you dont have permission to '"+ perm +"'" });
     }
     
-    var fields = {};
-    var files = [];
+    var info;
+    var fileUploaded;
     
-    req.busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
-        fields[fieldname] = val;
+    req.busboy.on('field', function(fieldname, val) {
+        if(fieldname === 'info') {
+            try {
+                info = JSON.parse(val);
+            }
+            catch(err) {
+                err.status =  400;
+                return next(err);
+            }
+        }
     });
     
     req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
         var saveTo = tmpFileCache.key2File(filename);
         file.pipe(fs.createWriteStream(saveTo));
         
-        files.push({ 
+        fileUploaded = { 
             filename: filename,
             path: saveTo
-        });
+        };
     });
     
     req.busboy.on('finish', function() {
         
-        console.log('fields: ', fields);
-        console.log('files: ', files);
+        console.log('info: ', info);
+        console.log('fileUploaded: ', fileUploaded);
         
-        try {
-            fields.project = JSON.parse(fields.project);
-            fields.info = JSON.parse(fields.info);
-        }
-        catch(err) {
-            err.status =  400;
-            return next(err);
-        }
+        var upload = { 
+            info: info,
+            file: fileUploaded,
+            project_id: project_id,
+        };
+        
+        processUpload(upload, function(err, file){
+            if(err) return console.error(err);
+            
+            console.log('finished processing:', file);
+        });
         
         res.status(202).send("upload done!");
-        
-        files.forEach(function(file) {
-            
-            jobQueue.push({ 
-                name: "process: " + file.filename,
-                work: function(cb) {
-                    var name = file.filename.split('.');
-                    var extension = name[name.length-1];
-                    
-                    var fileInfo = formatParse(fields.info.format, file.filename);
-                    
-                    if(fileInfo instanceof Error) // catch error parsing filename
-                        return cb(fileInfo);
-                    
-                    var recTime = new Date(fileInfo.year, --fileInfo.month, fileInfo.date, fileInfo.hour, fileInfo.min);
-                    var inFile = file.path;
-                    var outFile = tmpFileCache.key2File(fileInfo.filename + '.flac');
-                    var thumbnail = tmpFileCache.key2File(fileInfo.filename + '.thumbnail.png');
-
-                    var fileKey = util.format('project_%d/site_%d/%d/%d/%s', 
-                        fields.project.project_id,
-                        fields.info.site.id,
-                        fileInfo.year,
-                        fileInfo.month,
-                        fileInfo.filename
-                    );
-                    
-                    console.log('fileKey:', fileKey);
-                    
-                    async.auto({
-                        verifyNotDuplicate: function(callback) {
-                            model.recordings.exists({
-                                site_id: fields.info.site.id,
-                                filename: fileInfo.filename
-                            },
-                            function(err, exists) {
-                                if(err) return callback(err);
-                                
-                                if(exists) {
-                                    var msg = "filename "+ fileInfo.filename +
-                                              " already exists on site " + fields.info.site.id;
-                                    return callback(new Error(msg));
-                                }
-                                
-                                callback(null, false);
-                            });
-                        },
-                        
-                        convert: ['verifyNotDuplicate', function(callback) {
-                            console.log('convert');
-                            if(extension === "flac") 
-                                return callback(null, 0);
-                                
-                            audioTool.transcode(inFile, outFile, { format: 'flac' }, 
-                                function(code, stdout, stderr) {
-                                    callback(null, code);
-                                }
-                            );
-                        }],
-                        
-                        thumbnail: ['verifyNotDuplicate', function(callback) {
-                            console.log('thumbnail');
-                             audioTool.spectrogram(inFile, thumbnail, 
-                                { 
-                                    maxfreq : 15000,
-                                    pixPerSec : (7),
-                                    height : (153)
-                                },  
-                                function(code){                            
-                                    callback(null, code);
-                                }
-                            );
-                        }],
-                        
-                        uploadFlac: ['convert', function(callback, results) {
-                            console.log('uploadFlac');
-                            
-                            if(results.convert !== 0)
-                                throw new Error("error processing");
-                            
-                            var params = { 
-                                Bucket: 'arbimon2', 
-                                Key: fileKey + '.flac',
-                                ACL: 'public-read',
-                                Body: fs.createReadStream(outFile)
-                            };
-
-                            s3.putObject(params, function(err, data) {
-                                if (err)       
-                                    return console.log(err);
-                                    
-                                console.log("Successfully uploaded flac", fileInfo.filename);
-                                callback(null, data);
-                            });
-
-                        }],
-                        
-                        uploadThumbnail: ['thumbnail', function(callback, results) {
-                            console.log('uploadThumbnail');
-                            
-                            if(results.thumbnail !== 0)
-                                throw new Error("error creating thumbnail");
-                            
-                            var params = { 
-                                Bucket: 'arbimon2', 
-                                Key: fileKey + '.thumbnail.png',
-                                ACL: 'public-read',
-                                Body: fs.createReadStream(thumbnail)
-                            };
-
-                            s3.putObject(params, function(err, data) {
-                                if (err)       
-                                    return console.log(err);
-                                    
-                                console.log("Successfully uploaded thumbnail", fileInfo.filename);
-                                callback(null, data);
-                            });
-
-                        }],
-                        
-                        insertOnDB: ['uploadFlac', 'uploadThumbnail', function(callback, results) {
-                                                
-                            model.recordings.insert({
-                                site_id: fields.info.site.id,
-                                uri: fileKey + '.flac',
-                                datetime: recTime,
-                                mic: fields.info.mic,
-                                recorder: fields.info.recorder,
-                                version: fields.info.sver
-                            },
-                            function(err, result) {
-                                callback(err, result);
-                            });
-                        }]
-                    },
-                    function(err, results) {
-                        // delete temp files
-                        deleteFile(inFile);
-                        deleteFile(thumbnail);
-                        
-                        if(extension !== 'flac') {
-                            deleteFile(outFile);
-                        }
-                        
-                        if(err) return cb(err);
-                        
-                        console.log('results:', results);
-                        cb();
-                    });
-                }
-            },
-            2,
-            function(err){
-                if(err) return console.error(err);
-                console.log('finished processing:', file.filename);
-            });
-        });
     });
     
     req.pipe(req.busboy);

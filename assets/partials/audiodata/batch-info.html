@@ -6,10 +6,12 @@
     <div class="alert alert-danger" role="alert" ng-show="error"> all fields are required</div>
     <form name="uploadInfo"role="form">
         <div class="form-group">
-            <label class="control-label" for="site" >Site:</label>
-            <select name="site" id="site" class="form-control" ng-model="info.site" required>
-                <option ng-repeat="site in sites" value="{{ $index }}">{{ site.name }}</option>
-            </select>
+            <ui-select ng-model="info.site" theme="bootstrap">
+                <ui-select-match placeholder="Site name">{{ $select.selected.name }}</ui-select-match>
+                <ui-select-choices class="has-badges" repeat="site in sites | filter:$select.search">
+                    {{ site.name }}
+                </ui-select-choices>
+            </ui-select>
         </div>
         <div class="form-group">
             <label class="control-label" for="format" >Filename format:</label>

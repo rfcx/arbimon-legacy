@@ -40,5 +40,5 @@ var formatParse = function(formatName, filename) {
 
 module.exports = formatParse;
 
-// console.log(formatParse('Arbimon','fsldfjslkd'));
+console.log(formatParse('Arbimon','default-2014-08-25_17-30.flac'));
 // console.log(formatParse('arbimon','fsldfjslkd'));
