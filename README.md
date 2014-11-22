@@ -49,6 +49,16 @@ Bio-Acoustic Analyzer
    sudo apt-get install imagemagick
    ```
    
+ - R statistics
+   ```
+    sudo apt-get install r-base
+    sudo apt-get install r-base-dev
+    sudo apt-get install libfftw3-3 libfftw3-dev libsndfile1-dev r-cran-rgl bwidget
+   ```
+ - R packages (tuneR,seewave)
+   ```
+   sudo Rscript scripts/setup/r-packages.R
+   ```
    
  - nodejs
    ```
@@ -81,7 +91,7 @@ Bio-Acoustic Analyzer
    
  - scikits.audiolab dependencies
    ```
-   sudo apt-get install libsndfile-dev
+   sudo apt-get install libsndfile1 libsndfile-dev
    ```
    
  - node global dependencies(`sudo npm install -g <package>`):
