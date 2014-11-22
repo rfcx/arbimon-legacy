@@ -10,7 +10,7 @@ Bio-Acoustic Analyzer
    ```
    sudo add-apt-repository ppa:chris-lea/node.js
    sudo apt-get update
-   sudo apt-get install python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev gfortran libopenblas-dev liblapack-dev  libpng12-dev libfreetype6-dev libsndfile-dev
+   sudo apt-get install python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev gfortran libopenblas-dev liblapack-dev  libpng12-dev libfreetype6-dev libsndfile-dev virtualenv
    ```
    
  - Install all python dependencies, create python virtual enviroment and build
@@ -62,7 +62,11 @@ Bio-Acoustic Analyzer
    ```
    sudo apt-get install libmysqlclient-dev python-dev
    ```
-   
+ 
+ - python virtualenv
+   ```
+   sudo apt-get install virtualenv
+   ```
    
  - scipy dependencies
    ```
@@ -85,7 +89,7 @@ Bio-Acoustic Analyzer
   - grunt-cli
   
 
- - or individual python dependencies (`sudo pip install`):
+ - individual python dependencies (`sudo pip install`):
     - numpy 
     - scipy
     - MySQL-python 
