@@ -19,17 +19,20 @@
         </ui-select>
       </div>
       <div class="row">
-        <div class="col-lg-6">
+        <div class="col-sm-6">
             <label for="aggregation">Select Aggregation:</label>
-            <a2-aggregationtypeselector on-selected="aggregationValue"></a2-aggregationtypeselector>
+            <div class="row">
+                <a2-aggregationtypeselector on-selected="aggregationValue"></a2-aggregationtypeselector>
+            </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-sm-6">
             <div class="row container-fluid" >
                 <label for="aggregation">Peak Filtering:</label>
+                <a2-thresholdselector></a2-thresholdselector>
+                <!--
                 <div class="row">
                     <div class="col-sm-6"  tooltip="Selects peaks with amplitude above the threshold. A 0 value selects all peaks. A 1 value select none." >Threshold: {{datasubmit.threshold}}</div>
-                    <div class="col-sm-5" style="padding:0px;margin:0px;" range-slider min="0" max="100"  model-min="threshold" pin-handle="max" show-values="false"></div>
-                </div><!--
+                </div>
                 <div class="row">
                     <div class="col-sm-5"  tooltip="Selects peaks ..." >Flatness</div>
                 </div>-->
