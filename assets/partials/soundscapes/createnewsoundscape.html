@@ -28,9 +28,10 @@
         <div class="col-sm-6">
             <div class="row container-fluid" >
                 <label for="aggregation">Peak Filtering:</label>
+                <i class="fa fa-question" tooltip="Only peaks above the amplitude threshold will be considered. If the frequency difference of two successive peaks is less than the frequency threshold, then the peak of highest amplitude will be kept only." tooltip-placement="right"></i> 
                 <a2-thresholdselector></a2-thresholdselector>
-                
-                <a2-banwidthselector></a2-banwidthselector>
+                <div>Flatness</div>
+                <div>Bin bandwidth</div>
                 <!--
                 <div class="row">
                     <div class="col-sm-6"  tooltip="Selects peaks with amplitude above the threshold. A 0 value selects all peaks. A 1 value select none." >Threshold: {{datasubmit.threshold}}</div>
