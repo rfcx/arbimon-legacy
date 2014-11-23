@@ -323,32 +323,17 @@
 		restrict : 'E',
                 templateUrl: template_root + 'thresholdselector.html',
 		controller :['$scope', '$http', function($scope, $http) {
-		var lineData = [{
-  x: 1,
-  y: 0.1
-}, {
-  x: 2,
-  y: 0.2
-}, {
-  x: 3,
-  y: 0.9
-}, {
-  x: 4,
-  y: 0.02
-}, {
-  x: 5,
-  y: 0.1
-}, {
-  x: 6,
-  y: 0.1
-}, {
-  x: 7,
-  y: 0.4
-}, {
-  x: 8,
-  y: 0.1
-}];
-
+var data = [0.1,0.2,0.9,0.01,0.2,0.1,0.4,0.1]
+var lineData = [];
+for (var i= 0 ; i < data.length ; i++)
+{
+    lineData.push({x:(i+1),y:data[i]})
+}
+var peaks = [
+    {x:3 , y:0.9},
+    {x:5 , y:0.2},
+    {x:7 , y:0.4}
+]
 var vis = d3.select('#thresholdvisualisation')
 ,
     WIDTH = 210,
@@ -390,25 +375,22 @@ var vis = d3.select('#thresholdvisualisation')
   .attr('stroke-width', 2)
   .attr('fill', 'none').attr('class','movingline');
     vis.selectAll("text.peakText").remove()
-if (0.4 >= $scope.thresholdPerc) {
+    
+var peaki = 1;
+for (var i = 0 ; i < peaks.length;i++)
+{
+ if (peaks[i].y >= $scope.thresholdPerc) {
     //code
 
     $scope.peakText = vis.append("text")      // text label for the x axis
-        .attr("x", WIDTH*(7/lineData.length) )
-        .attr("y",  50*(1-0.4) + 10 ).attr('font-size','11px')
+        .attr("x", WIDTH*(peaks[i].x/lineData.length) )
+        .attr("y",  50*(1-peaks[i].y) + 10 ).attr('font-size','11px')
         .style("text-anchor", "middle").attr('class','peakText')
-        .text("P2");
+        .text("P"+(peaki ));
+	peaki  = peaki  + 1;
+}   
 }
 
-if (0.9 >= $scope.thresholdPerc) {
-    //code
-
-    $scope.peakText = vis.append("text")      // text label for the x axis
-        .attr("x", WIDTH*(3/lineData.length) )
-        .attr("y",  50*(1-0.9) + 10 ).attr('font-size','11px')
-        .style("text-anchor", "middle").attr('class','peakText')
-        .text("P1");
-}
 		}
 	    );
 vis.append('svg:g')
@@ -435,7 +417,136 @@ vis.append('svg:g')
   .attr('stroke', 'blue')
   .attr('stroke-width', 2)
   .attr('fill', 'none');
+vis.append("text")      // text label for the x axis
+        .attr("x", WIDTH/2 )
+        .attr("y",  68 ).attr('font-size','9px')
+        .style("text-anchor", "middle")
+        .text("Hz");
+		}]
+    	    }
+	}
+    ).
+    directive('a2Banwidthselector',
+	function()
+        {
+	    return {	
+		restrict : 'E',
+                templateUrl: template_root + 'banwidthselector.html',
+		controller :['$scope', '$http', function($scope, $http) {
+var data = [0.1,0.2,0.9,0.01,0.2,0.1,0.4,0.1]
+var lineData = [];
+for (var i= 0 ; i < data.length ; i++)
+{
+    lineData.push({x:(i+1),y:data[i]})
+}
+var peaks = [
+    {x:3 , y:0.9 , d:0},
+    {x:5 , y:0.2,d:420},
+    {x:7 , y:0.4, d:850}
+]
+var vis = d3.select('#banwidthvisualisation')
+,
+    WIDTH = 210,
+    HEIGHT = 70,
+    MARGINS = {
+      top: 10,
+      right: 10,
+      bottom: 10,
+      left: 24
+    },
+    xRange = d3.scale.linear().range([MARGINS.left, WIDTH - MARGINS.right]).domain([d3.min(lineData, function(d) {
+      return d.x;
+    }), d3.max(lineData, function(d) {
+      return d.x;
+    })]),
+    yRange = d3.scale.linear().domain([0,1]).range([HEIGHT - MARGINS.top, MARGINS.bottom]),
+    xAxis = d3.svg.axis()
+      .scale(xRange)
+      .ticks(0),
+    yAxis = d3.svg.axis()
+      .scale(yRange)
+      .ticks(3)
+      .tickSize(3)
+      .orient('left')
+      .tickSubdivide(true);
+ 	    $scope.banwidth = 100;
+	    $scope.banwidthValue = 0;
+	    $scope.$watch('banwidth',
+		function()
+		{
+		    		    $scope.banwidthPerc = ($scope.banwidth)/100;
+		    $scope.banwidthValue = 1000 - Math.round(1000*$scope.banwidthPerc);
+		    xval = Math.floor( WIDTH*(peaks[0].x/lineData.length)) -4 + 120*(1-$scope.banwidthPerc)
+		      vis.selectAll("line.movingline1").remove()
+		      
+   $scope.line=  vis.append('svg:line')
+.attr("x1",xval)
+.attr("y1", 14)
+.attr("x2",xval)
+.attr("y2", 60)  .attr('stroke', 'red')
+  .attr('stroke-width', 2)
+  .attr('fill', 'none').attr('class','movingline1');
+  
+    vis.selectAll("text.peakText1").remove()
+    
+var peaki = 2;
+for (var i = 1 ; i < peaks.length;i++)
+{
+ if (peaks[i].d >= $scope.banwidthValue ) {
+    //code
 
+    $scope.peakText = vis.append("text")      // text label for the x axis
+        .attr("x", WIDTH*(peaks[i].x/lineData.length) )
+        .attr("y",  50*(1-peaks[i].y) + 10 ).attr('font-size','11px')
+        .style("text-anchor", "middle").attr('class','peakText1')
+        .text("P"+(peaki ));
+	peaki  = peaki  + 1;
+}   
+}
+
+		}
+	    );
+vis.append('svg:g')
+  .attr('class', 'thresholdaxis')
+  .attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')
+  .call(xAxis);
+ 
+vis.append('svg:g')
+  .attr('class', 'thresholdaxis')
+  .attr('transform', 'translate(' + (MARGINS.left) + ',0)')
+  .call(yAxis);
+  
+  var lineFunc = d3.svg.line()
+  .x(function(d) {
+    return xRange(d.x);
+  })
+  .y(function(d) {
+    return yRange(d.y);
+  })
+  .interpolate('linear');
+  
+   $scope.line=  vis.append('svg:line')
+.attr("x1",Math.floor( WIDTH*(peaks[0].x/lineData.length)) -4)
+.attr("y1", 14)
+.attr("x2",Math.floor( WIDTH*(peaks[0].x/lineData.length)) -4)
+.attr("y2", 60)  .attr('stroke', 'red')
+  .attr('stroke-width', 2)
+  .attr('fill', 'none');
+      $scope.peakText = vis.append("text")      // text label for the x axis
+        .attr("x", WIDTH*(peaks[0].x/lineData.length) )
+        .attr("y",  50*(1-peaks[0].y) + 10 ).attr('font-size','11px')
+        .style("text-anchor", "middle")
+        .text("P1");
+  vis.append('svg:path')
+  .attr('d', lineFunc(lineData))
+  .attr('stroke', 'blue')
+  .attr('stroke-width', 2)
+  .attr('fill', 'none');
+vis.append("text")      // text label for the x axis
+        .attr("x", WIDTH/2 )
+        .attr("y",  68 ).attr('font-size','9px')
+        .style("text-anchor", "middle")
+        .text("Hz");
 		}]
     	    }
 	}
