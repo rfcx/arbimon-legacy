@@ -443,6 +443,7 @@ textarea.fixed-width {
 
 @training-job-color: #178fd5;
 @classify-job-color: #f45151;
+@soundscape-job-color: #009900;
 
 
 //progress bar colors
@@ -454,7 +455,10 @@ textarea.fixed-width {
     background-image: none;
     background-color: @classify-job-color;
 }
-
+.barColor4{ // soundscapes
+    background-image: none;
+    background-color: @soundscape-job-color;
+}
 .checkSelectors{
 input[type=checkbox] { visibility: hidden; }
 .checkboxex { background: #ededed;
@@ -471,7 +475,11 @@ input[type=checkbox] { visibility: hidden; }
 
 .checkbox-2 input[type=checkbox]:checked + label { background: @classify-job-color;  // classification
 width: 12px; height: 13px; top: 2px; left: 1px; }
+
+.checkbox-4 input[type=checkbox]:checked + label { background: @soundscape-job-color;  // soundscapes
+width: 12px; height: 13px; top: 2px; left: 1px; }
 }
+
 .bordered{
     border-top:1px solid #bbb;
     padding-bottom: 12px;
@@ -708,3 +716,16 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
         margin-left:40px;
 }
 
+.spacedhz
+{
+    padding-left: 11px;
+    padding-right: 11px;
+}
+
+.binhzpadding
+{padding-left:0px;
+    padding-bottom:10px;
+    margin-left: 0px;
+}
+
+#binhzlist .ui-selected { background: #d5d5d5; font-weight: bold;}

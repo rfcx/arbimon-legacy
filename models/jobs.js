@@ -33,10 +33,10 @@ module.exports =
          newSoundscapeJob: function(p, callback)
         {
          
-            var q = "INSERT INTO `job_params_soundscape`(`job_id`, `playlist_id`, `max_hertz`, `bin_size`, `soundscape_aggregation_type_id`, `name`, `threshold`) "+
+            var q = "INSERT INTO `job_params_soundscape`(`job_id`, `playlist_id`, `max_hertz`, `bin_size`, `soundscape_aggregation_type_id`, `name`, `threshold` , `frequency`) "+
                   " VALUES ("+mysql.escape(p.id)+","+mysql.escape(p.playlist)+","+mysql.escape(p.maxhertz)+
                   " ,"+mysql.escape(p.bin)+",  (SELECT `soundscape_aggregation_type_id` FROM `soundscape_aggregation_types` WHERE `identifier` = "+mysql.escape(p.aggregation)+") "+
-                  ","+mysql.escape(p.name)+","+mysql.escape(p.threshold)+")"
+                  ","+mysql.escape(p.name)+","+mysql.escape(p.threshold)+","+mysql.escape(p.frequency)+")"
             queryHandler(q,callback);
         },
         hide: function(jId, callback)

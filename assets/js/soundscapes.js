@@ -152,8 +152,9 @@
         }
     ).controller
     ('CreateNewSoundscapeInstanceCtrl', 
-        function ($scope, $modalInstance,$http,projectData,playlists) 
+        function ($scope, $modalInstance,$http,$timeout,projectData,playlists) 
         {
+	    
             $scope.projectData = projectData;
 	    $scope.playlists = playlists;
 	    $scope.buttonEnableFlag = true;
@@ -161,7 +162,9 @@
               name : '' ,
               playlist: '',
 	      aggregation : '',
-	      threshold : 0.0
+	      threshold : '' ,
+	      bin : 86,
+	      bandwidth : ''
             };
 	    $scope.nameMsg = '';
 	    $scope.aggregationValue = function(val)
@@ -170,6 +173,7 @@
 		    $scope.datasubmit.aggregation = val;
 		});
 	    };
+	    
 	    $scope.$watch('threshold',
 		function()
 		{
@@ -179,7 +183,7 @@
             $scope.ok = function () {
 		
                 var url = $scope.projectData.url;
-		$scope.nameMsg = '';
+		$scope.nameMsg = '';		
                 $http.post('/api/project/'+url+'/soundscape/new', 
                     {
                         n:$scope.datasubmit.name,
@@ -187,7 +191,8 @@
 			a:$scope.datasubmit.aggregation,
 			t:$scope.datasubmit.threshold,
 			m:22050,
-			b:86
+			b:$scope.datasubmit.bin,
+			f:$scope.datasubmit.bandwidth 
                     }
                 ).
                 success
@@ -212,7 +217,10 @@
             $scope.buttonEnable = function () 
             {
                 return  (
-			    $scope.datasubmit.aggregation.length  == 0
+			   ((typeof $scope.datasubmit.bin.length)  == 'string')
+			    || $scope.datasubmit.aggregation.length  == 0 
+			    || ((typeof $scope.datasubmit.threshold.length)  == 'string')
+			    || ((typeof $scope.datasubmit.bandwidth.length)  == 'string')
 			    || $scope.datasubmit.name.length  == 0
                             || ((typeof $scope.datasubmit.playlist) == 'string')
                         ) ;
@@ -221,7 +229,34 @@
             $scope.cancel = function () {
                  $modalInstance.dismiss('cancel');
             };
-            
+	    
+	    $timeout(function()
+		{
+		    if(!$scope.$$phase)
+		    {
+			$('#binhzlist').selectable(
+			    {
+				stop: function() {
+				$( ".ui-selected", this ).each(function() {
+				    $scope.datasubmit.bin = this.id;
+				});
+				}
+			    }
+			);
+			$('#binhzlist li:nth-child(3)').addClass('ui-selected');
+			$scope.$apply();
+		    }
+		      
+		},
+	    0);
+	    $scope.thresholdValue = function(val)
+	    {
+		$scope.datasubmit.threshold = val;
+	    };
+	    $scope.banwidthValue = function(val)
+	    {
+		$scope.datasubmit.bandwidth = val;
+	    };
         }
     ).
     directive('a2Aggregationtypeselector',
@@ -321,6 +356,10 @@
         {
 	    return {	
 		restrict : 'E',
+		scope: {
+		    "onThreshold": "=" ,
+		    "onBandwidth": "=" 
+		},
                 templateUrl: template_root + 'thresholdselector.html',
 		controller :['$scope', '$http',
 		function($scope, $http)
@@ -397,7 +436,7 @@
 				    peaki  = peaki  + 1;
 				}   
 			    }
-		    
+			    $scope.onThreshold($scope.thresholdPerc);
 			}
 		    );
 				
@@ -436,9 +475,9 @@
 				    peaki  = peaki  + 1;
 				}   
 			    }
-		    
-				    }
-				);
+			    $scope.onBandwidth($scope.banwidthValue);
+			}
+		    );
 		    vis.append('svg:g')
 			.attr('class', 'thresholdaxis')
 			.attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')

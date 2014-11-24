@@ -57,7 +57,8 @@ agrrid = sys.argv[5].strip("'")
 threshold = float(sys.argv[6].strip("'"))
 pid = int(sys.argv[7].strip("'"))
 uid = int(sys.argv[8].strip("'"))
-name = sys.argv[9]
+name = sys.argv[9].strip("'")
+frequency = int(sys.argv[10].strip("'"))
 aggregation = soundscape.aggregations.get(agrrid)
 if not aggregation:
     print "# Wrong agregation."
@@ -107,7 +108,7 @@ try:
 except Exception, ex:
     log.write('fatal error cannot connect to bucket '+ex.error_message)
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `remarks` = \'Error: connecting to bucket.\' where `job_id` = '+str(jId.strip(' ')))
+        cursor.execute('update `jobs` set `complete` = -1,`remarks` = \'Error: connecting to bucket.\' where `job_id` = '+str(job_id))
         db.commit()
     quit()
 log.write('connect to bucket  succesful')
@@ -115,18 +116,27 @@ log.write('connect to bucket  succesful')
 q=("SELECT r.`recording_id`,`uri`, DATE_FORMAT( `datetime` , '%Y-%m-%d %H:%i:%s' ) as date FROM `playlist_recordings` pr , `recordings` r "+
   "WHERE `playlist_id` = "+str(playlist_id)+" and pr.`recording_id` = r.`recording_id`")
 
+totalRecs = 0
 recsToProcess = []
 with closing(db.cursor()) as cursor:
         cursor.execute(q)
         db.commit()
         numrows = int(cursor.rowcount)
+        totalRecs = numrows
         for i in range(0,numrows):
             row = cursor.fetchone()
             recsToProcess.append({"uri":row[1],"id":row[0],"date":row[2]})
 
+with closing(db.cursor()) as cursor:
+    cursor.execute('update `jobs` set `progress_steps` = '+str(totalRecs+5)+' where `job_id` = '+str(job_id))
+    db.commit()
+        
 if len(recsToProcess) < 1:
     print "# fatal error invalid playlist or no recordings on playlist."
     log.write('Invalid playlist or no recordings on playlist')
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `complete` = -1,`remarks` = \'Error: Invalid playlist (Maybe empty).\' where `job_id` = '+str(job_id))
+        db.commit()
     log.close()
     sys.exit()
 
@@ -134,6 +144,9 @@ if len(recsToProcess) < 1:
 scp = soundscape.Soundscape(aggregation, bin_size, max_bins)
 
 def processRec(rec):
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+        db.commit()   
     results = []
     date = datetime.strptime( rec['date'], '%Y-%m-%d %H:%M:%S')
     id = rec['id']
@@ -146,9 +159,18 @@ def processRec(rec):
         localFile = recobject.getLocalFileLocation()
         if localFile is None:
             return None;
-        log.write('/usr/bin/Rscript'+"   "+ currDir+'/fpeaks.R' +"   "+ localFile +"  "+ 'a')
+        log.write('/usr/bin/Rscript'+currDir+'/fpeaks.R'
+                                 +' '+localFile
+                                 +' '+ str(threshold)
+                                 +' '+ str(bin_size)
+                                 +' '+ str(frequency))
         start_time_rec = time.time()
-        proc = subprocess.Popen(['/usr/bin/Rscript',currDir+'/fpeaks.R' , localFile , 'a' , str(threshold)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(['/usr/bin/Rscript',currDir+'/fpeaks.R'
+                                 , localFile
+                                 , str(threshold)
+                                 , str(bin_size)
+                                 , str(frequency)
+                                 ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
         if stderr:
             log.write('fpeaks.R:'+ str(time.time()-start_time_rec))
@@ -161,7 +183,7 @@ def processRec(rec):
             return None
         elif stdout:
             log.write('fpeaks.R:'+ str(time.time()-start_time_rec))
-            os.remove(localFile)
+            #os.remove(localFile)
             if 'err' in stdout:
                 return None
             freqs = stdout.strip(',')
@@ -181,6 +203,9 @@ resultsParallel = Parallel(n_jobs=num_cores)(delayed(processRec)(rec) for rec in
 log.write("all recs parallel ---" + str(time.time() - start_time_all))
 if len(resultsParallel)>0:
     log.write('processing recordings results: '+str(len(resultsParallel)))
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+        db.commit()
     start_time_all = time.time()
     for result in resultsParallel:
         if result != None:
@@ -194,26 +219,34 @@ if len(resultsParallel)>0:
     query = ("INSERT INTO `soundscapes`( `name`, `project_id`, `user_id`, " +
             " `soundscape_aggregation_type_id`, `bin_size`, `uri`, `min_t`, `max_t`, `min_f`, `max_f`, `min_value`, `max_value`, `date_created`, `playlist_id`) "+
             " VALUES ('"+name+"',"+str(pid)+","+str(uid)+", (SELECT `soundscape_aggregation_type_id` FROM `soundscape_aggregation_types` WHERE `identifier` = '"+agrrid+"' )" +
-            " ,"+str(bin_size)+",'stillUnkown',"+str(scp.stats['min_idx'])+","+str(scp.stats['max_idx'])+
+            " ,"+str(bin_size)+",NULL,"+str(scp.stats['min_idx'])+","+str(scp.stats['max_idx'])+
             " ,0,"+str(max_hertz)+",0,"+str(scp.stats['max_count'])+",now(),"+str(playlist_id)+")"  
             )
     scpId = -1;
     print query
+    log.write(query)
     with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+        db.commit()
         cursor.execute(query)
         db.commit()
         scpId = cursor.lastrowid
-        
+    log.write('inserted soundscape into database')   
     soundscapeId = scpId
     start_time_all = time.time()
     scp.write_image(workingFolder+imgout,palette.get_palette())
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+        db.commit()
     log.write("writing image:" + str(time.time() - start_time_all))
     imageUri = 'project_'+str(pid)+'/soundscapes/'+str(soundscapeId)+'/image.png'
     indexUri = 'project_'+str(pid)+'/soundscapes/'+str(soundscapeId)+'/index.scidx'
     k = bucket.new_key(imageUri )
     k.set_contents_from_filename(workingFolder+imgout)
     k.set_acl('public-read')
-    
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+        db.commit()
     k = bucket.new_key(indexUri )
     k.set_contents_from_filename(workingFolder+scidxout)
     k.set_acl('public-read')
@@ -222,11 +255,25 @@ if len(resultsParallel)>0:
         db.commit()
 else:
     print 'no results from playlist id:'+playlist_id
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `complete` = -1,`remarks` = \'Error: No results found.\' where `job_id` = '+str(job_id))
+        db.commit()    
     log.write('no results from playlist id:'+playlist_id) 
+    with closing(db.cursor()) as cursor:
+        cursor.execute('update `jobs` set `progress` = `progress` + 4 where `job_id` = '+str(job_id))
+        db.commit()
+
+
+with closing(db.cursor()) as cursor:
+    cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+    db.commit()
+log.write('closing database')
+
+db.close()
+log.write('removing temporary folder')
+
+shutil.rmtree(tempFolders+"/soundscape_"+str(job_id))
 
 log.write('ended script')
 log.close()
-db.close()
-
-# remove working folder
 

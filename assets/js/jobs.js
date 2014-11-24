@@ -127,6 +127,7 @@
         {
             $scope.showClassifications = true;
             $scope.showTrainings = true;
+	    $scope.showSoundscapes = true;
             $scope.url = '';
             $scope.successInfo = "";
             $scope.showSuccesss = false;
@@ -210,8 +211,14 @@
                                             {
                                                 if (data.err)
                                                 {
-                                                    console.log(data.err)
-                                               }
+						    $scope.errorInfo = "Error Communicating With Server";
+						    $scope.showError = true;
+						    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+						    function()
+						    {
+							$scope.showError = false;
+						    });
+                                                }
                                                 else
                                                 {
                                                     JobsData.updateJobs();
@@ -252,8 +259,14 @@
                         {
                             if (data.err)
                             {
-                                console.log(data.err)
-                           }
+				$scope.errorInfo = "Error Communicating With Server";
+				     $scope.showError = true;
+				     $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+				     function()
+				     {
+					 $scope.showError = false;
+				     });
+                            }
                             else
                             {
                                 JobsData.updateJobs();
@@ -291,6 +304,11 @@
                 if (type==2)
                 {
                     return($scope.showClassifications)
+                }
+		
+		if (type==4)
+                {
+                    return($scope.showSoundscapes)
                 }
                 else return false;
             };

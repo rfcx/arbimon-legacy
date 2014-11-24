@@ -443,6 +443,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             var playlist_id = (req.body.p.id);
             var bin = (req.body.b);
             var maxhertz = (req.body.m);
+            var frequency = (req.body.f);
             model.jobs.soundscapeNameExists({name:name,pid:project_id},
             
                 function(err,row) {
@@ -464,7 +465,9 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                                 {
                                     var soundscapeId = row.insertId;
 
-                                    model.jobs.newSoundscapeJob({id:soundscapeId,name:name,playlist:playlist_id,aggregation:aggregation,threshold:threshold,bin:bin,maxhertz:maxhertz},
+                                    model.jobs.newSoundscapeJob({id:soundscapeId,name:name,playlist:playlist_id,
+                                                                aggregation:aggregation,threshold:threshold,
+                                                                bin:bin,maxhertz:maxhertz,frequency:frequency},
                                         function (err,row)
                                         {
                                             if(err)
@@ -483,7 +486,8 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                                                             [scriptsFolder+'Soundscapes/playlist2soundscape.py'
                                                              ,mysql.escape(soundscapeId),mysql.escape(playlist_id),
                                                             mysql.escape(maxhertz),mysql.escape(bin),mysql.escape(aggregation)
-                                                            ,mysql.escape(threshold),mysql.escape(project_id),mysql.escape(user_id),mysql.escape(name)]
+                                                            ,mysql.escape(threshold),mysql.escape(project_id),mysql.escape(user_id)
+                                                            ,mysql.escape(name),mysql.escape(frequency)]
                                                         );
                                                         var output = "";
                                                         python.stdout.on('data', 

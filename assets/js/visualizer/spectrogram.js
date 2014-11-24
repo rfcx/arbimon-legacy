@@ -372,7 +372,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
         templateUrl : '/partials/visualizer/spectrogram-layer/default.html',
         replace  : true,
         link     : function(scope, element, attrs){
-            console.log("link     : function(scope, element, attrs){", scope, element, attrs);
+            //console.log("link     : function(scope, element, attrs){", scope, element, attrs);
             var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
             var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
             element.addClass(layer_type);

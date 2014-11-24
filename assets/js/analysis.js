@@ -7,6 +7,7 @@
     .config(function($stateProvider, $urlRouterProvider) {
 	var analysisHistory = [];
 	var analysisVisited = false;
+	
 	 $urlRouterProvider
 	 .rule(  
 	    function ($injector, $location , $state)

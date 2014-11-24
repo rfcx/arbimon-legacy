@@ -22,23 +22,30 @@
         <div class="col-sm-6">
             <label for="aggregation">Select Aggregation:</label>
             <div class="row">
-                <a2-aggregationtypeselector on-selected="aggregationValue"></a2-aggregationtypeselector>
+                 <div class="col-sm-12">
+                    <a2-aggregationtypeselector on-selected="aggregationValue"></a2-aggregationtypeselector>
+                 </div>
             </div>
         </div>
         <div class="col-sm-6">
+            <div class="row container-fluid " >
+                <label for="aggregation">Bin bandwidth (Hz):</label>
+                <ol id="binhzlist" class="btn-group binhzpadding">
+                  <li id="21" class="btn btn-default btn-xs"><span class="spacedhz">21</span></li>
+                  <li id="43" class="btn btn-default btn-xs"><span class="spacedhz">43</span></li>
+                  <li id="86" class="btn btn-default btn-xs"><span class="spacedhz">86</span></li>
+                  <li id="172" class="btn btn-default btn-xs"><span class="spacedhz">172</span></li>
+                  <li id="344" class="btn btn-default btn-xs"><span class="spacedhz">344</span></li>
+                </ol>
+            </div>
             <div class="row container-fluid" >
                 <label for="aggregation">Peak Filtering:</label>
                 <i class="fa fa-question" tooltip="Only peaks above the amplitude threshold will be considered. If the frequency difference of two successive peaks is less than the frequency threshold, then the peak of highest amplitude will be kept only." tooltip-placement="right"></i> 
-                <a2-thresholdselector></a2-thresholdselector>
-                <div>Flatness</div>
-                <div>Bin bandwidth</div>
+                <a2-thresholdselector on-threshold="thresholdValue" on-bandwidth="banwidthValue" ></a2-thresholdselector>
+                
                 <!--
-                <div class="row">
-                    <div class="col-sm-6"  tooltip="Selects peaks with amplitude above the threshold. A 0 value selects all peaks. A 1 value select none." >Threshold: {{datasubmit.threshold}}</div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-5"  tooltip="Selects peaks ..." >Flatness</div>
-                </div>-->
+                <div>Flatness</div>
+                -->
                 
             </div>
         </div>
