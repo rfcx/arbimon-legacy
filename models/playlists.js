@@ -43,7 +43,7 @@ var Playlists = {
             constraints.push('PL.name = ' + mysql.escape(query.name));
         }
 
-        if(constraints.length == 0){
+        if(constraints.length === 0){
             callback(new Error("Playlists.find called with invalid query."));
         }
         
@@ -93,7 +93,7 @@ var Playlists = {
         //     constraints.push('PL.project_id = ' + mysql.escape(query.project));
         // }
 
-        if(constraints.length == 0){
+        if(constraints.length === 0){
             callback(new Error("Playlists.fetchData called with invalid query."));
         }
 
