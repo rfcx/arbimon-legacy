@@ -1,6 +1,68 @@
 var mysql = require('mysql');
 
+
+var transaction = function(connection){
+    this.connection = connection;
+};
+
+transaction.prototype = {
+    begin : function(callback){
+        if(!this.connection){
+            callback(new Error("Transaction begin called without a connection."));
+            return;
+        }
+        this.connection.query("BEGIN", (function(err){
+            if(err){
+                callback(err);
+            } else {
+                this.in_tx = true;
+                callback();
+            }
+        }).bind(this));        
+    },
+    mark_failed  : function(){
+        var callback = arguments.length > 0 && arguments[arguments.length - 1];
+        this.success = false;
+        if(callback){
+            callback();
+        }
+    },
+    mark_success : function(){
+        var callback = arguments.length > 0 && arguments[arguments.length - 1];
+        this.success = true;
+        if(callback){
+            callback();
+        }
+    },
+    end : function(callback){
+        if(!this.in_tx || !this.connection){
+            callback();
+        } else if(this.success){
+            this.connection.query("COMMIT", (function(err){
+                if(err){
+                    callback(err);
+                } else {
+                    this.in_tx = false;
+                    callback();
+                }
+            }).bind(this));
+        } else {
+            this.connection.query("ROLLBACK", (function(err){
+                if(err){
+                    callback(err);
+                } else {
+                    this.in_tx = false;
+                    callback();
+                }
+            }).bind(this));
+        }
+    }
+}
+
 var sqlutil = {
+    
+    transaction : transaction,
+    
     apply_query_contraint: function(subject, query){
         if(query){
             if (query['=']) {
