@@ -41,6 +41,7 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils'])
         $modal.open({
             templateUrl : '/partials/visualizer/modal/sample_soundscape_region.html',
             controller  : 'a2VisualizerSampleSoundscapeRegionModalController',
+            size        : 'sm',
             resolve     : {
                 data : function(){ return {
                     soundscape : self.soundscape,
@@ -50,11 +51,11 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils'])
         }).result.then(function (region) {
             if(region && region.id) {
                 self.regions.forEach(function(r,idx){
-                    if(r.id == data.id){
-                        self.regions[idx] = data;
+                    if(r.id == region.id){
+                        self.regions[idx] = region;
                     }
                 });
-                self.selection.bbox = data;
+                self.selection.bbox = region;
             }
         });
     };
@@ -115,7 +116,6 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils'])
     });
 })
 .controller('a2VisualizerSampleSoundscapeRegionModalController', function($scope, $modalInstance, a2Soundscapes, data){
-    console.log('a2VisualizerSampleSoundscapeRegionModalController', $scope, data);
     $scope.soundscape = data.soundscape;
     $scope.region     = data.region;
     $scope.data = {
@@ -129,19 +129,20 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils'])
         var vdata = {};
         var tst;
 
-        if(0 < sdata.percent && sdata.percent < 100){
-            vdata.percent = sdata.percent;
-        } else {
+        if(sdata.percent > 100){
             sval.percent = "Percent must be between 0% and 100%.";
             sval.count++;
+        } else if(((sdata.percent * $scope.region.count)|0) < 1) {
+            sval.percent = "You must sample at least 1 recording.";
+            sval.count++;
+        } else {
+            vdata.percent = sdata.percent;
         }
 
         $scope.form_data=vdata;
 
         if(sval.count === 0){
-            a2Soundscapes.sampleRegion($scope.soundscape, vdata, {
-                percent : sdata.percent
-            }, function(region){
+            a2Soundscapes.sampleRegion($scope.soundscape, $scope.region.id, vdata, function(region){
                 $modalInstance.close(region);
             });
         }

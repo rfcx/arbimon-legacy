@@ -7,6 +7,9 @@ var arbimon2 = angular.module('arbimon2', [
     'analysis',
     'jobs'
 ])
+.run(function($rootScope){
+    $rootScope.Math = Math; // export math library to angular :-)
+})
 .config(function($stateProvider, $urlRouterProvider) {
     
     $urlRouterProvider

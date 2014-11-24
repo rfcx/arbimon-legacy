@@ -43,7 +43,7 @@ var Playlists = {
             constraints.push('PL.name = ' + mysql.escape(query.name));
         }
 
-        if(constraints.length == 0){
+        if(constraints.length === 0){
             callback(new Error("Playlists.find called with invalid query."));
         }
         
@@ -51,6 +51,11 @@ var Playlists = {
             agregate = true;
             projection.push("COUNT(PLR.recording_id) as count");
             joins.push("JOIN playlist_recordings PLR ON PL.playlist_id = PLR.playlist_id");
+        }
+
+        if(options.show_type){
+            projection.push("PLT.name as type");
+            joins.push("JOIN playlist_types PLT ON PL.playlist_type_id = PLT.playlist_type_id");
         }
         
 
@@ -88,7 +93,7 @@ var Playlists = {
         //     constraints.push('PL.project_id = ' + mysql.escape(query.project));
         // }
 
-        if(constraints.length == 0){
+        if(constraints.length === 0){
             callback(new Error("Playlists.fetchData called with invalid query."));
         }
 

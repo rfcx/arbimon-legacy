@@ -4,12 +4,12 @@
 <div class="modal-body" ng-form>
     <div class="form form-horizontal">
         <div class="form-group" ng-class="{'has-error': validation.name}" >
-            <label class="col-sm-2 control-label">Percent : </label>
-            <div class="col-sm-10">
+            <label class="col-sm-3 control-label">Percent: </label>
+            <div class="col-sm-9">
                 <input type="number" min="0" max="100" ng-model="data.percent" style="width:4em" />% 
                 <span class="badge" style="margin-left:15px">{{Math.floor(region.count * data.percent / 100)}}</span>
             </div>
-            <div class="pull-right text-danger" ng-show="validation.name">{{validation.name}}</div>
+            <div class="pull-right text-danger" ng-show="validation.percent">{{validation.percent}}</div>
         </div>
     </div>
 </div>
