@@ -52,6 +52,11 @@ var Playlists = {
             projection.push("COUNT(PLR.recording_id) as count");
             joins.push("JOIN playlist_recordings PLR ON PL.playlist_id = PLR.playlist_id");
         }
+
+        if(options.show_type){
+            projection.push("PLT.name as type");
+            joins.push("JOIN playlist_types PLT ON PL.playlist_type_id = PLT.playlist_type_id");
+        }
         
 
         return dbpool.queryHandler(
