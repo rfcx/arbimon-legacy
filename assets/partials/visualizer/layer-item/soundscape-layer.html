@@ -28,8 +28,8 @@
                     <span ng-repeat="label in region.labels | limitTo:3" class="label" ng-class="label.class" >{{label.name}}</span>
                 </td>
                 <td>
-                    <button class="btn btn-default btn-sm" tooltip="View Sampled Recordings" ng-show="layer.soundscape.selection.bbox.samples"
-                        ng-click="layer.soundscape.selection.view_samples()"
+                    <button class="btn btn-default btn-sm" tooltip="View Sampled Recordings" ng-show="region.playlist"
+                        ng-click="layer.soundscape.view_playlist(region)"
                     ><i class="fa fa-list"></i></button>
                 </td>
             </tr>

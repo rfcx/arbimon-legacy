@@ -18,6 +18,24 @@ router.param('soundscape', function(req, res, next, soundscape){
     });
 });
 
+router.param('region', function(req, res, next, region){
+    if(!req.soundscape){
+        return res.status(404).json({ error: "cannot find region without soundscape."});
+    }
+    
+    model.soundscapes.getRegions(req.soundscape, {
+        region : region
+    }, function(err, regions) {
+        if(err) return next(err);
+
+        if(!regions.length){
+            return res.status(404).json({ error: "region not found"});
+        }
+        req.region = regions[0];
+        return next();
+    });
+});
+
 var parse_bbox = function(bbox){
     var m=/^((\d+)?,(\d+)?-(\d+)?,(\d+)?|all)?$/.exec('' + bbox);
     if(!m){
@@ -69,6 +87,18 @@ router.post('/:soundscape/regions/add', function(req, res, next) {
     model.soundscapes.addRegion(req.soundscape, {
         bbox : bbox,
         name : req.body.name
+    }, function(err, region){
+        if(err){
+            next(err);
+        } else {
+            res.json(region);
+        }
+    });
+});
+
+router.post('/:soundscape/regions/:region/sample', function(req, res, next) {
+    model.soundscapes.sampleRegion(req.soundscape, req.region, {
+        count : req.region.count * req.body.percent
     }, function(err, region){
         if(err){
             next(err);

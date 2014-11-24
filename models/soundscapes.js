@@ -4,6 +4,7 @@ var AWS          = require('aws-sdk');
 var async        = require('async');
 var joi          = require('joi');
 var scidx        = require('../utils/scidx');
+var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var config       = require('../config');
 var arrays_util  = require('../utils/arrays');
@@ -14,6 +15,8 @@ var queryHandler = dbpool.queryHandler;
 
 // exports
 var Soundscapes = {
+    PLAYLIST_TYPE : 2,
+    
     /** Finds soundscapes, given a (non-empty) query.
      * @param {Object}  query
      * @param {Integer} query.id      find soundscapes with the given id.
@@ -187,9 +190,103 @@ var Soundscapes = {
         }
         
         return dbpool.queryHandler(
-            "SELECT SCR.soundscape_region_id as id, SCR.soundscape_id as soundscape, SCR.name, SCR.x1, SCR.y1, SCR.x2, SCR.y2, SCR.count\n" +
+            "SELECT SCR.soundscape_region_id as id, SCR.soundscape_id as soundscape, SCR.name, SCR.x1, SCR.y1, SCR.x2, SCR.y2, SCR.count, \n" +
+            "    SCR.sample_playlist_id as playlist \n" +
             "FROM soundscape_regions SCR \n" +
             "WHERE " + constraints.join(' AND '), callback);
+    },
+    
+    sampleRegion: function(soundscape, region, params, callback){
+        if(!params){
+            params = {};
+        }
+        
+        var count = (params.count) | 0;
+        var tx = new sqlutil.transaction();
+        var db;
+        var playlist_id, rercordings;
+        
+        async.waterfall([
+            function fetch_scidx(next){
+                var filters = {
+                    ignore_offsets : true,
+                    minx : ((region.x1 - soundscape.min_t)) | 0,
+                    maxx : ((region.x2 - soundscape.min_t)) | 0,
+                    miny : ((region.y1 - soundscape.min_f) / soundscape.bin_size) | 0,
+                    maxy : ((region.y2 - soundscape.min_f) / soundscape.bin_size - 1) | 0
+                };
+                Soundscapes.fetchSCIDX(soundscape, filters, next);
+            },
+            function flatten_recordings_list(scidx, next){
+                next(null, scidx.flatten());
+            },
+            function random_sort_and_sample(idx_recs, next){
+                var e = idx_recs.length, e_1 = e-1;
+                count = Math.min(idx_recs.length, count);
+                for(var i = 0; i < count; ++i, --e){
+                    var j = i + (Math.random(e) | 0) % e;
+                    var t = idx_recs[i];
+                    idx_recs[j] = idx_recs[i];
+                    idx_recs[i] = t;
+                }
+                recordings = idx_recs.slice(0, count);
+                next();
+            },            
+            dbpool.getConnection,
+            function got_connection(connection, next){
+                db = connection;
+                tx.connection = db;
+                next();
+            },
+            tx.begin.bind(tx),
+            function make_region_playlist(next){
+                if(region.playlist){
+                    playlist_id = region.playlist;
+                    next();
+                    return;
+                }
+                var name = soundscape.name + ', ' + region.name + ' recordings sample';
+                db.query(
+                    "INSERT INTO playlists(project_id, name, playlist_type_id, uri) \n" + 
+                    " VALUES ("+mysql.escape([
+                        soundscape.project, name, Soundscapes.PLAYLIST_TYPE, null
+                    ])+");", function(err, results){
+                        if(err){next(err); return;}
+                        region.playlist = results.insertId;
+                        playlist_id = region.playlist;
+                        db.query(
+                            "UPDATE soundscape_regions \n" +
+                            "SET sample_playlist_id = " + results.insertId + " \n" +
+                            "WHERE soundscape_region_id = " + mysql.escape(region.id), 
+                            next
+                        );
+                    }
+                );
+            },
+            function add_recordings_randomly(){
+                var next = arguments[arguments.length-1];
+                var values = recordings.map(function(r){
+                    return mysql.escape([playlist_id, r]);
+                });
+                db.query(
+                    "INSERT IGNORE INTO playlist_recordings(playlist_id, recording_id) VALUES (\n" + 
+                    "    " + values.join("), \n    (") +
+                     ")", next
+                );
+            }, 
+            tx.mark_success.bind(tx)
+        ], function(err){
+            tx.end(function(err2){
+                if(err){ 
+                    callback(err); 
+                } else if(err2){ 
+                    callback(err2); 
+                } else {
+                    callback(null, region);
+                }
+            });
+        });
+        
     },
     
     __compute_thumbnail_path : function(soundscape, callback){
