@@ -7,6 +7,7 @@ angular.module('a2visobjectsbrowser', [
     return {
         restrict : 'E',
         scope : {
+            location    : '=?',
             onVisObject : '&onVisObject'
         },
         templateUrl : '/partials/visualizer/browser/main.html',
@@ -16,7 +17,7 @@ angular.module('a2visobjectsbrowser', [
 .controller('a2VisObjectBrowserController', function($scope, $element, $attrs, $timeout, $controller, $q, browser_lovos, itemSelection, Project){
     var self = $scope.browser = this;
     var project = Project;
-
+    
     this.types = browser_lovos.$grouping;
     this.type  = browser_lovos.$list.filter(function(lovo){return lovo.default;}).shift();
     this.loading = {
@@ -41,11 +42,14 @@ angular.module('a2visobjectsbrowser', [
 
     }
 
-    this.setLOVO = function(lovo){
+    this.setLOVO = function(lovo, location){
         var old_lovo = self.lovo;
         self.lovo = lovo;
         if(lovo){
             lovo.initialize().then(function(){
+                if(location){
+                    $scope.location = location;
+                }
                 if(self.auto.visobject){
                     lovo.find(self.auto.visobject).then(function(visobject){
                         self.visobj = visobject;
@@ -124,13 +128,13 @@ angular.module('a2visobjectsbrowser', [
         }
     };
     $scope.$on('prev-visobject', function(){
-        if(self.visobject && self.lovo) {
-            self.lovo.previous(self.visobject.id).then($scope.selectVisObject);
+        if(self.visobj && self.lovo) {
+            self.lovo.previous(self.visobj.id).then($scope.selectVisObject);
         }
     });
     $scope.$on('next-visobject', function(){
-        if(self.visobject && self.lovo) {
-            self.lovo.next(self.visobject.id).then($scope.selectVisObject);
+        if(self.visobj && self.lovo) {
+            self.lovo.next(self.visobj.id).then($scope.selectVisObject);
         }
     });
     $scope.$on('set-browser-location',function(evt, location){

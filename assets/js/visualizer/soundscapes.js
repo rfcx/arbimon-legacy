@@ -1,5 +1,5 @@
 angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils'])
-.controller('a2VisualizerSoundscapeLayerController', function($scope, $modal, a2Soundscapes, a22PointBBoxEditor){
+.controller('a2VisualizerSoundscapeLayerController', function($scope, $modal, $location, a2Soundscapes, a22PointBBoxEditor){
     var self = this;
     var bbox2string = function(bbox){
         var x1 = bbox.x1 | 0;
@@ -12,6 +12,13 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils'])
     this.show={
         names : true,
         labels : true
+    };
+    
+    this.view_playlist = function(region){
+        console.log("this.view_playlist = function(region){", region);
+        if(region.playlist){
+            $scope.set_location("playlist/" + region.playlist);
+        }        
     };
     
     this.query = function(bbox){

@@ -1,5 +1,5 @@
 $(document)
-  .on('click.bs.dropdown.data-api', '.dropdown .dropdown-form', function (e) { e.stopPropagation() })
+  .on('click.bs.dropdown.data-api', '.dropdown .dropdown-form', function (e) { e.stopPropagation(); });
 
 
 angular.module('visualizer', [
@@ -17,18 +17,49 @@ angular.module('visualizer', [
         scope : {},
         controller : 'VisualizerCtrl',
         templateUrl: '/partials/visualizer/main.html'
-    }
+    };
 })
-.controller('VisualizerCtrl', function (a2VisualizerLayers, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller, 
-    VisualizerObjectTypes, VisualizerLayout) {
-    var update_location_path = function(){
-        if($scope.recording){
-            var rec  = $scope.recording;
-            var lovo = rec.lovo || 'rec';
-            $scope.set_location((rec.lovo || 'rec') + '/' + (rec.id));
+.service('a2VisualizerLocationManager', function($location){
+    var locman = function(scope, prefix){
+        this.scope = scope;
+        this.prefix = prefix;
+        this.current = '';
+        this.__expected = '';
+    };
+    locman.prototype = {
+        sync : function(){
+            if(this.current == this.__expected){
+                console.log("__sync : " , "no need. : ", this.current);
+                return;
+            }
+            console.log("__sync : " , "syncing to . : ", this.current);
+            this.__expected = this.current;
+            this.scope.$broadcast('set-browser-location', [this.current]);
+        },
+        update_path : function(){
+            this.set(this.current);
+        },
+        set : function(location, dont_sync){
+            if(dont_sync){
+                this.__expected = location;
+            }
+            $location.path(this.prefix + location);
+        },
+        path_changed : function(path){
+            if(path === undefined){
+                path = $location.path();
+            }
+            path = '' + path;
+            if(path.indexOf(this.prefix) === 0 ){
+                this.current = path.substr(this.prefix.length);
+                this.sync();
+            }
         }
     };
-
+    return locman;
+})
+.controller('VisualizerCtrl', function (a2VisualizerLayers, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller, 
+    VisualizerObjectTypes, VisualizerLayout, a2VisualizerLocationManager) {
     var layers = new a2VisualizerLayers($scope);
     var layer_types = layers.types;
     
@@ -51,9 +82,14 @@ angular.module('visualizer', [
     
     $scope.visobject = null;
     
-    $scope.set_location = function(location){
-        $location.path("/visualizer/"+location);
-    };
+    var location = new a2VisualizerLocationManager($scope, ($state.current.url || '/visualizer') + '/');
+    $scope.location = location;
+    
+    $scope.$on('$locationChangeSuccess', function(){
+        location.path_changed();
+    });
+    $scope.$watch('location.current', location.sync.bind(location));
+    $scope.set_location = location.set.bind(location);
 
     
     $scope.layout = new VisualizerLayout();
@@ -75,13 +111,13 @@ angular.module('visualizer', [
     
     $scope.setVisObject = function(visobject, type, location){
         if (visobject) {
+            $scope.location.set(location, true);
             var typedef = VisualizerObjectTypes[type];
             $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);            
             typedef.load(visobject, $scope).then(function (visobject){
                 $scope.loading_visobject = false;
                 $scope.visobject = visobject;
                 $scope.visobject_type = visobject.type;
-                $scope.set_location(location);
             });
         } else {
             $scope.visobject = null;
@@ -135,12 +171,13 @@ angular.module('visualizer', [
             $scope.$broadcast('next-visobject');
         },
     };
-    $scope.$on('a2-persisted', update_location_path);
+    $scope.$on('a2-persisted', $scope.location.__update);
     $scope.$on('browser-available', function(){
         if($state.params && $state.params.location) {
-            $scope.$broadcast('set-browser-location', [$state.params.location]);
+            $scope.location.current = $state.params.location;
         }
     });
+    
 
     // $scope.setRecording(test_data.recording);
 })

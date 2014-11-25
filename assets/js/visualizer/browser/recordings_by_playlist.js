@@ -6,7 +6,7 @@ angular.module('a2browser_recordings_by_playlist', [])
         this.offset = 0;
         this.count  = 0;
         this.list   = [];
-    }
+    };
     lovo.prototype = {
         initialize: function(){
             var d = $q.defer();
@@ -17,7 +17,7 @@ angular.module('a2browser_recordings_by_playlist', [])
                     this.list = recordings;
                     this.count  = recordings.length;
                     d.resolve(false);
-                }).bind(this))
+                }).bind(this));
             }
             return d.promise;
         },
@@ -38,7 +38,7 @@ angular.module('a2browser_recordings_by_playlist', [])
             Project.getNextRecording(id, d.resolve);
             return d.promise;
         }
-    }
+    };
     return lovo;
 })
 .controller('a2BrowserRecordingsByPlaylistController', function($scope, itemSelection, a2Browser, rbDateAvailabilityCache, a2Playlists, $timeout, $q, a2PlaylistLOVO){
@@ -67,7 +67,7 @@ angular.module('a2browser_recordings_by_playlist', [])
             });
         });
         return defer.promise;
-    }
+    };
     this.resolve={};
 
     this.resolve_location = function(location){
@@ -89,7 +89,7 @@ angular.module('a2browser_recordings_by_playlist', [])
                     self.playlist = playlist;
                     self.lovo = new a2PlaylistLOVO(playlist);
                     self.lovo.initialize().then(function(){
-                        return self.lovo.find(recid)
+                        return self.lovo.find(recid);
                     }).then(function(recording){
                         defer.resolve(recording);
                     });
@@ -101,15 +101,15 @@ angular.module('a2browser_recordings_by_playlist', [])
             defer.resolve();
         }
         return defer.promise;
-    }
+    };
     this.get_location = function(recording){
-        return 'playlist/' + this.lovo.playlist.id + "/" + recording.id;
-    }
+        return 'playlist/' + (this.lovo ? this.lovo.playlist.id + (recording ? "/" + recording.id : '') : '');
+    };
 
     $scope.$watch('browser.$type.playlist', function(playlist){
         if(playlist && (self.lovo ? self.lovo.playlist != playlist : true)){
             self.lovo = new a2PlaylistLOVO(playlist);
         }
-        a2Browser.setLOVO(self.lovo);
+        a2Browser.setLOVO(self.lovo, self.lovo ? "playlist/"+self.lovo.playlist.id : '');
     });
-})
+});

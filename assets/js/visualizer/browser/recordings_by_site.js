@@ -36,6 +36,7 @@ angular.module('a2browser_recordings_by_site', [])
             return d.promise;
         },
         previous : function(recording){
+            console.log("previous : function(recording){ :: ", recording);
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
             Project.getPreviousRecording(id, d.resolve);
             return d.promise;
