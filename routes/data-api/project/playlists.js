@@ -98,6 +98,16 @@ router.post('/create', function(req, res, next) {
 //     });
 // });
 
+/** Return a playlist's extra info.
+ */
+router.get('/info/:playlist', function(req, res, next) {
+    model.playlists.getInfo(req.playlist, function(err, data) {
+        if(err) return next(err);
+        res.json(data);
+    });
+});
+
+
 /** Return a playlist's data.
  */
 router.get('/list/:playlist', function(req, res, next) {

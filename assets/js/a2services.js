@@ -333,6 +333,15 @@ angular.module('a2services',[])
             });
         },
         
+        getInfo: function(playlist, callback) {
+            $http({
+                method : 'GET',
+                url    : '/api/project/'+projectName+'/playlists/info/'+playlist,
+            }).success(function(data) {
+                callback(data);
+            });
+        },
+        
         getData: function(playlist, query, callback) {
             $http({
                 method : 'GET',

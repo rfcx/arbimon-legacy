@@ -63,11 +63,4 @@ angular.module('a2browser_soundscapes', [])
     this.get_location = function(soundscape){
         return 'soundscape/' + soundscape.id;
     };
-
-    $scope.$watch('browser.$type.soundscape', function(soundscape){
-        // if(soundscape && (self.lovo ? self.lovo.soundscape != soundscape : true)){
-        //     self.lovo = new a2PlaylistLOVO(soundscape);
-        // }
-        // a2Browser.setLOVO(self.lovo);
-    });
-})
+});

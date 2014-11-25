@@ -29,10 +29,8 @@ angular.module('visualizer', [
     locman.prototype = {
         sync : function(){
             if(this.current == this.__expected){
-                console.log("__sync : " , "no need. : ", this.current);
                 return;
             }
-            console.log("__sync : " , "syncing to . : ", this.current);
             this.__expected = this.current;
             this.scope.$broadcast('set-browser-location', [this.current]);
         },
@@ -87,7 +85,9 @@ angular.module('visualizer', [
     $scope.$on('$locationChangeSuccess', function(){
         location.path_changed();
     });
-    $scope.$watch('location.current', location.sync.bind(location));
+    $scope.$watch('location.current', function(){
+        location.sync();
+    });
     $scope.set_location = location.set.bind(location);
 
     
@@ -123,7 +123,7 @@ angular.module('visualizer', [
         }
     };
     $scope.audio_player = new a2AudioPlayer($scope);
-    $scope.$on('a2-persisted', $scope.location.__update);
+    $scope.$on('a2-persisted', $scope.location.update_path.bind($scope.location));
     $scope.$on('browser-available', function(){
         if($state.params && $state.params.location) {
             $scope.location.current = $state.params.location;

@@ -1,23 +1,25 @@
-<div class="row no-gutter">
-    <div class="col-sm-12">
-        <div class="dropdown">
-            <button class="btn btn-block btn-default" role="button" data-toggle="dropdown">
-                <span class="fa" ng-class="{'fa-list' : !browser.$type.loading.playlists, 'fa-spinner fa-spin': browser.$type.loading.playlists}"></span>
-                {{browser.$type.playlist.name || "[Playlist]"}}
-                <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu has-badges dropdown-height-7" role="menu" aria-labelledby="dLabel">
-                <li ng-show="browser.$type.loading.playlists">
-                    <a><i class="fa fa-spinner fa-spin"></i> Loading Playlists</a>
-                </li>
-                <li ng-hide="browser.$type.loading.playlists || browser.$type.playlists">
-                    <a>No Playlists in Project</a>
-                </li>
-                <li ng-hide="browser.$type.loading.playlists" ng-repeat="playlist in browser.$type.playlists" ng-class="{active: browser.$type.playlist == playlist}">
-                    <a ng-click="browser.$type.playlist = playlist">{{playlist.name}}</a>
-                    <span class="badge">{{playlist.count}}</span>
-                </li>
-            </ul>
-        </div>
-    </div>
+<table style="width:100%"><tr><td>
+<div class="dropdown">
+        <button class="btn btn-block btn-default" role="button" data-toggle="dropdown">
+            <span class="fa" ng-class="{'fa-list' : !browser.$type.loading.playlists, 'fa-spinner fa-spin': browser.$type.loading.playlists}"></span>
+            {{browser.$type.playlist.name || "[Playlist]"}}
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu has-badges dropdown-height-7" role="menu" aria-labelledby="dLabel">
+            <li ng-show="browser.$type.loading.playlists">
+                <a><i class="fa fa-spinner fa-spin"></i> Loading Playlists</a>
+            </li>
+            <li ng-hide="browser.$type.loading.playlists || browser.$type.playlists">
+                <a>No Playlists in Project</a>
+            </li>
+            <li ng-hide="browser.$type.loading.playlists" ng-repeat="playlist in browser.$type.playlists" ng-class="{active: browser.$type.playlist == playlist}">
+                <a ng-click="browser.$type.playlist = playlist">{{playlist.name}}</a>
+                <span class="badge">{{playlist.count}}</span>
+            </li>
+        </ul>
 </div>
+</td><td><table><tr><td ng-repeat="link in browser.lovo.links">
+    <button class="btn btn-default" ng-click="browser.$type.resolve_link(link)"
+        tooltip="{{link.tooltip}}" tooltip-append-to-body="true" tooltip-placement="bottom"
+    ><i class="fa" ng-class="link.icon"></i></button>
+</td></tr></table></td></tr></table>
