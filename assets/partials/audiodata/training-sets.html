@@ -17,6 +17,7 @@
 <div class="row">
     <div class="col-sm-6">
         <a2-table fields="fields" rows="sets" no-checkbox on-select="displaySetData($index)"></a2-table>
+        <loader ng-hide="!loading"></loader>
     </div>
     <div ng-show="norois">No ROIs in Training Set {{selectedName}}</div>
     <div class="col-sm-5 panel panel-default"  ng-show="loaderDisplay"><div class="trainingSetLoader"><loader></loader></div></div>

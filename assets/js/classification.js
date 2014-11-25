@@ -7,6 +7,7 @@
     ('ClassificationCtrl' , 
         function ($scope,$http,$modal,$filter,$sce,Project, ngTableParams,JobsData) 
         {
+	    $scope.loading = true;
 	    $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
 	    $scope.updateFlags = function()
@@ -17,9 +18,10 @@
 		$scope.showError = false;
 		$scope.infoInfo = "";
 		$scope.showInfo = false;
+		$scope.loading = false;
 	    };
 	    
-             var p = Project.getInfo(
+            var p = Project.getInfo(
             function(data)
             {
                 $scope.projectData = data;
@@ -34,6 +36,7 @@
                             $scope.classificationsData = data;
 			    $scope.infoInfo = "";
                             $scope.showInfo = false;
+			    $scope.loading = false;
                             $scope.infopanedata = "";			
                             if(data.length> 0)
                             {              
@@ -77,6 +80,7 @@
                 {
 		    $scope.infoInfo = "Loading...";
 		    $scope.showInfo = true;
+		    $scope.loading = true;
                     var url = $scope.projectData.url;
                     var pid = $scope.projectData.project_id;
                     $scope.classi_id = classi_id;
@@ -117,7 +121,8 @@
 			    modalInstance.opened.then(function()
 			    {
 				$scope.infoInfo = "";
-				$scope.showInfo = false;    
+				$scope.showInfo = false;
+				$scope.loading = false;
 			    });
 			    
                             modalInstance.result.then
@@ -146,6 +151,9 @@
                 $scope.createNewClassification =             
                 function ()
                 {
+		    $scope.loading = true;
+		    $scope.infoInfo = "Loading...";
+		    $scope.showInfo = true;
                      $http.get('/api/project/'+$scope.projectData.url+'/sites')
                     .success
                     (
@@ -155,7 +163,7 @@
                             $scope.successInfo = "";
                             $scope.showSuccess = false;
                             $scope.errorInfo = "";
-                            $scope.showError = false;                            
+                            $scope.showError = false;
                             $scope.sites = data;
                             $http.get('/api/project/'+$scope.projectData.url+'/models')
                             .success
@@ -188,7 +196,8 @@
                                     modalInstance.opened.then(function()
 				    {
 					$scope.infoInfo = "";
-					$scope.showInfo = false;    
+					$scope.showInfo = false;
+					$scope.loading = false;
 				    });
 				    
                                     modalInstance.result.then

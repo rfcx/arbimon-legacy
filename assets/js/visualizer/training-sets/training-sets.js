@@ -73,14 +73,18 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
         name : '',
         type : null
     }
+    $scope.loadingClasses = true;
     $scope.typedefs = training_set_types;
     Project.getClasses(function(project_classes){
         $scope.project_classes = project_classes;
+        $scope.loadingClasses = false;
     });
+    $scope.loadingTypes = true;
     a2TrainingSets.getTypes(function(tset_types){
         $scope.tset_types = tset_types;
         if(tset_types && tset_types.length == 1) {
             $scope.data.type = tset_types[0];
+            $scope.loadingTypes = false;
         }
     });
     $scope.ok = function(){

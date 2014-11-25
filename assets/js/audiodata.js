@@ -446,7 +446,7 @@ angular.module('audiodata', [
         { name: 'Set type', key: 'type' },
         { name: 'Date created', key: 'date_created' },
     ];
-    
+    $scope.loading = true;
     $scope.rois = [];
     $scope.selectedName = '';
     $scope.species = '';
@@ -457,6 +457,7 @@ angular.module('audiodata', [
             d.date_created = new Date(d.date_created);
             return d;
         });
+        $scope.loading = false;
     });
     
     $scope.roi = null;

@@ -10,9 +10,9 @@
         <span ng-bind="nameMsg" class="nameExistsSpan"></span>
       </div>
       <div class="form-group">
-        <label for="classifier">Select Playlist:</label>
+        <label for="classifier">Select Playlist:</label> <span ng-hide="playlists" class="red"><em>No playlists found</em></span>
         <ui-select ng-model="datasubmit.playlist" theme="selectize" ng-disabled="disabled">
-        <ui-select-match placeholder="Select or search a model...">{{$select.selected.name}}</ui-select-match>
+        <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
             <ui-select-choices repeat="playlist in playlists | filter: $select.search">
               {{playlist.name}} <span class="trainingSetRoiCountSpan"><small><em> <strong >Count:</strong>({{playlist.count}})</em></small></span> 
             </ui-select-choices>

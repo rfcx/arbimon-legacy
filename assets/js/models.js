@@ -9,6 +9,7 @@
         {
 	    $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
+	    $scope.loading = true;
 	    $scope.updateFlags = function()
 	    {
 		$scope.successInfo = "";
@@ -17,6 +18,7 @@
 		$scope.showError = false;
 		$scope.infoInfo = "";
 		$scope.showInfo = false;
+		$scope.loading = false;
 	    };
 	    
             var pid=-1;
@@ -39,6 +41,7 @@
                                 $scope.showError = false;
 				$scope.infoInfo = "";
                                 $scope.showInfo = false;
+				$scope.loading = false;
                                 if(data.length> 0)
                                 {              
                                     $scope.tableParams = new ngTableParams
@@ -131,7 +134,7 @@
             {
 		$scope.infoInfo = "Loading...";
 		$scope.showInfo = true;
-
+		$scope.loading = true;
                 var modalInstance = $modal.open
                 (
                     {
@@ -158,7 +161,8 @@
 		modalInstance.opened.then(function()
 		{
 		    $scope.infoInfo = "";
-		    $scope.showInfo = false;    
+		    $scope.showInfo = false;
+		    $scope.loading = false;
 		});
 		
                 modalInstance.result.then
@@ -196,6 +200,7 @@
             {
 		$scope.infoInfo = "Loading...";
 		$scope.showInfo = true;
+		$scope.loading = true;
                 var url = $scope.projectData.url;
                 $http.get('/api/project/'+url+'/models/'+model_id)
                 .success
@@ -222,7 +227,8 @@
 			modalInstance.opened.then(function()
 			{
 			    $scope.infoInfo = "";
-			    $scope.showInfo = false;    
+			    $scope.showInfo = false;
+			    $scope.loading = false;
 			});
 			
 			modalInstance.result.then
@@ -253,6 +259,7 @@
             {
 		$scope.infoInfo = "Loading...";
 		$scope.showInfo = true;
+		$scope.loading = true;
                 var url = $scope.projectData.url;
                 $http.get('/api/project/'+url+'/models/forminfo')
                 .success
@@ -285,7 +292,8 @@
                		modalInstance.opened.then(function()
 			{
 			    $scope.infoInfo = "";
-			    $scope.showInfo = false;    
+			    $scope.showInfo = false;
+			    $scope.loading = false;
 			});
 			         
                         modalInstance.result.then

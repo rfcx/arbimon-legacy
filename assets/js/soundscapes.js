@@ -13,6 +13,8 @@
 	    $scope.showError = false;
 	    $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
+	    $scope.loading = true;
+
 	    $scope.infopanedata = '';
 	    
 	    var p = Project.getInfo(
@@ -36,6 +38,8 @@
 			$scope.soundscapesData = data;
 			$scope.infoInfo = "";
 			$scope.showInfo = false;
+			$scope.loading = false;
+
 			$scope.infopanedata = "";			
 			if(data.length> 0)
 			{              
@@ -78,6 +82,9 @@
 	    $scope.createNewSoundscape =             
 	    function ()
 	    {
+		$scope.infoInfo = "Loading...";
+		$scope.showInfo = true;
+		$scope.loading = true;
 		var modalInstance = $modal.open
 		(
 		    {
@@ -100,7 +107,8 @@
 		modalInstance.opened.then(function()
 		{
 		    $scope.infoInfo = "";
-		    $scope.showInfo = false;    
+		    $scope.showInfo = false;
+		    $scope.loading = false;
 		});
 		
 		modalInstance.result.then
