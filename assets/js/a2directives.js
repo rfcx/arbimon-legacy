@@ -710,6 +710,12 @@ angular.module('a2directives', ['a2services'])
                 reposition_element();
             }
             
+            $scope.$watch(function(){
+                return anchor.is(':visible');
+            }, function(visibility){
+                $element.css('display', visibility ? 'block' : 'none');
+            });
+            
             anchor.on('$destroy', function(){
                 $element.remove();
             });
