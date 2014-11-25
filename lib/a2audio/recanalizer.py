@@ -1,4 +1,4 @@
-from rec import Rec
+from a2audio.rec import Rec
 from pylab import *
 import numpy
 import time
@@ -50,36 +50,46 @@ class Recanalizer:
         currColumns = self.spec.shape[1]
         step = 2
         matrixSurface = self.speciesSurface[self.lowIndex:self.highIndex,:]
-        spec = self.spec[self.lowIndex:self.highIndex , :]
+        spec = self.spec;
         for j in range(0,currColumns - self.columns,step): 
             subMatrix =  spec[: , j:(j+self.columns)]
             self.distances.append(numpy.linalg.norm(subMatrix  - matrixSurface) )
                 
     def spectrogram(self):
 
-        data = self.rec.original
         start_time = time.time()
-        Pxx, freqs, bins = mlab.specgram(data, NFFT=512, Fs=self.rec.sample_rate , noverlap=256)
+        Pxx, freqs, bins = mlab.specgram(self.rec.original, NFFT=512, Fs=self.rec.sample_rate , noverlap=256)
         dims =  Pxx.shape
         if self.logs:
             self.logs.write("mlab.specgram --- seconds ---" + str(time.time() - start_time))
-        #put zeros in unwanted frequencies (filter)
+
         i =0
         j = 0
         start_time = time.time()
         while freqs[i] < self.low:
-            #Pxx[i,:] = 0
             j = j + 1
             i = i + 1
         
         #calculate decibeles in the passband
         while freqs[i] < self.high:
-            Pxx[i,:] =  10. * np.log10( Pxx[i,:].clip(min=0.0000000001))
+           # Pxx[i,:] =  10. * np.log10( Pxx[i,:].clip(min=0.0000000001))
             i = i + 1
-
-        self.highIndex = dims[0]-j-1
-        self.lowIndex = dims[0]-i-1
-        Z = np.flipud(Pxx)
+ 
+        if i >= dims[0]:
+            i = dims[0] - 1
+            
+        Z= Pxx[j:i,:]
+        
+        self.highIndex = dims[0]-j
+        self.lowIndex = dims[0]-i
+        
+        if self.lowIndex < 0:
+            self.lowIndex = 0
+            
+        if self.highIndex >= dims[0]:
+            self.highIndex = dims[0] - 1
+            
+        Z = np.flipud(Z)
         if self.logs:
             self.logs.write('logs and flip ---' + str(time.time() - start_time))
         self.spec = Z
