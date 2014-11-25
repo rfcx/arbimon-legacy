@@ -52,14 +52,13 @@ angular.module('visualizer', [
             path = '' + path;
             if(path.indexOf(this.prefix) === 0 ){
                 this.current = path.substr(this.prefix.length);
-                this.sync();
             }
         }
     };
     return locman;
 })
-.controller('VisualizerCtrl', function (a2VisualizerLayers, $location, $state, $scope, $timeout, ngAudio, itemSelection, Project, $controller, 
-    VisualizerObjectTypes, VisualizerLayout, a2VisualizerLocationManager) {
+.controller('VisualizerCtrl', function (a2VisualizerLayers, $location, $state, $scope, $timeout, itemSelection, Project, $controller, 
+    VisualizerObjectTypes, VisualizerLayout, a2AudioPlayer, a2VisualizerLocationManager) {
     var layers = new a2VisualizerLayers($scope);
     var layer_types = layers.types;
     
@@ -123,13 +122,29 @@ angular.module('visualizer', [
             $scope.visobject = null;
         }
     };
-    $scope.audio_player = {
-        is_playing : false,
-        is_muted   : false,
-        has_recording : false,
-        has_next_recording : false,
-        has_prev_recording : false,
-        resource: null,
+    $scope.audio_player = new a2AudioPlayer($scope);
+    $scope.$on('a2-persisted', $scope.location.__update);
+    $scope.$on('browser-available', function(){
+        if($state.params && $state.params.location) {
+            $scope.location.current = $state.params.location;
+        }
+    });
+    
+
+    // $scope.setRecording(test_data.recording);
+})
+
+.service('a2AudioPlayer', function(ngAudio){
+    var a2AudioPlayer = function(scope){
+        this.scope = scope;
+        this.is_playing = false;
+        this.is_muted = false;
+        this.has_recording = false;
+        this.has_next_recording = false;
+        this.has_prev_recording = false;
+        this.resource = null;
+    };
+    a2AudioPlayer.prototype = {
         setCurrentTime: function(time){
             if(this.resource) {
                 this.resource.currentTime = time;
@@ -165,21 +180,13 @@ angular.module('visualizer', [
             this.is_playing = false;
         },
         prev_recording : function(){
-            $scope.$broadcast('prev-visobject');
+            this.scope.$broadcast('prev-visobject');
         },
         next_recording : function(){
-            $scope.$broadcast('next-visobject');
+            this.scope.$broadcast('next-visobject');
         },
     };
-    $scope.$on('a2-persisted', $scope.location.__update);
-    $scope.$on('browser-available', function(){
-        if($state.params && $state.params.location) {
-            $scope.location.current = $state.params.location;
-        }
-    });
-    
-
-    // $scope.setRecording(test_data.recording);
+    return a2AudioPlayer;
 })
 
 .factory('VisualizerLayout', function(){
