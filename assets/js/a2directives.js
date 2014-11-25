@@ -1,3 +1,4 @@
+/*jshint -W030 */
 
 // add parent tag selector
 $.expr.filter.UP_PARENT_SPECIAL = function(_1){ 
@@ -27,7 +28,7 @@ $.expr.filter.UP_PARENT_SPECIAL = function(_1){
         return true;
     });
 };
-$.expr.match.needsContext = new RegExp($.expr.match.needsContext.source + '|^(\^)');
+$.expr.match.needsContext = new RegExp($.expr.match.needsContext.source + '|^(\\^)');
 $.expr.match.UP_PARENT_SPECIAL = /^(\^+)/;
 
 
@@ -220,7 +221,7 @@ angular.module('a2directives', ['a2services'])
                     return moment(value).utc().format(attrs.dateFormat || 'MMM D YYYY, HH:mm');
                 }
                 return value;
-            }
+            };
         }
     };
 }])
@@ -257,9 +258,9 @@ angular.module('a2directives', ['a2services'])
                         ptag.scope.$broadcast('a2-persisted');
                     });
                 }
-            }
+            };
         }
-    }
+    };
 })
 .directive('autoHeight', function () {
     return {
@@ -278,7 +279,7 @@ angular.module('a2directives', ['a2services'])
                 window.requestAnimationFrame(function() {
                     element.height(h);
                 });
-            }
+            };
 
             updateHeight();
 
@@ -307,7 +308,7 @@ angular.module('a2directives', ['a2services'])
              text : '@'
          },
          templateUrl: '/partials/directives/loader.html'
-     }
+     };
 })
  
 /**   yearpick - complete year date picker
@@ -395,7 +396,7 @@ angular.module('a2directives', ['a2services'])
             prev.on('click', function(){
                 $timeout(function(){
                     --scope.year;
-                })
+                });
             });
             
             
@@ -410,7 +411,7 @@ angular.module('a2directives', ['a2services'])
             next.on('click', function(){
                 $timeout(function(){
                     ++scope.year;
-                })
+                });
             });
             
             var scale = {scale:[1, 50, 100], labels:['0','1','50','100']};
@@ -635,7 +636,7 @@ angular.module('a2directives', ['a2services'])
             });
             
         }
-    }
+    };
 })
 .directive('a2TrainingSetDataImage', function($compile, a2TrainingSets){
     return {
@@ -660,11 +661,11 @@ angular.module('a2directives', ['a2services'])
                         });
                     }
                 }
-            }
+            };
             $scope.$watch('datum', resolve_null_uri);
             $scope.$watch('trainingSet', resolve_null_uri);
         }
-    }
+    };
 })
 .directive('a2InsertIn', function(){
     var count=1;
@@ -675,8 +676,8 @@ angular.module('a2directives', ['a2services'])
                 .attr('id', 'a2InsertInAnchor'+(count++));
                 
             var is_truthy = function(v){
-                return (v) && ~/no|false|0/.test(''+v);
-            }
+                return (v) && !/no|false|0/.test(''+v);
+            };
             var keep_position = is_truthy($attr.a2KeepPosition);
             var target = $($attr.a2InsertIn);
             
@@ -687,9 +688,9 @@ angular.module('a2directives', ['a2services'])
             if(keep_position){
                 var comp_pos = function(el){
                     return $(el).offset();
-                }
+                };
                 reposition_element = function(){
-                    $('.a2-insert-in-anchor')
+                    $('.a2-insert-in-anchor');
                     var po = comp_pos($element.offsetParent());
                     var ao = comp_pos(anchor);
                     ao.position='absolute';
@@ -711,8 +712,8 @@ angular.module('a2directives', ['a2services'])
             
             anchor.on('$destroy', function(){
                 $element.remove();
-            })
+            });
         }        
-    }
+    };
 })
  ;
