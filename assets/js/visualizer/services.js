@@ -18,7 +18,7 @@ angular.module('visualizer-services', ['a2services'])
     'soundscape-layer' : {
         title : "",
         controller : 'a2VisualizerSoundscapeLayerController as soundscape',
-        require : {type:'soundscape', selection : true},
+        require : {type:'soundscape', browsetype:'soundscape', selection : true},
         visible : true,
         hide_visibility : true,
         type    : "soundscape-layer"
@@ -80,21 +80,30 @@ angular.module('visualizer-services', ['a2services'])
                 }
             }
         },
+        __check_type : function(reqtype, curtype){
+            if(reqtype instanceof Array){
+                var idx = reqtype.indexOf(curtype);
+                if(idx==-1){
+                    return false;
+                }
+            } else if( curtype != reqtype){
+                return false;
+            }
+            return true;          
+        },
         check_requirements : function(req){
             if(!req){
                 return true;
             } else if(req.selection && !this.$scope.visobject){
                 return false;
-            } else if(req.type){
-                var visobject_type = this.$scope.visobject ? this.$scope.visobject.type : this.$scope.visobject_type;
-                if(req.type instanceof Array){
-                    var idx = req.type.indexOf(visobject_type);
-                    if(idx==-1){
-                        return false;
-                    }
-                } else if( visobject_type != req.type){
-                    return false;
-                }
+            } else if(req.type && 
+                !this.__check_type(req.type, this.$scope.visobject ? this.$scope.visobject.type : this.$scope.visobject_type)
+            ){
+                return false;
+            } else if(req.browsetype && 
+                !this.__check_type(req.browsetype, this.$scope.visobject_type)
+            ){
+                return false;
             }
             return true;
         },
