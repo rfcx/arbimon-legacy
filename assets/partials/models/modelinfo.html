@@ -112,18 +112,21 @@
         Computed Pattern:
         <div class="row">
             <div class="col-sm-2 roiaxis" >
-                <p>{{data.hfreq}}Hz-</p>
-                <div class="lowaxis">     {{data.lfreq}}Hz-</div>
+                <small>
+                    <p>{{data.hfreq}}Hz-</p>
+                    <div class="lowaxis">{{data.lfreq}}Hz-</div>
+                </small>
             </div>
             <img class="col-sm-10 roiimage" ng-src="{{data.png}}" />
         </div>
         <div class="row">
+            <small>
             <div class="col-sm-2"></div>
             <div class="col-sm-6">
                 0s
             </div>
             <div class="col-sm-1">{{data.rlength}}s</div>
-
+            </small>
         </div>
     </div>
     <div class="col-sm-6">
