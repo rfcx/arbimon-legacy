@@ -359,6 +359,39 @@
 		    );
                 }
             };
+	    
+	    $scope.gotoc = function (where) {
+		if (where == 'first') {
+		    $scope.currentPage =0;
+		}
+		if (where == 'last') {
+		    $scope.currentPage = Math.ceil($scope.data[0].total/$scope.maxPerPage) - 1
+		}
+
+		$http.get('/api/project/'+$scope.url+'/classification/'+$scope.id+'/more/'+($scope.currentPage*$scope.maxPerPage)+"/"+$scope.maxPerPage)
+		.success
+		(
+		    function(dataRec) 
+		    {
+			$scope.recs =dataRec;
+			jsonArr = JSON.parse(dataRec[0].json_stats)
+			$scope.minv = parseFloat(jsonArr['minv'])
+			$scope.maxv = parseFloat(jsonArr['maxv'])
+		    }
+		).error(
+		    function()
+		    {
+			$scope.errorInfo = "Error Communicating With Server";
+			$scope.showError = true;
+			$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			function()
+			{
+			    $scope.showError = false;
+			});
+		    }
+		);
+                
+            };
             $scope.more= function () {
 
 		$scope.showMore = true;
