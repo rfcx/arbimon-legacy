@@ -1,17 +1,5 @@
 <div ng-controller="StatusBarNavController" data-ng-init="init()">
-    <div class="alert alert-success alert-dismissible"  role="alert" id="successDivs" ng-show="showSuccesss">
-      <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-      {{ successInfo }}
-    </div>
-    <div class="alert alert-danger alert-dismissible"  role="alert" id="errorDivs" ng-show="showErrors">
-      <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-      {{ errorInfo }}
-    </div>
-    <div class="alert alert-info alert-dismissible"  role="alert" id="infoDiv" ng-show="showInfo">
-        <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        {{ infoInfo }}
-    </div>
-    <div class="container-fluid">
+    <div class="container-fluid padded-view-div">
         <div ng-show="jobs.length">
             <h3>Active Jobs</h3>
             <div class="row checkSelectors">
@@ -50,5 +38,19 @@
         <div ng-hide="jobs.length">
             <h3>No Active Jobs</h3>
         </div>
+    </div>
+    <div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
+      <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">
+        <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        {{ successInfo }}
+      </div>
+      <div class="alert alert-danger alert-dismissible"  role="alert" id="errorDiv" ng-show="showError">
+        <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        {{ errorInfo }}
+      </div>
+      <div class="alert alert-info alert-dismissible"  role="alert" id="infoDiv" ng-show="showInfo">
+        <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        {{ infoInfo }}
+      </div>
     </div>
 </div>

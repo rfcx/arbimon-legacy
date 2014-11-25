@@ -22,7 +22,8 @@ allRecs = sys.argv[3].strip("'");
 classifierId = sys.argv[5].strip("'");
 projectId = sys.argv[6].strip("'");
 userId = sys.argv[7].strip("'");
-
+playlistId = sys.argv[8].strip("'");
+print 'started'
 log = Logger(jobId , 'classification.py' , 'main')
 log.write('script started')
 
@@ -81,44 +82,45 @@ if model_type_id == 1: #Pattern Matching (modified Alvarez thesis)
         log.write('fatal error creating directory: '+workingFolder)
         quit()
         
-    log.write('use all recs:'+str(allRecs))
-    sitesIds = ''
-    if allRecs == '0':
-        sitesIds = sys.argv[4].strip("'");
-        log.write('individual sites selected')
-    else:
-        log.write('all sites selected, fetching sites from database...')
-        ids = []
-        with closing(db.cursor()) as cursor:
-            cursor.execute("select `site_id` from `sites` where `project_id` = "+str(projectId))
-            db.commit()
-            numrows = int(cursor.rowcount)
-            if numrows  < 1:
-                log.write('fatal error cannot sites (project_id:'+str(projectId)+')')
-                quit()
-            for i in range(0,numrows):
-                row = cursor.fetchone()
-                ids.append(str(row[0]))
-        sitesIds = ','.join(ids)
-        log.write('sites fetched.('+sitesIds+')')
-    
-    log.write('creating classification playlist')
+    #log.write('use all recs:'+str(allRecs))
+    #sitesIds = ''
+    #if allRecs == '0':
+    #    sitesIds = sys.argv[4].strip("'");
+    #    log.write('individual sites selected')
+    #else:
+    #    log.write('all sites selected, fetching sites from database...')
+    #    ids = []
+    #    with closing(db.cursor()) as cursor:
+    #        cursor.execute("select `site_id` from `sites` where `project_id` = "+str(projectId))
+    #        db.commit()
+    #        numrows = int(cursor.rowcount)
+    #        if numrows  < 1:
+    #            log.write('fatal error cannot sites (project_id:'+str(projectId)+')')
+    #            quit()
+    #        for i in range(0,numrows):
+    #            row = cursor.fetchone()
+    #            ids.append(str(row[0]))
+    #    sitesIds = ','.join(ids)
+    #    log.write('sites fetched.('+sitesIds+')')
+    #
+    log.write('fetching classification playlist')
     with closing(db.cursor()) as cursor:
         #create playlist
-        log.write('inserting playlist into database')
-        cursor.execute("INSERT INTO `arbimon2`.`playlists` (`playlist_id`, `project_id`, `name`, `uri`)"+
-                       " VALUES (NULL, '"+str(projectId)+"', '"+classificationName+" Classification Playlist', NULL);")
-        db.commit()
-        playlistId = cursor.lastrowid
-        log.write('playlist inserted with id:'+str(playlistId))
+        #log.write('inserting playlist into database')
+        #cursor.execute("INSERT INTO `arbimon2`.`playlists` (`playlist_id`, `project_id`, `name`, `uri`)"+
+        #               " VALUES (NULL, '"+str(projectId)+"', '"+classificationName+" Classification Playlist', NULL);")
+        #db.commit()
+        #playlistId = cursor.lastrowid
+        #log.write('playlist inserted with id:'+str(playlistId))
+        #
+        #log.write('update job_params_classification params...')
+        #cursor.execute("UPDATE `arbimon2`.`job_params_classification` SET `playlist_id` = '"+str(playlistId)+"' WHERE `job_params_classification`.`job_id` = "+str(jobId)+";")
+        #db.commit()
+        #log.write('update job_params_classification updates')
         
-        log.write('update job_params_classification params...')
-        cursor.execute("UPDATE `arbimon2`.`job_params_classification` SET `playlist_id` = '"+str(playlistId)+"' WHERE `job_params_classification`.`job_id` = "+str(jobId)+";")
-        db.commit()
-        log.write('update job_params_classification updates')
-        
-        log.write('fetching recordings from selected sites')
-        cursor.execute("SELECT `recording_id` , `uri` FROM `recordings` WHERE `site_id` in ("+sitesIds+")")
+        log.write('fetching recordings from selected playlist')
+        cursor.execute("SELECT R.`recording_id` , R.`uri` FROM `recordings` R , `playlist_recordings` PR "+
+                       " WHERE R.`recording_id` = PR.`recording_id` and PR.`playlist_id` = "+str(playlistId))
         db.commit()
         numrows = int(cursor.rowcount)
         log.write(str(numrows)+' fetched from database')
@@ -146,18 +148,19 @@ if model_type_id == 1: #Pattern Matching (modified Alvarez thesis)
         cursor.execute('update `jobs` set `progress_steps` = '+str(progress_steps)+' where `job_id` = '+str(jobId))
         db.commit()
         log.write('total job steps updated')
-        log.write('writing playlist recordings to database')
-        howManyInserted =0
-        for i in recsIds:
-            cursor.execute("INSERT INTO `arbimon2`.`playlist_recordings` (`playlist_id`, `recording_id`) VALUES ('"+str(playlistId) +"', '"+str(i)+"');")
-            db.commit()
-            howManyInserted = howManyInserted +1
-        if howManyInserted == howMany:
-            log.write('wrote '+str(howManyInserted )+' recordings to database')
-        else:
-            log.write('fatal error: sfailed to write '+str(howMany-howManyInserted)+' recordings to databse')
-            quit()
-            
+        
+        #log.write('writing playlist recordings to database')
+        #howManyInserted =0
+        #for i in recsIds:
+        #    cursor.execute("INSERT INTO `arbimon2`.`playlist_recordings` (`playlist_id`, `recording_id`) VALUES ('"+str(playlistId) +"', '"+str(i)+"');")
+        #    db.commit()
+        #    howManyInserted = howManyInserted +1
+        #if howManyInserted == howMany:
+        #    log.write('wrote '+str(howManyInserted )+' recordings to database')
+        #else:
+        #    log.write('fatal error: sfailed to write '+str(howMany-howManyInserted)+' recordings to databse')
+        #    quit()
+        #    
         i = 0
         with open(classificationFileName) as f:
             for i, l in enumerate(f):

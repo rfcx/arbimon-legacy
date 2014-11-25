@@ -211,6 +211,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
             var project_id = rows[0].project_id;
             var name = (req.body.n);
             var classifier_id = mysql.escape(req.body.c)
+            var playlist_id = (req.body.p.id)
             var user_id = req.session.user.id;
             var allRecs = mysql.escape(req.body.a);
             var sitesString = mysql.escape(req.body.s);
@@ -232,7 +233,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                                 else
                                 {
                                     var classificationId = row.insertId;
-                                    model.jobs.newClassificationJob({id:classificationId,name:name,classifier:classifier_id,user:user_id,pid:project_id},
+                                    model.jobs.newClassificationJob({id:classificationId,name:name,classifier:classifier_id,user:user_id,pid:project_id,playlist_id:playlist_id},
                                         function (err,row)
                                         {
                                             if(err)
@@ -241,6 +242,12 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                                             }
                                             else
                                             {
+                                                console.log(
+                                                    __dirname+'/../../.env/bin/python',
+                                                            scriptsFolder+'PatternMatching/classification.py'
+                                                            ,classificationId , name , allRecs, sitesString, classifier_id, project_id,user_id,playlist_id
+                                                    
+                                                )
                                                 jobQueue.push({
                                                     name: 'classificationJob'+classificationId,
                                                     work: function(callback)
@@ -249,7 +256,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                                                         (
                                                             __dirname+'/../../.env/bin/python',
                                                             [scriptsFolder+'PatternMatching/classification.py'
-                                                            ,classificationId , name , allRecs, sitesString, classifier_id, project_id,user_id]
+                                                            ,classificationId , name , allRecs, sitesString, classifier_id, project_id,user_id,playlist_id]
                                                         );
                                                         var output = "";
                                                         python.stdout.on('data', 

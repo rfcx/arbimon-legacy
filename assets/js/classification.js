@@ -5,7 +5,7 @@
 
     classification.controller
     ('ClassificationCtrl' , 
-        function ($scope,$http,$modal,$filter,$sce,Project, ngTableParams,JobsData) 
+        function ($scope,$http,$modal,$filter,$sce,Project, ngTableParams,JobsData,a2Playlists) 
         {
 	    $scope.loading = true;
 	    $scope.infoInfo = "Loading...";
@@ -21,9 +21,17 @@
 		$scope.loading = false;
 	    };
 	    
+	    a2Playlists.getList(
+	      function(data)
+	      {
+		$scope.playlists = data;
+	      }
+	    );
+	    
             var p = Project.getInfo(
             function(data)
             {
+
                 $scope.projectData = data;
                 pid = data.project_id;
                 $scope.url = data.url;
@@ -181,6 +189,10 @@
                                                 {
                                                   return data;
                                                 },
+						playlists:function()
+						{
+						    return $scope.playlists;
+						},
                                                 sites:function()
                                                 {
                                                   return $scope.sites;
@@ -380,17 +392,19 @@
         }
     ).controller
     ('CreateNewClassificationInstanceCtrl', 
-        function ($scope, $modalInstance,$http, data,sites,projectData) 
+        function ($scope, $modalInstance,$http, data,sites,projectData,playlists) 
         {
             $scope.data = data;
             $scope.projectData = projectData;
             $scope.recselected = '';
             $scope.showselection = false;
             $scope.sites = sites;
+	    $scope.playlists = playlists;
 	    $scope.nameMsg = ''
             $scope.datas = {
               name : '' ,
-              classifier: ''
+              classifier: '',
+	      playlist:''
             };
             $scope.$watch('recselected',
                 function()
@@ -405,6 +419,7 @@
                 var url = $scope.projectData.url;
                 $scope.all = 0;
                 $scope.selectedSites = []
+		/*
                 if ($scope.recselected=='all')
                 {
                     $scope.all = 1;
@@ -419,12 +434,14 @@
                         }
                     });
                 }
+                */
                 $http.post('/api/project/'+url+'/classification/new', 
                     {
                         n:$scope.datas.name,
                         c:$scope.datas.classifier.model_id,
                         a:$scope.all,
-                        s:$scope.selectedSites.join()
+                        s:$scope.selectedSites.join(),
+			p:$scope.datas.playlist
                     }
                 ).
                 success
@@ -448,6 +465,7 @@
             
             $scope.buttonEnable = function () 
             {
+		/*
                 var flag = false;
                 if ($scope.recselected === 'all')
                     flag = true;
@@ -460,8 +478,9 @@
                     }
                         
                 }
+		*/
                 return  !(
-                            flag
+                            !((typeof $scope.datas.playlist) == 'string')
                             && $scope.datas.name.length
                             && !((typeof $scope.datas.classifier) == 'string')
                         ) ;

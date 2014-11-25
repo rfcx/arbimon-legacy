@@ -26,7 +26,7 @@ module.exports =
         newClassificationJob: function(p, callback)
         {       
             var q = "INSERT INTO `job_params_classification` (`job_id`, `model_id`, `playlist_id` ,`name`)"+
-                 "  VALUES ("+mysql.escape(p.id)+","+mysql.escape(p.classifier)+",NULL, "+mysql.escape(p.name)+") ";
+                 "  VALUES ("+mysql.escape(p.id)+","+mysql.escape(p.classifier)+","+mysql.escape(p.playlist_id)+", "+mysql.escape(p.name)+") ";
 
             queryHandler(q,callback);
         },
