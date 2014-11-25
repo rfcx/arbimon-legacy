@@ -6,7 +6,7 @@
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-plus"></i>
             </button>
-            <span ng-hide="sets" class="font-blue-20"><i class="fa fa-arrow-left left-rigth-padding-4"></i> Create a training set</span>
+            <span ng-show="(!sets || !sets.length > 0) && !loading" class="font-blue-20"><i class="fa fa-arrow-left left-rigth-padding-4"></i> Create a training set</span>
             <!--
             <button class="btn btn-danger" 
                 tooltip="Delete training set"
