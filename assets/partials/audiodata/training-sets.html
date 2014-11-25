@@ -5,7 +5,9 @@
                 tooltip="Create training set"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-plus"></i>
-            </button><!--
+            </button>
+            <span ng-hide="sets" class="font-blue-20"><i class="fa fa-arrow-left left-rigth-padding-4"></i> Create a training set</span>
+            <!--
             <button class="btn btn-danger" 
                 tooltip="Delete training set"
                 tooltip-trigger="mouseenter">
@@ -17,9 +19,14 @@
 <div class="row">
     <div class="col-sm-6">
         <a2-table fields="fields" rows="sets" no-checkbox on-select="displaySetData($index)"></a2-table>
+        <div class="jumbotron" ng-show="(!sets || !sets.length > 0) && !loading">
+            <h3>
+                No training sets found.
+            </h3>
+        </div>
         <loader ng-hide="!loading"></loader>
     </div>
-    <div ng-show="norois">No ROIs in Training Set {{selectedName}}</div>
+    <div ng-show="norois">No ROIs in Training Set {{selectedName}}. <a ui-sref="visualizer" href="#/visualizer">Open Visualizer to add ROIs.</a></div>
     <div class="col-sm-5 panel panel-default"  ng-show="loaderDisplay"><div class="trainingSetLoader"><loader></loader></div></div>
     <div class="col-sm-5 panel panel-default" ng-show="rois.length">
         <div class="panel-body">
@@ -112,3 +119,5 @@
         </div>
     </div>
 </div>
+
+

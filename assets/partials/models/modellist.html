@@ -1,10 +1,13 @@
 <div class="col-sm-10 span10 padded-view-div" >
    <div class="row">
       <div class="col-sm-2">
-          <h3>Models <a class="btn btn-sm btn-default"  tooltip="Create New Model" tooltip-placement="right"  ng-click="newModel()" ><i class="fa fa-plus" ></i></a></h3>
+          <h3>Models <a class="btn btn-sm btn-default"  tooltip="Create New Model" tooltip-placement="right"  ng-click="newModel()" ><i class="fa fa-plus" ></i></a></h3>            
       </div>
-      <div  class="col-sm-1 loading-top-padding" >
-        <loader ng-hide="!loading"></loader>
+      <div  ng-hide="!loading" class="col-sm-1 loading-top-padding" >
+        <loader></loader>
+      </div>
+      <div  ng-show="(!modelsData || !modelsDatalength > 0) && !loading" class="col-sm-8 loading-top-padding" >
+         <span  class="font-blue-20"><i class="fa fa-arrow-left left-rigth-padding-4"></i> Create a model</span>
       </div>
    </div>
     <table ng-table="tableParams" class="table"  show-filter="true" >

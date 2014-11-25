@@ -22,7 +22,7 @@
         <a2-table fields="fields" rows="playlists" checked="checked" search="search" selected="selected"></a2-table>
         <div class="jumbotron" ng-show="(!playlists || !playlists.length > 0) && !loading">
             <h3>
-                No playlists found
+                No playlists found. <a href="#/audiodata/recordings" ui-sref="audiodata.recordings">Filter recordings and create a playlist.</a>
             </h3>
         </div>
         <loader ng-hide="!loading"></loader>

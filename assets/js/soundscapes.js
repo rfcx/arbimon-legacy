@@ -5,7 +5,7 @@
 
     soundscapes.controller
     ('SoundscapesCtrl' , 
-        function ($scope,$http,$modal,$filter,$sce,Project,JobsData,ngTableParams,a2Playlists) 
+        function ($scope,$http,$modal,$filter,$sce,Project,JobsData,ngTableParams,a2Playlists,$location) 
         {
 	    $scope.successInfo = "";
 	    $scope.showSuccess = false;
@@ -138,6 +138,11 @@
 				$scope.showError = false;
 			    });
 			}
+			
+			if (data.url)
+			{
+			    $location.path(data.url);
+			}
 		    }
 		);
 	    };
@@ -234,8 +239,8 @@
                         ) ;
             };
             
-            $scope.cancel = function () {
-                 $modalInstance.dismiss('cancel');
+            $scope.cancel = function (url) {
+                 $modalInstance.close( {url:url});
             };
 	    
 	    $timeout(function()

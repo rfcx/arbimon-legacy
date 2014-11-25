@@ -3,8 +3,11 @@
       <div class="col-sm-3">
           <h3>Soundscapes <a class="btn btn-sm btn-default"  tooltip="Create New Soundscape" tooltip-placement="right"  ng-click="createNewSoundscape()" ><i class="fa fa-plus" ></i></a></h3> 
       </div>
-      <div  class="col-sm-1 loading-top-padding" >
-        <loader ng-hide="!loading"></loader>
+      <div  ng-hide="!loading" class="col-sm-1 loading-top-padding" >
+        <loader></loader>
+      </div>
+      <div  ng-show="(!modelsData || !modelsDatalength > 0) && !loading" class="col-sm-8 loading-top-padding" >
+         <span  class="font-blue-20"><i class="fa fa-arrow-left left-rigth-padding-4"></i> Create a soundscape</span>
       </div>
     </div>
     <table ng-table="tableParams" class="table" >

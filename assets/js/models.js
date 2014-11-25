@@ -5,7 +5,7 @@
     var amazons3 = "https://s3.amazonaws.com/arbimon2/";
     models.controller
     ('ModelsCtrl' , 
-        function ($scope,$http,$modal,$filter,$sce, ngTableParams,Project,JobsData) 
+        function ($scope,$http,$modal,$filter,$sce, ngTableParams,Project,JobsData,$location) 
         {
 	    $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
@@ -323,6 +323,11 @@
 					$scope.showError = false;
 				    });
 				}
+				
+				if (data.url)
+				{
+				    $location.path(data.url);
+				}
                             }
                         );
                     }
@@ -472,8 +477,8 @@
 
             };
 
-            $scope.cancel = function () {
-                 $modalInstance.dismiss('cancel');
+            $scope.cancel = function (url) {
+                $modalInstance.close( {url:url});
             };
 
         }
