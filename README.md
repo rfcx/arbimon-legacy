@@ -91,7 +91,7 @@ Bio-Acoustic Analyzer
    
  - scikits.audiolab dependencies
    ```
-   sudo apt-get install libsndfile1 libsndfile-dev
+   sudo apt-get install libsndfile-dev
    ```
    
  - node global dependencies(`sudo npm install -g <package>`):

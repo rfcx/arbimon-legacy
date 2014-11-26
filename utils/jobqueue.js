@@ -9,6 +9,6 @@ var jobQueueInstance = async.priorityQueue(function (task, callback) {
 
 jobQueueInstance.drain = function() {
     console.log('all items have been processed');
-}
+};
 
 module.exports = jobQueueInstance;

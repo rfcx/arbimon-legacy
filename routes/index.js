@@ -5,6 +5,7 @@ var router = express.Router();
 var project = require('./project');
 var dataApi = require('./data-api');
 var uploads = require('./uploads');
+var admin = require('./admin');
 
 
 router.get('/register', function(req, res) {
@@ -42,5 +43,7 @@ router.get('/user-settings', function(req, res) {
 router.use('/api', dataApi);
 router.use('/project', project);
 router.use('/uploads', uploads);
+
+router.use('/admin', admin);
 
 module.exports = router;
