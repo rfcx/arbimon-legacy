@@ -3,6 +3,19 @@ var router = express.Router();
 var model = require('../models/');
 var sha256 = require('../utils/sha256');
 var gravatar = require('gravatar');
+var mysql = require('mysql');
+
+var nodemailer = require('nodemailer');
+var smtpTransport = require('nodemailer-smtp-transport');
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
+var transport = nodemailer.createTransport(smtpTransport({
+    host: 'smtp.sieve-analytics.com',
+    port: 587,
+    auth: {
+        user: 'support',
+        pass: '6k9=qZzy8m58B2Y'
+    }
+}));
 
 router.use(function(req, res, next) {
     
@@ -84,6 +97,125 @@ router.get('/logout', function(req, res, next) {
         
         res.redirect('/login');
     });
+});
+
+router.get('/register', function(req, res) {
+    res.render('register',{data:{title:'Register',message:''
+               ,first_name:"",last_name:'',email:'',password:'',confirm:'',username:'',emailsent:0}});
+});
+
+router.get('/activate/:hash', function(req, res) {    
+    model.users.accountRequestExists(req.params.hash,
+        function(err,data)
+        {
+            if(err) return next(err);
+
+            if (data.length)
+            {console.log('routerlength',data[0].params)
+                model.users.newUser(data[0].params,
+                    function (err,datas)
+                    {
+                        if(err) return next(err);
+                        model.users.removeRequest(data[0].support_request_id, function(error, info){
+                             res.render('activate',{data:{title:'Activate',login:1,status:'Your account has been activated.'}});
+                        });
+                    }
+                )
+            }
+            else
+            {
+                res.render('activate',{data:{title:'Activate',login:0,status:'A registration entry with your information does not exists. You need to register again.'}});
+            }
+        }
+    );
+    
+});
+
+router.post('/register', function(req, res) {
+    var username = mysql.escape(req.body.username ).replace('\'','').replace('\'','');
+    var first_name = mysql.escape(req.body.first_name ).replace('\'','').replace('\'','');
+    var last_name = mysql.escape(req.body.last_name ).replace('\'','').replace('\'','');
+    var email = mysql.escape(req.body.email ).replace('\'','').replace('\'','');
+    var password = mysql.escape(req.body.password ).replace('\'','').replace('\'','');
+    var confirm = mysql.escape(req.body.password_confirmation ).replace('\'','').replace('\'','');
+    
+    if (password != confirm)
+    {
+        return res.render('register',{data:{title:'Register',message:'Passwords do not match.'
+                          ,first_name:first_name,last_name:last_name,email:email
+                          ,password:'',confirm:'',username:'',emailsent:0}});
+    }
+    
+    model.users.findByUsername(username, function(err, rows) {
+        if(err) return next(err);
+        if (rows.length)
+        {
+            return res.render('register',{data:{title:'Register',message:'Username exists.'
+                              ,first_name:first_name,last_name:last_name,email:email
+                              ,password:password,confirm:password,username:'',emailsent:0}});
+        }
+            
+        model.users.findByEmail(email, function(err, rowsemail) {
+            if(err) return next(err);
+            
+            if (rowsemail.length)
+            {
+                return res.render('register',{data:{title:'Register',message:'An account exists with that email.'
+                                  ,first_name:first_name,last_name:last_name,email:""
+                                  ,password:password,confirm:password,username:username,emailsent:0}});
+            }     
+
+            model.users.accountSupportExistsByEmail(email, function(err, rowsemailsuppoert) {
+                if(err) return next(err);
+               
+                if (rowsemailsuppoert.length)
+                {
+                   return res.render('register',{data:{title:'Register',message:'An email with an activation link has been already sent to your email.'
+                                     ,first_name:first_name,last_name:last_name,email:""
+                                     ,password:password,confirm:password,username:username,emailsent:0}});
+                }
+               
+                password = sha256(password);
+                var seed = Math.ceil(new Date().getTime() / 1000)
+                var hash = sha256(seed.toString()+username+first_name+last_name+email);
+                var submitData = {username:username , first_name:first_name , last_name:last_name , email:email,password:password}
+                console.log('sbumitData',submitData)
+                model.users.newAccountRequest(submitData, hash, function(err, rowsRes) {
+                    if(err) return next(err);
+                        console.log('rowsRes',rowsRes)
+                        var requestId = rowsRes.insertId
+                        var mailOptions = {
+                            from: 'Sieve-Analytics <support@sieve-analytics.com>', 
+                            to: email, 
+                            subject: 'Sieve-Analytics: Arbimon Account Activation', // Subject line
+                            html: 'Your Arbimon account for <b>'+username+'</b> is almost ready to use!<br>'+
+                                '<br>'+
+                                'Follow this link to activate your account:<br><br>'+
+                                'https://arbimon.sieve-analytics.com/activate/'+hash
+                        };
+                        
+                        transport.sendMail(mailOptions, function(error, info){
+                            if(error){
+                                console.log(error)
+                                model.users.removeRequest(requestId , function(error, info){
+                                                        
+                                return res.render('register',{data:{title:'Register',message:'Could not send activation email.'
+                                              ,first_name:first_name,last_name:'',email:email,password:'',confirm:'',username:'',emailsent:0}})
+                                });
+                        
+                            }else{
+                                console.log('email sent to:',email)
+                                return res.render('register',{data:{title:'Register',message:''
+                                              ,first_name:first_name,last_name:'',email:email,password:'',confirm:'',username:'',emailsent:1}});  
+                        
+                            }
+                        });           
+                    }
+                );
+            });
+        });
+    });
+    
 });
 
 module.exports = router;

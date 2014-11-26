@@ -14,7 +14,13 @@ var Users = {
         q = util.format(q, mysql.escape(username))
         queryHandler(q, callback)
     },
-
+    findByEmail: function(email, callback) {
+        var q = 'SELECT * ' +
+                'FROM users ' +
+                'WHERE email=%s';
+        q = util.format(q, mysql.escape(email))
+        queryHandler(q, callback)
+    },
     findById: function(user_id, callback) {
         var q = 'SELECT * ' +
                 'FROM users ' +
@@ -117,6 +123,47 @@ var Users = {
 
         q = util.format(q, mysql.escape(user_id), mysql.escape(project_id));
         queryHandler(q, callback);
+    }
+    ,
+    newAccountRequest : function(data,hash,callback)
+    {
+        var q = 'INSERT INTO `user_account_support_request` ' +
+                ' ( `support_type_id`, `hash`, `params`, `consumed`,  ' +
+                ' `timestamp`, `expires`) VALUES (1,\''+hash+'\',\''+JSON.stringify(data)+'\',0, ' +
+                ' now(),(SELECT FROM_UNIXTIME( UNIX_TIMESTAMP( now( ) ) ' +
+                ' + (SELECT `max_lifetime` FROM `user_account_support_type` ' + 
+                ' WHERE `account_support_type_id` = 1) ) as expiresin)) ';
+
+        queryHandler(q, callback);
+    }
+    ,
+    accountSupportExistsByEmail : function(email,callback)
+    {
+        var q = 'SELECT * FROM `user_account_support_request` WHERE `params` like \'%'+email+'%\''
+        
+        queryHandler(q, callback);
+    }
+    ,removeRequest : function(id,callback)
+    {
+        var q = 'delete FROM `user_account_support_request` WHERE `support_request_id` = \''+id+'\''
+        
+        queryHandler(q, callback);
+    }
+    ,
+    accountRequestExists : function(hash,callback)
+    {
+        var q = 'SELECT * FROM `user_account_support_request` WHERE `hash` = \''+hash+'\''
+        
+        queryHandler(q, callback); 
+    }
+    ,
+    newUser : function(data,callback)
+    {
+        data = JSON.parse(data)
+        var q= "INSERT INTO `users`( `login`, `password`, `firstname`, `lastname`, `email`, `is_super`) "+
+                " VALUES ('"+data.username+"','"+data.password+"','"+data.first_name+"','"+data.last_name+"','"+data.email+"',0)"
+        
+        queryHandler(q, callback); 
     }
 };
 

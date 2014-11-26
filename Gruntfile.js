@@ -162,7 +162,8 @@ module.exports = function(grunt) {
                     'assets/js/user-settings.js',
                     'assets/js/jobs.js',
                     'assets/js/analysis.js',
-                    'assets/js/soundscapes.js'
+                    'assets/js/soundscapes.js',
+                    'assets/js/register.js'
 
                 ], 
 
