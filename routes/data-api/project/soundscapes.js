@@ -55,6 +55,18 @@ router.get('/', function(req, res, next) {
     });
 });
 
+router.get('/details', function(req, res, next) {
+    console.log('details')
+    model.soundscapes.details(req.project.project_id,
+    function(err, data) {
+        if(err) return next(err);
+
+        res.json(data);
+        return null;
+    });
+});
+
+
 router.get('/:soundscape', function(req, res, next) {
     res.json(req.soundscape);
 });
@@ -84,15 +96,6 @@ router.get('/:soundscape/recordings/:bbox', function(req, res, next) {
     });
 });
 
-router.get('/details', function(req, res, next) {
-    model.soundscapes.details(req.project.project_id,
-    function(err, data) {
-        if(err) return next(err);
-
-        res.json(data);
-        return null;
-    });
-});
 
 
 (function(router){
