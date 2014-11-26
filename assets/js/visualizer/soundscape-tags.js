@@ -1,5 +1,6 @@
 angular.module('a2SoundscapeRegionTags', ['a2Infotags'])
 .directive('a2SoundscapeRegionTag', function($injector){
+    var clsprefix = 'label-';
     var resolve_tag = function(scope, element, tag){
         var txt = element.children('.txt');
         var label_classes = ['default', 'primary', 'success', 'info', 'warning', 'danger'];        
@@ -15,7 +16,7 @@ angular.module('a2SoundscapeRegionTags', ['a2Infotags'])
         
         if(typeof tag == 'string'){
             txt.text(tag);
-            scope.class="label-default";
+            scope.class=clsprefix+"default";
         } else {
             var type  = tag.type;
             var text  = tag.text || tag.tag;
@@ -38,9 +39,9 @@ angular.module('a2SoundscapeRegionTags', ['a2Infotags'])
             }
             
             if(label_classes.indexOf(color) >= 0){
-                scope.class = 'label-'+color;
+                scope.class = clsprefix+color;
             } else {
-                scope.style['background-color'] = color;
+                scope.style['background-color'] = color;                
             }
 
         }        

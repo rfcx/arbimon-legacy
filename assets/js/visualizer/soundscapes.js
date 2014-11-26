@@ -114,7 +114,9 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils', 'a2S
         if(sc) {
             self.soundscape = sc;
             self.selection.reset();
-            a2Soundscapes.getRegions(sc, function(regions){
+            a2Soundscapes.getRegions(sc, {
+                view:'tags'
+            },function(regions){
                 self.regions = regions;
             });
         } else {

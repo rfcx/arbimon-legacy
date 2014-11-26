@@ -473,11 +473,16 @@ angular.module('a2services',[])
                 data   : data
             }).success(callback);
         },
-        getRegions: function(soundscape, callback) {
+        getRegions: function(soundscape, query, callback) {
+            if(query instanceof Function){
+                callback = query;
+                query = undefined;
+            }
             var projectName = Project.getName();
             $http({
                 method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions'
+                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions',
+                params : query
             }).success(function(data) {
                 callback(data);
             });

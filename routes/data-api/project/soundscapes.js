@@ -116,7 +116,9 @@ router.param('region', function(req, res, next, region){
 });
 
 router.get('/', function(req, res, next) {
-    model.soundscapes.getRegions(req.soundscape, function(err, regions){
+    model.soundscapes.getRegions(req.soundscape, {
+        compute:req.query.view
+    },function(err, regions){
         if(err){
             next(err);
         } else {

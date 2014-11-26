@@ -172,6 +172,13 @@ var Soundscapes = {
         ], callback);
     },
     
+    /** Fetches a soundscape's regions.
+     * @param {Object}  soundscape    soundscape 
+     * @param {Object}  params  [optional]
+     * @param {Integer} param.region  find region with the given id.
+     * @param {String}  param.compute other (computed) attributes to show on returned data
+     * @param {Function} callback called back with the queried results.
+     */
     getRegions: function(soundscape, params, callback){
         if(params instanceof Function){
             callback = params;
@@ -192,7 +199,17 @@ var Soundscapes = {
             "SELECT SCR.soundscape_region_id as id, SCR.soundscape_id as soundscape, SCR.name, SCR.x1, SCR.y1, SCR.x2, SCR.y2, SCR.count, \n" +
             "    SCR.sample_playlist_id as playlist \n" +
             "FROM soundscape_regions SCR \n" +
-            "WHERE " + constraints.join(' AND '), callback);
+            "WHERE " + constraints.join(' AND '), function(err, data){
+            if (!err && data){
+                if(params.compute){
+                    arrays_util.compute_row_properties(data, params.compute, function(property){
+                        return Soundscapes['__compute_region_' + property.replace(/-/g,'_')];
+                    }, callback);
+                    return;
+                }
+            }
+            callback(err, data);
+        });
     },
     
     sampleRegion: function(soundscape, region, params, callback){
@@ -328,7 +345,7 @@ var Soundscapes = {
 
         return dbpool.queryHandler(
             "SELECT SRT.soundscape_region_tag_id as id, SRT.soundscape_region_id as region, SRT.recording_id as recording,\n" +
-            "    " + (project.length ? project.join(", ")+"," : "") + " \n" +
+            (project.length ? "    " + project.join(", ")+", \n" : "")+
             "    ST.tag, ST.type, COUNT(*) as count \n" +
             "FROM soundscape_region_tags SRT \n" +
             "JOIN soundscape_tags ST ON ST.soundscape_tag_id = SRT.soundscape_tag_id\n" +
@@ -350,7 +367,6 @@ var Soundscapes = {
         if(typeof data == 'string'){
             data = {tag:data, type:'normal'};
         }
-        console.log(arguments);
         
         async.waterfall([
             function check_valid_tag_type(next){
@@ -438,6 +454,13 @@ var Soundscapes = {
     __compute_thumbnail_path : function(soundscape, callback){
         soundscape.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + soundscape.uri;
         callback();
+    },
+    __compute_region_tags : function(region, callback){
+        Soundscapes.getRegionTags(region, function(err, tags){
+            if(err){callback(err); return;}
+            region.tags = tags;
+            callback();
+        });
     },
 
 };
