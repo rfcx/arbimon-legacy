@@ -20,7 +20,7 @@
             </th><th></th></tr>
             <tr ng-repeat="region in layer.soundscape.regions" 
                 ng-class ="{'active':layer.soundscape.selection.bbox == region}"
-                ng-click ="layer.soundscape.selection.bbox = region"
+                ng-click ="layer.soundscape.selection.select(region)"
             >
                 <td>{{region.name}}</td>
                 <td>

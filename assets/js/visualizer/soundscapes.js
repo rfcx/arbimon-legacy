@@ -106,6 +106,15 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils', 'a2S
         },
         sample : function(){
             self.sample(this.bbox, this.percent);
+        },
+        view_samples : function(){
+            self.view_playlist(this.bbox);
+        },
+        select : function(region){
+            this.bbox = region;
+            if($scope.visobject && $scope.visobject.id && region && region.id){
+                $scope.set_location('soundscape/' + $scope.visobject.id + '/' + region.id, true);
+            }
         }
     });
 

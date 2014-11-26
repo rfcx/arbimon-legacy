@@ -67,6 +67,8 @@ angular.module('a2browser_soundscapes', [])
         return defer.promise;
     };
     this.get_location = function(soundscape){
-        return 'soundscape/' + soundscape.id;
+        return 'soundscape/' + soundscape.id + (
+            soundscape.extra && soundscape.extra.region ? '/' + soundscape.extra.region : ''
+        );
     };
 });
