@@ -21,8 +21,8 @@
                 </div>
                 <div class="visobj-list-item"
                     ng-hide="browser.loading.times"
-                    ng-repeat="visobj in browser.lovo.list | orderBy: 'datetime'"
-                    ng-class=" (browser.visobj == visobj ? 'active ' : ' ') + 'visobj-'+browser.lovo.object_type"
+                    ng-repeat="visobj in browser.lovo.list"
+                    ng-class=" (browser.visobj.id == visobj.id ? 'active ' : ' ') + 'visobj-'+browser.lovo.object_type"
                     ng-click="browser.visobj = visobj">
                     <div class="clearfix">
                         {{visobj.datetime | moment : 'hh:mm A'}}

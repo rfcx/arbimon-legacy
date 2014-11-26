@@ -15,12 +15,12 @@ angular.module('a2browser_recordings_by_playlist', [])
             } else {
                 a2Playlists.getData(self.playlist.id, {show:'thumbnail-path'}, function(recordings){
                     self.list = recordings;
-                    recordings.forEach(self.append_extras.bind(self));
                     self.count  = recordings.length;
                     d.resolve(false);
                 });
             }
             return d.promise.then(function(){
+                var d = $q.defer();
                 a2Playlists.getInfo(self.playlist.id, function(playlist_info){
                     self.playlist = playlist_info;
                     switch(self.playlist.type){
@@ -31,7 +31,13 @@ angular.module('a2browser_recordings_by_playlist', [])
                             ];
                         break;
                     }
+                    d.resolve();
                 });
+                return d.promise;
+            }).then(function(){
+                if(self.list){
+                    self.list.forEach(self.append_extras.bind(self));
+                }
             });
         },
         append_extras: function(recording){
@@ -44,7 +50,9 @@ angular.module('a2browser_recordings_by_playlist', [])
         },
         find : function(recording){
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
+            console.log("find : function(recording){", id, "--", recording);
             d.resolve(this.append_extras(this.list.filter(function(r){
+                console.log("  ::: ", r.id, id, r.id == id);
                 return r.id == id;
             }).shift()));
             return d.promise;
@@ -52,7 +60,7 @@ angular.module('a2browser_recordings_by_playlist', [])
         previous : function(recording){
             var self = this;
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
-            Project.getPreviousRecording(id, function(r){
+            a2Playlists.getPreviousRecording(this.playlist.id, id, function(r){
                 d.resolve(self.append_extras(r));
             });
             return d.promise;
@@ -60,7 +68,7 @@ angular.module('a2browser_recordings_by_playlist', [])
         next : function(recording){
             var self = this;
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
-            Project.getNextRecording(id, function(r){
+            a2Playlists.getNextRecording(this.playlist.id, id, function(r){
                 d.resolve(self.append_extras(r));
             });
             return d.promise;

@@ -17,7 +17,7 @@
     </div>
     <div>
         <div class="rect-holder" 
-        ng-click="layer.soundscape.selection.bbox = region; $event.stopPropagation();"
+        ng-click="$event.stopPropagation(); layer.soundscape.selection.select(region);"
         ng-class="{selected : region == layer.soundscape.selection.bbox}"
         ng-repeat="region in layer.soundscape.regions" ng-style="{
             left   : layout.sec2x(region.x1, 1) + 'px', 

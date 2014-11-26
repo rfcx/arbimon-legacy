@@ -150,7 +150,7 @@ router.get('/:region', function(req, res, next) {
 
 router.post('/:region/sample', function(req, res, next) {
     model.soundscapes.sampleRegion(req.soundscape, req.region, {
-        count : req.region.count * req.body.percent
+        count : (req.region.count * (req.body.percent|0) / 100.0) | 0
     }, function(err, region){
         if(err){
             next(err);

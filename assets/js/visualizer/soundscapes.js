@@ -11,7 +11,7 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils', 'a2S
     
     this.show={
         names : true,
-        labels : true
+        tags  : true
     };
     
     this.view_playlist = function(region){
@@ -106,6 +106,15 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils', 'a2S
         },
         sample : function(){
             self.sample(this.bbox, this.percent);
+        },
+        view_samples : function(){
+            self.view_playlist(this.bbox);
+        },
+        select : function(region){
+            this.bbox = region;
+            if($scope.visobject && $scope.visobject.id && region && region.id){
+                $scope.set_location('soundscape/' + $scope.visobject.id + '/' + region.id, true);
+            }
         }
     });
 
@@ -118,6 +127,12 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils', 'a2S
                 view:'tags'
             },function(regions){
                 self.regions = regions;
+                console.log(visobject.extra);
+                if(visobject.extra && visobject.extra.region){
+                    self.selection.bbox = self.regions.filter(function(r){
+                        return r.id == visobject.extra.region;
+                    }).pop();
+                }
             });
         } else {
             self.soundscape = 0;
@@ -220,7 +235,5 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils', 'a2S
             });
         }
     });
-    
-    console.log($scope);
 })
 ;

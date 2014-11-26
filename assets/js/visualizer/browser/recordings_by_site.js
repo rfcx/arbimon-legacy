@@ -2,13 +2,14 @@ angular.module('a2browser_recordings_by_site', [])
 .factory('rbDateAvailabilityCache', function ($cacheFactory) {
     return $cacheFactory('recordingsBrowserDateAvailabilityCache');
 })
-.service('a2RecordingsBySiteLOVO', function($q, Project){
+.service('a2RecordingsBySiteLOVO', function($q, Project, $filter){
     var lovo = function(site, date){
         this.initialized = false;
         this.site = site;
         this.date = date;
         this.object_type = "recording";
         this.offset = 0;
+        this.order  = 'datetime';
         this.count  = 0;
         this.list   = [];
     }
@@ -21,6 +22,7 @@ angular.module('a2browser_recordings_by_site', [])
                 var site=this.site, date=this.date;
                 var key = [site.name, date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
                 Project.getRecordings(key, {show:'thumbnail-path'},(function(recordings){
+                    recordings = $filter('orderBy')(recordings, 'datetime');
                     this.list = recordings;
                     this.count = recordings.length;
                     d.resolve(false);

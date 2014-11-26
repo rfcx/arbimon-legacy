@@ -24,8 +24,8 @@ angular.module('a2browser_soundscapes', [])
                 a2Browser.setLOVO(self.lovo);
             }
             defer.resolve(false);
-            if(self.resolve.pld){
-                self.resolve.pld.resolve(self.soundscapes);
+            if(self.resolve.scd){
+                self.resolve.scd.resolve(self.soundscapes);
             }
         });
 
@@ -39,19 +39,25 @@ angular.module('a2browser_soundscapes', [])
         var m = /(\d+)(\/(\d+))?/.exec(location);
         var defer = $q.defer();
         if(m){
-            var plid = m[1]|0, recid=m[3]|0;
-            var pld = $q.defer();
+            var scid = m[1]|0, regionid=m[3]|0;
+            var scd = $q.defer();
             if(self.loading.soundscapes){
-                self.resolve = { pld : pld };
+                self.resolve = { scd : scd};
             } else {
-                pld.resolve(self.soundscapes);
+                scd.resolve(self.soundscapes);
             }
-            pld.promise.then(function(soundscapes){
+            scd.promise.then(function(soundscapes){
                 var soundscape = self.soundscapes.filter(function(soundscape){
-                    return soundscape.id == plid;
+                    return soundscape.id == scid;
                 }).shift();
                 if(soundscape){
                     self.soundscape = soundscape;
+                    if(regionid){
+                        if(!self.soundscape.extra){
+                            self.soundscape.extra={};
+                        }
+                        self.soundscape.extra.region = regionid;
+                    }
                 }
                 defer.resolve(soundscape);
             });
@@ -61,6 +67,8 @@ angular.module('a2browser_soundscapes', [])
         return defer.promise;
     };
     this.get_location = function(soundscape){
-        return 'soundscape/' + soundscape.id;
+        return 'soundscape/' + soundscape.id + (
+            soundscape.extra && soundscape.extra.region ? '/' + soundscape.extra.region : ''
+        );
     };
 });
