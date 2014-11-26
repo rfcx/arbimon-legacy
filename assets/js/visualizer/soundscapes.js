@@ -118,6 +118,12 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils', 'a2S
                 view:'tags'
             },function(regions){
                 self.regions = regions;
+                console.log(visobject.extra);
+                if(visobject.extra && visobject.extra.region){
+                    self.selection.bbox = self.regions.filter(function(r){
+                        return r.id == visobject.extra.region;
+                    }).pop();
+                }
             });
         } else {
             self.soundscape = 0;
@@ -220,7 +226,5 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils', 'a2S
             });
         }
     });
-    
-    console.log($scope);
 })
 ;

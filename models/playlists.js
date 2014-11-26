@@ -112,6 +112,7 @@ var Playlists = {
      * @param {Object}  playlist  playlist object as returned by find().
      * @param {Object}  query (optional)
      * @param {Object}  query.recording limit data results to those belonging to the matching recordings
+     * @param {Object}  query.limit     limit results to the given window interval
      * @param {Function} callback(err, path) function to call back with the results.
      */
     fetchData: function (playlist, query, callback) {
@@ -130,6 +131,19 @@ var Playlists = {
         // } else if (query.project) {
         //     constraints.push('PL.project_id = ' + mysql.escape(query.project));
         // }
+        
+        var limit_clause = '';
+        
+        if(query.limit){
+            var qlimit = query.limit;
+            if(typeof qlimit != "object"){
+                qlimit = {count:query.limit};
+            }
+            limit_clause = " LIMIT " + Math.max(0,(qlimit.count | 0));
+            if(qlimit.offset){
+                limit_clause += " OFFSET " + Math.max(0, (qlimit.offset | 0))
+            }
+        }
 
         if(constraints.length === 0){
             callback(new Error("Playlists.fetchData called with invalid query."));
@@ -139,14 +153,86 @@ var Playlists = {
             "SELECT PLR.recording_id \n" +
             "FROM playlist_recordings PLR \n" +
             "WHERE " + constraints.join(" \n" +
-            "  AND "
-        ), function(err, data){
+            "  AND ") + limit_clause, function(err, data){
             if(err){ callback(err); return; }
-            var ids = data.map(function(row){
-                return row.recording_id;
+            if(!data.length){
+                callback(null, []);
+                return;
+            }
+            // var ids = data.map(function(row){
+            //     return row.recording_id;
+            // });
+            // model.recordings.findByUrlMatch({id:ids}, null, {compute:query && query.show}, callback);
+            // this is necessary to ensure playlist order
+            async.map(data, function(row, next_row){
+                var id = row.recording_id;
+                model.recordings.findByUrlMatch({id:id}, null, {compute:query && query.show}, function(err, recording){
+                    if(err){next_row(err); return;}
+                    next_row(null, recording.length && recording[0]);
+                });
+            }, function(err,recs){
+                callback(err, recs);
             });
-            model.recordings.findByUrlMatch({id:ids}, null, {compute:query && query.show}, callback);
         });
+    },
+    
+    fetchRecordingsAround: function(playlist, recording, radius, callback){
+        async.waterfall([
+            function(next){
+                dbpool.queryHandler(
+                    "SELECT rPLR.row \n" +
+                    "FROM (\n"+
+                    "   SELECT @rownum:=@rownum+1 row, PLR.*  \n" +
+                    "   FROM playlist_recordings PLR, (SELECT @rownum:=0) r \n" +
+                    "   WHERE PLR.playlist_id = " + mysql.escape(playlist.id) + " \n"+
+                    ") as rPLR \n" +
+                    "WHERE rPLR.recording_id = " + mysql.escape(recording),
+                next);
+            }, 
+            function(rows){
+                var next = arguments[arguments.length-1];
+                next(null, rows.length ? rows[0].row : 0);
+            },
+            function(rec_row, next){
+                --rec_row;
+                var intervals = [
+                    {offset:rec_row - radius, count:radius},
+                    {offset:rec_row         , count:1     },
+                    {offset:rec_row + 1     , count:radius}
+                ];                
+                async.map(intervals, function(interval, next_interval){
+                    Playlists.fetchData(playlist, {limit:interval}, next_interval);
+                }, next);
+            },
+            function(intervals){
+                var next = arguments[arguments.length-1];
+                next(null, intervals[0], intervals[1][0], intervals[2]);
+            },            
+        ], callback);
+    },
+
+    fetchNextRecording: function(playlist, recording, callback){
+        async.waterfall([
+            function(next){
+                Playlists.fetchRecordingsAround(playlist, recording, 1, next);
+            },
+            function(before, recording, after){
+                var next = arguments[arguments.length-1];
+                next(null, after.length ? after[0] : recording);
+            }
+        ], callback);
+    },
+
+    fetchPreviousRecording: function(playlist, recording, callback){
+        async.waterfall([
+            function(next){
+                Playlists.fetchRecordingsAround(playlist, recording, 1, next);
+            },
+            function(before, recording, after){
+                var next = arguments[arguments.length-1];
+                next(null, before.length ? before[0] : recording);
+            }
+        ], callback);
     },
     
     create: function(data, callback) {

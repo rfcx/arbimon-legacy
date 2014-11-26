@@ -37,7 +37,7 @@ angular.module('visualizer-services', ['a2services'])
         }},
         sidebar_only : true,
         visible : true,
-        hide_visibility : true
+        hide_visibility : false
      },
      {  type    : "species-presence",
         title   : "",

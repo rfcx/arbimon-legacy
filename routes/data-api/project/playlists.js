@@ -119,6 +119,21 @@ router.get('/list/:playlist', function(req, res, next) {
     });
 });
 
+router.get('/:playlist/:recid/next', function(req, res, next) {
+    model.playlists.fetchNextRecording(req.playlist, req.params.recid, function(err, data) {
+        if(err) return next(err);        
+        res.json(data);
+    });
+});
+
+router.get('/:playlist/:recid/previous', function(req, res, next) {
+    model.playlists.fetchPreviousRecording(req.playlist, req.params.recid, function(err, data) {
+        if(err) return next(err);        
+        res.json(data);
+    });
+});
+
+
 router.post('/delete', function(req, res, next) {
     if(!req.body.playlists)
         return res.json({ error: "missing paramenters" });

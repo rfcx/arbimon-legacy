@@ -115,6 +115,7 @@ angular.module('visualizer', [
             var typedef = VisualizerObjectTypes[type];
             $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);            
             typedef.load(visobject, $scope).then(function (visobject){
+console.log('VisObject loaded : ', visobject);
                 $scope.loading_visobject = false;
                 $scope.visobject = visobject;
                 $scope.visobject_type = visobject.type;

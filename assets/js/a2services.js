@@ -313,8 +313,17 @@ angular.module('a2services',[])
         //         callback(data);
         //     });
         // },
-
-
+        getPreviousRecording : function(playlist, recording, callback){
+            return $http.get('/api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/previous').success(function(data) {
+                callback(data);
+            });
+        },
+        
+        getNextRecording : function(playlist, recording, callback){
+            return $http.get('/api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/next').success(function(data) {
+                callback(data);
+            });
+        },
         
         rename: function(playlist, callback) {
             $http.post('/api/project/'+projectName+'/playlists/rename', playlist)
