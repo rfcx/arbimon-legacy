@@ -47,15 +47,33 @@
 			    (
 			    {
 				page: 1,          
-				count: 10
+				count: 10,      
+				filter: {
+
+				},     
+				sorting: {
+				    name: 'asc'     
+				}
 			    }, 
 			    {
 				total: $scope.soundscapesOriginal.length,
 				getData: function ($defer, params) 
 				{
-
-				    $defer.resolve($scope.soundscapesData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-				    $scope.soundscapesData = $scope.soundscapesOriginal.slice((params.page() - 1) * params.count(), params.page() * params.count())
+				    $scope.infopanedata = "";
+				    var filteredData = params.filter() ?
+					    $filter('filter')($scope.soundscapesOriginal , params.filter()) :
+					    $scope.soundscapesOriginal  ;
+				    
+				    var orderedData = params.sorting() ?
+					    $filter('orderBy')(filteredData, params.orderBy()) :
+					    $scope.soundscapesOriginal ;
+				    params.total(orderedData.length);
+				    $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+				    if(orderedData.length < 1)
+				    {
+					$scope.infopanedata = "No classifications found.";
+				    }
+				    $scope.soundscapesData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count())					
 				}
 			    }
 			    ); 

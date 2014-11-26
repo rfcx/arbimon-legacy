@@ -10,32 +10,20 @@
          <span  class="font-blue-20"><i class="fa fa-arrow-left left-rigth-padding-4"></i> Create a soundscape</span>
       </div>
     </div>
-    <table ng-table="tableParams" class="table" >
+    <table ng-table="tableParams" class="table" show-filter="true" >
         <tr ng-repeat="soundscape in soundscapesData" >
             <td data-title="'Date'" class="no-wrap-table-cell">
                 {{soundscape.date}} {{soundscape.time}}
             </td> 
-            <td data-title="'Name'" class="no-wrap-table-cell">
+            <td data-title="'Name'" class="no-wrap-table-cell" sortable="'name'"  filter="{ 'name': 'text' }">
                 {{soundscape.name}}
             </td>
-            <td data-title="'User'" class="no-wrap-table-cell">
+            <td data-title="'User'" class="no-wrap-table-cell" sortable="'user'"  filter="{ 'user': 'text' }">
                 {{soundscape.user}}
             </td>
-            <td data-title="'Playlist'" class="no-wrap-table-cell">
+            <td data-title="'Playlist'" class="no-wrap-table-cell" sortable="'playlist'"  filter="{ 'playlist': 'text' }">
                 {{soundscape.playlist}}
             </td>
-<!--        
-            <td>
-                <button class="btn btn-default btn-xs" ng-click="showClassificationDetails(classification.job_id)">Show details</button>
-            </td>
-            <td>
-                <button class="btn btn-default btn-xs" ng-click="deleteModel(model.model_id,model.mname)">Delete</button>
-            </td>
-            <td>
-                <button class="btn btn-default btn-xs" ng-click="newClassification(model.model_id,model.mname)">New Classification</button>
-            </td>
-            
--->
         </tr>
     </table>
     {{ infopanedata }}

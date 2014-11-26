@@ -52,16 +52,34 @@
                                 (
                                 {
                                     page: 1,          
-                                    count: 10
+                                    count: 10,
+				    filter: {
+
+				    },     
+				    sorting: {
+					cname: 'asc'     
+				    }
                                 }, 
                                 {
                                     total: $scope.classificationsOriginal.length,
                                     getData: function ($defer, params) 
                                     {
- 
-                                        $defer.resolve($scope.classificationsData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-                                        $scope.classificationsData = $scope.classificationsOriginal.slice((params.page() - 1) * params.count(), params.page() * params.count())
-                                    }
+					$scope.infopanedata = "";
+					var filteredData = params.filter() ?
+						$filter('filter')($scope.classificationsOriginal , params.filter()) :
+						$scope.classificationsOriginal  ;
+					
+					var orderedData = params.sorting() ?
+						$filter('orderBy')(filteredData, params.orderBy()) :
+						$scope.classificationsOriginal ;
+					params.total(orderedData.length);
+					$defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+					if(orderedData.length < 1)
+					{
+					    $scope.infopanedata = "No classifications found.";
+					}
+					$scope.classificationsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count())					
+				    }
                                 }
                                 ); 
                             }

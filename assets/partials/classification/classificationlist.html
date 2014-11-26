@@ -10,40 +10,23 @@
          <span  class="font-blue-20"><i class="fa fa-arrow-left left-rigth-padding-4"></i> Classify recordings</span>
       </div>
    </div>
-    <table ng-table="tableParams" class="table" >
+    <table ng-table="tableParams" class="table" show-filter="true" >
         <tr ng-repeat="classification in classificationsData" >
-            <td data-title="'Date'" >
+            <td data-title="'Date'" sortable="'date'" >
                 {{classification.date}}
             </td>
-            <td data-title="'Name'" ">
+            <td data-title="'Name'" " sortable="'cname'" filter="{ 'cname': 'text' }">
                 {{classification.cname}}
             </td>
-            <!--
-            <td data-title="'Type'" sortable="'mtname'" filter="{ 'mtname': 'text' }">
-                {{model.mtname}}
-            </td>
-            -->
-            <td data-title="'User'" class="no-wrap-table-cell">
+            <td data-title="'User'" sortable="'muser'" filter="{ 'muser': 'text' }" class="no-wrap-table-cell">
                 {{classification.muser}}
             </td>
-            <td data-title="'Model'" class="no-wrap-table-cell">
+            <td data-title="'Model'" sortable="'modname'" filter="{ 'modname': 'text' }" class="no-wrap-table-cell">
                 {{classification.modname}}
             </td>         
             <td>
                 <button class="btn btn-default btn-xs" ng-click="showClassificationDetails(classification.job_id)">Show details</button>
             </td>
-            <!--
-            <td>
-                <button class="btn btn-default btn-xs" ng-click="deleteModel(model.model_id,model.mname)">Delete</button>
-            </td>
-            <td>
-                <button class="btn btn-default btn-xs" ng-click="newClassification(model.model_id,model.mname)">New Classification</button>
-            </td>
-            
-            <td data-ng-hide="true">
-                {{classification.job_id}}
-            </td>
-            -->
         </tr>
     </table>
     {{ infopanedata }}
