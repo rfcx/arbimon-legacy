@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var model = require('../../../models');
 
+var region_router = express.Router();
 
 router.param('soundscape', function(req, res, next, soundscape){
     model.soundscapes.find({
@@ -14,24 +15,6 @@ router.param('soundscape', function(req, res, next, soundscape){
             return res.status(404).json({ error: "soundscape not found"});
         }
         req.soundscape = soundscapes[0];
-        return next();
-    });
-});
-
-router.param('region', function(req, res, next, region){
-    if(!req.soundscape){
-        return res.status(404).json({ error: "cannot find region without soundscape."});
-    }
-    
-    model.soundscapes.getRegions(req.soundscape, {
-        region : region
-    }, function(err, regions) {
-        if(err) return next(err);
-
-        if(!regions.length){
-            return res.status(404).json({ error: "region not found"});
-        }
-        req.region = regions[0];
         return next();
     });
 });
@@ -72,42 +55,11 @@ router.get('/', function(req, res, next) {
     });
 });
 
-router.get('/:soundscape/regions/', function(req, res, next) {
-    model.soundscapes.getRegions(req.soundscape, function(err, regions){
-        if(err){
-            next(err);
-        } else {
-            res.json(regions);
-        }
-    });
+router.get('/:soundscape', function(req, res, next) {
+    res.json(req.soundscape);
 });
 
-router.post('/:soundscape/regions/add', function(req, res, next) {
-    var bbox = parse_bbox(req.body.bbox);
-    model.soundscapes.addRegion(req.soundscape, {
-        bbox : bbox,
-        name : req.body.name
-    }, function(err, region){
-        if(err){
-            next(err);
-        } else {
-            res.json(region);
-        }
-    });
-});
-
-router.post('/:soundscape/regions/:region/sample', function(req, res, next) {
-    model.soundscapes.sampleRegion(req.soundscape, req.region, {
-        count : req.region.count * req.body.percent
-    }, function(err, region){
-        if(err){
-            next(err);
-        } else {
-            res.json(region);
-        }
-    });
-});
-
+router.use('/:soundscape/regions/', region_router);
 
 router.get('/:soundscape/recordings/:bbox', function(req, res, next) {
     var soundscape = req.soundscape;
@@ -141,6 +93,105 @@ router.get('/details', function(req, res, next) {
         return null;
     });
 });
+
+
+(function(router){
+
+router.param('region', function(req, res, next, region){
+    if(!req.soundscape){
+        return res.status(404).json({ error: "cannot find region without soundscape."});
+    }
+    
+    model.soundscapes.getRegions(req.soundscape, {
+        region : region
+    }, function(err, regions) {
+        if(err) return next(err);
+
+        if(!regions.length){
+            return res.status(404).json({ error: "region not found"});
+        }
+        req.region = regions[0];
+        return next();
+    });
+});
+
+router.get('/', function(req, res, next) {
+    model.soundscapes.getRegions(req.soundscape, {
+        compute:req.query.view
+    },function(err, regions){
+        if(err){
+            next(err);
+        } else {
+            res.json(regions);
+        }
+    });
+});
+
+router.post('/add', function(req, res, next) {
+    var bbox = parse_bbox(req.body.bbox);
+    model.soundscapes.addRegion(req.soundscape, {
+        bbox : bbox,
+        name : req.body.name
+    }, function(err, region){
+        if(err){
+            next(err);
+        } else {
+            res.json(region);
+        }
+    });
+});
+
+router.get('/:region', function(req, res, next) {
+    res.json(req.region);
+});
+
+router.post('/:region/sample', function(req, res, next) {
+    model.soundscapes.sampleRegion(req.soundscape, req.region, {
+        count : req.region.count * req.body.percent
+    }, function(err, region){
+        if(err){
+            next(err);
+        } else {
+            res.json(region);
+        }
+    });
+});
+
+
+router.get('/:region/tags/:recid', function(req, res, next) {
+    model.soundscapes.getRegionTags(req.region, {
+        recording : req.params.recid
+    }, function(err, region){
+        if(err){
+            next(err);
+        } else {
+            res.json(region);
+        }
+    });
+});
+
+router.post('/:region/tags/:recid/add', function(req, res, next) {
+    model.soundscapes.addRegionTag(req.region, req.params.recid, req.session.user.id, req.body.tag, function(err, tag){
+        if(err){
+            next(err);
+        } else {
+            res.json(tag);
+        }
+    });
+});
+
+
+router.post('/:region/tags/:recid/remove', function(req, res, next) {
+    model.soundscapes.removeRegionTag(req.region, req.params.recid, req.body.tag, function(err, tag){
+        if(err){
+            next(err);
+        } else {
+            res.json(tag);
+        }
+    });
+});
+
+})(region_router);
 
 
 module.exports = router;

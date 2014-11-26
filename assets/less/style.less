@@ -37,6 +37,7 @@
 @import "a2-components/audiodata.less";
 @import "a2-components/calendar.less";
 @import "a2-components/loader.less";
+@import "a2-icons.less";
 
 /*
  * general styles
@@ -758,3 +759,15 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
 }
 
 
+.label > .btn.btn-close {
+    &:last-child{
+        margin-right: -0.5em;
+    }
+}
+
+.label.a2-tag{
+    display:inline-block;
+    > .badge{
+        background-color:rgba(255,255,255,.2);
+    }
+}

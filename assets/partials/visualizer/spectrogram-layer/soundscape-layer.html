@@ -27,10 +27,14 @@
                 width  : layout.dsec2width(region.x2, region.x1, 1, 1) + 'px', 
                 height : layout.dhz2height(region.y2, region.y1, 1, 1) + 'px'
             }" ></div>
-            <div class="text">
+            <div class="text" style="min-width:200px;"
+                ng-style="{width : layout.dsec2width(region.x2, region.x1, 1, 1) + 'px'}"
+            >
                 <div ng-show="layer.soundscape.show.names">{{region.name}}</div>
-                <div ng-show="layer.soundscape.show.labels">
-                    <span ng-repeat="label in region.labels" class="label" ng-class="label.class" >{{label.name}}</span>
+                <div ng-show="layer.soundscape.show.tags">
+                    <span ng-repeat="tag in region.tags" >
+                        <a2-soundscape-region-tag tag="tag" show-count="true"></a2-soundscape-region-tag>
+                    </span>
                 </div>
             </div>
         </div>
@@ -88,6 +92,11 @@
                 {{layer.soundscape.selection.bbox.name}}<br />
                 <br />
                 Recordings : <span class="badge" >{{layer.soundscape.selection.bbox.count}}</span> <br />
+                <div ng-show="layer.soundscape.selection.bbox.tags">
+                    <span ng-repeat="tag in layer.soundscape.selection.bbox.tags">
+                        <a2-soundscape-region-tag tag="tag" show-count="true"></a2-soundscape-region-tag>
+                    </span>
+                </div>
                 <br />
                 <div ng-hide="layer.soundscape.selection.bbox.playlist">
                     <button class="btn btn-sm btn-default" ng-disabled="layer.soundscape.selection.bbox.count == 0"

@@ -16,10 +16,11 @@ angular.module('a2visobjects', [
 .service('VisualizerObjectRecordingType', function ($q, Project, $injector) {
     var khz_format = function(v){return (v/1000) | 0; };
     
-    var recording = function(data){
+    var recording = function(data, extra){
         for(var i in data){ this[i] = data[i]; }
         this.duration      = this.stats.duration;
         this.sampling_rate = this.stats.sample_rate;
+        this.extra  = extra;
         // fix up some stuff
         this.max_freq = this.sampling_rate / 2;
         // setup the domains
@@ -50,7 +51,7 @@ angular.module('a2visobjects', [
     recording.fetch = function(visobject){
         var d = $q.defer();
         Project.getRecordingInfo(visobject.id, function(data){
-            visobject = new recording(data);
+            visobject = new recording(data, visobject.extra);
             d.resolve(visobject);
         });
         return d.promise;

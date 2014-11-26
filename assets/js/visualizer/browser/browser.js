@@ -7,6 +7,7 @@ angular.module('a2visobjectsbrowser', [
     return {
         restrict : 'E',
         scope : {
+            location    : '=?',
             onVisObject : '&onVisObject'
         },
         templateUrl : '/partials/visualizer/browser/main.html',
@@ -16,7 +17,7 @@ angular.module('a2visobjectsbrowser', [
 .controller('a2VisObjectBrowserController', function($scope, $element, $attrs, $timeout, $controller, $q, browser_lovos, itemSelection, Project){
     var self = $scope.browser = this;
     var project = Project;
-
+    
     this.types = browser_lovos.$grouping;
     this.type  = browser_lovos.$list.filter(function(lovo){return lovo.default;}).shift();
     this.loading = {
@@ -29,23 +30,27 @@ angular.module('a2visobjectsbrowser', [
     this.lovo  = null;
     var initialized = false;
     var activate = function(){
-        if(self.$type && self.$type.activate){
-            self.$type.activate().then(function(){
+        var $type = self.$type;
+        if($type && $type.activate){
+            return $type.activate().then(function(){
                 if(!initialized){
                     initialized = true;
                     $scope.$emit('browser-available');
                 }
-                self.setLOVO(self.$type.lovo);
+                self.setLOVO($type.lovo);
             });
         }
 
     }
 
-    this.setLOVO = function(lovo){
+    this.setLOVO = function(lovo, location){
         var old_lovo = self.lovo;
         self.lovo = lovo;
         if(lovo){
             lovo.initialize().then(function(){
+                if(location){
+                    $scope.location = location;
+                }
                 if(self.auto.visobject){
                     lovo.find(self.auto.visobject).then(function(visobject){
                         self.visobj = visobject;
@@ -54,12 +59,15 @@ angular.module('a2visobjectsbrowser', [
             });
         }
     }
+    
+    this.set_location = function(location){
+        $scope.location = location;
+    };
 
     $scope.$on('a2-persisted', activate);
 
     var setBrowserType = function(type){
         var new_$type, old_$type = self.$type;
-        self.type = type;
         if(type && type.controller){
             if(!type.$controller){
                 type.$controller = $controller(type.controller, {
@@ -67,7 +75,7 @@ angular.module('a2visobjectsbrowser', [
                     a2Browser : self
                 });
             }
-            new_$type = self.$type = type.$controller;
+            new_$type = type.$controller;
         }
 
         var differ = new_$type !== old_$type;
@@ -79,9 +87,10 @@ angular.module('a2visobjectsbrowser', [
             }
         }).then(function(){
             if(differ && new_$type && new_$type.activate){
-                activate();
-            }
-            
+                self.type = type;
+                self.$type = new_$type;
+                return activate();
+            }            
         }).then(function(){
             $scope.$emit('browser-vobject-type', type.vobject_type);
         });
@@ -124,28 +133,27 @@ angular.module('a2visobjectsbrowser', [
         }
     };
     $scope.$on('prev-visobject', function(){
-        if(self.visobject && self.lovo) {
-            self.lovo.previous(self.visobject.id).then($scope.selectVisObject);
+        if(self.visobj && self.lovo) {
+            self.lovo.previous(self.visobj.id).then($scope.selectVisObject);
         }
     });
     $scope.$on('next-visobject', function(){
-        if(self.visobject && self.lovo) {
-            self.lovo.next(self.visobject.id).then($scope.selectVisObject);
+        if(self.visobj && self.lovo) {
+            self.lovo.next(self.visobj.id).then($scope.selectVisObject);
         }
     });
     $scope.$on('set-browser-location',function(evt, location){
-        var m;
-        if(m=/([\w+]+)(\/(.+))?/.exec(location)){
-            if(browser_lovos[m[1]]){
-                var loc = m[3];
-                setBrowserType(browser_lovos[m[1]]).then(function(){
-                    return self.$type.resolve_location(loc);
-                }).then(function(visobject){
-                    if(visobject){
-                        $scope.selectVisObject(visobject);
-                    }
-                });
-            }
+        var m=/([\w+]+)(\/(.+))?/.exec(location);
+        if(m && browser_lovos[m[1]]){
+            var loc = m[3];
+            var lovos_def = browser_lovos[m[1]];
+            setBrowserType(lovos_def).then(function(){
+                return lovos_def.$controller.resolve_location(loc);
+            }).then(function(visobject){
+                if(visobject){
+                    $scope.selectVisObject(visobject);
+                }
+            });
         }
     });
 

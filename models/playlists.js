@@ -53,10 +53,8 @@ var Playlists = {
             joins.push("JOIN playlist_recordings PLR ON PL.playlist_id = PLR.playlist_id");
         }
 
-        if(options.show_type){
-            projection.push("PLT.name as type");
-            joins.push("JOIN playlist_types PLT ON PL.playlist_type_id = PLT.playlist_type_id");
-        }
+        projection.push("PLT.name as type");
+        joins.push("JOIN playlist_types PLT ON PL.playlist_type_id = PLT.playlist_type_id");
         
 
         return dbpool.queryHandler(
@@ -68,6 +66,46 @@ var Playlists = {
             (agregate ? "\nGROUP BY PL.playlist_id" : ""), 
             callback
         );
+    },
+
+
+    /** Fetches a playlist's extra info.
+     *  The actual info fetched depends on the playlist type.
+     * @param {Object}  playlist  playlist object as returned by find().
+     * @param {Function} callback(err, path) function to call back with the results.
+     */
+    getInfo: function (playlist, callback) {
+        var steps=[];
+        
+        switch(playlist.type){
+            case "soundscape region":
+                steps.push(
+                    function (next){
+                        dbpool.queryHandler(
+                            "SELECT  soundscape_region_id as region, soundscape_id as soundscape \n" +
+                            "FROM soundscape_regions SCR \n" +
+                            "WHERE SCR.sample_playlist_id = " + (playlist.id | 0), 
+                            next
+                        );
+                    },
+                    function (data){
+                        var next = arguments[arguments.length - 1];
+                        if(data.length){
+                            playlist.region     = data[0].region;
+                            playlist.soundscape = data[0].soundscape;
+                        }
+                        next();
+                    }
+                );
+            break;
+            
+        }
+        
+        steps.push(function(){
+            arguments[arguments.length - 1](null, playlist);
+        });
+        
+        async.waterfall(steps, callback);
     },
 
     /** Fetches a playlist's data, optionally using a query.
@@ -128,7 +166,7 @@ var Playlists = {
             },
             insertPlaylist: function(cb) {
                 var q = "INSERT INTO playlists \n"+
-                        "SET project_id = %s, name = %s";
+                        "SET project_id = %s, name = %s, playlist_type_id=1";
                 q = util.format(q, mysql.escape(data.project_id), mysql.escape(data.name));
                 
                 queryHandler(q, cb);

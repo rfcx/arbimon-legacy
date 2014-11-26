@@ -68,8 +68,7 @@ var Soundscapes = {
 
     },
 
-    details: function(project, callback)
-    {
+    details: function(project, callback){
         var q = "SELECT S.`soundscape_id`,  CONCAT(UCASE(LEFT(S.`name`, 1)), SUBSTRING(S.`name`, 2)) name , "+
                 " CONCAT(UCASE(LEFT(P.`name`, 1)), SUBSTRING(P.`name`, 2)) playlist, "+
                 " DATE_FORMAT(S.`date_created`,'%h:%i %p') as time , DATE_FORMAT(S.`date_created`,'%M %d %Y') as date, "+
@@ -173,6 +172,13 @@ var Soundscapes = {
         ], callback);
     },
     
+    /** Fetches a soundscape's regions.
+     * @param {Object}  soundscape    soundscape 
+     * @param {Object}  params  [optional]
+     * @param {Integer} param.region  find region with the given id.
+     * @param {String}  param.compute other (computed) attributes to show on returned data
+     * @param {Function} callback called back with the queried results.
+     */
     getRegions: function(soundscape, params, callback){
         if(params instanceof Function){
             callback = params;
@@ -193,7 +199,17 @@ var Soundscapes = {
             "SELECT SCR.soundscape_region_id as id, SCR.soundscape_id as soundscape, SCR.name, SCR.x1, SCR.y1, SCR.x2, SCR.y2, SCR.count, \n" +
             "    SCR.sample_playlist_id as playlist \n" +
             "FROM soundscape_regions SCR \n" +
-            "WHERE " + constraints.join(' AND '), callback);
+            "WHERE " + constraints.join(' AND '), function(err, data){
+            if (!err && data){
+                if(params.compute){
+                    arrays_util.compute_row_properties(data, params.compute, function(property){
+                        return Soundscapes['__compute_region_' + property.replace(/-/g,'_')];
+                    }, callback);
+                    return;
+                }
+            }
+            callback(err, data);
+        });
     },
     
     sampleRegion: function(soundscape, region, params, callback){
@@ -289,9 +305,162 @@ var Soundscapes = {
         
     },
     
+
+    /** Fetches soundscape region tags.
+     * @param {Object}  region soundscape object as returned by getRegions().
+     * @param {Object}  params optional stuff for the query.
+     * @param {Object}  params.recording limit results to this recording.
+     * @param {Function} callback(err, path) function to call back with the results.
+     */
+    getRegionTags: function(region, params, callback){
+        if(params instanceof Function){
+            callback = params;
+            params = null;
+        }
+        if(!params){
+            params={};
+        }
+
+        var constraints=[
+            'SRT.soundscape_region_id = ' + (region.id)
+        ];
+        var project = [];
+        var groupby = [];
+        
+        groupby.push('SRT.soundscape_region_id');
+
+        if(params.id){
+            constraints.push('SRT.soundscape_region_tag_id = ' + mysql.escape(params.id));
+            project.push('SRT.user_id as user', 'SRT.timestamp');
+            if(params.recording){
+                constraints.push('SRT.recording_id = ' + mysql.escape(params.recording));
+            }
+        } else if(params.recording){
+            constraints.push('SRT.recording_id = ' + mysql.escape(params.recording));
+            project.push('SRT.user_id as user', 'SRT.timestamp');
+            groupby.push('SRT.recording_id');
+        }
+        
+        groupby.push('SRT.soundscape_tag_id');
+
+        return dbpool.queryHandler(
+            "SELECT SRT.soundscape_region_tag_id as id, SRT.soundscape_region_id as region, SRT.recording_id as recording,\n" +
+            (project.length ? "    " + project.join(", ")+", \n" : "")+
+            "    ST.tag, ST.type, COUNT(*) as count \n" +
+            "FROM soundscape_region_tags SRT \n" +
+            "JOIN soundscape_tags ST ON ST.soundscape_tag_id = SRT.soundscape_tag_id\n" +
+            "WHERE " + constraints.join(' AND ') + "\n" +
+            "GROUP BY " + groupby.join(", "), callback);
+    },
+    
+    /** adds a soundscape region tags.
+     * @param {Object}  region soundscape object as returned by getRegions().
+     * @param {Object}  recording id of the recording to add the tag to.
+     * @param {Object}  data data for the tag addition. Can be a string, in 
+     *                  which case its used for the tag parameter, or an 
+     *                  integer specifying an already existing tag.
+     * @param {Object}  data.tag the name of the tag
+     * @param {Function} callback(err, path) function to call back with the results.
+     */
+    addRegionTag: function(region, recording, user, data, callback){
+        var tagtypes={'normal':1,'species_sound':1};
+        if(typeof data == 'string'){
+            data = {tag:data, type:'normal'};
+        }
+        
+        async.waterfall([
+            function check_valid_tag_type(next){
+                if(!tagtypes[data.type]){
+                    next(new Error("Invalid tag type " + data.type + "."));
+                } else {
+                    next();
+                }                
+            },
+            function fetch_tag_id(next){
+                dbpool.queryHandler(
+                    "SELECT ST.soundscape_tag_id as id\n" +
+                    "FROM soundscape_tags ST \n" +
+                    "WHERE tag  = "+mysql.escape(data.tag)+"\n" +
+                    "  AND type = "+mysql.escape(data.type), next
+                );
+            },
+            function or_make_tag_id(result){
+                var next = arguments[arguments.length - 1];
+                if(result.length){
+                    next(null, result[0].id);
+                    return;
+                }
+                dbpool.queryHandler(
+                    "INSERT INTO soundscape_tags(tag, type) \n"+
+                    "VALUES ("+mysql.escape([data.tag, data.type])+")", 
+                    function(err, result){
+                        if(err){ next(err); } else { next(null, result.insertId); }
+                    }
+                );
+            },
+            function insert_tag(tag_id){
+                var next = arguments[arguments.length-1];
+                dbpool.queryHandler(
+                    "INSERT INTO soundscape_region_tags(soundscape_region_id, recording_id, soundscape_tag_id, user_id, timestamp) \n"+
+                    "VALUES ("+mysql.escape([region.id, recording, tag_id, user])+", NOW())", next
+                );
+            },
+            function get_tag(result){
+                var next = arguments[arguments.length-1];
+                Soundscapes.getRegionTags(region, {id:result.insertId}, next);
+            },
+            function (tags){
+                var next = arguments[arguments.length-1];
+                next(null, tags.shift());
+            }
+        ], callback);
+    },
+
+    /** removess a soundscape region tags.
+     * @param {Object}  region soundscape object as returned by getRegions().
+     * @param {Object}  recording id of the recording to add the tag to.
+     * @param {Object}  tag id for the tag to delete.
+     * @param {Function} callback(err, path) function to call back with the results.
+     */
+    removeRegionTag: function(region, recording, tag, callback){
+        var tagobj;
+        async.waterfall([
+            function fetch_tag_to_delete(next){
+                Soundscapes.getRegionTags(region, {id:tag, recording:recording}, next);
+            },
+            function check_in_rec(tags){
+                var next = arguments[arguments.length - 1];
+                if(!tags.length){
+                    next(new Error("Invalid tag specified."));
+                } else {
+                    tagobj = tags[0];
+                    next();
+                }
+            },
+            function(next){
+                dbpool.queryHandler(
+                    "DELETE FROM soundscape_region_tags \n"+
+                    "WHERE  soundscape_region_tag_id = " + mysql.escape(tagobj.id) + "\n",
+                    next
+                );
+            },
+            function(){
+                var next = arguments[arguments.length - 1];
+                arguments[arguments.length-1](null, tagobj);
+            }
+        ], callback);
+    },
+    
     __compute_thumbnail_path : function(soundscape, callback){
         soundscape.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + soundscape.uri;
         callback();
+    },
+    __compute_region_tags : function(region, callback){
+        Soundscapes.getRegionTags(region, function(err, tags){
+            if(err){callback(err); return;}
+            region.tags = tags;
+            callback();
+        });
     },
 
 };
