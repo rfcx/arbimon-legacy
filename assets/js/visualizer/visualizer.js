@@ -73,6 +73,7 @@ angular.module('visualizer', [
         'browser-layer',
         'recording-layer',
         'soundscape-layer',
+        'recording-soundscape-region-tags',
         'species-presence',
         'training-data'
     );    

@@ -1,4 +1,5 @@
 <span class="label" ng-class="class" ng-style="style">
     <span class="txt"></span>
-    <button ng-show="closable" ng-click="onClose()" class="btn btn-xs btn-link">x</button>
+    <span class="badge" ng-show="showCount">{{count}}</span>
+    <span class="btn-close btn btn-xs"ng-click="onClose()" ng-show="closeable">×</span>
 </span>

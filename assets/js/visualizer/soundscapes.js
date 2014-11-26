@@ -1,4 +1,4 @@
-angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils'])
+angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils', 'a2SoundscapeRegionTags'])
 .controller('a2VisualizerSoundscapeLayerController', function($scope, $modal, $location, a2Soundscapes, a22PointBBoxEditor){
     var self = this;
     var bbox2string = function(bbox){
@@ -154,4 +154,71 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils'])
             });
         }
     };
-});
+})
+
+
+.controller('a2VisualizerRecordingSoundscapeRegionTagsLayerController', function($scope, a2Soundscapes){
+    var self = this;
+    self.loading = {};
+    
+    self.tag = {
+        name : null,
+        add  : function(){
+            var tag = this.name;
+            
+            this.name = null;
+            
+            a2Soundscapes.addRecordingTag(self.soundscape.id, self.region.id, self.recording.id, tag, function(tag){
+                var tagid = tag.id | 0;
+                if(!self.tags.filter(function(t){
+                    return t.id == tagid;
+                }).length){
+                    self.tags.push(tag);
+                }
+            });
+        },
+        remove : function(tag){
+            var tagid = tag.id | 0;
+            a2Soundscapes.removeRecordingTag(self.soundscape.id, self.region.id, self.recording.id, tagid, function(){
+                self.tags = self.tags.filter(function(t){
+                    return t.id != tagid;
+                });
+            });
+        }
+    };
+    
+    $scope.$watch('visobject', function(visobject){
+        self.recording  = null;
+        self.playlist   = null;
+        self.soundscape = null;
+        self.region     = null;
+        self.tags       = null;
+
+        if(visobject && (visobject.type == 'recording') && visobject.id &&
+            visobject.extra && visobject.extra.playlist &&
+            visobject.extra.playlist.soundscape &&
+            visobject.extra.playlist.region
+        ){
+            self.recording = visobject;
+            self.playlist  = visobject.extra.playlist;
+            self.loading.soundscape = true;
+            self.loading.region = true;
+            self.loading.tags = true;
+            a2Soundscapes.get(self.playlist.soundscape, function(soundscape){
+                self.loading.soundscape = false;
+                self.soundscape = soundscape;
+                a2Soundscapes.getRegion(soundscape.id, self.playlist.region, function(region){
+                    self.loading.region = false;
+                    self.region = region;
+                    a2Soundscapes.getRecordingTags(soundscape.id, region.id, self.recording.id, function(tags){
+                        self.loading.tags = false;
+                        self.tags = tags;
+                    });
+                });
+            });
+        }
+    });
+    
+    console.log($scope);
+})
+;

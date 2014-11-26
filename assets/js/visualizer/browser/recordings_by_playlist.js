@@ -15,6 +15,7 @@ angular.module('a2browser_recordings_by_playlist', [])
             } else {
                 a2Playlists.getData(self.playlist.id, {show:'thumbnail-path'}, function(recordings){
                     self.list = recordings;
+                    recordings.forEach(self.append_extras.bind(self));
                     self.count  = recordings.length;
                     d.resolve(false);
                 });
@@ -33,21 +34,35 @@ angular.module('a2browser_recordings_by_playlist', [])
                 });
             });
         },
+        append_extras: function(recording){
+            if(recording){
+                recording.extra = {
+                    playlist : this.playlist
+                };
+            }
+            return recording;
+        },
         find : function(recording){
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
-            d.resolve(this.list.filter(function(r){
+            d.resolve(this.append_extras(this.list.filter(function(r){
                 return r.id == id;
-            }).shift());
+            }).shift()));
             return d.promise;
         },
         previous : function(recording){
+            var self = this;
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
-            Project.getPreviousRecording(id, d.resolve);
+            Project.getPreviousRecording(id, function(r){
+                d.resolve(self.append_extras(r));
+            });
             return d.promise;
         },
         next : function(recording){
+            var self = this;
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
-            Project.getNextRecording(id, d.resolve);
+            Project.getNextRecording(id, function(r){
+                d.resolve(self.append_extras(r));
+            });
             return d.promise;
         }
     };

@@ -31,11 +31,27 @@
 
 <script src="/assets/js/arbimon2.js"></script>
 <script src="/assets/js/arbimon2-templates.js"></script>
+<script charset="utf-8">
+    angular.module('test_app', [
+    'a2SoundscapeRegionTags',
+    'templates-arbimon2'
+    ])
+</script>
 
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 <title>Arbimon 2 - test</title>
 </head>
-<body>
+<body ng-app="test_app" ng-init="tags = [
+    'hello', 'world', 'of', 'labels', 
+    {type:'normal', text:'normal-label'},
+    {type:'normal', text:'blue-label', color:'blue'},
+    {type:'species_sound', text:'1', color:'blue'},
+    {type:'species_sound', text:'2', color:'blue'},
+    {type:'species_sound', text:'3', color:'blue'},
+    {type:'species_sound', text:'4', color:'blue'},
+    {type:'species_sound', text:'5'},
+    {type:'species_sound', tag:'7', count:10}
+]">
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -51,16 +67,22 @@
             </div>
         </div>
     </nav>
-    <div id="page" ng-app="a2SoundscapeRegionTags" ng-init="tags = [
-        'hello'
-    ]">
+    <div id="page" >
         {{tags}} <br />
-        <input ng-model="tag_text" />
-        <button class="btn btn-default" ng-click="tags.push($eval(tag_text) || tag_text);">+</button>
-            <a2-soundscape-region-tag ng-repeat="tag in tags"
-            tag="tag" closable="true" on-close="tags.splice(tags.indexOf(tag), 1)"></a2-soundscape-region-tag>
+        <div>
+            <input ng-model="tag_text" />
+            <button class="btn btn-default" ng-click="tags.push($eval(tag_text) || tag_text);">+</button>
+            <label>
+                <input type="checkbox" ng-model="closeable" /> Closeable
+            </label>
         </div>
-        <a2-soundscape-region-tag tag="tag" ></a2-soundscape-region-tag>
+        <div>
+            <a2-soundscape-region-tag ng-repeat="tag in tags"
+                tag="tag" closeable="closeable" on-close="tags.splice(tags.indexOf(tag), 1)"
+                show-count="true"
+            ></a2-soundscape-region-tag>
+        </div>
+        <a2-soundscape-region-tag tag="'tag'" ></a2-soundscape-region-tag>
     </div>
     
 </body>

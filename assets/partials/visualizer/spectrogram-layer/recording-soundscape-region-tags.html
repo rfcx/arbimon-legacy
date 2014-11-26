@@ -1,0 +1,10 @@
+<div class="filter-band" ng-style="{
+    top   :'0px', 
+    height: Math.ceil((visobject.max_freq - layer.ctrl.region.y2)*layout.scale.hz2px)+'px', 
+    width: layout.spectrogram.width +'px'}"
+></div>
+<div class="filter-band" ng-style="{
+    top   : (layout.spectrogram.height - Math.ceil(layer.ctrl.region.y1*layout.scale.hz2px))+'px', 
+    height: Math.ceil((layer.ctrl.region.y1                     )*layout.scale.hz2px)+'px', 
+    width: layout.spectrogram.width +'px'}
+"></div>

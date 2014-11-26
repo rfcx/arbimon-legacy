@@ -1,52 +1,65 @@
 angular.module('visualizer-services', ['a2services'])
-.value('layer_types',{
-    'browser-layer' : {
+.factory('layer_types',function(){
+    var type_array = [
+     {  type    : "browser-layer",
         title : "",
         visible : true,
         display:{spectrogram:false},
         sidebar_only : true,
-        hide_visibility : true,
-        type    : "browser-layer"
-    },
-    'recording-layer' : {
+        hide_visibility : true
+     },
+     {  type    : "recording-layer",
         title : "",
         require: {type:'recording'},
         visible : true,
-        hide_visibility : true,
-        type    : "recording-layer"
-    },
-    'soundscape-layer' : {
+        hide_visibility : true
+     },
+     {  type    : "soundscape-layer",
         title : "",
         controller : 'a2VisualizerSoundscapeLayerController as soundscape',
         require : {type:'soundscape', browsetype:'soundscape', selection : true},
         visible : true,
-        hide_visibility : true,
-        type    : "soundscape-layer"
-    },    
-    'base-image-layer' : {
+        hide_visibility : true
+     },    
+     {  type    : "base-image-layer",
         title   : "",
         require : {type:['recording', 'soundscape'], selection : true},
         display : {sidebar:false},
         visible : true,
-        type    : "base-image-layer",
-    },    
-    'frequency-adjust-layer' : true,
-    'species-presence' : {
+     },    
+     //{  type    :'frequency-adjust-layer'},
+     {  type    : "recording-soundscape-region-tags",
+        title   : "",
+        controller : 'a2VisualizerRecordingSoundscapeRegionTagsLayerController as ctrl',
+        require: {type:'recording', selection : true, that:function(scope){
+            var pl = scope.visobject.extra.playlist;
+            return pl && pl.soundscape && pl.region;
+        }},
+        sidebar_only : true,
+        visible : true,
+        hide_visibility : true
+     },
+     {  type    : "species-presence",
         title   : "",
         require: {type:'recording', selection : true},
         display:{spectrogram:false},
         sidebar_only : true,
         visible : false,
         hide_visibility : true,
-        type    : "species-presence",
-    },
-    'training-data' : {
+     },
+     {  type    : "training-data",
         title   : "",
         controller : 'a2VisualizerTrainingSetLayerController as training_data',
         require: {type:'recording', selection : true},
         visible : true,
-        type    : "training-data",
-    }
+     }
+    ];
+    var layer_types={};
+    type_array.forEach(function(lt){
+        layer_types[lt.type] = lt;
+    });
+    return layer_types;
+    
 })
 .service('a2VisualizerLayers', function(layer_types, $controller){
     var layers = function($scope){
@@ -92,17 +105,17 @@ angular.module('visualizer-services', ['a2services'])
             return true;          
         },
         check_requirements : function(req){
+            var browsetype = this.$scope.visobject_type;
+            var votype = this.$scope.visobject ? this.$scope.visobject.type : browsetype;
             if(!req){
                 return true;
             } else if(req.selection && !this.$scope.visobject){
                 return false;
-            } else if(req.type && 
-                !this.__check_type(req.type, this.$scope.visobject ? this.$scope.visobject.type : this.$scope.visobject_type)
-            ){
+            } else if(req.type && !this.__check_type(req.type, votype)){
                 return false;
-            } else if(req.browsetype && 
-                !this.__check_type(req.browsetype, this.$scope.visobject_type)
-            ){
+            } else if(req.browsetype && !this.__check_type(req.browsetype, browsetype)){
+                return false;
+            } else if(req.that && !req.that(this.$scope)){
                 return false;
             }
             return true;
