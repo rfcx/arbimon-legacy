@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: arbimon2
+-- Host: 10.0.0.4    Database: arbimon2
 -- ------------------------------------------------------
 -- Server version	5.5.40-0ubuntu0.14.04.1
 
@@ -59,8 +59,8 @@ CREATE TABLE `job_params_classification` (
   PRIMARY KEY (`job_id`),
   KEY `playlist_id` (`playlist_id`),
   KEY `model_id` (`model_id`),
+  CONSTRAINT `job_params_classification_ibfk_2` FOREIGN KEY (`playlist_id`) REFERENCES `playlists` (`playlist_id`) ON DELETE SET NULL,
   CONSTRAINT `job_params_classification_ibfk_1` FOREIGN KEY (`model_id`) REFERENCES `models` (`model_id`),
-  CONSTRAINT `job_params_classification_ibfk_2` FOREIGN KEY (`playlist_id`) REFERENCES `playlists` (`playlist_id`),
   CONSTRAINT `job_params_classification_ibfk_3` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -74,7 +74,7 @@ DROP TABLE IF EXISTS `job_params_soundscape`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `job_params_soundscape` (
   `job_id` bigint(11) unsigned NOT NULL,
-  `playlist_id` int(11) unsigned NOT NULL,
+  `playlist_id` int(10) unsigned NOT NULL,
   `max_hertz` int(11) NOT NULL,
   `bin_size` int(11) NOT NULL,
   `soundscape_aggregation_type_id` int(10) unsigned NOT NULL,
@@ -84,9 +84,9 @@ CREATE TABLE `job_params_soundscape` (
   UNIQUE KEY `job_id` (`job_id`),
   KEY `playlist_id` (`playlist_id`),
   KEY `soundscape_aggregation_type_id` (`soundscape_aggregation_type_id`),
+  CONSTRAINT `job_params_soundscape_ibfk_3` FOREIGN KEY (`playlist_id`) REFERENCES `playlists` (`playlist_id`) ON DELETE NO ACTION,
   CONSTRAINT `job_params_soundscape_ibfk_1` FOREIGN KEY (`soundscape_aggregation_type_id`) REFERENCES `soundscape_aggregation_types` (`soundscape_aggregation_type_id`),
-  CONSTRAINT `job_params_soundscape_ibfk_2` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`),
-  CONSTRAINT `job_params_soundscape_ibfk_3` FOREIGN KEY (`playlist_id`) REFERENCES `playlists` (`playlist_id`)
+  CONSTRAINT `job_params_soundscape_ibfk_2` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -617,13 +617,19 @@ DROP TABLE IF EXISTS `soundscape_region_tags`;
 CREATE TABLE `soundscape_region_tags` (
   `soundscape_region_tag_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `soundscape_region_id` int(10) unsigned NOT NULL,
-  `soundscape_tag_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
+  `recording_id` bigint(20) unsigned NOT NULL,
+  `soundscape_tag_id` int(11) unsigned NOT NULL,
+  `user_id` int(11) unsigned NOT NULL,
   `timestamp` datetime NOT NULL,
   PRIMARY KEY (`soundscape_region_tag_id`),
   KEY `user_id` (`user_id`),
   KEY `soundscape_tag_id` (`soundscape_tag_id`),
-  KEY `soundscape_region_id` (`soundscape_region_id`)
+  KEY `soundscape_region_id` (`soundscape_region_id`),
+  KEY `recording_id` (`recording_id`),
+  CONSTRAINT `soundscape_region_tags_ibfk_4` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `soundscape_region_tags_ibfk_1` FOREIGN KEY (`soundscape_region_id`) REFERENCES `soundscape_regions` (`soundscape_region_id`) ON DELETE CASCADE,
+  CONSTRAINT `soundscape_region_tags_ibfk_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`) ON DELETE CASCADE,
+  CONSTRAINT `soundscape_region_tags_ibfk_3` FOREIGN KEY (`soundscape_tag_id`) REFERENCES `soundscape_tags` (`soundscape_tag_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1008,4 +1014,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-11-24 17:40:18
+-- Dump completed on 2014-11-26 11:38:10

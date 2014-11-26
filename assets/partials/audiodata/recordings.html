@@ -1,14 +1,15 @@
 <div class="row toolbar">
-    <div class="col-sm-6">
+    <div class="col-sm-12">
         <accordion>
             <accordion-group is-open="filters.open" class="a2-filters-box">
                 <accordion-heading>
                     <i class="fa" ng-class="filters.open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
-                    Filters <i class="fa fa-filter"></i><small> <em>Filter recordings and save as playlists...</em></small> 
+                    Filters <i class="fa fa-filter"></i>
+                    <small><em>Filter recordings and save as playlists...</em></small> 
                 </accordion-heading>
                 <div class="a2-filter-row">
                     <div class="a2-filter a2-filter-text">
-                        Range
+                        Range:
                     </div>
                     <div class="a2-filter">
                         <button class="btn btn-default" type="text" 
@@ -36,7 +37,7 @@
                 </div>
                 <div class="a2-filter-row">
                     <div class="a2-filter a2-filter-text">
-                        Sites
+                        Sites:
                     </div>
                     <div class="a2-filter">
                         <ui-select multiple ng-model="params.sites" theme="bootstrap" style="width: 300px;">
@@ -50,7 +51,7 @@
                 </div>
                 <div class="a2-filter-row">
                     <div class="a2-filter a2-filter-text">
-                        Date and Time
+                        Date and Time:
                     </div>
                     <div class="a2-filter">
                         <ui-select multiple ng-model="params.years" theme="bootstrap" style="width: 125px;">
