@@ -11,7 +11,7 @@ angular.module('visualizer-soundscapes', ['visualizer-services', 'a2utils', 'a2S
     
     this.show={
         names : true,
-        labels : true
+        tags  : true
     };
     
     this.view_playlist = function(region){
