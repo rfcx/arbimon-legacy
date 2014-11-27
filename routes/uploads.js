@@ -20,19 +20,14 @@ var s3 = new AWS.S3();
 var processUpload = function(upload, cb) {
     
     var file = upload.file;
+    var fileInfo = upload.fileInfo;
     
     console.log("processUpload:", file.filename);
     
     var siteId = upload.info.site.id;
-    var fileNameFormat = upload.info.format;
     
     var name = file.filename.split('.');
     var extension = name[name.length-1];
-    
-    var fileInfo = formatParse(fileNameFormat, file.filename);
-    
-    if(fileInfo instanceof Error) // catch error parsing filename
-        return cb(fileInfo);
     
     var recTime = new Date(fileInfo.year, --fileInfo.month, fileInfo.date, fileInfo.hour, fileInfo.min);
     var inFile = file.path;
@@ -50,25 +45,17 @@ var processUpload = function(upload, cb) {
     console.log('fileURI:', fileURI);
     
     async.auto({
-        verifyNotDuplicate: function(callback) {
-            model.recordings.exists({
+        insertUploadRecs: function(callback) {
+            model.uploads.insertRecToList({
+                filename: file.filename,
+                project_id: upload.project_id,
                 site_id: siteId,
-                filename: fileInfo.filename
-            },
-            function(err, exists) {
-                if(err) return callback(err);
-                
-                if(exists) {
-                    var msg = "filename "+ fileInfo.filename +
-                              " already exists on site " + siteId;
-                    return callback(new Error(msg));
-                }
-                
-                callback(null, false);
-            });
+                user_id: upload.user_id,
+            }, 
+            callback);
         },
         
-        convert: ['verifyNotDuplicate', function(callback) {
+        convert: ['insertUploadRecs', function(callback) {
             if(extension === "flac") 
                 return callback(null, 0);
                 
@@ -84,7 +71,7 @@ var processUpload = function(upload, cb) {
             );
         }],
         
-        thumbnail: ['verifyNotDuplicate', function(callback) {
+        thumbnail: ['insertUploadRecs', function(callback) {
             console.log('gen thumbnail:', file.filename);
              audioTool.spectrogram(inFile, thumbnail, 
                 { 
@@ -113,7 +100,7 @@ var processUpload = function(upload, cb) {
 
             s3.putObject(params, function(err, data) {
                 if (err)       
-                    return console.log(err);
+                    return callback(err);
                     
                 console.log("Successfully uploaded flac", fileInfo.filename);
                 callback(null, data);
@@ -133,7 +120,7 @@ var processUpload = function(upload, cb) {
 
             s3.putObject(params, function(err, data) {
                 if (err)       
-                    return console.log(err);
+                    return callback(err);
                     
                 console.log("Successfully uploaded thumbnail:", fileInfo.filename);
                 callback(null, data);
@@ -161,6 +148,12 @@ var processUpload = function(upload, cb) {
         
         if(extension !== 'flac') {
             deleteFile(outFile);
+        }
+        
+        if(results.insertUploadRecs) {
+            model.uploads.removeFromList(results.insertUploadRecs[0].insertId, function(e) {
+                if(e) console.error(e);
+            });
         }
         
         if(err) return cb(err);
@@ -208,13 +201,34 @@ router.post('/audio/project/:projectid', function(req, res, next) {
     });
     
     req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-        var saveTo = tmpFileCache.key2File(filename);
-        file.pipe(fs.createWriteStream(saveTo));
         
-        fileUploaded = { 
-            filename: filename,
-            path: saveTo
-        };
+        async.parallel({
+            getProjectInfo: function(callback) {
+                model.projects.findById(project_id, callback);
+            },
+            getTotal: function(callback) {
+                model.projects.totalRecordings(project_id, callback);
+            }
+        }, 
+        function(err, results) {
+            if(err) return next(err);
+            
+            var project = results.getProjectInfo[0];
+            var total = results.getTotal[0].count;
+            
+            if(total >= project.recording_limit) {
+                return res.status(401).send("Project Recording limit reached");
+            }
+            
+            var saveTo = tmpFileCache.key2File(filename);
+            file.pipe(fs.createWriteStream(saveTo));
+            
+            fileUploaded = { 
+                filename: filename,
+                path: saveTo
+            };
+        });
+    
     });
     
     req.busboy.on('finish', function() {
@@ -222,19 +236,44 @@ router.post('/audio/project/:projectid', function(req, res, next) {
         console.log('info: ', info);
         console.log('fileUploaded: ', fileUploaded);
         
-        var upload = { 
-            info: info,
-            file: fileUploaded,
-            project_id: project_id,
-        };
+                
+        var fileInfo;
+        try {
+            fileInfo = formatParse(info.format, fileUploaded.filename);
+        } 
+        catch(e) {
+            return next(fileInfo);
+        }
         
-        processUpload(upload, function(err, file){
-            if(err) return console.error(err);
+        model.recordings.exists({
+            site_id: info.site.id,
+            filename: fileInfo.filename
+        },
+        function(err, exists) {
+            if(err) next(err);
             
-            console.log('finished processing:', file);
+            if(exists) {
+                var msg = "filename "+ fileInfo.filename +
+                          " already exists on site " + info.site.id;
+                return res.status(403).send(msg);
+            }
+            
+            res.status(202).send("upload done!");
+
+            processUpload({ 
+                info: info,
+                file: fileUploaded,
+                fileInfo: fileInfo,
+                project_id: project_id,
+                user_id: req.session.user.id
+            }, 
+            function(err, file){
+                if(err) return console.error(err);
+                
+                console.log('finished processing:', file);
+            });
+            
         });
-        
-        res.status(202).send("upload done!");
     });
     
     req.pipe(req.busboy);

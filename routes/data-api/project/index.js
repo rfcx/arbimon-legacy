@@ -19,6 +19,16 @@ router.post('/create', function(req, res, next) {
     project.project_type_id = 1;
 
     async.parallel({   // check if there any conflict
+        exceedsProjectLimit: function(callback) {
+            model.users.ownedProjectsQty(req.session.user.id, function(err, rows) {
+                if(err) return next(err);
+
+                if(rows[0].count < req.session.user.projectLimit)
+                    callback(null, false);
+                else
+                    callback(null, true);
+            });
+        },
         nameExists: function(callback) {
             model.projects.findByName(project.name, function(err, rows) {
                 if(err) return next(err);
@@ -42,6 +52,13 @@ router.post('/create', function(req, res, next) {
     },
     function(err, results) {
 
+        if(results.exceedsProjectLimit && !req.session.user.isSuper) {
+            return res.json({ 
+                error: true,
+                projectLimit: true
+            });
+        }
+        
         if(results.nameExists || results.urlExists) {
             // respond with error
             results.error = true;
@@ -103,7 +120,7 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
         
         console.log("update project:", result);
         res.json({ success: true });
-    })
+    });
 });
 
 
@@ -266,9 +283,9 @@ router.post('/:projectUrl/class/del', function(req, res, next){
                     return req.body.project_classes.indexOf(clss.id) >= 0;
                 });
                 
-                var classesDeleted = classesDeleted.map(function(clss){
+                classesDeleted = classesDeleted.map(function(clss){
                     return clss.species_name + " " + clss.songtype_name;
-                })
+                });
                 
                 model.projects.insertNews({
                     news_type_id: 6, // class removed
@@ -289,7 +306,7 @@ router.get('/:projectUrl/roles', function(req, res, next) {
         if(err) return next(err);
         
         res.json(roles);
-    })
+    });
 });
 
 router.get('/:projectUrl/users', function(req, res, next) {
@@ -297,7 +314,7 @@ router.get('/:projectUrl/users', function(req, res, next) {
         if(err) return next(err);
         
         var users = rows.map(function(row){
-            row.image_url = gravatar.url(row.email, { d: 'monsterid', s: 60 }, https=req.secure);
+            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, https=req.secure);
             
             return row;
         });

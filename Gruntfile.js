@@ -140,30 +140,21 @@ module.exports = function(grunt) {
                 flatten: true,
                 src: 'bower_components/angular-file-upload/**/*.js',
                 dest: 'public/assets/angular-file-upload/'
+            },
+            
+            humanejs: {
+                expand: true,
+                flatten: true,
+                cwd: 'bower_components/humane-js/',
+                src: ['humane.min.js', 'themes/libnotify.css'],
+                dest: 'public/assets/humane-js/'
             }
         },
 
         concat: {
             dev: {
-                src: [   // add project javascript files here
-                    'assets/js/router.js',
-                    'assets/js/visualizer/**/*.js',
-                    'assets/js/home.js',
-                    'assets/js/visualizer/*.js',
-                    'assets/js/dashboard.js',
-                    'assets/js/audiodata.js',
-                    'assets/js/a2services.js',
-                    'assets/js/a2utils.js',
-                    'assets/js/extras/*.js',
-                    'assets/js/a2directives.js',
-                    'assets/js/models.js',
-                    'assets/js/classification.js',
-                    'assets/js/jobs.js',
-                    'assets/js/user-settings.js',
-                    'assets/js/analysis.js',
-                    'assets/js/soundscapes.js',
-                    'assets/js/register.js',
-                    'assets/js/admin.js',
+                src: [
+                    'assets/js/**/*.js'
                 ], 
 
                 dest: 'public/assets/js/arbimon2.js'

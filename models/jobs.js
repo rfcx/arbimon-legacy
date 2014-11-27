@@ -36,7 +36,7 @@ module.exports =
             var q = "INSERT INTO `job_params_soundscape`(`job_id`, `playlist_id`, `max_hertz`, `bin_size`, `soundscape_aggregation_type_id`, `name`, `threshold` , `frequency`) "+
                   " VALUES ("+mysql.escape(p.id)+","+mysql.escape(p.playlist)+","+mysql.escape(p.maxhertz)+
                   " ,"+mysql.escape(p.bin)+",  (SELECT `soundscape_aggregation_type_id` FROM `soundscape_aggregation_types` WHERE `identifier` = "+mysql.escape(p.aggregation)+") "+
-                  ","+mysql.escape(p.name)+","+mysql.escape(p.threshold)+","+mysql.escape(p.frequency)+")"
+                  ","+mysql.escape(p.name)+","+mysql.escape(p.threshold)+","+mysql.escape(p.frequency)+")";
             queryHandler(q,callback);
         },
         hide: function(jId, callback)
@@ -50,7 +50,7 @@ module.exports =
         {       
             var q = "SELECT count(*) as count FROM `jobs` J ,  `job_params_classification` JPC " +
             " WHERE `project_id` = "+mysql.escape(p.pid)+" and `job_type_id` = 2 and J.`job_id` = JPC.`job_id` "+
-            " and `name` like "+mysql.escape(p.name)+" "
+            " and `name` like "+mysql.escape(p.name)+" ";
 
             queryHandler(q,callback);
         },
@@ -59,17 +59,18 @@ module.exports =
         {       
             var q = "SELECT count(*) as count FROM `jobs` J ,  `job_params_training` JPC " +
             " WHERE `project_id` = "+mysql.escape(p.pid)+" and `job_type_id` = 1 and J.`job_id` = JPC.`job_id` "+
-            " and `name` like "+mysql.escape(p.name)+" "
+            " and `name` like "+mysql.escape(p.name)+" ";
 
             queryHandler(q,callback);
         },
         soundscapeNameExists :
         function(p, callback)
         {
-            var q = "SELECT count(*) as count FROM `soundscapes` WHERE `project_id` = "+mysql.escape(p.pid)+" and `name` LIKE "+mysql.escape(p.name)
+            var q = "SELECT count(*) as count FROM `soundscapes` WHERE `project_id` = "+mysql.escape(p.pid)+" and `name` LIKE "+mysql.escape(p.name);
 
             queryHandler(q,callback);
-        },        
+        },
+        
         allActiveJobs: function(callback) {
             var q = "( SELECT j.`progress`, \n"+
                     "         j.`progress_steps`,  \n"+

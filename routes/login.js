@@ -82,7 +82,8 @@ router.post('/login', function(req, res, next) {
             firstname: user.firstname,
             lastname: user.lastname,
             isSuper: user.is_super,
-            image_url: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure)
+            imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure),
+            projectLimit: user.project_limit
         };
         
         res.redirect('/home');

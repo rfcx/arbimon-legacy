@@ -12,10 +12,15 @@
             </a>
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
+            <% if(user.isSuper) { %>
+                <ul class="nav navbar-nav">
+                    <li><a href="/admin"><i class="fa fa-cogs"></i> Admin</a></li>
+                </ul>
+            <% } %>
             <ul class="nav navbar-nav navbar-right">
-                <li class=""><a><% if(user.isSuper) { %>Super<% } %> <i class="fa fa-user"></i> <%= user.username %></a></li>
-                <li class=""><a href="/user-settings" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
-                <li class=""><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
+                <li><a><% if(user.isSuper) { %>Super<% } %> <i class="fa fa-user"></i> <%= user.username %></a></li>
+                <li><a href="/user-settings" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
+                <li><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
             </ul>
         </div>
     </div>

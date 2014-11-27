@@ -82,7 +82,7 @@
                         </div>
                     </li>  
                     <li class="list-group-item">Sites: {{ sites.length }}</li>
-                    <li class="list-group-item">Recordings: {{ recsQty }}</li>
+                    <li class="list-group-item" ng-class="{ 'list-group-item-warning': recsQty === project.recording_limit }">Recordings: {{ recsQty }} / {{ project.recording_limit }}</li>
                     <li class="list-group-item">
                         Species:
                         <ul>

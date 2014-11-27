@@ -148,11 +148,18 @@ angular.module('a2Infotags', [])
                     InfoTagService.getSongtype(newVal, function(data){
                         $timeout(function(){
                             $scope.data = data;
-                        })
-                    })
+                        });
+                    });
                 }
             });
         }
     };
 })
 ;
+
+angular.module('humane', [])
+.service('notify', function() {
+    humane.error = humane.spawn({ addnCls: 'humane-libnotify-error' });
+
+    return humane;
+});

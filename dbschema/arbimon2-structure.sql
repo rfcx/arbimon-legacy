@@ -411,6 +411,7 @@ CREATE TABLE `projects` (
   `project_type_id` int(10) unsigned NOT NULL,
   `is_private` tinyint(1) NOT NULL,
   `is_enabled` tinyint(4) NOT NULL DEFAULT '1',
+  `recording_limit` int(10) unsigned NOT NULL DEFAULT '500',
   PRIMARY KEY (`project_id`),
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `url` (`url`),
@@ -622,6 +623,7 @@ CREATE TABLE `soundscape_region_tags` (
   `user_id` int(11) unsigned NOT NULL,
   `timestamp` datetime NOT NULL,
   PRIMARY KEY (`soundscape_region_tag_id`),
+  UNIQUE KEY `soundscape_region_id_2` (`soundscape_region_id`,`recording_id`,`soundscape_tag_id`),
   KEY `user_id` (`user_id`),
   KEY `soundscape_tag_id` (`soundscape_tag_id`),
   KEY `soundscape_region_id` (`soundscape_region_id`),
@@ -630,7 +632,7 @@ CREATE TABLE `soundscape_region_tags` (
   CONSTRAINT `soundscape_region_tags_ibfk_1` FOREIGN KEY (`soundscape_region_id`) REFERENCES `soundscape_regions` (`soundscape_region_id`) ON DELETE CASCADE,
   CONSTRAINT `soundscape_region_tags_ibfk_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`) ON DELETE CASCADE,
   CONSTRAINT `soundscape_region_tags_ibfk_3` FOREIGN KEY (`soundscape_tag_id`) REFERENCES `soundscape_tags` (`soundscape_tag_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -670,7 +672,7 @@ CREATE TABLE `soundscape_tags` (
   `tag` varchar(256) NOT NULL,
   `type` enum('normal','species_sound','','') NOT NULL,
   PRIMARY KEY (`soundscape_tag_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -873,33 +875,29 @@ CREATE TABLE `training_sets_roi_set` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `uploaded_recordings`
+-- Table structure for table `uploads_processing`
 --
 
-DROP TABLE IF EXISTS `uploaded_recordings`;
+DROP TABLE IF EXISTS `uploads_processing`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `uploaded_recordings` (
-  `uploaded_recording_id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `filename` varchar(120) NOT NULL COMMENT 'filename of the recording',
-  `project_id` int(11) unsigned NOT NULL,
-  `site_id` int(11) unsigned NOT NULL,
-  `datetime` datetime DEFAULT NULL,
-  `state` varchar(20) DEFAULT NULL,
-  `remarks` text,
-  `upload_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `upload_user_id` int(11) unsigned NOT NULL,
-  PRIMARY KEY (`uploaded_recording_id`),
-  KEY `current_state_id` (`state`(1)),
-  KEY `recording` (`filename`),
-  KEY `project_id_upload_time` (`project_id`,`upload_timestamp`),
+CREATE TABLE `uploads_processing` (
+  `upload_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `project_id` int(10) unsigned NOT NULL,
+  `site_id` int(10) unsigned NOT NULL,
+  `user_id` int(10) unsigned NOT NULL,
+  `upload_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `filename` varchar(100) NOT NULL,
+  PRIMARY KEY (`upload_id`),
+  UNIQUE KEY `filename` (`filename`),
   KEY `project_id` (`project_id`),
   KEY `site_id` (`site_id`),
-  KEY `upload_user_id` (`upload_user_id`),
-  CONSTRAINT `uploaded_recordings_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`),
-  CONSTRAINT `uploaded_recordings_ibfk_2` FOREIGN KEY (`site_id`) REFERENCES `sites` (`site_id`),
-  CONSTRAINT `uploaded_recordings_ibfk_3` FOREIGN KEY (`upload_user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  KEY `user_id` (`user_id`),
+  KEY `upload_time` (`upload_time`),
+  CONSTRAINT `uploads_processing_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `uploads_processing_ibfk_2` FOREIGN KEY (`site_id`) REFERENCES `sites` (`site_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `uploads_processing_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='recording uploaded and being process';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -911,7 +909,7 @@ DROP TABLE IF EXISTS `user_account_support_request`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user_account_support_request` (
   `support_request_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(10) unsigned NOT NULL,
+  `user_id` int(10) unsigned DEFAULT NULL,
   `support_type_id` int(10) unsigned NOT NULL,
   `hash` varchar(64) NOT NULL,
   `params` text NOT NULL,
@@ -923,7 +921,7 @@ CREATE TABLE `user_account_support_request` (
   KEY `support_type_id` (`support_type_id`),
   CONSTRAINT `user_account_support_request_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `user_account_support_request_ibfk_2` FOREIGN KEY (`support_type_id`) REFERENCES `user_account_support_type` (`account_support_type_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -976,8 +974,9 @@ CREATE TABLE `users` (
   `firstname` varchar(255) NOT NULL,
   `lastname` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `last_login` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `last_login` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `is_super` tinyint(1) NOT NULL DEFAULT '0',
+  `project_limit` int(10) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `login` (`login`)
@@ -1014,4 +1013,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-11-26 11:38:10
+-- Dump completed on 2014-11-26 19:54:39

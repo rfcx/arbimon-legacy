@@ -120,8 +120,17 @@ var Users = {
                 'JOIN permissions AS p ON p.permission_id = rp.permission_id \n'+
                 'WHERE upr.user_id = %s \n'+
                 'AND upr.project_id = %s';
-
+        
         q = util.format(q, mysql.escape(user_id), mysql.escape(project_id));
+        queryHandler(q, callback);
+    },
+    
+    ownedProjectsQty: function(user_id, callback) {
+        var q = "SELECT COUNT(p.project_id) as count \n"+
+                "FROM projects as p \n"+
+                "WHERE p.owner_id = %s";
+        
+        q = util.format(q, mysql.escape(user_id));
         queryHandler(q, callback);
     }
     ,

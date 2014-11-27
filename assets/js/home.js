@@ -1,5 +1,5 @@
-angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils'])
-.controller('HomeCtrl', function($scope, $http, $modal) {
+angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane'])
+.controller('HomeCtrl', function($scope, $http, $modal, notify) {
     
     $scope.currentPage = 1;
     
@@ -36,14 +36,14 @@ angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils'])
         });
         
         modalInstance.result.then(function(message) {
-            alert(message);
+            notify.log(message);
             $scope.loadProjectList();
         });
     };
 })
-.controller('CreateProjectCtrl', function($scope, $http, $modalInstance) {
+.controller('CreateProjectCtrl', function($scope, $http, $modalInstance, notify) {
     
-    $scope.errors = []
+    $scope.errors = [];
     
     $scope.project = {
         is_private: 0
@@ -52,7 +52,7 @@ angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils'])
     $scope.testName = function() {
         if(!$scope.project.name) return;
         
-        var nameRe = /[\w\d]+(\s?[\w\d]+)*/
+        var nameRe = /[\w\d]+(\s?[\w\d]+)*/;
         
         if(
             nameRe.exec($scope.project.name) === null
@@ -67,7 +67,7 @@ angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils'])
     $scope.testUrl = function() {
         if(!$scope.project.url) return;
         
-        var urlRe = /[a-z0-9]+((-{1}|_{1})?[a-z0-9]+)+/
+        var urlRe = /[a-z0-9]+((-{1}|_{1})?[a-z0-9]+)+/;
         
         if(
             urlRe.exec($scope.project.url) === null
@@ -129,6 +129,11 @@ angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils'])
             .success(function(data) {
                 if(!data.error)
                     $modalInstance.close(data.message);
+                    
+                if(data.projectLimit) {
+                    $modalInstance.dismiss();
+                    notify.error('You have reached project limit, can not create new project');
+                }
                 
                 if(data.nameExists) {
                     $scope.errors.push({ 
@@ -144,12 +149,12 @@ angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils'])
                     });
                     $scope.error_url = true;
                 }
-                    
+                
             })
             .error(function(err) {
                 alert(err);
             });
-        };
+        }
     };
     
     $scope.closeAlert = function(index) {

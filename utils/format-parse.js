@@ -11,7 +11,7 @@ var formatParse = function(formatName, filename) {
     var results = formats[formatName].exec(filename);
     
     if(results === null)
-        return new Error('invalid filename: "' + filename + '"');
+        throw new Error('invalid filename: "' + filename + '"');
     
     if(formatName === 'Arbimon') {
         return {
@@ -34,11 +34,11 @@ var formatParse = function(formatName, filename) {
         };
     }
     else {
-        return new Error('invalid format');
+        throw new Error('invalid format');
     }
 };
 
 module.exports = formatParse;
 
-console.log(formatParse('Arbimon','default-2014-08-25_17-30.flac'));
+// console.log(formatParse('Arbimon','default-2014-08-25_17-30.flac'));
 // console.log(formatParse('arbimon','fsldfjslkd'));

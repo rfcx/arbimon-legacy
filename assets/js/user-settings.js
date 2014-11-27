@@ -1,5 +1,5 @@
-angular.module('settings', ['templates-arbimon2', 'ui.bootstrap'])
-.controller('UserSettingsCtrl', function($scope, $modal, $http){
+angular.module('settings', ['templates-arbimon2', 'ui.bootstrap', 'humane'])
+.controller('UserSettingsCtrl', function($scope, $modal, $http, notify){
     
     $http.get('/api/user/info')
     .success(function(data){
@@ -29,7 +29,7 @@ angular.module('settings', ['templates-arbimon2', 'ui.bootstrap'])
                 if(data.error)
                     return alert(data.error);
                     
-                alert(data.message);
+                notify.log(data.message);
             })
             .error(function(err){
                 alert(err);
@@ -49,7 +49,7 @@ angular.module('settings', ['templates-arbimon2', 'ui.bootstrap'])
                 password: pass
             })
             .success(function(data){
-                alert(data.message);
+                notify.log(data.message);
             })
             .error(function(err){
                 alert(err);

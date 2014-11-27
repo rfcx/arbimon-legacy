@@ -56,7 +56,7 @@ router.get('/feed/:page', function(req, res) {
         // console.log(results);
         
         var feed = results.news.map(function(row){
-            row.image_url = gravatar.url(row.email, { d: 'monsterid', s: 30 }, https=req.secure);
+            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 30 }, https=req.secure);
             
             var data = JSON.parse(row.data);
             
@@ -91,7 +91,7 @@ router.get('/search/:query', function(req, res, next) {
         if(err) return next(err);
         
         var users = rows.map(function(row){
-            row.image_url = gravatar.url(row.email, { d: 'monsterid', s: 60 }, https=req.secure);
+            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, https=req.secure);
             
             return row;
         });

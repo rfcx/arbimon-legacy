@@ -3,7 +3,6 @@ Bio-Acoustic Analyzer
 
 ---
 ### Quick Setup:
-
  - python 2.7 - comes with Ubuntu
  
  - All dependencies  in one line
@@ -13,22 +12,35 @@ Bio-Acoustic Analyzer
    sudo apt-get install python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev gfortran libopenblas-dev liblapack-dev  libpng12-dev libfreetype6-dev libsndfile1 libsndfile-dev virtualenv r-base r-base-dev libfftw3-3 libfftw3-dev r-cran-rgl bwidget
    ```
    
+   
  - Install all python dependencies, create python virtual enviroment and build
     ```
-    sudo npm run-script setup    
+    npm run-script setup    
     ```
+    
     
  - Run app (the app will be available in localhost:3000)
     ```
     npm start
     ```
+    
 
 ---
 
+
 ### System dependencies:
 
+ - nodejs
+   ```
+   sudo add-apt-repository ppa:chris-lea/node.js
+   sudo apt-get update
+   sudo apt-get install nodejs
+   ```
+   
+   
  - python 2.7 - comes with Ubuntu
- 
+   
+   
  - pip - python dependencies
    ```
    sudo apt-get install pip
@@ -42,12 +54,13 @@ Bio-Acoustic Analyzer
    sudo apt-get install sox
    sudo apt-get install libsox-fmt-mp3
    ```
-
-
+   
+   
  - image magick - image manipulation tool
    ```
    sudo apt-get install imagemagick
    ```
+   
    
  - R statistics
    ```
@@ -55,16 +68,11 @@ Bio-Acoustic Analyzer
     sudo apt-get install r-base-dev
     sudo apt-get install libfftw3-3 libfftw3-dev libsndfile1-dev r-cran-rgl bwidget
    ```
+   
+   
  - R packages (tuneR,seewave)
    ```
    sudo Rscript scripts/setup/r-packages.R
-   ```
-   
- - nodejs
-   ```
-   sudo add-apt-repository ppa:chris-lea/node.js
-   sudo apt-get update
-   sudo apt-get install nodejs
    ```
    
    
@@ -72,11 +80,13 @@ Bio-Acoustic Analyzer
    ```
    sudo apt-get install libmysqlclient-dev python-dev
    ```
- 
+   
+   
  - python virtualenv
    ```
    sudo apt-get install virtualenv
    ```
+   
    
  - scipy dependencies
    ```
@@ -89,16 +99,18 @@ Bio-Acoustic Analyzer
    sudo apt-get install libpng12-dev libfreetype6-dev
    ```
    
+   
  - scikits.audiolab dependencies
    ```
    sudo apt-get install libsndfile-dev
    ```
    
+   
  - node global dependencies(`sudo npm install -g <package>`):
   - bower
   - grunt-cli
   
-
+  
  - individual python dependencies (`sudo pip install`):
     - numpy 
     - scipy

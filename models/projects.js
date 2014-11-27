@@ -2,6 +2,7 @@ var util = require('util');
 var mysql = require('mysql');
 var async = require('async');
 var Joi = require('joi');
+var sprintf = require("sprintf-js").sprintf;
 
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
@@ -16,6 +17,12 @@ var Projects = {
                 "FROM projects";
 
         queryHandler(q, callback);
+    },
+    
+    findById: function (project_id, callback) {
+        var query = "SELECT * FROM projects WHERE project_id = " + mysql.escape(project_id);
+
+        return queryHandler(query , callback);
     },
     
     findByUrl: function (project_url, callback) {
@@ -122,7 +129,7 @@ var Projects = {
             project_id: Joi.number().required(), 
             data: Joi.string().required(), 
             news_type_id: Joi.number().required()
-        }
+        };
         
         Joi.validate(news, schema, function(err, newsVal) {
             if(err) {
@@ -157,7 +164,7 @@ var Projects = {
                 }
             });
             
-        })
+        });
     },
 
     /** Fetches a project's classes.
@@ -506,7 +513,26 @@ var Projects = {
                 "WHERE name != 'Owner'";
                 
         queryHandler(q, callback);
+    },
+    
+    // this includes recordings processing
+    totalRecordings: function(project_id, callback) {
+        var q = "SELECT count(*) as count \n"+
+                "FROM ( \n"+
+                "        (SELECT upload_id as id \n"+
+                "        FROM uploads_processing  \n"+
+                "        WHERE project_id = %1$s) \n"+
+                "        UNION \n"+
+                "        (SELECT recording_id as id \n"+
+                "        FROM recordings AS r \n"+
+                "        JOIN sites AS s ON s.site_id = r.site_id \n"+
+                "        WHERE s.project_id = %1$s) \n"+
+                "    ) as t";
+        
+        q = sprintf(q, project_id);
+        queryHandler(q, callback);
     }
 };
+
 
 module.exports = Projects;
