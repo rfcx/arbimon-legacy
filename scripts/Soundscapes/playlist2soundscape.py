@@ -173,8 +173,7 @@ def processRec(rec):
                                  ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
         if stderr and 'LC_TIME' not in stderr:
-            log.write('fpeaks.R:'+ str(time.time()-start_time_rec))
-            print 'error:',uri, stderr
+            log.write('fpeaks.R:'+ str(time.time()-start_time_rec)+" stdout: "+stdout+" stderr: "+stderr)
             os.remove(localFile)
             log.write('Error in recording:'+ uri )
             with closing(db.cursor()) as cursor:
@@ -182,8 +181,8 @@ def processRec(rec):
                 db.commit()
             return None
         elif stdout:
-            log.write('fpeaks.R:'+ str(time.time()-start_time_rec))
-            #os.remove(localFile)
+            log.write('fpeaks.R:'+ str(time.time()-start_time_rec)+" stdout: "+stdout+" stderr: "+stderr)
+            os.remove(localFile)
             if 'err' in stdout:
                 return None
             freqs = stdout.strip(',')
