@@ -172,7 +172,7 @@ def processRec(rec):
                                  , str(frequency)
                                  ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
-        if stderr:
+        if stderr and 'LC_TIME' not in stderr:
             log.write('fpeaks.R:'+ str(time.time()-start_time_rec))
             print 'error:',uri, stderr
             os.remove(localFile)
