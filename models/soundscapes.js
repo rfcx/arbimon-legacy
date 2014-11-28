@@ -165,7 +165,8 @@ var Soundscapes = {
             function(results, fields, next){
                 self.getRegions(soundscape, {region:results.insertId}, next);
             },
-            function(rows, fields, next){
+            function(rows, fields){
+                var next = arguments[arguments.length-1];
                 data = rows[0];
                 next(null, data);
             }
