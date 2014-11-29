@@ -10,6 +10,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from scikits.audiolab import Sndfile, Format
 from contextlib import closing
+import numpy as np
 
 class Rec:
 
@@ -51,7 +52,7 @@ class Rec:
             self.samples = f.nframes
             self.sample_rate = f.samplerate       
             # default dtype: float64
-            self.original = f.read_frames(f.nframes)
+            self.original = f.read_frames(f.nframes,dtype=np.dtype('int'+str(self.bps)))
             if self.logs :
                 self.logs.write(str(type(self.original)))
         
