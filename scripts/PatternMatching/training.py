@@ -15,7 +15,7 @@ jobId = sys.argv[1];
 modelName = sys.argv[2].strip("'");
 currDir = os.path.dirname(os.path.abspath(__file__))
 currPython = sys.executable
-
+project_id = -1
 configuration = Config()
 config = configuration.data()
 db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
@@ -92,6 +92,7 @@ if model_type_id == 1: #Pattern Matching (modified Alvarez thesis)
                 cursor.execute("SELECT r.`uri` , `species_id` , `songtype_id` , `present` "+
                         "FROM `recording_validations` rv, `recordings` r " +
                         "WHERE r.`recording_id` = rv.`recording_id`  "+
+                        " and rv.`project_id` = "+str(project_id)+" "+
                         "and `species_id` = "+queryString)
                 # is this condition too harsh?
                 # and r.`recording_id` NOT IN ("+ ','.join([str(x) for x in recordingsIds]) +") " +
