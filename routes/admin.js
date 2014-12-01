@@ -1,3 +1,4 @@
+var console={log:require('debug')('arbimon2:route:admin')};
 var express = require('express');
 var router = express.Router();
 var async = require('async');

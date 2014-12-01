@@ -1,5 +1,8 @@
+var console={log:require('debug')('arbimon2:jobqueue')};
 var async = require('async');
-var os = require('os');
+var os    = require('os');
+
+
 
 var jobQueueInstance = async.priorityQueue(function (task, callback) {
     console.log('starting task ' + task.name);

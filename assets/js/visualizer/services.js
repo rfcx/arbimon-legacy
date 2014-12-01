@@ -32,7 +32,7 @@ angular.module('visualizer-services', ['a2services'])
         title   : "",
         controller : 'a2VisualizerRecordingSoundscapeRegionTagsLayerController as ctrl',
         require: {type:'recording', selection : true, that:function(scope){
-            var pl = scope.visobject.extra.playlist;
+            var pl = scope.visobject && scope.visobject.extra && scope.visobject.extra.playlist;
             return pl && pl.soundscape && pl.region;
         }},
         sidebar_only : true,

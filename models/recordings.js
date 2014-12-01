@@ -1,4 +1,5 @@
 // dependencies
+var console={log:require('debug')('arbimon2:model:recordings')};
 var async = require('async');
 var AWS   = require('aws-sdk');
 var mysql = require('mysql');

@@ -1,3 +1,4 @@
+var console={log:require('debug')('arbimon2:audiotool')};
 var childProcess = require('child_process');
 
 /**
