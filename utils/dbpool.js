@@ -1,3 +1,4 @@
+var console={log:require('debug')('arbimon2:dbpool')};
 var mysql = require('mysql');
 var config = require('../config');
 var showQueriesInConsole = true;

@@ -1,4 +1,5 @@
 // dependencies
+var console={log:require('debug')('arbimon2:model:playlists')};
 var mysql = require('mysql');
 var async = require('async');
 var Joi   = require('joi');

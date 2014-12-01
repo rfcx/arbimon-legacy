@@ -40,7 +40,10 @@ if (app.get('env') === 'production') {
 }
 
 app.use(favicon(__dirname + '/public/images/favicon.ico'));
-app.use(logger('dev'));
+
+logger.token('tag', function(req, res){ return 'arbimon2:request'; });    
+app.use(logger(':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"'));
+
 app.use(cookieParser());
 app.use(busboy());
 app.use(bodyParser.json());

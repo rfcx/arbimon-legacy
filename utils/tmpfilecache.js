@@ -1,3 +1,4 @@
+var console={log:require('debug')('arbimon2:tmpfilecache')};
 var fs = require('fs');
 var path = require('path');
 var async = require('async');

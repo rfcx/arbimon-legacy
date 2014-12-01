@@ -1,3 +1,4 @@
+var console={log:require('debug')('arbimon2:model:projects')};
 var util = require('util');
 var mysql = require('mysql');
 var async = require('async');

@@ -1,8 +1,11 @@
 /**
  * configuration module.
  */
+var console={log:require('debug')('arbimon2:model')};
 var fs   = require('fs')
   , path = require('path');
+var console={log:require('debug')('arbimon2:config')};
+
 
 // config folder 
 var config_folder = __dirname;
