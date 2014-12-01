@@ -294,6 +294,9 @@ var Soundscapes = {
             tx.mark_success.bind(tx)
         ], function(err){
             tx.end(function(err2){
+                if(tx.connection){
+                    connection.release();
+                }
                 if(err){ 
                     callback(err); 
                 } else if(err2){ 
