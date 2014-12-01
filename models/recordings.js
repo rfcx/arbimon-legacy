@@ -548,6 +548,14 @@ var Recordings = {
         Recordings.fetchSpectrogramTiles(recording, callback);
     },    
     
+    recordingInfoGivenUri : function(uri,callback)
+    {//UNIX_TIMESTAMP( r.`datetime` )*1000 
+        var q = "SELECT r.`recording_id` id , date_format(r.`datetime`,'%m-%d-%Y %H:%i') as date , s.`name` site " +
+                " FROM `recordings` r,`sites` s  "+
+                " WHERE r.`uri` = "+mysql.escape(uri)+" and s.`site_id` = r.`site_id` "
+        
+        queryHandler(q, callback);        
+    },
     findProjectRecordings: function(params, callback) {
         var schema = {
             project_id: Joi.number().required(),

@@ -64,10 +64,11 @@
                                             var filteredData = params.filter() ?
                                                     $filter('filter')($scope.modelsDataOrig  , params.filter()) :
                                                     $scope.modelsDataOrig  ;
-                                            
-                                            var orderedData = params.sorting() ?
-                                                    $filter('orderBy')(filteredData, params.orderBy()) :
-                                                    $scope.modelsDataOrig ;
+					    
+					    var orderedData = params.sorting() ?
+							$filter('orderBy')(filteredData, params.orderBy()) :
+							filteredData ;
+					    					    
                                             params.total(orderedData.length);
                                             $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
                                             if(orderedData.length < 1)
@@ -194,52 +195,86 @@
                     }
                 );
             };
-
+	    $scope.model_id = null;
+	    $scope.validationdata = null;
             $scope.showModelDetails =
             function (model_id)
             {
+		$scope.model_id = model_id;
 		$scope.infoInfo = "Loading...";
 		$scope.showInfo = true;
 		$scope.loading = true;
                 var url = $scope.projectData.url;
-                $http.get('/api/project/'+url+'/models/'+model_id)
-                .success
-                (
-                    function(data) 
-                    {   
-			$scope.data = data;
-			var modalInstance = $modal.open
-			(
-			    {
-				templateUrl: template_root + 'modelinfo.html',
-				controller: 'ModelDetailsInstanceCtrl',
-				windowClass: 'models-modal-window',
-				resolve: 
-				{
-				    data: function () 
+		
+		$http.get('/api/project/'+$scope.projectData.url+'/validation/list/'+$scope.model_id)
+		.success
+		(
+		    function(vdata) 
+		    {
+			    $scope.validationdata = vdata;
+			    $http.get('/api/project/'+url+'/models/'+model_id)
+			    .success
+			    (
+				function(data) 
+				{   
+				    $scope.data = data;
+				    var modalInstance = $modal.open
+				    (
+					{
+					    templateUrl: template_root + 'modelinfo.html',
+					    controller: 'ModelDetailsInstanceCtrl',
+					    windowClass: 'models-modal-window',
+					    resolve: 
+					    {
+						data: function () 
+						{
+						  return $scope.data;
+						},
+						url : function ()
+						{
+						    return $scope.projectData.url;
+						},
+						model_id : function ()
+						{
+						    return $scope.model_id;
+						},
+						vdata : function()
+						{
+						   return $scope.validationdata;  
+						}
+					    }
+					}
+				    );
+				    
+				    modalInstance.opened.then(function()
 				    {
-				      return $scope.data;
-				    }
+					$scope.infoInfo = "";
+					$scope.showInfo = false;
+					$scope.loading = false;
+				    });
+				    
+				    modalInstance.result.then
+				    (
+					function () 
+					{
+					}
+				    );
+				    
 				}
-			    }
-			);
-			
-			modalInstance.opened.then(function()
-			{
-			    $scope.infoInfo = "";
-			    $scope.showInfo = false;
-			    $scope.loading = false;
-			});
-			
-			modalInstance.result.then
-			(
-			    function () 
-			    {
-			    }
-			);
-			
-                    }
-                ).error(
+			    ).error(
+				function()
+				{
+				    $scope.errorInfo = "Error Communicating With Server";
+				    $scope.showError = true;
+				    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+				    function()
+				    {
+					$scope.showError = false;
+				    });
+				}
+			    );
+		    }
+		).error(
 		    function()
 		    {
 			$scope.errorInfo = "Error Communicating With Server";
@@ -251,6 +286,7 @@
 			});
 		    }
 		);
+	    
             };
 
 
@@ -535,8 +571,10 @@
         }
     ).controller
     ('ModelDetailsInstanceCtrl', 
-        function ($scope, $modalInstance,data) 
+        function ($scope, $modalInstance,data,$compile,url,$http,model_id,vdata) 
         {
+	    $scope.url = url;
+	    $scope.model = model_id
 	    var json = JSON.parse(data[0]['json']);
 	    $scope.data = {
 		modelmdc : data[0].mdc, //ok
@@ -575,12 +613,32 @@
 		lfreq : Math.round(json['roilowfreq']* 100) / 100,//ok
 		rlength : Math.round(json['roilength']* 100) / 100,//ok
 		bw :  Math.round( ((  parseFloat(json['roihighfreq']) - parseFloat(json['roilowfreq']) ) * 100)) / 100,
-		freqMax : json['roisamplerate']/2//ok
+		freqMax : json['roisamplerate']/2,//ok
+		validations : vdata
 	    }
             $scope.ok = function () {
                 $modalInstance.close(   );
             };
-
+	    $scope.savedhtml = '';
+	    
+	    $scope.fields = [
+		{ name: 'Site', key: 'site' },
+		{ name: 'Presence', key: 'presence' },
+		{ name: 'Date', key: 'date' },
+	    ];
+	    console.log($scope.data.validations)
+	    $scope.validationsDetails = function () {
+		$scope.validationView = false;
+            };
+	    
+	    $scope.validationView = true;
+	    
+	    $scope.restore = function () {
+		$scope.validationView = true;
+            };
+	    	    
+	    $scope.validationRows = null;
+	    
         }
     ).directive
     ('a2Models',

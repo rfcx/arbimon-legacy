@@ -340,6 +340,74 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
     );
 });
 
+router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, next) {
+
+    model.projects.modelValidationUri(req.params.modelId, function(err, row) {
+        if(err) return next(err);
+        var validationUri = row[0].uri        
+        var aws = require('knox').createClient({
+            key: config.accessKeyId
+          , secret: config.secretAccessKey
+          , bucket: config.bucketName
+        });
+        var sendData = [];
+        aws.getFile(validationUri, function(err, resp){
+            if (err) {
+                console.log("Error fetching validation information file. : "+validationUri)
+                res.json({"err": "Error fetching validation information."});
+            }
+            var outData = ''
+            resp.on('data', function(chunk) { outData = outData + chunk; });
+            resp.on('end',
+            function(chunk)
+            {
+                outData = outData
+                var lines = outData.split('\n')
+                async.eachLimit(lines ,5,
+                function(line,callback)
+                {
+                    if (line == '')
+                    {
+                        callback()
+                    }
+                    else
+                    {
+                        
+                        items = line.split(',');
+                        prec = items[3].trim(' ')
+                        model.recordings.recordingInfoGivenUri(items[0],
+                        function(err,recData)
+                        {
+                            if (err) {
+                                console.log("Error fetching recording information. : "+items[0])
+                                res.json({"err": "Error fetching recording information."});
+                                callback('err')
+                            }
+                            var rowSent = {presence:prec,site:recData[0].site,date:recData[0].date,id:recData[0].id};
+                            sendData.push(rowSent)
+                            callback()
+                        });
+                        
+                    }
+                },
+                function(err)
+                {
+                    if (err)
+                    {
+                        res.json({"err": "Error fetching recording information."});
+                    }
+                    console.log('sendData2: '+sendData)
+                    res.json(sendData);
+                }
+                );
+                
+            });
+        });
+        
+     });
+});
+
+
 router.get('/project/:projectUrl/validations/:species/:songtype', function(req, res, next) {
 
     model.projects.validationsStats(req.params.projectUrl,req.params.species,req.params.songtype, function(err, row) {

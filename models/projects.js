@@ -474,7 +474,15 @@ var Projects = {
                 "WHERE rv.project_id = " + mysql.escape(project_id);
         queryHandler(q, callback);
     },
-   
+    
+    modelValidationUri: function(model_id, callback)
+    {
+        var q = "SELECT vs.`uri` FROM `validation_set` vs, `models` m "+
+            " WHERE m.`validation_set_id` = vs.`validation_set_id` "+
+            " and m.`model_id` = "+ mysql.escape(model_id);
+        
+        queryHandler(q, callback);      
+    },
     activeJobs: function(project_url, callback) {
         var q = "(SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` , " +
                 " CONCAT(UCASE(LEFT( jpt.`name`, 1)), SUBSTRING( jpt.`name`, 2)) as name, round(100*(j.`progress`/j.`progress_steps`),1) as percentage "+

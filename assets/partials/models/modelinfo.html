@@ -1,7 +1,7 @@
 <div class="modal-header">  
     <h3 class="modal-title">Model Details</h3>  
 </div>  
-<div class="modal-body row">
+<div class="modal-body row" >
     <div class="col-sm-6">
         <table>
             <tr>
@@ -72,7 +72,7 @@
     </div>
 </div>
 <div class="model-details"></div>
-<div class="modal-body row">
+<div class="modal-body row" ng-show="validationView" >
     <div class="col-sm-6">
     <h3 class="modal-title">Training Set</h3>
         <table>
@@ -182,10 +182,23 @@
                 </table>
                 <small><em>P = Present, NP = Not Present</em></small>
             </div>
-        </div> 
+        </div>
+        <div style="padding:10px"><div class="btn btn-default btn-s" ng-click="validationsDetails()">View details</div></div>
     </div>
 </div>
-<div class="modal-footer">  
+<div class="modal-body row" ng-hide="validationView">
+    <div class="col-sm-12">
+        <div class="row">
+        <h3 class="modal-title col-sm-6">Validations Details</h3>
+        <div class="col-sm-4"></div>
+        <button class="btn btn-default btn-sm col-sm-1" ng-click="restore()">Go Back</button>
+        </div>
+        <div  style="overflow-y:scroll;height:317px;">
+            <a2-table fields="fields" rows="data.validations" no-checkbox></a2-table>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">        
     <button class="btn btn-primary" ng-click="ok()">Close</button>  
 </div>  
 
