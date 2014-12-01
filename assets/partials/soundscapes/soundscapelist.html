@@ -6,9 +6,6 @@
       <div  ng-hide="!loading" class="col-sm-1 loading-top-padding" >
         <loader></loader>
       </div>
-      <div  ng-show="(!soundscapesData || !soundscapesData.length > 0) && !loading" class="col-sm-8 loading-top-padding" >
-         <span  class="font-blue-20"><i class="fa fa-arrow-left left-rigth-padding-4"></i> Create a soundscape</span>
-      </div>
     </div>
     <table ng-table="tableParams" class="table" show-filter="true" >
         <tr ng-repeat="soundscape in soundscapesData" >
@@ -26,7 +23,7 @@
             </td>
         </tr>
     </table>
-    {{ infopanedata }}
+    <div><h3>{{ infopanedata }} <a   ng-click="createNewSoundscape()" ng-show="(!soundscapesOriginal || !soundscapesOriginal.length > 0) && !loading" >Create a soundscape</a></h3></div>
 </div>
 <div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
   <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">

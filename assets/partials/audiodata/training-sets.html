@@ -6,7 +6,6 @@
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-plus"></i>
             </button>
-            <span ng-show="(!sets || !sets.length > 0) && !loading" class="font-blue-20"><i class="fa fa-arrow-left left-rigth-padding-4"></i> Create a training set</span>
             <!--
             <button class="btn btn-danger" 
                 tooltip="Delete training set"
@@ -24,7 +23,7 @@
         <a2-table search="search"  fields="fields" rows="sets" no-checkbox on-select="displaySetData($index)"></a2-table>
         <div class="jumbotron" ng-show="(!sets || !sets.length > 0) && !loading">
             <h3>
-                No training sets found.
+                No training sets found. <a ng-click="add_new_tset()"  ng-show="(!sets || !sets.length > 0) && !loading" >Create a training set.</a>
             </h3>
         </div>
         <loader ng-hide="!loading"></loader>

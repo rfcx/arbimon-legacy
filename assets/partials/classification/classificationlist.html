@@ -6,9 +6,6 @@
       <div  ng-hide="!loading" class="col-sm-1 loading-top-padding" >
         <loader></loader>
       </div>
-      <div  ng-show="(!classificationsData || !classificationsData.length > 0) && !loading" class="col-sm-8 loading-top-padding" >
-         <span  class="font-blue-20"><i class="fa fa-arrow-left left-rigth-padding-4"></i> Classify recordings</span>
-      </div>
    </div>
     <table ng-table="tableParams" class="table" show-filter="true" >
         <tr ng-repeat="classification in classificationsData" >
@@ -29,7 +26,7 @@
             </td>
         </tr>
     </table>
-    {{ infopanedata }}
+    <div class="jumbotron"><h3>{{ infopanedata }}  <a   ng-click="createNewClassification()" ng-show="(!classificationsOriginal || !classificationsOriginal.length > 0) && !loading" >Classify recordings</a></h3></div>
 </div>
 <div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
   <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">
