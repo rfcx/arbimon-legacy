@@ -9,8 +9,8 @@
    </div>
     <table ng-table="tableParams" class="table"  show-filter="true" >
         <tr ng-repeat="model in modelsData" >
-            <td data-title="'Date'">
-                {{model.mdc}}
+            <td data-title="'Date'" sortable="'date'">
+                {{model.date | date:'dd-MM-yyyy HH:mm' }}
             </td>
             <td data-title="'Name'" sortable="'mname'"  filter="{ 'mname': 'text' }">
                 {{model.mname}}

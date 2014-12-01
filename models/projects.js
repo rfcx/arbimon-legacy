@@ -360,7 +360,7 @@ var Projects = {
 
     modelList: function(project_url, callback) {
         var q = "SELECT m.model_id, CONCAT(UCASE(LEFT(m.name, 1)), SUBSTRING(m.name, 2)) as mname "+
-                " ,DATE_FORMAT(m.date_created,'%d-%m-%Y') as mdc "+
+                " ,UNIX_TIMESTAMP( m.`date_created` )*1000 as date "+
                 " , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,"+
                 "  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser " + 
                 " , mt.name as mtname "+
@@ -373,7 +373,8 @@ var Projects = {
     },
        
     classifications: function(project_url, callback) {
-            var q = "SELECT DATE_FORMAT(j.`date_created`,'%d-%m-%Y') as date  , j.`job_id`  , "+
+            var q = "SELECT UNIX_TIMESTAMP( j.`date_created` )*1000  as date "+
+                    "  , j.`job_id`  , "+
                      " CONCAT(UCASE(LEFT(mode.`name`, 1)), SUBSTRING(mode.`name`, 2))  as modname  " +         
                     " , CONCAT(UCASE(LEFT(jpc.`name`, 1)), SUBSTRING(jpc.`name`, 2))  as cname  "+
                     " , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,"+

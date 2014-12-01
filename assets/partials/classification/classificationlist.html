@@ -10,7 +10,7 @@
     <table ng-table="tableParams" class="table" show-filter="true" >
         <tr ng-repeat="classification in classificationsData" >
             <td data-title="'Date'" sortable="'date'" >
-                {{classification.date}}
+                {{classification.date | date:'dd-MM-yyyy HH:mm' }}
             </td>
             <td data-title="'Name'" " sortable="'cname'" filter="{ 'cname': 'text' }">
                 {{classification.cname}}
