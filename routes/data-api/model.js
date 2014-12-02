@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:route:model')};
+var debug = require('debug')('arbimon2:route:model');
 var express = require('express');
 var router = express.Router();
 var model = require('../../models');
@@ -7,7 +7,7 @@ var util = require('util');
 var mysql = require('mysql');
 var path = require('path');
 var jobQueue = require('../../utils/jobqueue');
-var scriptsFolder = __dirname+'/../../scripts/'
+var scriptsFolder = __dirname+'/../../scripts/';
 var config = require('../../config/aws.json');
 
 
@@ -72,7 +72,7 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
 });
 
 router.get('/project/:projectUrl/classification/:cid/more/:f/:t', function(req, res) {
-console.log('here mnore')
+debug('here mnore')
     model.projects.classificationDetailMore(req.params.projectUrl,req.params.cid,req.params.f,req.params.t, function(err, rows) {
         if(err) throw err;
         res.json(rows);
@@ -123,7 +123,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             
                         model.jobs.newJob({name:name,train:train_id,classifier:classifier_id,user:user_id,pid:project_id},1,
                             function (err,row)
-                            {console.log(__dirname+'/../../.env/bin/python',scriptsFolder+'training.py'
+                            {debug(__dirname+'/../../.env/bin/python',scriptsFolder+'training.py'
                                                             ,row.insertId , name)
                                 if(err)
                                 {
@@ -156,14 +156,14 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
                                                             function(data)
                                                             { 
                                                                 output += data
-                                                                console.log(output)
+                                                                debug(output)
                                                             }
                                                         );
                                                         python.on('close',
                                                             function(code)
                                                             { 
-                                                                if (code !== 0) { console.log('trainingJob returned error ',trainingId)}
-                                                                else console.log('no error, everything ok, trainingJob completed ',trainingId);
+                                                                if (code !== 0) { debug('trainingJob returned error ',trainingId)}
+                                                                else debug('no error, everything ok, trainingJob completed ',trainingId);
                                                                 callback(code);
                                                             }
                                                         );
@@ -171,7 +171,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
                                                 },
                                                 1, // priority
                                                 function(data) {
-                                                    console.log("job done! trainingJob", trainingId,data);
+                                                    debug("job done! trainingJob", trainingId,data);
                                                     
                                                     model.training_sets.findName(train_id, function(err, rows) {
                                                         model.projects.insertNews({
@@ -243,7 +243,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                                             }
                                             else
                                             {
-                                                console.log(
+                                                debug(
                                                     __dirname+'/../../.env/bin/python',
                                                             scriptsFolder+'PatternMatching/classification.py'
                                                             ,classificationId , name , allRecs, sitesString, classifier_id, project_id,user_id,playlist_id
@@ -269,8 +269,8 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                                                         python.on('close',
                                                             function(code)
                                                             { 
-                                                                if (code !== 0) { console.log('classificationJob returned error',classificationId)}
-                                                                else console.log('no error, everything ok, classificationJob completed',classificationId);
+                                                                if (code !== 0) { debug('classificationJob returned error',classificationId)}
+                                                                else debug('no error, everything ok, classificationJob completed',classificationId);
                                                                 callback();
                                                             }
                                                         );
@@ -278,7 +278,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                                                 },
                                                 1,
                                                 function() {
-                                                    console.log("job done! classificationJob", classificationId);
+                                                    debug("job done! classificationJob", classificationId);
                                                     
                                                     model.models.findName(classifier_id, function(err, rows) {
                                                         model.projects.insertNews({
@@ -358,7 +358,7 @@ console.log(validationUri)
         aws.getFile(validationUri, function(err, resp){
             
             if (err) {
-                console.log("Error fetching validation information file. : "+validationUri)
+                debug("Error fetching validation information file. : "+validationUri)
                 res.json({"err": "Error fetching validation information."});
             }
             
@@ -392,7 +392,7 @@ console.log(validationUri)
                         function(err,recData)
                         {
                             if (err) {
-                                console.log("Error fetching recording information. : "+items[0])
+                                debug("Error fetching recording information. : "+items[0])
                                 res.json({"err": "Error fetching recording information."});
                                 callback('err')
                             }
@@ -412,6 +412,10 @@ console.log(validationUri)
                     {
                         res.json({"err": "Error fetching recording information."});
                     }
+<<<<<<< HEAD
+=======
+                    debug('sendData2: '+sendData)
+>>>>>>> changed console.log calls to debug calls
                     res.json(sendData);
                 }
                 );
@@ -514,7 +518,7 @@ router.get('/project/classification/csv/:cid', function(req, res) {
 
 
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
-    console.log('req.params.projectUrl : '+req.params.projectUrl)
+    debug('req.params.projectUrl : '+req.params.projectUrl)
     model.projects.findByUrl(req.params.projectUrl, 
         function(err, rows) 
         {
@@ -589,8 +593,8 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                                                         python.on('close',
                                                             function(code)
                                                             { 
-                                                                if (code !== 0) { console.log('soundscapeJob returned error ',soundscapeId)}
-                                                                else console.log('no error, everything ok, soundscapeJob completed ',soundscapeId);
+                                                                if (code !== 0) { debug('soundscapeJob returned error ',soundscapeId)}
+                                                                else debug('no error, everything ok, soundscapeJob completed ',soundscapeId);
                                                                 callback();
                                                             }
                                                         );
@@ -598,8 +602,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                                                 },
                                                 1,
                                                 function() {
-                                                    console.log("job done! soundscapeJob:", soundscapeId);
-                                                    
+                                                    debug("job done! soundscapeJob:", soundscapeId);
                                                     model.projects.insertNews({
                                                         news_type_id: 11, // soundscape created
                                                         user_id: req.session.user.id,
