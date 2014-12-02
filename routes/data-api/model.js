@@ -92,216 +92,228 @@ router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 });
 
 router.post('/project/:projectUrl/models/new', function(req, res, next) {
-
-    model.projects.findByUrl(req.params.projectUrl, 
-        function(err, rows) 
-        {
-            if(err){ res.json({ err:"Could not create job"});  }
+    var response_already_sent;
+    var project_id, name, train_id, classifier_id, usePresentTraining;
+    var useNotPresentTraining, usePresentValidation, useNotPresentValidation, user_id;
+    var trainingId;
+    
+    async.waterfall([
+        function find_project_by_url(next){
+            model.projects.findByUrl(req.params.projectUrl, next);
+        },
+        function gather_job_params(rows){
+            var next = arguments[arguments.length-1];
             
-            if(!rows.length)
-            {
+            if(!rows.length){
                 res.status(404).json({ err: "project not found"});
+                response_already_sent = true;
+                next(new Error());
                 return;
             }
-            var project_id = rows[0].project_id;
-            var name = (req.body.n);
-            var train_id = mysql.escape(req.body.t);
-            var classifier_id = mysql.escape(req.body.c);
-            var usePresentTraining = mysql.escape(req.body.tp);
-            var useNotPresentTraining = mysql.escape(req.body.tn);
-            var usePresentValidation = mysql.escape(req.body.vp);
-            var useNotPresentValidation  = mysql.escape(req.body.vn);
-            var user_id = req.session.user.id;
-            model.jobs.modelNameExists({name:name,classifier:classifier_id,user:user_id,pid:project_id},
             
-                function(err,row) {
-                    if(err)
-                    {
-                       res.json({ err:"Could not create job"}); 
-                    }
-                    else if(row[0].count==0){            
+            project_id = rows[0].project_id;
+            name = (req.body.n);
+            train_id = mysql.escape(req.body.t);
+            classifier_id = mysql.escape(req.body.c);
+            usePresentTraining = mysql.escape(req.body.tp);
+            useNotPresentTraining = mysql.escape(req.body.tn);
+            usePresentValidation = mysql.escape(req.body.vp);
+            useNotPresentValidation  = mysql.escape(req.body.vn);
+            user_id = req.session.user.id;
             
-                        model.jobs.newJob({name:name,train:train_id,classifier:classifier_id,user:user_id,pid:project_id},1,
-                            function (err,row)
-                            {debug(__dirname+'/../../.env/bin/python',scriptsFolder+'training.py'
-                                                            ,row.insertId , name)
-                                if(err)
-                                {
-                                   res.json({ err:"Could not create job"}); 
-                                }
-                                else
-                                {
-                                    var trainingId = row.insertId;
-                                    model.jobs.newTrainingJob({id:trainingId,name:name,train:train_id,classifier:classifier_id,user:user_id,pid:project_id,upt:usePresentTraining,unt:useNotPresentTraining,upv:usePresentValidation,unv:useNotPresentValidation},
-                                        function (err,row)
-                                        {
-                                            if(err)
-                                            {
-                                               res.json({ err:"Could not create training job"}); 
-                                            }
-                                            else
-                                            { 
-                                                jobQueue.push({
-                                                    name: 'trainingJob'+trainingId,
-                                                    work: function(callback)
-                                                    {
-                                                        var python = require('child_process').spawn
-                                                        (
-                                                            __dirname+'/../../.env/bin/python',
-                                                            [scriptsFolder+'PatternMatching/training.py'
-                                                            ,trainingId , name]
-                                                        );
-                                                        var output = "";
-                                                        python.stdout.on('data', 
-                                                            function(data)
-                                                            { 
-                                                                output += data
-                                                                debug(output)
-                                                            }
-                                                        );
-                                                        python.on('close',
-                                                            function(code)
-                                                            { 
-                                                                if (code !== 0) { debug('trainingJob returned error ',trainingId)}
-                                                                else debug('no error, everything ok, trainingJob completed ',trainingId);
-                                                                callback(code);
-                                                            }
-                                                        );
-                                                    }
-                                                },
-                                                1, // priority
-                                                function(data) {
-                                                    debug("job done! trainingJob", trainingId,data);
-                                                    
-                                                    model.training_sets.findName(train_id, function(err, rows) {
-                                                        model.projects.insertNews({
-                                                            news_type_id: 8, // model created and trained
-                                                            user_id: req.session.user.id,
-                                                            project_id: project_id,
-                                                            data: JSON.stringify({ model: name, training_set: rows[0].name })
-                                                        });
-                                                    });
-                                                });
-                                                res.json({ ok:"job created trainingJob:"+trainingId});           
-                                            }
-                                        }
-                                    );
-                                }
-                            }
-                        );
-                    }else res.json({ name:"repeated"});
+            next();
+        },
+        function check_md_exists(next){
+            model.jobs.modelNameExists({name:name,classifier:classifier_id,user:user_id,pid:project_id}, next);
+        },
+        function abort_if_already_exists(row) {
+            var next = arguments[arguments.length-1];
+            if(row[0].count !== 0){
+                res.json({ name:"repeated"});
+                response_already_sent = true;
+                next(new Error());
+                return;
+            } else {
+                next();
+            }
+        },
+        function make_new_job(next){
+            model.jobs.newJob({name:name,train:train_id,classifier:classifier_id,user:user_id,pid:project_id},1, next);
+        },
+        function make_new_training_job(row){
+            debug(__dirname+'/../../.env/bin/python',scriptsFolder+'training.py',row.insertId , name);
+            var next = arguments[arguments.length-1];
+            trainingId = row.insertId;
+            model.jobs.newTrainingJob({
+                id:trainingId,name:name,
+                train:train_id,classifier:classifier_id,
+                user:user_id,pid:project_id,upt:usePresentTraining,
+                unt:useNotPresentTraining,upv:usePresentValidation,
+                unv:useNotPresentValidation
+            }, next);
+        },
+        function push_job_to_queue(row){
+            var next = arguments[arguments.length-1];
+            jobQueue.push({
+                name: 'trainingJob'+trainingId,
+                work: function(callback){
+                    var python = require('child_process').spawn(
+                        __dirname+'/../../.env/bin/python', [
+                            scriptsFolder+'PatternMatching/training.py',
+                            trainingId, 
+                            name
+                        ]
+                    );
+                    var output = "";
+                    python.stdout.on('data', function(data) { 
+                        output += data;
+                        debug(output);
+                    });
+                    python.on('close', function(code) { 
+                        if (code !== 0) { 
+                            debug('trainingJob returned error ',trainingId);
+                        } else {
+                            debug('no error, everything ok, trainingJob completed ',trainingId);
+                        }
+                        callback(code);
+                    });
                 }
-            );
+            },
+            1, // priority
+            function(data) {
+                debug("job done! trainingJob", trainingId,data);                
+                model.training_sets.findName(train_id, function(err, rows) {
+                    model.projects.insertNews({
+                        news_type_id: 8, // model created and trained
+                        user_id: req.session.user.id,
+                        project_id: project_id,
+                        data: JSON.stringify({ model: name, training_set: rows[0].name })
+                    });
+                });
+            });
+            next();
         }
-    );
+    ], function(err, data){
+        if(err){
+            if(!response_already_sent){
+                res.json({ err:"Could not create training job"});
+            }
+            return;
+        } else {
+            res.json({ ok:"job created trainingJob:"+trainingId});
+        }
+    });
+
 
 });
 
 router.post('/project/:projectUrl/classification/new', function(req, res, next) {
-    
-    model.projects.findByUrl(req.params.projectUrl, 
-        function(err, rows) 
-        {
-            if(err){ res.json({ err:"Could not create job"});  }
+    var response_already_sent;
+    var project_id, name, classifier_id, playlist_id, user_id, allRecs, sitesString;
+    var classificationId;
+    async.waterfall([
+        function find_project_by_url(next){
+            model.projects.findByUrl(req.params.projectUrl, next);
+        }, 
+        function gather_job_params(rows){
+            var next = arguments[arguments.length-1];
             
-            if(!rows.length)
-            {
+            if(!rows.length){
                 res.status(404).json({ err: "project not found"});
+                response_already_sent = true;
+                next(new Error());
                 return;
             }
-            var project_id = rows[0].project_id;
-            var name = (req.body.n);
-            var classifier_id = mysql.escape(req.body.c)
-            var playlist_id = (req.body.p.id)
-            var user_id = req.session.user.id;
-            var allRecs = mysql.escape(req.body.a);
-            var sitesString = mysql.escape(req.body.s);
-            model.jobs.classificationNameExists({name:name,classifier:classifier_id,user:user_id,pid:project_id},
             
-                function(err,row) {
-                    if(err)
-                    {
-                       res.json({ err:"Could not create job"}); 
-                    }
-                    else if(row[0].count==0){
-                        model.jobs.newJob({name:name,classifier:classifier_id,user:user_id,pid:project_id},2,
-                            function (err,row)
-                            {
-                                if(err)
-                                {
-                                   res.json({ err:"Could not create job"}); 
-                                }
-                                else
-                                {
-                                    var classificationId = row.insertId;
-                                    model.jobs.newClassificationJob({id:classificationId,name:name,classifier:classifier_id,user:user_id,pid:project_id,playlist_id:playlist_id},
-                                        function (err,row)
-                                        {
-                                            if(err)
-                                            {
-                                               res.json({ err:"Could not create classification job"}); 
-                                            }
-                                            else
-                                            {
-                                                debug(
-                                                    __dirname+'/../../.env/bin/python',
-                                                            scriptsFolder+'PatternMatching/classification.py'
-                                                            ,classificationId , name , allRecs, sitesString, classifier_id, project_id,user_id,playlist_id
-                                                    
-                                                )
-                                                jobQueue.push({
-                                                    name: 'classificationJob'+classificationId,
-                                                    work: function(callback)
-                                                    {
-                                                        var python = require('child_process').spawn
-                                                        (
-                                                            __dirname+'/../../.env/bin/python',
-                                                            [scriptsFolder+'PatternMatching/classification.py'
-                                                            ,classificationId , name , allRecs, sitesString, classifier_id, project_id,user_id,playlist_id]
-                                                        );
-                                                        var output = "";
-                                                        python.stdout.on('data', 
-                                                            function(data)
-                                                            { 
-                                                                output += data
-                                                            }
-                                                        );
-                                                        python.on('close',
-                                                            function(code)
-                                                            { 
-                                                                if (code !== 0) { debug('classificationJob returned error',classificationId)}
-                                                                else debug('no error, everything ok, classificationJob completed',classificationId);
-                                                                callback();
-                                                            }
-                                                        );
-                                                    }
-                                                },
-                                                1,
-                                                function() {
-                                                    debug("job done! classificationJob", classificationId);
-                                                    
-                                                    model.models.findName(classifier_id, function(err, rows) {
-                                                        model.projects.insertNews({
-                                                            news_type_id: 9, // model created and trained
-                                                            user_id: req.session.user.id,
-                                                            project_id: project_id,
-                                                            data: JSON.stringify({ model: rows[0].name, classi: name })
-                                                        });
-                                                    });
-                                                });
-                                                
-                                                res.json({ ok:"job created classificationJob:"+classificationId});           
-                                            }
-                                        }
-                                    );
-                                }
-                            }
-                        );  
-                    }else res.json({ name:"repeated"});
-                }
+            project_id = rows[0].project_id;
+            name = (req.body.n);
+            classifier_id = mysql.escape(req.body.c);
+            playlist_id = (req.body.p.id);
+            user_id = req.session.user.id;
+            allRecs = mysql.escape(req.body.a);
+            sitesString = mysql.escape(req.body.s);
+            
+            next();
+        },
+        function check_c_exists(next){
+            model.jobs.classificationNameExists({name:name,classifier:classifier_id,user:user_id,pid:project_id}, next);
+        },
+        function abort_if_already_exists(row) {
+            var next = arguments[arguments.length-1];
+            if(row[0].count !== 0){
+                res.json({ name:"repeated"});
+                response_already_sent = true;
+                next(new Error());
+                return;
+            } else {
+                next();
+            }
+        },
+        function make_new_job(row) {
+            var next = arguments[arguments.length-1];
+            model.jobs.newJob({name:name,classifier:classifier_id,user:user_id,pid:project_id},2, next);
+        },
+        function (row){
+            var next = arguments[arguments.length-1];
+            classificationId = row.insertId;
+            model.jobs.newClassificationJob({id:classificationId,name:name,classifier:classifier_id,user:user_id,pid:project_id,playlist_id:playlist_id}, next);
+        },
+        function(row){
+            var next = arguments[arguments.length-1];
+            debug(
+                __dirname+'/../../.env/bin/python',
+                scriptsFolder+'PatternMatching/classification.py',
+                classificationId , name , allRecs, 
+                sitesString, classifier_id, project_id,user_id, playlist_id
             );
+            
+            jobQueue.push(
+                {   name: 'classificationJob'+classificationId,
+                    work: function(callback){
+                        var python = require('child_process').spawn(
+                            __dirname+'/../../.env/bin/python', [
+                            scriptsFolder+'PatternMatching/classification.py' ,
+                                classificationId , name , allRecs, 
+                                sitesString, classifier_id, project_id,user_id,playlist_id
+                            ]
+                        );
+                        var output = "";
+                        python.stdout.on('data', function(data){ 
+                            output += data;
+                        });
+                        python.on('close', function(code) { 
+                            if (code !== 0) { 
+                                debug('classificationJob returned error',classificationId);
+                            } else {
+                                debug('no error, everything ok, classificationJob completed',classificationId);
+                            }
+                            callback();
+                        });
+                    }
+                }, 1, function() {
+                debug("job done! classificationJob", classificationId);
+                
+                model.models.findName(classifier_id, function(err, rows) {
+                    model.projects.insertNews({
+                        news_type_id: 9, // model created and trained
+                        user_id: req.session.user.id,
+                        project_id: project_id,
+                        data: JSON.stringify({ model: rows[0].name, classi: name })
+                    });
+                });
+            });
+            next();
         }
-    );
+    ], function(err, data){
+        if(err){
+            if(!response_already_sent){
+                res.json({ err:"Could not create classification job"}); 
+            }
+            return;
+        } else {
+            res.json({ ok:"job created classificationJob:"+classificationId});           
+        }
+    });
 });
 
 router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
@@ -412,10 +424,7 @@ console.log(validationUri)
                     {
                         res.json({"err": "Error fetching recording information."});
                     }
-<<<<<<< HEAD
-=======
                     debug('sendData2: '+sendData)
->>>>>>> changed console.log calls to debug calls
                     res.json(sendData);
                 }
                 );
@@ -519,111 +528,114 @@ router.get('/project/classification/csv/:cid', function(req, res) {
 
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
     debug('req.params.projectUrl : '+req.params.projectUrl)
-    model.projects.findByUrl(req.params.projectUrl, 
-        function(err, rows) 
-        {
-            if(err){ res.json({ err:"Could not create job"});  }
-            
-            if(!rows.length)
-            {
+    var response_already_sent;
+    var project_id,name,user_id,aggregation;
+    var threshold,playlist_id,bin,maxhertz,frequency;
+    var soundscapeId;
+
+    async.waterfall([
+        function find_project_by_url(next){
+            model.projects.findByUrl(req.params.projectUrl, next);
+        },
+        function gather_job_params(rows){
+            var next = arguments[arguments.length -1];            
+            if(!rows.length){
                 res.status(404).json({ err: "project not found"});
+                response_already_sent = true;
+                next(new Error());
                 return;
             }
-            var project_id = rows[0].project_id;
-            var name = (req.body.n);
-            var user_id = req.session.user.id;
-            var aggregation =  (req.body.a);
-            var threshold =  (req.body.t); 
-            var playlist_id = (req.body.p.id);
-            var bin = (req.body.b);
-            var maxhertz = (req.body.m);
-            var frequency = (req.body.f);
-            model.jobs.soundscapeNameExists({name:name,pid:project_id},
             
-                function(err,row) {
-                    if(err)
-                    {
-                       res.json({ err:"Could not create job"}); 
-                    }
-                    else if(row[0].count==0)
-                    {
-                        
-                        model.jobs.newJob({name:name,user:user_id,pid:project_id},4,
-                            function (err,row)
-                            {
-                                if(err)
-                                {
-                                   res.json({ err:"Could not create job"}); 
-                                }
-                                else
-                                {
-                                    var soundscapeId = row.insertId;
-
-                                    model.jobs.newSoundscapeJob({id:soundscapeId,name:name,playlist:playlist_id,
-                                                                aggregation:aggregation,threshold:threshold,
-                                                                bin:bin,maxhertz:maxhertz,frequency:frequency},
-                                        function (err,row)
-                                        {
-                                            if(err)
-                                            {
-                                               res.json({ err:"Could not create soundscape job"}); 
-                                            }
-                                            else
-                                            {
-                                                jobQueue.push({
-                                                    name: 'soundscapeJob'+soundscapeId,
-                                                    work: function(callback)
-                                                    {
-                                                        var python = require('child_process').spawn
-                                                        (
-                                                            __dirname+'/../../.env/bin/python',
-                                                            [scriptsFolder+'Soundscapes/playlist2soundscape.py'
-                                                             ,mysql.escape(soundscapeId),mysql.escape(playlist_id),
-                                                            mysql.escape(maxhertz),mysql.escape(bin),mysql.escape(aggregation)
-                                                            ,mysql.escape(threshold),mysql.escape(project_id),mysql.escape(user_id)
-                                                            ,mysql.escape(name),mysql.escape(frequency)]
-                                                        );
-                                                        var output = "";
-                                                        python.stdout.on('data', 
-                                                            function(data)
-                                                            { 
-                                                                output += data
-                                                            }
-                                                        );
-                                                        python.on('close',
-                                                            function(code)
-                                                            { 
-                                                                if (code !== 0) { debug('soundscapeJob returned error ',soundscapeId)}
-                                                                else debug('no error, everything ok, soundscapeJob completed ',soundscapeId);
-                                                                callback();
-                                                            }
-                                                        );
-                                                    }
-                                                },
-                                                1,
-                                                function() {
-                                                    debug("job done! soundscapeJob:", soundscapeId);
-                                                    model.projects.insertNews({
-                                                        news_type_id: 11, // soundscape created
-                                                        user_id: req.session.user.id,
-                                                        project_id: project_id,
-                                                        data: JSON.stringify({ soundscape: name })
-                                                    });
-                                                    
-                                                });
-                                                res.json({ ok:"job created soundscapeJob:"+soundscapeId });           
-                                            }
-                                        }
-                                    );
-                                }
-                            }
-                        );  
-                    }
-                    else res.json({ name:"repeated"});
+            project_id  = rows[0].project_id;
+            name        = (req.body.n);
+            user_id     = req.session.user.id;
+            aggregation = (req.body.a);
+            threshold   = (req.body.t); 
+            playlist_id = (req.body.p.id);
+            bin         = (req.body.b);
+            maxhertz    = (req.body.m);
+            frequency   = (req.body.f);
+            
+            next();
+        },
+        function check_sc_exists(next){
+            model.jobs.soundscapeNameExists({name:name,pid:project_id}, next);
+        },
+        function abort_if_already_exists(row) {
+            var next = arguments[arguments.length -1];            
+            if(row[0].count !== 0){
+                res.json({ name:"repeated"});
+                response_already_sent = true;
+                next(new Error());
+                return;
+            }
+            
+            next();
+        },
+        function make_new_job(next){            
+            model.jobs.newJob({name:name,user:user_id,pid:project_id}, 4, next);
+        },
+        function make_new_sc_job(row){
+            var next = arguments[arguments.length -1];
+            soundscapeId = row.insertId;
+            
+            model.jobs.newSoundscapeJob({
+                id:soundscapeId,name:name,playlist:playlist_id,
+                aggregation:aggregation,threshold:threshold,
+                bin:bin,maxhertz:maxhertz,frequency:frequency
+            }, next);
+        },
+        function push_job_to_queue(row){
+            var next = arguments[arguments.length -1];
+            jobQueue.push({
+                name: 'soundscapeJob'+soundscapeId,
+                work: function(callback){
+                    var python = require('child_process').spawn(
+                        __dirname+'/../../.env/bin/python',
+                        [
+                            scriptsFolder+'Soundscapes/playlist2soundscape.py' ,
+                            mysql.escape(soundscapeId),mysql.escape(playlist_id),
+                            mysql.escape(maxhertz),mysql.escape(bin),mysql.escape(aggregation),
+                            mysql.escape(threshold),mysql.escape(project_id),mysql.escape(user_id),
+                            mysql.escape(name),mysql.escape(frequency)
+                        ]
+                    );
+                    var output = "";
+                    python.stdout.on('data', function(data){ 
+                        output += data
+                    });
+                    python.on('close', function(code){ 
+                        if (code !== 0) { 
+                            debug('soundscapeJob '+soundscapeId+' returned error ' + code);
+                        } else {
+                            debug('no error, everything ok, soundscapeJob completed ',soundscapeId);
+                        }
+                        callback();
+                    });
                 }
-            );
+            },
+            1,
+            function() {
+                debug("job done! soundscapeJob:", soundscapeId);
+                model.projects.insertNews({
+                    news_type_id: 11, // soundscape created
+                    user_id: req.session.user.id,
+                    project_id: project_id,
+                    data: JSON.stringify({ soundscape: name })
+                });
+            });
+            next();
         }
-    );
+    ], function(err, data){
+        if(err){
+            if(!response_already_sent){
+                res.json({ err:"Could not create soundscape job"});
+            }            
+            return;
+        } else {
+            res.json({ ok:"job created soundscapeJob:"+soundscapeId });
+        }
+    })
 });
 
 module.exports = router;
