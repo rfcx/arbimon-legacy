@@ -295,7 +295,7 @@ var Soundscapes = {
         ], function(err){
             tx.end(function(err2){
                 if(tx.connection){
-                    connection.release();
+                    tx.connection.release();
                 }
                 if(err){ 
                     callback(err); 

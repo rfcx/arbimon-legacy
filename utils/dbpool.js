@@ -93,6 +93,5 @@ var dbpool = {
         });
     },
 };
-console.log(dbpool.pool);
 
 module.exports = dbpool;
