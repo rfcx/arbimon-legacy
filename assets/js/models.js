@@ -647,8 +647,8 @@
 	    $scope.fields = [
 		{ name: 'Date', key: 'date' },
 		{ name: 'Site', key: 'site' },
-		{ name: 'User precense', key: 'presence' },
-		{ name: 'Model precense' , key: 'model' }
+		{ name: 'User presence', key: 'presence' },
+		{ name: 'Model presence' , key: 'model' }
 		
 	    ];
 
