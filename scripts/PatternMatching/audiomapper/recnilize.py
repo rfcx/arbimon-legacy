@@ -59,6 +59,7 @@ for line in sys.stdin:
         fets.append(high)
         fets.append(jId)
         fets.append(sRate.strip('\n'))
+        fets.append(recUri)
         #print into stdout for next step (modelize.py)
         print ';'.join( str(x) for x in fets )
 

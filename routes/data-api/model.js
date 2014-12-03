@@ -345,18 +345,28 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
 
     model.projects.modelValidationUri(req.params.modelId, function(err, row) {
         if(err) return next(err);
-        var validationUri = row[0].uri        
+        var validationUri = row[0].uri 
+        validationUri = validationUri.replace('.csv','_vals.csv')
         var aws = require('knox').createClient({
             key: config.accessKeyId
           , secret: config.secretAccessKey
           , bucket: config.bucketName
         });
         var sendData = [];
+        
+console.log(validationUri)
         aws.getFile(validationUri, function(err, resp){
+            
             if (err) {
                 console.log("Error fetching validation information file. : "+validationUri)
                 res.json({"err": "Error fetching validation information."});
             }
+            
+            if (resp.statusCode == 404)
+            {
+                return res.json({"nofile": "nofile"});
+            }
+            
             var outData = ''
             resp.on('data', function(chunk) { outData = outData + chunk; });
             resp.on('end',
@@ -367,6 +377,7 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
                 async.eachLimit(lines ,5,
                 function(line,callback)
                 {
+                    
                     if (line == '')
                     {
                         callback()
@@ -375,8 +386,9 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
                     {
                         
                         items = line.split(',');
-                        prec = items[3].trim(' ')
-                        model.recordings.recordingInfoGivenUri(items[0],
+                        var prec = items[1].trim(' ') == 1 ? 'yes' :'no';
+                        var modelprec = items[2].trim(' ') == 1 ? 'yes' :'no';
+                        model.recordings.recordingInfoGivenUri(items[0],req.params.projectUrl,
                         function(err,recData)
                         {
                             if (err) {
@@ -384,8 +396,11 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
                                 res.json({"err": "Error fetching recording information."});
                                 callback('err')
                             }
-                            var rowSent = {presence:prec,site:recData[0].site,date:recData[0].date,id:recData[0].id};
-                            sendData.push(rowSent)
+                            if (recData.length > 0)
+                            {
+                                var rowSent = {presence:prec,model:modelprec,site:recData[0].site,date:recData[0].date,id:recData[0].id};
+                                sendData.push(rowSent)
+                            }
                             callback()
                         });
                         
@@ -397,7 +412,6 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
                     {
                         res.json({"err": "Error fetching recording information."});
                     }
-                    console.log('sendData2: '+sendData)
                     res.json(sendData);
                 }
                 );
@@ -585,16 +599,14 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                                                 1,
                                                 function() {
                                                     console.log("job done! soundscapeJob:", soundscapeId);
-                                                    /*
-                                                    model.models.findName(classifier_id, function(err, rows) {
-                                                        model.projects.insertNews({
-                                                            news_type_id: 9, // model created and trained
-                                                            user_id: req.session.user.id,
-                                                            project_id: project_id,
-                                                            data: JSON.stringify({ model: rows[0].name, classi: name })
-                                                        });
+                                                    
+                                                    model.projects.insertNews({
+                                                        news_type_id: 11, // soundscape created
+                                                        user_id: req.session.user.id,
+                                                        project_id: project_id,
+                                                        data: JSON.stringify({ soundscape: name })
                                                     });
-                                                    */
+                                                    
                                                 });
                                                 res.json({ ok:"job created soundscapeJob:"+soundscapeId });           
                                             }

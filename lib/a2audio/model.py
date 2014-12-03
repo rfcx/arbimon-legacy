@@ -6,19 +6,23 @@ import numpy
 import cPickle as pickle
 from itertools import izip as zip, count
 import random
+import csv
 
 class Model:
 
-    def __init__(self,classid,speciesSpec):
+    def __init__(self,classid,speciesSpec,jobid):
         self.classid = classid
         self.speciesSpec = speciesSpec
         self.data  = numpy.zeros(shape=(0,6))
         self.classes = []
+        self.uris = []
         self.minv = 9999999
         self.maxv = -9999999
+        self.jobId = jobid
         
-    def addSample(self,present,meanfeat,difffeat,maxfeat,minfeat,stdfeat,medfeat):
+    def addSample(self,present,meanfeat,difffeat,maxfeat,minfeat,stdfeat,medfeat,uri):
         self.classes.append(present)
+        self.uris.append(uri)
         if self.minv > minfeat:
             self.minv = minfeat
         if self.maxv < maxfeat:
@@ -54,8 +58,10 @@ class Model:
         
     def validate(self):
         classSubset = [self.classes[i] for i in self.validationDataIndices]
+        self.outClasses = classSubset
+        self.outuris = [self.uris[i] for i in self.validationDataIndices]
         predictions = self.clf.predict(self.data[self.validationDataIndices])
-
+        self.validationpredictions = predictions;
         presentIndeces = [i for i, j in zip(count(), classSubset) if j == '1']
         notPresentIndices = [i for i, j in zip(count(), classSubset) if j == '0']
         
@@ -101,4 +107,10 @@ class Model:
         with open(filename, 'wb') as output:
             pickler = pickle.Pickler(output, -1)
             pickle.dump([self.clf,self.speciesSpec,l,h,c], output, -1)
-        
+            
+    def saveValidations(self,filename):
+        with open(filename, 'wb') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=',')
+            for i in range(0,len(self.outClasses)):
+                spamwriter.writerow([self.outuris[i],self.outClasses[i],self.validationpredictions[i]])
+                

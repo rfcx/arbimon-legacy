@@ -627,7 +627,7 @@ angular.module('audiodata', [
                     $scope.roi = data.lrs[data.lr];
                     $scope.currentDuration = $scope.roi.dur;
                     $scope.currentRoi = data.lr;
-                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/"+$scope.roi.recording;
+                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
                     $scope.currentUri = $scope.roi.uri;
                     $scope.currentlow = $scope.roi.y1;
                     $scope.currenthigh = $scope.roi.y2;

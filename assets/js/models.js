@@ -255,8 +255,12 @@
 				    
 				    modalInstance.result.then
 				    (
-					function () 
+					function (data) 
 					{
+					    if (data.url)
+					    {
+						$location.path(data.url);
+					    }
 					}
 				    );
 				    
@@ -617,16 +621,37 @@
 		validations : vdata
 	    }
             $scope.ok = function () {
-                $modalInstance.close(   );
+                $modalInstance.close(  {} );
             };
+	    
+	    $scope.$watch('data.validations',
+		function()
+		{
+		    if (!$scope.data.validations.nofile) {
+			$scope.valiDetails = true;
+		    }
+		}
+	    );
+	    
 	    $scope.savedhtml = '';
 	    
+	    $scope.valiDetails = false;
+	    
+	    $scope.gotoRec = function($index)
+	    {
+		var selected = $scope.data.validations[$index];
+		var rurl = "/project/"+$scope.url+"/#/visualizer/rec/"+selected.id;
+		$modalInstance.close({url:rurl});
+	    };
+	    
 	    $scope.fields = [
-		{ name: 'Site', key: 'site' },
-		{ name: 'Presence', key: 'presence' },
 		{ name: 'Date', key: 'date' },
+		{ name: 'Site', key: 'site' },
+		{ name: 'User precense', key: 'presence' },
+		{ name: 'Model precense' , key: 'model' }
+		
 	    ];
-	    console.log($scope.data.validations)
+
 	    $scope.validationsDetails = function () {
 		$scope.validationView = false;
             };

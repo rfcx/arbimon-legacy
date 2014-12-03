@@ -31,11 +31,12 @@ sampleRate = 0
 for line in sys.stdin:
     line = line.strip(' ')
     line = line.strip('\n')
-    meanfeat,difffeat,maxfeat,minfeat,stdfeat,medfeat,classid,present,spectrogram,columns ,low , high , jId ,sRate= line.split(';')
+    meanfeat,difffeat,maxfeat,minfeat,stdfeat,medfeat,classid,present,spectrogram,columns ,low , high , jId ,sRate ,recUri= line.split(';')
     lowf = low
     highf = high
     cols =columns
     jobId = int(jId)
+    recUri = recUri.strip('\n')
     sampleRate = int(sRate)
     spectrogram  = spectrogram.strip(' ')
     spectrogram  = spectrogram.strip('\n')
@@ -47,10 +48,10 @@ for line in sys.stdin:
         spec = numpy.vstack((spec,row))
     
     if classid in classes:
-        classes[classid].addSample(present,float(meanfeat),float(difffeat),float(maxfeat),float(minfeat),float(stdfeat),float(medfeat))
+        classes[classid].addSample(present,float(meanfeat),float(difffeat),float(maxfeat),float(minfeat),float(stdfeat),float(medfeat),recUri)
     else:
-        classes[classid] = Model(classid,spec)
-        classes[classid].addSample(present,float(meanfeat),float(difffeat),float(maxfeat),float(minfeat),float(stdfeat),float(medfeat))
+        classes[classid] = Model(classid,spec,jobId)
+        classes[classid].addSample(present,float(meanfeat),float(difffeat),float(maxfeat),float(minfeat),float(stdfeat),float(medfeat),recUri)
 
 modelFilesLocation = tempFolders+"/training_"+str(jobId)+"/"
 
@@ -88,9 +89,13 @@ for i in classes:
     if not classes[i].splitData(useTrainingPresent,useTrainingNotPresent,useValidationPresent,useValidationNotPresent):
         continue
     
+    validationsKey =  'project_'+str(project_id)+'/validations/job_'+str(jobId)+'_vals.csv'
+    validationsLocalFile = modelFilesLocation+'job_'+str(jobId)+'_vals.csv'
+    
     classes[i].train()
     if useValidationPresent > 0:
         classes[i].validate()
+        classes[i].saveValidations(validationsLocalFile);
     
     modFile = modelFilesLocation+"model_"+str(jobId)+"_"+str(i)+".mod"
     classes[i].save(modFile,lowf , highf,cols)
@@ -119,6 +124,9 @@ for i in classes:
     #save model file to bucket
     k = bucket.new_key(modKey)
     k.set_contents_from_filename(modFile)
+    #save validations results to bucket
+    k = bucket.new_key(validationsKey)
+    k.set_contents_from_filename(validationsLocalFile)
     #save vocalization surface png to bucket
     k = bucket.new_key(pngKey)
     k.set_contents_from_filename(pngFilename)
