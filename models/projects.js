@@ -99,7 +99,8 @@ var Projects = {
             owner_id: Joi.number().optional(),
             project_type_id: Joi.number().optional(),
             is_private: Joi.number().optional(),
-            is_enabled: Joi.number().optional()
+            is_enabled: Joi.number().optional(),
+            recording_limit: Joi.number().optional()
         }
         
         Joi.validate(project, schema, function(err, projectInfo){
@@ -108,7 +109,7 @@ var Projects = {
             var values = [];
             
             for( var i in projectInfo) {
-                if(i !== 'project_id') {
+                if(i !== 'project_id' && i !== 'recording_limit') {
                     projectInfo[i] = mysql.escape(projectInfo[i]);
                     values.push(util.format('`%s`=%s', i, projectInfo[i]));
                 }
