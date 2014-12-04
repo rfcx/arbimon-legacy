@@ -18,9 +18,11 @@
     "angular-audio": "*",
     "jquery-ui": "~1.11.2",
     "angular-rangeslider": "~0.0.11",
-    "humane-js": "~3.2.1"
+    "humane-js": "~3.2.1",
+    "ng-csv" : "~0.3.0"
   },
   "resolutions": {
-    "d3": "~3.4.11"
+    "d3": "~3.4.11",
+    "angular": "~1.2.25"
   }
 }

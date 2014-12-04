@@ -148,6 +148,20 @@ module.exports = function(grunt) {
                 cwd: 'bower_components/humane-js/',
                 src: ['humane.min.js', 'themes/libnotify.css'],
                 dest: 'public/assets/humane-js/'
+            },
+            
+            ngCsv : { 
+                expand: true,
+                flatten: true,
+                src: 'bower_components/ng-csv/build/ng-csv.min.js',
+                dest: 'public/assets/ng-csv/'             
+            },
+            
+            angularSanitize : {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/angular-sanitize/angular-sanitize.min.js',
+                dest: 'public/assets/angular-sanitize/'               
             }
         },
 

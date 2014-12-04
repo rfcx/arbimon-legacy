@@ -398,7 +398,7 @@ console.log(validationUri)
                             }
                             if (recData.length > 0)
                             {
-                                var rowSent = {presence:prec,model:modelprec,site:recData[0].site,date:recData[0].date,id:recData[0].id};
+                                var rowSent = {site:recData[0].site,date:recData[0].date,presence:prec,model:modelprec,id:recData[0].id};
                                 sendData.push(rowSent)
                             }
                             callback()

@@ -1,6 +1,6 @@
 (function(angular)
 { 
-    var models = angular.module('models', ['ngTable','ui.bootstrap','a2services', 'ui.select']);
+    var models = angular.module('models', ['ngTable','ui.bootstrap','a2services', 'ui.select' , 'ngSanitize', 'ngCsv']);
     var template_root = '/partials/models/';
     var amazons3 = "https://s3.amazonaws.com/arbimon2/";
     models.controller
@@ -620,6 +620,21 @@
 		freqMax : json['roisamplerate']/2,//ok
 		validations : vdata
 	    }
+	    
+	    $scope.getValidations = function () {
+		
+	        var vals = [];
+		for(var i =0;i<$scope.data.validations.length;i++)
+		{
+		    vals.push({site:$scope.data.validations[i].site,
+			       date:$scope.data.validations[i].date,
+			       user:$scope.data.validations[i].presence,
+			       model:$scope.data.validations[i].model
+			      })
+		}
+                return vals;
+            };
+	    
             $scope.ok = function () {
                 $modalInstance.close(  {} );
             };

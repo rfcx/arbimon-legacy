@@ -153,7 +153,7 @@
                 </table>        
             </div>
         </div>
-        <div class="top-buffer" ng-show="data.tpos != null"><strong>Confusion Matrix:</strong></div>
+        <div class="top-buffer" ng-show="data.tpos != null"><strong>Verification Confusion Matrix:</strong></div>
         <div class="row top-buffer" ng-show="data.tpos != null">
             <div class="col-sm-1"></div>
             <div class="col-sm-1 rotatedtext">
@@ -183,7 +183,10 @@
                 <small><em>P = Present, NP = Not Present</em></small>
             </div>
         </div>
-        <div ng-show="valiDetails" style="padding:10px"><div class="btn btn-default btn-s" ng-click="validationsDetails()">View details</div></div>
+        <div ng-show="valiDetails" style="padding-left:30px;padding-top:10px;">
+            <div class="btn btn-default btn-xs" ng-click="validationsDetails()">Matrix Values</div>
+            <div  class="btn btn-default btn-xs" ng-csv="getValidations()" filename="matrixValues.csv"  csv-header="['Site', 'Date', 'User presence','Model presence']" ><i tooltip="Download Values in CSV" tooltip-placement="bottom" class="fa fa-download"  ></i></div>
+        </div>
     </div>
 </div>
 <div class="modal-body row" ng-hide="validationView">
