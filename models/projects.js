@@ -521,7 +521,7 @@ var Projects = {
     availableRoles: function(callback) {
         var q = "SELECT role_id as id, name, description \n"+
                 "FROM roles \n"+
-                "WHERE name != 'Owner'";
+                "WHERE name != 'Owner' order by level";
                 
         queryHandler(q, callback);
     },
