@@ -25,7 +25,7 @@ from boto.s3.connection import S3Connection
 #
 ##
 #will change this to a external configuration file
-num_cores = int(math.floor(multiprocessing.cpu_count() /2))
+num_cores = int(math.floor(multiprocessing.cpu_count() /(1.5)))
 
 currDir = (os.path.dirname(os.path.realpath(__file__)))
 USAGE = """
@@ -143,23 +143,31 @@ if len(recsToProcess) < 1:
     
 scp = soundscape.Soundscape(aggregation, bin_size, max_bins)
 
-def processRec(rec):
-    with closing(db.cursor()) as cursor:
+def processRec(rec,config):
+    id = rec['id']
+    log.write('------------------START WORKER THREAD LOG (id:'+str(id)+')------------------')
+    try:
+        db1 = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
+    except MySQLdb.Error as e:
+        log.write('worker id'+str(id)+' log: worker cannot connect to db')
+        return None;
+    with closing(db1.cursor()) as cursor:
         cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
-        db.commit()   
+        db1.commit()   
     results = []
     date = datetime.strptime( rec['date'], '%Y-%m-%d %H:%M:%S')
-    id = rec['id']
+    
     uri = rec['uri']
-    log.write('rec uri:'+uri)
+    log.write('worker id'+str(id)+' log: rec uri:'+uri)
     start_time_rec = time.time()
     recobject = Rec(uri,workingFolder,config,config[4],log,False)
-    log.write('rec from uri'+ str(time.time()-start_time_rec))
+    log.write('worker id'+str(id)+' log: rec from uri'+ str(time.time()-start_time_rec))
     if recobject .status == 'HasAudioData':
         localFile = recobject.getLocalFileLocation()
         if localFile is None:
+            log.write('------------------END WORKER THREAD LOG (id:'+str(id)+')------------------')
             return None;
-        log.write('/usr/bin/Rscript'+currDir+'/fpeaks.R'
+        log.write('worker id'+str(id)+' log: cmd: /usr/bin/Rscript '+currDir+'/fpeaks.R'
                                  +' '+localFile
                                  +' '+ str(threshold)
                                  +' '+ str(bin_size)
@@ -173,32 +181,35 @@ def processRec(rec):
                                  ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
         if stderr and 'LC_TIME' not in stderr:
-            log.write('fpeaks.R:'+ str(time.time()-start_time_rec)+" stdout: "+stdout+" stderr: "+stderr)
+            log.write('worker id'+str(id)+' log: fpeaks.R err:'+ str(time.time()-start_time_rec)+" stdout: "+stdout+" stderr: "+stderr)
             os.remove(localFile)
-            log.write('Error in recording:'+ uri )
-            with closing(db.cursor()) as cursor:
+            log.write('worker id'+str(id)+' log: Error in recording:'+ uri )
+            with closing(db1.cursor()) as cursor:
                 cursor.execute('INSERT INTO `recordings_errors`(`recording_id`, `job_id`) VALUES ('+str(id)+','+str(job_id)+') ')
-                db.commit()
+                db1.commit()
+            log.write('------------------END WORKER THREAD LOG (id:'+str(id)+')------------------')
             return None
         elif stdout:
-            log.write('fpeaks.R:'+ str(time.time()-start_time_rec)+" stdout: "+stdout+" stderr: "+stderr)
+            log.write('worker id'+str(id)+' log: fpeaks.R: ok'+ str(time.time()-start_time_rec)+" stdout: "+stdout+" stderr: "+stderr)
             os.remove(localFile)
             if 'err' in stdout:
                 return None
             freqs = stdout.strip(',')
             freqs = [float(i) for i in freqs.split(',')]
             results = {"date":date,"id":id,"freqs":freqs}
+            log.write('------------------END WORKER THREAD LOG (id:'+str(id)+')------------------')
             return results
     else:
         print 'invalid recording:'+uri
-        log.write('Invalid recording:'+ uri )
-        with closing(db.cursor()) as cursor:
+        log.write('worker id'+str(id)+' log: Invalid recording:'+ uri )
+        with closing(db1.cursor()) as cursor:
             cursor.execute('INSERT INTO `recordings_errors`(`recording_id`, `job_id`) VALUES ('+str(id)+','+str(job_id)+') ')
-            db.commit()
+            db1.commit()
+        log.write('------------------END WORKER THREAD LOG (id:'+str(id)+')------------------')
         return None
     
 start_time_all = time.time()
-resultsParallel = Parallel(n_jobs=num_cores)(delayed(processRec)(rec) for rec in recsToProcess)
+resultsParallel = Parallel(n_jobs=num_cores)(delayed(processRec)(rec,config) for rec in recsToProcess)
 log.write("all recs parallel ---" + str(time.time() - start_time_all))
 if len(resultsParallel)>0:
     log.write('processing recordings results: '+str(len(resultsParallel)))
