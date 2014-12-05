@@ -625,7 +625,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             });
             next();
         }
-    ], function(err, data){
+    ], function(err, job_id){
         if(err){
             if(!response_already_sent){
                 res.json({ err:"Could not create soundscape job"});
