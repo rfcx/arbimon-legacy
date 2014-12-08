@@ -2,8 +2,14 @@
 (function(angular)
 { 
     
-    var register = angular.module('register' , ['ui.bootstrap']);
+    var register = angular.module('register' , ['ui.bootstrap','angularytics']);
     
+    register.config(function(AngularyticsProvider) {
+       AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
+    });
+    register.run(function(Angularytics) {
+        Angularytics.init();
+    });  
     register.controller('UserRegisterCtrl', function($scope, $modal, $http){
         
         $scope.data = {

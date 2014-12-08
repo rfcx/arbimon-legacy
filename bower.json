@@ -19,7 +19,8 @@
     "jquery-ui": "~1.11.2",
     "angular-rangeslider": "~0.0.11",
     "humane-js": "~3.2.1",
-    "ng-csv" : "~0.3.0"
+    "ng-csv" : "~0.3.0",
+    "angularytics" : "~0.3.0"
   },
   "resolutions": {
     "d3": "~3.4.11",

@@ -1,4 +1,10 @@
-angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane'])
+angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane','angularytics']).
+config(function(AngularyticsProvider) {
+    AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
+}).
+run(function(Angularytics) {
+    Angularytics.init();
+})
 .controller('HomeCtrl', function($scope, $http, $modal, notify) {
     
     $scope.currentPage = 1;

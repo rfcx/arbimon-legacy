@@ -162,6 +162,13 @@ module.exports = function(grunt) {
                 flatten: true,
                 src: 'bower_components/angular-sanitize/angular-sanitize.min.js',
                 dest: 'public/assets/angular-sanitize/'               
+            },
+            
+            angularytics : {
+               expand: true,
+               flatten: true,
+               src: 'bower_components/angularytics/dist/angularytics.min.js',
+               dest: 'public/assets/angularytics/'           
             }
         },
 
