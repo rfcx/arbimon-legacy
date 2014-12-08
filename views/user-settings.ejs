@@ -40,7 +40,7 @@
                             ng-model="user.lastname">
                     </div>
                     
-                    <button class="btn btn-primary" ng-click="saveName()">
+                    <button class="btn btn-primary" ng-click="saveName() | trackEvent:'User Settings':'saveName'">
                         <i class="fa fa-floppy-o"></i> Save
                     </button>
                 </form>
@@ -68,7 +68,7 @@
                             placeholder="repeat new password">
                     </div>
                     <p ng-hide="(newpass1 !== newpass2) || !pass.newpass1.$valid">Passwords match!</p>
-                    <button class="btn btn-primary" ng-click="changePass()" ng-disabled="(newpass1 !== newpass2) || !pass.newpass1.$valid">
+                    <button class="btn btn-primary" ng-click="changePass() | trackEvent:'User Settings':'changePass'" ng-disabled="(newpass1 !== newpass2) || !pass.newpass1.$valid">
                         <i class="fa fa-key"></i> change password
                     </button>
                 </form>

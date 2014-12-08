@@ -1,6 +1,6 @@
 <div class="row">
     <div class="col-sm-5">
-        <button class="btn btn-default" ng-click="batchInfo()">
+        <button class="btn btn-default" ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
             <i class="fa fa-pencil-square-o"></i> Batch Info
         </button>
         <div class="btn btn-primary btn-file">
@@ -8,17 +8,17 @@
             <input accept="audio/x-wav,audio/wav,audio/mpeg,audio/flac" nv-file-select uploader="uploader" type="file" multiple>
         </div>
         <button type="button" class="btn btn-success" 
-            ng-click="verifyAndUpload()" 
+            ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'" 
             ng-disabled="!(uploader.getNotUploadedItems().length && info)">
             <i class="fa fa-cloud-upload"></i> Start
         </button>
         <button type="button" class="btn btn-warning" 
-            ng-click="uploader.cancelAll()" 
+            ng-click="uploader.cancelAll() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'" 
             ng-disabled="!uploader.isUploading">
             <i class="fa fa-ban"></i> Stop all
         </button>
         <button type="button" class="btn btn-danger btn-s" 
-            ng-click="uploader.clearQueue()" 
+            ng-click="uploader.clearQueue() | trackEvent:'Audiodata-Upload':'uploader.clearQueue'" 
             ng-disabled="!uploader.queue.length">
             <i class="fa fa-trash"></i> Remove all
         </button>
@@ -71,10 +71,10 @@
                         <span ng-show="item.isDuplicate">Duplicate</span>
                     </td>
                     <td nowrap>
-                        <button type="button" class="btn btn-warning btn-xs" ng-click="item.cancel()" ng-disabled="!item.isUploading">
+                        <button type="button" class="btn btn-warning btn-xs" ng-click="item.cancel() | trackEvent:'Audiodata-Upload':'item.cancel'" ng-disabled="!item.isUploading">
                             <i class="fa fa-ban"></i> Stop
                         </button>
-                        <button type="button" class="btn btn-danger btn-xs" ng-click="item.remove()">
+                        <button type="button" class="btn btn-danger btn-xs" ng-click="item.remove() | trackEvent:'Audiodata-Upload':'item.remove'">
                             <i class="fa fa-trash"></i> Remove
                         </button>
                     </td>

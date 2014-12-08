@@ -87,14 +87,14 @@
                     </div>
                 </div>
                 <div class="a2-filter-row">
-                    <button class="btn btn-default" ng-click="applyFilters()">
+                    <button class="btn btn-default" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'">
                         Apply filters
                     </button>
-                    <button class="btn btn-default" ng-click="resetFilters()">
+                    <button class="btn btn-default" ng-click="resetFilters() | trackEvent:'Audiodata-Recordings':'resetFilters'">
                         <i class="fa fa-undo"></i> Reset
                     </button>
                     <button class="btn btn-default" 
-                        ng-click="createPlaylist()" 
+                        ng-click="createPlaylist() | trackEvent:'Audiodata-Recordings':'createPlaylist'" 
                         tooltip="Save results as playlists"
                         tooltip-trigger="mouseenter">
                         <i class="fa fa-list-alt"></i>

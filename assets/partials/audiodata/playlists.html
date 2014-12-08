@@ -1,13 +1,13 @@
 <div class="row">
     <div class="col-sm-4">
         <button class="btn btn-default" 
-            ng-click="edit()"
+            ng-click="edit() | trackEvent:'Audiodata-playlists':'edit clicked'"
             tooltip="Edit Name"
             tooltip-trigger="mouseenter">
             <i class="fa fa-pencil"></i>
         </button>
         <button class="btn btn-danger"
-            ng-click="del()"
+            ng-click="del() | trackEvent:'Audiodata-playlists':'del clicked'"
             tooltip="Delete"
             tooltip-trigger="mouseenter">
             <i class="fa fa-trash"></i>

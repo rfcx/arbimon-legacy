@@ -1,13 +1,13 @@
 <div class="row toolbar">
     <div class="col-sm-5">
             <button class="btn btn-default" 
-                ng-click="create()"
+                ng-click="create() | trackEvent:'Dashboard-sites':'create site'"
                 tooltip="Add a site"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-plus"></i>
             </button>
             <button class="btn btn-default"
-                ng-click="edit()"
+                ng-click="edit() | trackEvent:'Dashboard-sites':'edit site'"
                 ng-class="{ disabled: !selected }"
                 tooltip="Edit site info"
                 tooltip-trigger="mouseenter">
@@ -60,7 +60,7 @@
                             <input class="form-control" id="alt" type="text" ng-model="temp.alt" placeholder="Altitude">
                         </div>
                     </div>
-                    <button class="btn btn-primary" ng-click="save()"><i class="fa fa-floppy-o"></i> Save</button>
+                    <button class="btn btn-primary" ng-click="save() | trackEvent:'Dashboard-sites':'save site'"><i class="fa fa-floppy-o"></i> Save</button>
                 </form>
             </div>
         </div>

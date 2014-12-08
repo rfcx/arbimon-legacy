@@ -1,7 +1,7 @@
 <div class="col-sm-10 span10 padded-view-div" >
    <div class="row">
       <div class="col-sm-2">
-          <h3>Models <a class="btn btn-sm btn-default"  tooltip="Create New Model" tooltip-placement="right"  ng-click="newModel()" ><i class="fa fa-plus" ></i></a></h3>            
+          <h3>Models <a class="btn btn-sm btn-default"  tooltip="Create New Model" tooltip-placement="right"  ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'" ><i class="fa fa-plus" ></i></a></h3>            
       </div>
       <div  ng-hide="!loading" class="col-sm-1 loading-top-padding" >
         <loader></loader>
@@ -22,10 +22,10 @@
                 {{model.muser}}
             </td>
             <td>
-                <button class="btn btn-default btn-xs" ng-click="showModelDetails(model.model_id)">Show details</button>
+                <button class="btn btn-default btn-xs" ng-click="showModelDetails(model.model_id) | trackEvent:'Analysis-Model list':'show model details'">Show details</button>
             </td>
             <td>
-                <button class="btn btn-default btn-xs" ng-click="deleteModel(model.model_id,model.mname)">Delete</button>
+                <button class="btn btn-default btn-xs" ng-click="deleteModel(model.model_id,model.mname) | trackEvent:'Analysis-Model list':'delete model'">Delete</button>
             </td>
             <!--
             <td>
@@ -38,20 +38,20 @@
         </tr>
     </table>
     <div class="jumbotron" >
-    <h3>{{ infopanedata }}  <a ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading" ng-click="newModel()">Create a model</a></h3>
+    <h3>{{ infopanedata }}  <a ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading" ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">Create a model</a></h3>
     </div>
 </div>
 <div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
   <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">
-    <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Model list':'alert-success closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
     {{ successInfo }}
   </div>
   <div class="alert alert-danger alert-dismissible"  role="alert" id="errorDiv" ng-show="showError">
-    <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Model list':'alert-danger closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
     {{ errorInfo }}
   </div>
   <div class="alert alert-info alert-dismissible"  role="alert" id="infoDiv" ng-show="showInfo">
-    <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Model list':'alert-info closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
     {{ infoInfo }}
   </div>
 </div>

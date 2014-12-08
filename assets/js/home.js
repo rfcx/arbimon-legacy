@@ -121,7 +121,7 @@ run(function(Angularytics) {
         }
         
         
-        if($scope.project.description.length < 80) {
+        if($scope.project.description && $scope.project.description.length < 80) {
             $scope.error_description = true;
             $scope.errors.push({ 
                 type: 'danger', 

@@ -13,13 +13,13 @@
                 <a>No Playlists in Project</a>
             </li>
             <li ng-hide="browser.$type.loading.playlists" ng-repeat="playlist in browser.$type.playlists" ng-class="{active: browser.$type.playlist == playlist}">
-                <a ng-click="browser.$type.playlist = playlist">{{playlist.name}}</a>
+                <a ng-click="browser.$type.playlist = playlist | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist'">{{playlist.name}}</a>
                 <span class="badge">{{playlist.count}}</span>
             </li>
         </ul>
 </div>
 </td><td><table><tr><td ng-repeat="link in browser.lovo.links">
-    <button class="btn btn-default" ng-click="browser.$type.resolve_link(link)"
+    <button class="btn btn-default" ng-click="browser.$type.resolve_link(link) | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist object'"
         tooltip="{{link.tooltip}}" tooltip-append-to-body="true" tooltip-placement="bottom"
     ><i class="fa" ng-class="link.icon"></i></button>
 </td></tr></table></td></tr></table>

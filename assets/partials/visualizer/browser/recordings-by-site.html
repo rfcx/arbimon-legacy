@@ -14,7 +14,7 @@
                     <a>No Stations in Project</a>
                 </li>
                 <li ng-hide="browser.$type.loading.sites" ng-repeat="site in browser.$type.sites" ng-class="{active: browser.$type.site == site}">
-                    <a ng-click="browser.$type.site = site">{{site.name}}</a>
+                    <a ng-click="browser.$type.site = site | trackEvent:'Visualizer-Recordings-By-Site':'open site'">{{site.name}}</a>
                     <span class="badge">{{site.rec_count}}</span>
                 </li>
             </ul>

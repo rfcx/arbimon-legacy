@@ -184,7 +184,7 @@
             </div>
         </div>
         <div ng-show="valiDetails" style="padding-left:30px;padding-top:10px;">
-            <div class="btn btn-default btn-xs" ng-click="validationsDetails()">Matrix Values</div>
+            <div class="btn btn-default btn-xs" ng-click="validationsDetails() | trackEvent:'Analysis-Model info':'validations details'">Matrix Values</div>
             <div  class="btn btn-default btn-xs" ng-csv="getValidations()" filename="matrixValues.csv"  csv-header="['Site', 'Date', 'User presence','Model presence']" ><i tooltip="Download Values in CSV" tooltip-placement="bottom" class="fa fa-download"  ></i></div>
         </div>
     </div>
@@ -194,7 +194,7 @@
         <div class="row">
         <h3 class="modal-title col-sm-6">Validations Details</h3>
         <div class="col-sm-4"></div>
-        <button class="btn btn-default btn-sm col-sm-1" ng-click="restore()">Go Back</button>
+        <button class="btn btn-default btn-sm col-sm-1" ng-click="restore() | trackEvent:'Analysis-Model info':'hide validations details'">Go Back</button>
         </div>
         <div  style="overflow-y:scroll;height:317px;">
             <a2-table fields="fields" rows="data.validations" no-checkbox on-select="gotoRec($index)"></a2-table>
@@ -202,7 +202,7 @@
     </div>
 </div>
 <div class="modal-footer">        
-    <button class="btn btn-primary" ng-click="ok()">Close</button>  
+    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Model info':'close model details'">Close</button>  
 </div>  
 
 

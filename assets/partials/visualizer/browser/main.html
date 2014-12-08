@@ -3,7 +3,7 @@
         <div class="col-sm-12 btn-toolbar">
             <div class="btn-group" ng-repeat="type_group in browser.types">
                 <button ng-repeat="type in type_group" class="btn btn-default"
-                    ng-class="browser.type == type ? 'active' : ''" ng-click="browser.type = type"
+                    ng-class="browser.type == type ? 'active' : ''" ng-click="browser.type = type | trackEvent:'Visualizer-Main':'setting browser type'"
                     tooltip="{{type.tooltip}}" tooltip-append-to-body="true" tooltip-placement="bottom-left"
                 ><i ng-class="type.icon"></i></button>
             </div>
@@ -23,7 +23,7 @@
                     ng-hide="browser.loading.times"
                     ng-repeat="visobj in browser.lovo.list"
                     ng-class=" (browser.visobj.id == visobj.id ? 'active ' : ' ') + 'visobj-'+browser.lovo.object_type"
-                    ng-click="browser.visobj = visobj">
+                    ng-click="browser.visobj = visobj | trackEvent:'Visualizer-Main':'setting visobj'">
                     <div class="clearfix">
                         {{visobj.datetime | moment : 'hh:mm A'}}
                         <div class="pull-right">
