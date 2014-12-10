@@ -51,7 +51,13 @@ var Jobs = {
                     ")", callback
                 );
             },
-        }
+        },
+        test_job: {
+            type_id : 5,
+            new: function(params, db, callback) {
+                callback();
+            },
+        }        
     },
 
     newJob: function(params, type, callback) {

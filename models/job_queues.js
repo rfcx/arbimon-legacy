@@ -1,10 +1,13 @@
+var os  = require('os');
 var mysql = require('mysql');
 var async = require('async');
 var validator = require('validator');
 var dbpool = require('../utils/dbpool');
 var sqlutil = require('../utils/sqlutil');
+var debug    = require('debug')('arbimon2:model:jobqueues');
 var Jobs = require('./jobs');
 var arrays_util  = require('../utils/arrays');
+
 
 var queryHandler = dbpool.queryHandler;
 
@@ -35,34 +38,78 @@ JobQueue.new = function(callback) {
     var freemem  = os.freemem();
     queryHandler(
         "INSERT INTO `job_queues` (\n"+
-        "    pid, host, platform, arch, cpus, freemem, heartbeat \n"+
+        "    pid, host, platform, arch, cpus, freemem, heartbeat, is_alive \n"+
         ") VALUES (\n    " + mysql.escape([
-            pid, host, cpus, freemem
-        ]) + ", NOW()\n)", function(err, result){
+            pid, host, platform, arch, cpus, freemem
+        ]) + ", NOW(), 1\n)", function(err, result){
         if(err){ callback(err); return; }
+        debug("New JobQueue created. Id : %s", result.insertId);
         new JobQueue(result.insertId, callback);
     });
 };
 
 JobQueue.find = function(id, callback) {
     queryHandler(
-        "SELECT job_queue_id as id, pid, host, platform, arch, cpus, hearbeat \n" +
+        "SELECT job_queue_id as id, pid, host, platform, arch, cpus, heartbeat, is_alive as alive \n" +
         "FROM `job_queues` \n"+
         "WHERE job_queue_id = " + mysql.escape(id), callback);
-},
+};
+
+/** Cleans up after job queues that have become unresponsive.
+ * @callback {Function} callback(err, ...) called back after the aciton is done. 
+ *                          cleaned_up is the number of job queues that were cleaned up.
+ **/
+JobQueue.cleanup_stuck_queues = function(callback){
+    var timeout = config('job-queue').heartbeat_timeout || 300000;
+
+    async.waterfall([
+        function kill_unresponsive_job_queues(next){
+            queryHandler(
+                "UPDATE `job_queues` \n"+
+                "SET is_alive = 0 \n" +
+                "WHERE heartbeat < DATE_SUB(NOW(), INTERVAL "+(timeout/1000.0)+" SECOND) \n" + 
+                "  AND is_alive = 1", 
+            next);
+        },
+        function dequeue_initializing_jobs_from_dead_queues(){
+            var next = arguments[arguments.length];
+            queryHandler(
+                "UPDATE `jobs` J \n" +
+                "  JOIN `job_queue_enqueued_jobs` EJ ON J.job_id = EJ.job_id \n"+
+                "  JOIN `job_queues` JQ ON JQ.job_queue_id = EK.job_queue_id \n"+
+                "SET J.state = 'waiting' \n" +
+                "WHERE J.state='initializing' \n"+
+                "  AND J.last_update < DATE_SUB(NOW(), INTERVAL "+(timeout/1000.0)+" SECOND) \n" + 
+                "  AND JQ.is_alive = 0", 
+            next);
+        }
+    ], callback);
+};
 
 
 JobQueue.prototype = {
-    heartbeat: function(callback) {
+    /** Sends a heartbeat to the database.
+     * @callback {Function} callback(err) called back after the action is done.
+     **/
+    send_heartbeat: function(callback) {
         queryHandler(
             "UPDATE `job_queues` \n"+
             "SET freemem = " + os.freemem() + ", \n"+
             "    heartbeat = NOW() \n" +
-            "WHERE job_queue_id = " + (this.id | 0), 
-        callback);
+            "WHERE job_queue_id = " + (this.id | 0) + " \n" +
+            "  AND is_alive = 1", function(err, result){
+            this.alive = !!(result && result.affectedRows);
+            if(err){ callback(err); } else { callback(); }
+        });
     },
 
+    /** Enqueues one job into the jobqueue.
+     * @callback {Function} callback called back after the heartbeat is sent. 
+     **/
     enqueue_one_waiting_job: function(job_queue, count, callback) {
+        if(!this.alive){
+            callback(new Error("Can't enqueue jobs, since job queue is marked as not alive."));
+        }
         var job_queue_id = this.id | 0;
         var job_id, jobs_to_check = true;
         async.doWhilst(

@@ -1,4 +1,5 @@
 {
     "delay" : 10000,
+    "heartbeat_timeout" : 300000,
     "concurrency" : -2
 }
