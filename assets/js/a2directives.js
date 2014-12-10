@@ -218,7 +218,7 @@ angular.module('a2directives', ['a2services'])
             scope.formatString = function(value) {
                 
                 if(value instanceof Date){
-                    return moment(value).utc().format(attrs.dateFormat || 'MMM D YYYY, HH:mm');
+                    return moment(value).utc().format(attrs.dateFormat || 'lll');
                 }
                 return value;
             };

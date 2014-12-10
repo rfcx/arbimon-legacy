@@ -10,7 +10,7 @@
     <table ng-table="tableParams" class="table" show-filter="true" >
         <tr ng-repeat="soundscape in soundscapesData" >
             <td data-title="'Date'" class="no-wrap-table-cell" sortable="'date'" >
-                {{soundscape.date | date:'dd-MM-yyyy HH:mm' }} 
+                {{soundscape.date | momentformat }} 
             </td> 
             <td data-title="'Name'" class="no-wrap-table-cell" sortable="'name'"  filter="{ 'name': 'text' }">
                 {{soundscape.name}}
