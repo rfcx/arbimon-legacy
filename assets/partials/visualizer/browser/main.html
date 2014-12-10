@@ -25,10 +25,7 @@
                     ng-class=" (browser.visobj.id == visobj.id ? 'active ' : ' ') + 'visobj-'+browser.lovo.object_type"
                     ng-click="browser.visobj = visobj | trackEvent:'Visualizer-Main':'setting visobj'">
                     <div class="clearfix">
-                        {{visobj.datetime | moment : 'hh:mm A'}}
-                        <div class="pull-right">
-                            {{visobj.name || visobj.file}}
-                        </div>
+                            {{visobj.caption || visobj.name}}
                     </div>
                     <div class="thumbnail-viewer">
                         <img ng-src="{{visobj.thumbnail}}"

@@ -23,6 +23,9 @@ angular.module('a2browser_recordings_by_site', [])
                 var key = [site.name, date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
                 Project.getRecordings(key, {show:'thumbnail-path'},(function(recordings){
                     recordings = $filter('orderBy')(recordings, 'datetime');
+                    recordings.forEach(function(recording){
+                        recording.caption = [recording.site, moment(recording.datetime).format('lll')].join(', ');
+                    });
                     this.list = recordings;
                     this.count = recordings.length;
                     d.resolve(false);
