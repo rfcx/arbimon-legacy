@@ -20,26 +20,26 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
         var e = {
             width  : $el.width(),
             height : $el.height()
-        }
+        };
         
         var affix_left    = $el.attr('data-affix-left') | 0;
         var affix_right   = $el.attr('data-affix-right');
         var affix_align_h = $el.attr('data-affix-align-h');
-        if(affix_right != undefined){
+        if(affix_right !== undefined){
             affix_left = v.width - $el.width() - (affix_right|0);
-        } else if(affix_align_h != undefined){
+        } else if(affix_align_h !== undefined){
             affix_left = v.left + (v.width - $el.width()) * affix_align_h;
         }
         var affix_top     = $el.attr('data-affix-top' ) | 0;
         var affix_bottom  = $el.attr('data-affix-bottom');
         var affix_align_v = $el.attr('data-affix-align-v');
-        if(affix_bottom != undefined){
+        if(affix_bottom !== undefined){
             affix_top = v.height - $el.height() - (affix_bottom|0);
-        } else if(affix_align_v != undefined){
+        } else if(affix_align_v !== undefined){
             affix_top = v.top + (v.height - $el.height()) * affix_align_v;
         }
         $el.css({position:'absolute', left : affix_left + $viewport.scrollLeft(), top  : affix_top  + $viewport.scrollTop()});
-    }
+    };
 })
 .directive('a2VisualizerSpectrogram', function(a2BrowserMetrics, a2AffixCompute){
     var layout_tmp = {
@@ -364,7 +364,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
             $scope.layout.apply($element.width(), $element.height());
             $scope.onScrolling();
         }
-    }
+    };
 })
 .directive('a2VisualizerSpectrogramLayer', function(layer_types, $compile, $templateFetch){
     return {
@@ -384,7 +384,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 });
             }
         }
-    }
+    };
 })
 .directive('a2VisualizerSpectrogramAffixed', function(a2AffixCompute){
     return {
@@ -394,19 +394,19 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
             var $root = $element.closest('.visualizer-root');
             var $eloff = $element.offset(), $roff = $root.offset();
             if($roff) {
-                if($element.attr('data-affix-left') == undefined){
+                if($element.attr('data-affix-left') === undefined){
                     $element.attr('data-affix-left', $eloff.left - $roff.left);
                 }
-                if($element.attr('data-affix-top') == undefined){
+                if($element.attr('data-affix-top') === undefined){
                     $element.attr('data-affix-top', $eloff.top - $roff.top);
                 }
             }
             a2AffixCompute($element.offsetParent(), $element, $scope.layout);
             $scope.$watch(function(){
-                return [$element.width(), $element.height()]
+                return [$element.width(), $element.height()];
             }, function(){
                 a2AffixCompute($element.offsetParent(), $element, $scope.layout);
-            }, true)
+            }, true);
         }
-    }
+    };
 });
