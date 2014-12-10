@@ -5,7 +5,7 @@
     var amazons3 = "https://s3.amazonaws.com/arbimon2/";
     models.controller
     ('ModelsCtrl' , 
-        function ($scope,$http,$modal,$filter,$sce, ngTableParams,Project,JobsData,$location) 
+        function ($scope, $http, $modal, $filter, $sce, ngTableParams,Project,JobsData,$location) 
         {
 	    $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
@@ -697,4 +697,3 @@
     );
 }
 )(angular);
-

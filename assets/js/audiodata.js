@@ -6,61 +6,19 @@ angular.module('audiodata', [
     'visualizer-training-sets'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
-   var audiodataHistory = [];
-   var audiodataVisited = false;
-    $urlRouterProvider
-    .rule(  //audiodata route HISTORY
-       function ($injector, $location , $state)
-       {
-            var path = $location.path();
-            var m =/audiodata\/?(.*)/.exec(path);
-            if(m)
-            {
-                audiodataVisited = true;
-                
-                if (audiodataHistory.length==2)
-                {
-                    var loc0 = audiodataHistory[0].split('/');
-                    var loc1 = audiodataHistory[1].split('/');
-                    if(loc0[1] != loc1[1])
-                    {
-                        audiodataHistory.pop();
-                        $location.replace().path(audiodataHistory[0]); 
-                    }
-                    else
-                    {
-                        audiodataHistory.pop();
-                        audiodataHistory.pop();
-                        if (path !== "")
-                            audiodataHistory.push(path);
-                    }
-                }
-                else
-                {
-                    audiodataHistory.pop();
-                    if (path !== "")
-                        audiodataHistory.push(path);
-                }
-            }
-            else if (audiodataVisited)
-            {
-                if(audiodataHistory.length==2)
-                {
-                    audiodataHistory.pop();
-                    if (path !== "")
-                        audiodataHistory.push(path);
-                }
-                else
-                {
-                    if (path !== "")
-                        audiodataHistory.push(path);
-                }
-            }
-       }
-    )
-    .when("/audiodata", "/audiodata/recordings");
+    $urlRouterProvider.when("/audiodata", "/audiodata/recordings");
 
-    $stateProvider.state('audiodata.recordings', {
+    $stateProvider.state('audiodata', {
+        url: '/audiodata',
+        views: {
+            'audiodata': {
+                templateUrl: '/partials/audiodata/index.html'
+            }
+        },
+        deepStateRedirect: true, 
+        sticky: true,
+    })
+    .state('audiodata.recordings', {
         url: '/recordings',
         controller: 'RecsCtrl',
         templateUrl: '/partials/audiodata/recordings.html'
