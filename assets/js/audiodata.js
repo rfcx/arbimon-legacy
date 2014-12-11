@@ -449,7 +449,7 @@ angular.module('audiodata', [
     $scope.selectedName = '';
     $scope.species = '';
     $scope.songtype = '';
-    
+    $scope.showSetDetails = false;
     a2TrainingSets.getList(function(data){
         $scope.sets = data.map(function(d) {
             d.date_created = new Date(d.date_created);
@@ -591,7 +591,11 @@ angular.module('audiodata', [
         $scope.projecturl = info.url;
     });
  
- 
+    $scope.closeSetDetails = function()
+    {
+       $scope.showSetDetails = false;
+    };
+    
     $scope.add_new_tset = function(){
         $modal.open({
             templateUrl : '/partials/visualizer/modal/add_tset.html',
@@ -611,6 +615,7 @@ angular.module('audiodata', [
         {
             if (data.ls)
             {
+                $scope.showSetDetails = true;
                 $scope.selectedSet = data.ls;
                 $scope.selectedName = $scope.selectedSet.name;
                 $scope.species = data.sp;
@@ -674,6 +679,7 @@ angular.module('audiodata', [
     );
     $scope.loaderDisplay = false;
     $scope.displaySetData = function($index) {
+        $scope.showSetDetails = true;
         $scope.norois = false;
         $scope.loaderDisplay = true;
         a2TrainingSetHistory.setLastSet($scope.sets[$index]);

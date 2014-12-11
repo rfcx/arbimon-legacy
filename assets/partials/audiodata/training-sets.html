@@ -30,14 +30,28 @@
     </div>
     <div ng-show="norois">No ROIs in Training Set {{selectedName}}. <a ui-sref="visualizer" href="#/visualizer">Open Visualizer to add ROIs.</a></div>
     <div class="col-sm-5 panel panel-default"  ng-show="loaderDisplay"><div class="trainingSetLoader"><loader></loader></div></div>
-    <div class="col-sm-5 panel panel-default" ng-show="rois.length">
+    <div class="col-sm-5 panel panel-default" ng-show="rois.length && showSetDetails" >
         <div class="panel-body">
             <div class="row">
-                <div class="col-sm-6">
-                   <strong>Set Name:</strong> {{selectedName}}
+                <div class="col-sm-6" >
+                    <div class="row">
+                        <div class="col-xs-2">
+                            <strong>Name:</strong>
+                        </div>
+                        <div class="col-sm-9 hidelongtext" >
+                            {{selectedName}}
+                        </div>
+                    </div>
                 </div>
                 <div class="col-sm-6">
-                    <strong>ROI Count :</strong>  {{rois.length}}
+                    <div class="row">
+                        <div class="col-sm-9">
+                            <strong>ROI Count :</strong>  {{rois.length}}
+                        </div>
+                        <div class="col-sm-1">
+                            <button ng-click="closeSetDetails()" class="btn btn-default btn-xs">X</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="row">
