@@ -193,7 +193,6 @@ angular.module('a2directives', ['a2services'])
                     return;
 
                 scope.selected = row;
-
                 if(attrs.onSelect)
                     scope.onSelect({ $index: $index });
             };

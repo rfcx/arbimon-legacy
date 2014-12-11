@@ -440,7 +440,7 @@ angular.module('audiodata', [
 )
 .controller('TrainingSetsCtrl', function($scope, a2TrainingSets, Project, $modal, a2TrainingSetHistory) {
     $scope.fields = [
-        { name: 'Name', key: 'name' },
+        { name: 'Name', key: 'name' , tdclass :'widthtd hidelongtext' },
         { name: 'Set type', key: 'type' },
         { name: 'Date created', key: 'date_created' },
     ];
