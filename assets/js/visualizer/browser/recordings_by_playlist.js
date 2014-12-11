@@ -15,6 +15,9 @@ angular.module('a2browser_recordings_by_playlist', [])
             } else {
                 a2Playlists.getData(self.playlist.id, {show:'thumbnail-path'}, function(recordings){
                     self.list = recordings;
+                    recordings.forEach(function(recording){
+                        recording.caption = [recording.site, moment(recording.datetime).format('lll')].join(', ');
+                    });
                     self.count  = recordings.length;
                     d.resolve(false);
                 });

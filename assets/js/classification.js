@@ -3,7 +3,15 @@
     var classification = angular.module('classification', ['ui.bootstrap' , 'a2services']);
     var template_root = '/partials/classification/';
 
-    classification.controller
+    classification
+    .filter
+    ('momentformat',
+    function() {
+	return function(input) {
+	    return moment(input).format('lll');
+	};
+    })
+    .controller
     ('ClassificationCtrl' , 
         function ($scope,$http,$modal,$filter,$sce,Project, ngTableParams,JobsData,a2Playlists,$location) 
         {

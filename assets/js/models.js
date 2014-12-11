@@ -3,7 +3,15 @@
     var models = angular.module('models', ['ngTable','ui.bootstrap','a2services', 'ui.select' , 'ngSanitize', 'ngCsv']);
     var template_root = '/partials/models/';
     var amazons3 = "https://s3.amazonaws.com/arbimon2/";
-    models.controller
+    models
+    .filter
+    ('momentformat',
+    function() {
+	return function(input) {
+	    return moment(input).format('lll');
+	};
+    })
+    .controller
     ('ModelsCtrl' , 
         function ($scope, $http, $modal, $filter, $sce, ngTableParams,Project,JobsData,$location) 
         {

@@ -19,7 +19,7 @@
                 ng-click="check($event, $index) | trackEvent:'Directives-Table':'check row'"
                 stop-click>
         </td>
-        <td ng-repeat="field in fields">{{ formatString(row[field.key]) }}</td>
+        <td ng-repeat="field in fields" ng-class="field.tdclass?field.tdclass:null">{{ formatString(row[field.key]) }}</td>
     </tr>
 </tbody>
 </table>
