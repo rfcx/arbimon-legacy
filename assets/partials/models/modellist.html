@@ -37,8 +37,12 @@
             </td>
         </tr>
     </table>
-    <div class="jumbotron" >
-    <h3>{{ infopanedata }}  <a ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading" ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">Create a model</a></h3>
+    <div class="jumbotron" ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading">
+        <h3>{{ infopanedata }}  
+            <a ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
+                Create a model
+            </a>
+        </h3>
     </div>
 </div>
 <div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">

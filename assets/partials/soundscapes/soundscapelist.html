@@ -23,7 +23,14 @@
             </td>
         </tr>
     </table>
-    <div><h3>{{ infopanedata }} <a   ng-click="createNewSoundscape() | trackEvent:'Analysis-Soundscapes':'Create new soundscape'" ng-show="(!soundscapesOriginal || !soundscapesOriginal.length > 0) && !loading" >Create a soundscape</a></h3></div>
+    <div class="jumbotron" ng-show="(!soundscapesOriginal || !soundscapesOriginal.length > 0) && !loading">
+        <h3>
+            {{ infopanedata }} 
+            <a ng-click="createNewSoundscape() | trackEvent:'Analysis-Soundscapes':'Create new soundscape'" >
+                Create a soundscape
+            </a>
+        </h3>
+    </div>
 </div>
 <div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
   <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">

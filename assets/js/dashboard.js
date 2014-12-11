@@ -24,16 +24,7 @@ angular.module('dashboard',[
         controller:'SummaryCtrl',
         templateUrl: '/partials/dashboard/summary.html'
     })
-    .state('dashboard.sites', {
-        url: '/sites',
-        controller:'SitesCtrl',
-        templateUrl: '/partials/dashboard/sites.html'
-    })
-    .state('dashboard.species', {
-        url: '/species',
-        controller:'SpeciesCtrl',
-        templateUrl: '/partials/dashboard/species.html'
-    })
+    
     .state('dashboard.settings', {
         url: '/settings',
         controller:'SettingsCtrl',

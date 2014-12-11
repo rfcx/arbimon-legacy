@@ -12,7 +12,7 @@
             <td data-title="'Date'" sortable="'date'" >
                 {{classification.date | date:'dd-MM-yyyy HH:mm' }}
             </td>
-            <td data-title="'Name'" " sortable="'cname'" filter="{ 'cname': 'text' }">
+            <td data-title="'Name'" sortable="'cname'" filter="{ 'cname': 'text' }">
                 {{classification.cname}}
             </td>
             <td data-title="'User'" sortable="'muser'" filter="{ 'muser': 'text' }" class="no-wrap-table-cell">
@@ -26,7 +26,14 @@
             </td>
         </tr>
     </table>
-    <div class="jumbotron"><h3>{{ infopanedata }}  <a   ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'" ng-show="(!classificationsOriginal || !classificationsOriginal.length > 0) && !loading" >Classify recordings</a></h3></div>
+    <div class="jumbotron" ng-show="(!classificationsOriginal || !classificationsOriginal.length > 0) && !loading">
+        <h3>
+            {{ infopanedata }}  
+            <a ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
+                Classify recordings
+            </a>
+        </h3>
+    </div>
 </div>
 <div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
   <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">
