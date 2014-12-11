@@ -499,6 +499,7 @@ angular.module('audiodata', [
             $scope.currenthigh = $scope.roi.y2;
             $scope.currentId = $scope.roi.id;
             $scope.currentUri = $scope.roi.uri;
+            $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
         }
     };
     
@@ -516,6 +517,7 @@ angular.module('audiodata', [
             $scope.currenthigh = $scope.roi.y2;
             $scope.currentId = $scope.roi.id;
             $scope.currentUri = $scope.roi.uri;
+            $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
         }
     };
     
@@ -573,6 +575,7 @@ angular.module('audiodata', [
                     $scope.currentlow = $scope.roi.y1;
                     $scope.currenthigh = $scope.roi.y2;
                     $scope.currentId = $scope.roi.id;
+                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
                     $scope.currentUri = $scope.roi.uri;
                     $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage);
                     if($scope.currentPage>($scope.totalpages-1)){
@@ -684,6 +687,7 @@ angular.module('audiodata', [
         $scope.loaderDisplay = true;
         a2TrainingSetHistory.setLastSet($scope.sets[$index]);
         $scope.selectedSet = $scope.sets[$index];
+        console.log($scope.selectedSet)
         $scope.selectedName = $scope.sets[$index].name;
         $scope.species  = null;
         $scope.songtype = null;
@@ -717,7 +721,7 @@ angular.module('audiodata', [
                     $scope.roi = data[0];
                     $scope.currentDuration = $scope.roi.dur;
                     $scope.currentRoi = 0;
-                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/"+$scope.roi.recording;
+                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
                     $scope.currentUri = $scope.roi.uri;
                     $scope.currentlow = $scope.roi.y1;
                     $scope.currenthigh = $scope.roi.y2;
