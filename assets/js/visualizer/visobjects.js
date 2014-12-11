@@ -165,6 +165,7 @@ angular.module('a2visobjects', [
     };
     soundscape.prototype = {
         type : "soundscape",
+        zoomable : true,
         getCaption : function(){
             var agg = {
                 'time_of_day'   : 'Time of day',

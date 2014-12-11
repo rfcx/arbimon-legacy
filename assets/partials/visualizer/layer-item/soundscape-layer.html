@@ -17,7 +17,7 @@
             </th><th>
                 tags
                 <button class="btn btn-xs" ng-click="layer.soundscape.show.tags = !layer.soundscape.show.tags | trackEvent:'Visualizer-Soundscapes-Layer':'show tags'"><i class="fa" ng-class="layer.soundscape.show.tags ? 'fa-eye' : 'fa-eye-slash'"></i></button> 
-            </th><th></th></tr>
+            </th><th colspan="2"></th></tr>
             <tr ng-repeat="region in layer.soundscape.regions" 
                 ng-class ="{'active':layer.soundscape.selection.bbox == region}"
                 ng-click ="layer.soundscape.selection.select(region)  | trackEvent:'Visualizer-Soundscapes-Layer':'select region'"
@@ -30,8 +30,13 @@
                     </span>
                 </td>
                 <td>
+                    <button class="btn btn-default btn-sm" tooltip="Show/Hide Region"
+                        ng-click="$event.stopPropagation(); region.__hide = !region.__hide | trackEvent:'Visualizer-Soundscapes-Region':'toggle region visibility'" 
+                    ><i class="fa" ng-class="region.__hide ? 'fa-eye-slash' : 'fa-eye'" ></i></button>
+                </td>
+                <td>
                     <button class="btn btn-default btn-sm" tooltip="View Sampled Recordings" ng-show="region.playlist"
-                        ng-click="layer.soundscape.view_playlist(region) | trackEvent:'Visualizer-Soundscapes-Layer':'view playlist of region'"
+                        ng-click="layer.soundscape.view_playlist(region) | trackEvent:'Visualizer-Soundscapes-Region':'view playlist of region'"
                     ><i class="fa fa-list"></i></button>
                 </td>
             </tr>
