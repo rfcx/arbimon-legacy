@@ -154,6 +154,43 @@ angular.module('a2Infotags', [])
             });
         }
     };
+});
+
+
+angular.module('a2Classy', [])
+.factory('makeClass', function($inheritFrom){
+    var slice=Array.prototype.slice;
+    return function makeClass(classdef){
+        if(!classdef.constructor){
+            classdef.constructor = classdef.super && classdef.super.constructor ? 
+                function super_constructor(){
+                    this.super.constructor.apply(this, slice.call(arguments));
+                } : 
+                function empty_constructor(){}
+            ;
+        }
+        if(classdef.static){
+            angular.extend(classdef.constructor, classdef.static);
+            delete classdef.static;
+        }        
+        if(classdef.super){
+            classdef = $inheritFrom(classdef.super, classdef);
+        }
+        classdef.constructor.prototype = classdef;
+
+        return classdef.constructor;
+    };        
+})
+.value('$inheritFrom', function $inheritFrom(object){
+    var fn = function(){};
+    fn.prototype = object;
+    if(arguments.length > 1){
+        var args = Array.prototype.slice.call(arguments);
+        args[0] = new fn();
+        return angular.extend.apply(angular, args);
+    } else {
+        return new fn();
+    }
 })
 ;
 

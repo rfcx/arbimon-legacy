@@ -9,8 +9,39 @@
             </div>
         </div>
     </div>
-    <ng-include src="browser.type ? browser.type.template : ''"></ng-include>
+    <div ng-include class="margin-xs" src="browser.type ? browser.type.template : ''"></div>
     <div class="row">
+        <div class="col-sm-12">
+            <div class="btn-toolbar text-center" ng-show="1 || browser.lovo.paging">
+                <div class="pull-left btn-group">
+                    <button class="btn btn-default btn-xs" ng-disabled="browser.lovo.paging.is_at_first_page" 
+                        ng-click="browser.lovo.paging.set_page('first')"
+                    ><i class="fa fa-step-backward"></i></button>
+                    <button class="btn btn-default btn-xs" ng-disabled="browser.lovo.paging.is_at_first_page" 
+                        ng-click="browser.lovo.paging.set_page('previous')"
+                    ><i class="fa fa-backward"></i></button>
+                </div>
+                <div class="inline-block">
+                    <div class="btn-group">
+                        <button class="btn btn-default btn-xs fa" 
+                            ng-repeat="page in browser.lovo.paging.block"
+                            ng-class="browser.lovo.paging.current_page == page ? 'active' : ''"
+                            ng-click="browser.lovo.paging.set_page(page)"
+                        >{{page + 1}}</button>
+                    </div>
+                </div>
+                <div class="pull-right btn-group">
+                    <button class="btn btn-default btn-xs"
+                        ng-disabled="browser.lovo.paging.is_at_last_page" 
+                        ng-click="browser.lovo.paging.set_page('next')"
+                    ><i class="fa fa-forward"></i></button>
+                    <button class="btn btn-default btn-xs"
+                        ng-disabled="browser.lovo.paging.is_at_last_page" 
+                        ng-click="browser.lovo.paging.set_page('last')"
+                    ><i class="fa fa-step-forward"></i></button>
+                </div>
+            </div>
+        </div>
         <div class="col-sm-12">
             <div class="nav nav-pills nav-stacked visobj-list" role="menu" aria-labelledby="dLabel">
                 <div class="visobj-list-item" ng-show="browser.loading.times">
@@ -22,6 +53,7 @@
                 <div class="visobj-list-item"
                     ng-hide="browser.loading.times"
                     ng-repeat="visobj in browser.lovo.list"
+                    data-index="{{$index}}"
                     ng-class=" (browser.visobj.id == visobj.id ? 'active ' : ' ') + 'visobj-'+browser.lovo.object_type"
                     ng-click="browser.visobj = visobj | trackEvent:'Visualizer-Main':'setting visobj'">
                     <div class="clearfix">

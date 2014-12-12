@@ -60,14 +60,54 @@ angular.module('a2directives', ['a2services'])
         }
     };
 })
-.directive('a2Scroll', function() {
+.directive('a2Scroll', function($parse) {
+    var mkFunction = function(scope, attr){
+        var fn = $parse(attr);
+        return function(locals) {
+            locals.console = console;
+            return fn(scope, locals);
+        };
+    };
+    
     return {
         scope: {
-            a2Scroll : '&a2Scroll'
+            'a2InfiniteScrollDistance':'=?',
+            'a2InfiniteScrollDisabled':'=?',
+            'a2InfiniteScrollImmediateCheck':'=?'
         },
-        link : function($scope, $element, $attrs) {
-            $element.bind("scroll", function(e) {
-                $scope.a2Scroll(e);
+        link : function($scope, element, attrs) {
+            var pscope = $scope.$parent;
+            var cb_count=0;
+            if(attrs.a2Scroll){
+                $scope.a2Scroll = mkFunction(pscope, attrs.a2Scroll);
+                ++cb_count;
+            }
+            if(attrs.a2InfiniteScroll){
+                $scope.a2InfiniteScroll = mkFunction(pscope, attrs.a2InfiniteScroll);
+                    
+                ++cb_count;
+            }
+            if(!$scope.a2InfiniteScrollDistance){
+                $scope.a2InfiniteScrollDistance = 1;
+            }
+            if(!$scope.a2InfiniteScrollRefraction){
+                $scope.a2InfiniteScrollRefraction = 1000;
+            }
+            
+            element.bind("scroll", function(e) {
+                if($scope.a2Scroll){
+                    $scope.a2Scroll({$event:e});
+                }
+                if($scope.a2InfiniteScroll && !$scope.a2InfiniteScrollDisabled){
+                    var remaining = ((element[0].scrollHeight - element[0].scrollTop)|0) / element.height();
+                    if(remaining < $scope.a2InfiniteScrollDistance){
+                        var time = new Date().getTime();
+                        if(!$scope.refraction || $scope.refraction < time){
+                            $scope.refraction = time + $scope.a2InfiniteScrollRefraction;
+                            $scope.a2InfiniteScroll({$event:e});
+                        }
+                    }
+                }
             });
         }
     };
@@ -309,6 +349,7 @@ angular.module('a2directives', ['a2services'])
          templateUrl: '/partials/directives/loader.html'
      };
 })
+
  
 /**   yearpick - complete year date picker
   
