@@ -112,33 +112,6 @@ angular.module('a2directives', ['a2services'])
         }
     };
 })
-.directive('a2ZoomControl', function(){
-    return {
-        restrict :'E',
-        scope : {
-            'level' : '='
-        },
-        templateUrl : '/partials/directives/zoom-ctrl.html',
-        replace  : true,
-        link : function($scope, $element, $attrs) {
-            var delta = (+$attrs.delta) || 0.1;
-            var horizontal = !!(($attrs.horizontal|0) || (/on|yes|true/.test($attrs.horizontal+'')));
-            $scope.horizontal = horizontal;
-            $scope.switched   = horizontal;
-            $scope.step = function(step){
-                $scope.level = Math.min(1, Math.max($scope.level + step*delta, 0));
-            };
-            $scope.set_by_mouse = function($event){
-                var track = $element.find('.zoom-track'), trackpos=track.offset();
-                var px = (track.width()  - ($event.pageX - trackpos.left )) / track.width() ;
-                var py = (track.height() - ($event.pageY - trackpos.top  )) / track.height();
-                // console.log('$scope.set_by_mouse', [px,py]);
-                var level = $scope.horizontal ? px : py;
-                $scope.level = $scope.switched ? (1-level) : level;
-            };
-        }
-    };
-})
 .directive('a2Table', ['$filter', function($filter) {
     return {
         restrict: 'E',

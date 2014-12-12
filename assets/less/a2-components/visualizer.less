@@ -109,6 +109,12 @@
                 pointer-events: auto;
                 z-index:1000;
             }
+
+            &.zoom-input-layer > .input-source {
+                z-index:1003;
+                cursor: zoom-in;
+            }
+            
             &.visobj-layer img{
                 pointer-events: none;
             }
@@ -311,6 +317,30 @@
     }
 }
 
+.zoom-control-group{
+    position:relative;
+    width :215px;
+    > *{
+        position:absolute;
+    }
+    
+    > .zoom-control{
+        &.horizontal{
+            top:0; left:0;
+        }
+        &.vertical{
+            top:25px; right:0;
+        }
+    }
+    > .btns{
+        top   : 214px;
+        right : 0px;
+        width : 22px;
+        > .btn{
+            margin-bottom:4px;
+        }
+    }
+}
 
 .fa-sm{
     font-size: 10px;

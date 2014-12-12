@@ -8,7 +8,9 @@ angular.module('visualizer', [
     'visualizer-layers', 'visualizer-spectrogram', 
     'visualizer-training-sets', 'visualizer-training-sets-roi_set',
     'visualizer-soundscapes',
-    'visualizer-services'
+    'visualizer-services',
+    'a2-visualizer-spectrogram-Layout',
+    'a2-visualizer-spectrogram-click2zoom'
 ])
 .directive('a2Visualizer', function(){
     return { 
@@ -56,6 +58,7 @@ angular.module('visualizer', [
     return locman;
 })
 .controller('VisualizerCtrl', function (a2VisualizerLayers, $location, $state, $scope, $timeout, itemSelection, Project, $controller, 
+    a2SpectrogramClick2Zoom,
     VisualizerObjectTypes, VisualizerLayout, a2AudioPlayer, a2VisualizerLocationManager) {
     var layers = new a2VisualizerLayers($scope);
     var layer_types = layers.types;
@@ -75,7 +78,8 @@ angular.module('visualizer', [
         'soundscape-layer',
         'recording-soundscape-region-tags',
         'species-presence',
-        'training-data'
+        'training-data',
+        'zoom-input-layer'
     );    
     
     $scope.visobject = null;
@@ -93,6 +97,7 @@ angular.module('visualizer', [
 
     
     $scope.layout = new VisualizerLayout();
+    $scope.click2zoom = new a2SpectrogramClick2Zoom($scope.layout);
     $scope.Math = Math;
     $scope.pointer = {
         x   : 0, y  : 0,
@@ -115,7 +120,7 @@ angular.module('visualizer', [
             var typedef = VisualizerObjectTypes[type];
             $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);            
             typedef.load(visobject, $scope).then(function (visobject){
-console.log('VisObject loaded : ', visobject);
+                console.log('VisObject loaded : ', visobject);
                 $scope.loading_visobject = false;
                 $scope.visobject = visobject;
                 $scope.visobject_type = visobject.type;
@@ -190,9 +195,10 @@ console.log('VisObject loaded : ', visobject);
     };
     return a2AudioPlayer;
 })
+;
 
-.factory('VisualizerLayout', function(){
-    var layout = function(){};
+angular.module('a2-visualizer-spectrogram-Layout',['a2Classy'])
+.factory('VisualizerLayout', function(a2BrowserMetrics, makeClass){
     var align_to_interval = function(unit, domain, align){
         if(align === undefined || !domain || !domain.unit_interval){
             return unit;
@@ -202,8 +208,72 @@ console.log('VisObject loaded : ', visobject);
             return unit + align * u;
         }
     };
-    layout.prototype = {
-        domain: {},
+
+    var get_domain = function(visobject){
+        return (visobject && visobject.domain) || {
+            x : {
+                from : 0, to : 60, span : 60, ticks : 60,
+                unit : 'Time ( s )'
+            },
+            y : {
+                from : 0, to : 22050, span : 22050,
+                unit : 'Frequency ( kHz )',
+                tick_format : function(v){return (v/1000) | 0; }
+            }
+        };
+    };
+    
+    var make_scale = function(domain, range){
+        var s;
+        if(domain.ordinal){
+            var dd = domain.to - domain.from;
+            var dr = range[1] - range[0];
+            var scale = dr / dd;
+            s = d3.scale.linear().domain([domain.from, domain.to]).range([
+                scale/2 + range[0], range[1] - scale/2
+            ]);
+        } else {
+            s = d3.scale.linear().domain([domain.from, domain.to]).range(range);
+        }
+        return s;
+    };
+    
+    var linear_interpolate = function(x, levels){
+        var l = x * (levels.length-1);
+        var f=Math.floor(l), c=Math.ceil(l), m=l-f;
+        
+        return levels[f] * (1-m) + levels[c] * m;
+    };
+
+    var interpolate = linear_interpolate;
+
+    return makeClass({
+        constructor: function(){
+            this.scale = {
+                def_sec2px : 100 / 1.0,
+                def_hz2px  : 100 / 5000.0,
+                max_sec2px : 100 / (1.0    / 8),
+                max_hz2px  : 100 / (5000.0 / 8),
+                zoom   : {x:0, y:0},
+                sec2px : 100 / 1.0,
+                hz2px  : 100 / 5000.0
+            };
+            this.offset = {
+                sec : 0,
+                hz :0
+            };
+            this.tmp = {
+                gutter       :  a2BrowserMetrics.scrollSize.height,
+                axis_sizew   :  60,
+                axis_sizeh   :  60,
+                legend_axis_w : 45,
+                legend_width  : 60,
+                legend_gutter : 30,
+                axis_lead    :  15
+            };
+            this.domain = {};
+            this.listeners=[];
+        },
         x2sec : function(x, interval_align){
             var seconds = x / this.scale.sec2px;
             seconds += this.offset.sec;
@@ -240,20 +310,135 @@ console.log('VisObject loaded : ', visobject);
             var h = (hz1 - hz2) * this.scale.hz2px;
             return round ? (h|0) : +h;
         },
-        scale : {
-            def_sec2px : 100 / 1.0,
-            def_hz2px  : 100 / 5000.0,
-            max_sec2px : 100 / (1.0    / 8),
-            max_hz2px  : 100 / (5000.0 / 8),
-            zoom   : {x:0, y:0},
-            sec2px : 100 / 1.0,
-            hz2px  : 100 / 5000.0
-        },
-        offset : {
-            sec : 0,
-            hz :0
+        apply : function(container, $scope, width, height, fix_scroll_center){
+            var layout_tmp = this.tmp;
+            var visobject = $scope.visobject;
+            var domain = this.domain = get_domain(visobject);
+            
+            var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
+            if(domain.legend){
+                avail_w -= layout_tmp.legend_width + layout_tmp.legend_gutter;
+            }
+            var avail_h = height - layout_tmp.axis_sizeh - layout_tmp.axis_lead - layout_tmp.gutter;
+            var cheight = container[0].clientHeight;
+            var zoom_levels_x = this.scale.zoom.levelx = [
+                avail_w/domain.x.span,
+                this.scale.max_sec2px
+            ];
+            var zoom_levels_y = this.scale.zoom.levely = [
+                avail_h/domain.y.span,
+                this.scale.max_hz2px
+            ];
+            var zoom_sec2px = interpolate(this.scale.zoom.x, zoom_levels_x);
+            var zoom_hz2px  = interpolate(this.scale.zoom.y, zoom_levels_y);
+            
+            var spec_w = Math.max(avail_w, Math.ceil(domain.x.span * zoom_sec2px));
+            var spec_h = Math.max(avail_h, Math.ceil(domain.y.span * zoom_hz2px ));
+            
+            
+            var scalex = make_scale(domain.x, [0, spec_w]);
+            var scaley = make_scale(domain.y, [spec_h, 0]);
+            var scalelegend;
+            var l = this.l = {};
+            l.spectrogram = { css:{
+                top    : layout_tmp.axis_lead,
+                left   : layout_tmp.axis_sizew,
+                width  : spec_w,
+                height : spec_h,
+            }};
+            l.y_axis = { scale : scaley, 
+                css:{
+                    top    : 0,
+                    left   : container.scrollLeft()
+                }, attr:{
+                    width  : layout_tmp.axis_sizew,
+                    height : spec_h + layout_tmp.axis_lead + layout_tmp.axis_sizeh
+                }
+            };
+            l.x_axis = { scale : scalex,  
+                css:{
+                    left : layout_tmp.axis_sizew -  layout_tmp.axis_lead,
+                    // left : layout_tmp.axis_sizew -  layout_tmp.axis_lead,
+                    top  : container.scrollTop() + height  - layout_tmp.axis_sizeh - layout_tmp.gutter
+                }, attr:{
+                    height : layout_tmp.axis_sizeh,
+                    width  : spec_w + 2*layout_tmp.axis_lead
+                }
+            };
+            
+            this.has_legend = $scope.has_legend = !!domain.legend;
+            
+            if(domain.legend){
+                l.legend = { scale : scalelegend, 
+                    css:{
+                        top  : 0,
+                        left : container.scrollLeft() + width - a2BrowserMetrics.scrollSize.width - layout_tmp.legend_width - layout_tmp.legend_gutter
+                    }, attr:{
+                        width  : layout_tmp.legend_width,
+                        height : spec_h + 2*layout_tmp.axis_lead
+                    }
+                };
+                scalelegend = d3.scale.linear().domain([domain.legend.from, domain.legend.to]).range([spec_h-2, 0]);
+            } else {
+                l.legend = {};
+            }
+            //l.x_axis.attr.height = cheight - l.x_axis.css.top - 1;
+            ['spectrogram', 'y_axis', 'x_axis', 'legend'].forEach((function(i){
+                var li = l[i];
+                this[i] = li.css;
+                if(li.attr){
+                    $.extend(this[i], li.attr);
+                }
+                if(li.scale){
+                    this[i].scale = li.scale;
+                }
+            }).bind(this));
+            
+            this.offset.sec = domain.x.from;
+            this.offset.hz  = domain.y.from;
+            this.scale.sec2px = spec_w / domain.x.span;
+            this.scale.hz2px  = spec_h / domain.y.span;
+            this.viewport = {
+                left : l.spectrogram.css.left,
+                top  : l.spectrogram.css.top,
+                width  : avail_w,
+                height : avail_h
+            };
+            
+            var sh = l.spectrogram.css.height;
+            var sw = l.spectrogram.css.width ;
+                            
+            this.root = {
+                left : 0,
+                top  : 0,
+                //width  : width,
+                //height : height,
+                width  : width  - (avail_h < sh ? a2BrowserMetrics.scrollSize.width  : 0),
+                height : height - (avail_w < sw ? a2BrowserMetrics.scrollSize.height : 0)
+            };
+
+            var scroll_center;
+            if(this.center){
+                scroll_center = {
+                    left: this.scale.sec2px * this.center.s + l.spectrogram.css.left - width/2.0,
+                    top: -this.scale.hz2px * this.center.hz - height/2.0 + l.spectrogram.css.top + l.spectrogram.css.height
+                };
+            }
+
+            l.domain = domain;
+            l.scroll_center = scroll_center;
+            l.scale = {
+                x : scalex,
+                y : scaley,
+                legend : scalelegend
+            };
+            
+            
+            for(var eh=this.listeners, ehi=0, ehe=eh.length; ehi < ehe; ++ehi){
+                eh[ehi](this, container, $scope, width, height, fix_scroll_center);
+            }
+
         }
-    };
-    return layout;
+    });
 })
 ;

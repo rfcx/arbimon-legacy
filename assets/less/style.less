@@ -818,6 +818,31 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
     margin-bottom: -1px;
 }
 
+.text-shadow {
+    text-shadow: 1px 1px rgba(255,255,255,.5);
+    &.inverted{
+        text-shadow: 1px 1px rgba(0,0,0,.5);
+    }
+}
+
+.ghost-like {
+    opacity: 0.50;
+    pointer-events:none;
+    * {
+        pointer-events:auto;
+    }
+    &:hover{
+        opacity: 1;
+    }
+}
+
+
+
 .inline-block{
     display:inline-block;
+}
+
+
+.fa-xs{
+    font-size:0.5em;
 }

@@ -177,6 +177,7 @@ angular.module('a2Classy', [])
             classdef = $inheritFrom(classdef.super, classdef);
         }
         classdef.constructor.prototype = classdef;
+        (window.qc||(window.qc=[])).push(classdef);
 
         return classdef.constructor;
     };        
