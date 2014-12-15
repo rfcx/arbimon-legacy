@@ -681,14 +681,23 @@ angular.module('audiodata', [
         }
     );
     $scope.loaderDisplay = false;
-    $scope.displaySetData = function($index) {
+    $scope.displaySetData = function($index,$object) {
+        var setId = $object.id;
+        var i = 0;
+        while(i<$scope.sets.length)
+        {
+            if ($scope.sets[i].id == setId )
+            {
+               break;
+            }else i++;   
+        }
+        var setIndex = i;
         $scope.showSetDetails = true;
         $scope.norois = false;
         $scope.loaderDisplay = true;
-        a2TrainingSetHistory.setLastSet($scope.sets[$index]);
-        $scope.selectedSet = $scope.sets[$index];
-        console.log($scope.selectedSet)
-        $scope.selectedName = $scope.sets[$index].name;
+        a2TrainingSetHistory.setLastSet($scope.sets[setIndex]);
+        $scope.selectedSet = $scope.sets[setIndex];
+        $scope.selectedName = $scope.sets[setIndex].name;
         $scope.species  = null;
         $scope.songtype = null;
         $scope.detailedView    = undefined;
@@ -705,13 +714,13 @@ angular.module('audiodata', [
         $scope.currentId       = undefined;
         $scope.currentrois     = undefined;
         $scope.rois            = undefined;
-        a2TrainingSets.getSpecies($scope.sets[$index].name, function(speciesData){
+        a2TrainingSets.getSpecies($scope.sets[setIndex].name, function(speciesData){
             $scope.species = speciesData[0].species;
             $scope.songtype = speciesData[0].songtype;
-
+        
             a2TrainingSetHistory.setLastSpecies($scope.species,$scope.songtype);
-
-            a2TrainingSets.getRois($scope.sets[$index].name, function(data){
+        
+            a2TrainingSets.getRois($scope.sets[setIndex].name, function(data){
                 $scope.loaderDisplay = false;
                 $scope.detailedView = false;
                 $scope.totalRois = data.length;

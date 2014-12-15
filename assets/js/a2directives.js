@@ -194,7 +194,7 @@ angular.module('a2directives', ['a2services'])
 
                 scope.selected = row;
                 if(attrs.onSelect)
-                    scope.onSelect({ $index: $index });
+                    scope.onSelect({ $index: $index , $object:row});              
             };
 
             scope.sortBy = function(field) {
