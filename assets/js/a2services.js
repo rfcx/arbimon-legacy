@@ -306,7 +306,14 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
-
+        
+        getRecordingPosition: function(playlist, recording, callback){
+            var r = $http.get('/api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/position');
+            if(callback){
+                r.success(callback);
+            }
+            return r;
+        },
         // addData: function(playlist, tset_data, callback) {
         //     var projectName = Project.getName();
         //     $http.post('/api/project/'+projectName+'/playlists/add-data/'+playlist, tset_data).success(function(data) {

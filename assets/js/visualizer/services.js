@@ -27,6 +27,14 @@ angular.module('visualizer-services', ['a2services'])
         display : {sidebar:false},
         visible : true,
      },    
+     {  type    : "zoom-input-layer",
+        title   : "",
+        require: {type:['recording','soundscape'], selection : true, that:function(scope){
+            return scope.visobject && scope.visobject.zoomable;
+        }},
+        display:{sidebar:false},
+        visible : true
+     },
      //{  type    :'frequency-adjust-layer'},
      {  type    : "recording-soundscape-region-tags",
         title   : "",
@@ -52,7 +60,7 @@ angular.module('visualizer-services', ['a2services'])
         controller : 'a2VisualizerTrainingSetLayerController as training_data',
         require: {type:'recording', selection : true},
         visible : true,
-     }
+    }
     ];
     var layer_types={};
     type_array.forEach(function(lt){
