@@ -22,6 +22,8 @@ module.exports = {
                 async.eachLimit(row_set, 10, function(row, next_row){
                     method(row, next_row);
                 }, next_property);
+            } else {
+                next_property(new Error("Property " + property + " cannot be computed."));
             }
         }, function(err){
             err ? callback(err) : callback(null, row_set);
