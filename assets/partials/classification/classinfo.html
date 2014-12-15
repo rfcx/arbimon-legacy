@@ -37,10 +37,10 @@
         
     </div>
     <div ng-hide="showMore" class="text-centered-bordered">
-        <h2><i class="fa fa-caret-down" tooltip="More Details" tooltip-placement="bottom"  ng-click="more()"></i></h2>
+        <h2><i class="fa fa-caret-down" tooltip="More Details" tooltip-placement="bottom"  ng-click="more() | trackEvent:'Analysis-Classification-Info':'more clicked'"></i></h2>
     </div>
     <div  ng-show="showMore" class="text-centered-bordered">
-        <h2><i class="fa fa-caret-up" tooltip="Less Details" tooltip-placement="bottom"  ng-click="less()"></i></h2>
+        <h2><i class="fa fa-caret-up" tooltip="Less Details" tooltip-placement="bottom"  ng-click="less() | trackEvent:'Analysis-Classification-Info':'less clicked'""></i></h2>
         <ul class="ulnodeco">
             <li ng-repeat="rec in recs" class="linodeco">
                 <div class="cleardiv"></div>
@@ -71,14 +71,14 @@
             </li>
         </ul>
         <ul class="pager">
-            <li><a ng-click="gotoc('first')">First</a></li>
-            <li><a ng-click="prev()">Previous</a></li>
+            <li><a ng-click="gotoc('first') | trackEvent:'Analysis-Classification-Info':'go to first'"">First</a></li>
+            <li><a ng-click="prev() | trackEvent:'Analysis-Classification-Info':'go to prev'"">Previous</a></li>
             <li><a>{{currentPage+1}} of {{totalRecs}}</a></li>
-            <li><a ng-click="next()">Next</a></li>
-            <li><a ng-click="gotoc('last')">Last</a></li>
+            <li><a ng-click="next() | trackEvent:'Analysis-Classification-Info':'go to next'"">Next</a></li>
+            <li><a ng-click="gotoc('last') | trackEvent:'Analysis-Classification-Info':'go to last'"">Last</a></li>
         </ul>
     </div>
 </div>
 <div class="modal-footer">  
-    <button class="btn btn-primary" ng-click="ok()"  ng-disabled="buttonEnable()">Close</button>  
+    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Classification-Info':'ok clicked'""  ng-disabled="buttonEnable()">Close</button>  
 </div>  

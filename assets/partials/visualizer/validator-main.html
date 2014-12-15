@@ -5,7 +5,7 @@
             <th>Song</th>
             <th>Annotation</th>
         </tr>
-        <tr ng-repeat="class in classes" ng-click="select(class, $event)" ng-class="is_selected[class.id] ? 'active' : ''">
+        <tr ng-repeat="class in classes" ng-click="select(class, $event) | trackEvent:'Visualizer-Validator-Main':'Select'" ng-class="is_selected[class.id] ? 'active' : ''">
             <td ng-bind="class.species_name"></td>
             <td ng-bind="class.songtype_name"> </td>
             <td>
@@ -19,7 +19,7 @@
                     </button>
                     <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
                         <li ng-repeat="option in val_options">
-                            <a ng-click="validate(class.id, option.val)"><i class="fa" ng-class="'val-'+option.val"></i> {{option.label}}</a>
+                            <a ng-click="validate(class.id, option.val) | trackEvent:'Visualizer-Validator-Main':'Validate'"><i class="fa" ng-class="'val-'+option.val"></i> {{option.label}}</a>
                         </li>
                     </ul>
                 </div>

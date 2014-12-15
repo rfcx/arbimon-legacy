@@ -14,6 +14,6 @@
     </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="ok()">OK</button>
-    <button class="btn btn-warning" ng-click="$dismiss()">Cancel</button>
+    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Visualizer-Sample-Soundscape-Region':'Ok'">OK</button>
+    <button class="btn btn-warning" ng-click="$dismiss() | trackEvent:'Visualizer-Sample-Soundscape-Region':'Cancel'">Cancel</button>
 </div>

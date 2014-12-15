@@ -3,23 +3,35 @@
         Please select a {{visobject_type}}.
     </div>
     
-    <div a2-visualizer-spectrogram-affixed class="loader" ng-show="loading_visobject"
-        data-affix-align-h=".5" 
-        data-affix-align-v=".5" 
-        data-affix-container="viewport"
+    <div a2-visualizer-spectrogram-affixed="{'align-h':.5, 'align-v':.5, container:'viewport'}"
+        class="loader" ng-show="loading_visobject"
     >
         <loader class="blocky big" text="Loading {{loading_visobject}}"></loader>        
     </div>
     
-    <div a2-visualizer-spectrogram-affixed data-affix-top="20" data-affix-right="40" ng-show="visobject && visobject.zoomable">
+    <div class="zoom-control-group ghost-like" a2-visualizer-spectrogram-affixed="{top:3, right:3, container:'viewport'}" ng-show="visobject && visobject.zoomable">
         <a2-zoom-control level="layout.scale.zoom.x" horizontal="true"></a2-zoom-control>
-    </div>
-    <div a2-visualizer-spectrogram-affixed data-affix-top="40" data-affix-right="20" ng-show="visobject && visobject.zoomable">
         <a2-zoom-control level="layout.scale.zoom.y"></a2-zoom-control>
+        <div class="btns">
+            <button class="btn btn-default btn-xs" 
+                ng-class="click2zoom.active ? 'active' : ''"
+                a2-global-keyup="($event.which == 90) && visobject.zoomable && click2zoom.toggle_active()"
+                ng-click="click2zoom.toggle_active('in')"><i class="fa fa-search-plus"></i></button>                
+            <button class="btn btn-default btn-xs top-right-2" 
+                ng-click="click2zoom.zoom_out()"><i class="fa fa-search-minus"></i></button>
+            <button class="btn btn-default btn-xs top-right-2" 
+                a2-global-keyup="($event.which == 82) && visobject.zoomable && click2zoom.reset()"
+                ng-click="click2zoom.zoom_reset()"><span class="fa-stack fa-xs">
+                    <i class="fa fa-search fa-stack-2x"></i>
+                    <i class="fa fa-remove fa-stack-1x"></i>
+                </span></button>
+        </div>
     </div>
     
     <div class="spectrogram-container" ng-show="visobject" >
         <a2-visualizer-spectrogram-layer ng-repeat="layer in layers | filter: canDisplayInSpectrogram" ng-show="isSpectrogramVisible(layer)" ></a2-visualizer-spectrogram-layer>
+        
+        <div ng-include class="margin-xs" src="browser.type ? browser.type.template : ''"></div>
         
         <div ng-show="visobject.type=='recording'"
             class="spectrogram-layer playback-head" 
@@ -27,17 +39,23 @@
         ></div>
         
     </div>
+
+    <div class="mask-panel" a2-visualizer-spectrogram-affixed="{container:'root', right :0, }" ng-style="{width  : layout.root.width - (layout.viewport.left + layout.viewport.width ), top  : layout.spectrogram.top  , height : layout.root.height}"></div>
+    <div class="mask-panel" a2-visualizer-spectrogram-affixed="{container:'root', bottom:0, }" ng-style="{height : layout.root.height - (layout.viewport.top + layout.viewport.height), left : layout.spectrogram.left , width  : layout.root.width }"></div>
+
     
     <svg class="axis-y" ng-show="visobject" ></svg>
     <svg class="axis-x" ng-show="visobject" ></svg>
     <svg class="legend" ng-show="visobject && has_legend" ></svg>
 
-    <div a2-visualizer-spectrogram-affixed data-affix-bottom="20" data-affix-align-h=".5" ng-show="visobject" class="no-wrap">
+    <div a2-visualizer-spectrogram-affixed="{bottom:20, 'align-h':.5}" ng-show="visobject" class="no-wrap">
         {{ visobject.domain.x.unit || 'Time ( s )'}}
     </div>
 
-    <div a2-visualizer-spectrogram-affixed data-affix-left="10" data-affix-align-v=".5" ng-show="visobject">
+    <div a2-visualizer-spectrogram-affixed="{left:10, 'align-v':.5}" ng-show="visobject">
         <div class="vertical-text">{{ visobject.domain.y.unit || 'Frequency ( kHz )'}}</div>
     </div>
+
+
 
 </div>

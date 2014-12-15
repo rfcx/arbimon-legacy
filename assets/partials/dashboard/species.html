@@ -3,14 +3,14 @@
         <h4>
             Project Species
             <button class="btn btn-default"
-                ng-click="add()"
+                ng-click="add() | trackEvent:'Dashboard-species':'add species'"
                 tooltip="Select a species song"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-plus"></i>
             </button>
             <button class="btn btn-danger"
                 ng-disabled="!checked || !checked.length"
-                ng-click="del()"
+                ng-click="del() | trackEvent:'Dashboard-species':'delete species'"
                 tooltip="Remove species song"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-trash"></i>
@@ -35,7 +35,7 @@
             <div class="input-group">
                 <input class="form-control" type="search" placeholder="Species: name, family, alias" ng-model="search" ng-keypress="submitSearch($event)">
                 <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" ng-click="searchSpecies()"><i class="fa fa-search"></i></button>
+                    <button class="btn btn-default" type="button" ng-click="searchSpecies() | trackEvent:'Dashboard-species':'search species'"><i class="fa fa-search"></i></button>
                 </span>
             </div>
         </div>
@@ -52,7 +52,7 @@
             <table class="table a2-table">
                 <tbody>
                     <tr ng-repeat="spec in species"
-                        ng-click="selectSpec($index)"
+                        ng-click="selectSpec($index) | trackEvent:'Dashboard-species':'select species in table'"
                         ng-class="{ active: selected.species.scientific_name === spec.scientific_name }">
                         <td width="50%">{{ spec.scientific_name }}</td>
                         <td width="30%">{{ spec.family }}</td>
@@ -72,7 +72,7 @@
             <table class="table a2-table">
                 <tbody>
                     <tr ng-repeat="song in songtypes"
-                        ng-click="selectSong($index)"
+                        ng-click="selectSong($index) | trackEvent:'Dashboard-species':'select sondtype in table'"
                         ng-class="{ active: selected.song.name === song.name }">
                         <td>{{ song.name }}</td>
                     </tr>

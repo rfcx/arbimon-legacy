@@ -19,7 +19,7 @@
       </div>
       <div class="form-group">
         <label for="trainingSet">Training Set:</label> 
-        <span ng-hide="trainings.length" value="-1" class="red"><em>No training sets found. <a ng-click="cancel('/audiodata/training-sets')" >Create one.</a></em></span>
+        <span ng-hide="trainings.length" value="-1" class="red"><em>No training sets found. <a ng-click="cancel('/audiodata/training-sets') | trackEvent:'Analysis-Newmodel':'cancel goto training-sets'" >Create one.</a></em></span>
         <ui-select ng-model="data.training" theme="selectize" ng-disabled="disabled">
         <ui-select-match placeholder="Select or search a training set in the list...">{{$select.selected.name}}</ui-select-match>
             <ui-select-choices repeat="train in trainings | filter: $select.search" value="train.training_set_id">
@@ -75,6 +75,6 @@
     </form>
 </div>  
 <div class="modal-footer">  
-    <button class="btn btn-primary" ng-click="ok()" ng-disabled="buttonEnable()">Submit</button>  
-    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>  
+    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Newmodel':'ok new model'" ng-disabled="buttonEnable()">Submit</button>  
+    <button class="btn btn-warning" ng-click="cancel() | trackEvent:'Analysis-Newmodel':'cancel'">Cancel</button>  
 </div>  

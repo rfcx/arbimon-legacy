@@ -10,32 +10,32 @@
     <table ng-table="tableParams" class="table" show-filter="true" >
         <tr ng-repeat="soundscape in soundscapesData" >
             <td data-title="'Date'" class="no-wrap-table-cell" sortable="'date'" >
-                {{soundscape.date | date:'dd-MM-yyyy HH:mm' }} 
+                {{soundscape.date | momentformat }} 
             </td> 
-            <td data-title="'Name'" class="no-wrap-table-cell" sortable="'name'"  filter="{ 'name': 'text' }">
+            <td data-title="'Name'" class="no-wrap-table-cell hidelongtext widthtd" sortable="'name'"  filter="{ 'name': 'text' }">
                 {{soundscape.name}}
             </td>
             <td data-title="'User'" class="no-wrap-table-cell" sortable="'user'"  filter="{ 'user': 'text' }">
                 {{soundscape.user}}
             </td>
-            <td data-title="'Playlist'" class="no-wrap-table-cell" sortable="'playlist'"  filter="{ 'playlist': 'text' }">
+            <td data-title="'Playlist'" class="no-wrap-table-cell hidelongtext widthtd" sortable="'playlist'"  filter="{ 'playlist': 'text' }">
                 {{soundscape.playlist}}
             </td>
         </tr>
     </table>
-    <div><h3>{{ infopanedata }} <a   ng-click="createNewSoundscape()" ng-show="(!soundscapesOriginal || !soundscapesOriginal.length > 0) && !loading" >Create a soundscape</a></h3></div>
+    <div><h3>{{ infopanedata }} <a   ng-click="createNewSoundscape() | trackEvent:'Analysis-Soundscapes':'Create new soundscape'" ng-show="(!soundscapesOriginal || !soundscapesOriginal.length > 0) && !loading" >Create a soundscape</a></h3></div>
 </div>
 <div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
   <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">
-    <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Soundscapes':'alert-success closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
     {{ successInfo }}
   </div>
   <div class="alert alert-danger alert-dismissible"  role="alert" id="errorDiv" ng-show="showError">
-    <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Soundscapes':'alert-danger closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
     {{ errorInfo }}
   </div>
   <div class="alert alert-info alert-dismissible"  role="alert" id="infoDiv" ng-show="showInfo">
-    <button type="button" class="close" ng-click="updateFlags()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Soundscapes':'alert-info closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
     {{ infoInfo }}
   </div>
 </div>

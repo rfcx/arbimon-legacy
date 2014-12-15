@@ -43,7 +43,7 @@ router.get('/:projecturl?/', function(req, res, next)
 
                     // return next();
                     return res.render('app', { project: req.project, user: req.session.user });
-;
+
                 });
             }
             else

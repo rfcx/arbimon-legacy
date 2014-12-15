@@ -46,6 +46,6 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="verify()">OK</button>
-    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+    <button class="btn btn-primary" ng-click="verify() | trackEvent:'Home-Create-Project':'ok'">OK</button>
+    <button class="btn btn-warning" ng-click="cancel() | trackEvent:'Home-Create-Project':'cancel'">Cancel</button>
 </div>

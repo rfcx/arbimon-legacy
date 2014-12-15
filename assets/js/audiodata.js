@@ -440,7 +440,7 @@ angular.module('audiodata', [
 )
 .controller('TrainingSetsCtrl', function($scope, a2TrainingSets, Project, $modal, a2TrainingSetHistory) {
     $scope.fields = [
-        { name: 'Name', key: 'name' },
+        { name: 'Name', key: 'name' , tdclass :'widthtd hidelongtext' },
         { name: 'Set type', key: 'type' },
         { name: 'Date created', key: 'date_created' },
     ];
@@ -449,7 +449,7 @@ angular.module('audiodata', [
     $scope.selectedName = '';
     $scope.species = '';
     $scope.songtype = '';
-    
+    $scope.showSetDetails = false;
     a2TrainingSets.getList(function(data){
         $scope.sets = data.map(function(d) {
             d.date_created = new Date(d.date_created);
@@ -499,6 +499,7 @@ angular.module('audiodata', [
             $scope.currenthigh = $scope.roi.y2;
             $scope.currentId = $scope.roi.id;
             $scope.currentUri = $scope.roi.uri;
+            $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
         }
     };
     
@@ -516,6 +517,7 @@ angular.module('audiodata', [
             $scope.currenthigh = $scope.roi.y2;
             $scope.currentId = $scope.roi.id;
             $scope.currentUri = $scope.roi.uri;
+            $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
         }
     };
     
@@ -573,6 +575,7 @@ angular.module('audiodata', [
                     $scope.currentlow = $scope.roi.y1;
                     $scope.currenthigh = $scope.roi.y2;
                     $scope.currentId = $scope.roi.id;
+                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
                     $scope.currentUri = $scope.roi.uri;
                     $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage);
                     if($scope.currentPage>($scope.totalpages-1)){
@@ -591,7 +594,11 @@ angular.module('audiodata', [
         $scope.projecturl = info.url;
     });
  
- 
+    $scope.closeSetDetails = function()
+    {
+       $scope.showSetDetails = false;
+    };
+    
     $scope.add_new_tset = function(){
         $modal.open({
             templateUrl : '/partials/visualizer/modal/add_tset.html',
@@ -611,6 +618,7 @@ angular.module('audiodata', [
         {
             if (data.ls)
             {
+                $scope.showSetDetails = true;
                 $scope.selectedSet = data.ls;
                 $scope.selectedName = $scope.selectedSet.name;
                 $scope.species = data.sp;
@@ -674,10 +682,12 @@ angular.module('audiodata', [
     );
     $scope.loaderDisplay = false;
     $scope.displaySetData = function($index) {
+        $scope.showSetDetails = true;
         $scope.norois = false;
         $scope.loaderDisplay = true;
         a2TrainingSetHistory.setLastSet($scope.sets[$index]);
         $scope.selectedSet = $scope.sets[$index];
+        console.log($scope.selectedSet)
         $scope.selectedName = $scope.sets[$index].name;
         $scope.species  = null;
         $scope.songtype = null;
@@ -711,7 +721,7 @@ angular.module('audiodata', [
                     $scope.roi = data[0];
                     $scope.currentDuration = $scope.roi.dur;
                     $scope.currentRoi = 0;
-                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/"+$scope.roi.recording;
+                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
                     $scope.currentUri = $scope.roi.uri;
                     $scope.currentlow = $scope.roi.y1;
                     $scope.currenthigh = $scope.roi.y2;

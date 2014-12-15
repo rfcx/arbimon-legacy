@@ -1,7 +1,7 @@
 <div class="row toolbar">
     <div class="col-sm-12">
         <div class="col-sm-3">
-            <button ng-click="add_new_tset()" class="btn btn-default" 
+            <button ng-click="add_new_tset() | trackEvent:'Audiodata-Training Sets':'add_new_tset'" class="btn btn-default" 
                 tooltip="Create training set"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-plus"></i>
@@ -23,21 +23,35 @@
         <a2-table search="search"  fields="fields" rows="sets" no-checkbox on-select="displaySetData($index)"></a2-table>
         <div class="jumbotron" ng-show="(!sets || !sets.length > 0) && !loading">
             <h3>
-                No training sets found. <a ng-click="add_new_tset()"  ng-show="(!sets || !sets.length > 0) && !loading" >Create a training set.</a>
+                No training sets found. <a ng-click="add_new_tset() | trackEvent:'Audiodata-Training Sets':'add_new_tset'"  ng-show="(!sets || !sets.length > 0) && !loading" >Create a training set.</a>
             </h3>
         </div>
         <loader ng-hide="!loading"></loader>
     </div>
     <div ng-show="norois">No ROIs in Training Set {{selectedName}}. <a ui-sref="visualizer" href="#/visualizer">Open Visualizer to add ROIs.</a></div>
     <div class="col-sm-5 panel panel-default"  ng-show="loaderDisplay"><div class="trainingSetLoader"><loader></loader></div></div>
-    <div class="col-sm-5 panel panel-default" ng-show="rois.length">
+    <div class="col-sm-5 panel panel-default" ng-show="rois.length && showSetDetails" >
         <div class="panel-body">
             <div class="row">
-                <div class="col-sm-6">
-                   <strong>Set Name:</strong> {{selectedName}}
+                <div class="col-sm-6" >
+                    <div class="row">
+                        <div class="col-xs-2">
+                            <strong>Name:</strong>
+                        </div>
+                        <div class="col-sm-9 hidelongtext" >
+                            {{selectedName}}
+                        </div>
+                    </div>
                 </div>
                 <div class="col-sm-6">
-                    <strong>ROI Count :</strong>  {{rois.length}}
+                    <div class="row">
+                        <div class="col-sm-9">
+                            <strong>ROI Count :</strong>  {{rois.length}}
+                        </div>
+                        <div class="col-sm-1">
+                            <button ng-click="closeSetDetails()" class="btn btn-default btn-xs">X</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="row">
@@ -53,17 +67,17 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <ul class="pager">
-                            <li><a ng-click="prevPage()">Previous</a></li>
+                            <li><a ng-click="prevPage() | trackEvent:'Audiodata-Training Sets':'prevPaget'">Previous</a></li>
                             <li><a tooltip="Pages">{{currentPage+1}} of {{totalpages}}</a></li>
-                            <li><a ng-click="nextPage()">Next</a></li>
-                            <li><a ng-click="toggleView()" tooltip="Detailed View"><i class="fa fa-search-plus"></i></a></li>
+                            <li><a ng-click="nextPage() | trackEvent:'Audiodata-Training Sets':'nextPage'">Next</a></li>
+                            <li><a ng-click="toggleView() | trackEvent:'Audiodata-Training Sets':'toggleView'" tooltip="Detailed View"><i class="fa fa-search-plus"></i></a></li>
                         </ul>
                     </div>
                 </div>
                 <div ng-repeat="roi in currentrois" class="roi-div-inline">
                     <div tooltip-placement="right" tooltip="Duration: {{roi.dur}}s  Bandwidth:{{roi.y1}}-{{roi.y2}}Hz">
                         <div class="roi-div-inline-remove">
-                            <button ng-click="removeRoi(roi.id)"
+                            <button ng-click="removeRoi(roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'"
                                 class="roi-delete"
                                 tooltip-placement="right" 
                                 tooltip="Remove ROI from Training Set">
@@ -83,10 +97,10 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <ul class="pager">
-                            <li><a ng-click="prev()">Previous</a></li>
+                            <li><a ng-click="prev() | trackEvent:'Audiodata-Training Sets':'prev'">Previous</a></li>
                             <li><a tooltip="ROIs">{{currentRoi+1}} of {{totalRois}}</a></li>
-                            <li><a ng-click="next()">Next</a></li>
-                            <li><a ng-click="toggleView()" tooltip="Gallery View"><i class="fa fa-th"></i></a></li>
+                            <li><a ng-click="next() | trackEvent:'Audiodata-Training Sets':'next'">Next</a></li>
+                            <li><a ng-click="toggleView() | trackEvent:'Audiodata-Training Sets':'toggleView'" tooltip="Gallery View"><i class="fa fa-th"></i></a></li>
                         </ul>
                     </div>
                 </div>
@@ -104,7 +118,7 @@
                                 </div>
                                 <div class="col-sm-1" class="roi-div-inline-remove-detail" >
                                     <button class="roi-delete"
-                                        ng-click="removeRoi(currentId)" 
+                                        ng-click="removeRoi(currentId) | trackEvent:'Audiodata-Training Sets':'removeRoi'" 
                                         tooltip="Remove ROI from Training Set">
                                         <i class="fa fa-times"></i>
                                     </button>

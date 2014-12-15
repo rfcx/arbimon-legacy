@@ -42,6 +42,12 @@
         z-index : 10;
     }
 
+    > .mask-panel, > .a2-visualizer-spectrogram-affixed.mask-panel{
+        z-index:5;
+        background:white;
+    }
+
+
     > .btn-toolbar{
         z-index : 50;
     }
@@ -103,6 +109,12 @@
                 pointer-events: auto;
                 z-index:1000;
             }
+
+            &.zoom-input-layer > .input-source {
+                z-index:1003;
+                cursor: zoom-in;
+            }
+            
             &.visobj-layer img{
                 pointer-events: none;
             }
@@ -156,7 +168,6 @@
     .visobj-list{
         max-height:194px;
         background-color: @body-bg;
-        margin: 5px 0px;
         border: 1px solid @btn-default-border;
         padding-top: -1px;
         overflow-y: auto;
@@ -306,6 +317,30 @@
     }
 }
 
+.zoom-control-group{
+    position:relative;
+    width :215px;
+    > *{
+        position:absolute;
+    }
+    
+    > .zoom-control{
+        &.horizontal{
+            top:0; left:0;
+        }
+        &.vertical{
+            top:25px; right:0;
+        }
+    }
+    > .btns{
+        top   : 214px;
+        right : 0px;
+        width : 22px;
+        > .btn{
+            margin-bottom:4px;
+        }
+    }
+}
 
 .fa-sm{
     font-size: 10px;
@@ -352,4 +387,8 @@ img.visobj-soundscape, img.crisp-image, .crisp-image img{
     image-rendering: optimizeSpeed;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
+}
+
+.margin-xs{
+    margin: 5px 0px;
 }

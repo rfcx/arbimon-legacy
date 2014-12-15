@@ -22,6 +22,6 @@
     </form>
 </div>  
 <div class="modal-footer">  
-    <button class="btn btn-primary" ng-click="ok()">Submit</button>  
-    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>  
+    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-New classification':'ok'">Submit</button>  
+    <button class="btn btn-warning" ng-click="cancel() | trackEvent:'Analysis-New classification':'cancel'">Cancel</button>  
 </div>  

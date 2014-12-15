@@ -1,4 +1,10 @@
-angular.module('admin', ['ui.bootstrap'])
+angular.module('admin', ['ui.bootstrap','angularytics']).
+config(function(AngularyticsProvider) {
+    AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
+}).
+run(function(Angularytics) {
+    Angularytics.init();
+})
 .controller('AdminCtrl', function($scope, $http, $interval) { 
     
     $interval(function(){ 

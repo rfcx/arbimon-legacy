@@ -19,7 +19,7 @@
                         <button class="btn btn-default" 
                             tooltip="Create a project"
                             tooltip-trigger="mouseenter"
-                            ng-click="createProject()">
+                            ng-click="createProject() | trackEvent:'Home':'createProject'">
                             <i class="fa fa-plus"></i>
                         </button>
                     </h3>
@@ -65,7 +65,7 @@
                     </li>
                 </ul>
             </div>
-            <button class="btn btn-default btn-block more-btn" ng-click="loadNewsPage()">More</button>
+            <button class="btn btn-default btn-block more-btn" ng-click="loadNewsPage() | trackEvent:'Home':'loadNewsPage'">More</button>
         </div>
     </div>
 </div>

@@ -16,16 +16,16 @@ module.exports =
         
         details: function(model_id, callback) {
             var q = "SELECT ms.`json_stats` as json, m.model_id, CONCAT(UCASE(LEFT(m.name, 1)), SUBSTRING(m.name, 2)) as mname "+
-                    ", DATE_FORMAT(m.date_created,'%h:%i %p') as mtime , DATE_FORMAT(m.date_created,'%M %d %Y') as mdc "+
+                    ", DATE_FORMAT(m.date_created,'%h:%i %p') as mtime , DATE_FORMAT(m.date_created,'%b %d, %Y') as mdc "+
                     ", jpt.`use_in_training_present`, jpt.`use_in_training_notpresent` ,jpt.`use_in_validation_present` , jpt.`use_in_validation_notpresent`"+
                     " , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,"+
                     "  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser " + 
                     " , mt.name as mtname ,jobs.`remarks`  " +
-                    ", DATE_FORMAT(jobs.`last_update`,'%h:%i %p') as lasttime , DATE_FORMAT(jobs.`last_update`,'%M %d %Y') as lastupdate "+ 
+                    ", DATE_FORMAT(jobs.`last_update`,'%h:%i %p') as lasttime , DATE_FORMAT(jobs.`last_update`,'%b %d, %Y') as lastupdate "+ 
                     " , CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as species "+
                     " , CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype "+
                     " , CONCAT(UCASE(LEFT(ts.`name`, 1)), SUBSTRING(ts.`name`, 2)) as trainingSetName "+
-                    ", DATE_FORMAT(ts.date_created,'%h:%i %p') as trainingSettime , DATE_FORMAT(ts.date_created,'%M %d %Y') as trainingSetdcreated "+
+                    ", DATE_FORMAT(ts.date_created,'%h:%i %p') as trainingSettime , DATE_FORMAT(ts.date_created,'%b %d, %Y') as trainingSetdcreated "+
                     " , TIMESTAMPDIFF(SECOND, jobs.`date_created`, m.`date_created` ) as joblength "+
                     " FROM `models` as m,`model_types` as mt , `users` as u ,`job_params_training` as jpt , `jobs` , `model_classes` as mc " +
                     " ,`species`  as s , `songtypes` as st , `model_stats` as ms , `training_sets` as ts "+

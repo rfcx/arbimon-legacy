@@ -5,12 +5,16 @@ var arbimon2 = angular.module('arbimon2', [
     'dashboard', 
     'audiodata',
     'analysis',
-    'jobs'
+    'jobs',
+    'angularytics'
 ])
-.run(function($rootScope){
+.run(function($rootScope,Angularytics){
     $rootScope.Math = Math; // export math library to angular :-)
+    Angularytics.init();
 })
-.config(function($stateProvider, $urlRouterProvider) {
+.config(function($stateProvider, $urlRouterProvider,AngularyticsProvider) {
+    
+    AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
     
     $urlRouterProvider
         .rule(function ($injector, $location) {
