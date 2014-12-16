@@ -1,5 +1,5 @@
 // dependencies
-var console={log:require('debug')('arbimon2:model:playlists')};
+var debug = require('debug')('arbimon2:model:playlists');
 var mysql = require('mysql');
 var async = require('async');
 var Joi   = require('joi');
@@ -281,7 +281,7 @@ var Playlists = {
                 queryHandler(q, cb);
             },
             insertPlaylistRecs: ['getRecs', 'insertPlaylist', function(cb, results) {
-                console.log(results);
+                debug(results);
                 Playlists.addRecs(results.insertPlaylist[0].insertId, results.getRecs, cb);
             }]
         },

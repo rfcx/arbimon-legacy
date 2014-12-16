@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:model:projects')};
+var debug = require('debug')('arbimon2:model:projects');
 var util = require('util');
 var mysql = require('mysql');
 var async = require('async');
@@ -202,7 +202,7 @@ var Projects = {
             species: Joi.string(),
             songtype: Joi.string(),
             project_id: Joi.number()
-        }
+        };
 
         Joi.validate(project_class, schema, function(err, value) {
             if(err) return callback(err);
@@ -230,8 +230,7 @@ var Projects = {
                 },
 
                 classExists: ['findSpecies', 'findSong', function(cb, results){
-
-                    console.log(results);
+                    
                     var q = "SELECT count(*) as count \n"+
                             "FROM project_classes \n"+
                             "WHERE project_id = %s \n"+
@@ -254,8 +253,7 @@ var Projects = {
 
                     if(results.classExists)
                         return cb(null, { error: "class already in project" });
-
-                    console.log(results);
+                    
                     var q = 'INSERT INTO project_classes \n'+
                             'SET project_id = %s, species_id = %s, songtype_id = %s';
 
@@ -276,7 +274,7 @@ var Projects = {
 
                 callback(null, results.insert);
             });
-        })
+        });
     },
 
     removeClasses: function(project_classes, callback) {
@@ -332,7 +330,7 @@ var Projects = {
             
             q = util.format(q, user_id, role_id, project_id);
             queryHandler(q, callback);
-        })
+        });
 
     },
     

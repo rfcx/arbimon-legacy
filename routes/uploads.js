@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:route:uploads')};
+var debug = require('debug')('arbimon2:route:uploads');
 var express = require('express');
 var router = express.Router();
 var fs = require('fs');
@@ -23,7 +23,7 @@ var processUpload = function(upload, cb) {
     var file = upload.file;
     var fileInfo = upload.fileInfo;
     
-    console.log("processUpload:", file.filename);
+    debug("processUpload:", file.filename);
     
     var siteId = upload.info.site.id;
     
@@ -43,7 +43,7 @@ var processUpload = function(upload, cb) {
                     fileInfo.filename
                 );
     
-    console.log('fileURI:', fileURI);
+    debug('fileURI:', fileURI);
     
     async.auto({
         insertUploadRecs: function(callback) {
@@ -60,7 +60,7 @@ var processUpload = function(upload, cb) {
             if(extension === "flac") 
                 return callback(null, 0);
                 
-            console.log('convert to flac:', file.filename);
+            debug('convert to flac:', file.filename);
             
             audioTool.transcode(inFile, outFile, { format: 'flac' }, 
                 function(code, stdout, stderr) {
@@ -73,8 +73,10 @@ var processUpload = function(upload, cb) {
         }],
         
         thumbnail: ['insertUploadRecs', function(callback) {
-            console.log('gen thumbnail:', file.filename);
-             audioTool.spectrogram(inFile, thumbnail, 
+            
+            debug('gen thumbnail:', file.filename);
+            
+            audioTool.spectrogram(inFile, thumbnail, 
                 { 
                     maxfreq : 15000,
                     pixPerSec : (7),
@@ -90,7 +92,7 @@ var processUpload = function(upload, cb) {
         }],
         
         uploadFlac: ['convert', function(callback, results) {
-            console.log('uploadFlac:', file.filename);
+            debug('uploadFlac:', file.filename);
             
             var params = { 
                 Bucket: 'arbimon2', 
@@ -103,14 +105,14 @@ var processUpload = function(upload, cb) {
                 if (err)       
                     return callback(err);
                     
-                console.log("Successfully uploaded flac", fileInfo.filename);
+                debug("Successfully uploaded flac", fileInfo.filename);
                 callback(null, data);
             });
 
         }],
         
         uploadThumbnail: ['thumbnail', function(callback, results) {
-            console.log('uploadThumbnail:', file.filename);
+            debug('uploadThumbnail:', file.filename);
             
             var params = { 
                 Bucket: 'arbimon2', 
@@ -123,14 +125,15 @@ var processUpload = function(upload, cb) {
                 if (err)       
                     return callback(err);
                     
-                console.log("Successfully uploaded thumbnail:", fileInfo.filename);
+                debug("Successfully uploaded thumbnail:", fileInfo.filename);
                 callback(null, data);
             });
 
         }],
         
         insertOnDB: ['uploadFlac', 'uploadThumbnail', function(callback, results) {
-            console.log("inserting to DB", file.filename);
+            debug("inserting to DB", file.filename);
+            
             model.recordings.insert({
                 site_id: siteId,
                 uri: fileURI + '.flac',
@@ -159,8 +162,8 @@ var processUpload = function(upload, cb) {
         
         if(err) return cb(err);
         
-        console.log('process upload results:');
-        console.log(results);
+        debug('process upload results:');
+        debug(results);
         
         cb(null, file.filename);
     });
@@ -234,8 +237,8 @@ router.post('/audio/project/:projectid', function(req, res, next) {
     
     req.busboy.on('finish', function() {
         
-        console.log('info: ', info);
-        console.log('fileUploaded: ', fileUploaded);
+        debug('info: ', info);
+        debug('fileUploaded: ', fileUploaded);
         
                 
         var fileInfo;
@@ -269,9 +272,9 @@ router.post('/audio/project/:projectid', function(req, res, next) {
                 user_id: req.session.user.id
             }, 
             function(err, file){
-                if(err) return console.error(err);
+                if(err) return console.error(file.filename, err);
                 
-                console.log('finished processing:', file);
+                console.log(file.filename, 'processed successfully');
             });
             
         });

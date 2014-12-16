@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:audiotool')};
+var debug = require('debug')('arbimon2:audiotool');
 var childProcess = require('child_process');
 
 /**
@@ -40,7 +40,7 @@ Options:
  */
 var audiotools = {
     sox : function(args, options, callback){
-        console.log('running sox with ', args)
+        debug('running sox with ', args);
         if(options instanceof Function) { callback = options; }
         options = options || {};
         
@@ -59,9 +59,9 @@ var audiotools = {
         });
         
         cp.on('close', function(code){
-            console.log('sox ended with code : ', code);
-            console.log('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
-            console.log('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
+            debug('sox ended with code : ', code);
+            debug('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
+            debug('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
             callback(code, stdout.value, stderr.value);
         });
     },
@@ -84,9 +84,9 @@ var audiotools = {
                         case 'sample_rate'     : value = value | 0; break;
                         case 'precision'       : value = /^(\d+)-bit/.exec(value)[1] | 0; break;
                         case 'duration'        :
-                            var m = /^(\d+):(\d+):(\d+\.\d+)\s+=\s+(\d+)/.exec(value);;
+                            m = /^(\d+):(\d+):(\d+\.\d+)\s+=\s+(\d+)/.exec(value);
                             value = ((m[1]|0)*60 + (m[2]|0))*60 + (m[3]|0);
-                            info['samples'] = m[4] | 0;
+                            info.samples = m[4] | 0;
                         break;
                     }
                     info[param] = value;
@@ -165,7 +165,7 @@ var audiotools = {
         args.push('-o', destination_path);
         audiotools.sox(args, {}, callback);
     }
-}
+};
 
 
 module.exports = audiotools;

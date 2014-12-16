@@ -3,15 +3,55 @@ $(document)
 
 
 angular.module('visualizer', [
-    'ui.router', 'ngAudio', 
-    'a2services', 'a2utils', 'a2visobjects', 'a2visobjectsbrowser', 'a2SpeciesValidator', 
-    'visualizer-layers', 'visualizer-spectrogram', 
-    'visualizer-training-sets', 'visualizer-training-sets-roi_set',
+    'ui.router', 
+    'ct.ui.router.extras', 
+    'ngAudio', 
+    'a2services', 
+    'a2utils', 
+    'a2visobjects', 
+    'a2visobjectsbrowser', 
+    'a2SpeciesValidator', 
+    'visualizer-layers', 
+    'visualizer-spectrogram', 
+    'visualizer-training-sets', 
+    'visualizer-training-sets-roi_set',
     'visualizer-soundscapes',
     'visualizer-services',
     'a2-visualizer-spectrogram-Layout',
     'a2-visualizer-spectrogram-click2zoom'
 ])
+.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+    
+    $urlRouterProvider
+    .rule(function ($injector, $location) {
+        var path = $location.path();
+        var m =/visualizer\/?(.*)/.exec(path);
+        if(m) {
+            var params = { 
+                location:m[1] 
+            };
+            $injector.invoke(function($state){ 
+                $state.go('visualizer', params, {location:false}); 
+            });
+            return m[0];
+        }
+    });
+    
+    $stateProvider.state('visualizer', {
+        url: '/visualizer',
+        views: {
+            'visualizer': {
+                params : {
+                    location:''
+                },
+                reloadOnSearch : false,
+                template: '<a2-visualizer></a2-visualizer>'
+            }
+        },
+        deepStateRedirect: true, 
+        sticky: true,
+    });
+}])
 .directive('a2Visualizer', function(){
     return { 
         restrict : 'E', 
@@ -120,7 +160,9 @@ angular.module('visualizer', [
             var typedef = VisualizerObjectTypes[type];
             $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);            
             typedef.load(visobject, $scope).then(function (visobject){
+                
                 console.log('VisObject loaded : ', visobject);
+                
                 $scope.loading_visobject = false;
                 $scope.visobject = visobject;
                 $scope.visobject_type = visobject.type;
@@ -140,7 +182,6 @@ angular.module('visualizer', [
 
     // $scope.setRecording(test_data.recording);
 })
-
 .service('a2AudioPlayer', function(ngAudio){
     var a2AudioPlayer = function(scope){
         this.scope = scope;
@@ -194,8 +235,7 @@ angular.module('visualizer', [
         },
     };
     return a2AudioPlayer;
-})
-;
+});
 
 angular.module('a2-visualizer-spectrogram-Layout',['a2Classy'])
 .factory('VisualizerLayout', function(a2BrowserMetrics, makeClass){

@@ -1,5 +1,5 @@
 // dependencies
-var console={log:require('debug')('arbimon2:model:recordings')};
+var debug = require('debug')('arbimon2:model:recordings');
 var async = require('async');
 var AWS   = require('aws-sdk');
 var mysql = require('mysql');
@@ -7,13 +7,13 @@ var util  = require('util');
 var Joi   = require('joi');
 var im    = require('imagemagick');
 
-
 var config       = require('../config'); 
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
 var audiotool    = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
+
 // local variables
 var s3;
 var queryHandler = dbpool.queryHandler;
@@ -252,7 +252,7 @@ var Recordings = {
      */
     fetchRecordingFile: function(recording, callback){
         tmpfilecache.fetch(recording.uri, function(cache_miss){
-            console.log('fetching ', recording.uri, ' from the bucket.');
+            debug('fetching ', recording.uri, ' from the bucket.');
             if(!s3){
                 s3 = new AWS.S3();
             }

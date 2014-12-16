@@ -18,7 +18,7 @@
                             max-date="params.range.to || maxDate"
                             ng-model="params.range.from">
                             <span ng-hide="params.range.from"> Select Date </span>
-                            {{ params.range.from | moment: 'L' }}
+                            {{ params.range.from | momentUtc: 'll' }}
                         </button>
                     </div>
                     <div class="a2-filter a2-filter-text">
@@ -31,7 +31,7 @@
                             max-date="maxDate"
                             ng-model="params.range.to">
                             <span ng-hide="params.range.to"> Select Date </span>
-                            {{ params.range.to | moment: 'L' }}
+                            {{ params.range.to | momentUtc: 'll' }}
                         </button>
                     </div>
                 </div>
