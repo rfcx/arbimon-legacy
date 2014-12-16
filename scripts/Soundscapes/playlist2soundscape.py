@@ -305,21 +305,24 @@ if len(resultsParallel) > 0:
         statsMin = aggregation['range'][0]
         statsMax = aggregation['range'][1]
 
-    query = (
-        "\
-        INSERT INTO `soundscapes`( `name`, `project_id`, `user_id`, \
-        `soundscape_aggregation_type_id`, `bin_size`, `uri`, `min_t`, \
-        `max_t`, `min_f`, `max_f`, `min_value`, `max_value`, \
-        `date_created`, `playlist_id`) \
-        VALUES ('" +
-        name + "'," + str(pid) + "," + str(uid) + ", (\
-            SELECT `soundscape_aggregation_type_id` \
-            FROM `soundscape_aggregation_types` \
-            WHERE `identifier` = '"+agrrid+"' \
-        ), " + str(bin_size) + ", NULL," + str(statsMin)+", " + str(statsMax) +
-        " ,0," + str(max_hertz) + ",0," + str(scp.stats['max_count']) +
-        ",now()," + str(playlist_id)+")"
-    )
+    query = ("""
+        INSERT INTO `soundscapes`( `name`, `project_id`, `user_id`,
+        `soundscape_aggregation_type_id`, `bin_size`, `uri`, `min_t`,
+        `max_t`, `min_f`, `max_f`, `min_value`, `max_value`,
+        `date_created`, `playlist_id`)
+        VALUES (%s, %s, %s, (
+            SELECT `soundscape_aggregation_type_id`
+            FROM `soundscape_aggregation_types`
+            WHERE `identifier` = '%s'
+        ), %s, NULL, %s, %s, 0, %s, 0, %s, NOW(), %s
+        )
+    """.format(
+        name, pid, uid,
+        agrrid,
+        bin_size, statsMin, statsMax,
+        max_hertz, scp.stats['max_count']
+        playlist_id
+    ))
     scpId = -1
     print query
     log.write(query)
