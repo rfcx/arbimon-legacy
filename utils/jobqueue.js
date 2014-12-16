@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:jobqueue')};
+var debug = require('debug')('arbimon2:jobqueue');
 var async = require('async');
 var os    = require('os');
 

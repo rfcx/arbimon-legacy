@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:route:login')};
+var debug = require('debug')('arbimon2:route:login');
 var express = require('express');
 var router = express.Router();
 var model = require('../models/');
@@ -8,7 +8,7 @@ var mysql = require('mysql');
 
 var nodemailer = require('nodemailer');
 var smtpTransport = require('nodemailer-smtp-transport');
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 var transport = nodemailer.createTransport(smtpTransport({
     host: 'smtp.sieve-analytics.com',
     port: 587,
@@ -27,7 +27,7 @@ router.use(function(req, res, next) {
         
         var projectPerms = req.session.user.permissions[project_id];
         
-        // console.log("project permission:", projectPerms);
+        debug("project permission:", projectPerms);
         
         if(!projectPerms)
             return false;
@@ -101,8 +101,19 @@ router.get('/logout', function(req, res, next) {
 });
 
 router.get('/register', function(req, res) {
-    res.render('register',{data:{title:'Register',message:''
-               ,first_name:"",last_name:'',email:'',password:'',confirm:'',username:'',emailsent:0}});
+    res.render('register', {
+        data: {
+            title:'Register',
+            message:'',
+            first_name:"",
+            last_name:'',
+            email:'',
+            password:'',
+            confirm:'',
+            username:'',
+            emailsent:0
+        }
+    });
 });
 
 router.get('/activate/:hash', function(req, res) {    
@@ -111,21 +122,35 @@ router.get('/activate/:hash', function(req, res) {
         {
             if(err) return next(err);
 
-            if (data.length)
-            {console.log('routerlength',data[0].params)
+            if (data.length) 
+            {
+                debug('routerlength',data[0].params); 
                 model.users.newUser(data[0].params,
                     function (err,datas)
                     {
                         if(err) return next(err);
+                        
                         model.users.removeRequest(data[0].support_request_id, function(error, info){
-                             res.render('activate',{data:{title:'Activate',login:1,status:'Your account has been activated.'}});
+                             res.render('activate',{ 
+                                 data: {
+                                    title:'Activate',
+                                    login:1,
+                                    status:'Your account has been activated.'
+                                }
+                            });
                         });
                     }
-                )
+                );
             }
             else
             {
-                res.render('activate',{data:{title:'Activate',login:0,status:'A registration entry with your information does not exists. You need to register again.'}});
+                res.render('activate', {
+                    data: {
+                        title:'Activate',
+                        login:0,
+                        status:'A registration entry with your information does not exists. You need to register again.'
+                    }
+                });
             }
         }
     );
@@ -140,51 +165,97 @@ router.post('/register', function(req, res) {
     var password = mysql.escape(req.body.password ).replace('\'','').replace('\'','');
     var confirm = mysql.escape(req.body.password_confirmation ).replace('\'','').replace('\'','');
     
-    if (password != confirm)
-    {
-        return res.render('register',{data:{title:'Register',message:'Passwords do not match.'
-                          ,first_name:first_name,last_name:last_name,email:email
-                          ,password:'',confirm:'',username:'',emailsent:0}});
+    if (password != confirm) {
+        return res.render('register', {
+            data: {
+                title: 'Register',
+                message: 'Passwords do not match.',
+                first_name: first_name,
+                last_name: last_name,
+                email: email,
+                password: '',
+                confirm: '',
+                username: '',
+                emailsent: 0
+            }
+        });
     }
     
     model.users.findByUsername(username, function(err, rows) {
         if(err) return next(err);
-        if (rows.length)
-        {
-            return res.render('register',{data:{title:'Register',message:'Username exists.'
-                              ,first_name:first_name,last_name:last_name,email:email
-                              ,password:password,confirm:password,username:'',emailsent:0}});
+        
+        if (rows.length) {
+            return res.render('register', {
+                data: {
+                    title: 'Register',
+                    message: 'Username exists.',
+                    first_name: first_name,
+                    last_name: last_name,
+                    email: email,
+                    password: password,
+                    confirm: password,
+                    username: '',
+                    emailsent: 0
+                }
+            });
         }
             
         model.users.findByEmail(email, function(err, rowsemail) {
             if(err) return next(err);
             
-            if (rowsemail.length)
-            {
-                return res.render('register',{data:{title:'Register',message:'An account exists with that email.'
-                                  ,first_name:first_name,last_name:last_name,email:""
-                                  ,password:password,confirm:password,username:username,emailsent:0}});
-            }     
+            if (rowsemail.length) {
+                return res.render('register', {
+                    data: {
+                        title: 'Register',
+                        message: 'An account exists with that email.',
+                        first_name: first_name,
+                        last_name: last_name,
+                        email: "",
+                        password: password,
+                        confirm: password,
+                        username: username,
+                        emailsent: 0
+                    }
+                });
+            } 
 
             model.users.accountSupportExistsByEmail(email, function(err, rowsemailsuppoert) {
                 if(err) return next(err);
                
-                if (rowsemailsuppoert.length)
-                {
-                   return res.render('register',{data:{title:'Register',message:'An email with an activation link has been already sent to your email.'
-                                     ,first_name:first_name,last_name:last_name,email:""
-                                     ,password:password,confirm:password,username:username,emailsent:0}});
+                if (rowsemailsuppoert.length) {
+                    return res.render('register', {
+                        data: {
+                            title: 'Register',
+                            message: 'An email with an activation link has been already sent to your email.',
+                            first_name: first_name,
+                            last_name: last_name,
+                            email: "",
+                            password: password,
+                            confirm: password,
+                            username: username,
+                            emailsent: 0
+                        }
+                    });
                 }
                
                 password = sha256(password);
-                var seed = Math.ceil(new Date().getTime() / 1000)
+                var seed = Math.ceil(new Date().getTime() / 1000);
                 var hash = sha256(seed.toString()+username+first_name+last_name+email);
-                var submitData = {username:username , first_name:first_name , last_name:last_name , email:email,password:password}
-                console.log('sbumitData',submitData)
+                var submitData = {
+                    username: username,
+                    first_name: first_name,
+                    last_name: last_name,
+                    email: email,
+                    password: password
+                };
+                
+                debug('submitData',submitData);
+                
                 model.users.newAccountRequest(submitData, hash, function(err, rowsRes) {
                     if(err) return next(err);
-                        console.log('rowsRes',rowsRes)
-                        var requestId = rowsRes.insertId
+                        debug('rowsRes',rowsRes);
+                        
+                        var requestId = rowsRes.insertId;
                         var mailOptions = {
                             from: 'Sieve-Analytics <support@sieve-analytics.com>', 
                             to: email, 
@@ -197,20 +268,41 @@ router.post('/register', function(req, res) {
                         
                         transport.sendMail(mailOptions, function(error, info){
                             if(error){
-                                console.log(error)
-                                model.users.removeRequest(requestId , function(error, info){
-                                                        
-                                return res.render('register',{data:{title:'Register',message:'Could not send activation email.'
-                                              ,first_name:first_name,last_name:'',email:email,password:'',confirm:'',username:'',emailsent:0}})
+                                debug('sendmail error', error);
+                                model.users.removeRequest(requestId, function(error, info) {
+                                    
+                                    return res.render('register', {
+                                        data: {
+                                            title: 'Register',
+                                            message: 'Could not send activation email.',
+                                            first_name: first_name,
+                                            last_name: '',
+                                            email: email,
+                                            password: '',
+                                            confirm: '',
+                                            username: '',
+                                            emailsent: 0
+                                        }
+                                    });
                                 });
-                        
-                            }else{
-                                console.log('email sent to:',email)
-                                return res.render('register',{data:{title:'Register',message:''
-                                              ,first_name:first_name,last_name:'',email:email,password:'',confirm:'',username:'',emailsent:1}});  
-                        
                             }
-                        });           
+                            else{
+                                debug('email sent to:',email);
+                                return res.render('register', {
+                                    data: {
+                                        title: 'Register',
+                                        message: '',
+                                        first_name: first_name,
+                                        last_name: '',
+                                        email: email,
+                                        password: '',
+                                        confirm: '',
+                                        username: '',
+                                        emailsent: 1
+                                    }
+                                });
+                            }
+                        });
                     }
                 );
             });

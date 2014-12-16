@@ -1,10 +1,9 @@
 /**
  * configuration module.
  */
-var console={log:require('debug')('arbimon2:model')};
-var fs   = require('fs')
-  , path = require('path');
-var console={log:require('debug')('arbimon2:config')};
+var fs   = require('fs');
+var path = require('path');
+var debug = require('debug')('arbimon2:config');
 
 
 // config folder 
@@ -12,14 +11,16 @@ var config_folder = __dirname;
 // cache
 var cache = {};
 
-console.log("watching config folder in :", config_folder);
-fs.watch(config_folder, {persistent:false}, function(event, filename){
+debug("watching config folder in :", config_folder);
+
+fs.watch(config_folder, { persistent:false }, function(event, filename){
     var filename_parts = /^(.*)(\.local)?(\.json)$/.exec(filename);
+    
     if(filename_parts && event == 'change') {
-        console.log("Config " + filename_parts[1] + " changed. (file :" + filename + ")");
+        debug("Config " + filename_parts[1] + " changed. (file :" + filename + ")");
         delete cache[filename_parts[1]];
     }
-})
+});
 
 module.exports = function(config_file){
     if(typeof cache[config_file] == 'undefined') {
@@ -32,7 +33,7 @@ module.exports = function(config_file){
             var filename = files[i];
             if(fs.existsSync(filename)) {
                 var contents = fs.readFileSync(filename);
-                console.log("Parsing config " + config_file + " (file : " + filename + ")");
+                debug("Parsing config " + config_file + " (file : " + filename + ")");
                 cache[config_file] = JSON.parse(contents);
                 break;
             }
@@ -40,4 +41,4 @@ module.exports = function(config_file){
     }
     
     return cache[config_file];
-}
+};

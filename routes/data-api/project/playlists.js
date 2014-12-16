@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:route:playlists')};
+var debug = require('debug')('arbimon2:route:playlists');
 var express = require('express');
 var router = express.Router();
 var model = require('../../../models');
@@ -75,7 +75,7 @@ router.post('/create', function(req, res, next) {
         function(err, new_tset) {
             if(err) return next(err);
             
-            console.log("playlist added", new_tset);
+            debug("playlist added", new_tset);
             
             model.projects.insertNews({
                 news_type_id: 10, // playlist created
@@ -149,6 +149,7 @@ router.post('/delete', function(req, res, next) {
     model.playlists.remove(req.body.playlists, function(err, results) {
         if(err) return next(err);
         
+        debug('playlist deleted', results);
         res.json({ success: true });
     });
     
