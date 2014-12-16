@@ -1,5 +1,7 @@
 from pylab import *
 import numpy
+import cPickle as pickle
+import scipy
 
 class Roiset:   
 
@@ -23,12 +25,18 @@ class Roiset:
                 self.maxrois.append(spec)
                 self.maxIndeces.append(self.roiCount)
                 self.lowestFreq = lowFreq
-                self.highestFreq = highFreq  
+                self.highestFreq = highFreq
+                self.highestlowestFreq = lowFreq
+                self.lowesthighestFreq = highFreq  
             else:
                 if self.lowestFreq > lowFreq:
                     self.lowestFreq = lowFreq
                 if self.highestFreq < highFreq:
                     self.highestFreq = highFreq
+                if self.highestlowestFreq  < lowFreq:
+                    self.highestlowestFreq  = lowFreq
+                if self.lowesthighestFreq > highFreq:
+                    self.lowesthighestFreq = highFreq
                 if self.maxColumns < columns:
                     self.varlengths.add(self.maxColumns)
                     self.maxColumns = columns
@@ -52,10 +60,11 @@ class Roiset:
             self.roiCount = self.roiCount + 1     
 
     def alignSamples(self):
+        
 
         self.surface = numpy.sum(self.maxrois,axis=0)
         self.surface = self.surface/len(self.maxIndeces)
-
+        weights = numpy.ones(shape=(self.rows,self.maxColumns))*len(self.maxrois)
         for i in self.varlengthsIndeces:
             distances = []
             currColumns = self.roi[i].spec.shape[1]
@@ -66,11 +75,37 @@ class Roiset:
             temp = numpy.zeros(shape=(self.rows,self.maxColumns))
             temp[:, j:(j+currColumns)] = self.roi[i].spec
             self.maxrois.append(temp)
-            self.surface[:, j:(j+currColumns)] = (self.surface[:, j:(j+currColumns)] + self.roi[i].spec)/2
-
+            self.surface[:, j:(j+currColumns)] = (self.surface[:, j:(j+currColumns)] + self.roi[i].spec)
+            weights[:, j:(j+currColumns)] = weights[:, j:(j+currColumns)]  + 1
+        self.surface = self.surface/self.roiCount
         self.meanSurface = numpy.mean([self.maxrois[j] for j in range(self.roiCount)],axis=0)
         self.stdSurface = numpy.std([self.maxrois[j] for j in range(self.roiCount)],axis=0)
 
+        for i in reversed(range(0,self.maxColumns)):
+            if weights[0,i] < self.roiCount:
+                weights = scipy.delete(weights, i, 1)
+                self.meanSurface = scipy.delete(self.meanSurface, i, 1)
+                self.stdSurface = scipy.delete(self.stdSurface, i, 1)
+                self.surface = scipy.delete(self.surface, i, 1)
+                
+        before = numpy.copy(self.meanSurface)
+        self.maxColumns = self.surface.shape[1]
+        freqs = [self.setSampleRate/2/(self.surface.shape[0]-1)*i for i in reversed(range(0,self.surface.shape[0]))]
+        
+        i =0
+        while freqs[i] >= self.lowesthighestFreq:
+            self.meanSurface[i,:] = 0
+            self.stdSurface[i,:] = 0
+            self.surface[i,:] = 0
+            i = i + 1
+        while freqs[i] >=  self.highestlowestFreq:
+            i = i + 1
+        while i <  self.rows:
+            self.meanSurface[i,:] = 0
+            self.stdSurface[i,:] = 0
+            self.surface[i,:] = 0
+            i = i + 1
+            
     def showSurface(self):
         ax1 = subplot(111)
         im = ax1.imshow(self.surface, None)
