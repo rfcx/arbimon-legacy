@@ -1,6 +1,7 @@
 var util = require('util');
 var mysql = require('mysql');
 var async = require('async');
+var debug = require('debug')('arbimon2:models:jobs');
 var validator = require('validator');
 var dbpool = require('../utils/dbpool');
 var sqlutil = require('../utils/sqlutil');
@@ -24,6 +25,12 @@ var Jobs = {
                         ]) + "\n" +
                     ")", callback
                 );
+            },
+            sql : {
+                report : {
+                    projections : ['CONCAT(UCASE(LEFT( JPT.`name`, 1)), SUBSTRING( JPT.`name`, 2)) as name'],
+                    tables      : ['JOIN `job_params_training` as JPT ON J.job_id = JPT.job_id'],
+                }
             }
         },
         classification_job : {
@@ -37,6 +44,12 @@ var Jobs = {
                     ")", callback
                 );
             },
+            sql : {
+                report : {
+                    projections : ['CONCAT(UCASE(LEFT( JPT.`name`, 1)), SUBSTRING( JPT.`name`, 2)) as name'],
+                    tables      : ['JOIN `job_params_classification` as JPT ON J.job_id = JPT.job_id'],
+                }
+            }
         },
         soundscape_job: {
             type_id : 4,
@@ -51,12 +64,23 @@ var Jobs = {
                     ")", callback
                 );
             },
+            sql : {
+                report : {
+                    projections : ['CONCAT(UCASE(LEFT( JPT.`name`, 1)), SUBSTRING( JPT.`name`, 2)) as name'],
+                    tables      : ['JOIN `job_params_soundscape` as JPT ON J.job_id = JPT.job_id'],
+                }
+            }
         },
         test_job: {
             type_id : 5,
             new: function(params, db, callback) {
                 callback();
             },
+            sql : {
+                report : {
+                    projections : ['"" as name'],
+                }
+            }
         }        
     },
 
@@ -113,7 +137,9 @@ var Jobs = {
     },
     
     
-    
+    getJobTypes: function(callback){
+        queryHandler("SELECT job_type_id as id, name, description FROM job_types WHERE `enabled`=1", callback);
+    },
     
     hide: function(jId, callback) {
         var q = "update `jobs` set `hidden`  = 1 where `job_id` = " + jId;
@@ -167,6 +193,57 @@ var Jobs = {
 
         queryHandler(q, callback);
     },
+
+    activeJobs: function(project, callback) {
+        if(project == Function){
+            callback = project;
+            project = undefined;
+        }
+        
+        var union=[], constraints=[], tables=[];
+        
+        constraints.push("J.`hidden` = 0");
+        tables.push("JOIN job_types JT ON J.job_type_id = JT.job_type_id");
+        
+        if(project){
+            if(typeof project != 'object'){
+                project = {id:project};
+            }
+            if(project.id){
+                constraints.push('J.project_id = ' + (project.id|0));
+            } else if(project.url){
+                constraints.push('P.url = ' + mysql.escape(project.url));
+                tables.push('JOIN projects P ON J.project_id = P.project_id');
+            }
+        }
+        
+        for(var i in this.job_types){
+            var job_type = this.job_types[i];
+            var jt_projections = job_type.sql && job_type.sql.report && job_type.sql.report.projections;
+            var jt_tables      = job_type.sql && job_type.sql.report && job_type.sql.report.tables;
+            union.push(
+                "SELECT J.`progress`, J.`progress_steps`, J.`job_type_id`, JT.name as type, J.`job_id`, J.state, J.last_update, \n" +
+                (jt_projections && jt_projections.length ? 
+                    "    "+jt_projections.join(", ")+", \n" : ""
+                ) +
+                "   round(100*(J.`progress`/J.`progress_steps`),1) as percentage \n"+
+                " FROM `jobs` as J " +
+                (jt_tables && jt_tables.length ? 
+                    "    "+jt_tables.join("\n")+"\n" : ""
+                ) +
+                (tables && tables.length ? 
+                    "    "+tables.join("\n")+"\n" : ""
+                ) +
+                "WHERE "+constraints.join(" AND ") + "\n" +
+                "  AND J.job_type_id = " + (job_type.type_id|0)
+            );
+        }
+        
+        queryHandler("(\n" + 
+            union.join("\n) UNION (\n") + 
+        "\n)", callback);
+    },
+
 
     /** Finds jobs, given a (non-empty) query.
      * @param {Object}  query

@@ -450,8 +450,7 @@ router.get('/project/:projectUrl/validations/:species/:songtype', function(req, 
 });
 
 router.get('/project/:projectUrl/progress', function(req, res, next) {
-
-    model.projects.activeJobs(req.params.projectUrl, function(err, row) {
+    model.jobs.activeJobs({url:req.params.projectUrl}, function(err, row) {
         if(err) return next(err);
 
         res.json(row);
@@ -471,12 +470,19 @@ router.get('/project/:projectUrl/progress/queue', function(req, res) {
 
 });
 
+router.get('/project/:projectUrl/job/types', function(req, res, next) {
+    model.jobs.getJobTypes(function(err, types) {
+        if(err){ next(err); return; }
+        res.json(types);
+    });
+});
+
 router.get('/project/:projectUrl/job/hide/:jId', function(req, res) {
 
     model.jobs.hide(req.params.jId, function(err, rows) {
         if(err) res.json('{ "err" : "Error removing job"}');
 
-        model.projects.activeJobs(req.params.projectUrl, function(err, row) {
+        model.jobs.activeJobs(req.params.projectUrl, function(err, row) {
             if(err) return next(err);
     
             res.json(row);
