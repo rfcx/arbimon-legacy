@@ -108,7 +108,7 @@ try:
 except Exception, ex:
     log.write('fatal error cannot connect to bucket '+ex.error_message)
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `complete` = -1,`remarks` = \'Error: connecting to bucket.\' where `job_id` = '+str(job_id))
+        cursor.execute('update `jobs` set `state`="error", `completed` = -1, `remarks` = \'Error: connecting to bucket.\' where `job_id` = '+str(job_id))
         db.commit()
     quit()
 log.write('connect to bucket  succesful')
@@ -128,14 +128,14 @@ with closing(db.cursor()) as cursor:
             recsToProcess.append({"uri":row[1],"id":row[0],"date":row[2]})
 
 with closing(db.cursor()) as cursor:
-    cursor.execute('update `jobs` set `progress_steps` = '+str(totalRecs+5)+' where `job_id` = '+str(job_id))
+    cursor.execute('update `jobs` set state="processing", `progress_steps` = '+str(totalRecs+5)+' where `job_id` = '+str(job_id))
     db.commit()
         
 if len(recsToProcess) < 1:
     print "# fatal error invalid playlist or no recordings on playlist."
     log.write('Invalid playlist or no recordings on playlist')
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `complete` = -1,`remarks` = \'Error: Invalid playlist (Maybe empty).\' where `job_id` = '+str(job_id))
+        cursor.execute('update `jobs` set `state`="error", `completed` = -1,`remarks` = \'Error: Invalid playlist (Maybe empty).\' where `job_id` = '+str(job_id))
         db.commit()
     log.close()
     sys.exit()
@@ -152,7 +152,7 @@ def processRec(rec,config):
         log.write('worker id'+str(id)+' log: worker cannot connect to db')
         return None;
     with closing(db1.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+        cursor.execute('update `jobs` set `state`="processing", `progress` = `progress` + 1 where `job_id` = '+str(job_id))
         db1.commit()   
     results = []
     date = datetime.strptime( rec['date'], '%Y-%m-%d %H:%M:%S')
@@ -214,7 +214,7 @@ log.write("all recs parallel ---" + str(time.time() - start_time_all))
 if len(resultsParallel)>0:
     log.write('processing recordings results: '+str(len(resultsParallel)))
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+        cursor.execute('update `jobs` set `state`="processing", `progress` = `progress` + 1 where `job_id` = '+str(job_id))
         db.commit()
     start_time_all = time.time()
     for result in resultsParallel:
@@ -243,7 +243,7 @@ if len(resultsParallel)>0:
     print query
     log.write(query)
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+        cursor.execute('update `jobs` set `state`="processing", `progress` = `progress` + 1 where `job_id` = '+str(job_id))
         db.commit()
         cursor.execute(query)
         db.commit()
@@ -253,7 +253,7 @@ if len(resultsParallel)>0:
     start_time_all = time.time()
     scp.write_image(workingFolder+imgout,palette.get_palette())
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+        cursor.execute('update `jobs` set `state`="processing", `progress` = `progress` + 1 where `job_id` = '+str(job_id))
         db.commit()
     log.write("writing image:" + str(time.time() - start_time_all))
     imageUri = 'project_'+str(pid)+'/soundscapes/'+str(soundscapeId)+'/image.png'
@@ -262,7 +262,7 @@ if len(resultsParallel)>0:
     k.set_contents_from_filename(workingFolder+imgout)
     k.set_acl('public-read')
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+        cursor.execute('update `jobs` set `state`="processing", `progress` = `progress` + 1 where `job_id` = '+str(job_id))
         db.commit()
     k = bucket.new_key(indexUri )
     k.set_contents_from_filename(workingFolder+scidxout)
@@ -273,16 +273,16 @@ if len(resultsParallel)>0:
 else:
     print 'no results from playlist id:'+playlist_id
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `complete` = -1,`remarks` = \'Error: No results found.\' where `job_id` = '+str(job_id))
+        cursor.execute('update `jobs` set `state`="error", `completed` = -1,`remarks` = \'Error: No results found.\' where `job_id` = '+str(job_id))
         db.commit()    
     log.write('no results from playlist id:'+playlist_id) 
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` + 4 where `job_id` = '+str(job_id))
+        cursor.execute('update `jobs` set `state`="processing", `progress` = `progress` + 4 where `job_id` = '+str(job_id))
         db.commit()
 
 
 with closing(db.cursor()) as cursor:
-    cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+    cursor.execute('update `jobs` set `state`="completed", `completed`=1, `progress` = `progress` + 1 where `job_id` = '+str(job_id))
     db.commit()
 log.write('closing database')
 
@@ -293,4 +293,3 @@ shutil.rmtree(tempFolders+"/soundscape_"+str(job_id))
 
 log.write('ended script')
 log.close()
-
