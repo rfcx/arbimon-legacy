@@ -278,7 +278,8 @@ var Jobs = {
         }
         
         var constraints = [], tables = [];
-        var projection, limit_clause, where_clause;
+        var projection;
+        var limit_clause="";
 
         if(query.id){
             constraints.push(sqlutil.escape_compare("J.job_id", "IN",  query.id));
@@ -343,8 +344,10 @@ var Jobs = {
                 return;
             }
             if(options.unpack_single){
+                debug("if(options.unpack_single){");
                 var cb = callback;
                 callback = function(err, rows){
+                    debug("callback = function(err, rows){");
                     if(err){
                         cb(err);
                         return;
@@ -353,10 +356,14 @@ var Jobs = {
                 };
             }
             if(options.compute){
-                arrays_util.compute_row_properties(data, options.compute, function(property){
+                debug("if(options.compute){");
+                arrays_util.compute_row_properties(rows, options.compute, function(property){
+                    debug("arrays_util.compute_row_properties(rows, options.compute, function(property){");
                     return Jobs['__compute_' + property.replace(/-/g,'_')];
                 }, callback);
-            }                            
+            } else {
+                callback(null, rows);
+            }                           
         });
 
     },
@@ -364,7 +371,8 @@ var Jobs = {
     set_job_state: function(job, new_state, callback){
         queryHandler(
             "UPDATE jobs \n"+
-            "SET state = " + mysql.escape(new_state) + "\n" +
+            "SET state = " + mysql.escape(new_state) + ",\n" +
+            "    last_update = NOW() \n" +
             "WHERE job_id = " + (job.id | 0), 
         callback);
     },

@@ -56,11 +56,12 @@ JobQueue.find = function(id, callback) {
 };
 
 /** Cleans up after job queues that have become unresponsive.
- * @callback {Function} callback(err, ...) called back after the aciton is done. 
+ *  @param {Integer}  timeout timeout after wich job queues are considered inactive and dead.
+ *  @param {Function} callback(err, ...) called back after the aciton is done. 
  *                          cleaned_up is the number of job queues that were cleaned up.
  **/
-JobQueue.cleanup_stuck_queues = function(callback){
-    var timeout = config('job-queue').heartbeat_timeout || 300000;
+JobQueue.cleanup_stuck_queues = function(timeout, callback){
+    timeout = timeout || 300000;
 
     async.waterfall([
         function kill_unresponsive_job_queues(next){
@@ -72,12 +73,13 @@ JobQueue.cleanup_stuck_queues = function(callback){
             next);
         },
         function dequeue_initializing_jobs_from_dead_queues(){
-            var next = arguments[arguments.length];
+            var next = arguments[arguments.length-1];
             queryHandler(
                 "UPDATE `jobs` J \n" +
                 "  JOIN `job_queue_enqueued_jobs` EJ ON J.job_id = EJ.job_id \n"+
-                "  JOIN `job_queues` JQ ON JQ.job_queue_id = EK.job_queue_id \n"+
-                "SET J.state = 'waiting' \n" +
+                "  JOIN `job_queues` JQ ON JQ.job_queue_id = EJ.job_queue_id \n"+
+                "SET J.state = 'waiting', \n" +
+                "    J.last_update = NOW() \n" +
                 "WHERE J.state='initializing' \n"+
                 "  AND J.last_update < DATE_SUB(NOW(), INTERVAL "+(timeout/1000.0)+" SECOND) \n" + 
                 "  AND JQ.is_alive = 0", 
@@ -99,24 +101,27 @@ JobQueue.prototype = {
             "WHERE job_queue_id = " + (this.id | 0) + " \n" +
             "  AND is_alive = 1", function(err, result){
             this.alive = !!(result && result.affectedRows);
-            if(err){ callback(err); } else { callback(); }
+            if(err){ 
+                callback(err); 
+            } else if (!this.alive){ 
+                callback(new Error("Hearbeat sent, but with no effect. I must have been declared dead.")); 
+            } else {
+                callback(); 
+            }
         });
     },
 
     /** Enqueues one job into the jobqueue.
      * @callback {Function} callback called back after the heartbeat is sent. 
      **/
-    enqueue_one_waiting_job: function(job_queue, count, callback) {
+    enqueue_one_waiting_job: function(callback) {
         if(!this.alive){
             callback(new Error("Can't enqueue jobs, since job queue is marked as not alive."));
         }
         var job_queue_id = this.id | 0;
         var job_id, jobs_to_check = true;
         async.doWhilst(
-            function (){
-                return jobs_to_check && !job_id;
-            },
-            function(next_loop){
+            function do_waterfall(next_loop){
                 async.waterfall([
                     function find_some_waiting_job(next){
                         job_id = null;
@@ -136,7 +141,8 @@ JobQueue.prototype = {
                             "INSERT INTO `job_queue_enqueued_jobs` (job_queue_id, job_id, timestamp)\n"+
                             "SELECT " + job_queue_id + ", J.job_id, NOW() \n"+
                             "FROM jobs J \n" +
-                            "WHERE J.state = 'waiting' AND J.job_id = " + job_id + "\n" +
+                            "JOIN job_types JT ON JT.job_type_id = J.job_type_id \n" +
+                            "WHERE J.state = 'waiting' AND J.job_id = " + job_id + " AND JT.enabled = 1\n" +
                             "LIMIT 1 \n" +
                             "ON DUPLICATE KEY UPDATE job_queue_id = " + job_queue_id, 
                         next);
@@ -148,9 +154,10 @@ JobQueue.prototype = {
                     function check_job_is_enqueued(){
                         var next = arguments[arguments.length-1];
                         queryHandler(
-                            "SELECT J.job_id as id\n"+
+                            "SELECT JQEJ.job_id as id\n"+
                             "FROM job_queue_enqueued_jobs JQEJ \n" +
-                            "WHERE JQEJ.job_queue_id = "+job_queue_id+" AND J.job_id = "+job_id+"\n" +
+                            "WHERE JQEJ.job_queue_id = "+job_queue_id+" \n"+
+                            "  AND JQEJ.job_id = "+job_id,
                         next);
                     },
                     function fetch_job_id_if_still_associated_else_nothing(jobs){
@@ -159,14 +166,17 @@ JobQueue.prototype = {
                         next();
                     },
                 ], next_loop);
-            }, 
+            },
+            function whilst_no_job_and_jobs_to_check(){
+                return jobs_to_check && !job_id;
+            },
             function(err){
                 if(err){
                     callback(err);
                 } else if(job_id){
-                    Jobs.find({id:job_id}, {unpack_single:true, compute:'script_path'}, callback);
+                    Jobs.find({id:job_id}, {unpack_single:true, script:true}, callback);
                 } else {
-                    callback();
+                    callback(null, null);
                 }                
             }
         );

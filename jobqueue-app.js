@@ -13,6 +13,8 @@ var script_path = path.resolve(__dirname, 'scripts/');
 var job_queue;
 
 var run_job = function(job, callback){
+    console.log("Running job : ", job);
+    process.exit(1);
     var job_script_path = path.join(script_path, job.script);
     var job_process = child_process.spawn(job_script_path, [job_queue.id, job.id], {
         detached : true
@@ -38,7 +40,10 @@ async.waterfall([
                     next_step();
                 }, 
                 job_queue.send_heartbeat.bind(job_queue),
-                model.job_queues.cleanup_stuck_queues,
+                function(){
+                    var next_step = arguments[arguments.length-1];
+                    model.job_queues.cleanup_stuck_queues(config('job-queue').heartbeat_timeout, next_step);
+                },
                 function count_enqueued_jobs(){
                     var next_step = arguments[arguments.length-1];
                     job_queue.count_jobs(next_step);
@@ -46,32 +51,42 @@ async.waterfall([
                 function(_job_count){
                     var next_step = arguments[arguments.length-1];
                     job_count = _job_count;
-                    debug("  Running Jobs : %s", job_count);
+                    var max_concurrency = job_queue.get_cpu_count(config("job-queue").concurrency);
+                    jobs_to_enqueue = Math.max(0, max_concurrency - job_count);
+                    debug("  Job Stats : {Running:%s, Max-Concurrency:%s, Left-To-Run:%s}", job_count, max_concurrency, jobs_to_enqueue);
                     next_step();
                 },
-                // function enqueue_more_jobs(job_count){
-                //     var next_step = arguments[arguments.length-1];
-                //     jobs_to_enqueue = Math.max(0, job_queue.get_cpu_count(config("job-queue").concurrency) - job_count);
-                //     async.whilst(
-                //         function(){
-                //             return jobs_to_enqueue > 0;
-                //         },
-                //         function(next_jte_loop){
-                //             --jobs_to_enqueue;
-                //             async.waterfall([
-                //                 function get_one_enqueued_job(){
-                //                     var next_w2_step = arguments[arguments.length-1];
-                //                     job_queue.enqueue_one_waiting_job(next_w2_step);
-                //                 },
-                //                 function run_enqueued_job(job){
-                //                     var next_w2_step = arguments[arguments.length-1];
-                //                     run_job(job, next_w2_step);
-                //                 }
-                //             ], next_jte_loop);
-                //         }, 
-                //         next_step
-                //     );
-                // },
+                function enqueue_more_jobs(job_count){
+                    var next_step = arguments[arguments.length-1];
+                    var still_have_jobs = true;
+                    async.whilst(
+                        function(){
+                            return jobs_to_enqueue > 0 && still_have_jobs;
+                        },
+                        function(next_jte_loop){
+                            --jobs_to_enqueue;
+                            async.waterfall([
+                                function get_one_enqueued_job(){
+                                    debug("function get_one_enqueued_job(){");
+                                    var next_w2_step = arguments[arguments.length-1];
+                                    job_queue.enqueue_one_waiting_job(next_w2_step);
+                                },
+                                function run_enqueued_job(){
+                                    debug("function run_enqueued_job(job){");
+                                    var next_w2_step = arguments[arguments.length-1];
+                                    var job = arguments.length > 1 ? arguments[0] : null;
+                                    if(job){
+                                        run_job(job, next_w2_step);
+                                    } else {
+                                        still_have_jobs = false;
+                                        next_w2_step();
+                                    }
+                                }
+                            ], next_jte_loop);
+                        }, 
+                        next_step
+                    );
+                },
                 function wait(){
                     var next_step = arguments[arguments.length-1];
                     debug("  Waiting for : %s ms", config("job-queue").delay);
