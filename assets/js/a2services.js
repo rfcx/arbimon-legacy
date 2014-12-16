@@ -519,5 +519,17 @@ angular.module('a2services',[])
         }
     };
 })
-
+.factory('a2Models', ['Project', '$http', function(Project, $http) {
+    var project_url = Project.getName();
+    
+    return {
+        getList: function(callback) {
+            $http.get('/api/project/' + project_url + '/models')
+            .success(function(data) {
+                return callback(data);
+            });
+        },
+        
+    };
+}])
 ;

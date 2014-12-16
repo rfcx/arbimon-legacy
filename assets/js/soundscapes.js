@@ -3,16 +3,7 @@
     var soundscapes = angular.module('soundscapes', ['ui.bootstrap' , 'a2services' , 'ui-rangeSlider']);
     var template_root = '/partials/soundscapes/';
 
-    soundscapes
-    .filter
-    ('momentformat',
-    function() {
-	return function(input) {
-	    return moment(input).format('lll');
-	};
-    })
-    .controller
-    ('SoundscapesCtrl' , 
+    soundscapes.controller('SoundscapesCtrl' , 
         function ($scope,$http,$modal,$filter,$sce,Project,JobsData,ngTableParams,a2Playlists,$location) 
         {
 	    $scope.successInfo = "";

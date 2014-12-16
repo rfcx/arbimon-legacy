@@ -3,6 +3,14 @@
 { 
     var jobs = angular.module('jobs',['a2services']);
     
+    jobs.config(['$stateProvider', function($stateProvider) {
+        $stateProvider.state('jobs', {
+            url: '/jobs',
+            controller : 'StatusBarNavController' ,
+            templateUrl: '/partials/jobs/index.html'
+        });
+    }]);
+    
     jobs.service('JobsData',
         function ($http, $interval,Project)
         {
@@ -127,7 +135,7 @@
         {
             $scope.showClassifications = true;
             $scope.showTrainings = true;
-	    $scope.showSoundscapes = true;
+        $scope.showSoundscapes = true;
             $scope.url = '';
             $scope.successInfo = "";
             $scope.showSuccesss = false;
@@ -136,14 +144,14 @@
             $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
             $scope.updateFlags = function()
-	    {
-		$scope.successInfo = "";
-		$scope.showSuccess = false;
-		$scope.errorInfo = "";
-		$scope.showError = false;
-		$scope.infoInfo = "";
-		$scope.showInfo = false;
-	    };
+        {
+        $scope.successInfo = "";
+        $scope.showSuccess = false;
+        $scope.errorInfo = "";
+        $scope.showError = false;
+        $scope.infoInfo = "";
+        $scope.showInfo = false;
+        };
             $scope.jobs = [];
             $scope.$watch
             (
@@ -211,13 +219,13 @@
                                             {
                                                 if (data.err)
                                                 {
-						    $scope.errorInfo = "Error Communicating With Server";
-						    $scope.showError = true;
-						    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
-						    function()
-						    {
-							$scope.showError = false;
-						    });
+                                                    $scope.errorInfo = "Error Communicating With Server";
+                                                    $scope.showError = true;
+                                                    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+                                                    function()
+                                                    {
+                                                        $scope.showError = false;
+                                                    });
                                                 }
                                                 else
                                                 {
@@ -259,13 +267,13 @@
                         {
                             if (data.err)
                             {
-				$scope.errorInfo = "Error Communicating With Server";
-				     $scope.showError = true;
-				     $("#errorDiv").fadeTo(3000, 500).slideUp(500,
-				     function()
-				     {
-					 $scope.showError = false;
-				     });
+                $scope.errorInfo = "Error Communicating With Server";
+                     $scope.showError = true;
+                     $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+                     function()
+                     {
+                     $scope.showError = false;
+                     });
                             }
                             else
                             {
@@ -280,16 +288,16 @@
                             }
                          }
                     ).error(
-		    function()
-		    {
-			$scope.errorInfo = "Error Communicating With Server";
-			$scope.showError = true;
-			$("#errorDiv").fadeTo(3000, 500).slideUp(500,
-			function()
-			{
-			    $scope.showError = false;
-			});
-		    }
+            function()
+            {
+            $scope.errorInfo = "Error Communicating With Server";
+            $scope.showError = true;
+            $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+            function()
+            {
+                $scope.showError = false;
+            });
+            }
                     );
                 }
             };
@@ -305,8 +313,8 @@
                 {
                     return($scope.showClassifications)
                 }
-		
-		if (type==4)
+        
+        if (type==4)
                 {
                     return($scope.showSoundscapes)
                 }

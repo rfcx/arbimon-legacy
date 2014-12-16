@@ -1,23 +1,30 @@
-angular.module('dashboard',['a2services', 'a2directives', 'ui.bootstrap'])
-.config(function($stateProvider, $urlRouterProvider) {
+angular.module('dashboard',[
+    'a2services', 
+    'a2directives', 
+    'ui.bootstrap',
+    'ui.router',
+    'ct.ui.router.extras'
+])
+.config(function($stickyStateProvider, $stateProvider, $urlRouterProvider) {
 
     $urlRouterProvider.when("/dashboard", "/dashboard/summary");
 
-    $stateProvider.state('dashboard.summary', {
+    $stateProvider.state('dashboard', {
+        url: '/dashboard',
+        views: { 
+            'dashboard': { 
+                templateUrl: '/partials/dashboard/index.html',
+            } 
+        },
+        deepStateRedirect: true, 
+        sticky: true,
+    })
+    .state('dashboard.summary', {
         url: '/summary',
         controller:'SummaryCtrl',
         templateUrl: '/partials/dashboard/summary.html'
     })
-    .state('dashboard.sites', {
-        url: '/sites',
-        controller:'SitesCtrl',
-        templateUrl: '/partials/dashboard/sites.html'
-    })
-    .state('dashboard.species', {
-        url: '/species',
-        controller:'SpeciesCtrl',
-        templateUrl: '/partials/dashboard/species.html'
-    })
+    
     .state('dashboard.settings', {
         url: '/settings',
         controller:'SettingsCtrl',

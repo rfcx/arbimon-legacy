@@ -3,7 +3,7 @@
     <% include head %>    
     <title>Arbimon 2 - <%= project.name %></title>
 </head>
-<body>
+<body ng-controller="MainCtrl">
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -43,6 +43,10 @@
         </div>
     </nav>
     <div id="page">
+        <div ui-view="dashboard" ng-show="$state.includes('dashboard')"></div>
+        <div ui-view="audiodata" ng-show="$state.includes('audiodata')"></div>
+        <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
+        <div ui-view="analysis" ng-show="$state.includes('analysis')"></div>
         <div ui-view></div>
     </div>
 
