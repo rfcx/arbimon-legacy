@@ -1,24 +1,34 @@
-angular.module('a2browser_recordings_by_playlist', [])
-.service('a2PlaylistLOVO', function($q, a2Playlists){
-    var lovo = function(playlist){
-        this.playlist = playlist;
-        this.object_type = "recording";
-        this.offset = 0;
-        this.count  = 0;
-        this.list   = [];
-    };
-    lovo.prototype = {
+angular.module('a2browser_recordings_by_playlist', ['a2Classy'])
+.service('a2PlaylistLOVO', function($q, makeClass, a2Playlists, a2Pager){
+    return makeClass({
+        static: {
+            PageSize : 100,
+            BlockSize: 7
+        },
+        constructor : function(playlist){
+            this.playlist = playlist;
+            this.object_type = "recording";
+            this.offset = 0;
+            this.count  = 0;
+            this.list   = [];
+            this.whole_list = [];
+            var self = this;
+            this.paging = new a2Pager({
+                item_count: playlist.count,
+                page_size : this.constructor.PageSize,
+                block_size: this.constructor.BlockSize,
+                block_tracks_page : true,
+                on_page   : function(e){
+                    return self.load_page(e.offset, e.count);
+                }
+            });
+        },
         initialize: function(){
             var self = this, d = $q.defer();
             if(this.initialized){
                 d.resolve(true);
             } else {
-                a2Playlists.getData(self.playlist.id, {show:'thumbnail-path'}, function(recordings){
-                    self.list = recordings;
-                    recordings.forEach(function(recording){
-                        recording.caption = [recording.site, moment(recording.datetime).format('lll')].join(', ');
-                    });
-                    self.count  = recordings.length;
+                this.paging.set_page(0).then(function(){
                     d.resolve(false);
                 });
             }
@@ -38,10 +48,26 @@ angular.module('a2browser_recordings_by_playlist', [])
                 });
                 return d.promise;
             }).then(function(){
-                if(self.list){
-                    self.list.forEach(self.append_extras.bind(self));
+                if(self.whole_list){
+                    self.whole_list.forEach(self.append_extras.bind(self));
                 }
             });
+        },
+        load_page: function(offset, count){
+            var self = this, d = $q.defer();
+            a2Playlists.getData(self.playlist.id, {
+                offset : offset,
+                limit  : count,
+                show:'thumbnail-path'
+            }, function(recordings){
+                self.list = recordings;
+                recordings.forEach(function(recording){
+                    recording.caption = [recording.site, moment(recording.datetime).format('lll')].join(', ');
+                });
+                self.count  = recordings.length;
+                d.resolve(recordings);
+            });
+            return d.promise;
         },
         append_extras: function(recording){
             if(recording){
@@ -51,13 +77,40 @@ angular.module('a2browser_recordings_by_playlist', [])
             }
             return recording;
         },
-        find : function(recording){
+        find_local : function(recording){
+            var self = this;
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
-            console.log("find : function(recording){", id, "--", recording);
-            d.resolve(this.append_extras(this.list.filter(function(r){
-                console.log("  ::: ", r.id, id, r.id == id);
+            console.log(":: find : %s : %s", recording, id);
+            d.resolve(this.append_extras(this.list && this.list.filter(function(r){
+                if(r.id == id){console.log("  :: ", r.id, r);}
                 return r.id == id;
             }).shift()));
+            return d.promise;            
+        },
+        find : function(recording){
+            var self = this;
+            var d = $q.defer();
+            var id = (recording && recording.id) || (recording | 0);
+            
+            self.find_local(recording)
+                .then(function(found_rec){
+                    if(found_rec){
+                        d.resolve(found_rec);
+                    } else {
+                        a2Playlists.getRecordingPosition(self.playlist.id, id)
+                            .then(function(response){
+                                return self.paging.set_page(self.paging.page_for(response.data));
+                            })
+                            .then(function(recordings){
+                                return self.find_local(recording);
+                            })
+                            .then(function(found_rec){
+                                d.resolve(found_rec);
+                            })
+                        ;
+                    }
+                });
+
             return d.promise;
         },
         previous : function(recording){
@@ -76,8 +129,86 @@ angular.module('a2browser_recordings_by_playlist', [])
             });
             return d.promise;
         }
-    };
-    return lovo;
+    });
+})
+.factory('a2Pager', function(makeClass){
+    return makeClass({
+        constructor: function(options){
+            this.block_size = 10;
+            this.last_page  = 0;
+            this.set_options(options);
+        },
+        resolve_value : function(value, current, first, last){
+            switch(value){
+                case 'first'    : value = first      ; break;
+                case 'previous' : value = current - 1; break;
+                case 'next'     : value = current + 1; break;
+                case 'last'     : value = last       ; break;
+            }
+            return Math.max(first, Math.min(+value, last));
+        },
+        set_options : function(options){
+            if(options.item_count           ){ this.item_count       = options.item_count      ; }
+            if(options.page_size            ){ this.page_size        = options.page_size       ; }
+            if(options.block_size           ){ this.block_size       = options.block_size      ; }
+            if(options.last_page            ){ this.last_page        = options.last_page       ; }
+            if(options.block_tracks_page !== undefined){ this.block_tracks_page       = !!options.block_tracks_page; }
+            if(options.on_page !== undefined){ this.on_page          = options.on_page ; }
+            this.update();
+        },
+        page_for : function(item){
+            var page = (item / this.page_size)|0;
+            console.log("page_for(%s) :: %s", item, page);
+            return page;
+        },
+        set_page : function(page){
+            this.current_page = this.resolve_value(page, this.current_page, 0, this.last_page)|0;
+            this.is_at_first_page = this.current_page === 0;
+            this.is_at_last_page  = this.current_page === this.last_page;
+            
+            if(this.block_tracks_page){
+                this.show_block((this.current_page - this.block_size/2 + (this.block_size%2)) / this.block_size);
+            } else {
+                this.show_block(this.current_page / this.block_size);
+            }
+            
+            if(this.on_page instanceof Function){
+                var offset = this.current_page*this.page_size;
+                return this.on_page({
+                    page   : this.current_page, 
+                    offset : offset, 
+                    count  : Math.min(this.page_size, this.item_count - offset + 1)
+                });
+            }
+            
+        },        
+        update : function(){
+            this.is_at_first_page = this.current_page <= 0;
+            this.last_page        = ((this.item_count-1) / this.page_size) | 0;
+            this.last_page_block  = (this.last_page / this.block_size) | 0;
+            this.is_at_last_page  = this.current_page >= this.last_page;
+            this.show_block(this.block);
+        },
+        show_block : function(block){
+            if(this.block_tracks_page){
+                this.current_page_block = this.resolve_value(block, this.current_page_block, 0, this.last_page_block);
+            } else {
+                this.current_page_block = this.resolve_value(block, this.current_page_block, 0, this.last_page_block) | 0;
+            }
+            this.is_at_first_page_block = this.current_page_block <= 0;
+            this.is_at_last_page_block  = this.current_page_block >= this.last_page_block;            
+            
+            this.current_page_block_first_page = (this.current_page_block * this.block_size)|0;
+            this.current_page_block_last_page  = Math.min(((this.current_page_block+1) * this.block_size - 1)|0, this.last_page);
+            this.block = [];
+            for(var i=this.current_page_block_first_page, e=this.current_page_block_last_page; i <= e; ++i){
+                this.block.push(i);
+            }            
+        },
+        has_page : function(page){
+            return 0 <= page && page <= this.last_page;
+        }
+    });
 })
 .controller('a2BrowserRecordingsByPlaylistController', function($scope, itemSelection, a2Browser, rbDateAvailabilityCache, a2Playlists, $timeout, $q, a2PlaylistLOVO){
     var self = this;

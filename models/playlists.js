@@ -134,13 +134,15 @@ var Playlists = {
         // }
         
         var limit_clause = '';
-        
         if(query.limit){
             var qlimit = query.limit;
             if(typeof qlimit != "object"){
                 qlimit = {count:query.limit};
             }
             limit_clause = " LIMIT " + Math.max(0,(qlimit.count | 0));
+            if(qlimit.offset === undefined && query.offset){
+                qlimit.offset = query.offset;
+            }
             if(qlimit.offset){
                 limit_clause += " OFFSET " + Math.max(0, (qlimit.offset | 0))
             }
@@ -179,7 +181,7 @@ var Playlists = {
     
     fetchRecordingsAround: function(playlist, recording, radius, callback){
         async.waterfall([
-            function(next){
+            (function(next){
                 dbpool.queryHandler(
                     "SELECT rPLR.row \n" +
                     "FROM (\n"+
@@ -189,7 +191,7 @@ var Playlists = {
                     ") as rPLR \n" +
                     "WHERE rPLR.recording_id = " + mysql.escape(recording),
                 next);
-            }, 
+            }).bind(this), 
             function(rows){
                 var next = arguments[arguments.length-1];
                 next(null, rows.length ? rows[0].row : 0);
@@ -209,6 +211,26 @@ var Playlists = {
                 var next = arguments[arguments.length-1];
                 next(null, intervals[0], intervals[1][0], intervals[2]);
             },            
+        ], callback);
+    },
+    
+    fetchRecordingPosition: function(playlist, recording, callback){
+        async.waterfall([
+            function(next){
+                dbpool.queryHandler(
+                    "SELECT rPLR.row \n" +
+                    "FROM (\n"+
+                    "   SELECT @rownum:=@rownum+1 row, PLR.*  \n" +
+                    "   FROM playlist_recordings PLR, (SELECT @rownum:=0) r \n" +
+                    "   WHERE PLR.playlist_id = " + mysql.escape(playlist.id) + " \n"+
+                    ") as rPLR \n" +
+                    "WHERE rPLR.recording_id = " + mysql.escape(recording),
+                next);
+            }, 
+            function(rows){
+                var next = arguments[arguments.length-1];
+                next(null, rows.length ? rows[0].row - 1 : null);
+            }
         ], callback);
     },
 

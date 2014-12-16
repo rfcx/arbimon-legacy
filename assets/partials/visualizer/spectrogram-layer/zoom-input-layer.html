@@ -1,0 +1,19 @@
+<div class="input-source" ng-show="visobject && visobject.zoomable && click2zoom.active"
+    ng-mousedown= "($event.which   == 1) && click2zoom.add_point(pointer.sec, pointer.hz)"
+    ng-mousemove= "($event.buttons == 1) && click2zoom.add_tracer_point(pointer.sec, pointer.hz)"
+    ng-mouseup  = "($event.which   == 1) && click2zoom.add_point(pointer.sec, pointer.hz, true)"
+>
+    <div class="text-shadow" a2-visualizer-spectrogram-affixed>
+        <strong>Click</strong> and <strong>Drag</strong> to zoom in a region.
+    </div>
+    <div class="selection-rect"
+        ng-show="click2zoom.active && click2zoom.bbox && !click2zoom.bbox.id"
+        ng-style="{
+            left   : layout.sec2x(click2zoom.bbox.x1) + 'px', 
+            top    : layout.hz2y(click2zoom.bbox.y2 ) + 'px', 
+            width  : layout.dsec2width(click2zoom.bbox.x2, click2zoom.bbox.x1) + 'px', 
+            height : layout.dhz2height(click2zoom.bbox.y2, click2zoom.bbox.y1) + 'px'
+        }"
+    >
+    </div>
+</div>

@@ -60,42 +60,55 @@ angular.module('a2directives', ['a2services'])
         }
     };
 })
-.directive('a2Scroll', function() {
+.directive('a2Scroll', function($parse) {
+    var mkFunction = function(scope, attr){
+        var fn = $parse(attr);
+        return function(locals) {
+            locals.console = console;
+            return fn(scope, locals);
+        };
+    };
+    
     return {
         scope: {
-            a2Scroll : '&a2Scroll'
+            'a2InfiniteScrollDistance':'=?',
+            'a2InfiniteScrollDisabled':'=?',
+            'a2InfiniteScrollImmediateCheck':'=?'
         },
-        link : function($scope, $element, $attrs) {
-            $element.bind("scroll", function(e) {
-                $scope.a2Scroll(e);
+        link : function($scope, element, attrs) {
+            var pscope = $scope.$parent;
+            var cb_count=0;
+            if(attrs.a2Scroll){
+                $scope.a2Scroll = mkFunction(pscope, attrs.a2Scroll);
+                ++cb_count;
+            }
+            if(attrs.a2InfiniteScroll){
+                $scope.a2InfiniteScroll = mkFunction(pscope, attrs.a2InfiniteScroll);
+                    
+                ++cb_count;
+            }
+            if(!$scope.a2InfiniteScrollDistance){
+                $scope.a2InfiniteScrollDistance = 1;
+            }
+            if(!$scope.a2InfiniteScrollRefraction){
+                $scope.a2InfiniteScrollRefraction = 1000;
+            }
+            
+            element.bind("scroll", function(e) {
+                if($scope.a2Scroll){
+                    $scope.a2Scroll({$event:e});
+                }
+                if($scope.a2InfiniteScroll && !$scope.a2InfiniteScrollDisabled){
+                    var remaining = ((element[0].scrollHeight - element[0].scrollTop)|0) / element.height();
+                    if(remaining < $scope.a2InfiniteScrollDistance){
+                        var time = new Date().getTime();
+                        if(!$scope.refraction || $scope.refraction < time){
+                            $scope.refraction = time + $scope.a2InfiniteScrollRefraction;
+                            $scope.a2InfiniteScroll({$event:e});
+                        }
+                    }
+                }
             });
-        }
-    };
-})
-.directive('a2ZoomControl', function(){
-    return {
-        restrict :'E',
-        scope : {
-            'level' : '='
-        },
-        templateUrl : '/partials/directives/zoom-ctrl.html',
-        replace  : true,
-        link : function($scope, $element, $attrs) {
-            var delta = (+$attrs.delta) || 0.1;
-            var horizontal = !!(($attrs.horizontal|0) || (/on|yes|true/.test($attrs.horizontal+'')));
-            $scope.horizontal = horizontal;
-            $scope.switched   = horizontal;
-            $scope.step = function(step){
-                $scope.level = Math.min(1, Math.max($scope.level + step*delta, 0));
-            };
-            $scope.set_by_mouse = function($event){
-                var track = $element.find('.zoom-track'), trackpos=track.offset();
-                var px = (track.width()  - ($event.pageX - trackpos.left )) / track.width() ;
-                var py = (track.height() - ($event.pageY - trackpos.top  )) / track.height();
-                // console.log('$scope.set_by_mouse', [px,py]);
-                var level = $scope.horizontal ? px : py;
-                $scope.level = $scope.switched ? (1-level) : level;
-            };
         }
     };
 })
@@ -194,7 +207,7 @@ angular.module('a2directives', ['a2services'])
 
                 scope.selected = row;
                 if(attrs.onSelect)
-                    scope.onSelect({ $index: $index });
+                    scope.onSelect({ $index: $index , $object:row});              
             };
 
             scope.sortBy = function(field) {
@@ -309,6 +322,7 @@ angular.module('a2directives', ['a2services'])
          templateUrl: '/partials/directives/loader.html'
      };
 })
+
  
 /**   yearpick - complete year date picker
   

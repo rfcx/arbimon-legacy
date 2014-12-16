@@ -1,7 +1,7 @@
 angular.module('a2visobjectsbrowser', [
     'a2utils', 'a2browser_common',
     'a2browser_recordings_by_site', 'a2browser_recordings_by_playlist',
-    'a2browser_soundscapes'
+    'a2browser_soundscapes',
 ])
 .directive('a2VisObjectBrowser', function () {
     return {
@@ -156,6 +156,18 @@ angular.module('a2visobjectsbrowser', [
             });
         }
     });
+
+    this.onLovoScroll = function(event){
+        var $el = $(event.target);
+        var $lovoels = $el.children('.visobj-list-item[data-index]');
+        var midh = $el.height() * 0.5;
+        var hit_pt = $el.scrollTop() + midh;
+        var $pointed_el = $lovoels.filter(function(i,el){
+            var $el =$(el), t=$el.position().top, h2=$el.height()*0.5; 
+            return Math.abs(hit_pt - t - h2) <= h2;
+        });
+        console.log("onLovoScroll = ", $pointed_el);
+    };
 
     activate();
 

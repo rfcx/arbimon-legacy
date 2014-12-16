@@ -120,6 +120,13 @@ router.get('/list/:playlist', function(req, res, next) {
     });
 });
 
+router.get('/:playlist/:recid/position', function(req, res, next) {
+    model.playlists.fetchRecordingPosition(req.playlist, req.params.recid, function(err, data) {
+        if(err) return next(err);
+        res.json(data);
+    });
+});
+
 router.get('/:playlist/:recid/next', function(req, res, next) {
     model.playlists.fetchNextRecording(req.playlist, req.params.recid, function(err, data) {
         if(err) return next(err);        
