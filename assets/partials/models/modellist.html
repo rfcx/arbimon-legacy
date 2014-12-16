@@ -10,7 +10,7 @@
     <table ng-table="tableParams" class="table"  show-filter="true" >
         <tr ng-repeat="model in modelsData" >
             <td data-title="'Date'" sortable="'date'">
-                {{model.date | momentformat }}
+                {{model.date | moment : 'lll' }}
             </td>
             <td data-title="'Name'" class="hidelongtext widthtd" sortable="'mname'"  filter="{ 'mname': 'text' }">
                 {{model.mname}}

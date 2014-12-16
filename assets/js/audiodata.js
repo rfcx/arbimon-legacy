@@ -378,11 +378,11 @@ angular.module('audiodata', [
     $scope.editing = false;
     
     $scope.fields = [
-    { name: 'Name', key: 'name' },
-    { name: 'Latidude', key:'lat' },
-    { name: 'Longitude', key: 'lon' },
-    { name: 'Altitude', key: 'alt' },
-    { name: 'Rec qty', key: 'rec_count' }
+        { name: 'Name', key: 'name' },
+        { name: 'Latidude', key:'lat' },
+        { name: 'Longitude', key: 'lon' },
+        { name: 'Altitude', key: 'alt' },
+        { name: 'Rec qty', key: 'rec_count' }
     ];
     
     
@@ -406,20 +406,20 @@ angular.module('audiodata', [
             if(data.error)
                 alert(data.error);
                 
-                if(action === 'create') {
-                    $scope.creating = false;
-                }
-                else {
-                    $scope.editing = false;
-                }
-                
-                Project.getSites(function(sites) {
-                    $scope.sites = sites;
-                });
-            })
-            .error(function(data) {
-                alert(data);
+            if(action === 'create') {
+                $scope.creating = false;
+            }
+            else {
+                $scope.editing = false;
+            }
+            
+            Project.getSites(function(sites) {
+                $scope.sites = sites;
             });
+        })
+        .error(function(data) {
+            alert(data);
+        });
     };
     
     
@@ -511,13 +511,13 @@ angular.module('audiodata', [
         $scope.editing = true;
     };
     
-    $scope.sel = function($index) {
+    $scope.sel = function(site) {
         //~ console.log('sel');
         
         $scope.editing = false;
         $scope.creating = false;
         
-        $scope.selected = $scope.sites[$index];
+        $scope.selected = site;
         
         var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
         
@@ -939,10 +939,10 @@ angular.module('audiodata', [
         }
     );
     $scope.loaderDisplay = false;
-    $scope.displaySetData = function($index,$object) {
+    $scope.displaySetData = function($object) {
         var setId = $object.id;
         var i = 0;
-        while(i<$scope.sets.length)
+        while(i < $scope.sets.length)
         {
             if ($scope.sets[i].id == setId )
             {

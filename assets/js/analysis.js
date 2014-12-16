@@ -26,7 +26,13 @@
         })
         .state('analysis.models', {
             url: '/models',
-            template: '<a2-models></a2-models>'
+            controller: 'ModelsCtrl',
+            templateUrl: '/partials/models/list.html'
+        })
+        .state('analysis.modeldetails', {
+            url: '/model/:modelId',
+            controller: 'ModelDetailsCtrl',
+            templateUrl: '/partials/models/modelinfo.html'
         })
         .state('analysis.classification', {
             url: '/classification',

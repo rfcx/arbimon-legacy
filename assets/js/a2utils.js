@@ -67,7 +67,15 @@ angular.module('a2utils', [])
     
     return metrics;
 })
-.filter('moment', function(){
+.filter('moment',function() {
+    return function(input, fmt) {
+        if(!input)
+            return undefined;
+            
+        return moment(input).format(fmt);
+    };
+})
+.filter('momentUtc', function(){
     return function(x, fmt){
         if(!x)
             return undefined;
@@ -92,7 +100,7 @@ angular.module('a2utils', [])
             return undefined;
             
         return x +'s';
-    }
+    };
 })
 ;
 

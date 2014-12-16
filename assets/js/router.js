@@ -14,8 +14,7 @@ var arbimon2 = angular.module('arbimon2', [
     Angularytics.init();
 })
 .config(function($stateProvider, $stickyStateProvider, $urlRouterProvider,AngularyticsProvider) {
-    $stickyStateProvider.enableDebug(true);
-    AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
+    AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
     
     $urlRouterProvider.otherwise("/dashboard");
 })
