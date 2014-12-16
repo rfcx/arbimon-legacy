@@ -10,6 +10,7 @@ import math
 import multiprocessing
 import subprocess
 import boto
+import json
 from joblib import Parallel, delayed
 from datetime import datetime
 from contextlib import closing
@@ -18,6 +19,7 @@ from a2pyutils.config import Config
 from a2pyutils.logger import Logger
 from a2audio.rec import Rec
 from a2pyutils import palette
+from a2pyutils.news import insertNews
 from boto.s3.connection import S3Connection
 
 # to do
@@ -371,8 +373,10 @@ else:
 with closing(db.cursor()) as cursor:
     cursor.execute('update `jobs` set `state`="completed", `completed`=1, \
         `progress` = `progress` + 1 where `job_id` = '+str(job_id))
+    insertNews(cursor, uid, pid, json.dumps({"soundscape": name}), 11)
     db.commit()
 log.write('closing database')
+
 
 db.close()
 log.write('removing temporary folder')
