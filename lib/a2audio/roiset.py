@@ -88,7 +88,6 @@ class Roiset:
                 self.stdSurface = scipy.delete(self.stdSurface, i, 1)
                 self.surface = scipy.delete(self.surface, i, 1)
                 
-        before = numpy.copy(self.meanSurface)
         self.maxColumns = self.surface.shape[1]
         freqs = [self.setSampleRate/2/(self.surface.shape[0]-1)*i for i in reversed(range(0,self.surface.shape[0]))]
         
