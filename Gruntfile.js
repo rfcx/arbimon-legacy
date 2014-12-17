@@ -1,6 +1,6 @@
 
 module.exports = function(grunt) {
-     grunt.initConfig({
+    var initcfg = {
         pkg: grunt.file.readJSON('package.json'),
         less: {
             main: {
@@ -183,9 +183,8 @@ module.exports = function(grunt) {
         },
 
         watch: {
-            options: {
-                //reloads the browser with livereload plugin
-                livereload: true
+            options: {                
+                livereload: true //reloads the browser with livereload plugin
             },
             html: {
                 files: [
@@ -224,12 +223,30 @@ module.exports = function(grunt) {
                     spawn: false // for grunt-contrib-watch v0.5.0+
                 }
             },
+            jobqueue: {
+                files: [
+                    'jobqueue-app.js',
+                    'models/job_queues.js',
+                    'utils/**/*.js',
+                    'config/**/*.js',
+                    'config/**/*.json'
+                ],
+                tasks: ['express:jobqueue'],
+                options: {
+                    spawn: false // for grunt-contrib-watch v0.5.0+
+                }
+            },
         },
 
         express: {
             dev: {
                 options: {
                     script: 'bin/www'
+                }
+            },
+            jobqueue: {
+                options: {
+                    script: 'bin/jobqueue'
                 }
             }
         },
@@ -238,7 +255,17 @@ module.exports = function(grunt) {
             assets: ['public/assets/*'],
             packages: ['bower_components', 'node_modules']
         }
-    });
+    };
+    
+    var appserver  = grunt.cli.tasks.indexOf('server') >= 0;
+    var jobqserver = grunt.cli.tasks.indexOf('jobqueue-server') >= 0;
+    if(!jobqserver){
+        delete initcfg.watch.jobqueue;
+    } else if(!appserver){
+        initcfg.watch.options.livereload = false;
+    }
+    
+    grunt.initConfig(initcfg);
 
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-less');
@@ -251,4 +278,5 @@ module.exports = function(grunt) {
     grunt.registerTask('build', ['copy', 'less', 'html2js', 'concat']);
     grunt.registerTask('default', ['build']);
     grunt.registerTask('server', ['build', 'express:dev', 'watch']);
+    grunt.registerTask('jobqueue-server', ['express:jobqueue', 'watch:jobqueue']);
 };
