@@ -1,6 +1,6 @@
 {
   "name": "arbimon2",
-  "version": "0.0.1",
+  "version": "0.3.0",
   "private": true,
   "dependencies": {
     "font-awesome": "~4.2.0",
