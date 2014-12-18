@@ -1,5 +1,7 @@
 {
-    "delay" : 10000,
+    "retry_delay" : 10000,
+    "enqueue_retries" : 10,
+    "suspend_delay" : 100000,
     "heartbeat_timeout" : 300000,
     "concurrency" : -2
 }

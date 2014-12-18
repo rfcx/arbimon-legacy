@@ -125,7 +125,7 @@ JobQueue.prototype = {
                 async.waterfall([
                     function find_some_waiting_job(next){
                         job_id = null;
-                        Jobs.find({state:'waiting', limit:1}, {id_only:true}, next);
+                        Jobs.find({state:'waiting', limit:1, user:5}, {id_only:true}, next);
                     }, 
                     function associate_job_to_queue(jobs){
                         var next = arguments[arguments.length-1];
@@ -182,7 +182,7 @@ JobQueue.prototype = {
         );
     },
 
-    count_jobs : function(callback){
+    count_enqueued_jobs : function(callback){
         queryHandler(
             "SELECT count(*) as count\n" +
             "FROM `job_queue_enqueued_jobs` \n"+
@@ -190,6 +190,19 @@ JobQueue.prototype = {
             function(err, data){
                 if(err){callback(err); return;}
                 callback(null, data.length ? data[0].count : 0);                
+            }
+        );
+    },
+
+    count_waiting_jobs : function(callback){
+        queryHandler(
+            "SELECT count(*) as count\n" +
+            "FROM `jobs` J\n"+
+            "JOIN job_types JT ON JT.job_type_id = J.job_type_id \n" +
+            "WHERE J.state = 'waiting' AND JT.enabled = 1\n",
+            function(err, data){
+                if(err){callback(err); return;}
+                callback(null, data.length ? data[0].count : 0);
             }
         );
     },

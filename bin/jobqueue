@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-var app = require('../jobqueue-app');
+var app = new (require('../jobqueue-app'))();
 var debug = require('debug')('arbimon2:jobqueue');
 
-app.set('port', process.env.JOBS_PORT || 3007);
+app.server.set('port', process.env.JOBS_PORT || 3007);
 
-var server = app.listen(app.get('port'), function() {
+var server = app.server.listen(app.server.get('port'), function() {
     debug('Express server listening on port ' + server.address().port);
 });
