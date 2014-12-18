@@ -247,7 +247,8 @@
             $scope.buttonEnable = function () 
             {
                 return  (
-			   ((typeof $scope.datasubmit.bin.length)  == 'string')
+			    $scope.datasubmit.bin == 0
+			    || ((typeof $scope.datasubmit.bin.length)  == 'string')
 			    || $scope.datasubmit.aggregation.length  == 0 
 			    || ((typeof $scope.datasubmit.threshold.length)  == 'string')
 			    || ((typeof $scope.datasubmit.bandwidth.length)  == 'string')
