@@ -44,17 +44,23 @@ class Rec:
          #   audiodata = audiotools.open(self.localFiles+self.filename)
         sig = None
         
-        with closing(Sndfile(self.localFiles+self.filename)) as f:
+        try:
+            with closing(Sndfile(self.localFiles+self.filename)) as f:
+                if self.logs :
+                    self.logs.write("sampling rate = {} Hz, length = {} samples, channels = {}".format(f.samplerate, f.nframes, f.channels))
+                self.bps = 16
+                self.channs = f.channels
+                self.samples = f.nframes
+                self.sample_rate = f.samplerate       
+                # default dtype: float64
+                self.original = f.read_frames(f.nframes,dtype=np.dtype('int'+str(self.bps)))
+                if self.logs :
+                    self.logs.write(str(type(self.original)))
+        except:
             if self.logs :
-                self.logs.write("sampling rate = {} Hz, length = {} samples, channels = {}".format(f.samplerate, f.nframes, f.channels))
-            self.bps = 16
-            self.channs = f.channels
-            self.samples = f.nframes
-            self.sample_rate = f.samplerate       
-            # default dtype: float64
-            self.original = f.read_frames(f.nframes,dtype=np.dtype('int'+str(self.bps)))
-            if self.logs :
-                self.logs.write(str(type(self.original)))
+                self.logs.write("error opening : "+self.filename)
+            self.status = 'CorruptedFile'
+            return None
         
         self.localfilename = self.localFiles+self.filename
         
