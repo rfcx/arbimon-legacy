@@ -1,18 +1,22 @@
 // dependencies
-var console={log:require('debug')('arbimon2:model:training_sets')};
+var debug = require('debug')('arbimon2:model:training_sets');
 var mysql        = require('mysql');
 var async        = require('async');
 var joi          = require('joi');
 var im           = require('imagemagick');
 var AWS          = require('aws-sdk');
 var fs           = require('fs');
+var util         = require('util');
+
+
 var config       = require('../config'); 
 var tmpfilecache = require('../utils/tmpfilecache');
-var util         = require('util');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
+
+
 // local variables
 var s3;
 var queryHandler = dbpool.queryHandler;
@@ -49,7 +53,7 @@ var TrainingSets = {
             }
         }
 
-        if(constraints.length == 0){
+        if(constraints.length === 0){
             callback(new Error("TrainingSets.find called with invalid query."));
         }
 
@@ -69,16 +73,16 @@ var TrainingSets = {
                     if(m){
                         ttfields.push([m[0], m[1], m[2]]);
                     }
-                })
+                });
                 data.forEach(function(item){
-                    var tt = item['type'];
+                    var tt = item.type;
                     ttfields.forEach(function(ttfield){
                         var val = item[ttfield[0]];
                         delete item[ttfield[0]];
                         if(tt == ttfield[1]){
                             item[ttfield[2]] = val;
                         }
-                    })
+                    });
                 });
             }
             callback(err, data);
@@ -124,7 +128,7 @@ var TrainingSets = {
             tasks.push(function perform_typedef_extra_validation(cb){
                 typedef_action.validate(data, cb);
             });
-        };
+        }
         tasks.push(dbpool.getConnection);
         tasks.push(function begin_transaction(connection, cb){
             scope.connection = connection;
@@ -314,11 +318,11 @@ TrainingSets.types.roi_set = {
                 Recordings.fetchInfo(rec_data, next);
             },
             function fetch_spectrogram(data, next){
-                rec_stats = data                
+                rec_stats = data;
                 Recordings.fetchSpectrogramFile(rec_data, next);  
             },
             function get_spectrogram_identify(data, next){
-                spec_data = data
+                spec_data = data;
                 im.identify(spec_data.path, next);
             },
             function crop_roi(spectro_info, next){
@@ -372,7 +376,7 @@ TrainingSets.types.roi_set = {
         var self = this, data;
         async.waterfall([
             function fetch_tset_data(next){
-                self.get_data(training_set, {id:data_id}, next)
+                self.get_data(training_set, {id:data_id}, next);
             },
             function check_and_get_tset_data(rows, fields, next){
                 if(!rows.length){ next(new Error("Requested training set data does not exists.")); return; }
@@ -487,6 +491,6 @@ TrainingSets.types.roi_set = {
         ], callback);
     },
 
-}
+};
 
 module.exports = TrainingSets;

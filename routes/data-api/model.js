@@ -1,14 +1,16 @@
-var console={log:require('debug')('arbimon2:route:model')};
+var debug = require('debug')('arbimon2:route:model');
 var express = require('express');
 var router = express.Router();
-var model = require('../../models');
 var async = require('async');
 var util = require('util');
 var mysql = require('mysql');
 var path = require('path');
+
+var model = require('../../models');
 var jobQueue = require('../../utils/jobqueue');
-var scriptsFolder = __dirname+'/../../scripts/'
-var config = require('../../config/aws.json');
+var config = require('../../config');
+
+var scriptsFolder = __dirname+'/../../scripts/';
 
 
 router.get('/project/:projectUrl/models', function(req, res, next) {
@@ -20,6 +22,7 @@ router.get('/project/:projectUrl/models', function(req, res, next) {
     });
 });
 
+
 router.get('/project/:projectUrl/classifications', function(req, res, next) {
 
     model.projects.classifications(req.params.projectUrl, function(err, rows) {
@@ -28,6 +31,7 @@ router.get('/project/:projectUrl/classifications', function(req, res, next) {
         res.json(rows);
     });
 });
+
 
 router.get('/project/:projectUrl/classification/:cid', function(req, res, next) {
     model.projects.classificationErrors(req.params.projectUrl,req.params.cid , function(err, rowsRecs) {
@@ -71,6 +75,7 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
     });
 });
 
+
 router.get('/project/:projectUrl/classification/:cid/more/:f/:t', function(req, res) {
 console.log('here mnore')
     model.projects.classificationDetailMore(req.params.projectUrl,req.params.cid,req.params.f,req.params.t, function(err, rows) {
@@ -78,6 +83,7 @@ console.log('here mnore')
         res.json(rows);
     });
 });
+
 
 router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 
@@ -90,6 +96,7 @@ router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 
     });
 });
+
 
 router.post('/project/:projectUrl/models/new', function(req, res, next) {
 
@@ -196,6 +203,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
     );
 
 });
+
 
 router.post('/project/:projectUrl/classification/new', function(req, res, next) {
     
@@ -304,13 +312,24 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
     );
 });
 
-router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
 
+router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
     model.models.details(req.params.mid, function(err, row) {
         if(err) return next(err);   
-        res.json(row);
+        
+        if(!row.length)
+            return res.json({ error: "invalid model id" });
+        
+        data = row[0];
+        
+        data.json = JSON.parse(data.json);
+        
+        data.json.roiUrl = req.protocol + "://"+ config('aws').bucketName + ".s3.amazonaws.com/"+ data.json.roipng;
+        
+        res.json(data);
     });
 });
+
 
 router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
     model.projects.findByUrl(req.params.projectUrl, 
@@ -342,19 +361,25 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
 });
 
 router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, next) {
-
+    
+    if(!req.params.modelId)
+        return res.json('missing values');
+    
     model.projects.modelValidationUri(req.params.modelId, function(err, row) {
         if(err) return next(err);
-        var validationUri = row[0].uri 
-        validationUri = validationUri.replace('.csv','_vals.csv')
+        
+        console.log(row);
+        var validationUri = row[0].uri ;
+        validationUri = validationUri.replace('.csv','_vals.csv');
         var aws = require('knox').createClient({
-            key: config.accessKeyId
-          , secret: config.secretAccessKey
-          , bucket: config.bucketName
+            key: config('aws').accessKeyId,
+            secret: config('aws').secretAccessKey,
+            bucket: config('aws').bucketName
         });
         var sendData = [];
         
-console.log(validationUri)
+        console.log(validationUri);
+        
         aws.getFile(validationUri, function(err, resp){
             
             if (err) {
@@ -380,7 +405,7 @@ console.log(validationUri)
                     
                     if (line == '')
                     {
-                        callback()
+                        callback();
                     }
                     else
                     {
@@ -470,9 +495,9 @@ router.get('/project/:projectUrl/job/hide/:jId', function(req, res) {
 router.post('/project/:projectUrl/classification/vector', function(req, res) {
 
     var aws = require('knox').createClient({
-        key: config.accessKeyId
-      , secret: config.secretAccessKey
-      , bucket: config.bucketName
+        key: config('aws').accessKeyId,
+        secret: config('aws').secretAccessKey,
+        bucket: config('aws').bucketName
     });
 
     aws.getFile('/'+req.body.v, function(err, resp){

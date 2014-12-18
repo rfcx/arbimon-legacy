@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:model:projects')};
+var debug = require('debug')('arbimon2:model:projects');
 var util = require('util');
 var mysql = require('mysql');
 var async = require('async');
@@ -202,7 +202,7 @@ var Projects = {
             species: Joi.string(),
             songtype: Joi.string(),
             project_id: Joi.number()
-        }
+        };
 
         Joi.validate(project_class, schema, function(err, value) {
             if(err) return callback(err);
@@ -230,8 +230,7 @@ var Projects = {
                 },
 
                 classExists: ['findSpecies', 'findSong', function(cb, results){
-
-                    console.log(results);
+                    
                     var q = "SELECT count(*) as count \n"+
                             "FROM project_classes \n"+
                             "WHERE project_id = %s \n"+
@@ -254,8 +253,7 @@ var Projects = {
 
                     if(results.classExists)
                         return cb(null, { error: "class already in project" });
-
-                    console.log(results);
+                    
                     var q = 'INSERT INTO project_classes \n'+
                             'SET project_id = %s, species_id = %s, songtype_id = %s';
 
@@ -276,7 +274,7 @@ var Projects = {
 
                 callback(null, results.insert);
             });
-        })
+        });
     },
 
     removeClasses: function(project_classes, callback) {
@@ -332,7 +330,7 @@ var Projects = {
             
             q = util.format(q, user_id, role_id, project_id);
             queryHandler(q, callback);
-        })
+        });
 
     },
     
@@ -430,14 +428,14 @@ var Projects = {
     },
     
     classificationDetailMore: function(project_url,cid,from,total, callback) {
-        var q = "select cs.`json_stats`,  c.`species_id` ,c.`songtype_id`,c.`present`  , c.`recording_id`,SUBSTRING_INDEX(SUBSTRING_INDEX( r.`uri` , '.', 1 ),'/',-1 ) as recname ,CONCAT( SUBSTRING_INDEX( r.`uri` , '.', 1 ) , '.thumbnail.png') as uri,"+
+        var q = "select cs.`json_stats`,  c.`species_id` ,c.`songtype_id`,c.`present` as present  , c.`recording_id`,SUBSTRING_INDEX(SUBSTRING_INDEX( r.`uri` , '.', 1 ),'/',-1 ) as recname ,CONCAT( SUBSTRING_INDEX( r.`uri` , '.', 1 ) , '.thumbnail.png') as uri,"+
                 " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
                 " CONCAT(SUBSTRING_INDEX( m.`uri` , '.', 1 ),'/classification_',c.`job_id`,'_',SUBSTRING_INDEX(r.`uri` ,'/',-1 ),'.vector') as vect,"+
                 " CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name  "+
                 " from `classification_stats`  cs , `models` m ,`job_params_classification` jpc, `recordings` r,  `classification_results` c,`species` as s , `songtypes` as st where c.`job_id` = "+mysql.escape(cid)+
-                " and c.`job_id` = cs.`job_id` and m.`model_id` = jpc.`model_id` and jpc.`job_id` = c.`job_id` and c.`species_id` = s.`species_id` and c.`songtype_id` = st.`songtype_id` and r.`recording_id` = c.`recording_id` LIMIT "+parseInt(from)+" , "+parseInt(total) ;
-
-        queryHandler(q, callback);
+                " and c.`job_id` = cs.`job_id` and m.`model_id` = jpc.`model_id` and jpc.`job_id` = c.`job_id` and c.`species_id` = s.`species_id` and c.`songtype_id` = st.`songtype_id` and r.`recording_id` = c.`recording_id` "+
+                " order by present desc LIMIT "+parseInt(from)+" , "+parseInt(total) ;
+                queryHandler(q, callback);
     },
    
     trainingSets: function(project_url, callback) {

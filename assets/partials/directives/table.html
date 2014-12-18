@@ -14,7 +14,8 @@
     <tr ng-repeat="row in rows | filter: query | orderBy: sort : reverse"
         ng-click="sel(row, $index) | trackEvent:'Directives-Table':'select row'"
         ng-class="{ 'active': selected == row }">
-        <td ng-hide="noCheck"><input type="checkbox"
+        <td ng-hide="noCheck">
+            <input type="checkbox"
                 ng-model="row.checked"
                 ng-click="check($event, $index) | trackEvent:'Directives-Table':'check row'"
                 stop-click>
