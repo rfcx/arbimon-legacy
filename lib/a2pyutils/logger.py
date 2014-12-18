@@ -6,6 +6,7 @@ class Logger:
 
     def __init__(self,jobId,script,logFor='worker',logON = True):
         self.logON = logON
+        self.also_print = False
         if self.logON:
             tempFolders = tempfile.gettempdir()
             self.workingFolder = tempFolders+"/logs/job_"+str(jobId)
@@ -35,6 +36,8 @@ class Logger:
             if self.log_file_handle:
                 self.log_file_handle.close()
                 self.log_file_handle = None
+            if self.also_print:
+                print "#LOG:" + currTime + ':\t'+message
 
     def write_clean(self,message):
         if self.logON:
