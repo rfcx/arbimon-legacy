@@ -204,7 +204,10 @@ else:
     print("Unkown model type requested\n");
     log.write('Unkown model type requested')
 
-        
+with closing(db.cursor()) as cursor:
+    cursor.execute("UPDATE `jobs` SET `last_update`=now() WHERE `job_id` = "+str(jobId ))
+    db.commit()
+    
 timestr = 'execution time: '+str(time.time() - start_time)
 db.close()
 log.write('script end')

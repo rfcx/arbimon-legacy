@@ -2,6 +2,14 @@
 (function(angular){ 
     var jobs = angular.module('jobs',['a2services']);
     
+    jobs.config(['$stateProvider', function($stateProvider) {
+        $stateProvider.state('jobs', {
+            url: '/jobs',
+            controller : 'StatusBarNavController' ,
+            templateUrl: '/partials/jobs/index.html'
+        });
+    }]);
+    
     jobs.service('JobsData', function ($http, $interval, Project, $q){
         var jobslength = 0;
         var jobs;
@@ -86,7 +94,7 @@
                 cancelTimer : function(){
                     $interval.cancel(intervalPromise);                   
                 }
-            }
+            };
                 
         }
     );

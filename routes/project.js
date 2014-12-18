@@ -1,18 +1,15 @@
-var console={log:require('debug')('arbimon2:route:project')};
+var debug = require('debug')('arbimon2:route:project');
 var express = require('express');
 var model = require('../models');
 var router = express.Router();
 
-// router.get('/', function(req, res)
-// {
-//     res.redirect('/home');
-// });
 
 router.get('/:projecturl?/', function(req, res, next)
 {
     var project_url = req.param('projecturl');
 
-    console.log(project_url);
+    debug('project_url', project_url);
+    
     model.projects.findByUrl(project_url ,
         function(err,rows)
         {
@@ -34,7 +31,7 @@ router.get('/:projecturl?/', function(req, res, next)
 
                     req.session.user.permissions[project.project_id] = rows;
 
-                    console.log("project perms:", req.session.user.permissions);
+                    debug("project perms:", req.session.user.permissions);
 
                     req.project = {
                         id: project.project_id,
@@ -48,8 +45,11 @@ router.get('/:projecturl?/', function(req, res, next)
             }
             else
             {
-                res.send('<html><head><title>Project '+project+' is disabled</title></head><body>Your project '+project
-                    +' has been disabled.</body></html>');
+                res.send(
+                    '<html><head><title>Project ' + project + 
+                    ' is disabled</title></head><body>Your project ' + project + 
+                    ' has been disabled.</body></html>'
+                );
             }
         }
     );

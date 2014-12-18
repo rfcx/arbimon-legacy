@@ -20,7 +20,7 @@
 </div>
 <div class="row">
     <div class="col-sm-6">
-        <a2-table search="search"  fields="fields" rows="sets" no-checkbox on-select="displaySetData($index)"></a2-table>
+        <a2-table search="search"  fields="fields" rows="sets" no-checkbox on-select="displaySetData(row)"></a2-table>
         <div class="jumbotron" ng-show="(!sets || !sets.length > 0) && !loading">
             <h3>
                 No training sets found. <a ng-click="add_new_tset() | trackEvent:'Audiodata-Training Sets':'add_new_tset'"  ng-show="(!sets || !sets.length > 0) && !loading" >Create a training set.</a>
@@ -135,5 +135,3 @@
         </div>
     </div>
 </div>
-
-

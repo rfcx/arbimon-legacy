@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:tmpfilecache')};
+var debug = require('debug')('arbimon2:tmpfilecache');
 var fs = require('fs');
 var path = require('path');
 var async = require('async');
@@ -44,7 +44,7 @@ var cache = {
                     callback(null, null);
                 });                
             }
-        })
+        });
     },
     get :  function(key, callback){
         cache.checkValidity(cache.key2File(key), function(err, stats){
@@ -65,19 +65,19 @@ var cache = {
             } else {
                 callback(null, data);
             }
-        })
+        });
     },
     
     cleanupTimeout : 0,
     cleanup : function(){
-        console.log('Cleaning up tmpcache.');
+        debug('Cleaning up tmpcache.');
         var root = path.resolve(config("tmpfilecache").path);
         var setCleanupTimeout = function(){
             if (cache.cleanupTimeout) {
                 return;
             }
             var delay = config("tmpfilecache").cleanupInterval;
-            console.log('Running tmpcache cleanup in : ', (delay/1000.0), ' seconds.');
+            debug('Running tmpcache cleanup in : ', (delay/1000.0), ' seconds.');
             cache.cleanupTimeout = setTimeout(function(){
                 cache.cleanupTimeout = 0;
                 cache.cleanup();
@@ -93,14 +93,14 @@ var cache = {
                 cache.checkValidity(file, function (err, filestats){
                     if(!filestats) {
                         fs.unlink(file, function(){
-                            console.log('   tmpcache file removed : ', file);
+                            debug('   tmpcache file removed : ', file);
                         });
                     }
                 });
             }, function(err){
                 setCleanupTimeout();
             });
-        })
+        });
     }
 };
 

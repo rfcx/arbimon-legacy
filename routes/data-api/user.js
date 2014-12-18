@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:route:user')};
+var debug = require('debug')('arbimon2:route:user');
 var express = require('express');
 var router = express.Router();
 var gravatar = require('gravatar');
@@ -121,7 +121,8 @@ router.post('/update/password', function(req, res, next){
         function(err, result) {
             if(err) return next(err);
             
-            console.log("update user pass:", result);
+            debug("update user pass:", result);
+            
             res.json({ message: "success! password updated"});
         });
     });
@@ -148,7 +149,7 @@ router.post('/update/name', function(req, res, next){
             req.session.user.firstname = userData.name;
             req.session.user.lastname = userData.lastname;
             
-            console.log("update user name:", result);
+            debug("update user name:", result);
             res.json({ message: "success! Name updated"});
         });
     });

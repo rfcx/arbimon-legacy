@@ -10,8 +10,9 @@
     <table ng-table="tableParams" class="table" show-filter="true" >
         <tr ng-repeat="classification in classificationsData" >
             <td data-title="'Date'" sortable="'date'" >
-                {{classification.date | momentformat }}
+                {{ classification.date | moment : 'lll' }}
             </td>
+
             <td data-title="'Name'" class="hidelongtext widthtd" sortable="'cname'" filter="{ 'cname': 'text' }">
                 {{classification.cname}}
             </td>
@@ -26,7 +27,14 @@
             </td>
         </tr>
     </table>
-    <div class="jumbotron"><h3>{{ infopanedata }}  <a   ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'" ng-show="(!classificationsOriginal || !classificationsOriginal.length > 0) && !loading" >Classify recordings</a></h3></div>
+    <div class="jumbotron" ng-show="(!classificationsOriginal || !classificationsOriginal.length > 0) && !loading">
+        <h3>
+            {{ infopanedata }}  
+            <a ng-click="createNewClassification() | trackEvent:'Analysis-Classification-List':'Create new classification'">
+                Classify recordings
+            </a>
+        </h3>
+    </div>
 </div>
 <div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
   <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">

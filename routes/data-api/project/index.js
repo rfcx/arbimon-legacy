@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:route')};
+var debug = require('debug')('arbimon2:route');
 var express = require('express');
 var router = express.Router();
 var async = require('async');
@@ -119,7 +119,7 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
     model.projects.update(req.body.project, function(err, result){
         if(err) return next(err);
         
-        console.log("update project:", result);
+        debug("update project:", result);
         res.json({ success: true });
     });
 });
@@ -254,7 +254,7 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
             data: JSON.stringify({ species: projectClass.species, song: projectClass.songtype })
         });
         
-        console.log("class added:", result);
+        debug("class added:", result);
         res.json({ success: true });
     });
 });
@@ -295,7 +295,7 @@ router.post('/:projectUrl/class/del', function(req, res, next){
                     data: JSON.stringify({ classes: classesDeleted })
                 });
                 
-                console.log("class removed:", result);
+                debug("class removed:", result);
                 res.json({ success: true });
             });
         }
@@ -341,14 +341,12 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
     function(err, result){
         if(err) return next(err);
         
-        console.log("add user:", result);
+        debug("add user:", result);
         res.json({ success: true });
     });
 });
 
 router.post('/:projectUrl/user/role', function(req, res, next) {
-    
-    console.log(req.body);
     
     if(!req.body.project_id || !req.body.user_id || !req.body.role_id) {
         return res.json({ error: "missing parameters"});
@@ -366,7 +364,7 @@ router.post('/:projectUrl/user/role', function(req, res, next) {
     function(err, result){
         if(err) return next(err);
         
-        console.log("change user role:", result);
+        debug("change user role:", result);
         res.json({ success: true });
     });
 });
@@ -383,7 +381,7 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
     model.projects.removeUser(req.body.user_id, req.body.project_id, function(err, result){
         if(err) return next(err);
         
-        console.log("remove user:", result);
+        debug("remove user:", result);
         res.json({ success: true });
     });
 });

@@ -129,7 +129,8 @@ angular.module('a2directives', ['a2services'])
         },
         templateUrl: '/partials/directives/table.html',
         link: function(scope, element, attrs) {
-
+            
+            
             if(attrs.noCheckbox !== undefined)
                 scope.noCheck = true;
 
@@ -207,7 +208,7 @@ angular.module('a2directives', ['a2services'])
 
                 scope.selected = row;
                 if(attrs.onSelect)
-                    scope.onSelect({ $index: $index });
+                    scope.onSelect({ row: row });
             };
 
             scope.sortBy = function(field) {

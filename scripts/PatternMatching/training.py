@@ -138,5 +138,9 @@ if model_type_id == 1: #Pattern Matching (modified Alvarez thesis)
 
 else:
     print("Unkown model type requested\n");
-
+    
+with closing(db.cursor()) as cursor:
+    cursor.execute("UPDATE `jobs` SET `last_update`=now() WHERE `job_id` = "+str(jobId ))
+    db.commit()
+    
 db.close()

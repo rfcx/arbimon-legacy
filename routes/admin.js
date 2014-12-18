@@ -1,4 +1,4 @@
-var console={log:require('debug')('arbimon2:route:admin')};
+var debug = require('debug')('arbimon2:route:admin');
 var express = require('express');
 var router = express.Router();
 var async = require('async');
@@ -19,7 +19,7 @@ router.get('/', function(req, res) {
 
 
 router.get('/job-queue', function(req, res, next) {
-    console.log(jobQueue);
+    debug('jobQueue:', jobQueue);
     
     res.json({
         length: jobQueue.length(),
@@ -32,7 +32,7 @@ router.get('/job-queue', function(req, res, next) {
 router.get('/active-jobs', function(req, res, next) {
     model.jobs.allActiveJobs(function(err, rows) {
         if(err) return next(err);
-            console.log(rows);
+        
         res.json(rows);
     });
 });
