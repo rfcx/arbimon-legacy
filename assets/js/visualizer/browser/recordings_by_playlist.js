@@ -63,6 +63,7 @@ angular.module('a2browser_recordings_by_playlist', ['a2Classy'])
                 self.list = recordings;
                 recordings.forEach(function(recording){
                     recording.caption = [recording.site, moment(recording.datetime).utc().format('lll')].join(', ');
+                    self.append_extras(recording);
                 });
                 self.count  = recordings.length;
                 d.resolve(recordings);
