@@ -3,7 +3,8 @@ angular.module('dashboard',[
     'a2directives', 
     'ui.bootstrap',
     'ui.router',
-    'ct.ui.router.extras'
+    'ct.ui.router.extras',
+    'humane'
 ])
 .config(function($stickyStateProvider, $stateProvider, $urlRouterProvider) {
 
@@ -82,7 +83,7 @@ angular.module('dashboard',[
         var bounds = new google.maps.LatLngBounds();
 
         for(var i in sites) {
-            var position = new google.maps.LatLng(sites[i].lat,sites[i].lon)
+            var position = new google.maps.LatLng(sites[i].lat,sites[i].lon);
 
             sites[i].marker = new google.maps.Marker({
                 position: position,
@@ -103,296 +104,7 @@ angular.module('dashboard',[
         $scope.recsQty = count;
     });
 })
-.controller('SitesCtrl', function($scope, Project, $http, $modal) {
-    $scope.loading = true;
-    
-    Project.getInfo(function(info){
-         $scope.project = info;
-    });
-
-    Project.getSites(function(sites) {
-        $scope.sites = sites;
-        $scope.loading = false;
-    });
-    
-    $scope.editing = false;
-
-    $scope.fields = [
-        { name: 'Name', key: 'name' },
-        { name: 'Latidude', key:'lat' },
-        { name: 'Longitude', key: 'lon' },
-        { name: 'Altitude', key: 'alt' },
-        { name: 'Rec qty', key: 'rec_count' }
-    ];
-
-
-    var mapOptions = {
-        center: { lat: 18.3, lng: -66.5},
-        zoom: 8
-    };
-
-    $scope.map = new google.maps.Map(document.getElementById('map-site'), mapOptions);
-
-    
-
-    $scope.save = function() {
-        var action = $scope.editing ? 'update' : 'create';
-
-        $http.post('/api/project/'+ action +'/site', {
-            project: $scope.project,
-            site: $scope.temp
-        })
-        .success(function(data) {
-            if(data.error)
-                alert(data.error);
-
-            if(action === 'create') {
-                $scope.creating = false;
-            }
-            else {
-                $scope.editing = false;
-            }
-
-            Project.getSites(function(sites) {
-                $scope.sites = sites;
-            });
-        })
-        .error(function(data) {
-            alert(data);
-        });
-    };
-
-
-
-    $scope.del = function() {
-        if(!$scope.checked || !$scope.checked.length)
-            return;
-        
-        var sitesNames = $scope.checked.map(function(row) {
-            return row.name;
-        });
-        
-        var message = ["You are about to delete the following sites: "];
-        var message2 = ["Are you sure??"];
-        
-        $scope.messages = message.concat(sitesNames, message2);
-        
-        $scope.btnOk = "Yes, do it!";
-        $scope.btnCancel = "No";
-
-        var modalInstance = $modal.open({
-            templateUrl: '/partials/pop-up.html',
-            scope: $scope
-        });
-
-        modalInstance.result.then(function() {
-            $http.post('/api/project/delete/sites', {
-                project: $scope.project,
-                sites: $scope.checked
-            })
-            .success(function(data) {
-                if(data.error)
-                    alert(data.error);
-
-                Project.getSites(function(sites) {
-                    $scope.sites = sites;
-                });
-            })
-            .error(function(data) {
-                alert(data);
-            });
-        });
-    };
-
-    $scope.create = function() {
-        $scope.temp = {};
-
-        if(!$scope.marker) {
-            $scope.marker = new google.maps.Marker({
-                position: $scope.map.getCenter(),
-                title: 'New Site Location'
-            });
-            $scope.marker.setMap($scope.map);
-        }
-        else {
-            $scope.marker.setPosition($scope.map.getCenter());
-        }
-
-        $scope.marker.setDraggable(true);
-        $scope.creating = true;
-
-        google.maps.event.addListener($scope.marker, 'dragend', function(position) {
-            //~ console.log(position);
-            $scope.$apply(function () {
-                $scope.temp.lat = position.latLng.lat();
-                $scope.temp.lon = position.latLng.lng();
-            });
-        });
-    };
-
-    $scope.edit = function() {
-        console.log($scope.editing);
-        if(!$scope.selected)
-            return;
-
-        $scope.temp = JSON.parse(JSON.stringify($scope.selected));
-
-        $scope.marker.setDraggable(true);
-
-        google.maps.event.addListener($scope.marker, 'dragend', function(position) {
-            //~ console.log(position);
-            $scope.$apply(function () {
-                $scope.temp.lat = position.latLng.lat();
-                $scope.temp.lon = position.latLng.lng();
-            });
-        });
-
-        $scope.editing = true;
-    };
-
-    $scope.sel = function($index) {
-        //~ console.log('sel');
-
-        $scope.editing = false;
-        $scope.creating = false;
-
-        $scope.selected = $scope.sites[$index];
-
-        var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
-
-        if(!$scope.marker) {
-            $scope.marker = new google.maps.Marker({
-                position: position,
-                title: $scope.selected.name
-            });
-            $scope.marker.setMap($scope.map);
-        }
-        else {
-            $scope.marker.setDraggable(false);
-            $scope.marker.setPosition(position);
-            $scope.marker.setTitle($scope.selected.name);
-        }
-
-        $scope.map.panTo(position);
-        //~ console.log($scope.selected);
-    };
-
-})
-.controller('SpeciesCtrl', function($scope, Project, Species, Songtypes, $modal) {
-    $scope.loading = true;
-    
-    $scope.fields = [
-        { name: 'Species', key: 'species_name' },
-        { name: 'Song', key: 'songtype_name' }
-    ];
-
-    $scope.selected = {};
-
-    Species.get(function(species){
-        $scope.species = species;
-    });
-
-    Songtypes.get(function(songs) {
-        $scope.songtypes = songs;
-    });
-
-    Project.getClasses(function(classes){
-        $scope.classes = classes;
-        $scope.loading = false;
-    });
-
-    Project.getInfo(function(info){
-         $scope.project = info;
-    });
-
-
-    $scope.submitSearch = function($event) {
-        if($event.key === "Enter")
-            $scope.searchSpecies();
-    };
-
-    $scope.searchSpecies = function() {
-        if($scope.search === "")
-            return;
-        
-        Species.search($scope.search, function(data){
-            $scope.species = data;
-        });
-    };
-    
-    $scope.selectSpec = function(index){
-        $scope.selected.species = $scope.species[index];
-    };
-    
-    $scope.selectSong = function(index){
-        $scope.selected.song = $scope.songtypes[index];
-    };
-    
-    $scope.add = function(){
-        if(!$scope.selected.species || !$scope.selected.song) {
-            return;
-        }
-        
-        console.log($scope.selected);
-        
-        Project.addClass({
-            species: $scope.selected.species.scientific_name,
-            songtype: $scope.selected.song.name,
-            project_id: $scope.project.project_id
-        },
-        function(err, result){
-            if(err) alert(err);
-            
-            console.log(result);
-            Project.getClasses(function(classes){
-                $scope.classes = classes;
-            });
-        });
-    };
-    
-    $scope.del = function(){
-        if(!$scope.checked || !$scope.checked.length)
-            return;
-        
-        var speciesClasses = $scope.checked.map(function(row) {
-            return '"'+row.species_name +' | ' + row.songtype_name+'"';
-        });
-        
-        var message = ["You are about to delete the following project species: "];
-        var message2 = ["Are you sure??"];
-        
-        $scope.messages = message.concat(speciesClasses, message2);
-        
-        $scope.btnOk = "Yes, do it!";
-        $scope.btnCancel = "No";
-        
-        var modalInstance = $modal.open({
-            templateUrl: '/partials/pop-up.html',
-            scope: $scope
-        });
-        
-        modalInstance.result.then(function() {
-            var classesIds = $scope.checked.map(function(row) {
-                return row.id;
-            });
-            
-            Project.removeClasses({
-                project_id: $scope.project.project_id,
-                project_classes: classesIds
-            },
-            function(err, result) {
-                if(err) alert(err);
-                
-                console.log(result);
-                Project.getClasses(function(classes){
-                    $scope.classes = classes;
-                });
-            });
-        });
-        
-    };
-})
-.controller('SettingsCtrl', function($scope, Project) {
+.controller('SettingsCtrl', function($scope, Project, notify) {
     Project.getInfo(function(info) {
         $scope.project = info;
     });
@@ -404,7 +116,12 @@ angular.module('dashboard',[
         function(err, result){
             if(err) alert(err);
             
-            console.log(result);
+            if(result.error) {
+                notify.error(result.error);
+            }
+            else {
+                notify.log('Project Info Updated');
+            }
         });
     };
 })

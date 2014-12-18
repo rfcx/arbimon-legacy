@@ -112,6 +112,11 @@ router.get('/:projectUrl/info', function(req, res, next) {
 });
 
 router.post('/:projectUrl/info/update', function(req, res, next) {
+    
+    if(!req.haveAccess(req.project.project_id, "manage settings")) {
+        return res.json({ error: "you dont have permission to 'manage settings'" });
+    }
+    
     if(!req.body.project)
         return res.json({ error: "missing parameters" });
     

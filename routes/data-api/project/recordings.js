@@ -144,7 +144,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
 
 router.post('/validate/:oneRecUrl?', function(req, res, next) {
     if(!req.haveAccess(req.project.project_id, "validate species")) {
-        return res.json({ error: "you dont have permission to 'manage project sites'" });
+        return res.json({ error: "you dont have permission to validate species" });
     }
 
     var recording = req.recording;

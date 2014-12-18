@@ -36,32 +36,32 @@ router.get('/project/:projectUrl/classifications', function(req, res, next) {
 router.get('/project/:projectUrl/classification/:cid', function(req, res, next) {
     model.projects.classificationErrors(req.params.projectUrl,req.params.cid , function(err, rowsRecs) {
         if(err) res.json({"data":[]});
-        rowsRecs =  rowsRecs[0]
+        rowsRecs =  rowsRecs[0];
         model.projects.classificationDetail(req.params.projectUrl,req.params.cid, function(err, rows) {
             if(err) res.json({"data":[]});
             
-            i = 0
-            var data = []
-            var total = []
-            var species =[]
-            var songtype =[]
+            i = 0;
+            var data = [];
+            var total = [];
+            var species =[];
+            var songtype =[];
             while(i < rows.length)
             {
-                row = rows[i]
+                row = rows[i];
                 var index = row['species_id']+'_'+row['songtype_id'];
                 if (typeof data[index]  == 'number')
                 {
-                    data[index] = data[index] + parseInt(row['present'])
-                    total[index] = total[index] + 1
+                    data[index] = data[index] + parseInt(row['present']);
+                    total[index] = total[index] + 1;
                 }
                 else
                 {
-                    data[index] = parseInt(row['present'])
-                    species[index] = row['scientific_name']
-                    songtype[index] = row['songtype']
-                    total[index] = 1
+                    data[index] = parseInt(row['present']);
+                    species[index] = row['scientific_name'];
+                    songtype[index] = row['songtype'];
+                    total[index] = 1;
                 }
-                i = i + 1
+                i = i + 1;
             }
             var results = []
             for (var key in species)
@@ -77,7 +77,6 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
 
 
 router.get('/project/:projectUrl/classification/:cid/more/:f/:t', function(req, res) {
-console.log('here mnore')
     model.projects.classificationDetailMore(req.params.projectUrl,req.params.cid,req.params.f,req.params.t, function(err, rows) {
         if(err) throw err;
         res.json(rows);
@@ -99,6 +98,8 @@ router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 
 
 router.post('/project/:projectUrl/models/new', function(req, res, next) {
+    
+    
 
     model.projects.findByUrl(req.params.projectUrl, 
         function(err, rows) 
@@ -111,6 +112,10 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
                 return;
             }
             var project_id = rows[0].project_id;
+            
+            if(!req.haveAccess(project_id, "manage models and classification"))
+                return res.json({ error: "you dont have permission to 'manage models and classification'" });
+            
             var name = (req.body.n);
             var train_id = mysql.escape(req.body.t);
             var classifier_id = mysql.escape(req.body.c);
@@ -218,9 +223,13 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                 return;
             }
             var project_id = rows[0].project_id;
+            
+            if(!req.haveAccess(project_id, "manage models and classification"))
+                return res.json({ error: "you dont have permission to 'manage models and classification'" });
+            
             var name = (req.body.n);
-            var classifier_id = mysql.escape(req.body.c)
-            var playlist_id = (req.body.p.id)
+            var classifier_id = mysql.escape(req.body.c);
+            var playlist_id = req.body.p.id;
             var user_id = req.session.user.id;
             var allRecs = mysql.escape(req.body.a);
             var sitesString = mysql.escape(req.body.s);
@@ -231,7 +240,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                     {
                        res.json({ err:"Could not create job"}); 
                     }
-                    else if(row[0].count==0){
+                    else if(row[0].count === 0) {
                         model.jobs.newJob({name:name,classifier:classifier_id,user:user_id,pid:project_id},2,
                             function (err,row)
                             {
@@ -539,6 +548,8 @@ router.get('/project/classification/csv/:cid', function(req, res) {
 
 
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
+    
+    
     console.log('req.params.projectUrl : '+req.params.projectUrl)
     model.projects.findByUrl(req.params.projectUrl, 
         function(err, rows) 
@@ -550,7 +561,12 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                 res.status(404).json({ err: "project not found"});
                 return;
             }
+            
             var project_id = rows[0].project_id;
+            
+            if(!req.haveAccess(project_id, "manage soundscapes"))
+                return res.json({ error: "you dont have permission to 'manage soundscapes'" });
+            
             var name = (req.body.n);
             var user_id = req.session.user.id;
             var aggregation =  (req.body.a);

@@ -1,9 +1,23 @@
-var console={log:require('debug')('arbimon2:route:soundscapes')};
+var debug = require('debug')('arbimon2:route:soundscapes');
 var express = require('express');
 var router = express.Router();
 var model = require('../../../models');
 
 var region_router = express.Router();
+
+var parse_bbox = function(bbox){
+    var m=/^((\d+)?,(\d+)?-(\d+)?,(\d+)?|all)?$/.exec('' + bbox);
+    if(!m){
+        return null;
+    }
+    return {
+        x1 : m[2] === undefined ? undefined : (m[2] | 0),
+        y1 : m[3] === undefined ? undefined : (m[3] | 0),
+        x2 : m[4] === undefined ? undefined : (m[4] | 0),
+        y2 : m[5] === undefined ? undefined : (m[5] | 0)
+    };
+};
+
 
 router.param('soundscape', function(req, res, next, soundscape){
     model.soundscapes.find({
@@ -20,18 +34,6 @@ router.param('soundscape', function(req, res, next, soundscape){
     });
 });
 
-var parse_bbox = function(bbox){
-    var m=/^((\d+)?,(\d+)?-(\d+)?,(\d+)?|all)?$/.exec('' + bbox);
-    if(!m){
-        return null;
-    }
-    return {
-        x1 : m[2] === undefined ? undefined : (m[2] | 0),
-        y1 : m[3] === undefined ? undefined : (m[3] | 0),
-        x2 : m[4] === undefined ? undefined : (m[4] | 0),
-        y2 : m[5] === undefined ? undefined : (m[5] | 0)
-    };
-};
 
 router.param('bbox', function(req, res, next, bbox){
     var bb = parse_bbox(bbox);
@@ -57,7 +59,6 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/details', function(req, res, next) {
-    console.log('details')
     model.soundscapes.details(req.project.project_id,
     function(err, data) {
         if(err) return next(err);
@@ -132,6 +133,10 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/add', function(req, res, next) {
+    
+    if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
+        return res.json({ error: "you dont have permission to 'manage soundscapes'" });
+    
     var bbox = parse_bbox(req.body.bbox);
     model.soundscapes.addRegion(req.soundscape, {
         bbox : bbox,
@@ -175,6 +180,10 @@ router.get('/:region/tags/:recid', function(req, res, next) {
 });
 
 router.post('/:region/tags/:recid/add', function(req, res, next) {
+    
+    if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
+        return res.json({ error: "you dont have permission to 'manage soundscapes'" });
+    
     model.soundscapes.addRegionTag(req.region, req.params.recid, req.session.user.id, req.body.tag, function(err, tag){
         if(err){
             next(err);
@@ -186,6 +195,10 @@ router.post('/:region/tags/:recid/add', function(req, res, next) {
 
 
 router.post('/:region/tags/:recid/remove', function(req, res, next) {
+    
+    if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
+        return res.json({ error: "you dont have permission to 'manage soundscapes'" });
+    
     model.soundscapes.removeRegionTag(req.region, req.params.recid, req.body.tag, function(err, tag){
         if(err){
             next(err);
