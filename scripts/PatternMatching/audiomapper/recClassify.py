@@ -20,7 +20,7 @@ from a2pyutils.logger import Logger
 
 start_time_all = time.time()
 logWorkers = True
-num_cores = int(math.floor(multiprocessing.cpu_count() /2))
+num_cores = multiprocessing.cpu_count() # int(math.floor(multiprocessing.cpu_count() /2))
 
 jobId = sys.argv[1].strip("'").strip(" ");
 log = Logger(jobId , 'recClassify.py' , 'worker')

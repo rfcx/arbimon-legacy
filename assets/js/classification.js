@@ -602,10 +602,29 @@
                                 ctx.height = canvasheight 
                                 ctxContext = ctx.getContext('2d');
                                 ctxContext.beginPath();
-                                ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+
+				minvev = 99999999.0;
+				maxvev = -99999999.0;
+				
+				for(var jj = 0 ; jj < $scope.data.length; jj++)
+				{
+				    $scope.data[jj] = parseFloat($scope.data[jj]);
+				    if (minvev >$scope.data[jj])
+				    {
+					minvev =$scope.data[jj];
+				    }
+				    if (maxvev<$scope.data[jj])
+				    {
+					maxvev =$scope.data[jj];
+				    }
+				}
+				
+				ctxContext.moveTo(i,canvasheight*(1- (($scope.data[i]-minvev)/(maxvev-minvev))   ));
+                                //ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
                                 for(var i =1; i < $scope.data.length;i++)
                                 {
-                                    ctxContext.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+                                    ctxContext.lineTo(i,canvasheight*(1- (($scope.data[i]-minvev)/(maxvev-minvev)) ) );
+                                    //ctxContext.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
 
                                 }
                                 ctxContext.strokeStyle = "#000";
