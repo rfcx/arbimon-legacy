@@ -42,6 +42,38 @@ router.get('/:playlist', function(req, res, next) {
 });
 
 
+
+/** Return a playlist's extra info.
+*/
+router.get('/info/:playlist', function(req, res, next) {
+    model.playlists.getInfo(req.playlist, function(err, data) {
+        if(err) return next(err);
+        res.json(data);
+    });
+});
+
+router.get('/:playlist/:recid/position', function(req, res, next) {
+    model.playlists.fetchRecordingPosition(req.playlist, req.params.recid, function(err, data) {
+        if(err) return next(err);
+        res.json(data);
+    });
+});
+
+router.get('/:playlist/:recid/next', function(req, res, next) {
+    model.playlists.fetchNextRecording(req.playlist, req.params.recid, function(err, data) {
+        if(err) return next(err);        
+        res.json(data);
+    });
+});
+
+router.get('/:playlist/:recid/previous', function(req, res, next) {
+    model.playlists.fetchPreviousRecording(req.playlist, req.params.recid, function(err, data) {
+        if(err) return next(err);        
+        res.json(data);
+    });
+});
+
+
 router.use(function(req, res, next) { 
     if(!req.haveAccess(req.project.project_id, "manage playlists"))
         return res.json({ error: "you dont have permission to 'manage playlists'" });
@@ -98,48 +130,6 @@ router.post('/create', function(req, res, next) {
 //         return res.json(tset_data);
 //     });
 // });
-
-/** Return a playlist's extra info.
- */
-router.get('/info/:playlist', function(req, res, next) {
-    model.playlists.getInfo(req.playlist, function(err, data) {
-        if(err) return next(err);
-        res.json(data);
-    });
-});
-
-
-/** Return a playlist's data.
- */
-router.get('/list/:playlist', function(req, res, next) {
-    model.playlists.fetchData(req.playlist, req.query, function(err, data) {
-
-        if(err) return next(err);
-        
-        res.json(data);
-    });
-});
-
-router.get('/:playlist/:recid/position', function(req, res, next) {
-    model.playlists.fetchRecordingPosition(req.playlist, req.params.recid, function(err, data) {
-        if(err) return next(err);
-        res.json(data);
-    });
-});
-
-router.get('/:playlist/:recid/next', function(req, res, next) {
-    model.playlists.fetchNextRecording(req.playlist, req.params.recid, function(err, data) {
-        if(err) return next(err);        
-        res.json(data);
-    });
-});
-
-router.get('/:playlist/:recid/previous', function(req, res, next) {
-    model.playlists.fetchPreviousRecording(req.playlist, req.params.recid, function(err, data) {
-        if(err) return next(err);        
-        res.json(data);
-    });
-});
 
 
 router.post('/delete', function(req, res, next) {

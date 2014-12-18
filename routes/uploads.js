@@ -186,7 +186,7 @@ router.post('/audio/project/:projectid', function(req, res, next) {
     var perm = "manage project recordings";
     
     if(!req.haveAccess(project_id, perm)) {
-        return res.json({ error: "you dont have permission to '"+ perm +"'" });
+        return res.status(401).json({ error: "you dont have permission to '"+ perm +"'" });
     }
     
     var info;

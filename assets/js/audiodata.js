@@ -3,7 +3,8 @@ angular.module('audiodata', [
     'a2directives', 
     'ui.bootstrap', 
     'angularFileUpload',
-    'visualizer-training-sets'
+    'visualizer-training-sets',
+    'humane'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.when("/audiodata", "/audiodata/sites");
@@ -363,7 +364,7 @@ angular.module('audiodata', [
         }
     };
 })
-.controller('SitesCtrl', function($scope, Project, $http, $modal) {
+.controller('SitesCtrl', function($scope, Project, $http, $modal, notify) {
     $scope.loading = true;
     
     Project.getInfo(function(info){
@@ -404,7 +405,7 @@ angular.module('audiodata', [
         })
         .success(function(data) {
             if(data.error)
-                alert(data.error);
+                notify.error(data.error);
                 
             if(action === 'create') {
                 $scope.creating = false;
@@ -418,7 +419,7 @@ angular.module('audiodata', [
             });
         })
         .error(function(data) {
-            alert(data);
+            console.log(data);
         });
     };
     
@@ -539,7 +540,7 @@ angular.module('audiodata', [
     };
                     
 })
-.controller('SpeciesCtrl', function($scope, Project, Species, Songtypes, $modal) {
+.controller('SpeciesCtrl', function($scope, Project, Species, Songtypes, $modal, notify) {
     $scope.loading = true;
     
     $scope.fields = [
@@ -604,7 +605,9 @@ angular.module('audiodata', [
         function(err, result){
             if(err) alert(err);
             
-            console.log(result);
+            if(result.error) {
+                notify.error(result.error);
+            }
             Project.getClasses(function(classes){
                 $scope.classes = classes;
             });
