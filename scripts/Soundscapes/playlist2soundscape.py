@@ -29,7 +29,7 @@ from boto.s3.connection import S3Connection
 #
 ##
 # will change this to a external configuration file
-num_cores = int(math.floor(multiprocessing.cpu_count() / (1.5)))
+num_cores = multiprocessing.cpu_count()
 
 currDir = (os.path.dirname(os.path.realpath(__file__)))
 USAGE = """
@@ -154,28 +154,29 @@ try:
         " and pr.`recording_id` = r.`recording_id`"
     )
 
+    log.write('retrieving playlist recordings list')
     totalRecs = 0
     recsToProcess = []
     with closing(db.cursor()) as cursor:
-            cursor.execute(q)
-            db.commit()
-            numrows = int(cursor.rowcount)
-            totalRecs = numrows
-            for i in range(0, numrows):
-                row = cursor.fetchone()
-                recsToProcess.append({
-                    "uri": row[1], "id": row[0], "date": row[2]
-                })
-
+        cursor.execute(q)
+        db.commit()
+        numrows = int(cursor.rowcount)
+        totalRecs = numrows
+        for i in range(0, numrows):
+            row = cursor.fetchone()
+            recsToProcess.append({
+                "uri": row[1], "id": row[0], "date": row[2]
+            })
+        log.write('playlist recordings list retrieved')
     with closing(db.cursor()) as cursor:
         cursor.execute('update `jobs` set state="processing", `progress` = 1,\
             `progress_steps` = '+str(totalRecs+5)+' \
             where `job_id` = '+str(job_id))
         db.commit()
-
     if len(recsToProcess) < 1:
         print "# fatal error invalid playlist or no recordings on playlist."
         log.write('Invalid playlist or no recordings on playlist')
+
         with closing(db.cursor()) as cursor:
             cursor.execute('update `jobs` set `state`="error", \
                 `completed` = -1,`remarks` = \'Error: Invalid playlist \
@@ -184,11 +185,17 @@ try:
         log.close()
         sys.exit(-1)
 
+    log.write(
+        'init playlist with aggregation: '+str(aggregation) +
+        " bin size:" + str(bin_size) + " bins:" + str(max_bins))
     scp = soundscape.Soundscape(aggregation, bin_size, max_bins)
+    log.write("start parallel... ")
 
     def processRec(rec, config):
+        logofthread = Logger(job_id, 'playlist2soundscape.py', 'thread')
+
         id = rec['id']
-        log.write(
+        logofthread.write(
             '------------------START WORKER THREAD LOG (id:'+str(id) +
             ')------------------'
         )
@@ -197,8 +204,10 @@ try:
                 host=config[0], user=config[1], passwd=config[2], db=config[3]
             )
         except MySQLdb.Error as e:
-            log.write('worker id'+str(id)+' log: worker cannot connect to db')
+            logofthread.write('worker id'+str(id)+' log: worker cannot \
+                connect \to db')
             return None
+        logofthread.write('worker id'+str(id)+' log: connected to db')
         with closing(db1.cursor()) as cursor:
             cursor.execute('update `jobs` set `state`="processing", \
                 `progress` = `progress` + 1 where `job_id` = '+str(job_id))
@@ -207,22 +216,24 @@ try:
         date = datetime.strptime(rec['date'], '%Y-%m-%d %H:%M:%S')
 
         uri = rec['uri']
-        log.write('worker id'+str(id)+' log: rec uri:'+uri)
+        logofthread.write('worker id'+str(id)+' log: rec uri:'+uri)
         start_time_rec = time.time()
-        recobject = Rec(uri, workingFolder, config, config[4], log, False)
-        log.write(
+        recobject = Rec(
+            uri, workingFolder, config, config[4], logofthread, False)
+        logofthread.write(
             'worker id' + str(id) + ' log: rec from uri' +
             str(time.time()-start_time_rec)
         )
         if recobject .status == 'HasAudioData':
             localFile = recobject.getLocalFileLocation()
+            logofthread.write('worker id'+str(id)+' log: rec HasAudioData')
             if localFile is None:
-                log.write(
+                logofthread.write(
                     '------------------END WORKER THREAD LOG (id:' + str(id) +
                     ')------------------'
                 )
                 return None
-            log.write(
+            logofthread.write(
                 'worker id' + str(id) + ' log: cmd: /usr/bin/Rscript ' +
                 currDir + '/fpeaks.R' + ' ' + localFile + ' ' +
                 str(threshold) + ' ' + str(bin_size) + ' ' + str(frequency)
@@ -237,49 +248,56 @@ try:
             ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = proc.communicate()
             if stderr and 'LC_TIME' not in stderr:
-                log.write(
+                logofthread.write(
                     'worker id' + str(id) + ' log: fpeaks.R err:' +
                     str(time.time()-start_time_rec) + " stdout: " + stdout +
                     " stderr: "+stderr
                 )
                 os.remove(localFile)
-                log.write(
+                logofthread.write(
                     'worker id' + str(id) + ' log:Error in recording:' + uri)
                 with closing(db1.cursor()) as cursor:
                     cursor.execute(
                         'INSERT INTO `recordings_errors`(`recording_id`,`job_id`) \
                         VALUES ('+str(id)+','+str(job_id)+') ')
                     db1.commit()
-                log.write(
+                logofthread.write(
                     '------------------END WORKER THREAD LOG (id:' + str(id) +
                     ')------------------')
                 return None
             elif stdout:
-                log.write(
+                logofthread.write(
                     'worker id' + str(id) + ' log: fpeaks.R: ok' +
                     str(time.time()-start_time_rec) + " stdout: " + stdout +
                     " stderr: " + stderr
                 )
                 os.remove(localFile)
                 if 'err' in stdout:
+                    logofthread.write('err in stdout')
+                    logofthread.write(
+                        '------------------END WORKER THREAD LOG (id:' +
+                        str(id) + ')------------------')
                     return None
                 freqs = stdout.strip(',')
-                freqs = [float(i) for i in freqs.split(',')]
+                fresqSplit = freqs.split(',')
+                if len(fresqSplit) < 1:
+                    logofthread.write('no peaks found')
+                    return None
+                freqs = [float(i) for i in fresqSplit]
                 results = {"date": date, "id": id, "freqs": freqs}
-                log.write(
+                logofthread.write(
                     '------------------END WORKER THREAD LOG (id:' + str(id) +
                     ')------------------'
                 )
                 return results
         else:
-            print 'invalid recording:' + uri
-            log.write(
+            logofthread.write(
                 'worker id' + str(id) + ' log: Invalid recording:' + uri)
             with closing(db1.cursor()) as cursor:
                 cursor.execute('INSERT INTO `recordings_errors`(`recording_id`, \
                     `job_id`) VALUES ('+str(id)+','+str(job_id)+') ')
                 db1.commit()
-            log.write(
+            logofthread.write(
                 '------------------END WORKER THREAD LOG (id:' + str(id) +
                 ')------------------'
             )

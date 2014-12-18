@@ -3,7 +3,7 @@ suppressMessages(suppressWarnings(library(seewave)))
 suppressMessages(suppressWarnings(library(tuneR)))
 archivo<- readWave(args[1])
 AmplPeaks = c()
-if(length(archivo@left)>0)
+if(length(archivo@left)>archivo@samp.rate)# at least one second of audio
 {
     bin_size = as.numeric(args[3])
     picos = c()
