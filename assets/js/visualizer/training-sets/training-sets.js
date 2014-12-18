@@ -115,10 +115,14 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
 
         $scope.form_data=tset_data;
 
-        if(sval.count == 0){
-            a2TrainingSets.add(tset_data, function(new_tset){
+        if(sval.count ===  0) {
+            a2TrainingSets.add(tset_data, function(new_tset) {
                 if(new_tset.error) {
-                    sval[new_tset.field] = new_tset.error;
+                    
+                    var field = new_tset.field || 'error';
+                    
+                    sval[field] = new_tset.error;
+                    
                     return;
                 }
                 $modalInstance.close(new_tset);
