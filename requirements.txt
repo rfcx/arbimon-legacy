@@ -1,5 +1,6 @@
 numpy==1.9.1
 scikits.audiolab==0.11.0
+skimage==0.10.1
 virtualenv==1.11.6
 argparse==1.2.1
 pypng==0.0.17
