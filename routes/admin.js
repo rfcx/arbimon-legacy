@@ -1,5 +1,7 @@
 var debug = require('debug')('arbimon2:route:admin');
 var express = require('express');
+var request = require('request');
+var config = require('../config');
 var router = express.Router();
 var async = require('async');
 
@@ -19,20 +21,12 @@ router.get('/', function(req, res) {
 
 
 router.get('/job-queue', function(req, res, next) {
-    debug('jobQueue:', jobQueue);
-    
-    res.json({
-        length: jobQueue.length(),
-        running: jobQueue.running(),
-        isIdle: jobQueue.idle(),
-        concurrency: jobQueue.concurrency
-    });
+    request.get(config('hosts').jobqueue + '/stats').pipe(res);
 });
 
 router.get('/active-jobs', function(req, res, next) {
-    model.jobs.allActiveJobs(function(err, rows) {
+    model.jobs.activeJobs(function(err, rows) {
         if(err) return next(err);
-        
         res.json(rows);
     });
 });

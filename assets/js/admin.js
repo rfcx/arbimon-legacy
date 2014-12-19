@@ -1,4 +1,4 @@
-angular.module('admin', ['ui.bootstrap','angularytics']).
+angular.module('admin', ['ui.bootstrap','angularytics', 'a2-job-types']).
 config(function(AngularyticsProvider) {
     AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
 }).

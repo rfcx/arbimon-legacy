@@ -1,6 +1,6 @@
 
 (function(angular){ 
-    var jobs = angular.module('jobs',['a2services']);
+    var jobs = angular.module('jobs',['a2services', 'a2-job-data', 'a2-job-type']);
     
     jobs.config(['$stateProvider', function($stateProvider) {
         $stateProvider.state('jobs', {
@@ -10,16 +10,17 @@
         });
     }]);
     
-    jobs.service('JobsData', function ($http, $interval, Project, $q){
+    angular.module('a2-job-data',['a2services'])
+    .service('JobsData', function ($http, $interval, Project, $q){
         var jobslength = 0;
-        var jobs;
+        var jobs=[];
         var job_types;
         var url = Project.getName();
         var intervalPromise;
-        $http.get('/api/project/'+url+'/progress').success(function(data) {
-            jobs = data;
-            jobslength = jobs.length;
-        });
+        // $http.get('/api/project/'+url+'/progress').success(function(data) {
+        //     jobs = data;
+        //     jobslength = jobs.length;
+        // });
                     
         return {
                 geturl : function(){
@@ -36,7 +37,7 @@
                     if(job_types){
                         d.resolve(job_types);
                     } else{
-                        $http.get('/api/project/'+url+'/job/types')
+                        $http.get('/api/job/types')
                         .success(function(_job_types){
                             job_types = _job_types;
                             d.resolve(job_types);
@@ -47,16 +48,11 @@
                     }
                     return d.promise;
                 },
-                updateJobs: function() {
-                    $http.get('/api/project/'+url+'/progress')
-                    .success
-                    (
-                        function(data) 
-                        {
-                            jobs = data;
-                            jobslength = jobs.length;
-                         }
-                    );
+                updateJobs: function(){
+                    $http.get('/api/project/'+url+'/progress').success(function(data){
+                        jobs = data;
+                        jobslength = jobs.length;
+                    });
                 },
                 startTimer : function(){
                     $interval.cancel(intervalPromise);
@@ -116,6 +112,22 @@
             );
         }         
     );
+
+    angular.module('a2-job-types',['a2-job-data'])
+    .controller('JobTypesController', function(JobsData){
+        var self = this;
+        JobsData.getJobTypes().then(function(job_types){
+            var colors = ['blue','red','green','purple','orange'];
+            self.types = job_types;
+            self.show  = {};
+            self.for   = {};
+            self.types.forEach(function(c,i){
+                self.show[c.id] = true;
+                self.for[c.id] = c;
+                c.color = colors[i % colors.length];
+            });
+        });
+    });
     
 
    jobs.controller
@@ -134,19 +146,9 @@
         }
     ) ;
     
-    jobs.controller('StatusBarNavController', function ($scope, $http,$modal,$interval, Project,JobsData){
+    
+    jobs.controller('StatusBarNavController', function ($scope, $http,$modal,$interval, Project, JobsData){
         $scope.show={};
-        $scope.job_types=[];
-        $scope.job_types_for={};
-        JobsData.getJobTypes().then(function(job_types){
-            var colors = ['blue','red','green','purple','orange'];
-            $scope.job_types = job_types;
-            $scope.job_types.forEach(function(c,i){
-                $scope.show[c.id] = true;
-                $scope.job_types_for[c.id] = c;
-                c.color = colors[i % colors.length];
-            });
-        });
         $scope.showClassifications = true;
         $scope.showTrainings = true;
 	    $scope.showSoundscapes = true;

@@ -1,10 +1,10 @@
 <div ng-controller="StatusBarNavController" data-ng-init="init()">
-    <div class="container-fluid padded-view-div">
+    <div class="container-fluid padded-view-div" ng-controller="JobTypesController as job_types">
         <div ng-show="jobs.length">
             <h3>Active Jobs</h3>
             <div class="row">
                 Show : 
-                <label ng-repeat="job_type in job_types" style="padding-left:25px; display:inline-block;">
+                <label ng-repeat="job_type in job_types.types" style="padding-left:25px; display:inline-block;">
                     <input type="checkbox" class="hidden"  ng-model="show[job_type.id]" /> 
                     <i class="fa" ng-class="show[job_type.id] ? 'fa-circle' : 'fa-circle-o'"
                         ng-style="{color : job_type.color}"
@@ -22,7 +22,7 @@
                 <div class="row" ng-show="show[o.job_type_id]" >
                     <div class="bordered"></div>
                     <div class="col-sm-2 hidelongtext">
-                        <i class="fa fa-circle" ng-style="{color : job_types_for[o.job_type_id].color}"></i>
+                        <i class="fa fa-circle" ng-style="{color : job_types.for[o.job_type_id].color}"></i>
                         {{o.name}}
                     </div>
                     <div class="col-sm-2 hidelongtext">{{o.type}}</div>
@@ -30,7 +30,7 @@
                     <div class="col-sm-1" ng-show="o.state == 'processing' && o.percentage"><span ng-show="o.percentage">{{o.percentage}}%</span></div>
                     <div class="col-sm-2" ng-show="o.state == 'processing' && o.percentage">
                         <div class="progress progress-striped active"> 
-                         <div ng-style="{'background-color':job_types_for[o.job_type_id].color, width : ( o.percentage + '%' ) }" aria-valuemax="100" aria-valuemin="0" aria-valuenow="{{o.percentage}}" role="progressbar" class="progress-bar">
+                         <div ng-style="{'background-color':job_types.for[o.job_type_id].color, width : ( o.percentage + '%' ) }" aria-valuemax="100" aria-valuemin="0" aria-valuenow="{{o.percentage}}" role="progressbar" class="progress-bar">
                             {{o.percentage}}%
                          </div>
                         </div>

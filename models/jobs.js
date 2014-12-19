@@ -195,7 +195,7 @@ var Jobs = {
     },
 
     activeJobs: function(project, callback) {
-        if(project == Function){
+        if(project instanceof Function){
             callback = project;
             project = undefined;
         }
