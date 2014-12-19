@@ -185,8 +185,10 @@ JobQueue.prototype = {
     count_enqueued_jobs : function(callback){
         queryHandler(
             "SELECT count(*) as count\n" +
-            "FROM `job_queue_enqueued_jobs` \n"+
-            "WHERE job_queue_id = " + (this.id | 0),
+            "FROM `job_queue_enqueued_jobs` EJ\n"+
+            "JOIN `jobs` J ON EJ.job_id = J.job_id\n"+
+            "WHERE EJ.job_queue_id = " + (this.id | 0) +
+            "  AND J.state IN ('initializing', 'ready', 'processing')",
             function(err, data){
                 if(err){callback(err); return;}
                 callback(null, data.length ? data[0].count : 0);                

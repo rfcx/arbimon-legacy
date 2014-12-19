@@ -15,12 +15,11 @@ var script_path = path.resolve(__dirname, 'scripts/');
 /** Application for running the main queue
  * @param {Object} options
  * @param {Boolean} options.server whether or not to activate the server, (default: true).
- * @param {Integer} options.enqueue_retries number of iterations to fail
- *                  at trying to enqueue a job in order to quit.
  * @param {Integer} options.concurrency maximum number of concurrent jobs.
- * @param {Integer} options.retry_delay delay between each loop iteration. 
- *                  (if 0, then there is no delay)
- * @param {Integer} options.suspend_delay delay between each loop iteration.
+ * @param {Integer} options.loop_while_more_jobs whether the main loop keeps running while there are still waiting jobs. (default: true)
+ * @param {Integer} options.loop_delay delay between each loop iteration in the main loop.
+ * @param {Integer} options.rerun_interval interval to wait before re-running the main loop.
+ *                  (if 0, then the main loop is not re-run after a timeout)
  */
 var jqapp = function(options){
     this.options = options || {};
@@ -81,7 +80,9 @@ jqapp.prototype = {
         }
          
         var self = this;
-        var suspend_delay  = this.options.suspend_delay   || config("job-queue").suspend_delay  ;
+        var loop_while_more_jobs = this.options.loop_while_more_jobs || config("job-queue").loop_while_more_jobs;
+        var loop_delay           = this.options.loop_delay           || config("job-queue").loop_delay          ;
+        var rerun_interval       = this.options.rerun_interval       || config("job-queue").rerun_interval      ;
         
         if(self.main_loop_timeout){
             clearTimeout(self.main_loop_timeout);
@@ -90,10 +91,13 @@ jqapp.prototype = {
         self.state = 'running-loop';
 
         self.running_loop = true;
-        this.loop_once(function(err){
-            if(suspend_delay){
-                debug("  Suspending main loop for : %s ms", suspend_delay);
-                self.main_loop_timeout = setTimeout(self.run_main_loop.bind(self), suspend_delay);
+        this.loop_once(function(err, results){
+            if(loop_while_more_jobs && results && results.waiting > 0 && results.current < results.max){
+                debug("  There are still %s more jobs waiting and concurrency is %s/%s, looping in %s ms", results.waiting, results.current, results.max, loop_delay);
+                self.main_loop_timeout = setTimeout(self.run_main_loop.bind(self), loop_delay);
+            } else if(rerun_interval){
+                debug("  Suspending main loop for : %s ms", rerun_interval);
+                self.main_loop_timeout = setTimeout(self.run_main_loop.bind(self), rerun_interval);
             } else {
                 debug("  Suspending main loop.");
             }
@@ -138,31 +142,33 @@ jqapp.prototype = {
     
     enqueue_and_run_jobs: function(){
         var self = this;
+        var r={};
 
         var callback = arguments[arguments.length-1];
         async.waterfall([
             self.job_queue.count_enqueued_jobs.bind(self.job_queue),
             function determine_max_concurrency(enqueued_job_count){
                 var next_step = arguments[arguments.length-1];
-                self.enqueued_job_count = enqueued_job_count;
-                self.max_concurrency = self.get_max_concurrency();
+                r.current  = self.enqueued_job_count = enqueued_job_count;
+                r.max      = self.max_concurrency = self.get_max_concurrency();
                 next_step();
             },
             self.job_queue.count_waiting_jobs.bind(self.job_queue),
             function determine_max_jobs_count(waiting_job_count){
                 var next_step = arguments[arguments.length-1];
-                self.waiting_job_count = waiting_job_count;
+                r.waiting = self.waiting_job_count = waiting_job_count;
                 next_step();
             },
             function determine_jobs_to_enqueue(job_count){
                 var next_step = arguments[arguments.length-1];
-                self.jobs_to_enqueue = Math.max(0, Math.min(self.waiting_job_count, self.max_concurrency - self.enqueued_job_count));
+                r.to_enqueue = self.jobs_to_enqueue = Math.max(0, Math.min(self.waiting_job_count, self.max_concurrency - self.enqueued_job_count));
                 debug("  Job Stats : {Waiting:%s, Running:%s, Max-Concurrency:%s, Left-To-Run:%s}", self.waiting_job_count, self.enqueued_job_count, self.max_concurrency, self.jobs_to_enqueue);
                 next_step();
             },
             function enqueue_jobs(){
                 var next_step = arguments[arguments.length-1];
                 var still_have_jobs = true;
+                r.enqueued=0;
                 async.whilst(
                     function(){
                         return self.jobs_to_enqueue > 0 && still_have_jobs;
@@ -175,6 +181,8 @@ jqapp.prototype = {
                                 var next_w2_step = arguments[arguments.length-1];
                                 var job = arguments.length > 1 ? arguments[0] : null;
                                 if(job){
+                                    ++r.enqueued;
+                                    --r.waiting;
                                     self.run_job(job, next_w2_step);
                                 } else {
                                     still_have_jobs = false;
@@ -184,7 +192,11 @@ jqapp.prototype = {
                         ], next_jte_loop);
                     }, 
                     next_step
-                );                
+                );
+            },
+            function(){
+                var next_step = arguments[arguments.length-1];
+                next_step(null, r);
             }
         ], callback);
     },

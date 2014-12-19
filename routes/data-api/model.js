@@ -106,7 +106,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
     var response_already_sent;
     var project_id, name, train_id, classifier_id, usePresentTraining;
     var useNotPresentTraining, usePresentValidation, useNotPresentValidation, user_id;
-    var trainingId;
+    var job_id, params;
     
     async.waterfall([
         function find_project_by_url(next){
@@ -135,6 +135,17 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             usePresentValidation = mysql.escape(req.body.vp);
             useNotPresentValidation  = mysql.escape(req.body.vn);
             user_id = req.session.user.id;
+            params = {
+                name       : name                   ,
+                train      : train_id               ,
+                classifier : classifier_id          ,
+                user       : user_id                ,
+                project    : project_id             ,
+                upt        : usePresentTraining     ,
+                unt        : useNotPresentTraining  ,
+                upv        : usePresentValidation   ,
+                unv        : useNotPresentValidation
+            };
             
             next();
         },
@@ -152,62 +163,18 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
                 next();
             }
         },
-        function make_new_job(next){
-            model.jobs.newJob({name:name,train:train_id,classifier:classifier_id,user:user_id,pid:project_id},1, next);
+        function add_job(next){
+            model.jobs.newJob(params, 'training_job', next);
         },
-        function make_new_training_job(row){
-            debug(__dirname+'/../../.env/bin/python',scriptsFolder+'training.py',row.insertId , name);
-            var next = arguments[arguments.length-1];
-            trainingId = row.insertId;
-            model.jobs.newTrainingJob({
-                id:trainingId,name:name,
-                train:train_id,classifier:classifier_id,
-                user:user_id,pid:project_id,upt:usePresentTraining,
-                unt:useNotPresentTraining,upv:usePresentValidation,
-                unv:useNotPresentValidation
-            }, next);
-        },
-        function push_job_to_queue(row){
-            var next = arguments[arguments.length-1];
-            jobQueue.push({
-                name: 'trainingJob'+trainingId,
-                work: function(callback){
-                    var python = require('child_process').spawn(
-                        __dirname+'/../../.env/bin/python', [
-                            scriptsFolder+'PatternMatching/training.py',
-                            trainingId, 
-                            name
-                        ]
-                    );
-                    var output = "";
-                    python.stdout.on('data', function(data) { 
-                        output += data;
-                        debug(output);
-                    });
-                    python.on('close', function(code) { 
-                        if (code !== 0) { 
-                            debug('trainingJob returned error ',trainingId);
-                        } else {
-                            debug('no error, everything ok, trainingJob completed ',trainingId);
-                        }
-                        callback(code);
-                    });
-                }
-            },
-            1, // priority
-            function(data) {
-                debug("job done! trainingJob", trainingId,data);                
-                model.training_sets.findName(train_id, function(err, rows) {
-                    model.projects.insertNews({
-                        news_type_id: 8, // model created and trained
-                        user_id: req.session.user.id,
-                        project_id: project_id,
-                        data: JSON.stringify({ model: name, training_set: rows[0].name })
-                    });
-                });
-            });
+        function get_job_id(_job_id){
+            var next = arguments[arguments.length -1];
+            job_id = _job_id;
             next();
-        }
+        },
+        function poke_the_monkey(next){
+            request.post(config('hosts').jobqueue + '/notify', function(){});
+            next();
+        },
     ], function(err, data){
         if(err){
             if(!response_already_sent){
@@ -215,7 +182,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             }
             return;
         } else {
-            res.json({ ok:"job created trainingJob:"+trainingId});
+            res.json({ ok:"job created trainingJob:"+job_id});
         }
     });
 
@@ -277,52 +244,10 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
             job_id = _job_id;
             next();
         },
-        function push_job_to_queue(row){
-            var next = arguments[arguments.length-1];
-            debug(
-                __dirname+'/../../.env/bin/python',
-                scriptsFolder+'PatternMatching/classification.py',
-                cmd_escape(job_id            ), cmd_escape(params.name         ), cmd_escape(params.allRecs), 
-                cmd_escape(params.sitesString), cmd_escape(params.classifier), cmd_escape(params.project), cmd_escape(params.user), cmd_escape(params.playlist)
-            );
-            
-            jobQueue.push(
-                {   name: 'classificationJob'+job_id,
-                    work: function(callback){
-                        var python = require('child_process').spawn(
-                            __dirname+'/../../.env/bin/python', [
-                            scriptsFolder+'PatternMatching/classification.py' ,
-                                cmd_escape(job_id             ), cmd_escape(params.name      ), cmd_escape(params.allRecs), 
-                                cmd_escape(params.sitesString ), cmd_escape(params.classifier), cmd_escape(params.project), cmd_escape(params.user), cmd_escape(params.playlist)
-                            ]
-                        );
-                        var output = "";
-                        python.stdout.on('data', function(data){ 
-                            output += data;
-                        });
-                        python.on('close', function(code) { 
-                            if (code !== 0) { 
-                                debug('classificationJob returned error',job_id);
-                            } else {
-                                debug('no error, everything ok, classificationJob completed',job_id);
-                            }
-                            callback();
-                        });
-                    }
-                }, 1, function() {
-                debug("job done! classificationJob", job_id);
-                
-                model.models.findName(params.classifier, function(err, rows) {
-                    model.projects.insertNews({
-                        news_type_id: 9, // model created and trained
-                        user_id: req.session.user.id,
-                        project_id: params.project,
-                        data: JSON.stringify({ model: rows[0].name, classi: params.name })
-                    });
-                });
-            });
+        function poke_the_monkey(next){
+            request.post(config('hosts').jobqueue + '/notify', function(){});
             next();
-        }
+        },
     ], function(err, data){
         if(err){
             if(!response_already_sent){
@@ -502,7 +427,7 @@ router.get('/project/:projectUrl/progress/queue', function(req, res) {
 
 });
 
-router.get('/project/:projectUrl/job/types', function(req, res, next) {
+router.get('/job/types', function(req, res, next) {
     model.jobs.getJobTypes(function(err, types) {
         if(err){ next(err); return; }
         res.json(types);
@@ -627,7 +552,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             next();
         },
         function poke_the_monkey(next){
-            request.post(config('hosts').jobqueue + '/notify', function(){})
+            request.post(config('hosts').jobqueue + '/notify', function(){});
             next();
         }
     ], function(err, job_id){
