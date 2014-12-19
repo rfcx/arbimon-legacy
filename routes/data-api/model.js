@@ -1,5 +1,6 @@
 var debug = require('debug')('arbimon2:route:model');
 var express = require('express');
+var request = require('request');
 var router = express.Router();
 var async = require('async');
 var util = require('util');
@@ -9,7 +10,7 @@ var path = require('path');
 var model = require('../../models');
 var jobQueue = require('../../utils/jobqueue');
 var scriptsFolder = __dirname+'/../../scripts/';
-var config = require('../../config/aws.json');
+var config = require('../../config');
 
 
 
@@ -613,6 +614,10 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             var next = arguments[arguments.length -1];
             job_id = _job_id;
             next();
+        },
+        function poke_the_monkey(next){
+            request.post(config('hosts').jobqueue + '/notify', function(){})
+            next();
         }
     ], function(err, job_id){
         if(err){
@@ -625,5 +630,6 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
         }
     })
 });
+
 
 module.exports = router;

@@ -125,7 +125,7 @@ JobQueue.prototype = {
                 async.waterfall([
                     function find_some_waiting_job(next){
                         job_id = null;
-                        Jobs.find({state:'waiting', limit:1, user:5}, {id_only:true}, next);
+                        Jobs.find({state:'waiting', limit:1}, {id_only:true}, next);
                     }, 
                     function associate_job_to_queue(jobs){
                         var next = arguments[arguments.length-1];
