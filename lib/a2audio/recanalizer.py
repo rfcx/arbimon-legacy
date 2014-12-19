@@ -5,6 +5,10 @@ import time
 from a2pyutils.config import Config
 from skimage.measure import structural_similarity as ssim
 import cPickle as pickle
+from scipy.stats import pearsonr as prs
+from scipy.stats import kendalltau as ktau
+from  scipy.spatial.distance import cityblock as ct
+from scipy.spatial.distance import cosine as csn
 
 class Recanalizer:
     
@@ -74,21 +78,47 @@ class Recanalizer:
            self.logs.write("featureVector write end")            
         spec = self.spec;
         for j in range(0,currColumns - self.columns,step): 
-            self.distances.append(self.matrixDistance(numpy.copy(spec[: , j:(j+self.columns)])  , 2  ) )
+            self.distances.append(self.matrixDistance(numpy.copy(spec[: , j:(j+self.columns)])) )
         if self.logs:
            self.logs.write("featureVector end")
            
-    def matrixDistance(self,a,stype=1):
-        val = 0
+    def matrixDistance(self,a,stype=2):
+        #val = 0
         
-        if stype == 1: #original from RAB thesis
-            val = numpy.linalg.norm(a  - self.matrixSurfacComp)
-        
-        if stype == 2: # SSIM (structural similarity)
-            val = ssim(a,self.matrixSurfacComp)
-            if val < 0:
-                val = 0
-                
+        #if stype == 1: #original from RAB thesis (frobenius norm of the difference, squared l2-norm?)
+        #    val = numpy.linalg.norm(a  - self.matrixSurfacComp)
+        #
+        #if stype == 2: # SSIM (structural similarity)
+        val = ssim(a,self.matrixSurfacComp)
+        if val < 0:
+            val = 0
+    
+        #if stype == 3: # Mean Squared Error 
+        #    val = ((a - self.matrixSurfacComp) ** 2).mean(axis=None)
+        #
+        #if stype == 4: # Pearson correlation coefficient 
+        #    val = prs((numpy.asarray(a)).reshape(-1) , (numpy.asarray(self.matrixSurfacComp)).reshape(-1) )[0]
+        #    if val < 0:
+        #        val = 0
+        #        
+        #if stype == 5: # Kendall's tau
+        #   val = ktau(a,self.matrixSurfacComp)[0]
+        #   if val < 0:
+        #       val = 0
+        #       
+        #if stype == 6: # Manhattan distance. 
+        #    val = ct(np.asarray(a).reshape(-1) , np.asarray(self.matrixSurfacComp).reshape(-1))
+        #    if val < 0:
+        #        val = 0
+        #        
+        #if stype == 7: # Cosine distance. 
+        #    val = csn(np.asarray(a).reshape(-1) , np.asarray(self.matrixSurfacComp).reshape(-1))
+        #    if val < 0:
+        #        val = 0
+        #        
+        #if stype == 8: # L1-norm
+        #    val = numpy.linalg.norm(a  - self.matrixSurfacComp,ord=1)
+            
         return val
     
     def spectrogram(self):

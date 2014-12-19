@@ -63,8 +63,18 @@ class Roiset:
         
 
         self.surface = numpy.sum(self.maxrois,axis=0)
-        self.surface = self.surface/len(self.maxIndeces)
-        weights = numpy.ones(shape=(self.rows,self.maxColumns))*len(self.maxrois)
+        weights = numpy.ones(shape=(self.rows,self.maxColumns))
+        freqs = [self.setSampleRate/2/(self.rows-1)*i for i in reversed(range(0,self.surface.shape[0]))]
+        high_index = 0
+        low_index = 0
+        while freqs[high_index] >= self.highestFreq:
+            high_index = high_index + 1
+            low_index  = low_index  + 1
+        while freqs[low_index ] >=  self.lowestFreq:
+            low_index  = low_index  + 1
+        
+        weights[high_index:low_index ,:] = weights[high_index:low_index ,:]*len(self.maxrois)
+        
         for i in self.varlengthsIndeces:
             distances = []
             currColumns = self.roi[i].spec.shape[1]
@@ -76,34 +86,46 @@ class Roiset:
             temp[:, j:(j+currColumns)] = self.roi[i].spec
             self.maxrois.append(temp)
             self.surface[:, j:(j+currColumns)] = (self.surface[:, j:(j+currColumns)] + self.roi[i].spec)
-            weights[:, j:(j+currColumns)] = weights[:, j:(j+currColumns)]  + 1
-        self.surface = self.surface/self.roiCount
-        self.meanSurface = numpy.mean([self.maxrois[j] for j in range(self.roiCount)],axis=0)
-        self.stdSurface = numpy.std([self.maxrois[j] for j in range(self.roiCount)],axis=0)
+            
+            high_index = 0
+            low_index = 0
+            while freqs[high_index] >= self.roi[i].highFreq:
+                high_index = high_index + 1
+                low_index  = low_index  + 1
+            while freqs[low_index ] >=  self.roi[i].lowFreq:
+                low_index  = low_index  + 1
 
-        for i in reversed(range(0,self.maxColumns)):
-            if weights[0,i] < self.roiCount:
-                weights = scipy.delete(weights, i, 1)
-                self.meanSurface = scipy.delete(self.meanSurface, i, 1)
-                self.stdSurface = scipy.delete(self.stdSurface, i, 1)
-                self.surface = scipy.delete(self.surface, i, 1)
-                
-        self.maxColumns = self.surface.shape[1]
-        freqs = [self.setSampleRate/2/(self.surface.shape[0]-1)*i for i in reversed(range(0,self.surface.shape[0]))]
-        
-        i =0
-        while freqs[i] >= self.lowesthighestFreq:
-            self.meanSurface[i,:] = 0
-            self.stdSurface[i,:] = 0
-            self.surface[i,:] = 0
-            i = i + 1
-        while freqs[i] >=  self.highestlowestFreq:
-            i = i + 1
-        while i <  self.rows:
-            self.meanSurface[i,:] = 0
-            self.stdSurface[i,:] = 0
-            self.surface[i,:] = 0
-            i = i + 1
+            
+            weights[high_index:low_index, j:(j+currColumns)] = weights[high_index:low_index, j:(j+currColumns)]  + 1
+            
+        #self.meanSurface = numpy.mean([self.maxrois[j] for j in range(self.roiCount)],axis=0)
+        self.meanSurface = numpy.sum(self.maxrois,axis=0)
+        self.meanSurface = numpy.divide(self.meanSurface,weights)
+        self.stdSurface = numpy.std([self.maxrois[j] for j in range(self.roiCount)],axis=0)
+        #
+        #for i in reversed(range(0,self.maxColumns)):
+        #    if weights[0,i] < self.roiCount:
+        #        weights = scipy.delete(weights, i, 1)
+        #        self.meanSurface = scipy.delete(self.meanSurface, i, 1)
+        #        self.stdSurface = scipy.delete(self.stdSurface, i, 1)
+        #        self.surface = scipy.delete(self.surface, i, 1)
+        #        
+        #self.maxColumns = self.surface.shape[1]
+        #freqs = [self.setSampleRate/2/(self.surface.shape[0]-1)*i for i in reversed(range(0,self.surface.shape[0]))]
+        #
+        #i =0
+        #while freqs[i] >= self.lowesthighestFreq:
+        #    self.meanSurface[i,:] = 0
+        #    self.stdSurface[i,:] = 0
+        #    self.surface[i,:] = 0
+        #    i = i + 1
+        #while freqs[i] >=  self.highestlowestFreq:
+        #    i = i + 1
+        #while i <  self.rows:
+        #    self.meanSurface[i,:] = 0
+        #    self.stdSurface[i,:] = 0
+        #    self.surface[i,:] = 0
+        #    i = i + 1
             
     def showSurface(self):
         ax1 = subplot(111)
