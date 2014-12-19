@@ -31,7 +31,23 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         Active jobs
+                    </div>                    
+                    <div ng-init="states={
+                        waiting      : {color:'black', show: true},
+                        initializing : {color:'blue', show: true},
+                        ready        : {color:'#007777', show: true},
+                        processing   : {color:'olive', show: true},
+                        completed    : {color:'green', show: false},
+                        error        : {color:'red', show: true},
+                        canceled     : {color:'gray', show: false},
+                    }">
+                        States:
+                        <label ng-repeat="(state, obj) in states" ng-style="{color:obj.color}"><input ng-model="obj.show" type="checkbox"> {{state}}</label>
                     </div>
+                    <div>
+                        Types:
+                        <label ng-repeat="type in job_types.types"><input ng-init="type.show=true" ng-model="type.show" type="checkbox">{{type.name}}</label>
+                    </div>                    
                     <table class="table">
                         <thead>
                             <tr>
@@ -42,7 +58,7 @@
                             </tr>
                         <thead>
                         <tbody>
-                            <tr ng-repeat="job in activeJobs">
+                            <tr ng-repeat="job in activeJobs" ng-show="job_types.for[job.job_type_id].show && states[job.state].show">
                                 <td>{{job.job_id }}</td>
                                 <td>
                                     <i class="fa fa-circle" ng-style="{color : job_types.for[job.job_type_id].color}"
@@ -51,7 +67,7 @@
                                     {{ job.name }}
                                 </td>
                                 <td>
-                                    <div ng-hide="job.state == 'processing' && job.percentage" >{{job.state}}</div>
+                                    <div ng-hide="job.state == 'processing' && job.percentage" ng-style="{color:states[job.state].color}" >{{job.state}}</div>
                                     <div ng-show="job.state == 'processing' && job.percentage">
                                         <div class="progress progress-striped active"> 
                                          <div ng-style="{'background-color':job_types.for[job.job_type_id].color, width : ( job.percentage + '%' ) }" aria-valuemax="100" aria-valuemin="0" aria-valuenow="{{job.percentage}}" role="progressbar" class="progress-bar">

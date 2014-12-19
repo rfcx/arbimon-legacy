@@ -1,6 +1,6 @@
 
 (function(angular){ 
-    var jobs = angular.module('jobs',['a2services', 'a2-job-data', 'a2-job-type']);
+    var jobs = angular.module('jobs',['a2services', 'a2-job-data', 'a2-job-types']);
     
     jobs.config(['$stateProvider', function($stateProvider) {
         $stateProvider.state('jobs', {

@@ -21,7 +21,9 @@ router.get('/', function(req, res) {
 
 
 router.get('/job-queue', function(req, res, next) {
-    request.get(config('hosts').jobqueue + '/stats').pipe(res);
+    request.get(config('hosts').jobqueue + '/stats').on('error', function(err) {
+        res.json({error:'Could not read job queue stats.'});
+    }).pipe(res);
 });
 
 router.get('/active-jobs', function(req, res, next) {

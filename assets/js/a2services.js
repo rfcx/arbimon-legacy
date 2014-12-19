@@ -4,7 +4,8 @@ angular.module('a2services',[])
     urlparse.href = $location.absUrl();
     var nameRe = /\/?project\/([\w\_\-]+)/;
 
-    var url = (nameRe.exec(urlparse.pathname) | ['',''])[1];
+    var nrm = nameRe.exec(urlparse.pathname);
+    var url = nrm ? nrm[1] : '';
 
     var project;
 
