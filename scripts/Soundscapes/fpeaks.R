@@ -9,7 +9,7 @@ if(length(archivo@left)>archivo@samp.rate)# at least one second of audio
     picos = c()
     spec = c()
     srate = archivo@samp.rate
-    n = floor((srate/2)/bin_size) # search for the next power of two
+    n = floor((srate)/bin_size) # search for the next power of two
     n = n - 1
     n = bitwOr(n,bitwShiftR(n, 1) )
     n = bitwOr(n,bitwShiftR(n, 2)  )
