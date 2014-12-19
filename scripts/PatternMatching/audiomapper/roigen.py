@@ -43,7 +43,7 @@ for line in sys.stdin:
     roi = Roizer(recuri,tempFolder,config,initTime,endingTime,lowFreq,highFreq)
     
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(jobId))
+        cursor.execute('update `jobs` set `state`="processing", `progress` = `progress` + 1 where `job_id` = '+str(jobId))
         db.commit()
         
     if "NoAudio" in roi.status:

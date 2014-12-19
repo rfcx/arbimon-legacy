@@ -30,7 +30,7 @@ for line in sys.stdin:
     specCopy = spectrogram
     
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(jId))
+        cursor.execute('update `jobs` set `state`="processing", `progress` = `progress` + 1 where `job_id` = '+str(jId))
         db.commit()
         
     #prepare the spec matrix from spectrogram string
@@ -62,5 +62,3 @@ for line in sys.stdin:
         fets.append(recUri)
         #print into stdout for next step (modelize.py)
         print ';'.join( str(x) for x in fets )
-
-
