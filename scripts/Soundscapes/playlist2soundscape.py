@@ -98,20 +98,7 @@ log.write('database connection succesful')
 bucketName = config[4]
 awsKeyId = config[5]
 awsKeySecret = config[6]
-log.write('tring connection to bucket') 
 
-start_time = time.time()
-bucket = ''
-conn = S3Connection(awsKeyId, awsKeySecret)
-try:
-    bucket = conn.get_bucket(bucketName)
-except Exception, ex:
-    log.write('fatal error cannot connect to bucket '+ex.error_message)
-    with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `complete` = -1,`remarks` = \'Error: connecting to bucket.\' where `job_id` = '+str(job_id))
-        db.commit()
-    quit()
-log.write('connect to bucket  succesful')
 
 q=("SELECT r.`recording_id`,`uri`, DATE_FORMAT( `datetime` , '%Y-%m-%d %H:%i:%s' ) as date FROM `playlist_recordings` pr , `recordings` r "+
   "WHERE `playlist_id` = "+str(playlist_id)+" and pr.`recording_id` = r.`recording_id`")
@@ -271,6 +258,19 @@ if len(resultsParallel)>0:
     log.write("writing image:" + str(time.time() - start_time_all))
     imageUri = 'project_'+str(pid)+'/soundscapes/'+str(soundscapeId)+'/image.png'
     indexUri = 'project_'+str(pid)+'/soundscapes/'+str(soundscapeId)+'/index.scidx'
+    log.write('tring connection to bucket') 
+    start_time = time.time()
+    bucket = None
+    conn = S3Connection(awsKeyId, awsKeySecret)
+    try:
+        bucket = conn.get_bucket(bucketName)
+    except Exception, ex:
+        log.write('fatal error cannot connect to bucket '+ex.error_message)
+        with closing(db.cursor()) as cursor:
+            cursor.execute('update `jobs` set `complete` = -1,`remarks` = \'Error: connecting to bucket.\' where `job_id` = '+str(job_id))
+            db.commit()
+        quit()
+    log.write('connect to bucket  succesful')
     k = bucket.new_key(imageUri )
     k.set_contents_from_filename(workingFolder+imgout)
     k.set_acl('public-read')
