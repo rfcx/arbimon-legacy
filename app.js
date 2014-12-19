@@ -33,16 +33,22 @@ if (app.get('env') === 'production') {
     app.use(function(req, res, next){
         if(!req.secure) {
             var securePort = app.get('tls_port') == 443 ? '' : ':' + app.get('tls_port');
-            return res.redirect('https://' + req.hostname + securePort + req.originalUrl)
+            return res.redirect('https://' + req.hostname + securePort + req.originalUrl);
         }
         next();
-    })
+    });
 }
 
 app.use(favicon(__dirname + '/public/images/favicon.ico'));
 
-logger.token('tag', function(req, res){ return 'arbimon2:request'; });    
-app.use(logger(':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"'));
+logger.token('tag', function(req, res){ return 'arbimon2:request'; });
+
+if (app.get('env') === 'production') {
+    app.use(logger(':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"'));
+}
+else {
+    app.use(logger('dev'));
+}
 
 app.use(cookieParser());
 app.use(busboy());

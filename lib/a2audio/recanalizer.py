@@ -3,6 +3,8 @@ from pylab import *
 import numpy
 import time
 from a2pyutils.config import Config
+from skimage.measure import structural_similarity as ssim
+import cPickle as pickle
 
 class Recanalizer:
     
@@ -15,6 +17,11 @@ class Recanalizer:
         self.logs = logs
         configuration = Config()
         config = configuration.data()
+        if self.logs:
+           self.logs.write(uri)    
+        self.uri = uri
+        if self.logs:
+           self.logs.write(self.uri)    
         if self.logs :
             self.logs.write("configuration time --- seconds ---" + str(time.time() - start_time))
         start_time = time.time()
@@ -32,8 +39,7 @@ class Recanalizer:
                 self.logs.write("feature vector --- seconds ---" + str(time.time() - start_time))
             self.status = 'Processed'
         else:
-            self.status = 'NoData'
-            
+            self.status = 'NoData'        
         self.tempFolder = tempFolder
         
     def getVector(self ):
@@ -45,16 +51,46 @@ class Recanalizer:
                 , numpy.std(self.distances) , numpy.median(self.distances)]
         
     def featureVector(self):
-        
+        if self.logs:
+           self.logs.write("featureVector start")
+        if self.logs:
+           self.logs.write(self.uri)    
+        pieces = self.uri.split('/')
+        filename = '/home/rafa/debugs_pickels/'+pieces[len(pieces)-1]+".pickle"
         self.distances = []
         currColumns = self.spec.shape[1]
-        step = 2
-        matrixSurface = self.speciesSurface[self.lowIndex:self.highIndex,:]
+        step = 4
+        if self.logs:
+           self.logs.write("featureVector in here")     
+        self.matrixSurfacComp = numpy.copy(self.speciesSurface[self.lowIndex:self.highIndex,:])
+        if self.logs:
+           self.logs.write("featureVector write start")
+           
+        #with open(filename, 'wb') as output:
+        #    pickler = pickle.Pickler(output, -1)
+        #    pickle.dump([self.spec,self.matrixSurfacComp], output, -1)
+        #    
+        if self.logs:
+           self.logs.write("featureVector write end")            
         spec = self.spec;
         for j in range(0,currColumns - self.columns,step): 
-            subMatrix =  spec[: , j:(j+self.columns)]
-            self.distances.append(numpy.linalg.norm(subMatrix  - matrixSurface) )
+            self.distances.append(self.matrixDistance(numpy.copy(spec[: , j:(j+self.columns)])  , 2  ) )
+        if self.logs:
+           self.logs.write("featureVector end")
+           
+    def matrixDistance(self,a,stype=1):
+        val = 0
+        
+        if stype == 1: #original from RAB thesis
+            val = numpy.linalg.norm(a  - self.matrixSurfacComp)
+        
+        if stype == 2: # SSIM (structural similarity)
+            val = ssim(a,self.matrixSurfacComp)
+            if val < 0:
+                val = 0
                 
+        return val
+    
     def spectrogram(self):
 
         start_time = time.time()
@@ -72,7 +108,7 @@ class Recanalizer:
         
         #calculate decibeles in the passband
         while freqs[i] < self.high:
-           # Pxx[i,:] =  10. * np.log10( Pxx[i,:].clip(min=0.0000000001))
+            Pxx[i,:] =  10. * np.log10( Pxx[i,:].clip(min=0.0000000001))
             i = i + 1
  
         if i >= dims[0]:

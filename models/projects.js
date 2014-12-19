@@ -74,7 +74,7 @@ var Projects = {
                 return callback(new Error("required field '"+ requiredValues[i] + "' missing"));
         }
 
-        for( var i in project) {
+        for(var i in project) {
             if(i !== 'id') {
                 project[i] = mysql.escape(project[i]);
                 values.push(util.format('`%s`=%s', i, project[i]));

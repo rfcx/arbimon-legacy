@@ -111,8 +111,8 @@ class Rec:
         #bucket = None
         #if type(self.bucket) is str:
         #start_time = time.time()
-        #awsKeyId = self.config[5]
-        #awsKeySecret = self.config[6]
+        awsKeyId = self.config[5]
+        awsKeySecret = self.config[6]
         #conn = S3Connection(awsKeyId, awsKeySecret)
         #bucket = conn.get_bucket(self.bucket)
         #if self.logs :
@@ -127,14 +127,16 @@ class Rec:
         #if not key:
         #    return False       
         #key.get_contents_to_filename(self.localFiles+self.filename)
+        #
+        f = None
         if self.logs :
             self.logs.write('https://s3.amazonaws.com/arbimon2/'+self.uri+ ' to '+self.localFiles+self.filename)
         try:
-            f = urlopen('https://s3.amazonaws.com/arbimon2/'+self.uri)    
+            f = urlopen('https://s3.amazonaws.com/arbimon2/'+self.uri)
+            if self.logs :
+                self.logs.write('urlopen success')
             # Open our local file for writing
-            with open(self.localFiles+self.filename, "wb") as local_file:
-                local_file.write(f.read())
-
+                
         #handle errors
         except HTTPError, e:
             self.logs.write("bucket http error:" + str(e.code ))
@@ -143,6 +145,19 @@ class Rec:
             self.logs.write("bucket url error:" + str(e.reason ))
             return False
         
+        if f:
+            try:
+                with open(self.localFiles+self.filename, "wb") as local_file:
+                   local_file.write(f.read())
+            except:
+                self.logs.write('error f.read')
+                return False
+        else:
+            return False
+        
+        if self.logs :
+           self.logs.write('f.read success')
+           
         if self.logs :
             self.logs.write("retrieve recording:" + str(time.time() - start_time))
         return True

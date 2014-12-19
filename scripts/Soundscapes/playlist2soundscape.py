@@ -127,25 +127,8 @@ log.write('max_bins '+str(max_bins))
 bucketName = config[4]
 awsKeyId = config[5]
 awsKeySecret = config[6]
-log.write('tring connection to bucket')
 
-
-start_time = time.time()
 try:
-    bucket = ''
-    conn = S3Connection(awsKeyId, awsKeySecret)
-    try:
-        bucket = conn.get_bucket(bucketName)
-    except Exception, ex:
-        log.write('fatal error cannot connect to bucket '+ex.error_message)
-        with closing(db.cursor()) as cursor:
-            cursor.execute('update `jobs` set `state`="error", `completed` = -1, \
-                `remarks` = \'Error: connecting to bucket.\' \
-                where `job_id` = '+str(job_id))
-            db.commit()
-        quit()
-    log.write('connect to bucket  succesful')
-
     q = (
         "SELECT r.`recording_id`,`uri`, DATE_FORMAT( `datetime` , \
         '%Y-%m-%d %H:%i:%s' ) as date FROM `playlist_recordings` pr , \
@@ -366,6 +349,22 @@ try:
         uriBase = 'project_'+str(pid)+'/soundscapes/'+str(soundscapeId)
         imageUri = uriBase + '/image.png'
         indexUri = uriBase + '/index.scidx'
+        log.write('tring connection to bucket')
+        start_time = time.time()
+        bucket = None
+        conn = S3Connection(awsKeyId, awsKeySecret)
+        try:
+            bucket = conn.get_bucket(bucketName)
+        except Exception, ex:
+            log.write('fatal error cannot connect to bucket '+ex.error_message)
+            with closing(db.cursor()) as cursor:
+                cursor.execute('UPDATE `jobs` \
+                SET `complete` = -1, `state`="error", \
+                `remarks` = \'Error: connecting to bucket.\' \
+                WHERE `job_id` = '+str(job_id))
+                db.commit()
+            quit()
+        log.write('connect to bucket  succesful')
         k = bucket.new_key(imageUri)
         k.set_contents_from_filename(workingFolder+imgout)
         k.set_acl('public-read')
@@ -389,7 +388,7 @@ try:
             db.commit()
         log.write('no results from playlist id:'+playlist_id)
         with closing(db.cursor()) as cursor:
-            cursor.execute('update `jobs` set `state`="processing", \
+            cursor.execute('update `jobs` set \
                 `progress` = `progress` + 4 where `job_id` = '+str(job_id))
             db.commit()
 

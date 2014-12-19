@@ -41,32 +41,32 @@ router.get('/project/:projectUrl/classifications', function(req, res, next) {
 router.get('/project/:projectUrl/classification/:cid', function(req, res, next) {
     model.projects.classificationErrors(req.params.projectUrl,req.params.cid , function(err, rowsRecs) {
         if(err) res.json({"data":[]});
-        rowsRecs =  rowsRecs[0]
+        rowsRecs =  rowsRecs[0];
         model.projects.classificationDetail(req.params.projectUrl,req.params.cid, function(err, rows) {
             if(err) res.json({"data":[]});
             
-            i = 0
-            var data = []
-            var total = []
-            var species =[]
-            var songtype =[]
+            i = 0;
+            var data = [];
+            var total = [];
+            var species =[];
+            var songtype =[];
             while(i < rows.length)
             {
-                row = rows[i]
+                row = rows[i];
                 var index = row['species_id']+'_'+row['songtype_id'];
                 if (typeof data[index]  == 'number')
                 {
-                    data[index] = data[index] + parseInt(row['present'])
-                    total[index] = total[index] + 1
+                    data[index] = data[index] + parseInt(row['present']);
+                    total[index] = total[index] + 1;
                 }
                 else
                 {
-                    data[index] = parseInt(row['present'])
-                    species[index] = row['scientific_name']
-                    songtype[index] = row['songtype']
-                    total[index] = 1
+                    data[index] = parseInt(row['present']);
+                    species[index] = row['scientific_name'];
+                    songtype[index] = row['songtype'];
+                    total[index] = 1;
                 }
-                i = i + 1
+                i = i + 1;
             }
             var results = []
             for (var key in species)
@@ -82,7 +82,6 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
 
 
 router.get('/project/:projectUrl/classification/:cid/more/:f/:t', function(req, res) {
-debug('here mnore')
     model.projects.classificationDetailMore(req.params.projectUrl,req.params.cid,req.params.f,req.params.t, function(err, rows) {
         if(err) throw err;
         res.json(rows);
@@ -124,6 +123,10 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             }
             
             project_id = rows[0].project_id;
+            
+            if(!req.haveAccess(project_id, "manage models and classification"))
+                return res.json({ error: "you dont have permission to 'manage models and classification'" });
+                
             name = (req.body.n);
             train_id = mysql.escape(req.body.t);
             classifier_id = mysql.escape(req.body.c);
@@ -235,11 +238,15 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                 next(new Error());
                 return;
             }
+            var project_id = rows[0].project_id;
+
+            if(!req.haveAccess(project_id, "manage models and classification"))
+                return res.json({ error: "you dont have permission to 'manage models and classification'" });
 
             params = {
                 name        : req.body.n,
                 user        : req.session.user.id,
-                project     : rows[0].project_id,
+                project     : project_id,
                 classifier  : req.body.c,
                 allRecs     : req.body.a, // unused
                 sitesString : req.body.s, // unused
@@ -578,11 +585,15 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                 next(new Error());
                 return;
             }
+            var project_id = rows[0].project_id;
+
+            if(!req.haveAccess(project_id, "manage soundscapes"))
+                return res.json({ error: "you dont have permission to 'manage soundscapes'" });
             
             params = {
                 name        : (req.body.n),
                 user        : req.session.user.id,
-                project     : rows[0].project_id,
+                project     : project_id,
                 playlist    : (req.body.p.id),
                 aggregation : (req.body.a),
                 threshold   : (req.body.t),
