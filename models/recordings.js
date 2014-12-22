@@ -622,9 +622,9 @@ var Recordings = {
                 var months;
                 
                 if(months instanceof Array)
-                    months = parameters.months.map(function(m) { return m+1; });
+                    months = parameters.months.map(function(m) { return parseInt(m)+1; });
                 else
-                    months = parameters.months+1;
+                    months = parseInt(parameters.months)+1;
                 
                 q += 'AND MONTH(r.datetime) IN (' + mysql.escape(months) + ') \n';
             }
