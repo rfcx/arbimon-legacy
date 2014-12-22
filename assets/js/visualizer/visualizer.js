@@ -39,6 +39,9 @@ angular.module('visualizer', [
     
     $stateProvider.state('visualizer', {
         url: '/visualizer',
+        params : {
+            location:''
+        },
         views: {
             'visualizer': {
                 params : {
