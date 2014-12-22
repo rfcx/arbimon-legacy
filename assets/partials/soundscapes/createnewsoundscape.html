@@ -23,25 +23,25 @@
             <label for="aggregation">Select Aggregation:</label>
             <div class="row">
                  <div class="col-sm-12">
-                    <a2-aggregationtypeselector on-selected="aggregationValue"></a2-aggregationtypeselector>
+                    <a2-aggregationtypeselector selected="datasubmit.aggregation"></a2-aggregationtypeselector>
                  </div>
             </div>
         </div>
         <div class="col-sm-6">
             <div class="row container-fluid " >
                 <label for="aggregation">Bin bandwidth (Hz):</label>
-                <ol id="binhzlist" class="btn-group binhzpadding">
-                  <li id="21" class="btn btn-default btn-xs"><span class="spacedhz">21</span></li>
-                  <li id="43" class="btn btn-default btn-xs"><span class="spacedhz">43</span></li>
-                  <li id="86" class="btn btn-default btn-xs"><span class="spacedhz">86</span></li>
-                  <li id="172" class="btn btn-default btn-xs"><span class="spacedhz">172</span></li>
-                  <li id="344" class="btn btn-default btn-xs"><span class="spacedhz">344</span></li>
+                <ol id="" class="btn-group binhzpadding">
+                  <li btn-radio="21" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">21</span></li>
+                  <li btn-radio="43" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">43</span></li>
+                  <li btn-radio="86" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">86</span></li>
+                  <li btn-radio="172" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">172</span></li>
+                  <li btn-radio="344" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">344</span></li>
                 </ol>
             </div>
             <div class="row container-fluid" >
                 <label for="aggregation">Peak Filtering:</label>
-                <i class="fa fa-question" tooltip="Only peaks above the amplitude threshold will be considered. If the frequency difference of two successive peaks is less than the frequency threshold, then the peak of highest amplitude will be kept only." tooltip-placement="right"></i> 
-                <a2-thresholdselector on-threshold="thresholdValue" on-bandwidth="banwidthValue" ></a2-thresholdselector>
+                <i class="fa fa-question-circle" tooltip="Only peaks above the amplitude threshold will be considered. If the frequency difference of two successive peaks is less than the frequency threshold, then the peak of highest amplitude will be kept only." tooltip-placement="right"></i> 
+                <a2-threshold-selector threshold="datasubmit.threshold" bandwidth="datasubmit.bandwidth" ></a2-threshold-selector>
                 
                 <!--
                 <div>Flatness</div>
@@ -54,5 +54,5 @@
 </div>  
 <div class="modal-footer">  
     <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Soundscapes-new':'OK'"  ng-disabled="buttonEnable()">Submit</button>  
-    <button class="btn btn-warning" ng-click="cancel() | trackEvent:'Analysis-Soundscapes-new':'cancel'">Cancel</button>  
+    <button class="btn btn-default" ng-click="cancel() | trackEvent:'Analysis-Soundscapes-new':'cancel'">Cancel</button>  
 </div>  

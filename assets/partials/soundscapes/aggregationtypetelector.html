@@ -1,1 +1,11 @@
-<div style="width:200;height:110;"><ol id="aggregationlist" style="width:200;height:110;"></ol></div>
+<div style="width:200;height:110;">
+    <ul class="list-unstyled">
+        <li class="btn btn-default"
+            ng-class="{'active': selected == aggr.id }"
+            ng-repeat="aggr in aggregations" 
+            ng-click="select(aggr)">
+            
+            <a2-draw-aggregation aggregation="aggr"></a2-draw-aggregation>
+        <li>
+    </ul>
+</div>

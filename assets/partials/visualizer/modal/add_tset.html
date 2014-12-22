@@ -35,6 +35,7 @@
         </div>
         <div ng-include="typedefs[data.type.identifier].templates.new_modal" ></div>
     </div>
+    <div class="text-danger" ng-show="validation.error">{{ validation.error }}</div>
 </div>
 <div class="modal-footer">
     <button class="btn btn-primary" ng-click="ok()| trackEvent:'Visualizer-Add-Training-Set':'Ok'">OK</button>
