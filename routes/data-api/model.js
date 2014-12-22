@@ -39,7 +39,6 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
         rowsRecs =  rowsRecs[0];
         model.projects.classificationDetail(req.params.projectUrl,req.params.cid, function(err, rows) {
             if(err) res.json({"data":[]});
-            
             i = 0;
             var data = [];
             var total = [];
@@ -209,6 +208,31 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
 
 });
 
+router.get('/project/:projectUrl/classification/:cid/delete', function(req, res) {
+    model.projects.findByUrl(req.params.projectUrl, 
+        function(err, rows) 
+        {
+            if(err){ res.json({ err:"Could not delete classification"});  }
+            
+            if(!rows.length)
+            {
+                res.status(404).json({ err: "project not found"});
+                return;
+            }
+            var project_id = rows[0].project_id;
+            
+            if(!req.haveAccess(project_id, "manage models and classification"))
+                return res.json({ err: "You dont have permission to 'manage models and classification'" });
+            
+            model.projects.classificationDelete(mysql.escape(req.params.cid),
+                function (err,data)
+                {
+                    res.json(data);
+                }
+            );    
+        }
+    );
+});
 
 router.post('/project/:projectUrl/classification/new', function(req, res, next) {
     
@@ -545,6 +569,7 @@ router.get('/project/classification/csv/:cid', function(req, res) {
           
 
 });
+
 
 
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {

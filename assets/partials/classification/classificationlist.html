@@ -25,6 +25,9 @@
             <td>
                 <button class="btn btn-default btn-xs" ng-click="showClassificationDetails(classification.job_id) | trackEvent:'Analysis-Classification-List':' show classification details'">Show details</button>
             </td>
+            <td>
+                <button class="btn btn-default btn-xs" ng-click="deleteClassification(classification.job_id,classification.cname) | trackEvent:'Analysis-Classification list':'delete classification'">Delete</button>
+            </td>
         </tr>
     </table>
     <div class="jumbotron" ng-show="(!classificationsOriginal || !classificationsOriginal.length > 0) && !loading">

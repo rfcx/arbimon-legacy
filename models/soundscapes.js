@@ -444,7 +444,7 @@ var Soundscapes = {
             function (err,rows)
             {
                 if (err) {
-                    callback();
+                    callback(err);
                 }
                 if(!s3){
                     s3 = new AWS.S3();
@@ -468,7 +468,7 @@ var Soundscapes = {
                 s3.deleteObjects(params, function(err, data) {
                     if (err)
                     {
-                        callback();
+                        callback(err);
                     }
                     else
                     {
@@ -478,7 +478,7 @@ var Soundscapes = {
                             {
                                 if (err)
                                 {
-                                    callback();
+                                    callback(err);
                                 }
                                 else
                                 {    

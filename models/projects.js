@@ -4,7 +4,9 @@ var mysql = require('mysql');
 var async = require('async');
 var Joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;
-
+var AWS = require('aws-sdk');
+var config       = require('../config');
+var s3;
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
@@ -392,7 +394,147 @@ var Projects = {
 
         queryHandler(q, callback);
     },
-     
+    
+    classificationDelete: function(cid, callback) {
+        var modUri = ''
+        var q = "SELECT `uri` FROM `models` WHERE `model_id` = "+
+            "(SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = "+cid+")";
+        queryHandler(q,
+            function(err,data)
+            {
+                if(err) return callback(err);
+                modUri = data[0].uri.replace('.mod','');
+                q = "SELECT `uri` FROM `recordings` WHERE `recording_id` in "+
+                "(SELECT `recording_id` FROM `classification_results` WHERE `job_id` = "+cid+") ";
+                queryHandler(q,
+                    function(err,data)
+                    {
+                        if(err) return callback(err);
+                        var allToDelete = [];
+                        async.eachLimit(data,5,
+                        function (elem,callb)
+                        {
+                            var uri = elem.uri.split("/");
+                            uri = uri[uri.length-1]
+                            var cido = parseInt(cid.replace("'",""));
+                            allToDelete.push({Key:modUri+'/classification_'+cido+'_'+uri+'.vector'})
+                            callb();
+                        }
+                        ,
+                        function(err){
+                            if (err){
+                                return callback(err);
+                            }
+
+                            
+                            if (allToDelete.length==0)
+                            {
+                               var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid
+                               console.log('exc quer 1')
+                               queryHandler(q,function(err,row)
+                                   {
+                                       if (err)
+                                       {
+                                           callback(err);
+                                       }
+                                       else
+                                       {    
+                                           var q = "DELETE FROM `classification_stats` WHERE `job_id` = "+cid ;
+                                           console.log('exc quer 2')
+                                           queryHandler(q,
+                                                function(err,row)
+                                                {
+                                                    if (err)
+                                                    {
+                                                        callback(err);
+                                                    }
+                                                    else
+                                                    {    
+                                                        var q = "DELETE FROM `job_params_classification` WHERE `job_id` ="+cid;
+                                                        console.log('exc quer 3')
+                                                        queryHandler(q,            
+                                                            function(err,data)
+                                                            {
+                                                                if (err){
+                                                                    callback(err);
+                                                                }
+                                                                callback(null,{data:"Classification deleted succesfully"});
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            );
+                                       }
+                                   }
+                               );
+                            }
+                            else
+                            {
+                                if(!s3){
+                                    s3 = new AWS.S3();
+                                }
+                                var params = {
+                                    Bucket: config('aws').bucketName,
+                                    Delete: { 
+                                        Objects:allToDelete
+                                    }
+                                };
+                                s3.deleteObjects(params, function(err, data) {
+                                   if (err)
+                                   {console.log('error!!:',err)
+                                       callback(err);
+                                   }
+                                   else
+                                   {
+                                       var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid
+                                       console.log('exc quer 1')
+                                       queryHandler(q,function(err,row)
+                                           {
+                                               if (err)
+                                               {
+                                                   callback(err);
+                                               }
+                                               else
+                                               {    
+                                                   var q = "DELETE FROM `classification_stats` WHERE `job_id` = "+cid ;
+                                                   console.log('exc quer 2')
+                                                   queryHandler(q,
+                                                        function(err,row)
+                                                        {
+                                                            if (err)
+                                                            {
+                                                                callback(err);
+                                                            }
+                                                            else
+                                                            {    
+                                                                var q = "DELETE FROM `job_params_classification` WHERE `job_id` ="+cid;
+                                                                console.log('exc quer 3')
+                                                                queryHandler(q,            
+                                                                    function(err,data)
+                                                                    {
+                                                                        if (err){
+                                                                            callback(err);
+                                                                        }
+                                                                        callback(null,{data:"Classification deleted succesfully"});
+                                                                    }
+                                                                )
+                                                            }
+                                                        }
+                                                    );
+                                               }
+                                           }
+                                       );
+                                   }
+                                });
+                            }
+                        });
+                            
+                    }
+                ); 
+            }
+        );
+    },
+    
     classificationCsvData: function(cid, callback) {
         var q = "SELECT extract(year from r.`datetime`) year , "+
                 "extract(month from r.`datetime`) month , "+
