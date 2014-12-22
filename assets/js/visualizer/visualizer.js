@@ -42,6 +42,7 @@ angular.module('visualizer', [
         params : {
             location:''
         },
+        reloadOnSearch : false,
         views: {
             'visualizer': {
                 params : {
@@ -51,8 +52,6 @@ angular.module('visualizer', [
                 template: '<a2-visualizer></a2-visualizer>'
             }
         },
-        deepStateRedirect: true, 
-        sticky: true,
     });
 }])
 .directive('a2Visualizer', function(){
