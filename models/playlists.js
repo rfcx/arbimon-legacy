@@ -276,8 +276,8 @@ var Playlists = {
             insertPlaylist: function(cb) {
                 var q = "INSERT INTO playlists \n"+
                         "SET project_id = %s, name = %s, playlist_type_id=1";
-                q = util.format(q, mysql.escape(data.project_id), mysql.escape(data.name));
                 
+                q = util.format(q, mysql.escape(data.project_id), mysql.escape(data.name));
                 queryHandler(q, cb);
             },
             insertPlaylistRecs: ['getRecs', 'insertPlaylist', function(cb, results) {

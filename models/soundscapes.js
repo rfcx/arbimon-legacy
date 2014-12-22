@@ -419,7 +419,65 @@ var Soundscapes = {
             }
         ], callback);
     },
+    /** deletes soundscapes png scidx and db associations
 
+     */
+    delete: function (scape_id,callback)
+    {
+        var q = "SELECT `uri` FROM `soundscapes` WHERE `soundscape_id` = "+scape_id;
+
+        queryHandler(q,
+            function (err,rows)
+            {
+                if (err) {
+                    callback();
+                }
+                if(!s3){
+                    s3 = new AWS.S3();
+                }
+                var imgUri = rows[0].uri;
+                var indexUri = rows[0].uri.replace('image.png','index.scidx');
+                var params = {
+                    Bucket: config('aws').bucketName,
+                    Delete: { 
+                        Objects:
+                        [ 
+                          {
+                            Key: imgUri
+                          },
+                          {
+                            Key: indexUri 
+                          }
+                        ]
+                    }
+                };
+                s3.deleteObjects(params, function(err, data) {
+                    if (err)
+                    {
+                        callback();
+                    }
+                    else
+                    {
+                        var q = " DELETE FROM `playlists` WHERE `playlist_id` IN "+
+                        " (SELECT `sample_playlist_id` FROM `soundscape_regions` WHERE `soundscape_id` = "+scape_id+")"
+                        queryHandler(q,function(err,row)
+                            {
+                                if (err)
+                                {
+                                    callback();
+                                }
+                                else
+                                {    
+                                    var q = "DELETE FROM `soundscapes` WHERE `soundscape_id` = "+scape_id+"" ;
+                                    queryHandler(q, callback);
+                                }
+                            }
+                        );
+                    }
+                });                 
+            }
+        );
+    },
     /** removess a soundscape region tags.
      * @param {Object}  region soundscape object as returned by getRegions().
      * @param {Object}  recording id of the recording to add the tag to.

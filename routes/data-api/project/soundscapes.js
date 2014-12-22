@@ -73,6 +73,19 @@ router.get('/:soundscape', function(req, res, next) {
     res.json(req.soundscape);
 });
 
+router.get('/:soundscape/delete', function(req, res, next) {
+    if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
+        return res.json({ error: "you dont have permission to 'manage soundscapes'" });
+    
+    model.soundscapes.delete(req.soundscape.id,
+    function(err, data) {
+        if(err) return next(err);
+
+        res.json({ok:'Soundscape deleted.'});
+        return null;
+    });
+});
+
 router.use('/:soundscape/regions/', region_router);
 
 router.get('/:soundscape/recordings/:bbox', function(req, res, next) {

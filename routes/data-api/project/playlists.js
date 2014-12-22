@@ -98,7 +98,6 @@ router.post('/create', function(req, res, next) {
         
         if(rows.length > 0)
             return res.json({ error: "playlist name in use" });
-        
         model.playlists.create({
             project_id: req.project.project_id,
             name:    req.body.playlist_name,

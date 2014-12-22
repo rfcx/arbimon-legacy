@@ -96,6 +96,59 @@
 		);
 	    });
 	    
+	    $scope.deleteSoundscape =
+	    function (id,name)
+	    {		
+		$scope.infoInfo = "Loading...";
+		$scope.showInfo = true;
+		$scope.loading = true;
+		var modalInstance = $modal.open({
+		    templateUrl: template_root + 'deletesoundscape.html',
+		    controller: 'DeleteSoundscapeInstanceCtrl',
+		    resolve: {
+			name: function() {
+			    return name;
+			},
+			id: function() {
+			    return id;
+			},
+			projectData: function() {
+			    return $scope.projectData;
+			}
+		    }
+		});
+
+		modalInstance.opened.then(function() {
+		    $scope.infoInfo = "";
+		    $scope.showInfo = false;
+		    $scope.loading = false;
+		});
+
+		modalInstance.result.then(
+		    function() {
+			
+			var index = -1;
+			var modArr = eval($scope.soundscapesOriginal);
+			for (var i = 0; i < modArr.length; i++) {
+			    if (modArr[i].soundscape_id === id) {
+				index = i;
+				break;
+			    }
+			}
+			if (index > -1) {
+			    $scope.soundscapesOriginal.splice(index, 1);
+			    $scope.tableParams.reload();
+			    $scope.successInfo = "Soundscape Deleted Successfully";
+			    $scope.showSuccess = true;
+			    $("#successDiv").fadeTo(3000, 500).slideUp(500,
+				function() {
+				    $scope.showSuccess = false;
+				});
+			}
+		    }
+		);
+	    };
+	    
 	    $scope.createNewSoundscape =             
 	    function ()
 	    {
@@ -163,6 +216,36 @@
 		    }
 		);
 	    };
+	}
+    )
+    .controller('DeleteSoundscapeInstanceCtrl',
+	function($scope, $modalInstance, $http, name, id, projectData) {
+	    $scope.name = name;
+	    $scope.id = id;
+	    $scope.projectData = projectData;
+	    var url = $scope.projectData.url;
+	    $scope.ok = function() {
+		$http.get('/api/project/' + url + '/soundscapes/' + id + "/delete")
+		    .success(
+			function(data) {
+			    $modalInstance.close();
+			}
+		    ).error(
+			function() {
+			    $scope.errorInfo = "Error Communicating With Server";
+			    $scope.showError = true;
+			    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+				function() {
+				    $scope.showError = false;
+				});
+			}
+		    );
+	    };
+
+	    $scope.cancel = function() {
+		$modalInstance.dismiss('cancel');
+	    };
+
 	}
     )
     .directive

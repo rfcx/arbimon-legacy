@@ -21,6 +21,9 @@
             <td data-title="'Playlist'" class="no-wrap-table-cell hidelongtext widthtd" sortable="'playlist'"  filter="{ 'playlist': 'text' }">
                 {{soundscape.playlist}}
             </td>
+            <td>
+                <button class="btn btn-default btn-xs" ng-click="deleteSoundscape(soundscape.soundscape_id,soundscape.name) | trackEvent:'Analysis-Soundscapes list':'delete soundscape'">Delete</button>
+            </td>
         </tr>
     </table>
     <div class="jumbotron" ng-show="(!soundscapesOriginal || !soundscapesOriginal.length > 0) && !loading">
