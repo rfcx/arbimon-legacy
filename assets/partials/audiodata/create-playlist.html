@@ -5,7 +5,7 @@
 <div class="modal-body">
     <form>
         <div class="form-group">
-            <label for="name">Playlist name</label>
+            <label for="name">Playlist name</label><span class="red">{{errMess}}</span>
             <input type="text"
                 name="name"
                 id="name" 
@@ -15,6 +15,6 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="$close(pname) | trackEvent:'Audiodata-Create-playlists':'close clicked'"><i class="fa fa-floppy-o"></i> Save &amp; Close </button>
+    <button class="btn btn-primary" ng-click="savePlaylist(pname) | trackEvent:'Audiodata-Create-playlists':'close clicked'"><i class="fa fa-floppy-o"></i> Save &amp; Close </button>
     <button class="btn" ng-click="$dismiss() | trackEvent:'Audiodata-Create-playlists':'dismiss clicked'"><i class="fa fa-times"></i> Close</button>
 </div>
