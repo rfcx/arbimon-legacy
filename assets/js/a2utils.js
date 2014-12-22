@@ -221,6 +221,9 @@ angular.module('a2Classy', [])
 })
 ;
 
+angular.module('d3', []).value('d3', d3);
+
+
 angular.module('humane', [])
 .service('notify', function() {
     humane.error = humane.spawn({ addnCls: 'humane-libnotify-error' });

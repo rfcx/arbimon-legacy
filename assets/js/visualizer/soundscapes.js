@@ -242,8 +242,7 @@ angular.module('visualizer-soundscape-regions', ['visualizer-services', 'a2utils
 
 
 angular.module('visualizer-soundscape-info', [
-    'visualizer-services', 'a2utils', 'a2SoundscapeRegionTags',
-    'a2Colors'
+    'visualizer-services', 'a2utils', 'a2SoundscapeRegionTags', 'd3'
 ])
 .controller('a2VisualizerSoundscapeInfoLayerController', function($scope, $modal, $location, a2Soundscapes){
     var self = this;
@@ -294,9 +293,9 @@ angular.module('visualizer-soundscape-info', [
     };
     
     $scope.ok = function(){
-        // a2Soundscapes.sampleRegion($scope.soundscape, $scope.region.id, vdata, function(region){
-        //     $modalInstance.close(region);
-        // });
+        a2Soundscapes.editVisualMaxValue($scope.soundscape, $scope.data, function(){
+             $modalInstance.close();
+        });
     };
 })
 .directive('a2SoundscapeDrawer', function(d3, a2Soundscapes, a2VisualizerSoundscapeGradient){
@@ -361,18 +360,6 @@ angular.module('visualizer-soundscape-info', [
 
         }
     };
-// <rect width="100%" height="100%" ng-attr-style="fill:{{color(0, data.visual_max)}};" />
-// <g ng-repeat="(i, row) in counts.index">
-//     <rect 
-//         ng-repeat = "(j, count) in row"
-//         ng-attr-x      = "{{100 * j / counts.width}}%"
-//         ng-attr-y      = "{{100 * (counts.height - i - 1) / counts.height}}%"
-//         ng-attr-width  = "{{100 * 1 / counts.width }}%"
-//         ng-attr-height = "{{100 * 1 / counts.height}}%"                    
-//         ng-attr-style="fill:{{color(count, data.visual_max)}};" 
-//     />
-// </g>
-// </svg>
 
 })
 ;
