@@ -124,49 +124,64 @@
                         function(data) 
                         {
                             $scope.data = data;
-                            var modalInstance = $modal.open
-                            (
-                                {
-                                    templateUrl: template_root + 'classinfo.html',
-                                    controller: 'ClassiDetailsInstanceCtrl',
-                                    windowClass: 'details-modal-window',
-                                    resolve: 
-                                    {
-                                        data: function () 
-                                        {
-                                          return $scope.data;
-                                        },
-                                        url : function ()
-                                        {
-                                          return $scope.url;
-                                        },
-                                        id : function ()
-                                        {
-                                          return $scope.classi_id;
-                                        },
-                                        pid : function ()
-                                        {
-                                            return $scope.pid;
-                                        }
-                                    }
-                                }
-                            );
-			    
-			    modalInstance.opened.then(function()
+			    if (data.data.length>0) 
+			    {
+				var modalInstance = $modal.open
+				(
+				    {
+					templateUrl: template_root + 'classinfo.html',
+					controller: 'ClassiDetailsInstanceCtrl',
+					windowClass: 'details-modal-window',
+					resolve: 
+					{
+					    data: function () 
+					    {
+					      return $scope.data;
+					    },
+					    url : function ()
+					    {
+					      return $scope.url;
+					    },
+					    id : function ()
+					    {
+					      return $scope.classi_id;
+					    },
+					    pid : function ()
+					    {
+						return $scope.pid;
+					    }
+					}
+				    }
+				);
+				
+				modalInstance.opened.then(function()
+				{
+				    $scope.infoInfo = "";
+				    $scope.showInfo = false;
+				    $scope.loading = false;
+				});
+				
+				modalInstance.result.then
+				(
+				    function () 
+				    {
+					
+				    }
+				);
+			    }
+			    else
 			    {
 				$scope.infoInfo = "";
 				$scope.showInfo = false;
 				$scope.loading = false;
-			    });
-			    
-                            modalInstance.result.then
-                            (
-                                function () 
-                                {
-                                    
-                                }
-                            );
-                            
+				$scope.errorInfo = "Error Retrieving Classification Data";
+				$scope.showError = true;
+				$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+				function()
+				{
+				    $scope.showError = false;
+				});				
+			    }
                         }
                     ).error(
 			function()
@@ -204,6 +219,7 @@
                             (
                                 function(data) 
                                 {
+
                                     var modalInstance = $modal.open
                                     (
                                         {
