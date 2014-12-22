@@ -1,3 +1,6 @@
+<!-- <ul>
+    <li ng-repeat="s in soundscapesData">{{ s }}</li>
+</ul> -->
 <div class="col-sm-8 span8 padded-view-div" >
     <div class="row">
       <div class="col-sm-3">
@@ -20,6 +23,9 @@
             </td>
             <td data-title="'Playlist'" class="no-wrap-table-cell hidelongtext widthtd" sortable="'playlist'"  filter="{ 'playlist': 'text' }">
                 {{soundscape.playlist}}
+            </td>
+            <td>
+                <button class="btn btn-default btn-xs" ng-click="showDetails(soundscape.soundscape_id) | trackEvent:'Analysis-Soundscapes-List':' show soundscapes details'">Show details</button>
             </td>
             <td>
                 <button class="btn btn-default btn-xs" ng-click="deleteSoundscape(soundscape.soundscape_id,soundscape.name) | trackEvent:'Analysis-Soundscapes list':'delete soundscape'">Delete</button>

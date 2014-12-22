@@ -27,9 +27,22 @@ router.param('soundscape', function(req, res, next, soundscape){
         if(err) return next(err);
 
         if(!soundscapes.length){
-            return res.status(404).json({ error: "soundscape not found"});
+            return res.status(404).json({ error: "soundscape not found" });
         }
-        req.soundscape = soundscapes[0];
+        
+        var s = soundscapes[0];
+        // console.log(s);
+        s.aggregation = {
+            id: s.aggregation,
+            name: s.aggr_name,
+            scale: JSON.parse(s.aggr_scale)
+        };
+        
+        delete s.aggr_name;
+        delete s.aggr_scale;
+        
+        req.soundscape = s;
+        
         return next();
     });
 });
