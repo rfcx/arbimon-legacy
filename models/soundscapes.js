@@ -48,10 +48,24 @@ var Soundscapes = {
         }
 
         return dbpool.queryHandler(
-            "SELECT SC.soundscape_id as id, SC.name, SC.project_id as project, SC.user_id as user, \n"+
-            "     SC.min_value, SC.max_value, SC.min_t, SC.max_t, SC.min_f, SC.max_f, \n" +
-            "     SC.bin_size, SCAT.identifier as aggregation, \n" +
-            "     SC.uri \n" +
+            "SELECT SC.soundscape_id as id, \n"+
+            "       SC.name, \n"+
+            "       SC.project_id as project, \n"+
+            "       SC.playlist_id, \n"+
+            "       SC.user_id as user, \n"+
+            "       SC.min_value, \n"+
+            "       SC.max_value, \n"+
+            "       SC.min_t, \n"+
+            "       SC.max_t, \n"+
+            "       SC.min_f, \n"+
+            "       SC.max_f, \n"+
+            "       SC.bin_size, \n"+
+            "       SC.threshold, \n"+
+            "       SC.frequency, \n"+
+            "       SCAT.identifier as aggregation, \n" +
+            "       SCAT.name as aggr_name, \n" +
+            "       SCAT.scale as aggr_scale, \n" +
+            "       SC.uri \n" +
             "FROM soundscapes SC \n" +
             "JOIN soundscape_aggregation_types SCAT ON SC.soundscape_aggregation_type_id = SCAT.soundscape_aggregation_type_id\n" +
             "WHERE " + constraints.join(" \n  AND "), function(err, data){
@@ -74,7 +88,7 @@ var Soundscapes = {
                 " UNIX_TIMESTAMP( S.`date_created` )*1000 as date , "+
                 " CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2))  ,' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) user " +
                 " FROM `soundscapes` S ,`users` U , `playlists` P  " +
-                " WHERE S.`project_id` = "+mysql.escape(project)+" and S.`user_id` = U.`user_id` and P.`playlist_id`  =S.`playlist_id` " 
+                " WHERE S.`project_id` = "+mysql.escape(project)+" and S.`user_id` = U.`user_id` and P.`playlist_id`  =S.`playlist_id` ";
 
         queryHandler(q, callback);
     },

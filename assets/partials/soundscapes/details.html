@@ -1,0 +1,30 @@
+<div class="modal-header">  
+    <h3 class="modal-title">Soundscape Details</h3>  
+</div>  
+<div class="modal-body">
+    <div class="row">
+        <div class="col-xs-6">
+            <ul class="list-unstyled details-list">
+                <li><strong>Name:</strong> {{ soundscape.name }}</li>
+                <li><strong>Playlist:</strong> {{ playlist.name }}  <i><strong>count:</strong> {{ playlist.count }} </i></li>
+                <li><strong>Bin bandwidth:</strong> {{ soundscape.bin_size }}Hz</li>
+                <li>
+                    <p><strong>Aggregation:</strong> {{ soundscape.aggregation.name }}</p>
+                    <div class="btn btn-default disabled">
+                        <a2-draw-aggregation aggregation="soundscape.aggregation"></a2-draw-aggregation>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="col-xs-6" ng-show="soundscape.threshold || soundscape.frequency">
+            <h4>Peak Filtering</h4>
+            <ul class="list-unstyled details-list">
+            <li><strong>Amplitude:</strong> {{ soundscape.threshold }} </li>
+            <li><strong>Frequency:</strong> {{ soundscape.frequency }}Hz </li>
+            <a2-draw-peak-threshold threshold="soundscape.threshold" bandwidth="soundscape.frequency"></a2-draw-peak-threshold>
+        </div>
+    </div>
+</div>  
+<div class="modal-footer">  
+    <button class="btn btn-primary" ng-click="$close()">Close</button>  
+</div>  
