@@ -73,6 +73,21 @@ router.get('/:soundscape', function(req, res, next) {
     res.json(req.soundscape);
 });
 
+router.get('/:soundscape/scidx', function(req, res, next) {
+    var soundscape = req.soundscape;
+    var just_count = req.query && req.query.count;
+    model.soundscapes.fetchSCIDX(req.soundscape, {
+        just_count : just_count
+    },function(err, scidx){
+        if(err){
+            next(err);
+        } else {
+            res.json(scidx);
+        }
+    });
+});
+
+
 router.use('/:soundscape/regions/', region_router);
 
 router.get('/:soundscape/recordings/:bbox', function(req, res, next) {

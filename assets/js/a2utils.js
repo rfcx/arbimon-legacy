@@ -102,6 +102,24 @@ angular.module('a2utils', [])
         return x +'s';
     };
 })
+.filter('worded', function(){
+    return function(x, fmt){
+        if(!x)
+            return undefined;
+            
+        return (''+x).replace(/[_-]/g, ' ');
+    };
+})
+.filter('wordCaps', function(){
+    return function(x, fmt){
+        if(!x)
+            return undefined;
+            
+        return (''+x).replace(/\b(\w)/g, function(_1){ 
+            return _1.toUpperCase();
+        });
+    };
+})
 ;
 
 

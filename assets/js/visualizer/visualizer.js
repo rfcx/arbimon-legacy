@@ -117,6 +117,7 @@ angular.module('visualizer', [
         'base-image-layer',
         'browser-layer',
         'recording-layer',
+        'soundscape-info-layer',
         'soundscape-regions-layer',
         'recording-soundscape-region-tags',
         'species-presence',

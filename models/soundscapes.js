@@ -49,7 +49,7 @@ var Soundscapes = {
 
         return dbpool.queryHandler(
             "SELECT SC.soundscape_id as id, SC.name, SC.project_id as project, SC.user_id as user, \n"+
-            "     SC.min_value, SC.max_value, SC.min_t, SC.max_t, SC.min_f, SC.max_f, \n" +
+            "     SC.min_value, SC.max_value, SC.visual_max_value, SC.min_t, SC.max_t, SC.min_f, SC.max_f, \n" +
             "     SC.bin_size, SCAT.identifier as aggregation, \n" +
             "     SC.uri \n" +
             "FROM soundscapes SC \n" +
