@@ -252,6 +252,10 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
     model.projects.insertClass(projectClass, function(err, result){
         if(err) return next(err);
         
+        if(result.error) {
+            return res.json(result);
+        }
+        
         model.projects.insertNews({
             news_type_id: 5, // class added
             user_id: req.session.user.id,

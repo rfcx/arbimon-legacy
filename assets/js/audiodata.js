@@ -556,23 +556,21 @@ angular.module('audiodata', [
     };
                     
 })
-.controller('SpeciesCtrl', function($scope, Project, Species, Songtypes, $modal, notify) {
+.controller('SpeciesCtrl', function($scope, Project, $modal, notify) {
     $scope.loading = true;
     
     $scope.fields = [
-    { name: 'Species', key: 'species_name' },
-    { name: 'Song', key: 'songtype_name' }
+        { name: 'Species', key: 'species_name' },
+        { name: 'Song', key: 'songtype_name' }
     ];
     
     $scope.selected = {};
     
-    Species.get(function(species){
-        $scope.species = species;
-    });
+    // Species.get(function(species){
+    //     $scope.species = species;
+    // });
     
-    Songtypes.get(function(songs) {
-        $scope.songtypes = songs;
-    });
+    
     
     Project.getClasses(function(classes){
         $scope.classes = classes;
@@ -584,49 +582,35 @@ angular.module('audiodata', [
     });
     
     
-    $scope.submitSearch = function($event) {
-        if($event.key === "Enter")
-            $scope.searchSpecies();
-        };
+    $scope.add = function() {
         
-    $scope.searchSpecies = function() {
-        if($scope.search === "")
-            return;
-                
-        Species.search($scope.search, function(data){
-            $scope.species = data;
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/audiodata/select-species.html',
+            controller: 'SelectSpeciesCtrl',
+            size: 'lg',
         });
-    };
-    
-    $scope.selectSpec = function(index){
-        $scope.selected.species = $scope.species[index];
-    };
-    
-    $scope.selectSong = function(index){
-        $scope.selected.song = $scope.songtypes[index];
-    };
-    
-    $scope.add = function(){
-        if(!$scope.selected.species || !$scope.selected.song) {
-            return;
-        }
-                
-        console.log($scope.selected);
         
-        Project.addClass({
-            species: $scope.selected.species.scientific_name,
-            songtype: $scope.selected.song.name,
-            project_id: $scope.project.project_id
-        },
-        function(err, result){
-            if(err) alert(err);
+        modalInstance.result.then(function(selected) {
             
-            if(result.error) {
-                notify.error(result.error);
-            }
-            Project.getClasses(function(classes){
-                $scope.classes = classes;
+            Project.addClass({
+                species: selected.species.scientific_name,
+                songtype: selected.song.name,
+                project_id: $scope.project.project_id
+            },
+            function(err, result){
+                if(err) return console.error(err);
+                
+                if(result.error) {
+                    return notify.error(result.error);
+                }
+                
+                notify.log(selected.species.scientific_name + ' ' + selected.song.name +" added to project");
+                
+                Project.getClasses(function(classes){
+                    $scope.classes = classes;
+                });
             });
+            
         });
     };
     
@@ -672,6 +656,39 @@ angular.module('audiodata', [
             
     };
 })
+.controller('SelectSpeciesCtrl', ['$scope', 'Species', 'Songtypes',  function($scope, Species, Songtypes) {
+    
+    $scope.spFields = [ 
+        { name: 'Species', key: 'scientific_name'},
+        { name: 'Family', key: 'family'},
+        { name: 'Taxon', key: 'taxon'},
+    ];
+    
+    
+    $scope.songFields = [ 
+        { name: 'Song types', key: 'name'},
+    ];
+    
+    Songtypes.get(function(songs) {
+        $scope.songtypes = songs;
+    });
+    
+    
+    $scope.submitSearch = function($event) {
+        if($event.key === "Enter") {
+            $scope.searchSpecies();
+        }
+    };
+    
+        
+    $scope.searchSpecies = function() {
+        if($scope.search === "") return;
+            
+        Species.search($scope.search, function(results){
+            $scope.species = results;
+        });
+    };
+}])
 .factory('a2TrainingSetHistory',
     function(){
         var lastSet, 
@@ -1104,5 +1121,4 @@ angular.module('audiodata', [
         });
     };
 })
-
 ;

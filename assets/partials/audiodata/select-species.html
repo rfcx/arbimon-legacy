@@ -1,0 +1,32 @@
+<div class="modal-header">
+    <h3>
+        Species Library
+    </h3>
+</div>
+<div class="modal-body">
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="input-group">
+                <input class="form-control" type="search" placeholder="Search species by name, family or alias" ng-model="search" ng-keypress="submitSearch($event)">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" ng-click="searchSpecies() | trackEvent:'Dashboard-species':'search species'"><i class="fa fa-search"></i></button>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-8 species-lib">
+            <a2-table fields="spFields" rows="species" selected="selected.species" no-checkbox></a2-table>
+            <div class="jumbotron" ng-hide="species.length">
+                <h4>Select a species, then select a songtype</h4>
+            </div>
+        </div>
+        <div class="col-sm-4 species-lib" ng-show="selected.species">
+            <a2-table fields="songFields" rows="songtypes" selected="selected.song" no-checkbox></a2-table>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-disabled="!selected.species || !selected.song" ng-click="$close(selected)">Select</button>
+    <button class="btn btn-default" ng-click="$dismiss()">Close</button>
+</div>
