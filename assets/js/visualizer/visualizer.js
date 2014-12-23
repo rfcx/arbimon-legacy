@@ -18,7 +18,8 @@ angular.module('visualizer', [
     'visualizer-soundscapes',
     'visualizer-services',
     'a2-visualizer-spectrogram-Layout',
-    'a2-visualizer-spectrogram-click2zoom'
+    'a2-visualizer-spectrogram-click2zoom',
+    'a2-url-update-service'
 ])
 .config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
     
@@ -101,6 +102,7 @@ angular.module('visualizer', [
 })
 .controller('VisualizerCtrl', function (a2VisualizerLayers, $location, $state, $scope, $timeout, itemSelection, Project, $controller, 
     a2SpectrogramClick2Zoom,
+    $rootScope,
     VisualizerObjectTypes, VisualizerLayout, a2AudioPlayer, a2VisualizerLocationManager) {
     var layers = new a2VisualizerLayers($scope);
     var layer_types = layers.types;
@@ -159,6 +161,7 @@ angular.module('visualizer', [
     
     $scope.setVisObject = function(visobject, type, location){
         if (visobject) {
+            $scope.visobject_location = location;
             $scope.location.set(location, true);
             var typedef = VisualizerObjectTypes[type];
             $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);            
@@ -181,7 +184,14 @@ angular.module('visualizer', [
             $scope.location.current = $state.params.location;
         }
     });
-    
+    $rootScope.$on('notify-visobj-updated', function(){
+        var args = Array.prototype.slice.call(arguments, 1);
+        args.unshift('visobj-updated');
+        $scope.$broadcast.apply($scope, args);
+    });
+    $scope.$on('visobj-updated', function(visobject){
+        $scope.setVisObject($scope.visobject, $scope.visobject_type, $scope.visobject_location);
+    });
 
     // $scope.setRecording(test_data.recording);
 })

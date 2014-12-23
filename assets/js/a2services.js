@@ -454,6 +454,16 @@ angular.module('a2services',[])
                 callback(data);
             });
         },
+        setVisualScale: function(soundscape, params, callback){
+            var projectName = Project.getName();
+            return $http({
+                method : 'POST',
+                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/scale',
+                data   : params
+            }).success(function(data) {
+                callback(data);
+            });
+        },
         addRegion: function(soundscape, bbox, params, callback) {
             var projectName = Project.getName();
             params.bbox = bbox;

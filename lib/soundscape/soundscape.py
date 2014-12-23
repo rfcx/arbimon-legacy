@@ -27,7 +27,7 @@ aggregations = {
 
 
 class Soundscape():
-    def __init__(self, aggregation, bin_size, max_bins,finp=None):
+    def __init__(self, aggregation, bin_size, max_bins, finp=None):
         "Constructs a soundscape from a peaks file"
         self.aggregation = aggregation
         self.start_bin = 0
@@ -43,7 +43,7 @@ class Soundscape():
             'max_idx': float('-inf'),
             'max_count': 0
         }
-        
+
         if finp is None:
             self.recordings = recordings
         else:
@@ -51,7 +51,7 @@ class Soundscape():
                 i_bin, i_idx, i_id = (i['bin'], i['idx'], i['id'])
                 stats['min_idx'] = min(stats['min_idx'], i_idx)
                 stats['max_idx'] = max(stats['max_idx'], i_idx)
-    
+
                 if i_id not in recordings:
                     recordings[i_id] = 1
                 if i_bin not in bins:
@@ -62,32 +62,29 @@ class Soundscape():
                 recs = bin[i_idx]
                 if i_id not in recs:
                     recs[i_id] = 1
-    
+
                 if not max_list or len(max_list) < len(recs):
                     max_list = recs
-    
+
             stats['max_count'] = len(max_list) if max_list else 0
             self.recordings = recordings.keys()
             self.recordings.sort()
         self.bins = bins
         self.stats = stats
 
-    def insert_peaks(self,date,freqs,i_id):
+    def insert_peaks(self, date, freqs, i_id):
         aggregation = self.aggregation
         max_bins = self.max_bins
         bin_size = self.bin_size
         max_list = self.max_list_global
         idx = int(sum([
-           float(date.strftime(x)) * y for (x, y) in
-           zip(aggregation['date'], aggregation['projection'])
+            float(date.strftime(x)) * y for (x, y) in
+            zip(aggregation['date'], aggregation['projection'])
         ]))
         self.stats['min_idx'] = min(self.stats['min_idx'], idx)
         self.stats['max_idx'] = max(self.stats['max_idx'], idx)
         for f in freqs:
-            i_bin = min(
-                    int(f * 1000 / bin_size),
-                    max_bins
-                )
+            i_bin = min(int(f * 1000 / bin_size), max_bins)
             if i_id not in self.recstemp:
                 self.recstemp[i_id] = 1
             if i_bin not in self.bins:
@@ -106,7 +103,7 @@ class Soundscape():
         self.recordings = self.recstemp
         self.recordings = self.recordings.keys()
         self.recordings.sort()
-        
+
     def get_peak_list(self, finp):
         "Generator that reads a file and yields peaks in an aggregated form"
         aggregation = self.aggregation
@@ -137,17 +134,17 @@ class Soundscape():
                 yield l
 
     @staticmethod
-    def cols_gen(bin, scale, from_x, to_x):
+    def cols_gen(bin, scalefn, from_x, to_x):
         "yields counts for each column in a cell"
         for x in range(from_x, to_x):
             v = len(bin[x]) if bin and x in bin else 0
-            yield int(v * scale)
+            yield scalefn(v)
 
     @classmethod
-    def rows_gen(cls, bins, scale, from_y, to_y, from_x, to_x):
+    def rows_gen(cls, bins, scalefn, from_y, to_y, from_x, to_x):
         "yields column iterators for each row in the index"
         for y in range(to_y-1, from_y-1, -1):
-            yield cls.cols_gen(bins.get(y), scale, from_x, to_x)
+            yield cls.cols_gen(bins.get(y), scalefn, from_x, to_x)
 
     def write_image(self, imgout, palette):
         "Writes the soundscape to an image file"
@@ -168,15 +165,16 @@ class Soundscape():
             w = bmpio.Writer(
                 width=width, height=height, bitdepth=bpp, palette=palette
             )
-        
 
-        if  self.stats['max_count'] > 0 :
+        scale = self.stats['max_count']
+
+        if self.stats['max_count'] > 0:
             fout = file(imgout, "wb")
             w.write(fout, self.rows_gen(
-                self.bins, 255.0 / self.stats['max_count'],
+                self.bins, lambda x: max(0, min(int(x * 255.0 / scale), 255)),
                 0, height, offsetx, offsetx + width
             ))
-        else :
+        else:
             print 'no data'
 
     def write_index(self, indexout):
@@ -198,5 +196,22 @@ class Soundscape():
                 indexout, bins, recordings,
                 offsetx, width, offsety, height
             )
-        else :
+        else:
             print 'no data'
+
+    @classmethod
+    def read_from_index(self, filename):
+        (bins, recordings, offsetx, width, offsety, height,
+            minx, maxx, miny, maxy) = scidx.read_scidx(filename)
+        aggregation = {
+            "range": [offsetx, width + offsetx - 1]
+        }
+        obj = Soundscape(aggregation, -1, height)
+        obj.recordings = recordings
+        obj.stats = {
+            "max_count": max(len(bins[x][y]) for x in bins for y in bins[x]),
+            "min_idx": aggregation["range"][0],
+            "max_idx": aggregation["range"][1]
+        }
+        obj.bins = bins
+        return obj

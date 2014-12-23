@@ -242,7 +242,8 @@ angular.module('visualizer-soundscape-regions', ['visualizer-services', 'a2utils
 
 
 angular.module('visualizer-soundscape-info', [
-    'visualizer-services', 'a2utils', 'a2SoundscapeRegionTags', 'd3'
+    'visualizer-services', 'a2utils', 'a2SoundscapeRegionTags', 'd3',
+    'a2-url-update-service'
 ])
 .controller('a2VisualizerSoundscapeInfoLayerController', function($scope, $modal, $location, a2Soundscapes){
     var self = this;
@@ -285,16 +286,21 @@ angular.module('visualizer-soundscape-info', [
     '#debca6', '#e0bea8', '#e1c0aa', '#e2c1ad', '#e4c3af', '#e5c5b1', '#e7c6b4', '#e8c8b6', '#eacab9'
     ];
 })
-.controller('a2VisualizerSampleSoundscapeInfoEditVisualScaleModalController', function($scope, $modalInstance, a2Soundscapes, a2VisualizerSoundscapeGradient, data){
+.controller('a2VisualizerSampleSoundscapeInfoEditVisualScaleModalController', function($scope, $modalInstance, a2Soundscapes, a2VisualizerSoundscapeGradient, data, a2UrlUpdate){
     var soundscape = data.soundscape;
+    window.qqaazz = $scope;
     $scope.soundscape = soundscape;
     $scope.data = {
         visual_max : soundscape.visual_max_value || soundscape.max_value
     };
-    
     $scope.ok = function(){
-        a2Soundscapes.editVisualMaxValue($scope.soundscape, $scope.data, function(){
-             $modalInstance.close();
+        a2Soundscapes.setVisualScale(soundscape.id, {
+            max: $scope.data.visual_max
+        }, function(){
+            soundscape.visual_max_value = $scope.data.visual_max;
+            a2UrlUpdate.update(soundscape.thumbnail);
+            $scope.$emit('notify-visobj-updated', soundscape);
+            $modalInstance.close();
         });
     };
 })
@@ -308,7 +314,7 @@ angular.module('visualizer-soundscape-info', [
         },
         replace  : true,
         link     : function($scope, $element, $attrs){
-            $scope.color = function(v, max){
+            var color = $scope.color = function(v, max){
                 max = max || soundscape.max_value;
                 var i = Math.max(0, Math.min(((v * 255.0 / max) | 0), 255));
                 return a2VisualizerSoundscapeGradient[i];
@@ -328,12 +334,13 @@ angular.module('visualizer-soundscape-info', [
                         }
                     }
                     var svg = d3.select($element[0]);
-                    var vmax = $scope.visualMax();
+                    var idx = scidx.index;
+                    var vmax = $scope.visualMax() || soundscape.max_value;
                     svg.selectAll("rect.bg").data([0]).enter().append('rect')
                         .classed('bg', true)
                         .attr('width', '100%')
                         .attr('height', '100%')
-                        .style('fill', $scope.color(0, vmax || soundscape.max_value))
+                        .style('fill', color(0, vmax))
                     ;
                     var rects = svg.selectAll("rect.cell").data(indices);
                         rects.exit().remove();
@@ -343,18 +350,19 @@ angular.module('visualizer-soundscape-info', [
                             .attr('width' , (100/scidx.width )+'%')
                             .attr('height', (100/scidx.height)+'%')
                             .style('fill', function(d){
-                                return $scope.color(scidx.index[d[0]][d[1]], vmax || soundscape.max_value);
+                                return color(idx[d[0]][d[1]], vmax);
                             })
                     ;
                 });
             });
             $scope.$watch('visualMax()', function(visualMax){
-                if(!soundscape){return;}
-                var vmax = visualMax;
+                if(!soundscape || !scidx){return;}
+                var vmax = visualMax || soundscape.max_value;
+                var idx = scidx.index;
                 var svg = d3.select($element[0]);
-                svg.selectAll("rect.bg").style('fill', $scope.color(0, vmax || soundscape.max_value));
+                svg.selectAll("rect.bg").style('fill', color(0, vmax));
                 var rects = svg.selectAll("rect.cell").style('fill', function(d){
-                    return $scope.color(scidx.index[d[0]][d[1]], vmax || soundscape.max_value);
+                    return color(idx[d[0]][d[1]], vmax);
                 });
             });            
 

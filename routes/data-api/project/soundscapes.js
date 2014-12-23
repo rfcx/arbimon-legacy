@@ -87,6 +87,17 @@ router.get('/:soundscape/scidx', function(req, res, next) {
     });
 });
 
+router.post('/:soundscape/scale', function(req, res, next) {
+    model.soundscapes.setVisualScale(req.soundscape, {
+        max : req.body.max
+    }, function(err, soundscape){
+        if(err){
+            next(err);
+        } else {
+            res.json(soundscape);
+        }
+    });
+});
 
 router.use('/:soundscape/regions/', region_router);
 

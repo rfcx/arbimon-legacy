@@ -3,6 +3,7 @@ var mysql        = require('mysql');
 var AWS          = require('aws-sdk');
 var async        = require('async');
 var joi          = require('joi');
+var child_process = require('child_process');
 var scidx        = require('../utils/scidx');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
@@ -213,6 +214,13 @@ var Soundscapes = {
         });
     },
     
+    /** Samples the recordings in a soundscape region.
+     * @param {Object}  soundscape    soundscape 
+     * @param {Object}  region  region in the soundscape.
+     * @param {Object}  params  [optional]
+     * @param {Integer} param.count  number of recording to sample (default: all the recordings in the region).
+     * @param {Function} callback called back with the results.
+     */
     sampleRegion: function(soundscape, region, params, callback){
         if(!params){
             params = {};
@@ -308,7 +316,6 @@ var Soundscapes = {
         });
         
     },
-    
 
     /** Fetches soundscape region tags.
      * @param {Object}  region soundscape object as returned by getRegions().
@@ -454,6 +461,30 @@ var Soundscapes = {
             }
         ], callback);
     },
+
+
+    /** sets the soundscape's visualization scale.
+     * @param {Object}  soundscape   soundscape 
+     * @param {Object}  scale        scale object
+     * @param {Integer} scale.max    max value
+     * @param {Function} callback called back with the results.
+     */
+    setVisualScale: function(soundscape, scale, callback){
+        if(!scale){
+            scale = {};
+        }
+        
+        var max = (scale.max || soundscape.max_value);
+        
+        var script = child_process.spawn(
+            '.env/bin/python', ['scripts/Soundscapes/set_visual_scale.py', (soundscape.id|0), max == '-' ? '-' : (max|0)]
+        );
+        script.on('close', function(code){
+            Soundscapes.find({id:soundscape.id}, callback);
+        });        
+    },
+
+
     
     __compute_thumbnail_path : function(soundscape, callback){
         soundscape.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + soundscape.uri;
