@@ -84,7 +84,7 @@
             
             
             
-            $scope.deleteSoundscape = function (id,name) {
+            $scope.deleteSoundscape = function (id, name) {
                 
                 $scope.infoInfo = "Loading...";
                 $scope.showInfo = true;
@@ -115,7 +115,7 @@
                     function() {
                         
                         var index = -1;
-                        var modArr = eval($scope.soundscapesOriginal);
+                        var modArr = angular.copy($scope.soundscapesOriginal);
                         for (var i = 0; i < modArr.length; i++) {
                             if (modArr[i].soundscape_id === id) {
                                 index = i;
@@ -123,6 +123,8 @@
                             }
                         }
                         if (index > -1) {
+                            $scope.soundscapesOriginal.splice(index, 1);
+                            $scope.tableParams.reload();
                             notify.log("Soundscape Deleted Successfully");
                         }
                     }
