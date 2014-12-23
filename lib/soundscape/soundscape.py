@@ -167,15 +167,14 @@ class Soundscape():
             )
 
         scale = self.stats['max_count']
+        if scale == 0:
+            scale = 1
 
-        if self.stats['max_count'] > 0:
-            fout = file(imgout, "wb")
-            w.write(fout, self.rows_gen(
-                self.bins, lambda x: max(0, min(int(x * 255.0 / scale), 255)),
-                0, height, offsetx, offsetx + width
-            ))
-        else:
-            print 'no data'
+        fout = file(imgout, "wb")
+        w.write(fout, self.rows_gen(
+            self.bins, lambda x: max(0, min(int(x * 255.0 / scale), 255)),
+            0, height, offsetx, offsetx + width
+        ))
 
     def write_index(self, indexout):
         bins = self.bins
@@ -191,13 +190,10 @@ class Soundscape():
         offsety = 0
         height = self.max_bins
 
-        if max_count > 0:
-            scidx.write_scidx(
-                indexout, bins, recordings,
-                offsetx, width, offsety, height
-            )
-        else:
-            print 'no data'
+        scidx.write_scidx(
+            indexout, bins, recordings,
+            offsetx, width, offsety, height
+        )
 
     @classmethod
     def read_from_index(self, filename):

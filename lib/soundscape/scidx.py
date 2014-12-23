@@ -36,7 +36,10 @@ def write_scidx(filename, index, recordings, offsetx, width, offsety, height):
     "Writes a scidx file to the given filename, given the index attributes"
     fout = file(filename, "wb")
     rcount = len(recordings)
-    rcbytes = int(math.ceil(math.log(rcount, 2)/8.0))
+    if rcount == 0:
+        rcbytes = 1
+    else:
+        rcbytes = int(math.ceil(math.log(rcount, 2)/8.0))
     rcfmt = ">" + ("B"*rcbytes)
     rec_idx = {}
     # write header
