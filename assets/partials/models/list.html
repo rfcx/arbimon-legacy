@@ -1,8 +1,5 @@
 <div class="row">
     <div class="col-sm-12 col-lg-11 padded-view-div" >
-        <div  ng-hide="!loading" class="col-sm-1 loading-top-padding" >
-            <loader></loader>
-        </div>
         <h3>
             Models 
             <a class="btn btn-sm btn-default"  
@@ -12,42 +9,46 @@
                 <i class="fa fa-plus" ></i>
             </a>
         </h3>            
-        <table ng-table="tableParams" class="table"  show-filter="true" >
-            <tr ng-repeat="model in modelsData" >
-                <td data-title="'Date'" sortable="'date'">
-                    {{ model.date | moment : 'lll' }}
-                </td>
-                <td data-title="'Name'" class="hidelongtext widthtd" sortable="'mname'"  filter="{ 'mname': 'text' }">
-                    {{model.mname}}
-                </td>
-                <td data-title="'Type'" sortable="'mtname'" filter="{ 'mtname': 'text' }">
-                    {{model.mtname}}
-                </td>
-                <td data-title="'User'" sortable="'muser'" filter="{ 'muser': 'text' }" class="no-wrap-table-cell">
-                    {{model.muser}}
-                </td>
-                <td>
-                    <button class="btn btn-default btn-xs" 
-                        ui-sref="analysis.modeldetails({ modelId: model.model_id })">
-                        Show details
-                    </button>
-                </td>
-                <td>
-                    <button class="btn btn-default btn-xs" 
-                        ng-click="deleteModel(model.model_id,model.mname) | trackEvent:'Analysis-Model list':'delete model'">
-                        Delete
-                    </button>
-                </td>
-                <!--
-                <td>
-                    <button class="btn btn-default btn-xs" ng-click="newClassification(model.model_id,model.mname)">New Classification</button>
-                </td>
-                -->
-                <td data-ng-hide="true">
-                    {{ model.model_id }}
-                </td>
-            </tr>
-        </table>
+        <loader ng-show="loading"></loader>
+        
+        <div ng-hide="loading">
+            <table ng-table="tableParams" class="table"  show-filter="true" >
+                <tr ng-repeat="model in modelsData" >
+                    <td data-title="'Date'" sortable="'date'">
+                        {{ model.date | moment : 'lll' }}
+                    </td>
+                    <td data-title="'Name'" class="hidelongtext widthtd" sortable="'mname'"  filter="{ 'mname': 'text' }">
+                        {{model.mname}}
+                    </td>
+                    <td data-title="'Type'" sortable="'mtname'" filter="{ 'mtname': 'text' }">
+                        {{model.mtname}}
+                    </td>
+                    <td data-title="'User'" sortable="'muser'" filter="{ 'muser': 'text' }" class="no-wrap-table-cell">
+                        {{model.muser}}
+                    </td>
+                    <td>
+                        <button class="btn btn-default btn-xs" 
+                            ui-sref="analysis.modeldetails({ modelId: model.model_id })">
+                            Show details
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-default btn-xs" 
+                            ng-click="deleteModel(model.model_id,model.mname) | trackEvent:'Analysis-Model list':'delete model'">
+                            Delete
+                        </button>
+                    </td>
+                    <!--
+                    <td>
+                        <button class="btn btn-default btn-xs" ng-click="newClassification(model.model_id,model.mname)">New Classification</button>
+                    </td>
+                    -->
+                    <!-- <td data-ng-hide="true">
+                        {{ model.model_id }}
+                    </td> -->
+                </tr>
+            </table>
+        </div>
         <div class="jumbotron" ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading">
             <h3>{{ infopanedata }}  
                 <a ng-click="newModel() | trackEvent:'Analysis-Model list':'new model'">
@@ -56,19 +57,19 @@
             </h3>
         </div>
     </div>
-    
-    <div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
-        <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">
-            <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Model list':'alert-success closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            {{ successInfo }}
-        </div>
-        <div class="alert alert-danger alert-dismissible"  role="alert" id="errorDiv" ng-show="showError">
-            <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Model list':'alert-danger closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            {{ errorInfo }}
-        </div>
-        <div class="alert alert-info alert-dismissible"  role="alert" id="infoDiv" ng-show="showInfo">
-            <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Model list':'alert-info closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            {{ infoInfo }}
-        </div>
+</div>
+
+<div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
+    <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">
+        <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Model list':'alert-success closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        {{ successInfo }}
+    </div>
+    <div class="alert alert-danger alert-dismissible"  role="alert" id="errorDiv" ng-show="showError">
+        <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Model list':'alert-danger closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        {{ errorInfo }}
+    </div>
+    <div class="alert alert-info alert-dismissible"  role="alert" id="infoDiv" ng-show="showInfo">
+        <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Model list':'alert-info closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        {{ infoInfo }}
     </div>
 </div>

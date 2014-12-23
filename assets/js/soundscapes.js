@@ -232,25 +232,6 @@
 
         }
     )
-    .directive('a2Soundscapes',
-        function()
-        {
-            return  {
-                restrict : 'E', 
-                templateUrl: template_root + 'main.html'
-            }; 
-
-        }
-    )
-    .directive('a2Soundscapelist',
-        function()
-        {
-            return  {
-                restrict : 'E',
-                templateUrl: template_root + 'soundscapelist.html'
-            };
-        }
-    )
     .controller('CreateNewSoundscapeInstanceCtrl', 
         function ($scope, $modalInstance, $http, $timeout, projectData, playlists) {
         

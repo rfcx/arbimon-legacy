@@ -475,26 +475,6 @@
 
         }
     )
-    .directive('a2Classification',
-        function()
-        {
-            return  {
-                restrict : 'E', 
-                templateUrl: template_root + 'main.html'
-            };
-
-        }
-    )
-    .directive('a2Classificationlist',
-        function()
-        {
-            return  {
-                restrict : 'E',
-                templateUrl: template_root + 'classificationlist.html'
-            };
-
-        }
-    )
     .directive('a2Vectorchart',
         function()
         {
