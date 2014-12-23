@@ -529,7 +529,6 @@ angular.module('a2services',[])
                 return callback(data);
             });
         },
-        
     };
 }])
 ;
