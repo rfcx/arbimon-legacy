@@ -27,9 +27,22 @@ router.param('soundscape', function(req, res, next, soundscape){
         if(err) return next(err);
 
         if(!soundscapes.length){
-            return res.status(404).json({ error: "soundscape not found"});
+            return res.status(404).json({ error: "soundscape not found" });
         }
-        req.soundscape = soundscapes[0];
+        
+        var s = soundscapes[0];
+        // console.log(s);
+        s.aggregation = {
+            id: s.aggregation,
+            name: s.aggr_name,
+            scale: JSON.parse(s.aggr_scale)
+        };
+        
+        delete s.aggr_name;
+        delete s.aggr_scale;
+        
+        req.soundscape = s;
+        
         return next();
     });
 });
@@ -71,6 +84,48 @@ router.get('/details', function(req, res, next) {
 
 router.get('/:soundscape', function(req, res, next) {
     res.json(req.soundscape);
+});
+
+router.get('/:soundscape/delete', function(req, res, next) {
+    if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
+        return res.json({ error: "you dont have permission to 'manage soundscapes'" });
+    
+    model.soundscapes.delete(req.soundscape.id,
+    function(err, data) {
+        if(err) return next(err);
+
+        res.json({ok:'Soundscape deleted.'});
+        return null;
+    });
+});
+
+router.get('/:soundscape/scidx', function(req, res, next) {
+    var soundscape = req.soundscape;
+    var just_count = req.query && req.query.count;
+    model.soundscapes.fetchSCIDX(req.soundscape, {
+        just_count : just_count
+    },function(err, scidx){
+        if(err){
+            next(err);
+        } else {
+            res.json(scidx);
+        }
+    });
+});
+
+router.post('/:soundscape/scale', function(req, res, next) {
+    if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
+        return res.json({ error: "you dont have permission to 'manage soundscapes'" });
+        
+    model.soundscapes.setVisualScale(req.soundscape, {
+        max : req.body.max
+    }, function(err, soundscape){
+        if(err){
+            next(err);
+        } else {
+            res.json(soundscape);
+        }
+    });
 });
 
 router.use('/:soundscape/regions/', region_router);

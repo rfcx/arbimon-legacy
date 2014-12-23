@@ -1,0 +1,61 @@
+<div class="row" >
+    <div class="col-sm-12 col-lg-11 padded-view-div" >
+        <h3>
+            Soundscapes 
+            <a class="btn btn-sm btn-default"  
+                tooltip="Create New Soundscape" 
+                tooltip-placement="right"  
+                ng-click="createNewSoundscape()" >
+                <i class="fa fa-plus" ></i>
+            </a>
+        </h3> 
+        <loader ng-show="loading"></loader>
+        <div ng-hide="loading">
+            <table ng-table="tableParams" class="table" show-filter="true" >
+                <tr ng-repeat="soundscape in soundscapesData" >
+                    <td data-title="'Date'" class="no-wrap-table-cell" sortable="'date'" >
+                        {{soundscape.date | moment : 'lll' }} 
+                    </td> 
+                    <td data-title="'Name'" class="no-wrap-table-cell hidelongtext widthtd" sortable="'name'"  filter="{ 'name': 'text' }">
+                        {{soundscape.name}}
+                    </td>
+                    <td data-title="'User'" class="no-wrap-table-cell" sortable="'user'"  filter="{ 'user': 'text' }">
+                        {{soundscape.user}}
+                    </td>
+                    <td data-title="'Playlist'" class="no-wrap-table-cell hidelongtext widthtd" sortable="'playlist'"  filter="{ 'playlist': 'text' }">
+                        {{soundscape.playlist}}
+                    </td>
+                    <td>
+                        <button class="btn btn-default btn-xs" ng-click="showDetails(soundscape.soundscape_id) | trackEvent:'Analysis-Soundscapes-List':' show soundscapes details'">Show details</button>
+                    </td>
+                    <td>
+                        <button class="btn btn-default btn-xs" ng-click="deleteSoundscape(soundscape.soundscape_id,soundscape.name) | trackEvent:'Analysis-Soundscapes list':'delete soundscape'">Delete</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="jumbotron" ng-show="(!soundscapesOriginal || !soundscapesOriginal.length > 0) && !loading">
+            <h3>
+                {{ infopanedata }} 
+                <a ng-click="createNewSoundscape() | trackEvent:'Analysis-Soundscapes':'Create new soundscape'" >
+                    Create a soundscape
+                </a>
+            </h3>
+        </div>
+    </div>
+</div>
+
+<div class="navbar navbar-inverse navbar-fixed-bottom bottom-fixed-alerts">
+  <div class="alert alert-success alert-dismissible"  role="alert" id="successDiv" ng-show="showSuccess">
+    <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Soundscapes':'alert-success closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    {{ successInfo }}
+  </div>
+  <div class="alert alert-danger alert-dismissible"  role="alert" id="errorDiv" ng-show="showError">
+    <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Soundscapes':'alert-danger closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    {{ errorInfo }}
+  </div>
+  <div class="alert alert-info alert-dismissible"  role="alert" id="infoDiv" ng-show="showInfo">
+    <button type="button" class="close" ng-click="updateFlags() | trackEvent:'Analysis-Soundscapes':'alert-info closed'"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    {{ infoInfo }}
+  </div>
+</div>

@@ -55,6 +55,7 @@ angular.module('audiodata', [
     
     
     var readFilters = function() {
+        $scope.message = '';
         var params = {};
         
         if($scope.params.range && $scope.params.range.from && $scope.params.range.to) {
@@ -83,7 +84,6 @@ angular.module('audiodata', [
     };
     
     var searchRecs = function(output) {
-        
         var params = readFilters();
         params.limit = $scope.limitPerPage;
         params.offset = ($scope.currentPage-1) * $scope.limitPerPage;
@@ -119,13 +119,16 @@ angular.module('audiodata', [
     $scope.limitPerPage = 10;
     $scope.days = d3.range(1,32);
     $scope.months =  d3.range(12).map(function(month) {
+        $scope.message = ''; 
         return { value: month, string: moment().month(month).format('MMM') };
     });
     $scope.hours = d3.range(24).map(function(hour) {
+        $scope.message = '';
         return { value: hour, string: moment().hour(hour).minute(0).format('HH:mm') };
     });
     
     Project.getSites(function(data){
+        $scope.message = '';  
         $scope.sites = data;
     });
     
@@ -154,41 +157,46 @@ angular.module('audiodata', [
     searchRecs('date_range');
     
     $scope.sortRecs = function(sortKey, reverse) {
+        $scope.message = '';
         $scope.sortKey = sortKey;
         $scope.reverse = reverse;
         searchRecs();
     };
     $scope.applyFilters = function() {
+        $scope.message = '';
         $scope.currentPage  = 1;
         searchRecs('count');
         searchRecs();
     };
     $scope.resetFilters = function() {
+        $scope.message = '';
         $scope.currentPage  = 1;
         $scope.params = {};
         searchRecs('count');
         searchRecs();
     };
     
+    $scope.message = '';
+    
     $scope.createPlaylist = function() {
-        
+        $scope.message = '';
         var listParams = readFilters();
         
         if($.isEmptyObject(listParams))
             return;
         
         var modalInstance = $modal.open({
-            templateUrl: '/partials/audiodata/create-playlist.html'
+            controller: 'SavePlaylistModalInstanceCtrl',
+            templateUrl: '/partials/audiodata/create-playlist.html',
+            resolve: {
+                listParams: function() {
+                    return listParams;
+                }
+            }
         });
         
-        modalInstance.result.then(function(playlistName) {
-            a2Playlists.create({
-                playlist_name: playlistName,
-                params: listParams
-            },
-            function(data) {
-                console.log(data);
-            });
+        modalInstance.result.then(function() {
+            $scope.message = 'Playlist saved.'
         });
     };
     
@@ -215,6 +223,24 @@ angular.module('audiodata', [
         });
     } */
 })
+ .controller('SavePlaylistModalInstanceCtrl', function($scope, $modalInstance, a2Playlists,listParams) {
+   $scope.errMess = ''
+   $scope.savePlaylist = function(name)
+   {
+      $scope.errMess = '';
+      a2Playlists.create({
+          playlist_name: name,
+          params: listParams
+      },
+      function(data) {
+         if (data.error)
+         {
+            $scope.errMess = 'Playlist name is in use.'
+            
+         }else $modalInstance.close();
+      });
+   }
+ })
 // .controller('RecsEditorCtrl', function($scope, Project, $modalInstance, recs) {
 //     $scope.recs = recs;
 // })

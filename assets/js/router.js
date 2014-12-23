@@ -13,7 +13,7 @@ var arbimon2 = angular.module('arbimon2', [
     $rootScope.Math = Math; // export math library to angular :-)
     Angularytics.init();
 })
-.config(function($stateProvider, $stickyStateProvider, $urlRouterProvider,AngularyticsProvider) {
+.config(function($stateProvider, $stickyStateProvider, $urlRouterProvider, AngularyticsProvider) {
     AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
     
     $urlRouterProvider.otherwise("/dashboard");

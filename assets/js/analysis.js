@@ -36,11 +36,13 @@
         })
         .state('analysis.classification', {
             url: '/classification',
-            template: '<a2-classification></a2-classification>'
+            controller: 'ClassificationCtrl',
+            templateUrl: '/partials/classification/list.html'
         })
         .state('analysis.soundscapes', {
             url: '/soundscapes',
-            template: '<a2-soundscapes></a2-soundscapes>'
+            controller: 'SoundscapesCtrl',
+            templateUrl: '/partials/soundscapes/list.html'
         });
     });
 }

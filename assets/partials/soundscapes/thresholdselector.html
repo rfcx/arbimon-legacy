@@ -1,11 +1,22 @@
 <div>
     <div class="row thresholdtext">
-    <span class="col-sm-5" tooltip="Only peaks above this threshold will be considered.">Amplitude:{{thresholdPerc}}</span>
-    <span class="col-sm-7" tooltip-placement="bottom" tooltip="If the frequency difference of two successive peaks is less than this threshold, then the peak of highest amplitude will be kept only.">Frequency:{{banwidthValue}}Hz</span>
+        <span class="col-sm-5" tooltip="Only peaks above this threshold will be considered.">
+            Amplitude:{{ threshold }}
+        </span>
+        <span class="col-sm-7" tooltip-placement="bottom" 
+            tooltip="If the frequency difference of two successive peaks is less than this threshold, then the peak of highest amplitude will be kept only.">
+            Frequency:{{ bandwidth }}Hz
+        </span>
     </div>
     <div class="row" height="70" >
-        <div class="col-sm-1 thresslider"> <div orientation="vertical" range-slider min="0" max="100" model-min="threshold" pin-handle="max" show-values="false"></div></div>
-        <div class="col-sm-9 margin-left-8"><svg  id="thresholdvisualisation" width="250" height="70"></svg></div>
+        <div class="col-sm-1 thresslider">
+            <div orientation="vertical" range-slider min="0" max="100" model-min="thresholdInvPercent" pin-handle="max" show-values="false"></div>
+        </div>
+        <div class="col-sm-9 margin-left-8">
+            <a2-draw-peak-threshold threshold="threshold" bandwidth="bandwidth"></a2-draw-peak-threshold>
+        </div>
     </div>
-   <div class="bandwidthslider" > <div range-slider min="0" max="100" model-max="banwidth" pin-handle="min" show-values="false"></div></div>
+    <div class="bandwidthslider" >
+        <div range-slider min="0" max="1000" step="10" model-max="bandwidth" pin-handle="min" show-values="false"></div>
+    </div>
 </div>

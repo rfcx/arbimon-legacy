@@ -3,6 +3,11 @@ var mysql = require('mysql');
 var validator = require('validator');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
+var AWS   = require('aws-sdk');
+
+var config       = require('../config'); 
+
+var s3;
 
 module.exports =
     {
@@ -58,9 +63,50 @@ module.exports =
         },
 
         delete: function(model_id, callback) {
-            var q = "update `models` set `deleted` = 1 where model_id = "+model_id;
+            var q = "SELECT `uri` FROM `models` WHERE `model_id` ="+model_id;
+    
+            queryHandler(q,
+                function (err,rows)
+                {
+                    if (err) {
+                        callback();
+                    }
+                    if(!s3){
+                        s3 = new AWS.S3();
+                    }
+                    var uri = rows[0].uri;
+                    var imgUri = rows[0].uri.replace('.mod','.png');
+                    var params = {
+                        Bucket: config('aws').bucketName,
+                        Delete: { 
+                            Objects:
+                            [ 
+                              {
+                                Key: uri, 
+                              },
+                              {
+                                Key: imgUri, 
+                              }
+                            ]
+                        }
+                    };
+                    s3.deleteObjects(params, function(err, data) {
+                        if (err)
+                        {
+                            callback();
+                        }
+                        else
+                        {
+                            var q = "update `models` set `deleted` = 1 where model_id = "+model_id;
+       
+                            queryHandler(q, callback);                             
+                        }
+                    });                 
+             
+                }
+            );
+            
 
-            queryHandler(q, callback);
         },
 
         types: function(callback) {

@@ -3,6 +3,7 @@ var mysql        = require('mysql');
 var AWS          = require('aws-sdk');
 var async        = require('async');
 var joi          = require('joi');
+var child_process = require('child_process');
 var scidx        = require('../utils/scidx');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
@@ -48,10 +49,25 @@ var Soundscapes = {
         }
 
         return dbpool.queryHandler(
-            "SELECT SC.soundscape_id as id, SC.name, SC.project_id as project, SC.user_id as user, \n"+
-            "     SC.min_value, SC.max_value, SC.min_t, SC.max_t, SC.min_f, SC.max_f, \n" +
-            "     SC.bin_size, SCAT.identifier as aggregation, \n" +
-            "     SC.uri \n" +
+            "SELECT SC.soundscape_id as id, \n"+
+            "       SC.name, \n"+
+            "       SC.project_id as project, \n"+
+            "       SC.playlist_id, \n"+
+            "       SC.user_id as user, \n"+
+            "       SC.min_value, \n"+
+            "       SC.max_value, \n"+
+            "       SC.visual_max_value, \n"+
+            "       SC.min_t, \n"+
+            "       SC.max_t, \n"+
+            "       SC.min_f, \n"+
+            "       SC.max_f, \n"+
+            "       SC.bin_size, \n"+
+            "       SC.threshold, \n"+
+            "       SC.frequency, \n"+
+            "       SCAT.identifier as aggregation, \n" +
+            "       SCAT.name as aggr_name, \n" +
+            "       SCAT.scale as aggr_scale, \n" +
+            "       SC.uri \n" +
             "FROM soundscapes SC \n" +
             "JOIN soundscape_aggregation_types SCAT ON SC.soundscape_aggregation_type_id = SCAT.soundscape_aggregation_type_id\n" +
             "WHERE " + constraints.join(" \n  AND "), function(err, data){
@@ -74,7 +90,7 @@ var Soundscapes = {
                 " UNIX_TIMESTAMP( S.`date_created` )*1000 as date , "+
                 " CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2))  ,' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) user " +
                 " FROM `soundscapes` S ,`users` U , `playlists` P  " +
-                " WHERE S.`project_id` = "+mysql.escape(project)+" and S.`user_id` = U.`user_id` and P.`playlist_id`  =S.`playlist_id` " 
+                " WHERE S.`project_id` = "+mysql.escape(project)+" and S.`user_id` = U.`user_id` and P.`playlist_id`  =S.`playlist_id` ";
 
         queryHandler(q, callback);
     },
@@ -213,6 +229,13 @@ var Soundscapes = {
         });
     },
     
+    /** Samples the recordings in a soundscape region.
+     * @param {Object}  soundscape    soundscape 
+     * @param {Object}  region  region in the soundscape.
+     * @param {Object}  params  [optional]
+     * @param {Integer} param.count  number of recording to sample (default: all the recordings in the region).
+     * @param {Function} callback called back with the results.
+     */
     sampleRegion: function(soundscape, region, params, callback){
         if(!params){
             params = {};
@@ -308,7 +331,6 @@ var Soundscapes = {
         });
         
     },
-    
 
     /** Fetches soundscape region tags.
      * @param {Object}  region soundscape object as returned by getRegions().
@@ -419,7 +441,65 @@ var Soundscapes = {
             }
         ], callback);
     },
+    /** deletes soundscapes png scidx and db associations
 
+     */
+    delete: function (scape_id,callback)
+    {
+        var q = "SELECT `uri` FROM `soundscapes` WHERE `soundscape_id` = "+scape_id;
+
+        queryHandler(q,
+            function (err,rows)
+            {
+                if (err) {
+                    callback(err);
+                }
+                if(!s3){
+                    s3 = new AWS.S3();
+                }
+                var imgUri = rows[0].uri;
+                var indexUri = rows[0].uri.replace('image.png','index.scidx');
+                var params = {
+                    Bucket: config('aws').bucketName,
+                    Delete: { 
+                        Objects:
+                        [ 
+                          {
+                            Key: imgUri
+                          },
+                          {
+                            Key: indexUri 
+                          }
+                        ]
+                    }
+                };
+                s3.deleteObjects(params, function(err, data) {
+                    if (err)
+                    {
+                        callback(err);
+                    }
+                    else
+                    {
+                        var q = " DELETE FROM `playlists` WHERE `playlist_id` IN "+
+                        " (SELECT `sample_playlist_id` FROM `soundscape_regions` WHERE `soundscape_id` = "+scape_id+")"
+                        queryHandler(q,function(err,row)
+                            {
+                                if (err)
+                                {
+                                    callback(err);
+                                }
+                                else
+                                {    
+                                    var q = "DELETE FROM `soundscapes` WHERE `soundscape_id` = "+scape_id+"" ;
+                                    queryHandler(q, callback);
+                                }
+                            }
+                        );
+                    }
+                });                 
+            }
+        );
+    },
     /** removess a soundscape region tags.
      * @param {Object}  region soundscape object as returned by getRegions().
      * @param {Object}  recording id of the recording to add the tag to.
@@ -454,6 +534,30 @@ var Soundscapes = {
             }
         ], callback);
     },
+
+
+    /** sets the soundscape's visualization scale.
+     * @param {Object}  soundscape   soundscape 
+     * @param {Object}  scale        scale object
+     * @param {Integer} scale.max    max value
+     * @param {Function} callback called back with the results.
+     */
+    setVisualScale: function(soundscape, scale, callback){
+        if(!scale){
+            scale = {};
+        }
+        
+        var max = (scale.max || soundscape.max_value);
+        
+        var script = child_process.spawn(
+            '.env/bin/python', ['scripts/Soundscapes/set_visual_scale.py', (soundscape.id|0), max == '-' ? '-' : (max|0)]
+        );
+        script.on('close', function(code){
+            Soundscapes.find({id:soundscape.id}, callback);
+        });        
+    },
+
+
     
     __compute_thumbnail_path : function(soundscape, callback){
         soundscape.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + soundscape.uri;

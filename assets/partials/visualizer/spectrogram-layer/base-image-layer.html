@@ -1,6 +1,6 @@
 <a2-img
     ng-repeat="tile in visobject.tiles.set track by $index" 
-    a2-src="{{tile.src}}" 
+    a2-src="{{tile.src | a2UpdatedUrl}}" 
     style="position:absolute;z-index:-1"
     ng-class="tile.crisp ? 'crisp-image' : ''"
     ng-style="{left:tile.s * layout.scale.sec2px + 'px', top: (layout.spectrogram.height - tile.hz * layout.scale.hz2px) + 'px', height: tile.dhz * layout.scale.hz2px + 'px', width: tile.ds * layout.scale.sec2px + 'px'}"
