@@ -27,9 +27,10 @@
                     ng-click="browser.visobj = visobj | trackEvent:'Visualizer-Main':'setting visobj'">
                     <div class="clearfix">
                             {{visobj.caption || visobj.name}}
+                            <span ng-show="visobj.caption2" class="pull-right">{{visobj.caption2}}</span>
                     </div>
                     <div class="thumbnail-viewer">
-                        <img ng-src="{{visobj.thumbnail}}"
+                        <img ng-src="{{visobj.thumbnail | a2UpdatedUrl}}"
                             ng-class="'visobj-'+browser.lovo.object_type"
                         >
                     </div>

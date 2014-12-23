@@ -112,7 +112,7 @@ angular.module('a2visobjects', [
         
         var t0=this.min_t, t1=this.max_t;
         var f0=this.min_f, f1=this.max_f;
-        var v0=this.min_value, v1=this.max_value;
+        var v0=this.min_value, v1=this.visual_max_value || this.max_value;
         var dt= t1 - t0 + 1, df= f1 - f0, dv = v1 - v0;
         
         var aggregation = aggregations[this.aggregation] || aggregations['unknown'];

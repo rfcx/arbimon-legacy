@@ -407,7 +407,7 @@ angular.module('a2services',[])
         }
     };
 }])
-.factory('a2Soundscapes', function(Project, $http) {
+.factory('a2Soundscapes', function(Project, $http, $q) {
     return {
         get: function(soundscape, callback) {
             var projectName = Project.getName();
@@ -417,6 +417,28 @@ angular.module('a2services',[])
             }).success(function(data) {
                 callback(data);
             });
+        },
+        getSCIdx: function(soundscape, params, callback) {
+            if(params instanceof Function){
+                callback = params;
+                params = undefined;
+            }
+            if(!params){
+                params = {};
+            }
+            
+            var d = $q.defer();
+            var projectName = Project.getName();
+            
+            $http({
+                method : 'GET',
+                url    : '/api/project/'+projectName+'/soundscapes/' + (soundscape|0) + '/scidx',
+                params : params
+            }).success(function(data) {
+                if(callback){callback(data);}
+                d.resolve(data);
+            });
+            return d.promise;
         },
         getList: function(query, callback) {
             if(query instanceof Function){
@@ -428,6 +450,16 @@ angular.module('a2services',[])
                 method : 'GET',
                 url    : '/api/project/'+projectName+'/soundscapes/',
                 params : query
+            }).success(function(data) {
+                callback(data);
+            });
+        },
+        setVisualScale: function(soundscape, params, callback){
+            var projectName = Project.getName();
+            return $http({
+                method : 'POST',
+                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/scale',
+                data   : params
             }).success(function(data) {
                 callback(data);
             });
