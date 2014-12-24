@@ -4,7 +4,7 @@
     var template_root = '/partials/classification/';
 
     classification.controller('ClassificationCtrl' , 
-        function ($scope, $http, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, $location, notify) 
+        function ($scope, $http, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, $location, notify, $q) 
         {
             $scope.loading = true;
             $scope.infoInfo = "Loading...";
@@ -160,20 +160,25 @@
                             templateUrl: template_root + 'createnewclassification.html',
                             controller: 'CreateNewClassificationInstanceCtrl',
                             resolve: {
-                                data: function () 
-                                {
-                                    Project.getModels(function(data){
-                                        return data;
+                                data: function($q){
+                                    var d = $q.defer();
+                                    Project.getModels(function(err, data){
+                                        if(err){
+                                            console.error(err);
+                                        }
+                                        
+                                        d.resolve(data || []);
+                                        
                                     });
+                                    return d.promise;
                                 },
-                                playlists:function()
+                                playlists:function($q)
                                 {
-                                    return $scope.playlists;
-                                },
-                                sites: function() {
-                                    Project.getSites(function(data){
-                                        return sites;
+                                    var d = $q.defer();
+                                    a2Playlists.getList(function(data) {
+                                        d.resolve(data || []);
                                     });
+                                    return d.promise;
                                 },
                                 projectData:function()
                                 {
@@ -373,13 +378,12 @@
         }
     )
     .controller('CreateNewClassificationInstanceCtrl', 
-        function ($scope, $modalInstance, $http, data, sites, projectData, playlists) 
+        function ($scope, $modalInstance, $http, data, projectData, playlists) 
         {
             $scope.data = data;
             $scope.projectData = projectData;
             $scope.recselected = '';
             $scope.showselection = false;
-            $scope.sites = sites;
             $scope.playlists = playlists;
             $scope.nameMsg = '';
             $scope.datas = {
