@@ -551,7 +551,7 @@ var Recordings = {
     
     recordingInfoGivenUri : function(uri,project_uri,callback)
     {
-        var q = "SELECT r.`recording_id` id , date_format(r.`datetime`,'%m-%d-%Y %H:%i') as date , s.`name` site " +
+        var q = "SELECT r.`recording_id` id , date_format(r.`datetime`,'%m-%d-%Y %H:%i') as date , s.`name` site ,r.`uri` " +
                 " FROM `recordings` r,`sites` s  "+
                 " WHERE r.`uri` = "+mysql.escape(uri)+" and s.`site_id` = r.`site_id` " +
                 " and r.`site_id` in (SELECT s.`site_id` FROM `sites` s WHERE s.`project_id` = "+

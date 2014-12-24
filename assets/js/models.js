@@ -405,25 +405,226 @@
         )
         .controller('ModelDetailsCtrl', function($scope, $http, $stateParams, $location, Project, notify) {
             
-            var project_url = Project.getName();
-            
+            $scope.project_url = Project.getName();
+	    $scope.project_id = -1;
+	    Project.getInfo(
+		function (data)
+		{
+		    $scope.project_id = data.project_id
+		}
+	    );
+	    
+            $scope.showValidationsTable = true;
             $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
             $scope.loading = true;
-                            
-            $http.get('/api/project/' + project_url + '/validation/list/' + $stateParams.modelId)
+            $scope.recsUris = [];
+	    $scope.selectedVect = null;
+	    $scope.selectedVectWatch =null;
+	    $scope.$watch('selectedVectWatch' ,
+		function()
+		{
+		    $scope.selectedVect = $scope.selectedVectWatch;
+		}
+	    );
+	    $scope.vectorYesMinMax = 1;
+	    $scope.allYesMax = [];
+	    $scope.vectorNoMax = -1;
+            $http.get('/api/project/' + $scope.project_url+ '/validation/list/' + $stateParams.modelId)
             .success(function(vdata) {
                 $scope.validations = vdata;
+
                 $scope.valiDetails = $scope.validations.nofile ? false : true;
-                
+  		for(var i = 0 ; i < $scope.validations.length ; i++)
+		{
+		    $scope.getRecVali ( $scope.validations[i],i );
+		}              
             })
             .error(function() {
                 notify.error("Error Communicating With Server");
             });
-            
-            $http.get('/api/project/' + project_url + '/models/' + $stateParams.modelId)
+            $scope.loadingValidations = true;
+	    $scope.getRecVali = function (currRec ,i)
+	    {
+		var pieces = currRec.uri.split('/');
+		var filename = pieces[pieces.length-1];
+		fileName = filename.replace('.thumbnail.png','.flac');		    
+		var vectorUri = 'project_'+$scope.project_id+'/training_vectors/job_'+$scope.data.job_id+'/'+fileName;
+
+		$http.post('/api/project/'+$scope.project_url+'/classification/vector', 
+		    {
+			v:vectorUri
+		    }
+		).
+		success
+		(
+		    function(data, status, headers, config) 
+		    {
+			var vector =  data.data.split(",") ;
+			for(var jj = 0 ; jj < vector.length; jj++)
+			{
+			    vector[jj] = parseFloat(vector [jj]);
+			}
+			var vectorLength = vector.length;
+			
+			var vmax = Math.max.apply(null,vector)
+			$scope.validations[i].vmax = vmax;
+			$scope.validations[i].vector = vector;
+		        if (currRec.presence == 'no')
+			{
+			    if($scope.vectorNoMax < vmax )
+			    {
+				$scope.vectorNoMax = vmax
+			    }
+			}
+			
+		        if (currRec.presence == 'yes')
+			{
+			    $scope.allYesMax.push(vmax)
+			}
+			
+			if ($scope.validations.length == i + 1)
+			{
+			   $scope.allYesMax = $scope.allYesMax.sort();
+			    var j ;
+			    for(j = 0 ; j < $scope.allYesMax.length;j++)
+			    {
+				if ($scope.allYesMax[j]>=$scope.vectorNoMax)
+				{
+				    break;
+				}
+			    }
+			    if ($scope.vectorYesMinMax == null)
+			    {
+			    
+				$scope.vectorYesMinMax =  Math.round($scope.allYesMax[j]*100)/100;
+				$scope.thresholdCurrent = $scope.vectorYesMinMax;
+				
+				if (typeof $scope.vectorYesMinMax == 'NaN')
+				{
+				    $scope.vectorYesMinMax =  Math.round($scope.allYesMax[0]*100)/100;
+				    $scope.thresholdCurrent = $scope.vectorYesMinMax;
+				}
+			    }
+			    
+			    for(var jj = 0 ; jj < $scope.validations.length;jj++)
+			    {
+				$scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.vectorYesMinMax) ? 'yes' : 'no';
+			    }
+			    
+
+			    $scope.validationsData = $scope.validations;
+			    $scope.computeStats();
+			    $scope.loadingValidations = false;
+			}
+		    }
+		);   
+	    };
+	    
+            $scope.thres = {
+	        tpos: '-',
+                fpos: '-',
+                tneg: '-',
+                fneg: '-',
+		accuracy: '-', 
+		precision: '-', 
+		sensitivity: '-', 
+		specificity: '-', 
+	    };	    
+	    
+	    $scope.computeStats = function()
+	    {
+		var trupositive = 0;
+		var falsepositives = 0;
+		var truenegatives = 0;
+		var falsenegative = 0;
+		for(var jj = 0 ; jj < $scope.validations.length;jj++)
+		{
+		    if ($scope.validations[jj].presence == 'yes')
+		    {
+			if ($scope.validations[jj].threshold == 'yes')
+			{
+			    trupositive = trupositive + 1
+			}
+			else
+			{
+			    falsenegative = falsenegative + 1
+			}
+		    }
+		    else
+		    {
+			if ($scope.validations[jj].threshold == 'yes')
+			{
+			    falsepositives = falsepositives + 1
+			}
+			else
+			{
+			    truenegatives = truenegatives + 1
+			}		
+		    }
+		}
+	    
+		$scope.thres.tpos = trupositive;
+                $scope.thres.fpos = falsepositives;
+                $scope.thres.tneg = truenegatives;
+                $scope.thres.fneg= falsenegative;
+		$scope.thres.accuracy = Math.round(((trupositive+truenegatives)/(trupositive+ falsepositives+truenegatives+falsenegative))*100)/100;
+		if (trupositive+ falsepositives>0){
+		    $scope.thres.precision = Math.round((trupositive/(trupositive+ falsepositives))*100)/100
+		}
+		if (trupositive+falsenegative>0){
+		    $scope.thres.sensitivity = Math.round((trupositive/(trupositive+falsenegative))*100)/100
+		}
+		if (truenegatives+falsepositives>0){
+		    $scope.thres.specificity = Math.round((truenegatives/(truenegatives+falsepositives))*100)/100
+		}
+		 console.log($scope.thres)
+	    };
+	    $scope.messageSaved = '';
+	    $scope.saveThreshold =function()
+	    {
+	        $http.post('/api/project/' + $scope.project_url + '/models/savethreshold', {
+		    m:$stateParams.modelId,
+		    t:$scope.vectorYesMinMax
+		}).
+		success
+		    (
+			function(data, status, headers, config) {
+			    $scope.messageSaved = 'Threshold saved';
+			}
+		    ).
+		error(
+		    function(data, status, headers, config) {
+			$scope.messageSaved = 'Error saving threshold ';
+		    }
+		);	
+	    };
+	    
+	    $scope.recalculate = function()
+	    {
+		var newval = $('#newthres').val();
+		console.log(newval);
+		$scope.vectorYesMinMax = parseFloat(newval);
+		if (!isNaN($scope.vectorYesMinMax) && ($scope.vectorYesMinMax<=1.0) && ($scope.vectorYesMinMax>=0.0))
+		{
+		    for(var jj = 0 ; jj < $scope.validations.length;jj++)
+		    {
+			$scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.vectorYesMinMax) ? 'yes' : 'no';
+		    }
+		    $scope.computeStats();
+		}
+
+	    };
+	    
+	    $scope.thresholdCurrent = '-';
+            $http.get('/api/project/' + $scope.project_url + '/models/' + $stateParams.modelId)
             .success(function(data) {
+		console.log(data)
+		$scope.vectorYesMinMax = data.threshold;
+		$scope.thresholdCurrent = data.threshold;
                 $scope.data = {
+		    thresholdFromDb : data.threshold, 
+		    job_id : data.job_id,
                     modelmdc: data.mdc, //ok
                     modelmtime: data.mtime, //ok
                     modelmname: data.mname, //ok
@@ -455,6 +656,8 @@
                     fpos: data.json.fp,
                     tneg: data.json.tn,
                     fneg: data.json.fn,
+		    maxv: data.json.maxv,
+                    minv: data.json.minv,
                     roicount: data.json.roicount, //ok
                     hfreq: Math.round(data.json.roihighfreq * 100) / 100, //ok
                     lfreq: Math.round(data.json.roilowfreq * 100) / 100, //ok
@@ -467,28 +670,56 @@
                 notify.error("Error Communicating With Server");
             });
             
-            
+	    
         
             $scope.getValidations = function() {
                 var vals = [];
-                for (var i = 0; i < $scope.validations.length; i++) {
+                for (var i = 0; i < $scope.validationsData.length; i++) {
                     vals.push({
-                        site: $scope.validations[i].site,
-                        date: $scope.validations[i].date,
-                        user: $scope.validations[i].presence,
-                        model: $scope.validations[i].model
+                        site: $scope.validationsData[i].site,
+                        date: $scope.validationsData[i].date,
+                        user: $scope.validationsData[i].presence,
+                        model: $scope.validationsData[i].model,
+			threshold: $scope.validationsData[i].threshold,
+			value: $scope.vectorYesMinMax
                     });
                 }
                 return vals;
             };
 
             $scope.savedhtml = '';
-
-
-            $scope.gotoRec = function(rec) {
+	    $scope.recNameInVectorViewDate = '';
+	    $scope.recNameInVectorViewSite = '';
+	    $scope.recNameInVectorViewUser = '';
+	    $scope.recNameInVectorViewModel = '';
+	    $scope.recNameInVectorViewTh = '';
+	    $scope.selectedUri = '';
+	    $scope.selectedRecId = -1;
+            $scope.recDetails = function(rec) {
                 
                 var selected = rec;
-                var rurl = "/project/" + project_url + "/#/visualizer/rec/" + selected.id;
+		$scope.recNameInVectorViewDate = rec.date;
+		$scope.recNameInVectorViewSite = rec.site;
+		$scope.recNameInVectorViewUser = rec.presence;
+		$scope.recNameInVectorViewModel = rec.model;
+		$scope.recNameInVectorViewTh = rec.threshold
+		$scope.selectedUri = rec.uri;
+		var pieces = rec.uri.split('/');
+		var filename = pieces[pieces.length-1];
+		fileName = filename.replace('.thumbnail.png','.flac');
+		$scope.selectedRecId = rec.id;
+		$scope.selectedVectWatch = 'project_'+$scope.project_id+'/training_vectors/job_'+$scope.data.job_id+'/'+fileName;
+		$scope.showValidationsTable = false;
+            };
+	    
+	    $scope.closeRecValidationsDetails = function() {
+		$scope.showValidationsTable = true;
+		$scope.selectedVectWatch = null;
+            };
+	    
+            $scope.gotoRec = function() {
+                
+                var rurl = "/project/" + $scope.project_url + "/#/visualizer/rec/" + $scope.selectedRecId;
                 $location.path(rurl);
             };
 
@@ -504,6 +735,9 @@
             }, {
                 name: 'Model presence',
                 key: 'model'
+            }, {
+                name: 'Threshold presence',
+                key: 'threshold'
             }];
 
             

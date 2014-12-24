@@ -124,6 +124,7 @@
                         function(data) 
                         {
                             $scope.data = data;
+			    $scope.currentModelTh = data.data[0].th;
 			    if (data.data.length>0) 
 			    {
 				var modalInstance = $modal.open
@@ -149,6 +150,10 @@
 					    pid : function ()
 					    {
 						return $scope.pid;
+					    },
+					    th : function ()
+					    {
+						return $scope.currentModelTh;
 					    }
 					}
 				    }
@@ -405,8 +410,9 @@
     )
     .controller
     ('ClassiDetailsInstanceCtrl', 
-        function ($scope, $modalInstance,$http, data,url,id,pid) 
+        function ($scope, $modalInstance,$http, data,url,id,pid,th) 
         {
+	    $scope.th = th;
             $scope.data = data.data;
             $scope.pid = pid;
             $scope.url = url;
@@ -520,6 +526,7 @@
 		);
                 
             };
+	    $scope.htresDeci = '-';
             $scope.more= function () {
 
 		$scope.showMore = true;
@@ -530,10 +537,35 @@
                     (
                         function(dataRec) 
                         {
-                            $scope.recs = dataRec;
-                            jsonArr = JSON.parse(dataRec[0].json_stats)
-                            $scope.minv = parseFloat(jsonArr['minv'])
-                            $scope.maxv = parseFloat(jsonArr['maxv'])
+			    $http.post('/api/project/'+$scope.purl+'/classification/vector', 
+				{
+				    v:dataRec[0].vect
+				}
+			    ).
+			    success
+			    (
+				function(vectordata)
+				{
+				    var recVect =  vectordata.data.split(",") ;
+				    for(var jj = 0 ; jj < recVect.length; jj++)
+				    {
+					recVect[jj] = parseFloat(recVect[jj]);
+				    }
+				    var maxVal = Math.max.apply(null,recVect)
+				    if (! isNaN($scope.th)) {
+				    
+					if(maxVal < $scope.th )
+					{
+					    $scope.htresDeci = 'no';
+					}else $scope.htresDeci = 'yes';
+				    }
+			            $scope.recs = dataRec;
+				    jsonArr = JSON.parse(dataRec[0].json_stats)
+				    $scope.minv = parseFloat(jsonArr['minv'])
+				    $scope.maxv = parseFloat(jsonArr['maxv'])	    
+				}
+			    );
+
                         }
                     ).error(
 			function()
@@ -681,76 +713,88 @@
                     scope: {
                         vurl: '=',
                         minvect: '=',
-                        maxvect: '='
+                        maxvect: '=',
+			purl: '='
                     },
                     templateUrl: template_root + 'vectorchart.html',
                     controller: ['$scope', '$http', function($scope, $http) {
 			$scope.loadingflag = true;
+			$scope.setLoader = function()
+			{
+			    $scope.loadingflag = true;
+			};
+			
                         $scope.getVect = function(path,minve,maxve,ctx) {
-                        $http.post('/api/project/'+$scope.url+'/classification/vector', 
-                            {
-                                v:path
-                            }
-                        ).
-                        success
-                        (
-                            function(data, status, headers, config) 
-                            {
-                                $scope.data =  data.data.split(",") ;
-                                $scope.dataLength = $scope.data.length;
-                                var canvasheight = 50;
-                                var i = 0;
-                                ctx.width = $scope.dataLength
-                                ctx.height = canvasheight 
-                                ctxContext = ctx.getContext('2d');
-                                ctxContext.beginPath();
-
-				minvev = 99999999.0;
-				maxvev = -99999999.0;
-				
-				for(var jj = 0 ; jj < $scope.data.length; jj++)
+			if(path)
+			{console.log($scope.purl)
+			    $http.post('/api/project/'+$scope.purl+'/classification/vector', 
 				{
-				    $scope.data[jj] = parseFloat($scope.data[jj]);
-				    if (minvev >$scope.data[jj])
-				    {
-					minvev =$scope.data[jj];
-				    }
-				    if (maxvev<$scope.data[jj])
-				    {
-					maxvev =$scope.data[jj];
-				    }
+				    v:path
 				}
-				
-				ctxContext.moveTo(i,canvasheight*(1- (($scope.data[i]-minvev)/(maxvev-minvev))   ));
-                                //ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
-                                for(var i =1; i < $scope.data.length;i++)
-                                {
-                                    ctxContext.lineTo(i,canvasheight*(1- (($scope.data[i]-minvev)/(maxvev-minvev)) ) );
-                                    //ctxContext.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
-
-                                }
-                                ctxContext.strokeStyle = "#000";
-                                ctxContext.stroke();
-				$scope.loadingflag = false;
-                            }
-                        ).error(
-			    function()
-			    {
-				$scope.errorInfo = "Error Communicating With Server";
-				$scope.showError = true;
-				$("#errorDiv").fadeTo(3000, 500).slideUp(500,
+			    ).
+			    success
+			    (
+				function(data, status, headers, config) 
+				{
+				    $scope.data =  data.data.split(",") ;
+				    $scope.dataLength = $scope.data.length;
+				    var canvasheight = 50;
+				    var i = 0;
+				    ctx.width = $scope.dataLength
+				    ctx.height = canvasheight 
+				    ctxContext = ctx.getContext('2d');
+				    ctxContext.beginPath();
+    
+				    //minvev = 99999999.0;
+				    //maxvev = -99999999.0;
+				    /*
+				    for(var jj = 0 ; jj < $scope.data.length; jj++)
+				    {
+					$scope.data[jj] = parseFloat($scope.data[jj]);
+					if (minvev >$scope.data[jj])
+					{
+					    minvev =$scope.data[jj];
+					}
+					if (maxvev<$scope.data[jj])
+					{
+					    maxvev =$scope.data[jj];
+					}
+				    }
+				    */
+				    ctxContext.moveTo(i,canvasheight*(1- (($scope.data[i]-$scope.minvect)/($scope.maxvect-$scope.minvect))   ));
+				    //ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+				    for(var i =1; i < $scope.data.length;i++)
+				    {
+					ctxContext.lineTo(i,canvasheight*(1- (($scope.data[i]-$scope.minvect)/($scope.maxvect-$scope.minvect)) ) );
+					//ctxContext.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+    
+				    }
+				    ctxContext.strokeStyle = "#000";
+				    ctxContext.stroke();
+				    $scope.loadingflag = false;
+				}
+			    ).error(
 				function()
 				{
-				    $scope.showError = false;
-				});
-			    }
-			);
+				    $scope.errorInfo = "Error Communicating With Server";
+				    $scope.showError = true;
+				    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+				    function()
+				    {
+					$scope.showError = false;
+				    });
+				}
+			    );
+			}
                         };
                     }],
                     link: function (scope, element) {
                           var ctx = element.children()
-                          ctx = ctx[0];
-                          scope.getVect(scope.vurl,parseFloat(scope.minvect),parseFloat(scope.maxvect),ctx)
+                          ctx = ctx[0]; 
+			  scope.$watch("vurl",function(newValue,oldValue) {
+			    scope.setLoader();
+			    scope.getVect(scope.vurl,parseFloat(scope.minvect),parseFloat(scope.maxvect),ctx)
+			  });
                       }
                     } 
 
