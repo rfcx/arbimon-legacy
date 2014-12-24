@@ -14,10 +14,12 @@
 
     models.
     controller('ModelsCtrl',
-            function($scope, $http, $modal, $filter, $sce, ngTableParams, Project, JobsData, $location, notify) {
+            function($scope, $http, $modal, $filter, ngTableParams, Project, JobsData, $location, notify) {
                 $scope.infoInfo = "Loading...";
                 $scope.showInfo = true;
                 $scope.loading = true;
+                
+                
                 
                 
                 $scope.updateFlags = function() {
@@ -30,67 +32,69 @@
                     $scope.loading = false;
                 };
 
-                var pid = -1;
-                var p = Project.getInfo(
-                    function(data) {
-                        $scope.projectData = data;
-                        pid = data.project_id;
-                        $http.get('/api/project/' + data.url + '/models')
-                        .success(
-                            function(data) {
-                                $scope.modelsData = data;
-                                $scope.modelsDataOrig = data;
+                Project.getInfo(function(data) {
+                    $scope.projectData = data;
+                });
+                
+                var initTable = function() {
+                    $scope.tableParams = new ngTableParams(
+                        {
+                            page: 1,
+                            count: 10,
+                            sorting: {
+                                mname: 'asc'
+                            }
+                        }, 
+                        {
+                            total: $scope.modelsDataOrig.length,
+                            getData: function($defer, params) {
                                 $scope.infopanedata = "";
-                                $scope.successInfo = "";
-                                $scope.showSuccess = false;
-                                $scope.errorInfo = "";
-                                $scope.showError = false;
-                                $scope.infoInfo = "";
-                                $scope.showInfo = false;
-                                $scope.loading = false;
-                                if (data.length > 0) {
-                                    $scope.tableParams = new ngTableParams({
-                                        page: 1,
-                                        count: 10,
-                                        filter: {
-
-                                        },
-                                        sorting: {
-                                            mname: 'asc'
-                                        }
-                                    }, 
-                                    {
-                                        total: $scope.modelsDataOrig.length,
-                                        getData: function($defer, params) {
-                                            $scope.infopanedata = "";
-                                            var filteredData = params.filter() ?
-                                                $filter('filter')($scope.modelsDataOrig, params.filter()) :
-                                                $scope.modelsDataOrig;
-
-                                            var orderedData = params.sorting() ?
-                                                $filter('orderBy')(filteredData, params.orderBy()) :
-                                                filteredData;
-
-                                            params.total(orderedData.length);
-                                            $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-                                            if (orderedData.length < 1) {
-                                                $scope.infopanedata = "No models found.";
-                                            }
-                                            $scope.modelsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                                        }
-                                    });
-                                } 
-                                else {
+                                var filteredData = params.filter() ?
+                                $filter('filter')($scope.modelsDataOrig, params.filter()) :
+                                $scope.modelsDataOrig;
+                                
+                                var orderedData = params.sorting() ?
+                                $filter('orderBy')(filteredData, params.orderBy()) :
+                                filteredData;
+                                
+                                params.total(orderedData.length);
+                                $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+                                if (orderedData.length < 1) {
                                     $scope.infopanedata = "No models found.";
                                 }
+                                $scope.modelsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
                             }
-                        )
-                        .error(function() {
-                                notify.error("Error Communicating With Server");
                         });
-                    }
-                );
+                };
                 
+                $scope.loadModels = function() {
+                    $http.get('/api/project/' + Project.getName() + '/models')
+                    .success(
+                        function(data) {
+                            $scope.modelsData = data;
+                            $scope.modelsDataOrig = data;
+                            $scope.infoInfo = "";
+                            $scope.showInfo = false;
+                            $scope.loading = false;
+                            
+                            if (data.length > 0) {
+                                if(!$scope.tableParams) {
+                                    initTable();
+                                }
+                                else {
+                                    $scope.tableParams.reload();
+                                }
+                            } 
+                            else {
+                                $scope.infopanedata = "No models found.";
+                            }
+                        }
+                    )
+                    .error(function() {
+                            notify.error("Error Communicating With Server");
+                    });
+                };
+                $scope.loadModels();
                 
                 $scope.newClassification = function(model_id, model_name) {
                     
@@ -144,7 +148,7 @@
                     modalInstance.result.then(
                         function() {
                             var index = -1;
-                            var modArr = eval($scope.modelsDataOrig);
+                            var modArr = angular.copy($scope.modelsDataOrig);
                             for (var i = 0; i < modArr.length; i++) {
                                 if (modArr[i].model_id === model_id) {
                                     index = i;
