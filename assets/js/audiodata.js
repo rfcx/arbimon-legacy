@@ -570,8 +570,6 @@ angular.module('audiodata', [
     //     $scope.species = species;
     // });
     
-    
-    
     Project.getClasses(function(classes){
         $scope.classes = classes;
         $scope.loading = false;
@@ -673,17 +671,13 @@ angular.module('audiodata', [
         $scope.songtypes = songs;
     });
     
-    
-    $scope.submitSearch = function($event) {
-        if($event.key === "Enter") {
-            $scope.searchSpecies();
-        }
-    };
-    
         
     $scope.searchSpecies = function() {
-        if($scope.search === "") return;
-            
+        if($scope.search === "") {
+            $scope.species = [];
+            return;
+        }
+    
         Species.search($scope.search, function(results){
             $scope.species = results;
         });
