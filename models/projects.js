@@ -76,7 +76,7 @@ var Projects = {
                 return callback(new Error("required field '"+ requiredValues[i] + "' missing"));
         }
 
-        for(var i in project) {
+        for(i in project) {
             if(i !== 'id') {
                 project[i] = mysql.escape(project[i]);
                 values.push(util.format('`%s`=%s', i, project[i]));
@@ -559,7 +559,7 @@ var Projects = {
         queryHandler(q, callback);
     },
     
-    classificationDetail: function(project_url,cid, callback) {
+    classificationDetail: function(project_url, cid, callback) {
         var q = "select  c.`species_id` ,c.`songtype_id`,c.`present`  , "+
                 " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
                 " CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name ,"+
@@ -570,7 +570,7 @@ var Projects = {
         queryHandler(q, callback);
     },
     
-    classificationDetailMore: function(project_url,cid,from,total, callback) {
+    classificationDetailMore: function(project_url, cid, from, total, callback) {
         var q = "select cs.`json_stats`,  c.`species_id` ,c.`songtype_id`,c.`present` as present  , c.`recording_id`,SUBSTRING_INDEX(SUBSTRING_INDEX( r.`uri` , '.', 1 ),'/',-1 ) as recname ,CONCAT( SUBSTRING_INDEX( r.`uri` , '.', 1 ) , '.thumbnail.png') as uri,"+
                 " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
                 " CONCAT(SUBSTRING_INDEX( m.`uri` , '.', 1 ),'/classification_',c.`job_id`,'_',SUBSTRING_INDEX(r.`uri` ,'/',-1 ),'.vector') as vect,"+

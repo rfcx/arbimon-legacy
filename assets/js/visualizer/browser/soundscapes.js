@@ -15,10 +15,17 @@ angular.module('a2browser_soundscapes', [])
         a2Soundscapes.getList({show:'thumbnail-path'},function(soundscapes){
             self.loading.soundscapes = false;
             self.soundscapes = soundscapes;
+            self.soundscapes.forEach(function(soundscape){
+                soundscape.caption2 = 'scale:' + (soundscape.visual_max_value !== null ? soundscape.visual_max_value : soundscape.max_value);
+            });
+
             if(!self.soundscapes_lovo){
                 self.soundscapes_lovo = new a2ArrayLOVO();
             }
             self.soundscapes_lovo.setArray(self.soundscapes, 'soundscape');
+            self.soundscapes_lovo.update = function(){
+                self.activate();
+            }
             if(!self.lovo){
                 self.lovo = self.soundscapes_lovo;
                 a2Browser.setLOVO(self.lovo);

@@ -99,6 +99,35 @@ router.get('/:soundscape/delete', function(req, res, next) {
     });
 });
 
+router.get('/:soundscape/scidx', function(req, res, next) {
+    var soundscape = req.soundscape;
+    var just_count = req.query && req.query.count;
+    model.soundscapes.fetchSCIDX(req.soundscape, {
+        just_count : just_count
+    },function(err, scidx){
+        if(err){
+            next(err);
+        } else {
+            res.json(scidx);
+        }
+    });
+});
+
+router.post('/:soundscape/scale', function(req, res, next) {
+    if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
+        return res.json({ error: "you dont have permission to 'manage soundscapes'" });
+        
+    model.soundscapes.setVisualScale(req.soundscape, {
+        max : req.body.max
+    }, function(err, soundscape){
+        if(err){
+            next(err);
+        } else {
+            res.json(soundscape);
+        }
+    });
+});
+
 router.use('/:soundscape/regions/', region_router);
 
 router.get('/:soundscape/recordings/:bbox', function(req, res, next) {

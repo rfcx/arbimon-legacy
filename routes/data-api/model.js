@@ -73,14 +73,15 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
                 results.push(rr);
             }
             res.json({"data":results});
-        })
+        });
     });
 });
 
 
-router.get('/project/:projectUrl/classification/:cid/more/:f/:t', function(req, res) {
-    model.projects.classificationDetailMore(req.params.projectUrl,req.params.cid,req.params.f,req.params.t, function(err, rows) {
-        if(err) throw err;
+router.get('/project/:projectUrl/classification/:classiId/more/:from/:total', function(req, res, next) {
+    model.projects.classificationDetailMore(req.params.projectUrl, req.params.classiId, req.params.from, req.params.total, function(err, rows) {
+        if(err) return next(err);
+        
         res.json(rows);
     });
 });

@@ -156,6 +156,11 @@ angular.module('a2visobjectsbrowser', [
             });
         }
     });
+    $scope.$on('visobj-updated', function(evt, visobject){
+        if(self.lovo && self.lovo.update){
+            self.lovo.update(visobject);
+        }
+    });
 
     this.onLovoScroll = function(event){
         var $el = $(event.target);

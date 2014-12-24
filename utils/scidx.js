@@ -41,6 +41,7 @@ scidx.prototype = {
 
         var _ = {
             index : this.index,
+            just_count: filter.just_count,
             box   : {
                 minx : filter.minx !== undefined ? filter.minx : -1/0.0, 
                 maxx : filter.maxx !== undefined ? filter.maxx :  1/0.0, 
@@ -122,6 +123,9 @@ scidx.prototype = {
                 this.__read_rows(_, next);
             }).bind(this)
         ], (function(err){
+            if(_.just_count){
+                delete this.recordings;
+            }
             if(_.finp){
                 _.finp.close((function(err2){
                     if(err){
@@ -222,6 +226,9 @@ scidx.prototype = {
                         next_cell(err);
                     } else {
                         if(cell_list){
+                            if(_.just_count){
+                                cell_list = cell_list.length;
+                            }
                             row[_.offsetx + _.x] = cell_list;
                             ++cells_read;
                         }
