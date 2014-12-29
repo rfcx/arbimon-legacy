@@ -65,7 +65,7 @@ angular.module('a2services',[])
             });
         },
 
-        getName: function(){
+        getUrl: function(){
             return url;
         },
 
@@ -223,14 +223,14 @@ angular.module('a2services',[])
 .factory('a2TrainingSets', function(Project, $http) {
     return {
         getList: function(callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/').success(function(data) {
                 callback(data);
             });
         },
 
         add: function(tset_data, callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http.post('/api/project/'+projectName+'/training-sets/add', tset_data)
             .success(function(data) {
                 callback(data);
@@ -238,7 +238,7 @@ angular.module('a2services',[])
         },
 
         addData: function(training_set, tset_data, callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http.post('/api/project/'+projectName+'/training-sets/add-data/'+training_set, tset_data).success(function(data) {
                 callback(data);
             });
@@ -250,40 +250,40 @@ angular.module('a2services',[])
                 recording_uri = "";
             }
 
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/list/'+training_set+'/'+recording_uri).success(function(data) {
                 callback(data);
             });
         },
 
         getDataImage: function(training_set, data_id, callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/data/'+training_set+'/get-image/'+data_id).success(function(data) {
                 callback(data);
             });
         },
 
         getTypes: function(callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/types').success(function(data) {
                 callback(data);
             });
         },
 
         getRois: function(training_set, callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/rois/'+training_set).success(function(data) {
                 callback(data);
             });
         },
         getSpecies: function(training_set, callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/species/'+training_set).success(function(data) {
                 callback(data);
             });
         },
         removeRoi: function(roi_id,training_set, callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/'+training_set.name+'/remove-roi/'+roi_id).success(function(data) {
                 callback(data);
             });
@@ -291,7 +291,7 @@ angular.module('a2services',[])
     };
 })
 .factory('a2Playlists', function(Project, $http) {
-    var projectName = Project.getName();
+    var projectName = Project.getUrl();
     
     return {
         getList: function(callback) {
@@ -316,7 +316,7 @@ angular.module('a2services',[])
             return r;
         },
         // addData: function(playlist, tset_data, callback) {
-        //     var projectName = Project.getName();
+        //     var projectName = Project.getUrl();
         //     $http.post('/api/project/'+projectName+'/playlists/add-data/'+playlist, tset_data).success(function(data) {
         //         callback(data);
         //     });
@@ -411,7 +411,7 @@ angular.module('a2services',[])
 .factory('a2Soundscapes', function(Project, $http, $q) {
     return {
         get: function(soundscape, callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http({
                 method : 'GET',
                 url    : '/api/project/'+projectName+'/soundscapes/' + (soundscape|0)
@@ -429,7 +429,7 @@ angular.module('a2services',[])
             }
             
             var d = $q.defer();
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             
             $http({
                 method : 'GET',
@@ -446,7 +446,7 @@ angular.module('a2services',[])
                 callback = query;
                 query = {};
             }
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http({
                 method : 'GET',
                 url    : '/api/project/'+projectName+'/soundscapes/',
@@ -456,7 +456,7 @@ angular.module('a2services',[])
             });
         },
         setVisualScale: function(soundscape, params, callback){
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             return $http({
                 method : 'POST',
                 url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/scale',
@@ -466,7 +466,7 @@ angular.module('a2services',[])
             });
         },
         addRegion: function(soundscape, bbox, params, callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             params.bbox = bbox;
             $http({
                 method : 'POST',
@@ -477,7 +477,7 @@ angular.module('a2services',[])
             });
         },
         sampleRegion: function(soundscape, region, params, callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http({
                 method : 'POST',
                 url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/'+region+'/sample',
@@ -487,7 +487,7 @@ angular.module('a2services',[])
             });
         },
         getRegion: function(soundscape, region, callback) {
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http({
                 method : 'GET',
                 url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/' + region
@@ -496,7 +496,7 @@ angular.module('a2services',[])
             });
         },
         getRecordingTags: function(soundscape, region, recording, callback){
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http({
                 method : 'GET',
                 url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/'+ region + '/tags/' + recording
@@ -505,7 +505,7 @@ angular.module('a2services',[])
             });
         },
         addRecordingTag: function (soundscape, region, recording, tag, callback){
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             var data = {tag:tag};
             return $http({
                 method : 'POST',
@@ -514,7 +514,7 @@ angular.module('a2services',[])
             }).success(callback);
         },
         removeRecordingTag: function (soundscape, region, recording, tag, callback){
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             var data = {tag:tag};
             return $http({
                 method : 'POST',
@@ -527,7 +527,7 @@ angular.module('a2services',[])
                 callback = query;
                 query = undefined;
             }
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http({
                 method : 'GET',
                 url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions',
@@ -541,7 +541,7 @@ angular.module('a2services',[])
                 callback = query;
                 query = {};
             }
-            var projectName = Project.getName();
+            var projectName = Project.getUrl();
             $http({
                 method : 'GET',
                 url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/recordings/'+bbox,
@@ -553,7 +553,7 @@ angular.module('a2services',[])
     };
 })
 .factory('a2Models', ['Project', '$http', function(Project, $http) {
-    var project_url = Project.getName();
+    var project_url = Project.getUrl();
     
     return {
         getList: function(callback) {

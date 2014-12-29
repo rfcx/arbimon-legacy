@@ -57,6 +57,7 @@ var Soundscapes = {
             "       SC.min_value, \n"+
             "       SC.max_value, \n"+
             "       SC.visual_max_value, \n"+
+            "       SC.visual_palette, \n"+
             "       SC.min_t, \n"+
             "       SC.max_t, \n"+
             "       SC.min_f, \n"+
@@ -548,10 +549,13 @@ var Soundscapes = {
         }
         
         var max = (scale.max || soundscape.max_value);
-        
+        var palette = scale.palette === undefined ?  soundscape.visual_palette : (scale.palette | 0);
+        var cmd;
         var script = child_process.spawn(
-            '.env/bin/python', ['scripts/Soundscapes/set_visual_scale.py', (soundscape.id|0), max == '-' ? '-' : (max|0)]
+            '.env/bin/python', cmd=[
+                'scripts/Soundscapes/set_visual_scale.py', (soundscape.id|0), max == '-' ? '-' : (max|0), palette]
         );
+        console.log(cmd);
         script.on('close', function(code){
             Soundscapes.find({id:soundscape.id}, callback);
         });        

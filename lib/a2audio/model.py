@@ -58,13 +58,25 @@ class Model:
         
     def validate(self):
         classSubset = [self.classes[i] for i in self.validationDataIndices]
+        classSubsetTraining = [self.classes[i] for i in self.trainDataIndices]
         self.outClasses = classSubset
+        self.outClassesTraining = classSubsetTraining
         self.outuris = [self.uris[i] for i in self.validationDataIndices]
+        self.outurisTraining = [self.uris[i] for i in self.trainDataIndices]
         predictions = self.clf.predict(self.data[self.validationDataIndices])
         self.validationpredictions = predictions;
         presentIndeces = [i for i, j in zip(count(), classSubset) if j == '1']
         notPresentIndices = [i for i, j in zip(count(), classSubset) if j == '0']
-        
+        minamxdata = self.data[self.validationDataIndices]
+        minv = 99999999
+        maxv = -99999999
+        for row in minamxdata:
+            if max(row) > maxv:
+                maxv = max(row)
+            if min(row) < minv:
+               minv = min(row)
+        self.minv = minv
+        self.maxv = maxv
         self.tp = 0.0
         self.fp = 0.0
         self.tn = 0.0
@@ -112,5 +124,7 @@ class Model:
         with open(filename, 'wb') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=',')
             for i in range(0,len(self.outClasses)):
-                spamwriter.writerow([self.outuris[i],self.outClasses[i],self.validationpredictions[i]])
+                spamwriter.writerow([self.outuris[i],self.outClasses[i],self.validationpredictions[i],'validation'])
+            for i in range(0,len(self.outClassesTraining)):
+                spamwriter.writerow([self.outurisTraining[i],self.outClassesTraining[i],'NA','training'])
                 

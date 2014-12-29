@@ -17,19 +17,25 @@ import MySQLdb
 from a2pyutils.config import Config
 tempFolders = tempfile.gettempdir()
 currDir = os.path.dirname(os.path.abspath(__file__))
+import multiprocessing
+from joblib import Parallel, delayed
+num_cores = multiprocessing.cpu_count()
 
 configuration = Config()
 config = configuration.data()
-db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
+
 
 jobId = -1
-for line in sys.stdin:
+#for line in sys.stdin:
+def processLine(line,config,tempFolders,currDir ):
+    db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
     #line has recId,speciesId,songtypeId,iniTime,endTime,lowFreq,highFreq,recuri,jobid
     line = line.strip()
     line = line.strip('\n')
     lineArgs = line.split(",")
-    if len(lineArgs) < 2:
-        continue
+    if len(lineArgs) < 8:
+        db.close()
+        return 'err'
     recId = int(lineArgs[0])
     roispeciesId = int(lineArgs[1])
     roisongtypeId= int(lineArgs[2])
@@ -48,9 +54,10 @@ for line in sys.stdin:
         
     if "NoAudio" in roi.status:
         with closing(db.cursor()) as cursor:
-            cursor.execute('INSERT INTO `recordings_errors` (`recording_id`, `job_id`) VALUES ('+str(recId.strip(' '))+','+str(jobId.strip(' '))+') ')
+            cursor.execute('INSERT INTO `recordings_errors` (`recording_id`, `job_id`) VALUES ('+str(recId)+','+str(jobId)+') ')
             db.commit()
-        continue
+        db.close()
+        return 'err'
     else:
         dims = roi.spec.shape
         rows = dims[0]
@@ -62,7 +69,11 @@ for line in sys.stdin:
             
         spectrogram =  '*'.join( str(x) for x in ss )
         a = '%s;%d;%d;%d;%d;%s;%d;%d;%d' %(str(roispeciesId)+"_"+str(roisongtypeId),(roi.samples),lowFreq,highFreq,roi.sample_rate,spectrogram,rows,columns,jobId)
+        db.close()
+        return a
 
-        print a
 
-db.close()
+resultsParallel = Parallel(n_jobs=num_cores)(delayed(processLine)(line,config,tempFolders,currDir) for line in sys.stdin)
+for res in resultsParallel:
+    if res != 'err':
+        print res

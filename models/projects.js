@@ -76,7 +76,7 @@ var Projects = {
                 return callback(new Error("required field '"+ requiredValues[i] + "' missing"));
         }
 
-        for(var i in project) {
+        for(i in project) {
             if(i !== 'id') {
                 project[i] = mysql.escape(project[i]);
                 values.push(util.format('`%s`=%s', i, project[i]));
@@ -562,9 +562,10 @@ var Projects = {
     classificationDetail: function(project_url, cid, callback) {
         var q = "select  c.`species_id` ,c.`songtype_id`,c.`present`  , "+
                 " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
-                " CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name  "+
-                " from  `classification_results` c,`species` as s , `songtypes` as st where c.`job_id` = "+mysql.escape(cid)+
-                " and c.`species_id` = s.`species_id` and c.`songtype_id` = st.`songtype_id`" ;
+                " CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name ,"+
+                "  mm.`threshold` as th "+
+                " from  `models` mm,`job_params_classification`jpc ,`classification_results` c,`species` as s , `songtypes` as st where c.`job_id` = "+mysql.escape(cid)+
+                " and c.`species_id` = s.`species_id` and c.`songtype_id` = st.`songtype_id` and jpc.`job_id` = c.`job_id` and mm.`model_id` = jpc.`model_id`" ;
 
         queryHandler(q, callback);
     },

@@ -49,9 +49,12 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
             var total = [];
             var species =[];
             var songtype =[];
+            var th = '';
             while(i < rows.length)
             {
                 row = rows[i];
+                th = row['th']
+                console.log(row)
                 var index = row['species_id']+'_'+row['songtype_id'];
                 if (typeof data[index]  == 'number')
                 {
@@ -71,7 +74,7 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
             for (var key in species)
             {
                 var per = Math.round( (data[key]/total[key])*100);
-                var rr = {"err":rowsRecs['count'],"species":species[key],"songtype":songtype[key],"total":total[key],"data":data[key],"percentage":per }
+                var rr = {"err":rowsRecs['count'],"species":species[key],"songtype":songtype[key],"total":total[key],"data":data[key],"percentage":per,"th":th }
                 results.push(rr);
             }
             res.json({"data":results});
@@ -303,6 +306,13 @@ router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
     });
 });
 
+router.post('/project/:projectUrl/models/savethreshold', function(req, res, next) {
+    model.models.savethreshold(req.body.m,req.body.t, function(err, row) {
+        if(err) return next(err);   
+        
+        res.json({ok:'saved'});
+    });
+});
 
 router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
     model.projects.findByUrl(req.params.projectUrl, 
@@ -341,7 +351,6 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
     model.projects.modelValidationUri(req.params.modelId, function(err, row) {
         if(err) return next(err);
         
-        console.log(row);
         var validationUri = row[0].uri ;
         validationUri = validationUri.replace('.csv','_vals.csv');
         var aws = require('knox').createClient({
@@ -350,9 +359,7 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
             bucket: config('aws').bucketName
         });
         var sendData = [];
-        
-        console.log(validationUri);
-        
+                
         aws.getFile(validationUri, function(err, resp){
             
             if (err) {
@@ -382,10 +389,11 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
                     }
                     else
                     {
-                        
+  
                         items = line.split(',');
                         var prec = items[1].trim(' ') == 1 ? 'yes' :'no';
-                        var modelprec = items[2].trim(' ') == 1 ? 'yes' :'no';
+                        var modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
+                        var entryType = items[3]?items[3].trim(' '):'';
                         model.recordings.recordingInfoGivenUri(items[0],req.params.projectUrl,
                         function(err,recData)
                         {
@@ -396,7 +404,9 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
                             }
                             if (recData.length > 0)
                             {
-                                var rowSent = {site:recData[0].site,date:recData[0].date,presence:prec,model:modelprec,id:recData[0].id};
+                                var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
+                                recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
+                                var rowSent = {site:recData[0].site,date:recData[0].date,presence:prec,model:modelprec,id:recData[0].id,uri:recUriThumb,type:entryType};
                                 sendData.push(rowSent)
                             }
                             callback()

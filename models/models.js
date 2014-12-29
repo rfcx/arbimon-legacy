@@ -21,6 +21,7 @@ module.exports =
         
         details: function(model_id, callback) {
             var q = "SELECT ms.`json_stats` as json, \n"+
+                    "       m.threshold , \n" +
                     "       m.model_id, \n"+
                     "       CONCAT(UCASE(LEFT(m.name, 1)), SUBSTRING(m.name, 2)) as mname, \n"+
                     "       DATE_FORMAT(m.date_created,'%h:%i %p') as mtime, \n"+
@@ -35,6 +36,7 @@ module.exports =
                     "       ) as muser, \n"+
                     "       mt.name as mtname, \n"+
                     "       jobs.`remarks`, \n"+
+                    "       jobs.`job_id`, \n"+
                     "       DATE_FORMAT(jobs.`last_update`,'%h:%i %p') as lasttime, \n"+
                     "       DATE_FORMAT(jobs.`last_update`,'%b %d, %Y') as lastupdate, \n"+
                     "       CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as species, \n"+
@@ -111,6 +113,12 @@ module.exports =
 
         types: function(callback) {
             var q = "SELECT `model_type_id`, `name` FROM `model_types` ";
+
+            queryHandler(q, callback);
+        },
+
+        savethreshold: function(m,t,callback) {
+            var q = "UPDATE `models` SET `threshold` = "+mysql.escape(t)+" WHERE `models`.`model_id` ="+mysql.escape(m)+";";
 
             queryHandler(q, callback);
         }

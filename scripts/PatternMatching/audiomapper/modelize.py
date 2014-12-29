@@ -31,27 +31,30 @@ sampleRate = 0
 for line in sys.stdin:
     line = line.strip(' ')
     line = line.strip('\n')
-    meanfeat,difffeat,maxfeat,minfeat,stdfeat,medfeat,classid,present,spectrogram,columns ,low , high , jId ,sRate ,recUri= line.split(';')
-    lowf = low
-    highf = high
-    cols =columns
-    jobId = int(jId)
-    recUri = recUri.strip('\n')
-    sampleRate = int(sRate)
-    spectrogram  = spectrogram.strip(' ')
-    spectrogram  = spectrogram.strip('\n')
-    spectrogram  = spectrogram.split('*')
-    spec = numpy.zeros(shape=(0,int(columns)))
-    for s in spectrogram :
-        row = s.split(',')
-        row = map(float,row)
-        spec = numpy.vstack((spec,row))
-    
-    if classid in classes:
-        classes[classid].addSample(present,float(meanfeat),float(difffeat),float(maxfeat),float(minfeat),float(stdfeat),float(medfeat),recUri)
-    else:
-        classes[classid] = Model(classid,spec,jobId)
-        classes[classid].addSample(present,float(meanfeat),float(difffeat),float(maxfeat),float(minfeat),float(stdfeat),float(medfeat),recUri)
+    test = line.split(';')
+    if len(test) >= 14:
+        meanfeat,difffeat,maxfeat,minfeat,stdfeat,medfeat,classid,present,spectrogram,columns ,low , high , jId ,sRate ,recUri= line.split(';')
+        
+        lowf = low
+        highf = high
+        cols =columns
+        jobId = int(jId)
+        recUri = recUri.strip('\n')
+        sampleRate = int(sRate)
+        spectrogram  = spectrogram.strip(' ')
+        spectrogram  = spectrogram.strip('\n')
+        spectrogram  = spectrogram.split('*')
+        spec = numpy.zeros(shape=(0,int(columns)))
+        for s in spectrogram :
+            row = s.split(',')
+            row = map(float,row)
+            spec = numpy.vstack((spec,row))
+        
+        if classid in classes:
+            classes[classid].addSample(present,float(meanfeat),float(difffeat),float(maxfeat),float(minfeat),float(stdfeat),float(medfeat),recUri)
+        else:
+            classes[classid] = Model(classid,spec,jobId)
+            classes[classid].addSample(present,float(meanfeat),float(difffeat),float(maxfeat),float(minfeat),float(stdfeat),float(medfeat),recUri)
 
 modelFilesLocation = tempFolders+"/training_"+str(jobId)+"/"
 

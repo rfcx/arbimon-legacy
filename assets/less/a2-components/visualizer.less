@@ -382,11 +382,19 @@ a2-img {
 }
 
 
-img.visobj-soundscape, img.crisp-image, .crisp-image img{
+.a2-crisp-image(){
     -ms-interpolation-mode: nearest-neighbor;
     image-rendering: optimizeSpeed;
     image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
+    image-rendering: -moz-crisp-edges;        
+}
+
+canvas.crisp-image, img.crisp-image, .crisp-image img, .crisp-image canvas{
+    .a2-crisp-image();
+}
+
+img.visobj-soundscape{
+    .a2-crisp-image();
 }
 
 .margin-xs{

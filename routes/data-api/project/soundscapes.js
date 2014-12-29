@@ -118,12 +118,13 @@ router.post('/:soundscape/scale', function(req, res, next) {
         return res.json({ error: "you dont have permission to 'manage soundscapes'" });
         
     model.soundscapes.setVisualScale(req.soundscape, {
-        max : req.body.max
+        max : req.body.max,
+        palette : (req.body.palette | 0)
     }, function(err, soundscape){
         if(err){
             next(err);
         } else {
-            res.json(soundscape);
+            res.json(soundscape && soundscape.pop());
         }
     });
 });
