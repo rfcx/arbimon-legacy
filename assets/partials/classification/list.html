@@ -10,6 +10,12 @@
             </a>
         </h3> 
         <loader ng-show="loading"></loader>
+        <button class="btn btn-default pull-right"
+            tooltip="Refresh list"
+            ng-click="loadClassifications()">
+                <i class="fa fa-refresh"></i>
+        </button>
+        
         <div ng-hide="loading">
             <table ng-table="tableParams" class="table" show-filter="true" >
                 <tr ng-repeat="classification in classificationsData" >
