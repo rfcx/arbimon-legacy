@@ -25,63 +25,74 @@
             a2Playlists.getList(function(data) {
                     $scope.playlists = data;
             });
-                    
-                    
-            $http.get('/api/project/'+Project.getName()+'/soundscapes/details')
-            .success(
-                function(data) 
-                {
-                    $scope.soundscapesOriginal = data;
-                    $scope.soundscapesData = data;
-                    $scope.infoInfo = "";
-                    $scope.showInfo = false;
-                    $scope.loading = false;
-
-                    $scope.infopanedata = "";
-                    if(data.length > 0)
+            
+            
+            var initTable = function() {
+                $scope.tableParams = new ngTableParams(
                     {
-                        $scope.tableParams = new ngTableParams
-                        (
+                        page: 1,
+                        count: 10,
+                        sorting: {
+                            name: 'asc'
+                        }
+                    }, 
+                    {
+                        total: $scope.soundscapesOriginal.length,
+                        getData: function ($defer, params) 
                         {
-                            page: 1,
-                            count: 10,
-                            sorting: {
-                                name: 'asc'
-                            }
-                        }, 
-                        {
-                            total: $scope.soundscapesOriginal.length,
-                            getData: function ($defer, params) 
+                            $scope.infopanedata = "";
+                            var filteredData = params.filter() ?
+                            $filter('filter')($scope.soundscapesOriginal , params.filter()) :
+                            $scope.soundscapesOriginal  ;
+                            
+                            var orderedData = params.sorting() ?
+                            $filter('orderBy')(filteredData, params.orderBy()) :
+                            $scope.soundscapesOriginal ;
+                            params.total(orderedData.length);
+                            $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+                            if(orderedData.length < 1)
                             {
-                                $scope.infopanedata = "";
-                                var filteredData = params.filter() ?
-                                        $filter('filter')($scope.soundscapesOriginal , params.filter()) :
-                                        $scope.soundscapesOriginal  ;
-                                
-                                var orderedData = params.sorting() ?
-                                        $filter('orderBy')(filteredData, params.orderBy()) :
-                                        $scope.soundscapesOriginal ;
-                                params.total(orderedData.length);
-                                $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-                                if(orderedData.length < 1)
-                                {
-                                    $scope.infopanedata = "No classifications found.";
-                                }
-                                $scope.soundscapesData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+                                $scope.infopanedata = "No classifications found.";
+                            }
+                            $scope.soundscapesData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+                        }
+                    }
+                );
+            };
+            
+            
+            $scope.loadSoundscapes = function() {
+                $http.get('/api/project/'+Project.getUrl()+'/soundscapes/details')
+                .success(
+                    function(data) 
+                    {
+                        $scope.soundscapesOriginal = data;
+                        $scope.soundscapesData = data;
+                        $scope.infoInfo = "";
+                        $scope.showInfo = false;
+                        $scope.loading = false;
+
+                        $scope.infopanedata = "";
+                        if(data.length > 0)
+                        {
+                            if(!$scope.tableParams) {
+                                initTable();
+                            }
+                            else {
+                                $scope.tableParams.reload();
                             }
                         }
-                        ); 
+                        else 
+                        {
+                            $scope.infopanedata = "No soundscapes found.";
+                        }
                     }
-                    else 
-                    {
-                        $scope.infopanedata = "No soundscapes found.";
-                    }
-                }
-            )
-            .error(function() {
-                notify.error("Error Communicating With Server");
-            });
-            
+                )
+                .error(function() {
+                    notify.error("Error Communicating With Server");
+                });
+            };
+            $scope.loadSoundscapes();
             
             
             $scope.deleteSoundscape = function (id, name) {

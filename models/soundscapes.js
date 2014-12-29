@@ -57,6 +57,7 @@ var Soundscapes = {
             "       SC.min_value, \n"+
             "       SC.max_value, \n"+
             "       SC.visual_max_value, \n"+
+            "       SC.visual_palette, \n"+
             "       SC.min_t, \n"+
             "       SC.max_t, \n"+
             "       SC.min_f, \n"+

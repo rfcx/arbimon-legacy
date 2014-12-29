@@ -68,7 +68,7 @@
                 };
                 
                 $scope.loadModels = function() {
-                    $http.get('/api/project/' + Project.getName() + '/models')
+                    $http.get('/api/project/' + Project.getUrl() + '/models')
                     .success(
                         function(data) {
                             $scope.modelsData = data;
@@ -382,7 +382,7 @@
         )
         .controller('ModelDetailsCtrl', function($scope, $http, $stateParams, $location, Project, notify) {
             
-            $scope.project_url = Project.getName();
+            $scope.project_url = Project.getUrl();
 	    $scope.project_id = -1;
 	    Project.getInfo(
 		function (data)

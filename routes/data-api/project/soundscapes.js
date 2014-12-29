@@ -123,7 +123,7 @@ router.post('/:soundscape/scale', function(req, res, next) {
         if(err){
             next(err);
         } else {
-            res.json(soundscape);
+            res.json(soundscape && soundscape.pop());
         }
     });
 });
