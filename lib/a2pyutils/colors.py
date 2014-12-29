@@ -55,6 +55,17 @@ class AbstractGradient(object):
         return [self(i / d) for i in range(color_count)]
 
 
+class MatPlotLibGradient(AbstractGradient):
+    def __init__(self, name, quant_scale=None):
+        import pylab
+        self.cmap = getattr(pylab.cm, name)
+        self.quant_scale = quant_scale
+
+    def __call__(self, i):
+        cl = self.cmap(i)[:3]
+        return quantize(cl, self.quant_scale) if self.quant_scale else cl
+
+
 class LinearGradient(AbstractGradient):
     def __init__(self, colors, norm_scale=1.0, quant_scale=None, spacetx=None):
         self.colors = colors
