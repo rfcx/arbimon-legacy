@@ -380,7 +380,7 @@
 
             }
         )
-        .controller('ModelDetailsCtrl', function($scope, $http, $stateParams, $location, Project, notify) {
+        .controller('ModelDetailsCtrl', function($scope, $http, $stateParams, $location, Project, notify,$timeout) {
             
             $scope.project_url = Project.getUrl();
 	    $scope.project_id = -1;
@@ -412,14 +412,18 @@
                 $scope.validations = vdata;
 
                 $scope.valiDetails = $scope.validations.nofile ? false : true;
-  		for(var i = 0 ; i < $scope.validations.length ; i++)
-		{
-		    $scope.getRecVali ( $scope.validations[i],i );
-		}              
+		$timeout(function() {
+		    for(var i = 0 ; i < $scope.validations.length ; i++)
+		    {
+			$scope.getRecVali ( $scope.validations[i],i );
+		    }  
+		},50);		
+            
             })
             .error(function() {
                 notify.error("Error Communicating With Server");
             });
+	    $scope.showValidationsFalg = true;
             $scope.loadingValidations = true;
 	    $scope.getRecVali = function (currRec ,i)
 	    {
@@ -462,37 +466,50 @@
 			
 			if ($scope.validations.length == i + 1)
 			{
-			   $scope.allYesMax = $scope.allYesMax.sort();
-			    var j ;
-			    for(j = 0 ; j < $scope.allYesMax.length;j++)
-			    {
-				if ($scope.allYesMax[j]>=$scope.vectorNoMax)
+			    $timeout(function() {
+				$scope.allYesMax = $scope.allYesMax.sort();
+				 var j ;
+				 for(j = 0 ; j < $scope.allYesMax.length;j++)
+				 {
+				     if ($scope.allYesMax[j]>=$scope.vectorNoMax)
+				     {
+					 break;
+				     }
+				 }
+				 if ($scope.vectorYesMinMax == null || isNaN($scope.vectorYesMinMax))
+				 {
+				     $scope.$apply(function () {
+					 $scope.vectorYesMinMax =  $scope.allYesMax[j]
+				     });
+				     $scope.$apply(function () {
+					 $scope.thresholdCurrent = Math.round($scope.allYesMax[j]*100)/100;
+				     });
+				     
+				     if (isNaN($scope.vectorYesMinMax))
+				     {
+					 $scope.vectorYesMinMax =  $scope.allYesMax[j]
+					 $scope.thresholdCurrent = Math.round($scope.allYesMax[j]*100)/100;
+				     }
+				 }
+				 
+				 for(var jj = 0 ; jj < $scope.validations.length;jj++)
+				 {
+				     $scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.vectorYesMinMax) ? 'yes' : 'no';
+				 }
+				 
+				if (isNaN($scope.vectorYesMinMax))
 				{
-				    break;
+				    $scope.loadingValidations = false;
+				    $scope.showValidationsFalg = false;
 				}
-			    }
-			    if ($scope.vectorYesMinMax == null)
-			    {
-			    
-				$scope.vectorYesMinMax =  Math.round($scope.allYesMax[j]*100)/100;
-				$scope.thresholdCurrent = $scope.vectorYesMinMax;
-				
-				if (typeof $scope.vectorYesMinMax == 'NaN')
+				else
 				{
-				    $scope.vectorYesMinMax =  Math.round($scope.allYesMax[0]*100)/100;
-				    $scope.thresholdCurrent = $scope.vectorYesMinMax;
-				}
-			    }
-			    
-			    for(var jj = 0 ; jj < $scope.validations.length;jj++)
-			    {
-				$scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.vectorYesMinMax) ? 'yes' : 'no';
-			    }
-			    
+				 $scope.validationsData = $scope.validations;
+				 $scope.computeStats();
+				 $scope.loadingValidations = false;
+				} 
+			    },500);	
 
-			    $scope.validationsData = $scope.validations;
-			    $scope.computeStats();
-			    $scope.loadingValidations = false;
 			}
 		    }
 		);   
@@ -555,7 +572,6 @@
 		if (truenegatives+falsepositives>0){
 		    $scope.thres.specificity = Math.round((truenegatives/(truenegatives+falsepositives))*100)/100
 		}
-		 console.log($scope.thres)
 	    };
 	    $scope.messageSaved = '';
 	    $scope.saveThreshold =function()
@@ -580,7 +596,6 @@
 	    $scope.recalculate = function()
 	    {
 		var newval = $('#newthres').val();
-		console.log(newval);
 		$scope.vectorYesMinMax = parseFloat(newval);
 		if (!isNaN($scope.vectorYesMinMax) && ($scope.vectorYesMinMax<=1.0) && ($scope.vectorYesMinMax>=0.0))
 		{
@@ -596,11 +611,10 @@
 	    $scope.thresholdCurrent = '-';
             $http.get('/api/project/' + $scope.project_url + '/models/' + $stateParams.modelId)
             .success(function(data) {
-		console.log(data)
-		$scope.vectorYesMinMax = data.threshold;
-		$scope.thresholdCurrent = data.threshold;
+		$scope.vectorYesMinMax = parseFloat(data.threshold);
+		$scope.thresholdCurrent = parseFloat(data.threshold);
                 $scope.data = {
-		    thresholdFromDb : data.threshold, 
+		    thresholdFromDb : parseFloat(data.threshold), 
 		    job_id : data.job_id,
                     modelmdc: data.mdc, //ok
                     modelmtime: data.mtime, //ok

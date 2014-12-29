@@ -114,7 +114,9 @@ for i in classes:
     for j in range(0,rowsInSpec):
         if abs(sum(spec[j,:])) > 0.0:
             specToShow = numpy.vstack((specToShow,spec[j,:]))
-        
+            
+    specToShow[specToShow[:,:]==0] = numpy.min(numpy.min(specToShow))
+    
     smin = min([min((specToShow[j])) for j in range(specToShow.shape[0])])
     smax = max([max((specToShow[j])) for j in range(specToShow.shape[0])])
     x = 255*(1-((specToShow - smin)/(smax-smin)))    

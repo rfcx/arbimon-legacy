@@ -85,7 +85,7 @@ class Roiset:
             temp = numpy.zeros(shape=(self.rows,self.maxColumns))
             temp[:, j:(j+currColumns)] = self.roi[i].spec
             self.maxrois.append(temp)
-            self.surface[:, j:(j+currColumns)] = (self.surface[:, j:(j+currColumns)] + self.roi[i].spec)
+            self.surface[:, j:(j+currColumns)] = self.surface[:, j:(j+currColumns)] + self.roi[i].spec
             
             high_index = 0
             low_index = 0
@@ -94,14 +94,19 @@ class Roiset:
                 low_index  = low_index  + 1
             while freqs[low_index ] >=  self.roi[i].lowFreq:
                 low_index  = low_index  + 1
-
-            
+            low_index = low_index + 1
             weights[high_index:low_index, j:(j+currColumns)] = weights[high_index:low_index, j:(j+currColumns)]  + 1
+            
+        #filename = '/home/rafa/debug_weights.data'    
+        #with open(filename, 'wb') as output:
+        #    pickler = pickle.Pickler(output, -1)
+        #    pickle.dump([self.maxrois,weights], output, -1)
             
         #self.meanSurface = numpy.mean([self.maxrois[j] for j in range(self.roiCount)],axis=0)
         self.meanSurface = numpy.sum(self.maxrois,axis=0)
         self.meanSurface = numpy.divide(self.meanSurface,weights)
         self.stdSurface = numpy.std([self.maxrois[j] for j in range(self.roiCount)],axis=0)
+        #self.meanSurface[self.meanSurface[:,:]==0] = numpy.min(numpy.min(self.meanSurface))
         #
         #for i in reversed(range(0,self.maxColumns)):
         #    if weights[0,i] < self.roiCount:

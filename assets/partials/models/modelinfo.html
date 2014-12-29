@@ -192,8 +192,12 @@
         </div>
         
     </div>
-    
-    <div class="col-xs-12" ng-hide="loadingValidations">
+    <div class="col-xs-12" ng-hide="showValidationsFalg" >
+        <h4>The selected model was computed with a previous version of the Arbimon2 App.<br> Some features may not be available.
+        </h4>
+        <br>
+    </div>
+    <div class="col-xs-12" ng-hide="loadingValidations || !showValidationsFalg" >
         <h3>Threshold Details</h3>
         <div class="model-info-column row">
            <strong>Current threshold:</strong> {{thresholdCurrent}}
@@ -259,7 +263,7 @@
     </div>
 </div>
 
-<div class="row" ng-show="valiDetails">
+<div class="row" ng-show="valiDetails && showValidationsFalg">
     <div ng-hide="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
         <h3 class="inlineh3">
             Validations 
