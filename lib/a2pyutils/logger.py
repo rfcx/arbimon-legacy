@@ -1,6 +1,6 @@
 import os
 import tempfile
-from time import gmtime, strftime
+import time
 
 class Logger:
 
@@ -27,7 +27,7 @@ class Logger:
     
     def write(self,message):
         if self.logON:
-            currTime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+            currTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
             if self.log_file_handle:
                 self.log_file_handle.write(currTime +':\t'+message+'\n')
             else :
@@ -41,7 +41,7 @@ class Logger:
 
     def time_delta(self, message, start):
         self.write("{} --- seconds --- {}".format(
-            msg, time.time() - start
+            message, time.time() - start
         ))
 
 
