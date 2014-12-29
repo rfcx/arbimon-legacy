@@ -12,20 +12,25 @@ import os
 from a2pyutils.config import Config
 from boto.s3.connection import S3Connection
 import csv
+import multiprocessing
+from joblib import Parallel, delayed
 
 tempFolders = tempfile.gettempdir()
 currDir = os.path.dirname(os.path.abspath(__file__))
 configuration = Config()
 config = configuration.data()
-bucketName = config[4]
-awsKeyId = config[5]
-awsKeySecret = config[6]
-db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
-conn = S3Connection(awsKeyId, awsKeySecret)
-bucket = conn.get_bucket(bucketName)
+num_cores = multiprocessing.cpu_count()
+
 #reads lines from stdin
-for line in sys.stdin:
-    
+#for line in sys.stdin:
+
+def processLine(line,config,tempFolders,currDir ):
+    bucketName = config[4]
+    awsKeyId = config[5]
+    awsKeySecret = config[6]
+    db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
+    conn = S3Connection(awsKeyId, awsKeySecret)
+    bucket = conn.get_bucket(bucketName)
     #remove white space
     line = line.strip(' ')
     
@@ -87,6 +92,15 @@ for line in sys.stdin:
         fets.append(sRate.strip('\n'))
         fets.append(recUri)
         #print into stdout for next step (modelize.py)
-        print ';'.join( str(x) for x in fets )
+        db.close()
+        return ';'.join( str(x) for x in fets )
+    else:
+        db.close()
+        return 'err'
+    
 
-
+resultsParallel = Parallel(n_jobs=num_cores)(delayed(processLine)(line,config,tempFolders,currDir) for line in sys.stdin)
+for res in resultsParallel:
+    if res != 'err':
+        print res
+        
