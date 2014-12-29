@@ -8,9 +8,15 @@ var uploads = require('./uploads');
 var admin = require('./admin');
 
 
+router.get('/alive', function(req, res) { // for health checks
+    res.sendStatus(200);
+});
+
+
 router.get('/register', function(req, res) {
     res.redirect('/');
 });
+
 
 router.get('/forgot', function(req, res) {
     res.redirect('/');

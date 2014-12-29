@@ -21,23 +21,14 @@ var routes = require('./routes/index');
 var AWS = require('aws-sdk');
 AWS.config.loadFromPath('./config/aws.json');
 
+tmpfilecache.cleanup();
+
 var app = express();
 // test
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-tmpfilecache.cleanup();
-
-if (app.get('env') === 'production') {
-    app.use(function(req, res, next){
-        if(!req.secure) {
-            var securePort = app.get('tls_port') == 443 ? '' : ':' + app.get('tls_port');
-            return res.redirect('https://' + req.hostname + securePort + req.originalUrl);
-        }
-        next();
-    });
-}
 
 app.use(favicon(__dirname + '/public/images/favicon.ico'));
 
@@ -70,7 +61,7 @@ var sessionConfig = {
 };
 
 if (app.get('env') === 'production') {
-    app.set('trust proxy', 1) // trust first proxy
+    app.enable('trust proxy');
     sessionConfig.cookie = { secure: true }; // use secure cookies
 }
 
