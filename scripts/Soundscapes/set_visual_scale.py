@@ -84,7 +84,8 @@ img_file = file_cache.key2File(img_uri)
 sc = soundscape.soundscape.Soundscape.read_from_index(scidx_file['path'])
 if clip_max is not None:
     sc.stats['max_count'] = clip_max
-sc.write_image(img_file, a2pyutils.palette.get_palette())
+palette_id = 1
+sc.write_image(img_file, a2pyutils.palette.get_palette(palette_id))
 
 k = bucket.new_key(img_uri)
 k.set_contents_from_filename(img_file)
@@ -93,7 +94,7 @@ k.set_acl('public-read')
 with closing(db.cursor()) as cursor:
     cursor.execute("""
         UPDATE `soundscapes`
-        SET visual_max_value = %s
+        SET visual_max_value = %s, visual_palette = %s
         WHERE soundscape_id = %s
-    """, [clip_max, soundscape_id])
+    """, [clip_max, palette_id, soundscape_id])
     db.commit()

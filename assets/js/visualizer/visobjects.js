@@ -108,51 +108,7 @@ angular.module('a2visobjects', [
     };
     
     var soundscape = function(data){
-        for(var i in data){ this[i] = data[i]; }
-        
-        var t0=this.min_t, t1=this.max_t;
-        var f0=this.min_f, f1=this.max_f;
-        var v0=this.min_value, v1=this.visual_max_value || this.max_value;
-        var dt= t1 - t0 + 1, df= f1 - f0, dv = v1 - v0;
-        
-        var aggregation = aggregations[this.aggregation] || aggregations['unknown'];
-        var time_unit = aggregation.time_unit;
-
-        // setup the domains
-        this.domain = {
-            x : {
-                // from : t0, to : t1 + 1, span : dt + 1, ticks : dt + 1,
-                from : t0, to : t1, span : dt, ticks : dt,
-                ordinal : true, 
-                unit_interval : 1,
-                unit_format : aggregation.unit_fmt,
-                unit : time_unit || 'Time ( s )'
-            },
-            y : {
-                from : f0, to : f1, span : df,
-                unit : 'Frequency ( kHz )',
-                unit_interval : this.bin_size,
-                unit_format : khz_unit_fmt,
-                tick_format : khz_format
-            },
-            legend : {
-                from : v0, to : v1, span : dv,
-                ticks: Math.max(2, Math.min(dv|0, 10)),
-                unit : 'Count',
-                src  : '/images/soundscape-palette.png'
-            }
-
-        };
-        // set it to the scope
-        this.tiles = { x:1, y:1, set : [{
-            i:0, j:0, 
-            s : 0, hz : f1, ds  : dt, dhz : df,
-            src : this.thumbnail,
-            crisp : true
-        }]};
-        this.legend = {
-            min : 0, max:255
-        };
+        this.update(data);
     };
     soundscape.fetch = function(visobject){
         var d = $q.defer();
@@ -166,6 +122,54 @@ angular.module('a2visobjects', [
     soundscape.prototype = {
         type : "soundscape",
         zoomable : true,
+        update : function(data){
+            for(var i in data){ this[i] = data[i]; }
+
+            var t0=this.min_t, t1=this.max_t;
+            var f0=this.min_f, f1=this.max_f;
+            var v0=this.min_value, v1=this.visual_max_value || this.max_value;
+            var dt= t1 - t0 + 1, df= f1 - f0, dv = v1 - v0;
+
+            var aggregation = aggregations[this.aggregation] || aggregations['unknown'];
+            var time_unit = aggregation.time_unit;
+
+            // setup the domains
+            this.domain = {
+                x : {
+                    // from : t0, to : t1 + 1, span : dt + 1, ticks : dt + 1,
+                    from : t0, to : t1, span : dt, ticks : dt,
+                    ordinal : true, 
+                    unit_interval : 1,
+                    unit_format : aggregation.unit_fmt,
+                    unit : time_unit || 'Time ( s )'
+                },
+                y : {
+                    from : f0, to : f1, span : df,
+                    unit : 'Frequency ( kHz )',
+                    unit_interval : this.bin_size,
+                    unit_format : khz_unit_fmt,
+                    tick_format : khz_format
+                },
+                legend : {
+                    from : v0, to : v1, span : dv,
+                    ticks: Math.max(2, Math.min(dv|0, 10)),
+                    unit : 'Count',
+                    src  : '/images/palettes/'+this.visual_palette+'.png'
+                }
+
+            };
+            // set it to the scope
+            this.tiles = { x:1, y:1, set : [{
+                i:0, j:0, 
+                s : 0, hz : f1, ds  : dt, dhz : df,
+                src : this.thumbnail,
+                crisp : true
+            }]};
+            this.legend = {
+                min : 0, max:255
+            };
+            
+        },
         getCaption : function(){
             var agg = {
                 'time_of_day'   : 'Time of day',
