@@ -130,9 +130,10 @@ jqapp.prototype = {
     },
     
     cleanup_other_queues: function(){
-        var cleanup_timeout = this.options.heartbeat_timeout || config("job-queue").heartbeat_timeout;
+        var qtimeout = this.options.heartbeat_timeout || config("job-queue").heartbeat_timeout;
+        var jtimeout = this.options.job_inactivity_timeout || config("job-queue").job_inactivity_timeout;
         var callback = arguments[arguments.length-1];
-        model.job_queues.cleanup_stuck_queues(cleanup_timeout, callback);
+        model.job_queues.cleanup_stuck_queues(qtimeout, jtimeout, callback);
     },
     
     get_max_concurrency : function(){

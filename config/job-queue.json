@@ -4,5 +4,6 @@
     "loop_while_more_jobs" : true,
     "rerun_interval" : 100000,
     "heartbeat_timeout" : 300000,
+    "job_inactivity_timeout" : 1800000,
     "concurrency" : -2
 }

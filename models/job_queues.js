@@ -56,19 +56,21 @@ JobQueue.find = function(id, callback) {
 };
 
 /** Cleans up after job queues that have become unresponsive.
- *  @param {Integer}  timeout timeout after wich job queues are considered inactive and dead.
+ *  @param {Integer}  qtimeout timeout after wich job queues are considered inactive and dead.
+ *  @param {Integer}  jtimeout timeout after wich jobs are considered stalled.
  *  @param {Function} callback(err, ...) called back after the aciton is done. 
  *                          cleaned_up is the number of job queues that were cleaned up.
  **/
-JobQueue.cleanup_stuck_queues = function(timeout, callback){
-    timeout = timeout || 300000;
+JobQueue.cleanup_stuck_queues = function(qtimeout, jtimeout, callback){
+    qtimeout = qtimeout ||  300000;
+    jtimeout = jtimeout || 1800000;
 
     async.waterfall([
         function kill_unresponsive_job_queues(next){
             queryHandler(
                 "UPDATE `job_queues` \n"+
                 "SET is_alive = 0 \n" +
-                "WHERE heartbeat < DATE_SUB(NOW(), INTERVAL "+(timeout/1000.0)+" SECOND) \n" + 
+                "WHERE heartbeat < DATE_SUB(NOW(), INTERVAL "+(qtimeout/1000.0)+" SECOND) \n" + 
                 "  AND is_alive = 1", 
             next);
         },
@@ -81,7 +83,20 @@ JobQueue.cleanup_stuck_queues = function(timeout, callback){
                 "SET J.state = 'waiting', \n" +
                 "    J.last_update = NOW() \n" +
                 "WHERE J.state='initializing' \n"+
-                "  AND J.last_update < DATE_SUB(NOW(), INTERVAL "+(timeout/1000.0)+" SECOND) \n" + 
+                "  AND J.last_update < DATE_SUB(NOW(), INTERVAL "+(qtimeout/1000.0)+" SECOND) \n" + 
+                "  AND JQ.is_alive = 0", 
+            next);
+        },
+        function cleanup_dead_jobs(){
+            var next = arguments[arguments.length-1];
+            queryHandler(
+                "UPDATE `jobs` J \n" +
+                "  JOIN `job_queue_enqueued_jobs` EJ ON J.job_id = EJ.job_id \n"+
+                "  JOIN `job_queues` JQ ON JQ.job_queue_id = EJ.job_queue_id \n"+
+                "SET J.state = 'stalled', \n" +
+                "    J.last_update = NOW() \n" +
+                "WHERE J.state='processing' \n"+
+                "  AND J.last_update < DATE_SUB(NOW(), INTERVAL "+(jtimeout/1000.0)+" SECOND) \n" + 
                 "  AND JQ.is_alive = 0", 
             next);
         }

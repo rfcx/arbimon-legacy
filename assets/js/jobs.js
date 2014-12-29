@@ -15,7 +15,7 @@
         var jobslength = 0;
         var jobs=[];
         var job_types;
-        var url = Project.getName();
+        var url = Project.getUrl();
         var intervalPromise;
         // $http.get('/api/project/'+url+'/progress').success(function(data) {
         //     jobs = data;
