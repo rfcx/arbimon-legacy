@@ -3,6 +3,7 @@ import boto
 import math
 import os
 import time
+import sys
 from boto.s3.connection import S3Connection
 import warnings
 from urllib2 import urlopen, URLError, HTTPError
@@ -45,7 +46,7 @@ class Rec:
         sig = None
         
         try:
-            with closing(Sndfile(self.localFiles+self.filename)) as f:
+            with closing(Sndfile(self.localFiles+self.filename+self.seed)) as f:
                 if self.logs :
                     self.logs.write("sampling rate = {} Hz, length = {} samples, channels = {}".format(f.samplerate, f.nframes, f.channels))
                 self.bps = 16
@@ -62,7 +63,7 @@ class Rec:
             self.status = 'CorruptedFile'
             return None
         
-        self.localfilename = self.localFiles+self.filename
+        self.localfilename = self.localFiles+self.filename+self.seed
         
         if 'flac' in self.filename: #if flac convert to wav
             if not removeFile:
@@ -130,7 +131,7 @@ class Rec:
         #
         f = None
         if self.logs :
-            self.logs.write('https://s3.amazonaws.com/arbimon2/'+self.uri+ ' to '+self.localFiles+self.filename)
+            self.logs.write('https://s3.amazonaws.com/arbimon2/'+self.uri+ ' to '+self.localFiles+self.filename+self.seed)
         try:
             f = urlopen('https://s3.amazonaws.com/arbimon2/'+self.uri)
             if self.logs :
@@ -145,9 +146,13 @@ class Rec:
             self.logs.write("bucket url error:" + str(e.reason ))
             return False
         
+        self.seed = "%.16f" % ((sys.maxint*np.random.rand(1)))
+        while os.path.isfile(self.localFiles+self.filename+self.seed):
+            self.seed = "%.16f" % ((sys.maxint*np.random.rand(1)))
+            
         if f:
             try:
-                with open(self.localFiles+self.filename, "wb") as local_file:
+                with open(self.localFiles+self.filename+self.seed, "wb") as local_file:
                    local_file.write(f.read())
             except:
                 self.logs.write('error f.read')

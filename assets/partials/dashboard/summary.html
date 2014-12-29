@@ -77,12 +77,16 @@
                                     tooltip="Run Clasification"
                                     tooltip-trigger="mouseenter">
                                 </li>
-                            </ul
-                            >
+                            </ul>
                         </div>
                     </li>  
                     <li class="list-group-item">Sites: {{ sites.length }}</li>
-                    <li class="list-group-item" ng-class="{ 'list-group-item-warning': recsQty === project.recording_limit }">Recordings: {{ recsQty }} / {{ project.recording_limit }}</li>
+                    <li class="list-group-item" ng-class="{ 'list-group-item-warning': recsQty >= project.recording_limit }">
+                        Recordings: {{ recsQty }} / {{ project.recording_limit }}
+                        <em class="text-warning pull-right" ng-show="recsQty >= project.recording_limit">
+                            Recordings limit has been reached
+                        </em>
+                    </li>
                     <li class="list-group-item">
                         Species:
                         <ul>
