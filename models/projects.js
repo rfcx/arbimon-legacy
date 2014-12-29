@@ -626,24 +626,7 @@ var Projects = {
         
         queryHandler(q, callback);      
     },
-    activeJobs: function(project_url, callback) {
-        var q = "(SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` , " +
-                " CONCAT(UCASE(LEFT( jpt.`name`, 1)), SUBSTRING( jpt.`name`, 2)) as name, round(100*(j.`progress`/j.`progress_steps`),1) as percentage "+
-                " FROM  `job_params_training` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0    "+
-                " and jpt.`job_id` = j.`job_id` and j.`job_type_id` = 1 and p.`url` = " + mysql.escape(project_url)+" )"+
-                " UNION "+
-                " (SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` , "+
-                " CONCAT(UCASE(LEFT( jpt.`name`, 1)), SUBSTRING( jpt.`name`, 2)) as name , round(100*(j.`progress`/j.`progress_steps`),1) as percentage "+
-                " FROM  `job_params_classification` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0   "+
-                " and jpt.`job_id` = j.`job_id` and j.`job_type_id` = 2 and p.`url` = " + mysql.escape(project_url)+" )"+
-                " UNION "+
-                " (SELECT j.`progress`,j.`progress_steps`, j.`job_type_id` ,j.`job_id` , "+
-                " CONCAT(UCASE(LEFT( jpt.`name`, 1)), SUBSTRING( jpt.`name`, 2)) as name , round(100*(j.`progress`/j.`progress_steps`),1) as percentage "+
-                " FROM  `job_params_soundscape` as jpt,`jobs` as j , `projects` as p WHERE j.`project_id` = p.`project_id` and j.`hidden` = 0   "+
-                " and jpt.`job_id` = j.`job_id` and j.`job_type_id` = 4 and p.`url` = " + mysql.escape(project_url)+" )";              
-        queryHandler(q, callback);
-    },
-    
+
     
     removeUser: function(user_id, project_id, callback){
         if(typeof project_id !== 'number')

@@ -4,7 +4,8 @@ angular.module('a2services',[])
     urlparse.href = $location.absUrl();
     var nameRe = /\/?project\/([\w\_\-]+)/;
 
-    var url = nameRe.exec(urlparse.pathname)[1];
+    var nrm = nameRe.exec(urlparse.pathname);
+    var url = nrm ? nrm[1] : '';
 
     var project;
 
@@ -69,7 +70,7 @@ angular.module('a2services',[])
         },
 
         getRecordings: function(key, options, callback) {
-            var projectName = this.getName();
+            var projectName = this.getUrl();
             var query='';
             if(options instanceof Function){
                 callback = options;
@@ -87,37 +88,37 @@ angular.module('a2services',[])
             });
         },
         getOneRecording: function(key, callback) {
-            var projectName = this.getName();
+            var projectName = this.getUrl();
             $http.get('/api/project/'+projectName+'/recordings/find/'+key).success(function(data) {
                 callback(data);
             });
         },
         getRecordingAvailability: function(key, callback) {
-            var projectName = this.getName();
+            var projectName = this.getUrl();
             $http.get('/api/project/'+projectName+'/recordings/available/'+key).success(function(data) {
                 callback(data);
             });
         },
         getRecordingInfo: function(key, callback) {
-            var projectName = this.getName();
+            var projectName = this.getUrl();
             $http.get('/api/project/'+projectName+'/recordings/info/'+key).success(function(data) {
                 callback(data);
             });
         },
         getNextRecording: function(key, callback) {
-            var projectName = this.getName();
+            var projectName = this.getUrl();
             $http.get('/api/project/'+projectName+'/recordings/next/'+key).success(function(data) {
                 callback(data);
             });
         },
         getPreviousRecording: function(key, callback) {
-            var projectName = this.getName();
+            var projectName = this.getUrl();
             $http.get('/api/project/'+projectName+'/recordings/previous/'+key).success(function(data) {
                 callback(data);
             });
         },
         validateRecording: function(recording_uri, validation, callback){
-            var projectName = this.getName();
+            var projectName = this.getUrl();
             $http.post('/api/project/'+projectName+'/recordings/validate/'+recording_uri, validation).success(function(data) {
                 callback(data);
             });

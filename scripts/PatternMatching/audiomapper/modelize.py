@@ -80,7 +80,7 @@ with closing(db.cursor()) as cursor:
     db.commit()
     row = cursor.fetchone()
     
-    cursor.execute('update `jobs` set `progress` = `progress` + 5 where `job_id` = '+str(jobId))
+    cursor.execute('update `jobs` set `state`="processing", `progress` = `progress` + 5 where `job_id` = '+str(jobId))
     db.commit()
     
     #j = json.loads(nameJson)
@@ -141,7 +141,7 @@ for i in classes:
     
     #save model to DB
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` + 5 where `job_id` = '+str(jobId))
+        cursor.execute('update `jobs` set `state`="processing", `progress` = `progress` + 5 where `job_id` = '+str(jobId))
         db.commit()        
         cursor.execute("SELECT   max(ts.`x2` -  ts.`x1`) , min(ts.`y1`) , max(ts.`y2`) "+
             "FROM `training_set_roi_set_data` ts "+
@@ -184,7 +184,7 @@ for i in classes:
         
         cursor.execute('update `jobs` set `last_update` = now() where `job_id` = '+str(jobId))
         db.commit()
-        cursor.execute('update `jobs` set `progress` = `progress_steps` ,  `completed` = 1 , `last_update` = now() where `job_id` = '+str(jobId))
+        cursor.execute('update `jobs` set `state`="completed", `progress` = `progress_steps` ,  `completed` = 1 , `last_update` = now() where `job_id` = '+str(jobId))
         db.commit()
 
 #remore temporary directory

@@ -1,7 +1,6 @@
 
-(function(angular)
-{ 
-    var jobs = angular.module('jobs',['a2services']);
+(function(angular){ 
+    var jobs = angular.module('jobs',['a2services', 'a2-job-data', 'a2-job-types']);
     
     jobs.config(['$stateProvider', function($stateProvider) {
         $stateProvider.state('jobs', {
@@ -11,28 +10,18 @@
         });
     }]);
     
-    jobs.service('JobsData',
-        function ($http, $interval,Project)
-        {
-            var jobslength = 0;
-            var jobs;
-            var url;
-            var intervalPromise;
-            var p = Project.getInfo(
-            function(data)
-            {
-                url = data.url;
-                $http.get('/api/project/'+url+'/progress')
-                .success
-                (
-                    function(data) 
-                    {
-                        jobs = data;
-                        jobslength = jobs.length;
-                     }
-                );
-            });
-            
+    angular.module('a2-job-data',['a2services'])
+    .service('JobsData', function ($http, $interval, Project, $q){
+        var jobslength = 0;
+        var jobs=[];
+        var job_types;
+        var url = Project.getUrl();
+        var intervalPromise;
+        // $http.get('/api/project/'+url+'/progress').success(function(data) {
+        //     jobs = data;
+        //     jobslength = jobs.length;
+        // });
+                    
         return {
                 geturl : function(){
                     return url;  
@@ -43,16 +32,27 @@
                 getJobs: function() {
                     return jobs;
                 },
-                updateJobs: function() {
-                    $http.get('/api/project/'+url+'/progress')
-                    .success
-                    (
-                        function(data) 
-                        {
-                            jobs = data;
-                            jobslength = jobs.length;
-                         }
-                    );
+                getJobTypes: function(){
+                    var d = $q.defer();
+                    if(job_types){
+                        d.resolve(job_types);
+                    } else{
+                        $http.get('/api/job/types')
+                        .success(function(_job_types){
+                            job_types = _job_types;
+                            d.resolve(job_types);
+                        })
+                        .error(function(){
+                            d.reject("Could not retrieve job types.");
+                        });
+                    }
+                    return d.promise;
+                },
+                updateJobs: function(){
+                    $http.get('/api/project/'+url+'/progress').success(function(data){
+                        jobs = data;
+                        jobslength = jobs.length;
+                    });
                 },
                 startTimer : function(){
                     $interval.cancel(intervalPromise);
@@ -90,7 +90,7 @@
                 cancelTimer : function(){
                     $interval.cancel(intervalPromise);                   
                 }
-            }
+            };
                 
         }
     );
@@ -112,6 +112,22 @@
             );
         }         
     );
+
+    angular.module('a2-job-types',['a2-job-data'])
+    .controller('JobTypesController', function(JobsData){
+        var self = this;
+        JobsData.getJobTypes().then(function(job_types){
+            var colors = ['blue','red','green','purple','orange'];
+            self.types = job_types;
+            self.show  = {};
+            self.for   = {};
+            self.types.forEach(function(c,i){
+                self.show[c.id] = true;
+                self.for[c.id] = c;
+                c.color = colors[i % colors.length];
+            });
+        });
+    });
     
 
    jobs.controller
@@ -130,198 +146,131 @@
         }
     ) ;
     
-    jobs.controller('StatusBarNavController',
-        function ($scope, $http,$modal,$interval, Project,JobsData)
-        {
-            $scope.showClassifications = true;
-            $scope.showTrainings = true;
-        $scope.showSoundscapes = true;
-            $scope.url = '';
-            $scope.successInfo = "";
-            $scope.showSuccesss = false;
-            $scope.errorInfo = "";
-            $scope.showErrors = false;
+    
+    jobs.controller('StatusBarNavController', function ($scope, $http,$modal,$interval, Project, JobsData){
+        $scope.show={};
+        $scope.showClassifications = true;
+        $scope.showTrainings = true;
+	    $scope.showSoundscapes = true;
+        $scope.url = '';
+        $scope.successInfo = "";
+        $scope.showSuccesss = false;
+        $scope.errorInfo = "";
+        $scope.showErrors = false;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+        $scope.updateFlags = function(){
+    		$scope.successInfo = "";
+    		$scope.showSuccess = false;
+    		$scope.errorInfo = "";
+    		$scope.showError = false;
+    		$scope.infoInfo = "";
+    		$scope.showInfo = false;
+        };
+        $scope.jobs = [];
+        $scope.$watch(
+            function(){
+                return JobsData.getJobs();
+            },
+            function(new_jobs){
+                $scope.jobs = new_jobs;
+                JobsData.startTimer();
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+            }
+        );
+        
+        $scope.$on('$destroy', function () { JobsData.cancelTimer(); });
+        
+        $scope.hideJob = function(jobId){
             $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
-            $scope.updateFlags = function()
-        {
-        $scope.successInfo = "";
-        $scope.showSuccess = false;
-        $scope.errorInfo = "";
-        $scope.showError = false;
-        $scope.infoInfo = "";
-        $scope.showInfo = false;
-        };
-            $scope.jobs = [];
-            $scope.$watch
-            (
-             function(){
-                return JobsData.getJobs();
-                }
-                ,
-                function()
-                {
-                    $scope.jobs = JobsData.getJobs();
-                    JobsData.startTimer();
-                    $scope.infoInfo = "";
-                    $scope.showInfo = false;
-                }
-            );
-            
-            $scope.$on('$destroy', function () { JobsData.cancelTimer() });
-            
-            $scope.hideJob =
-            function(jobId)
-            {
-                $scope.infoInfo = "Loading...";
-                $scope.showInfo = true;
-                var continueFalg = true;
-                for(var i =0;i < $scope.jobs.length ; i++)
-                {
-                    if ($scope.jobs[i].job_id == jobId) 
-                    {
-                        if ($scope.jobs[i].percentage < 100)
-                        {
-                            continueFalg = false;
-                            var modalInstance = $modal.open
-                            (
-                                {
-                                    template: '<div class="modal-header">'  +
-                                                    '<h3 class="modal-title">Hide running job</h3> '+ 
-                                                '</div>  '+
-                                                '<div class="modal-body"> '+
-                                                'Job has not finished. Hide anyway?'+
-                                                '</div>  '+
-                                                '<div class="modal-footer">  '+
-                                                    '<button class="btn btn-primary" ng-click="ok()">Submit</button>  '+
-                                                    '<button class="btn btn-warning" ng-click="cancel()">Cancel</button>  '+
-                                                '</div>  ',
-                                    controller: 'UnfinishedJobInstanceCtrl',
-                                }
-                            );
-                            
-                            modalInstance.opened.then(function()
-                            {
-                                $scope.infoInfo = "";
-                                $scope.showInfo = false;    
-                            });
-                            
-                            modalInstance.result.then
-                            (
-                                function (data) 
-                                {
-                                    if(data.ok)
-                                    {
-                                        $http.get('/api/project/'+JobsData.geturl()+'/job/hide/'+jobId)
-                                        .success
-                                        (
-                                            function(data) 
-                                            {
-                                                if (data.err)
-                                                {
-                                                    $scope.errorInfo = "Error Communicating With Server";
-                                                    $scope.showError = true;
-                                                    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
-                                                    function()
-                                                    {
-                                                        $scope.showError = false;
-                                                    });
-                                                }
-                                                else
-                                                {
-                                                    JobsData.updateJobs();
-                                                    $scope.successInfo = "Job Hidden Successfully";
-                                                    $scope.showSuccesss = true;
-                                                    $("#successDivs").fadeTo(3000, 500).slideUp(500,
-                                                   function()
-                                                    {
-                                                        $scope.showSuccesss = false;
-                                                    });
-                                                }
-                                             }
-                                        ).error(
-                                            function()
-                                            {
-                                                $scope.errorInfo = "Error Communicating With Server";
-                                                $scope.showError = true;
-                                                $("#errorDiv").fadeTo(3000, 500).slideUp(500,
-                                                function()
-                                                {
-                                                    $scope.showError = false;
-                                                });
-                                            }
-                                        );
-                                    }
-                                }
-                            );                            
-                        }
-                    }
-                }
-                
-                if (continueFalg)
-                {
-                    $http.get('/api/project/'+JobsData.geturl()+'/job/hide/'+jobId)
-                    .success
-                    (
-                        function(data) 
-                        {
-                            if (data.err)
-                            {
-                $scope.errorInfo = "Error Communicating With Server";
-                     $scope.showError = true;
-                     $("#errorDiv").fadeTo(3000, 500).slideUp(500,
-                     function()
-                     {
-                     $scope.showError = false;
-                     });
-                            }
-                            else
-                            {
-                                JobsData.updateJobs();
-                                $scope.successInfo = "Job Hidden Successfully";
-                                $scope.showSuccesss = true;
-                                $("#successDivs").fadeTo(3000, 500).slideUp(500,
-                               function()
-                                {
-                                    $scope.showSuccesss = false;
+            var continueFalg = true;
+            for(var i =0;i < $scope.jobs.length ; i++){
+                if ($scope.jobs[i].job_id == jobId) {
+                    if ($scope.jobs[i].percentage < 100){
+                        continueFalg = false;
+                        var modalInstance = $modal.open({
+                            template: '<div class="modal-header">'  +
+                                            '<h3 class="modal-title">Hide running job</h3> '+ 
+                                        '</div>  '+
+                                        '<div class="modal-body"> '+
+                                        'Job has not finished. Hide anyway?'+
+                                        '</div>  '+
+                                        '<div class="modal-footer">  '+
+                                            '<button class="btn btn-primary" ng-click="ok()">Submit</button>  '+
+                                            '<button class="btn btn-warning" ng-click="cancel()">Cancel</button>  '+
+                                        '</div>  ',
+                            controller: 'UnfinishedJobInstanceCtrl',
+                        });
+                        
+                        modalInstance.opened.then(function(){
+                            $scope.infoInfo = "";
+                            $scope.showInfo = false;    
+                        });
+                        
+                        modalInstance.result.then(function (data) {
+                            if(data.ok){
+                                $http.get('/api/project/'+JobsData.geturl()+'/job/hide/'+jobId)
+                                .success(
+                                    function(data) {
+                                        if (data.err){
+                                            $scope.errorInfo = "Error Communicating With Server";
+                                            $scope.showError = true;
+                                            $("#errorDiv").fadeTo(3000, 500).slideUp(500, function(){
+                                                $scope.showError = false;
+                                            });
+                                        } else {
+                                            JobsData.updateJobs();
+                                            $scope.successInfo = "Job Hidden Successfully";
+                                            $scope.showSuccesss = true;
+                                            $("#successDivs").fadeTo(3000, 500).slideUp(500, function(){
+                                                $scope.showSuccesss = false;
+                                            });
+                                        }
+                                     }
+                                )
+                                .error(function(){
+                                    $scope.errorInfo = "Error Communicating With Server";
+                                    $scope.showError = true;
+                                    $("#errorDiv").fadeTo(3000, 500).slideUp(500,
+                                    function(){
+                                        $scope.showError = false;
+                                    });
                                 });
                             }
-                         }
-                    ).error(
-            function()
-            {
-            $scope.errorInfo = "Error Communicating With Server";
-            $scope.showError = true;
-            $("#errorDiv").fadeTo(3000, 500).slideUp(500,
-            function()
-            {
-                $scope.showError = false;
-            });
+                        });
+                    }
+                }
             }
-                    );
-                }
-            };
             
-            $scope.showOrHide = function(type)
-            {
-                if (type==1)
-                {
-                    return($scope.showTrainings )
-                }
-                
-                if (type==2)
-                {
-                    return($scope.showClassifications)
-                }
-        
-        if (type==4)
-                {
-                    return($scope.showSoundscapes)
-                }
-                else return false;
-            };
-            
-        }
-    );   
+            if (continueFalg){
+                $http.get('/api/project/'+JobsData.geturl()+'/job/hide/'+jobId)
+                .success(function(data) {
+                    if (data.err){
+                        $scope.errorInfo = "Error Communicating With Server";
+                        $scope.showError = true;
+                        $("#errorDiv").fadeTo(3000, 500).slideUp(500, function(){
+                            $scope.showError = false;
+                        });
+                    } else {
+                        JobsData.updateJobs();
+                        $scope.successInfo = "Job Hidden Successfully";
+                        $scope.showSuccesss = true;
+                        $("#successDivs").fadeTo(3000, 500).slideUp(500, function(){
+                            $scope.showSuccesss = false;
+                        });
+                    }
+                })
+                .error(function(){
+                    $scope.errorInfo = "Error Communicating With Server";
+                    $scope.showError = true;
+                    $("#errorDiv").fadeTo(3000, 500).slideUp(500, function(){
+                        $scope.showError = false;
+                    });
+                });
+            }
+        };
+    });   
 }
 )(angular);
