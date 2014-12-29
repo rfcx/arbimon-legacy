@@ -39,6 +39,12 @@ class Logger:
             if self.also_print:
                 print "#LOG:" + currTime + ':\t'+message
 
+    def time_delta(self, message, start):
+        self.write("{} --- seconds --- {}".format(
+            msg, time.time() - start
+        ))
+
+
     def write_clean(self,message):
         if self.logON:
             self.log_file_handle.write(message)

@@ -10,7 +10,7 @@ import os
 import math
 import time
 import multiprocessing
-from joblib import Parallel, delayed 
+from joblib import Parallel, delayed
 from contextlib import closing
 import MySQLdb
 from boto.s3.connection import S3Connection
@@ -20,10 +20,12 @@ from a2pyutils.logger import Logger
 
 start_time_all = time.time()
 logWorkers = True
-num_cores = multiprocessing.cpu_count() # int(math.floor(multiprocessing.cpu_count() /2))
+num_cores = multiprocessing.cpu_count()
 
-jobId = sys.argv[1].strip("'").strip(" ");
-log = Logger(jobId , 'recClassify.py' , 'worker')
+jobId = int(sys.argv[1].strip("'").strip(" "))
+modelUri = sys.argv[2].strip("'").strip(" ")
+
+log = Logger(jobId, 'recClassify.py', 'worker')
 log.write('script started')
 
 models = {}
@@ -37,15 +39,16 @@ log.write('configuration loaded')
 log.write('trying database connection')
 db = None
 try:
-    db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
+    db = MySQLdb.connect(
+        host=config[0], user=config[1], passwd=config[2], db=config[3])
 except MySQLdb.Error as e:
-    log.write('fatal error cannot connect to database with credentials: '+config[0]+' '+config[1]+' '+config[2]+' '+config[3])
+    log.write('fatal error cannot connect to database.')
     quit()
-log.write('database connection succesful')   
+log.write('database connection succesful')
 bucketName = config[4]
 awsKeyId = config[5]
 awsKeySecret = config[6]
-log.write('tring connection to bucket') 
+log.write('tring connection to bucket')
 
 start_time = time.time()
 
@@ -55,63 +58,77 @@ try:
 except Exception, ex:
     log.write('fatal error cannot connect to bucket '+ex.error_message)
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `remarks` = \'Error: connecting to bucket.\' where `job_id` = '+str(jId.strip(' ')))
+        cursor.execute("""
+            UPDATE `jobs` set `remarks` = %s
+            WHERE `job_id` = %
+        """, ["Error: connecting to bucket.", jobId])
         db.commit()
     quit()
-log.write('connect to bucket  succesful') 
-    
-log.write('bucket config took:'+str(time.time()-start_time))   
-  
+log.write('connect to bucket  succesful')
+
+log.write('bucket config took:'+str(time.time()-start_time))
+
 tempFolder = tempFolders+"/classification_"+str(jobId)+"/"
 modelLocal = tempFolder+'model.mod'
-modelUri = sys.argv[2].strip("'").strip(" ");
 log.write('fetching model from bucket ('+modelUri+') to ('+modelLocal+')')
 start_time = time.time()
 
-key = bucket.get_key(modelUri)     
+key = bucket.get_key(modelUri)
 key.get_contents_to_filename(modelLocal)
 mod = None
 if os.path.isfile(modelLocal):
-    mod = pickle.load( open( modelLocal, "rb" ) )
+    mod = pickle.load(open(modelLocal, "rb"))
     log.write('model was loaded to memory')
 else:
     log.write('fatal error cannot load model')
     quit()
-log.write('model retrieve took:'+str(time.time()-start_time))   
-           
+log.write('model retrieve took:'+str(time.time()-start_time))
+
 linesProcessed = 0
 missedRecs = 0
-#reads lines from stdin
-log.write('start processing cycle. configuration took:'+str(time.time()-start_time_all))   
-#for line in sys.stdin:
-def processLine(line,bucket,mod,config,logWorkers):
+# reads lines from stdin
+log.write(
+    'start processing cycle. configuration took:' +
+    str(time.time()-start_time_all))
+# for line in sys.stdin:
+
+
+def processLine(line, bucket, mod, config, logWorkers):
+    global jobId
     start_time_all = time.time()
-    log = Logger(jobId , 'recClassify.py' , 'worker-thread',logWorkers)
-    
+    log = Logger(jobId, 'recClassify.py', 'worker-thread', logWorkers)
+
     log.write('worker-thread started')
-    
+
     try:
-        db = MySQLdb.connect(host=config[0], user=config[1], passwd=config[2],db=config[3])
+        db = MySQLdb.connect(
+            host=config[0], user=config[1], passwd=config[2], db=config[3])
     except MySQLdb.Error as e:
-        log.write('fatal error cannot connect to database with credentials: '+config[0]+' '+config[1]+' '+config[2]+' '+config[3])
+        log.write('fatal error cannot connect to database.')
         return 0
-    #remove white space
+    # remove white space
     line = line.strip(' ')
     line = line.strip('\n')
-    #split the line into variables
-    recUri,modelUri,recId,jId,species,songtype = line.split(',')
+    # split the line into variables
+    recUri, modelUri, recId, jobId, species, songtype = line.split(',')
+    recId = int(recId.strip())
     log.write('new subprocess:'+recUri)
     tempFolders = tempfile.gettempdir()
-    tempFolder = tempFolders+"/classification_"+str(jId)+"/"
+    tempFolder = tempFolders+"/classification_"+str(jobId)+"/"
 
-    #get rec from URI and compute feature vector using the spec vocalization
+    # get rec from URI and compute feature vector using the spec vocalization
     start_time = time.time()
     log.write(str(type(bucket)))
-    recAnalized = Recanalizer(recUri , mod[1] ,mod[2], mod[3] ,mod[4], tempFolder,log , bucket)
-    log.write("recAnalized --- seconds ---" + str(time.time() - start_time))
+    recAnalized = Recanalizer(
+        recUri, mod[1], mod[2], mod[3], mod[4], tempFolder, log, bucket)
+    log.time_delta("recAnalized", start_time)
     with closing(db.cursor()) as cursor:
-        cursor.execute('update `jobs` set `progress` = `progress` + 1 where `job_id` = '+str(jId.strip(' ')))
-        db.commit()  
+        cursor.execute("""
+            UPDATE `jobs`
+            SET `progress` = `progress` + 1
+            WHERE `job_id` = %s
+        """, [jobId])
+        db.commit()
 
     if recAnalized.status == 'Processed':
         log.write('rec processed')
@@ -124,56 +141,75 @@ def processLine(line,bucket,mod,config,logWorkers):
         wr = csv.writer(myfileWrite)
         wr.writerow(featvector)
         myfileWrite.close()
-        log.write("wrote vector file --- seconds ---" + str(time.time() - start_time))
+        log.time_delta("wrote vector file", start_time)
         if not os.path.isfile(vectorLocal):
             log.write('error writing: '+vectorLocal)
             with closing(db.cursor()) as cursor:
-                cursor.execute('INSERT INTO `recordings_errors`(`recording_id`, `job_id`) VALUES ('+str(recId.strip(' '))+','+str(jId.strip(' '))+') ')
+                cursor.execute("""
+                    INSERT INTO `recordings_errors`(`recording_id`, `job_id`)
+                    VALUES (%s, %s)
+                """, [recId, jobId])
                 db.commit()
-            log.write("function exec --- seconds ---" + str(time.time() - start_time_all))
+            log.time_delta("function exec", start_time_all)
             return 0
         else:
             start_time = time.time()
-            vectorUri = modelUri.replace('.mod','') + '/classification_'+ str(jId)+ '_' + recName + '.vector'
+            vectorUri = '{}/classification_{}_{}.vector'.format(
+                modelUri.replace('.mod', ''), jobId, recName
+            )
             log.write(str(type(bucket)))
-            k = bucket.new_key(vectorUri )
+            k = bucket.new_key(vectorUri)
             k.set_contents_from_filename(vectorLocal)
             k.set_acl('public-read')
             fets = recAnalized.features()
             clf = mod[0]
             noErrorFlag = True
-            log.write("uploaded vector file --- seconds ---" + str(time.time() - start_time))
+            log.time_delta("uploaded vector file", start_time)
             start_time = time.time()
             try:
                 res = clf.predict(fets)
             except:
                 log.write('error predicting on recording: '+recUri)
                 with closing(db.cursor()) as cursor:
-                    cursor.execute('INSERT INTO `recordings_errors`(`recording_id`, `job_id`) VALUES ('+str(recId.strip(' '))+','+str(jId.strip(' '))+') ')
+                    cursor.execute("""
+                        INSERT INTO `recordings_errors`
+                            (`recording_id`, `job_id`)
+                        VALUES (%s, %s)
+                    """, [recId, jobId])
                     db.commit()
                 noErrorFlag = False
-            log.write("prediction --- seconds ---" + str(time.time() - start_time))
+            log.time_delta("prediction", start_time)
             if noErrorFlag:
-                print recId,";",res[0],";",jId,";",species,";",songtype,";", min(featvector) ,";",max(featvector)
+                print recId, ";", res[0], ";", jobId, ";", species, ";",
+                print songtype, ";", min(featvector), ";", max(featvector)
                 sys.stdout.flush()
-                log.write("function exec --- seconds ---" + str(time.time() - start_time_all))
+                log.time_delta("function exec", start_time_all)
                 return 1
             else:
                 log.write('error return 0')
-                with closing(db.cursor()) as cursor:
-                    cursor.execute('INSERT INTO `recordings_errors`(`recording_id`, `job_id`) VALUES ('+str(recId.strip(' '))+','+str(jId.strip(' '))+') ')
-                    db.commit()
-                log.write("function exec --- seconds ---" + str(time.time() - start_time_all))
+                insert_rec_error(db, recId, jobId)
+                log.time_delta("function exec", start_time_all)
                 return 0
     else:
         log.write('error processing recording: '+recUri)
-        log.write("function exec --- seconds ---" + str(time.time() - start_time_all))
-        with closing(db.cursor()) as cursor:
-            cursor.execute('INSERT INTO `recordings_errors`(`recording_id`, `job_id`) VALUES ('+str(recId.strip(' '))+','+str(jId.strip(' '))+') ')
-            db.commit()
-        return 0 
-        
-resultsParallel = Parallel(n_jobs=num_cores)(delayed(processLine)(line,bucket,mod,config,logWorkers) for line in sys.stdin)
+        log.time_delta("function exec", start_time_all)
+        insert_rec_error(db, recId, jobId)
+        return 0
+
+
+def insert_rec_error(db, recId, jobId):
+    with closing(db.cursor()) as cursor:
+        cursor.execute("""
+            INSERT INTO `recordings_errors`(`recording_id`, `job_id`)
+            VALUES (%s, %s)
+        """, [recId, jobId])
+        db.commit()
+
+
+resultsParallel = Parallel(n_jobs=num_cores)(
+    delayed(processLine)(line, bucket, mod, config, logWorkers)
+    for line in sys.stdin
+)
 log.write('this worker processed '+str(sum(resultsParallel))+' recordings')
 log.write('end processing cycle')
 log.close()

@@ -242,7 +242,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
                 classifier  : req.body.c,
                 allRecs     : req.body.a, // unused
                 sitesString : req.body.s, // unused
-                playlist_id : req.body.p.id
+                playlist    : req.body.p.id
             };
             
             next();
