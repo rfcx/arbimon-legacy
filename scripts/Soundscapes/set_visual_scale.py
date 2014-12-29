@@ -13,10 +13,12 @@ from boto.s3.connection import S3Connection
 
 
 USAGE = """
-{prog} soundscape_id max_visual_scale
+{prog} soundscape_id max_visual_scale [palette_id]
     soundscape_id - id of the soundscape whose image to edit
     max_visual_scale - clip range maximum (if '-', then it is
                        computed automatically)
+    palette_id - index of the gradient palette to use
+                (defined in a2pyutils.palette)
 """.format(
     prog=sys.argv[0]
 )
@@ -34,6 +36,9 @@ if len(sys.argv) < 3:
 
 soundscape_id = int(sys.argv[1])
 clip_max = None if sys.argv[2] == '-' else int(sys.argv[2])
+palette_id = (
+    (int(sys.argv[3]) if len(sys.argv) > 3 else 0) %
+    len(a2pyutils.palette.palette))
 
 configuration = Config()
 config = configuration.data()
@@ -84,7 +89,6 @@ img_file = file_cache.key2File(img_uri)
 sc = soundscape.soundscape.Soundscape.read_from_index(scidx_file['path'])
 if clip_max is not None:
     sc.stats['max_count'] = clip_max
-palette_id = 1
 sc.write_image(img_file, a2pyutils.palette.get_palette(palette_id))
 
 k = bucket.new_key(img_uri)
