@@ -12,7 +12,23 @@
                 (default: {{soundscape.max_value}})
             </div>
         </div>
-        <a2-soundscape-drawer width="200" height="300" style="width:100%;padding:0px 50px" soundscape="soundscape" visual-max="data.visual_max">
+        <div class="form-group" ng-class="{'has-error': validation.name}" >
+            <label class="col-sm-3 control-label">Colors: </label>
+            <div class="col-sm-9">
+                <div class="dropdown">
+                    <button class="btn btn-default" role="button" data-toggle="dropdown">
+                        <a2-palette-drawer style="height:16px; width:256px;" palette="palettes[data.palette]" ></a2-palette-drawer>
+                        <span class="caret"></span>                        
+                    </button>
+                    <ul class="dropdown-menu has-badges dropdown-height-7" role="menu" aria-labelledby="dLabel">
+                        <li ng-repeat="palette in palettes" ng-class="{active: data.palette == $index}" ng-click="data.palette = $index">
+                            <a><a2-palette-drawer style="height:16px; width:256px; margin:5px;" palette="palette" ></a2-palette-drawer></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <a2-soundscape-drawer class="crisp-image" style="width:100%; height:300px; padding:0px 50px" soundscape="soundscape" visual-max="data.visual_max" palette="palettes[data.palette]">
         </a2-soundscape-drawer>
     </div>
 </div>
