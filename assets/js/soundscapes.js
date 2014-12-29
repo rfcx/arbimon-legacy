@@ -27,7 +27,7 @@
             });
                     
                     
-            $http.get('/api/project/'+Project.getName()+'/soundscapes/details')
+            $http.get('/api/project/'+Project.getUrl()+'/soundscapes/details')
             .success(
                 function(data) 
                 {
