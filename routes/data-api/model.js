@@ -530,7 +530,7 @@ router.get('/project/classification/csv/:cid', function(req, res) {
 
 
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
-    debug('req.params.projectUrl : '+req.params.projectUrl)
+    debug('req.params.projectUrl : '+req.params.projectUrl);
     var response_already_sent;
     var params, job_id;
 
@@ -548,8 +548,11 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             }
             var project_id = rows[0].project_id;
 
-            if(!req.haveAccess(project_id, "manage soundscapes"))
-                return res.json({ error: "you dont have permission to 'manage soundscapes'" });
+            if(!req.haveAccess(project_id, "manage soundscapes")) {
+                response_already_sent = true;
+                res.status(403).json({ error: "you dont have permission to 'manage soundscapes'" });
+                return next(new Error());
+            }
             
             params = {
                 name        : (req.body.n),
@@ -600,7 +603,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
         } else {
             res.json({ ok:"job created soundscapeJob:"+job_id });
         }
-    })
+    });
 });
 
 
