@@ -21,10 +21,6 @@
                 $scope.loading = false;
             };
         
-            a2Playlists.getList(function(data) {
-                $scope.playlists = data;
-            });
-        
             var p = Project.getInfo(
             function(data)
             {
@@ -157,6 +153,7 @@
                     $scope.loading = true;
                     $scope.infoInfo = "Loading...";
                     $scope.showInfo = true;
+
                     
                     var modalInstance = $modal.open
                     (
@@ -176,8 +173,7 @@
                                     });
                                     return d.promise;
                                 },
-                                playlists:function($q)
-                                {
+                                playlists:function($q){
                                     var d = $q.defer();
                                     a2Playlists.getList(function(data) {
                                         d.resolve(data || []);
