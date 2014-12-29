@@ -18,7 +18,6 @@ angular.module('dashboard',[
             } 
         },
         deepStateRedirect: true, 
-        sticky: true,
     })
     .state('dashboard.summary', {
         url: '/summary',
@@ -38,7 +37,7 @@ angular.module('dashboard',[
     });
 
 })
-.controller('SummaryCtrl', function($scope, Project, a2TrainingSets) {
+.controller('SummaryCtrl', function($scope, Project, a2TrainingSets, $timeout) {
     
     $scope.loading = true;
 
@@ -75,27 +74,33 @@ angular.module('dashboard',[
         zoom: 8
     };
 
+    
+    
     Project.getSites(function(sites) {
         $scope.sites = sites;
         
-        $scope.map = new google.maps.Map(document.getElementById('map-summary'), mapOptions);
+        $timeout(function() {
+        
+            $scope.map = new google.maps.Map(document.getElementById('map-summary'), mapOptions);
+            
+            var bounds = new google.maps.LatLngBounds();
+            
+            for(var i in sites) {
+                var position = new google.maps.LatLng(sites[i].lat,sites[i].lon);
 
-        var bounds = new google.maps.LatLngBounds();
+                sites[i].marker = new google.maps.Marker({
+                    position: position,
+                    title: sites[i].name
+                });
 
-        for(var i in sites) {
-            var position = new google.maps.LatLng(sites[i].lat,sites[i].lon);
+                bounds.extend(position);
 
-            sites[i].marker = new google.maps.Marker({
-                position: position,
-                title: sites[i].name
-            });
+                sites[i].marker.setMap($scope.map);
+            }
 
-            bounds.extend(position);
-
-            sites[i].marker.setMap($scope.map);
-        }
-
-        $scope.map.fitBounds(bounds);
+            $scope.map.fitBounds(bounds);
+            
+        }, 50);
         
         $scope.loading = false;
     });
