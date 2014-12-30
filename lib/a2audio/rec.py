@@ -129,6 +129,7 @@ class Rec:
         #    return False       
         #key.get_contents_to_filename(self.localFiles+self.filename)
         #
+        self.seed = "%.16f" % ((sys.maxint*np.random.rand(1)))
         f = None
         if self.logs :
             self.logs.write('https://s3.amazonaws.com/arbimon2/'+self.uri+ ' to '+self.localFiles+self.filename+self.seed)
@@ -146,7 +147,7 @@ class Rec:
             self.logs.write("bucket url error:" + str(e.reason ))
             return False
         
-        self.seed = "%.16f" % ((sys.maxint*np.random.rand(1)))
+        
         while os.path.isfile(self.localFiles+self.filename+self.seed):
             self.seed = "%.16f" % ((sys.maxint*np.random.rand(1)))
             
