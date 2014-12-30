@@ -325,10 +325,34 @@
             var loadClassifiedRec = function() {
                 $http.get('/api/project/'+$scope.url+'/classification/'+$scope.id+'/more/'+($scope.currentPage*$scope.maxPerPage)+"/"+$scope.maxPerPage)
                 .success(function(dataRec) {
-                    $scope.recs =dataRec;
-                    jsonArr = JSON.parse(dataRec[0].json_stats);
-                    $scope.minv = parseFloat(jsonArr.minv);
-                    $scope.maxv = parseFloat(jsonArr.maxv);
+		    $http.post('/api/project/'+$scope.purl+'/classification/vector', 
+			{
+			    v:dataRec[0].vect
+			}
+		    ).
+		    success
+		    (
+			function(vectordata)
+			{
+			    var recVect =  vectordata.data.split(",") ;
+			    for(var jj = 0 ; jj < recVect.length; jj++)
+			    {
+				recVect[jj] = parseFloat(recVect[jj]);
+			    }
+			    var maxVal = Math.max.apply(null,recVect)
+			    if (! isNaN($scope.th)) {
+				if(maxVal < $scope.th )
+				{
+				    $scope.htresDeci = 'no';
+				}else $scope.htresDeci = 'yes';
+			    }
+			    $scope.recs = dataRec;
+			    jsonArr = JSON.parse(dataRec[0].json_stats)
+			    $scope.minv = parseFloat(jsonArr['minv'])
+			    $scope.maxv = parseFloat(jsonArr['maxv'])
+			    $scope.maxvRounded = Math.round($scope.maxv*1000)/1000;
+			}
+		    );
                 })
                 .error(function() {
                     notify.error("Error Communicating With Server");
@@ -400,7 +424,6 @@
 				    }
 				    var maxVal = Math.max.apply(null,recVect)
 				    if (! isNaN($scope.th)) {
-				    
 					if(maxVal < $scope.th )
 					{
 					    $scope.htresDeci = 'no';
@@ -409,7 +432,8 @@
 			            $scope.recs = dataRec;
 				    jsonArr = JSON.parse(dataRec[0].json_stats)
 				    $scope.minv = parseFloat(jsonArr['minv'])
-				    $scope.maxv = parseFloat(jsonArr['maxv'])	    
+				    $scope.maxv = parseFloat(jsonArr['maxv'])
+				    $scope.maxvRounded = Math.round($scope.maxv*1000)/1000;
 				}
 			    );
 
@@ -559,7 +583,7 @@
 			
                         $scope.getVect = function(path,minve,maxve,ctx) {
 			if(path)
-			{console.log($scope.purl)
+			{
 			    $http.post('/api/project/'+$scope.purl+'/classification/vector', 
 				{
 				    v:path
@@ -594,6 +618,7 @@
 					}
 				    }
 				    */
+				    
 				    ctxContext.moveTo(i,canvasheight*(1- (($scope.data[i]-$scope.minvect)/($scope.maxvect-$scope.minvect))   ));
 				    //ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
 				    for(var i =1; i < $scope.data.length;i++)

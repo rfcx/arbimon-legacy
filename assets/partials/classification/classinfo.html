@@ -14,7 +14,7 @@
             <th>Present/Total</th>
             <th>Percentage</th>
             <th>Damaged Recordings</th>
-            <th>Threshold</th>
+            <th ng-show="th">Threshold</th>
         </tr>
         <tr ng-repeat="species in data" >
             <td class="no-wrap-table-cell">
@@ -32,7 +32,7 @@
             <td>
                 {{species.err}}
             </td>
-            <td>
+            <td ng-show="th">
                 {{th}}
             </td>
         </tr>
@@ -54,13 +54,13 @@
                     <span ng-show="rec.present">Yes</span>
                     <span ng-hide="rec.present">No</span>
                 </span>
-                <span class="horizontal-blank-space">
+                <span class="horizontal-blank-space" ng-show="th">
                     Threshold Presence:
                     {{htresDeci}}
                 </span>
                 <div class="axisWrapper">
                     <div class="yaxisWrapper">
-                        1.0
+                        <div class="yAxishighvalue">{{maxvRounded}}</div>
                         <div class="lowaxis2">0.0</div>
                     </div>
                     <div class="vectorWrapper"><a2-vectorchart  minvect="minv" maxvect="maxv" vurl="rec.vect" purl="url"></a2-vectorchart></div>
