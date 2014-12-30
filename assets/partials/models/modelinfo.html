@@ -201,7 +201,8 @@
            <strong>Current threshold:</strong> {{currentThreshold}}
            <div><strong>New threshold:</strong><input id="newthres" type="text" size="5"/></div>
            <div><div class="btn btn-default" ng-click="recalculate()">Recalculate</div></div>
-           <div><div class="btn btn-default" ng-click="saveThreshold()">Save current threshold</div></div>{{messageSaved}}
+           <div><div class="btn btn-default" ng-click="saveThreshold()">Save current threshold</div></div>
+           <small>{{messageSaved}}</small>
         </div>
         <div class="model-info-column" >
             <strong>Statistics</strong>

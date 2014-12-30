@@ -602,8 +602,8 @@
 		    {
 			$scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
 		    }
-		    $scope.computeStats();
-		}else $scope.messageSaved = 'Invalidad value. Should be a value bewtween 0 and 1.';
+		    $scope.computeStats();   
+		}else $scope.messageSaved = 'Value should be between 0 and 1.';
 
 	    };
 	    
