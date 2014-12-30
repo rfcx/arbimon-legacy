@@ -110,7 +110,7 @@ for i in classes:
         
     rowsInSpec = modelStats[4].shape[0]
     spec = modelStats[4]
-    
+    spec[spec == -10000] = float('nan')
     for j in range(0,rowsInSpec):
         if abs(sum(spec[j,:])) > 0.0:
             specToShow = numpy.vstack((specToShow,spec[j,:]))

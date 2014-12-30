@@ -141,10 +141,12 @@ class Rec:
                 
         #handle errors
         except HTTPError, e:
-            self.logs.write("bucket http error:" + str(e.code ))
+            if self.logs :
+                self.logs.write("bucket http error:" + str(e.code ))
             return False
         except URLError, e:
-            self.logs.write("bucket url error:" + str(e.reason ))
+            if self.logs :
+                self.logs.write("bucket url error:" + str(e.reason ))
             return False
         
         
