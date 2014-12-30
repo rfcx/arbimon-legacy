@@ -398,20 +398,28 @@
             $scope.recsUris = [];
 	    $scope.selectedVect = null;
 	    $scope.selectedVectWatch =null;
+	    $scope.waitCallsNUmber = 0;
+	    $scope.waitCallsNUmberIndex = 0;
 	    $scope.$watch('selectedVectWatch' ,
 		function()
 		{
 		    $scope.selectedVect = $scope.selectedVectWatch;
 		}
 	    );
-	    $scope.vectorYesMinMax = 1;
+
 	    $scope.allYesMax = [];
 	    $scope.vectorNoMax = -1;
+	    
+	    $scope.suggestedThreshold = null;
+	    $scope.databaseThreshold = null;
+	    $scope.currentThreshold = null;
+	    
             $http.get('/api/project/' + $scope.project_url+ '/validation/list/' + $stateParams.modelId)
             .success(function(vdata) {
                 $scope.validations = vdata;
 
                 $scope.valiDetails = $scope.validations.nofile ? false : true;
+		$scope.waitCallsNUmber = $scope.validations.length;
   		for(var i = 0 ; i < $scope.validations.length ; i++)
 		{
 		    $scope.getRecVali ( $scope.validations[i],i );
@@ -420,7 +428,9 @@
             .error(function() {
                 notify.error("Error Communicating With Server");
             });
+	    
             $scope.loadingValidations = true;
+	    
 	    $scope.getRecVali = function (currRec ,i)
 	    {
 		var pieces = currRec.uri.split('/');
@@ -460,43 +470,46 @@
 			    $scope.allYesMax.push(vmax)
 			}
 			
-			if ($scope.validations.length == i + 1)
-			{
-			   $scope.allYesMax = $scope.allYesMax.sort();
-			    var j ;
-			    for(j = 0 ; j < $scope.allYesMax.length;j++)
-			    {
-				if ($scope.allYesMax[j]>=$scope.vectorNoMax)
-				{
-				    break;
-				}
-			    }
-			    if ($scope.vectorYesMinMax == null)
-			    {
-			    
-				$scope.vectorYesMinMax =  Math.round($scope.allYesMax[j]*100)/100;
-				$scope.thresholdCurrent = $scope.vectorYesMinMax;
-				
-				if (typeof $scope.vectorYesMinMax == 'NaN')
-				{
-				    $scope.vectorYesMinMax =  Math.round($scope.allYesMax[0]*100)/100;
-				    $scope.thresholdCurrent = $scope.vectorYesMinMax;
-				}
-			    }
-			    
-			    for(var jj = 0 ; jj < $scope.validations.length;jj++)
-			    {
-				$scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.vectorYesMinMax) ? 'yes' : 'no';
-			    }
-			    
-
-			    $scope.validationsData = $scope.validations;
-			    $scope.computeStats();
-			    $scope.loadingValidations = false;
-			}
+			$scope.waitinFunction();
 		    }
 		);   
 	    };
+	    $scope.showModelValidations = true;
+	    $scope.waitinFunction = function()
+	    {
+		$scope.waitCallsNUmberIndex = $scope.waitCallsNUmberIndex + 1
+		if ($scope.waitCallsNUmber == $scope.waitCallsNUmberIndex)
+		{
+		    $scope.allYesMax = $scope.allYesMax.sort();
+		    var j ;
+		    for(j = 0 ; j < $scope.allYesMax.length;j++)
+		    {
+			if ($scope.allYesMax[j]>=$scope.vectorNoMax)
+			{
+			    break;
+			}
+		    }
+		    $scope.data.maxv = Math.max.apply(null,$scope.allYesMax);
+		    $scope.data.maxvRounded = Math.round($scope.data.maxv*1000)/1000;
+		    $scope.suggestedThreshold =  Math.round($scope.allYesMax[j]*1000000)/1000000;
+		    $scope.currentThreshold = $scope.databaseThreshold != '-'? $scope.databaseThreshold:$scope.suggestedThreshold ;
+		    
+		    if (isNaN($scope.currentThreshold))
+		    {
+			$scope.showModelValidations = false;
+		    }
+		    else
+		    {
+			for(var jj = 0 ; jj < $scope.validations.length;jj++)
+			{
+			    $scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
+			}
+			$scope.validationsData = $scope.validations;
+			$scope.computeStats();
+			$scope.loadingValidations = false;
+		    }
+		}
+	    }
 	    
             $scope.thres = {
 	        tpos: '-',
@@ -555,14 +568,14 @@
 		if (truenegatives+falsepositives>0){
 		    $scope.thres.specificity = Math.round((truenegatives/(truenegatives+falsepositives))*100)/100
 		}
-		 console.log($scope.thres)
 	    };
 	    $scope.messageSaved = '';
 	    $scope.saveThreshold =function()
 	    {
+		$scope.messageSaved = '';
 	        $http.post('/api/project/' + $scope.project_url + '/models/savethreshold', {
 		    m:$stateParams.modelId,
-		    t:$scope.vectorYesMinMax
+		    t:$scope.currentThreshold
 		}).
 		success
 		    (
@@ -580,25 +593,24 @@
 	    $scope.recalculate = function()
 	    {
 		var newval = $('#newthres').val();
-		console.log(newval);
-		$scope.vectorYesMinMax = parseFloat(newval);
-		if (!isNaN($scope.vectorYesMinMax) && ($scope.vectorYesMinMax<=1.0) && ($scope.vectorYesMinMax>=0.0))
+		$scope.messageSaved = '';
+		newval = parseFloat(newval);
+		if (!isNaN(newval) && (newval<=1.0) && (newval>=0.0))
 		{
+		    $scope.currentThreshold =  Math.round(newval*1000000)/1000000;
 		    for(var jj = 0 ; jj < $scope.validations.length;jj++)
 		    {
-			$scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.vectorYesMinMax) ? 'yes' : 'no';
+			$scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
 		    }
 		    $scope.computeStats();
-		}
+		}else $scope.messageSaved = 'Invalidad value. Should be a value bewtween 0 and 1.';
 
 	    };
 	    
-	    $scope.thresholdCurrent = '-';
+	    $scope.currentThreshold = '-';
             $http.get('/api/project/' + $scope.project_url + '/models/' + $stateParams.modelId)
             .success(function(data) {
-		console.log(data)
-		$scope.vectorYesMinMax = data.threshold;
-		$scope.thresholdCurrent = data.threshold;
+		$scope.databaseThreshold = data.threshold == null ?  '-' : data.threshold;
                 $scope.data = {
 		    thresholdFromDb : data.threshold, 
 		    job_id : data.job_id,
@@ -634,6 +646,7 @@
                     tneg: data.json.tn,
                     fneg: data.json.fn,
 		    maxv: data.json.maxv,
+		    maxvRounded: Math.round(data.json.maxv*1000)/1000,
                     minv: data.json.minv,
                     roicount: data.json.roicount, //ok
                     hfreq: Math.round(data.json.roihighfreq * 100) / 100, //ok
@@ -658,7 +671,7 @@
                         user: $scope.validationsData[i].presence,
                         model: $scope.validationsData[i].model,
 			threshold: $scope.validationsData[i].threshold,
-			value: $scope.vectorYesMinMax
+			value: $scope.currentThreshold
                     });
                 }
                 return vals;

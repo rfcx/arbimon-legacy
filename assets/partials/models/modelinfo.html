@@ -193,13 +193,15 @@
         
     </div>
     
-    <div class="col-xs-12" ng-hide="loadingValidations">
+    <div class="col-xs-12" ng-hide="loadingValidations || !showModelValidations">
         <h3>Threshold Details</h3>
         <div class="model-info-column row">
-           <strong>Current threshold:</strong> {{thresholdCurrent}}
+           <strong>Saved threshold:</strong> {{databaseThreshold}}<br>
+           <strong>Suggested threshold:</strong> {{suggestedThreshold}}<br>
+           <strong>Current threshold:</strong> {{currentThreshold}}
            <div><strong>New threshold:</strong><input id="newthres" type="text" size="5"/></div>
            <div><div class="btn btn-default" ng-click="recalculate()">Recalculate</div></div>
-           <div><div class="btn btn-default" ng-click="saveThreshold()">Save threshold</div></div>{{messageSaved}}
+           <div><div class="btn btn-default" ng-click="saveThreshold()">Save current threshold</div></div>{{messageSaved}}
         </div>
         <div class="model-info-column" >
             <strong>Statistics</strong>
@@ -258,8 +260,11 @@
         
     </div>
 </div>
-
-<div class="row" ng-show="valiDetails">
+<div class="row" ng-hide="showModelValidations">
+    <h4>The current model was computed using a previous version of the Arbimon2 App.<br>
+    The validation list feature is not available.</h4>
+</div>
+<div class="row" ng-show="valiDetails && showModelValidations">
     <div ng-hide="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
         <h3 class="inlineh3">
             Validations 
@@ -309,7 +314,7 @@
         
         <div class="axisWrapper">
             <div class="yaxisWrapper">
-                1.0
+                <div class="yAxishighvalue">{{data.maxvRounded}}</div>
                 <div class="lowaxis2">0.0</div>
             </div>
             <div class="vectorWrapper"><a2-vectorchart  minvect="data.minv" maxvect="data.maxv" vurl="selectedVectWatch" purl="project_url"></a2-vectorchart></div>
