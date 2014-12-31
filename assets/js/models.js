@@ -481,17 +481,21 @@
 		if ($scope.waitCallsNUmber == $scope.waitCallsNUmberIndex)
 		{
 		    $scope.allYesMax = $scope.allYesMax.sort();
-		    var j ;
-		    for(j = 0 ; j < $scope.allYesMax.length;j++)
+		    var index  = 0;
+		    for(var j = 0 ; j < $scope.allYesMax.length;j++)
 		    {
 			if ($scope.allYesMax[j]>=$scope.vectorNoMax)
 			{
-			    break;
+			    index = j;
 			}
 		    }
 		    $scope.data.maxv = Math.max.apply(null,$scope.allYesMax);
 		    $scope.data.maxvRounded = Math.round($scope.data.maxv*1000)/1000;
-		    $scope.suggestedThreshold =  Math.round($scope.allYesMax[j]*1000000)/1000000;
+		    $scope.suggestedThreshold =  Math.round($scope.allYesMax[index]*1000000)/1000000;
+		    if (typeof $scope.suggestedThreshold == undefined || isNaN($scope.suggestedThreshold))
+		    {
+			$scope.suggestedThreshold =  Math.round($scope.allYesMax[0]*1000000)/1000000;
+		    }
 		    $scope.currentThreshold = $scope.databaseThreshold != '-'? $scope.databaseThreshold:$scope.suggestedThreshold ;
 		    
 		    if (isNaN($scope.currentThreshold))
@@ -573,6 +577,7 @@
 	    $scope.saveThreshold =function()
 	    {
 		$scope.messageSaved = '';
+		$scope.recalculate();
 	        $http.post('/api/project/' + $scope.project_url + '/models/savethreshold', {
 		    m:$stateParams.modelId,
 		    t:$scope.currentThreshold
@@ -581,6 +586,7 @@
 		    (
 			function(data, status, headers, config) {
 			    $scope.messageSaved = 'Threshold saved';
+			    $scope.databaseThreshold = $scope.currentThreshold;
 			}
 		    ).
 		error(
