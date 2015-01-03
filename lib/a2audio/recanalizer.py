@@ -78,7 +78,11 @@ class Recanalizer:
            self.logs.write("featureVector write end")            
         spec = self.spec;
         for j in range(0,currColumns - self.columns,step): 
-            self.distances.append(self.matrixDistance(numpy.copy(spec[: , j:(j+self.columns)])) )
+            #self.distances.append(self.matrixDistance(numpy.copy(spec[: , j:(j+self.columns)])) )
+            val = ssim( numpy.copy(spec[: , j:(j+self.columns)]) , self.matrixSurfacComp )
+            if val < 0:
+               val = 0
+            self.distances.append(  val   )
         if self.logs:
            self.logs.write("featureVector end")
            
