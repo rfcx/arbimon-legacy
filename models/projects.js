@@ -544,6 +544,7 @@ var Projects = {
                 " m.`threshold` , "+
                 " m.`uri` , "+
                 " r.`uri` ruri  , "+
+		" cr.`max_vector_value` as mvv ," +
                 "SUBSTRING_INDEX(r.`uri` ,'/',-1 ) rec , cr.`present` , s.`name` , sp.`scientific_name` , st.`songtype` "+
                 "FROM `models` m , `job_params_classification`  jpc, `species` sp, `classification_results` cr, `recordings` r, `sites` s, `songtypes` st "+
                 "WHERE cr.`job_id` ="+mysql.escape(cid)+" "+

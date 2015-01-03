@@ -571,45 +571,25 @@ router.get('/project/classification/csv/:cid', function(req, res) {
             
             if (th)
             {
-                var aws = require('knox').createClient({
-                    key: config('aws').accessKeyId,
-                    secret: config('aws').secretAccessKey,
-                    bucket: config('aws').bucketName
-                });
+
                 data.push('"rec","model presence","threshold presence","current threshold","vector max value","site","year","month","day","hour","minute","species","songtype"');
                 async.eachLimit(row ,5,
                     function(thisrow,callback)
                     {
-                        var recuri = thisrow['ruri'].split('/')
-                        recuri = recuri[recuri.length - 1]+".vector"
-                        var vectorPath = thisrow['uri'].replace('.mod','')+'/classification_'+req.params.cid+"_"+recuri
-                        aws.getFile('/'+vectorPath, function(err, resp){
-                            var outData = ''
-                            resp.on('data', function(chunk) { outData = outData + chunk; });
-                            resp.on('end',
-                            function(chunk)
-                            {
-                                var recVect =  outData.split(",") ;
-                                for(var jj = 0 ; jj < recVect.length; jj++)
-                                {
-                                    recVect[jj] = parseFloat(recVect[jj]);
-                                }
-                                var maxVal = Math.max.apply(null,recVect)
-                                var tprec = 0;
-           			if(maxVal >= th )
-				{
-				    tprec = 1;
-				}                     
+                        var maxVal = thisrow['mvv']
+                        var tprec = 0;
+   			if(maxVal >= th )
+			{
+			    tprec = 1;
+			}                     
 
-                                data.push( '"'+ thisrow['rec']+'",'+ thisrow['present']+','+tprec +','+th+','+maxVal+','+
-                                   thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
-                                   thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
-                                   thisrow['scientific_name']+'","'+ thisrow['songtype']+'"');
-                              
-                                callback();
-                                
-                            });
-                        });
+                        data.push( '"'+ thisrow['rec']+'",'+ thisrow['present']+','+tprec +','+th+','+maxVal+','+
+                           thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
+                           thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
+                           thisrow['scientific_name']+'","'+ thisrow['songtype']+'"');
+                      
+                        callback();
+
 
                     },
                     function(err)
