@@ -9,6 +9,7 @@ from scipy.stats import pearsonr as prs
 from scipy.stats import kendalltau as ktau
 from  scipy.spatial.distance import cityblock as ct
 from scipy.spatial.distance import cosine as csn
+import math
 
 class Recanalizer:
     
@@ -63,7 +64,7 @@ class Recanalizer:
         filename = '/home/rafa/debugs_pickels/'+pieces[len(pieces)-1]+".pickle"
         self.distances = []
         currColumns = self.spec.shape[1]
-        step = 4
+        step = math.ceil(currColumns*.1)
         if self.logs:
            self.logs.write("featureVector in here")     
         self.matrixSurfacComp = numpy.copy(self.speciesSurface[self.lowIndex:self.highIndex,:])
