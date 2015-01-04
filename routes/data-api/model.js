@@ -573,6 +573,24 @@ router.get('/project/classification/csv/:cid', function(req, res) {
             {
 
                 data.push('"rec","model presence","threshold presence","current threshold","vector max value","site","year","month","day","hour","minute","species","songtype"');
+
+		for(var i = 0 ; i < row.length ; i++)
+		{
+			thisrow = row[i];
+                        var maxVal = thisrow['mvv']
+                        var tprec = 0;
+   			if(maxVal >= th )
+			{
+			    tprec = 1;
+			}                     
+
+                        data.push( '"'+ thisrow['rec']+'",'+ thisrow['present']+','+tprec +','+th+','+maxVal+','+
+                           thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
+                           thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
+                           thisrow['scientific_name']+'","'+ thisrow['songtype']+'"');
+		}
+		res.send(data.join("\n"));
+/*
                 async.eachLimit(row ,5,
                     function(thisrow,callback)
                     {
@@ -600,7 +618,7 @@ router.get('/project/classification/csv/:cid', function(req, res) {
                         }
                         res.send(data.join("\n"));
                     }
-                );
+                );*/
             }
             else
             {
