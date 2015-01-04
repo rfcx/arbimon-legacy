@@ -64,7 +64,7 @@ class Recanalizer:
         filename = '/home/rafa/debugs_pickels/'+pieces[len(pieces)-1]+".pickle"
         self.distances = []
         currColumns = self.spec.shape[1]
-        step = math.ceil(currColumns*.1)
+        step = 16
         if self.logs:
            self.logs.write("featureVector in here")     
         self.matrixSurfacComp = numpy.copy(self.speciesSurface[self.lowIndex:self.highIndex,:])
