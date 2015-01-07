@@ -1,7 +1,14 @@
 #! /bin/sh
 
 sudo apt-get install libcap2-bin git
-sudo add-apt-repository ppa:chris-lea/node.js
+
+repo="chris-lea/node.js"
+repoppa="ppa:$repo"
+
+if ! (grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -v list.save | grep -v deb-src | cut -d "#" -f 1 | grep -q $repo); then 
+    sudo add-apt-repository $repoppa
+fi
+
 sudo apt-get update
 sudo apt-get install python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev gfortran libopenblas-dev liblapack-dev  libpng12-dev libfreetype6-dev libsndfile1 libsndfile-dev python-virtualenv r-base r-base-dev libfftw3-3 libfftw3-dev r-cran-rgl bwidget
 sudo scripts/setup/r-packages.R
