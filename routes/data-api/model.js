@@ -54,7 +54,6 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
             {
                 row = rows[i];
                 th = row['th']
-                console.log(row)
                 var index = row['species_id']+'_'+row['songtype_id'];
                 if (typeof data[index]  == 'number')
                 {
@@ -510,17 +509,77 @@ router.get('/project/classification/csv/:cid', function(req, res) {
         
         model.projects.classificationCsvData(req.params.cid, function(err, row) {
             if(err) throw err;
-            var data = '"rec","presence","site","year","month","day","hour","minute","species","songtype"\n';
+            var data = [];
+            
             var thisrow;
-            for(var i =0;i < row.length;i++)
+            thisrow = row[0];
+            var th = thisrow['threshold'];
+            
+            if (th)
             {
-                thisrow = row[i]
-                data = data + '"'+ thisrow['rec']+'",'+ thisrow['present']+','+
-                        thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
-                        thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
-                        thisrow['scientific_name']+'","'+ thisrow['songtype']+'"\n'
+
+                data.push('"rec","model presence","threshold presence","current threshold","vector max value","site","year","month","day","hour","minute","species","songtype"');
+
+		for(var i = 0 ; i < row.length ; i++)
+		{
+			thisrow = row[i];
+                        var maxVal = thisrow['mvv']
+                        var tprec = 0;
+   			if(maxVal >= th )
+			{
+			    tprec = 1;
+			}                     
+
+                        data.push( '"'+ thisrow['rec']+'",'+ thisrow['present']+','+tprec +','+th+','+maxVal+','+
+                           thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
+                           thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
+                           thisrow['scientific_name']+'","'+ thisrow['songtype']+'"');
+		}
+		res.send(data.join("\n"));
+/*
+                async.eachLimit(row ,5,
+                    function(thisrow,callback)
+                    {
+                        var maxVal = thisrow['mvv']
+                        var tprec = 0;
+   			if(maxVal >= th )
+			{
+			    tprec = 1;
+			}                     
+
+                        data.push( '"'+ thisrow['rec']+'",'+ thisrow['present']+','+tprec +','+th+','+maxVal+','+
+                           thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
+                           thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
+                           thisrow['scientific_name']+'","'+ thisrow['songtype']+'"');
+                      
+                        callback();
+
+
+                    },
+                    function(err)
+                    {
+                        if (err)
+                        {
+                            res.json({"err": "Error fetching classification information."});
+                        }
+                        res.send(data.join("\n"));
+                    }
+                );*/
             }
-            res.send(data);
+            else
+            {
+                data.push('"rec","presence","site","year","month","day","hour","minute","species","songtype"');
+                for(var i =0;i < row.length;i++)
+                {
+                    thisrow = row[i];
+    
+                    data.push( '"'+ thisrow['rec']+'",'+ thisrow['present']+','+
+                            thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
+                            thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
+                            thisrow['scientific_name']+'","'+ thisrow['songtype']+'"');               
+                }
+                res.send(data.join("\n"));
+            }
         });
     });
           
@@ -530,7 +589,6 @@ router.get('/project/classification/csv/:cid', function(req, res) {
 
 
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
-    debug('req.params.projectUrl : '+req.params.projectUrl);
     var response_already_sent;
     var params, job_id;
 
