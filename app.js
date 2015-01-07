@@ -46,6 +46,9 @@ app.use(busboy());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+if(app.get('env') === 'development') {
+    app.use('/docs', express.static(path.join(__dirname, 'docs')));
+}
 
 var sessionConfig = {
     key    : config('session').key,

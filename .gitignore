@@ -21,3 +21,6 @@ a2.komodoproject
 *pyc
 
 .env
+
+# docs (?)
+docs
