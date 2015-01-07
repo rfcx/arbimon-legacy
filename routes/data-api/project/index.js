@@ -5,7 +5,7 @@ var async = require('async');
 var util = require('util');
 var gravatar = require('gravatar');
 
-var model = require('../../../models');
+var model = require('../../../model');
 
 // routes
 var recording_routes = require('./recordings');

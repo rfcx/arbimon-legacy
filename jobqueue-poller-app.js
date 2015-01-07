@@ -1,6 +1,6 @@
 // packages
 var config   = require('./config');
-var model    = require('./models');
+var model    = require('./model');
 var jobQueue = require('./utils/jobqueue');
 var debug    = require('debug')('arbimon2:jobqueue-app');
 var async    = require('async');

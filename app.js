@@ -10,7 +10,7 @@ var SessionStore = require('express-mysql-session');
 var busboy = require('connect-busboy');
 
 var config = require('./config');
-var model = require('./models');
+var model = require('./model');
 var tmpfilecache = require('./utils/tmpfilecache');
 var jobQueue = require('./utils/jobqueue');
 

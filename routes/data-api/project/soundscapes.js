@@ -1,7 +1,7 @@
 var debug = require('debug')('arbimon2:route:soundscapes');
 var express = require('express');
 var router = express.Router();
-var model = require('../../../models');
+var model = require('../../../model');
 
 var region_router = express.Router();
 

@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var model = require('../../../models');
+var model = require('../../../model');
 
 
 router.param('trainingSet', function(req, res, next, training_set){

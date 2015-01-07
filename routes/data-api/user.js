@@ -5,7 +5,7 @@ var gravatar = require('gravatar');
 var async = require('async');
 var sprintf = require("sprintf-js").sprintf;
 
-var model = require('../../models');
+var model = require('../../model');
 var sha256 = require('../../utils/sha256');
 
 router.get('/projectlist', function(req, res, next) {

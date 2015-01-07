@@ -7,7 +7,7 @@ var async = require('async');
 var util = require('util');
 
 
-var model = require('../models');
+var model = require('../model');
 var config = require('../config');
 var audioTool = require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');

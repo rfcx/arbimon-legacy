@@ -213,7 +213,7 @@ module.exports = function(grunt) {
                 files: [
                     'app.js',
                     'routes/**/*.js',
-                    'models/**/*.js',
+                    'model/**/*.js',
                     'utils/**/*.js',
                     'config/**/*.js',
                     'config/**/*.json'
@@ -226,7 +226,7 @@ module.exports = function(grunt) {
             jobqueue: {
                 files: [
                     'jobqueue-app.js',
-                    'models/job_queues.js',
+                    'model/job_queues.js',
                     'utils/**/*.js',
                     'config/**/*.js',
                     'config/**/*.json'
