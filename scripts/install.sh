@@ -19,6 +19,6 @@ sudo npm install -g forever
 
 U=`whoami`
 H=`readlink ~/.npm`
-sudo chown -R "$H" "$U"
+sudo chown -R "$U" "$H"
 
 npm run-script setup
