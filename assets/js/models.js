@@ -433,46 +433,49 @@
 	    
 	    $scope.getRecVali = function (currRec ,i)
 	    {
-		var pieces = currRec.uri.split('/');
-		var filename = pieces[pieces.length-1];
-		fileName = filename.replace('.thumbnail.png','.flac');		    
-		var vectorUri = 'project_'+$scope.project_id+'/training_vectors/job_'+$scope.data.job_id+'/'+fileName;
-
-		$http.post('/api/project/'+$scope.project_url+'/classification/vector', 
-		    {
-			v:vectorUri
-		    }
-		).
-		success
-		(
-		    function(data, status, headers, config) 
-		    {
-			var vector =  data.data.split(",") ;
-			for(var jj = 0 ; jj < vector.length; jj++)
+		if (currRec.uri)
+		{	
+		    var pieces = currRec.uri.split('/');
+		    var filename = pieces[pieces.length-1];
+		    fileName = filename.replace('.thumbnail.png','.flac');		    
+		    var vectorUri = 'project_'+$scope.project_id+'/training_vectors/job_'+$scope.data.job_id+'/'+fileName;
+    
+		    $http.post('/api/project/'+$scope.project_url+'/classification/vector', 
 			{
-			    vector[jj] = parseFloat(vector [jj]);
+			    v:vectorUri
 			}
-			var vectorLength = vector.length;
-			
-			var vmax = Math.max.apply(null,vector)
-			$scope.validations[i].vmax = vmax;
-			$scope.validations[i].vector = vector;
-		        if (currRec.presence == 'no')
+		    ).
+		    success
+		    (
+			function(data, status, headers, config) 
 			{
-			    if($scope.vectorNoMax < vmax )
+			    var vector =  data.data.split(",") ;
+			    for(var jj = 0 ; jj < vector.length; jj++)
 			    {
-				$scope.vectorNoMax = vmax
+				vector[jj] = parseFloat(vector [jj]);
 			    }
+			    var vectorLength = vector.length;
+			    
+			    var vmax = Math.max.apply(null,vector)
+			    $scope.validations[i].vmax = vmax;
+			    $scope.validations[i].vector = vector;
+			    if (currRec.presence == 'no')
+			    {
+				if($scope.vectorNoMax < vmax )
+				{
+				    $scope.vectorNoMax = vmax
+				}
+			    }
+			    
+			    if (currRec.presence == 'yes')
+			    {
+				$scope.allYesMax.push(vmax)
+			    }
+			    
+			    $scope.waitinFunction();
 			}
-			
-		        if (currRec.presence == 'yes')
-			{
-			    $scope.allYesMax.push(vmax)
-			}
-			
-			$scope.waitinFunction();
-		    }
-		);   
+		    );
+		}
 	    };
 	    $scope.showModelValidations = true;
 	    $scope.waitinFunction = function()

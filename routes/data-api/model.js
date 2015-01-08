@@ -427,10 +427,13 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
                 res.json({"err": "Error fetching validation information."});
             }
             
-            if (resp.statusCode == 404)
-            {
-                return res.json({"nofile": "nofile"});
-            }
+            if (resp && resp.statusCode)
+            {            
+                if (resp.statusCode == 404)
+                {
+                    return res.json({"nofile": "nofile"});
+                }
+            }else return res.json({"nofile": "nofile"});
             
             var outData = ''
             resp.on('data', function(chunk) { outData = outData + chunk; });
