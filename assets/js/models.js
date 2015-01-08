@@ -597,9 +597,9 @@
 
 			if (typeof $scope.suggestedThreshold == undefined || isNaN($scope.suggestedThreshold) || !$scope.suggestedThreshold)
 			{
-			    $scope.currentThreshold = $scope.allYesMax[0]
+			    $scope.currentThreshold = $scope.databaseThreshold != '-'? $scope.databaseThreshold: $scope.allYesMax[0]
 			    $scope.suggestedThreshold =  Math.round($scope.allYesMax[0]*1000000)/1000000;
-			    $scope.currentThresholdRounded = $scope.suggestedThreshold ;
+			    $scope.currentThresholdRounded = $scope.databaseThreshold != '-'? $scope.databaseThreshold: $scope.suggestedThreshold ;
 			}
 			console.log($scope.suggestedThreshold)
 			for(var jj = 0 ; jj < $scope.validations.length;jj++)
