@@ -26,7 +26,7 @@ router.get('/projectlist', function(req, res, next) {
     }
 });
 
-router.get('/feed/:page', function(req, res) {
+router.get('/feed/:page', function(req, res, next) {
     
     var page = req.params.page;
     
@@ -53,8 +53,7 @@ router.get('/feed/:page', function(req, res) {
         }
     },
     function(err, results) {
-        
-        // console.log(results);
+        if(err) return next(err);
         
         var feed = results.news.map(function(row){
             row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 30 }, https=req.secure);

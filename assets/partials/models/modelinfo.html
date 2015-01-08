@@ -265,16 +265,11 @@
         
     </div>
 </div>
-<<<<<<< HEAD
-
-<div class="row" ng-show="valiDetails && showValidationsFalg">
-=======
 <div class="row" ng-hide="showModelValidations">
     <h4>The current model was computed using a previous version of the Arbimon2 App.<br>
     The validation list feature is not available.</h4>
 </div>
 <div class="row" ng-show="valiDetails && showModelValidations">
->>>>>>> all-in-one
     <div ng-hide="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
         <h3 class="inlineh3">
             Validations 
@@ -335,7 +330,7 @@
             <div class="yaxisWrapper vertical-text2">
                 Hertz
             </div>
-            <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="https://s3.amazonaws.com/arbimon2/{{selectedUri}}"/></div>
+            <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="{{selectedUrl}}"/></div>
             <small>Seconds</small>
         </div>
     </div>

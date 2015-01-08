@@ -9,17 +9,19 @@ var session = require('express-session')
 var SessionStore = require('express-mysql-session');
 var busboy = require('connect-busboy');
 
+var AWS = require('aws-sdk');
+
 var config = require('./config');
+AWS.config.update({
+    accessKeyId: config('aws').accessKeyId, 
+    secretAccessKey: config('aws').secretAccessKey,
+    region: config('aws').region
+});
+
+
 var model = require('./model');
 var tmpfilecache = require('./utils/tmpfilecache');
 var jobQueue = require('./utils/jobqueue');
-
-// routes
-var login = require('./routes/login');
-var routes = require('./routes/index');
-
-var AWS = require('aws-sdk');
-AWS.config.loadFromPath('./config/aws.json');
 
 tmpfilecache.cleanup();
 
@@ -66,6 +68,10 @@ if (app.get('env') === 'production') {
 }
 
 app.use(session(sessionConfig));
+
+// routes
+var login = require('./routes/login');
+var routes = require('./routes/index');
 
 app.use('/', login);
 app.use('/', routes);

@@ -12,7 +12,7 @@ from scipy.spatial.distance import cosine as csn
 
 class Recanalizer:
     
-    def __init__(self, uri , speciesSurface ,low , high ,columns,tempFolder,logs=None , bucket = 'arbimon2'):
+    def __init__(self, uri, speciesSurface, low, high, columns, tempFolder, logs=None, bucket):
         start_time = time.time()
         self.low = float(low)
         self.high = float(high)

@@ -15,11 +15,6 @@ var scriptsFolder = __dirname+'/../../scripts/';
 var config = require('../../config');
 
 
-
-var cmd_escape = function(x){
-    return mysql.escape(x);
-};
-
 router.get('/project/:projectUrl/models', function(req, res, next) {
 
     model.projects.modelList(req.params.projectUrl, function(err, rows) {
@@ -246,8 +241,10 @@ router.get('/project/:projectUrl/classification/:cid/delete', function(req, res)
 });
 
 router.post('/project/:projectUrl/classification/new', function(req, res, next) {
+    
     var response_already_sent;
     var params, job_id;
+    
     async.waterfall([
         function find_project_by_url(next){
             model.projects.findByUrl(req.params.projectUrl, next);
@@ -373,7 +370,7 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
 router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, next) {
 
     if(!req.params.modelId)
-        return res.json('missing values');
+        return res.json({ error: 'missing values' });
 
     model.projects.modelValidationUri(req.params.modelId, function(err, row) {
         if(err) return next(err);
@@ -381,67 +378,66 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
         var validationUri = row[0].uri ;
         validationUri = validationUri.replace('.csv','_vals.csv');
 
-        var sendData = [];
-
         s3.getObject({
             Key: validationUri,
             Bucket: config('aws').bucketName
         },
         function(err, data) {
-            if (err) return next(err);
+            if (err) {
+                if(err.code !== 'NoSuchKey') return next(err);
+                
+                return res.status(404).json({error: "list not found"});
+            }
 
             var outData = String(data.Body);
 
             var lines = outData.split('\n');
+            
+            lines = lines.filter(function(line) {
+                return line !== '';
+            });
 
-            async.each(lines , function(line,callback) {
-
-                if (line === '')
+            async.map(lines, function(line, callback) {
+                
+                items = line.split(',');
+                var prec = items[1].trim(' ') == 1 ? 'yes' :'no';
+                var modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
+                var entryType = items[3]?items[3].trim(' '):'';
+                
+                model.recordings.recordingInfoGivenUri(items[0], req.params.projectUrl, function(err,recData)
                 {
-                    callback();
-                }
-                else
-                {
-                    items = line.split(',');
-                    var prec = items[1].trim(' ') == 1 ? 'yes' :'no';
-                    var modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
-                    var entryType = items[3]?items[3].trim(' '):'';
-                    model.recordings.recordingInfoGivenUri(items[0],req.params.projectUrl, function(err,recData)
+                    if (err) {
+                        debug("Error fetching recording information. : " + items[0]);
+                        console.error(err);
+                        return callback(err);
+                    }
+                    if (recData.length > 0)
                     {
-                        if (err) {
-                            debug("Error fetching recording information. : "+items[0])
-                            res.json({"err": "Error fetching recording information."});
-                            callback('err')
-                        }
-                        if (recData.length > 0)
-                        {
-                            var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
-                            recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
+                        var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
+                        recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
 
-                            var rowSent = {
-                                site: recData[0].site,
-                                date: new Date(recData[0].date),
-                                presence: prec,
-                                model: modelprec,
-                                id: recData[0].id,
-                                url: "https://"+ config('aws').bucketName + ".s3.amazonaws.com/" + recUriThumb,
-                                type: entryType
-                            };
+                        var rowSent = {
+                            site: recData[0].site,
+                            date: new Date(recData[0].date),
+                            presence: prec,
+                            model: modelprec,
+                            id: recData[0].id,
+                            url: "https://"+ config('aws').bucketName + ".s3.amazonaws.com/" + recUriThumb,
+                            type: entryType
+                        };
 
-                            sendData.push(rowSent);
-                        }
-                        callback();
-                    });
+                        callback(null, rowSent);
+                    }
+                });
 
-                }
             },
-            function(err) {
+            function(err, results) {
                 if (err)
                 {
-                    res.json({"err": "Error fetching recording information."});
+                    res.json({err: "Error fetching recording information."});
                 }
-                debug('sendData2: '+sendData);
-                res.json(sendData);
+                debug('sendData2: '+ results);
+                res.json(results);
             });
 
         });
@@ -509,7 +505,7 @@ router.post('/project/:projectUrl/classification/vector', function(req, res, nex
     function(err, data){
         if(err) return next(err);
 
-        res.json({ data: data });
+        res.json({ data: String(data.Body) });
     });
 
 });

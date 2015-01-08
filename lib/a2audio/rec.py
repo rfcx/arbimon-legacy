@@ -19,7 +19,7 @@ class Rec:
     samples = 0
     sample_rate = 0
 
-    def __init__(self, uri , tempFolder,configData,bucket = 'arbimon2',logs=None,removeFile=True):
+    def __init__(self, uri, tempFolder, configData, bucket, logs=None, removeFile=True):
         self.logs = logs
         self.config = configData
         self.localFiles = tempFolder
@@ -132,9 +132,9 @@ class Rec:
         self.seed = "%.16f" % ((sys.maxint*np.random.rand(1)))
         f = None
         if self.logs :
-            self.logs.write('https://s3.amazonaws.com/arbimon2/'+self.uri+ ' to '+self.localFiles+self.filename+self.seed)
+            self.logs.write('https://s3.amazonaws.com/'+self.bucket+'/'+self.uri+ ' to '+self.localFiles+self.filename+self.seed)
         try:
-            f = urlopen('https://s3.amazonaws.com/arbimon2/'+self.uri)
+            f = urlopen('https://s3.amazonaws.com/'+self.bucket+'/'+self.uri)
             if self.logs :
                 self.logs.write('urlopen success')
             # Open our local file for writing
@@ -187,5 +187,3 @@ class Rec:
             return self.localfilename;
         else:
             return None;
-
-

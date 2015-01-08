@@ -44,7 +44,7 @@
         <h2><i class="fa fa-caret-down" tooltip="More Details" tooltip-placement="bottom"  ng-click="more() | trackEvent:'Analysis-Classification-Info':'more clicked'"></i></h2>
     </div>
     <div  ng-show="showMore" class="text-centered-bordered">
-        <h2><i class="fa fa-caret-up" tooltip="Less Details" tooltip-placement="bottom"  ng-click="less() | trackEvent:'Analysis-Classification-Info':'less clicked'""></i></h2>
+        <h2><i class="fa fa-caret-up" tooltip="Less Details" tooltip-placement="bottom"  ng-click="less() | trackEvent:'Analysis-Classification-Info':'less clicked'"></i></h2>
         <ul class="ulnodeco">
             <li ng-repeat="rec in recs" class="linodeco">
                 <div class="cleardiv"></div>
@@ -71,7 +71,7 @@
                     <div class="yaxisWrapper vertical-text2">
                         Hertz
                     </div>
-                    <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="https://s3.amazonaws.com/arbimon2/{{rec.uri}}"/></div>
+                    <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="{{ rec.rec_image_url }}"/></div>
                     <small>Seconds</small>
                 </div>
                 <div class="bordeder-empy-div"></div>
