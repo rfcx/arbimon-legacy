@@ -17,4 +17,8 @@ sudo npm install -g grunt-cli
 sudo npm install -g bower
 sudo npm install -g forever
 
+U=`whoami`
+H=`readlink ~/.npm`
+sudo chown -R "$H" "$U"
+
 npm run-script setup
