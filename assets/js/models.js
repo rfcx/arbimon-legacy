@@ -513,6 +513,7 @@
 			var accuracyObject = [];
 			var sensitivityObject = [];
 			var specificityObject = [];
+			var sumObject = [];
 			while(searchTh > 0.01)
 			{
 			    for(var jj = 0 ; jj < $scope.validations.length;jj++)
@@ -525,9 +526,20 @@
 			    accuracyObject.push($scope.thres.accuracy)
 			    sensitivityObject.push($scope.thres.sensitivity)
 			    specificityObject.push($scope.thres.specificity)
+			    sumObject.push($scope.thres.specificity+$scope.thres.sensitivity+$scope.thres.accuracy+$scope.thres.precision)
 			    searchTh = searchTh - 0.001;
 			}
-			var max = precisionObject[0];
+			var max = sumObject[0];
+			var mindex = 0;
+			for (var ii = 1; ii < sumObject.length; ii++) {
+			    if (sumObject[ii] > max) {
+				max = sumObject[ii];
+				mindex = ii
+			    }
+			}
+			console.log(thresholdObject[mindex])
+			
+			max = precisionObject[0];
 			
 			for (var ii = 0; ii < precisionObject.length; ii++) {
 			    if (precisionObject[ii] >= max) {
