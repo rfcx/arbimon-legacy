@@ -595,13 +595,13 @@
 			$scope.suggestedThreshold =  Math.round(accum*1000000)/1000000;
 			$scope.currentThresholdRounded = $scope.databaseThreshold != '-'? $scope.databaseThreshold: Math.round(accum*1000000)/1000000;
 
-			if (typeof $scope.suggestedThreshold == undefined || isNaN($scope.suggestedThreshold))
+			if (typeof $scope.suggestedThreshold == undefined || isNaN($scope.suggestedThreshold) || !$scope.suggestedThreshold)
 			{
 			    $scope.currentThreshold = $scope.allYesMax[0]
 			    $scope.suggestedThreshold =  Math.round($scope.allYesMax[0]*1000000)/1000000;
 			    $scope.currentThresholdRounded = $scope.suggestedThreshold ;
 			}
-			
+			console.log($scope.suggestedThreshold)
 			for(var jj = 0 ; jj < $scope.validations.length;jj++)
 			{
 			    $scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
