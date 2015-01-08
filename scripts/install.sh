@@ -18,7 +18,7 @@ sudo npm install -g bower
 sudo npm install -g forever
 
 U=`whoami`
-H=`readlink ~/.npm`
+H=`readlink -f ~/.npm`
 sudo chown -R "$U" "$H"
 
 npm run-script setup
