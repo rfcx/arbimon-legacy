@@ -1,7 +1,12 @@
 $(document)
   .on('click.bs.dropdown.data-api', '.dropdown .dropdown-form', function (e) { e.stopPropagation(); });
 
-
+/**
+ * @ngdoc overview
+ * @name visualizer
+ * @description
+ * This is the main visualizer module.
+ */
 angular.module('visualizer', [
     'ui.router', 
     'ct.ui.router.extras', 
@@ -21,6 +26,12 @@ angular.module('visualizer', [
     'a2-visualizer-spectrogram-click2zoom',
     'a2-url-update-service'
 ])
+/**
+ * @ngdoc service
+ * @name a2-visualizer-spectrogram-Layout.factory:VisualizerLayout
+ * @description
+ * The layout manager for the spectrogram.
+ */
 .config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
     
     $urlRouterProvider
@@ -250,7 +261,19 @@ angular.module('visualizer', [
     return a2AudioPlayer;
 });
 
+/**
+ * @ngdoc overview
+ * @name a2-visualizer-spectrogram-Layout
+ * @description
+ * This module stores the layout manager for the spectrogram.
+ */
 angular.module('a2-visualizer-spectrogram-Layout',['a2Classy'])
+/**
+ * @ngdoc service
+ * @name a2-visualizer-spectrogram-Layout.factory:VisualizerLayout
+ * @description
+ * The layout manager for the spectrogram.
+ */
 .factory('VisualizerLayout', function(a2BrowserMetrics, makeClass){
     var align_to_interval = function(unit, domain, align){
         if(align === undefined || !domain || !domain.unit_interval){

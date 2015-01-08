@@ -56,9 +56,12 @@ for line in sys.stdin:
     with closing(db.cursor()) as cursor:
         cursor.execute("""
             INSERT INTO `arbimon2`.`classification_results` (
-                job_id, recording_id, species_id, songtype_id, present
-            ) VALUES (%s, %s, %s, %s, %s)
-        """, [jId, recId, species, songtype, presence])
+                job_id, recording_id, species_id, songtype_id, present,
+                max_vector_value
+            ) VALUES (%s, %s, %s, %s, %s,
+                %s
+            )
+        """, [jId, recId, species, songtype, presence, maxV])
         db.commit()
     processedCount = processedCount + 1
 log.write('processed '+str(processedCount)+' of '+str(expectedRecordings))

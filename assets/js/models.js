@@ -11,373 +11,372 @@
     ]);
     var template_root = '/partials/models/';
     
-    models.
-    controller('ModelsCtrl',
-            function($scope, $http, $modal, $filter, ngTableParams, Project, JobsData, $location, notify) {
-                $scope.infoInfo = "Loading...";
-                $scope.showInfo = true;
-                $scope.loading = true;
-                
-                $scope.updateFlags = function() {
-                    $scope.successInfo = "";
-                    $scope.showSuccess = false;
-                    $scope.errorInfo = "";
-                    $scope.showError = false;
-                    $scope.infoInfo = "";
-                    $scope.showInfo = false;
-                    $scope.loading = false;
-                };
+    models.controller('ModelsCtrl',
+        function($scope, $http, $modal, $filter, ngTableParams, Project, JobsData, $location, notify) {
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            $scope.loading = true;
+            
+            $scope.updateFlags = function() {
+                $scope.successInfo = "";
+                $scope.showSuccess = false;
+                $scope.errorInfo = "";
+                $scope.showError = false;
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+            };
 
-                Project.getInfo(function(data) {
-                    $scope.projectData = data;
-                });
-                
-                var initTable = function() {
-                    $scope.tableParams = new ngTableParams(
-                        {
-                            page: 1,
-                            count: 10,
-                            sorting: {
-                                mname: 'asc'
-                            }
-                        }, 
-                        {
-                            total: $scope.modelsDataOrig.length,
-                            getData: function($defer, params) {
-                                $scope.infopanedata = "";
-                                var filteredData = params.filter() ?
-                                $filter('filter')($scope.modelsDataOrig, params.filter()) :
-                                $scope.modelsDataOrig;
-                                
-                                var orderedData = params.sorting() ?
-                                $filter('orderBy')(filteredData, params.orderBy()) :
-                                filteredData;
-                                
-                                params.total(orderedData.length);
-                                $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-                                if (orderedData.length < 1) {
-                                    $scope.infopanedata = "No models found.";
-                                }
-                                $scope.modelsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                            }
-                        });
-                };
-                
-                $scope.loadModels = function() {
-                    $http.get('/api/project/' + Project.getUrl() + '/models')
-                    .success(
-                        function(data) {
-                            $scope.modelsData = data;
-                            $scope.modelsDataOrig = data;
-                            $scope.infoInfo = "";
-                            $scope.showInfo = false;
-                            $scope.loading = false;
+            Project.getInfo(function(data) {
+                $scope.projectData = data;
+            });
+            
+            var initTable = function() {
+                $scope.tableParams = new ngTableParams(
+                    {
+                        page: 1,
+                        count: 10,
+                        sorting: {
+                            mname: 'asc'
+                        }
+                    }, 
+                    {
+                        total: $scope.modelsDataOrig.length,
+                        getData: function($defer, params) {
+                            $scope.infopanedata = "";
+                            var filteredData = params.filter() ?
+                            $filter('filter')($scope.modelsDataOrig, params.filter()) :
+                            $scope.modelsDataOrig;
                             
-                            if (data.length > 0) {
-                                if(!$scope.tableParams) {
-                                    initTable();
-                                }
-                                else {
-                                    $scope.tableParams.reload();
-                                }
-                            } 
-                            else {
+                            var orderedData = params.sorting() ?
+                            $filter('orderBy')(filteredData, params.orderBy()) :
+                            filteredData;
+                            
+                            params.total(orderedData.length);
+                            $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+                            if (orderedData.length < 1) {
                                 $scope.infopanedata = "No models found.";
                             }
-                        }
-                    )
-                    .error(function() {
-                            notify.error("Error Communicating With Server");
-                    });
-                };
-                $scope.loadModels();
-                
-                $scope.newClassification = function(model_id, model_name) {
-                    
-                    var modalInstance = $modal.open({
-                        templateUrl: template_root + 'newclassification.html',
-                        controller: 'NewClassificationInstanceCtrl',
-                        resolve: {
-                            model_name: function() {
-                                return model_name;
-                            },
-                            model_id: function() {
-                                return model_id;
-                            }
+                            $scope.modelsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
                         }
                     });
-
-                    modalInstance.result.then(
-                        function() {
-                            console.log('new classification: ' + new Date());
-                        }
-                    );
-                };
-
-
-                $scope.deleteModel = function(model_id, model_name) {
-                    $scope.infoInfo = "Loading...";
-                    $scope.showInfo = true;
-                    $scope.loading = true;
-                    var modalInstance = $modal.open({
-                        templateUrl: template_root + 'deletemodel.html',
-                        controller: 'DeleteModelInstanceCtrl',
-                        resolve: {
-                            model_name: function() {
-                                return model_name;
-                            },
-                            model_id: function() {
-                                return model_id;
-                            },
-                            projectData: function() {
-                                return $scope.projectData;
-                            }
-                        }
-                    });
-
-                    modalInstance.opened.then(function() {
+            };
+            
+            $scope.loadModels = function() {
+                $http.get('/api/project/' + Project.getUrl() + '/models')
+                .success(
+                    function(data) {
+                        $scope.modelsData = data;
+                        $scope.modelsDataOrig = data;
                         $scope.infoInfo = "";
                         $scope.showInfo = false;
                         $scope.loading = false;
-                    });
-
-                    modalInstance.result.then(
-                        function() {
-                            var index = -1;
-                            var modArr = angular.copy($scope.modelsDataOrig);
-                            for (var i = 0; i < modArr.length; i++) {
-                                if (modArr[i].model_id === model_id) {
-                                    index = i;
-                                    break;
-                                }
+                        
+                        if (data.length > 0) {
+                            if(!$scope.tableParams) {
+                                initTable();
                             }
-                            if (index > -1) {
-                                $scope.modelsDataOrig.splice(index, 1);
-                                $scope.tableParams.reload();
-                                notify.log("Model Deleted Successfully");
-                            }
-                        }
-                    );
-                };
-                
-                
-                $scope.model_id = null;
-                $scope.validationdata = null;
-                
-                $scope.newModel = function() {
-                    $scope.infoInfo = "Loading...";
-                    $scope.showInfo = true;
-                    $scope.loading = true;
-                    var url = $scope.projectData.url;
-                    $http.get('/api/project/' + url + '/models/forminfo')
-                        .success(
-                            function(data) {
-
-                                var modalInstance = $modal.open({
-                                    templateUrl: template_root + 'newmodel.html',
-                                    controller: 'NewModelInstanceCtrl',
-                                    resolve: {
-                                        projectData: function() {
-                                            return $scope.projectData;
-                                        },
-                                        types: function() {
-                                            return data.types;
-                                        },
-                                        trainings: function() {
-                                            return data.trainings;
-                                        }
-                                    }
-                                });
-                                
-                                modalInstance.opened.then(function() {
-                                    $scope.infoInfo = "";
-                                    $scope.showInfo = false;
-                                    $scope.loading = false;
-                                });
-
-                                modalInstance.result.then(
-                                    function(result) {
-                                        data = result;
-                                        if (data.ok) {
-                                            JobsData.updateJobs();
-                                            notify.log("New Model Training on Queue");
-                                        }
-
-                                        if (data.err) {
-                                            notify.error(err);
-                                        }
-
-                                        if (data.url) {
-                                            $location.path(data.url);
-                                        }
-                                    }
-                                );
-                            }
-                        )
-                        .error(function() {
-                            notify.error("Error Communicating With Server");
-                        });
-                };
-
-            }
-        )
-        .controller('NewModelInstanceCtrl',
-            function($scope, $modalInstance, $http, projectData, types, trainings, notify) {
-                $scope.types = types;
-                $scope.projectData = projectData;
-                $scope.trainings = trainings;
-                $scope.nameMsg = '';
-                $scope.data = {
-                    training: '',
-                    classifier: '',
-                    name: '',
-                    totalValidations: 'Retrieving...',
-                    presentValidations: '-',
-                    absentsValidations: '-',
-                    usePresentTraining: '',
-                    useNotPresentTraining: '',
-                    usePresentValidation: -1,
-                    useNotPresentValidation: -1
-                };
-
-                $scope.$watch('data.usePresentTraining',
-                    function() {
-                        var val = $scope.data.presentValidations - $scope.data.usePresentTraining;
-
-                        if (val > -1) {
-                            $scope.data.usePresentValidation = val;
-                        } else {
-                            $scope.data.usePresentValidation = 0;
-                        }
-
-                        if ($scope.data.usePresentTraining > $scope.data.presentValidations) {
-                            $scope.data.usePresentTraining = $scope.data.presentValidations;
-                        }
-
-                    });
-
-                $scope.$watch('data.useNotPresentTraining',
-                    function() {
-                        var val = $scope.data.absentsValidations - $scope.data.useNotPresentTraining;
-                        if (val > -1) {
-                            $scope.data.useNotPresentValidation = val;
-                        } else
-                            $scope.data.useNotPresentValidation = 0;
-
-                        if ($scope.data.useNotPresentTraining > $scope.data.absentsValidations)
-                            $scope.data.useNotPresentTraining = $scope.data.absentsValidations;
-
-                    });
-
-                $scope.$watch('data.training',
-                    function() {
-                        if ($scope.data.training !== '') {
-                            $http.get('/api/project/' + $scope.projectData.url + '/validations/' + $scope.data.training.species_id + "/" + $scope.data.training.songtype_id)
-                                .success(
-                                    function(data) {
-                                        $scope.data.totalValidations = data[0].total;
-                                        $scope.data.presentValidations = data[0].present;
-                                        $scope.data.absentsValidations = data[0].absent;
-                                    }
-                                ).error(function() {
-                                    notify.error("Error Communicating With Server");
-                                });
-                        }
-                    });
-
-                $scope.buttonEnable = function() {
-                    return !($scope.trainings.length && 
-                            $scope.data.name.length && 
-                            $scope.data.usePresentTraining > 0 && 
-                            $scope.data.useNotPresentTraining > 0 && 
-                            $scope.data.usePresentValidation > 0 && 
-                            $scope.data.useNotPresentValidation > 0 && 
-                            typeof $scope.data.training !== 'string' && 
-                            typeof $scope.data.classifier !== 'string');
-                };
-
-                $scope.ok = function() {
-                    var url = $scope.projectData.url;
-                    $scope.nameMsg = '';
-                    $http.post('/api/project/' + url + '/models/new', {
-                        n: $scope.data.name,
-                        t: $scope.data.training.training_set_id,
-                        c: $scope.data.classifier.model_type_id,
-                        tp: $scope.data.usePresentTraining,
-                        tn: $scope.data.useNotPresentTraining,
-                        vp: $scope.data.usePresentValidation,
-                        vn: $scope.data.useNotPresentValidation
-                    })
-                    .success(
-                        function(data, status, headers, config) {
-                            if (data.name) {
-                                $scope.nameMsg = 'Name exists';
-                            } 
                             else {
-                                $modalInstance.close(data);
+                                $scope.tableParams.reload();
                             }
+                        } 
+                        else {
+                            $scope.infopanedata = "No models found.";
+                        }
+                    }
+                )
+                .error(function() {
+                        notify.error("Error Communicating With Server");
+                });
+            };
+            $scope.loadModels();
+            
+            $scope.newClassification = function(model_id, model_name) {
+                
+                var modalInstance = $modal.open({
+                    templateUrl: template_root + 'newclassification.html',
+                    controller: 'NewClassificationInstanceCtrl',
+                    resolve: {
+                        model_name: function() {
+                            return model_name;
+                        },
+                        model_id: function() {
+                            return model_id;
+                        }
+                    }
+                });
+
+                modalInstance.result.then(
+                    function() {
+                        console.log('new classification: ' + new Date());
+                    }
+                );
+            };
+
+
+            $scope.deleteModel = function(model_id, model_name) {
+                $scope.infoInfo = "Loading...";
+                $scope.showInfo = true;
+                $scope.loading = true;
+                var modalInstance = $modal.open({
+                    templateUrl: template_root + 'deletemodel.html',
+                    controller: 'DeleteModelInstanceCtrl',
+                    resolve: {
+                        model_name: function() {
+                            return model_name;
+                        },
+                        model_id: function() {
+                            return model_id;
+                        },
+                        projectData: function() {
+                            return $scope.projectData;
+                        }
+                    }
+                });
+
+                modalInstance.opened.then(function() {
+                    $scope.infoInfo = "";
+                    $scope.showInfo = false;
+                    $scope.loading = false;
+                });
+
+                modalInstance.result.then(
+                    function() {
+                        var index = -1;
+                        var modArr = angular.copy($scope.modelsDataOrig);
+                        for (var i = 0; i < modArr.length; i++) {
+                            if (modArr[i].model_id === model_id) {
+                                index = i;
+                                break;
+                            }
+                        }
+                        if (index > -1) {
+                            $scope.modelsDataOrig.splice(index, 1);
+                            $scope.tableParams.reload();
+                            notify.log("Model Deleted Successfully");
+                        }
+                    }
+                );
+            };
+            
+            
+            $scope.model_id = null;
+            $scope.validationdata = null;
+            
+            $scope.newModel = function() {
+                $scope.infoInfo = "Loading...";
+                $scope.showInfo = true;
+                $scope.loading = true;
+                var url = $scope.projectData.url;
+                $http.get('/api/project/' + url + '/models/forminfo')
+                    .success(
+                        function(data) {
+
+                            var modalInstance = $modal.open({
+                                templateUrl: template_root + 'newmodel.html',
+                                controller: 'NewModelInstanceCtrl',
+                                resolve: {
+                                    projectData: function() {
+                                        return $scope.projectData;
+                                    },
+                                    types: function() {
+                                        return data.types;
+                                    },
+                                    trainings: function() {
+                                        return data.trainings;
+                                    }
+                                }
+                            });
+                            
+                            modalInstance.opened.then(function() {
+                                $scope.infoInfo = "";
+                                $scope.showInfo = false;
+                                $scope.loading = false;
+                            });
+
+                            modalInstance.result.then(
+                                function(result) {
+                                    data = result;
+                                    if (data.ok) {
+                                        JobsData.updateJobs();
+                                        notify.log("New Model Training on Queue");
+                                    }
+
+                                    if (data.err) {
+                                        notify.error(err);
+                                    }
+
+                                    if (data.url) {
+                                        $location.path(data.url);
+                                    }
+                                }
+                            );
                         }
                     )
-                    .error(
-                        function(data, status, headers, config) {
-                            $modalInstance.close({
-                                err: "Could not create job"
+                    .error(function() {
+                        notify.error("Error Communicating With Server");
+                    });
+            };
+        }
+    )
+    .controller('NewModelInstanceCtrl',
+        function($scope, $modalInstance, $http, projectData, types, trainings, notify) {
+            $scope.types = types;
+            $scope.projectData = projectData;
+            $scope.trainings = trainings;
+            $scope.nameMsg = '';
+            $scope.data = {
+                training: '',
+                classifier: '',
+                name: '',
+                totalValidations: 'Retrieving...',
+                presentValidations: '-',
+                absentsValidations: '-',
+                usePresentTraining: '',
+                useNotPresentTraining: '',
+                usePresentValidation: -1,
+                useNotPresentValidation: -1
+            };
+
+            $scope.$watch('data.usePresentTraining',
+                function() {
+                    var val = $scope.data.presentValidations - $scope.data.usePresentTraining;
+
+                    if (val > -1) {
+                        $scope.data.usePresentValidation = val;
+                    } else {
+                        $scope.data.usePresentValidation = 0;
+                    }
+
+                    if ($scope.data.usePresentTraining > $scope.data.presentValidations) {
+                        $scope.data.usePresentTraining = $scope.data.presentValidations;
+                    }
+
+                });
+
+            $scope.$watch('data.useNotPresentTraining',
+                function() {
+                    var val = $scope.data.absentsValidations - $scope.data.useNotPresentTraining;
+                    if (val > -1) {
+                        $scope.data.useNotPresentValidation = val;
+                    } else
+                        $scope.data.useNotPresentValidation = 0;
+
+                    if ($scope.data.useNotPresentTraining > $scope.data.absentsValidations)
+                        $scope.data.useNotPresentTraining = $scope.data.absentsValidations;
+
+                });
+
+            $scope.$watch('data.training',
+                function() {
+                    if ($scope.data.training !== '') {
+                        $http.get('/api/project/' + $scope.projectData.url + '/validations/' + $scope.data.training.species_id + "/" + $scope.data.training.songtype_id)
+                            .success(
+                                function(data) {
+                                    $scope.data.totalValidations = data[0].total;
+                                    $scope.data.presentValidations = data[0].present;
+                                    $scope.data.absentsValidations = data[0].absent;
+                                }
+                            ).error(function() {
+                                notify.error("Error Communicating With Server");
                             });
+                    }
+                });
+
+            $scope.buttonEnable = function() {
+                return !($scope.trainings.length && 
+                        $scope.data.name.length && 
+                        $scope.data.usePresentTraining > 0 && 
+                        $scope.data.useNotPresentTraining > 0 && 
+                        $scope.data.usePresentValidation > 0 && 
+                        $scope.data.useNotPresentValidation > 0 && 
+                        typeof $scope.data.training !== 'string' && 
+                        typeof $scope.data.classifier !== 'string');
+            };
+
+            $scope.ok = function() {
+                var url = $scope.projectData.url;
+                $scope.nameMsg = '';
+                $http.post('/api/project/' + url + '/models/new', {
+                    n: $scope.data.name,
+                    t: $scope.data.training.training_set_id,
+                    c: $scope.data.classifier.model_type_id,
+                    tp: $scope.data.usePresentTraining,
+                    tn: $scope.data.useNotPresentTraining,
+                    vp: $scope.data.usePresentValidation,
+                    vn: $scope.data.useNotPresentValidation
+                })
+                .success(
+                    function(data, status, headers, config) {
+                        if (data.name) {
+                            $scope.nameMsg = 'Name exists';
+                        } 
+                        else {
+                            $modalInstance.close(data);
+                        }
+                    }
+                )
+                .error(
+                    function(data, status, headers, config) {
+                        $modalInstance.close({
+                            err: "Could not create job"
+                        });
+                    }
+                );
+
+            };
+
+            $scope.cancel = function(url) {
+                $modalInstance.close({
+                    url: url
+                });
+            };
+
+        }
+    )
+    .controller('DeleteModelInstanceCtrl',
+        function($scope, $modalInstance, $http, model_name, model_id, projectData, notify) {
+            $scope.model_name = model_name;
+            $scope.model_id = model_id;
+            $scope.projectData = projectData;
+            var url = $scope.projectData.url;
+            $scope.ok = function() {
+                $http.get('/api/project/' + url + '/models/' + model_id + "/delete")
+                    .success(
+                        function(data) {
+                            $modalInstance.close();
+                        }
+                    ).error(
+                        function() {
+                            notify.error("Error Communicating With Server");
                         }
                     );
 
-                };
+            };
 
-                $scope.cancel = function(url) {
-                    $modalInstance.close({
-                        url: url
-                    });
-                };
+            $scope.cancel = function() {
+                $modalInstance.dismiss('cancel');
+            };
 
-            }
-        )
-        .controller('DeleteModelInstanceCtrl',
-            function($scope, $modalInstance, $http, model_name, model_id, projectData, notify) {
-                $scope.model_name = model_name;
-                $scope.model_id = model_id;
-                $scope.projectData = projectData;
-                var url = $scope.projectData.url;
-                $scope.ok = function() {
-                    $http.get('/api/project/' + url + '/models/' + model_id + "/delete")
-                        .success(
-                            function(data) {
-                                $modalInstance.close();
-                            }
-                        ).error(
-                            function() {
-                                notify.error("Error Communicating With Server");
-                            }
-                        );
+        }
+    )
+    .controller('NewClassificationInstanceCtrl',
+        function($scope, $modalInstance, model_name, model_id) {
+            $scope.model_name = model_name;
+            $scope.model_id = model_id;
+            $scope.ok = function() {
+                $modalInstance.close();
+            };
 
-                };
+            $scope.cancel = function() {
+                $modalInstance.dismiss('cancel');
+            };
 
-                $scope.cancel = function() {
-                    $modalInstance.dismiss('cancel');
-                };
-
-            }
-        )
-        .controller('NewClassificationInstanceCtrl',
-            function($scope, $modalInstance, model_name, model_id) {
-                $scope.model_name = model_name;
-                $scope.model_id = model_id;
-                $scope.ok = function() {
-                    $modalInstance.close();
-                };
-
-                $scope.cancel = function() {
-                    $modalInstance.dismiss('cancel');
-                };
-
-            }
-        )
-        .controller('ModelDetailsCtrl', function($scope, $http, $stateParams, $location, Project, notify, $timeout) {
-            
+        }
+    )
+    .controller('ModelDetailsCtrl', 
+        function($scope, $http, $stateParams, $location, Project, notify, $timeout) {
+        
             $scope.project_url = Project.getUrl();
             $scope.project_id = -1;
             
@@ -419,181 +418,191 @@
             
             $scope.loadingValidations = true;
         
-        $scope.getRecVali = function (currRec ,i)
-        {
-            var pieces = currRec.url.split('/');
-            var filename = pieces[pieces.length-1];
-            fileName = filename.replace('.thumbnail.png','.flac');            
-            var vectorUri = 'project_'+$scope.project_id+'/training_vectors/job_'+$scope.data.job_id+'/'+fileName;
+            $scope.getRecVali = function (currRec ,i) {
 
-            $http.post('/api/project/'+$scope.project_url+'/classification/vector', { v: vectorUri })
-            .success(function(data, status, headers, config) {
-                var vector =  data.data.split(",");
-                for(var jj = 0 ; jj < vector.length; jj++)
-                {
-                    vector[jj] = parseFloat(vector [jj]);
-                }
-                var vectorLength = vector.length;
-                
-                var vmax = Math.max.apply(null,vector);
-                $scope.validations[i].vmax = vmax;
-                $scope.validations[i].vector = vector;
+                var pieces = currRec.url.split('/');
+                var filename = pieces[pieces.length-1];
+                fileName = filename.replace('.thumbnail.png','.flac');            
+                var vectorUri = 'project_'+$scope.project_id+'/training_vectors/job_'+$scope.data.job_id+'/'+fileName;
+
+                $http.post('/api/project/'+$scope.project_url+'/classification/vector', { v: vectorUri })
+                .success(function(data, status, headers, config) {
+                    var vector =  data.data.split(",");
+                    for(var jj = 0 ; jj < vector.length; jj++)
+                    {
+                        vector[jj] = parseFloat(vector [jj]);
+                    }
+                    var vectorLength = vector.length;
+                    
+                    var vmax = Math.max.apply(null,vector);
+                    $scope.validations[i].vmax = vmax;
+                    $scope.validations[i].vector = vector;
+                    
                     if (currRec.presence == 'no')
-                {
-                    if($scope.vectorNoMax < vmax )
                     {
-                    $scope.vectorNoMax = vmax;
+                        if($scope.vectorNoMax < vmax )
+                        {
+                            $scope.vectorNoMax = vmax;
+                        }
                     }
-                }
-                
+                    
                     if (currRec.presence == 'yes')
-                {
-                    $scope.allYesMax.push(vmax);
-                }
-                
-                $scope.waitinFunction();
-            });
-        };
-        $scope.showModelValidations = true;
-        
-        $scope.waitinFunction = function() {
-            $scope.waitCallsNUmberIndex = $scope.waitCallsNUmberIndex + 1;
-            if ($scope.waitCallsNUmber == $scope.waitCallsNUmberIndex)
-            {
-                $scope.allYesMax = $scope.allYesMax.sort();
-                var j ;
-                for(j = 0 ; j < $scope.allYesMax.length;j++)
-                {
-                    if ($scope.allYesMax[j]>=$scope.vectorNoMax)
                     {
-                        break;
+                        $scope.allYesMax.push(vmax);
+                    }
+                    
+                    $scope.waitinFunction();
+                });
+            };
+            
+            $scope.showModelValidations = true;
+            
+            $scope.waitinFunction = function() {
+                $scope.waitCallsNUmberIndex = $scope.waitCallsNUmberIndex + 1;
+                if ($scope.waitCallsNUmber == $scope.waitCallsNUmberIndex)
+                {
+                    $scope.allYesMax = $scope.allYesMax.sort();
+                    var index  = 0;
+                    for(var j = 0 ; j < $scope.allYesMax.length; j++)
+                    {
+                        if ($scope.allYesMax[j]>=$scope.vectorNoMax)
+                        {
+                            index = j;
+                        }
+                    }
+                    
+                    $scope.data.maxv = Math.max.apply(null,$scope.allYesMax);
+                    $scope.data.maxvRounded = Math.round($scope.data.maxv*1000)/1000;
+                    $scope.suggestedThreshold =  Math.round($scope.allYesMax[index]*1000000)/1000000;
+                    if(typeof $scope.suggestedThreshold === undefined || isNaN($scope.suggestedThreshold))
+                    {
+                        $scope.suggestedThreshold =  Math.round($scope.allYesMax[0]*1000000)/1000000;
+                    }
+                    $scope.currentThreshold = ($scope.databaseThreshold != '-') ? $scope.databaseThreshold : $scope.suggestedThreshold ;
+                    
+                    if(isNaN($scope.currentThreshold))
+                    {
+                        $scope.showModelValidations = false;
+                    }
+                    else
+                    {
+                        for(var jj = 0 ; jj < $scope.validations.length;jj++)
+                        {
+                            $scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
+                        }
+                        $scope.validationsData = $scope.validations;
+                        $scope.computeStats();
+                        $scope.loadingValidations = false;
                     }
                 }
-                
-                $scope.data.maxv = Math.max.apply(null,$scope.allYesMax);
-                $scope.data.maxvRounded = Math.round($scope.data.maxv*1000)/1000;
-                $scope.suggestedThreshold =  Math.round($scope.allYesMax[j]*1000000)/1000000;
-                $scope.currentThreshold = $scope.databaseThreshold != '-'? $scope.databaseThreshold:$scope.suggestedThreshold ;
-                
-                if(isNaN($scope.currentThreshold))
-                {
-                    $scope.showModelValidations = false;
-                }
-                else
-                {
-                    for(var jj = 0 ; jj < $scope.validations.length;jj++)
-                    {
-                        $scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
-                    }
-                    $scope.validationsData = $scope.validations;
-                    $scope.computeStats();
-                    $scope.loadingValidations = false;
-                }
-            }
-        };
-        
+            };
+            
             $scope.thres = {
-            tpos: '-',
+                tpos: '-',
                 fpos: '-',
                 tneg: '-',
                 fneg: '-',
-        accuracy: '-', 
-        precision: '-', 
-        sensitivity: '-', 
-        specificity: '-', 
-        };        
-        
-        $scope.computeStats = function()
-        {
-            var trupositive = 0;
-            var falsepositives = 0;
-            var truenegatives = 0;
-            var falsenegative = 0;
-            for(var jj = 0 ; jj < $scope.validations.length;jj++)
+                accuracy: '-', 
+                precision: '-', 
+                sensitivity: '-', 
+                specificity: '-', 
+            };        
+            
+            $scope.computeStats = function()
             {
-                if ($scope.validations[jj].presence == 'yes')
-                {
-                    if ($scope.validations[jj].threshold == 'yes')
-                    {
-                        trupositive = trupositive + 1;
-                    }
-                    else
-                    {
-                        falsenegative = falsenegative + 1;
-                    }
-                }
-                else
-                {
-                    if ($scope.validations[jj].threshold == 'yes')
-                    {
-                        falsepositives = falsepositives + 1;
-                    }
-                    else
-                    {
-                        truenegatives = truenegatives + 1;
-                    }
-                }
-            }
-            
-            $scope.thres.tpos = trupositive;
-            $scope.thres.fpos = falsepositives;
-            $scope.thres.tneg = truenegatives;
-            $scope.thres.fneg= falsenegative;
-            $scope.thres.accuracy = Math.round(((trupositive+truenegatives)/(trupositive+ falsepositives+truenegatives+falsenegative))*100)/100;
-            
-            if (trupositive+ falsepositives>0){
-                $scope.thres.precision = Math.round((trupositive/(trupositive+ falsepositives))*100)/100;
-            }
-            if (trupositive+falsenegative>0){
-                $scope.thres.sensitivity = Math.round((trupositive/(trupositive+falsenegative))*100)/100;
-            }
-            if (truenegatives+falsepositives>0){
-                $scope.thres.specificity = Math.round((truenegatives/(truenegatives+falsepositives))*100)/100;
-            }
-        };
-        
-        
-        $scope.messageSaved = '';
-        
-        
-        $scope.saveThreshold =function()
-        {
-            $scope.messageSaved = '';
-            $http.post('/api/project/' + $scope.project_url + '/models/savethreshold', {
-                m:$stateParams.modelId,
-                t:$scope.currentThreshold
-            })
-            .success(function() {
-                    $scope.messageSaved = 'Threshold saved';
-            })
-            .error(function(data, status, headers, config) {
-                $scope.messageSaved = 'Error saving threshold ';
-            });
-        };
-        
-        
-        $scope.recalculate = function()
-        {
-            var newval = $('#newthres').val();
-            $scope.messageSaved = '';
-            newval = parseFloat(newval);
-            
-            if (!isNaN(newval) && (newval<=1.0) && (newval>=0.0))
-            {
-                $scope.currentThreshold =  Math.round(newval*1000000)/1000000;
+                var trupositive = 0;
+                var falsepositives = 0;
+                var truenegatives = 0;
+                var falsenegative = 0;
                 for(var jj = 0 ; jj < $scope.validations.length;jj++)
                 {
-                $scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
+                    if ($scope.validations[jj].presence == 'yes')
+                    {
+                        if ($scope.validations[jj].threshold == 'yes')
+                        {
+                            trupositive = trupositive + 1;
+                        }
+                        else
+                        {
+                            falsenegative = falsenegative + 1;
+                        }
+                    }
+                    else
+                    {
+                        if ($scope.validations[jj].threshold == 'yes')
+                        {
+                            falsepositives = falsepositives + 1;
+                        }
+                        else
+                        {
+                            truenegatives = truenegatives + 1;
+                        }
+                    }
                 }
-                $scope.computeStats();   
-            }
-            else 
+                
+                $scope.thres.tpos = trupositive;
+                $scope.thres.fpos = falsepositives;
+                $scope.thres.tneg = truenegatives;
+                $scope.thres.fneg= falsenegative;
+                $scope.thres.accuracy = Math.round(((trupositive+truenegatives)/(trupositive+ falsepositives+truenegatives+falsenegative))*100)/100;
+                
+                if (trupositive+ falsepositives>0){
+                    $scope.thres.precision = Math.round((trupositive/(trupositive+ falsepositives))*100)/100;
+                }
+                if (trupositive+falsenegative>0){
+                    $scope.thres.sensitivity = Math.round((trupositive/(trupositive+falsenegative))*100)/100;
+                }
+                if (truenegatives+falsepositives>0){
+                    $scope.thres.specificity = Math.round((truenegatives/(truenegatives+falsepositives))*100)/100;
+                }
+            };
+            
+            
+            $scope.messageSaved = '';
+            
+            
+            $scope.saveThreshold =function()
             {
-                $scope.messageSaved = 'Value should be between 0 and 1.';
-            }
-        };
-        
-        $scope.currentThreshold = '-';
+                $scope.messageSaved = '';
+                $scope.recalculate();
+                
+                $http.post('/api/project/' + $scope.project_url + '/models/savethreshold', {
+                    m:$stateParams.modelId,
+                    t:$scope.currentThreshold
+                })
+                .success(function() {
+                        $scope.messageSaved = 'Threshold saved';
+                        $scope.databaseThreshold = $scope.currentThreshold;
+                })
+                .error(function(data, status, headers, config) {
+                    $scope.messageSaved = 'Error saving threshold ';
+                });
+            };
+            
+            
+            $scope.recalculate = function()
+            {
+                var newval = $('#newthres').val();
+                $scope.messageSaved = '';
+                newval = parseFloat(newval);
+                
+                if (!isNaN(newval) && (newval<=1.0) && (newval>=0.0))
+                {
+                    $scope.currentThreshold =  Math.round(newval*1000000)/1000000;
+                    for(var jj = 0 ; jj < $scope.validations.length;jj++)
+                    {
+                    $scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
+                    }
+                    $scope.computeStats();   
+                }
+                else 
+                {
+                    $scope.messageSaved = 'Value should be between 0 and 1.';
+                }
+            };
+            
+            $scope.currentThreshold = '-';
+            
             $http.get('/api/project/' + $scope.project_url + '/models/' + $stateParams.modelId)
             .success(function(data) {
                 $scope.databaseThreshold = (data.threshold === null) ?  '-' : data.threshold;
@@ -723,5 +732,6 @@
             
             $scope.validationRows = null;
 
-        });
+        }
+    );
 })(angular);
