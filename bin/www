@@ -3,18 +3,17 @@ var debug = require('debug')('arbimon2');
 var app = require('../app');
 var redirectHttp = require('../utils/redirect-http');
 
-app.set('app-port', process.env.HTTP_PORT || 3001);
-app.set('http-redirect-port', process.env.HTTPS_PORT || 3000);
+app.set('app-port', process.env.APP_PORT || 3000);
+
+app.set('http-redirect-port', process.env.RD_PORT || 3001);
 
 if (app.get('env') === 'production') {
-    
     var http = require('http');
     http.createServer(app).listen(app.get('app-port'));
     http.createServer(redirectHttp).listen(app.get('http-redirect-port'));
 }
-
 else {
-    var server = app.listen(app.get('port'), function() {
+    var server = app.listen(app.get('app-port'), function() {
         debug('Express server listening on port ' + server.address().port);
     });
 }
