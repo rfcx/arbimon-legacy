@@ -54,7 +54,6 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
             {
                 row = rows[i];
                 th = row['th']
-                console.log(row)
                 var index = row['species_id']+'_'+row['songtype_id'];
                 if (typeof data[index]  == 'number')
                 {
@@ -350,84 +349,89 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
     
     model.projects.modelValidationUri(req.params.modelId, function(err, row) {
         if(err) return next(err);
-        
-        var validationUri = row[0].uri ;
-        validationUri = validationUri.replace('.csv','_vals.csv');
-        var aws = require('knox').createClient({
-            key: config('aws').accessKeyId,
-            secret: config('aws').secretAccessKey,
-            bucket: config('aws').bucketName
-        });
-        var sendData = [];
-                
-        aws.getFile(validationUri, function(err, resp){
-            
-            if (err) {
-                debug("Error fetching validation information file. : "+validationUri)
-                res.json({"err": "Error fetching validation information."});
-            }
-            
-            if (resp.statusCode == 404)
-            {
-                return res.json({"nofile": "nofile"});
-            }
-            
-            var outData = ''
-            resp.on('data', function(chunk) { outData = outData + chunk; });
-            resp.on('end',
-            function(chunk)
-            {
-                outData = outData
-                var lines = outData.split('\n')
-                async.eachLimit(lines ,5,
-                function(line,callback)
-                {
-                    
-                    if (line == '')
-                    {
-                        callback();
-                    }
-                    else
-                    {
-  
-                        items = line.split(',');
-                        var prec = items[1].trim(' ') == 1 ? 'yes' :'no';
-                        var modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
-                        var entryType = items[3]?items[3].trim(' '):'';
-                        model.recordings.recordingInfoGivenUri(items[0],req.params.projectUrl,
-                        function(err,recData)
-                        {
-                            if (err) {
-                                debug("Error fetching recording information. : "+items[0])
-                                res.json({"err": "Error fetching recording information."});
-                                callback('err')
-                            }
-                            if (recData.length > 0)
-                            {
-                                var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
-                                recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
-                                var rowSent = {site:recData[0].site,date:recData[0].date,presence:prec,model:modelprec,id:recData[0].id,uri:recUriThumb,type:entryType};
-                                sendData.push(rowSent)
-                            }
-                            callback()
-                        });
-                        
-                    }
-                },
-                function(err)
-                {
-                    if (err)
-                    {
-                        res.json({"err": "Error fetching recording information."});
-                    }
-                    debug('sendData2: '+sendData)
-                    res.json(sendData);
-                }
-                );
-                
+        if (row.length > 0)
+        {      
+            var validationUri = row[0].uri ;
+            validationUri = validationUri.replace('.csv','_vals.csv');
+            var aws = require('knox').createClient({
+                key: config('aws').accessKeyId,
+                secret: config('aws').secretAccessKey,
+                bucket: config('aws').bucketName
             });
-        });
-        
+            var sendData = [];
+                    
+            aws.getFile(validationUri, function(err, resp){
+                
+                if (err) {
+                    debug("Error fetching validation information file. : "+validationUri)
+                    res.json({"err": "Error fetching validation information."});
+                }
+                
+                if (resp.statusCode == 404)
+                {
+                    return res.json({"nofile": "nofile"});
+                }
+                
+                var outData = ''
+                resp.on('data', function(chunk) { outData = outData + chunk; });
+                resp.on('end',
+                function(chunk)
+                {
+                    outData = outData
+                    var lines = outData.split('\n')
+                    async.eachLimit(lines ,5,
+                    function(line,callback)
+                    {
+                        
+                        if (line == '')
+                        {
+                            callback();
+                        }
+                        else
+                        {
+      
+                            items = line.split(',');
+                            var prec = items[1].trim(' ') == 1 ? 'yes' :'no';
+                            var modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
+                            var entryType = items[3]?items[3].trim(' '):'';
+                            model.recordings.recordingInfoGivenUri(items[0],req.params.projectUrl,
+                            function(err,recData)
+                            {
+                                if (err) {
+                                    debug("Error fetching recording information. : "+items[0])
+                                    res.json({"err": "Error fetching recording information."});
+                                    callback('err')
+                                }
+                                if (recData.length > 0)
+                                {
+                                    var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
+                                    recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
+                                    var rowSent = {site:recData[0].site,date:recData[0].date,presence:prec,model:modelprec,id:recData[0].id,uri:recUriThumb,type:entryType};
+                                    sendData.push(rowSent)
+                                }
+                                callback()
+                            });
+                            
+                        }
+                    },
+                    function(err)
+                    {
+                        if (err)
+                        {
+                            res.json({"err": "Error fetching recording information."});
+                        }
+                        debug('sendData2: '+sendData)
+                        res.json(sendData);
+                    }
+                    );
+                    
+                });
+            });
+        }
+        else
+        {
+            res.json({"err": "Error fetching validation information."});
+        }
      });
 });
 

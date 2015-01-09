@@ -1,331 +1,337 @@
-<div class="row">
-    <div class="col-xs-12">
-        <a class="btn btn-primary" ui-sref="analysis.models" ui-sref-active="active">
-            <i class="fa fa-arrow-left"></i> 
-            back
-        </a>
-    </div>
-</div>  
-<div class="row" >
-    <div class="col-xs-12" >
-        <h3 class="">Model Details</h3>  
-        <div class="model-info-column">
-            <table class="table">
-                <tr>
-                    <td><strong>Name:</strong></td>
-                    <td class="hidelongtext widthtd"> {{ data.modelmname }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Type:</strong></td>
-                    <td> {{ data.modelmtname }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Creation date:</strong> </td>
-                    <td>{{ data.modelmdc }} {{ data.modelmtime }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Last updated:</strong></td>
-                    <td> {{ data.lastupdate }} {{ data.lasttime }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Creator:</strong></td>
-                    <td> {{ data.modelmuser }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Species:</strong></td>
-                    <td> {{ data.species }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Songtype:</strong></td>
-                    <td> {{ data.songtype }}</td>
-                </tr>
-            </table>
-            <div data-ng-hide="true">
-                {{ data.modelmodel_id }}
+<div ng-hide="data">   
+    <h4>Model Has Not Be Found</h4>
+</div>
+<div ng-show="data">   
+    <div class="row">
+        <div class="col-xs-12">
+            <a class="btn btn-primary" ui-sref="analysis.models" ui-sref-active="active">
+                <i class="fa fa-arrow-left"></i> 
+                back
+            </a>
+        </div>
+    </div>  
+    <div class="row" >
+        <div class="col-xs-12" >
+            <h3 class="">Model Details</h3>  
+            <div class="model-info-column">
+                <table class="table">
+                    <tr>
+                        <td><strong>Name:</strong></td>
+                        <td class="hidelongtext widthtd"> {{ data.modelmname }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Type:</strong></td>
+                        <td> {{ data.modelmtname }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Creation date:</strong> </td>
+                        <td>{{ data.modelmdc }} {{ data.modelmtime }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Last updated:</strong></td>
+                        <td> {{ data.lastupdate }} {{ data.lasttime }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Creator:</strong></td>
+                        <td> {{ data.modelmuser }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Species:</strong></td>
+                        <td> {{ data.species }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Songtype:</strong></td>
+                        <td> {{ data.songtype }}</td>
+                    </tr>
+                </table>
+                <div data-ng-hide="true">
+                    {{ data.modelmodel_id }}
+                </div>
             </div>
         </div>
-    </div>
+            
+        <div class="col-xs-12" >
+            <h3>Training Set</h3>
+            <div class="model-info-column">
+                <table class="table">
+                    <tr>
+                        <td><strong>Name:</strong></td>
+                        <td class="hidelongtext widthtd"> {{ data.trainingName }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Creation date:</strong></td>
+                        <td><span ng-bind="data.trainingDate"></span> <span ng-bind="data.trainingTime"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pattern ROI Count:</strong></td>
+                        <td>{{ data.roicount }}</td>
+                    </tr>
+                    <!-- 
+                    <tr>
+                        <td>
+                            Pattern Low Frequency: 
+                        </td><td><span ng-bind="data.lfreq"></span>hz</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Pattern High Frequency: 
+                        </td><td><span ng-bind="data.hfreq"></span>Hz</td>
+                    </tr>
+                    -->
+                    <tr>
+                        <td><strong>Pattern Bandwidth:</strong></td>
+                        <td>{{ data.bw }}Hz</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="model-info-column">
+                <strong>Computed Pattern:</strong>
+                <div class="model-pattern">
+                    <img class="pattern" ng-src="{{data.png}}" />
+                    <div class="axis-y1">{{data.lfreq}}Hz-</div>
+                    <div class="axis-y2">{{data.hfreq}}Hz-</div>
+                    <div class="axis-x1">0s</div>
+                    <div class="axis-x2">{{ data.rlength }}s</div>
+                </div>
+            </div>
+        </div>
         
-    <div class="col-xs-12" >
-        <h3>Training Set</h3>
-        <div class="model-info-column">
-            <table class="table">
-                <tr>
-                    <td><strong>Name:</strong></td>
-                    <td class="hidelongtext widthtd"> {{ data.trainingName }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Creation date:</strong></td>
-                    <td><span ng-bind="data.trainingDate"></span> <span ng-bind="data.trainingTime"></span></td>
-                </tr>
-                <tr>
-                    <td><strong>Pattern ROI Count:</strong></td>
-                    <td>{{ data.roicount }}</td>
-                </tr>
-                <!-- 
-                <tr>
-                    <td>
-                        Pattern Low Frequency: 
-                    </td><td><span ng-bind="data.lfreq"></span>hz</td>
-                </tr>
-                <tr>
-                    <td>
-                        Pattern High Frequency: 
-                    </td><td><span ng-bind="data.hfreq"></span>Hz</td>
-                </tr>
-                -->
-                <tr>
-                    <td><strong>Pattern Bandwidth:</strong></td>
-                    <td>{{ data.bw }}Hz</td>
-                </tr>
-            </table>
-        </div>
-        <div class="model-info-column">
-            <strong>Computed Pattern:</strong>
-            <div class="model-pattern">
-                <img class="pattern" ng-src="{{data.png}}" />
-                <div class="axis-y1">{{data.lfreq}}Hz-</div>
-                <div class="axis-y2">{{data.hfreq}}Hz-</div>
-                <div class="axis-x1">0s</div>
-                <div class="axis-x2">{{ data.rlength }}s</div>
+        <div class="col-xs-12">
+            <h3>Model Validation Details</h3>
+            <div class="model-info-column">
+                
+                <div class="">
+                    <strong>Total Validations Used:</strong> {{data.all}}
+                </div>
+                <div class="" >
+                    <div class="model-info-column">
+                        
+                        <table class="table">
+                            <tr>
+                                <td><strong>Present:</strong></td>
+                                <td>{{data.p}}</td>
+                            </tr>
+                            <tr>
+                                <td>In Fitting:</td>
+                                <td>{{ data.tp }}</td>
+                            </tr>
+                            <tr>
+                                <td>In Verification:</td>
+                                <td>{{ data.vp }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="model-info-column">
+                        
+                        <table class="table">
+                            <tr>
+                                <td><strong>Not Present:</strong></td>
+                                <td>{{data.np}}</td>
+                            </tr>
+                            <tr>
+                                <td>In Fitting:</td>
+                                <td>{{ data.tnp }}</td>
+                            </tr>
+                            <tr>
+                                <td>In Verification:</td>
+                                <td>{{ data.vnp }}</td>
+                            </tr>
+                        </table>         
+                    </div>
+                </div>
             </div>
+             <div class="model-info-column">
+                <strong>Statistics</strong>
+                <table class="table">
+                    <tr>
+                        <td><strong>Accuracy:</strong></td>
+                        <td>{{ data.accuracy }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Precision:</strong></td>
+                        <td>{{ data.precision }}</td>
+                    </tr>
+                    <tr ng-show="data.sensitivity != null"> 
+                        <td><strong>Sensitivity:</strong></td>
+                        <td>{{ data.sensitivity }}</td>
+                    </tr>
+                    <tr ng-show="data.specificity != null"> 
+                        <td><strong>Specificity:</strong></td>
+                        <td>{{ data.specificity }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="model-info-column">
+                <div class="top-buffer" ng-show="data.tpos != null">
+                    <strong>Confusion Matrix:</strong>
+                </div>
+                <div class="confusion-matrix" ng-show="data.tpos !== null">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td></td>
+                                <td colspan="2"><strong>Predicted Values</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Actual</strong></td>
+                                <td><small><em>P</em></small></td>
+                                <td><small><em>NP</em></small></td>
+                            </tr>
+                            <tr>
+                                <td ><small><em>P</em></small></td>
+                                <td class=""> {{ data.tpos }}</td>
+                                <td class="">{{ data.fneg }}</td>                
+                            </tr>
+                            <tr class="">
+                                <td ><small><em>NP</em></small></td>
+                                <td class="">{{ data.fpos }}</td>
+                                <td class="">{{ data.tneg }}</td>                
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div>
+                        <small><em>P = Present, NP = Not Present</em></small>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <div class="col-xs-12" ng-hide="showValidationsFalg" >
+            <h4>The selected model was computed with a previous version of the Arbimon2 App.<br> Some features may not be available.
+            </h4>
+            <br>
+        </div>
+        <div class="col-xs-12" ng-hide="loadingValidations || !showValidationsFalg" >
+            <h3>Threshold Details</h3>
+            <div class="model-info-column row">
+               <strong>Current threshold:</strong> {{thresholdCurrent}}
+               <div><strong>New threshold:</strong><input id="newthres" type="text" size="5"/></div>
+               <div><div class="btn btn-default" ng-click="recalculate()">Recalculate</div></div>
+               <div><div class="btn btn-default" ng-click="saveThreshold()">Save threshold</div></div>{{messageSaved}}
+            </div>
+            <div class="model-info-column" >
+                <strong>Statistics</strong>
+                <table class="table">
+                    <tr>
+                        <td><strong>Accuracy:</strong></td>
+                        <td>{{ thres.accuracy }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Precision:</strong></td>
+                        <td>{{ thres.precision }}</td>
+                    </tr>
+                    <tr ng-show="data.sensitivity != null"> 
+                        <td><strong>Sensitivity:</strong></td>
+                        <td>{{ thres.sensitivity }}</td>
+                    </tr>
+                    <tr ng-show="data.specificity != null"> 
+                        <td><strong>Specificity:</strong></td>
+                        <td>{{ thres.specificity }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="model-info-column" >
+                <div class="top-buffer" ng-show="data.tpos != null">
+                    <strong>Confusion Matrix:</strong>
+                </div>
+                <div class="confusion-matrix" ng-show="data.tpos !== null">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td></td>
+                                <td colspan="2"><strong>Predicted Values</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Actual</strong></td>
+                                <td><small><em>P</em></small></td>
+                                <td><small><em>NP</em></small></td>
+                            </tr>
+                            <tr>
+                                <td ><small><em>P</em></small></td>
+                                <td class=""> {{ thres.tpos }}</td>
+                                <td class="">{{ thres.fneg }}</td>                
+                            </tr>
+                            <tr class="">
+                                <td ><small><em>NP</em></small></td>
+                                <td class="">{{ thres.fpos }}</td>
+                                <td class="">{{ thres.tneg }}</td>                
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div>
+                        <small><em>P = Present, NP = Not Present</em></small>
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div>
     
-    <div class="col-xs-12">
-        <h3>Model Validation Details</h3>
-        <div class="model-info-column">
+    <div class="row" ng-show="valiDetails && showValidationsFalg">
+        <div ng-hide="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
+            <h3 class="inlineh3">
+                Validations 
+                <div class="btn btn-default" 
+                    ng-csv="getValidations()" 
+                    filename="matrixValues.csv"  
+                    csv-header="['Site', 'Date', 'User presence','Model presence','Threshold presence' ,'Threshold value']">
+                    <i class="fa fa-download"
+                        tooltip="Download Values in CSV" 
+                        tooltip-placement="bottom">
+                    </i>
+                </div>
+            </h3>
+            <small><em>(Click in the recording row to show recording details)</em></small>
+            <a2-table  fields="fields" rows="validationsData" no-checkbox on-select="recDetails(row)"></a2-table>
             
-            <div class="">
-                <strong>Total Validations Used:</strong> {{data.all}}
-            </div>
-            <div class="" >
-                <div class="model-info-column">
-                    
-                    <table class="table">
-                        <tr>
-                            <td><strong>Present:</strong></td>
-                            <td>{{data.p}}</td>
-                        </tr>
-                        <tr>
-                            <td>In Fitting:</td>
-                            <td>{{ data.tp }}</td>
-                        </tr>
-                        <tr>
-                            <td>In Verification:</td>
-                            <td>{{ data.vp }}</td>
-                        </tr>
-                    </table>
+        </div>
+        <div ng-show="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
+            <h3 class="inlineh3">
+                Loading data 
+            </h3>
+            <loader></loader>
+        </div>
+        <div class="col-sm-12 col-lg-8" ng-hide="showValidationsTable">
+            <h3>
+                <div class="row">
+                    <div class="col-sm-4">Validation Recording Detail</div>
+                    <div class="btn btn-default col-sm-1" 
+                        ng-click="closeRecValidationsDetails()" >
+                         <i class="fa fa-arrow-left"></i> 
+                        Back
+                    </div>
+                    <div class="btn btn-default col-sm-2" 
+                        ng-click="gotoRec()" >
+                         <i class="fa fa-cubes"></i> 
+                        Open in Visualizer
+                    </div>
                 </div>
-                <div class="model-info-column">
-                    
-                    <table class="table">
-                        <tr>
-                            <td><strong>Not Present:</strong></td>
-                            <td>{{data.np}}</td>
-                        </tr>
-                        <tr>
-                            <td>In Fitting:</td>
-                            <td>{{ data.tnp }}</td>
-                        </tr>
-                        <tr>
-                            <td>In Verification:</td>
-                            <td>{{ data.vnp }}</td>
-                        </tr>
-                    </table>         
-                </div>
-            </div>
-        </div>
-         <div class="model-info-column">
-            <strong>Statistics</strong>
-            <table class="table">
-                <tr>
-                    <td><strong>Accuracy:</strong></td>
-                    <td>{{ data.accuracy }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Precision:</strong></td>
-                    <td>{{ data.precision }}</td>
-                </tr>
-                <tr ng-show="data.sensitivity != null"> 
-                    <td><strong>Sensitivity:</strong></td>
-                    <td>{{ data.sensitivity }}</td>
-                </tr>
-                <tr ng-show="data.specificity != null"> 
-                    <td><strong>Specificity:</strong></td>
-                    <td>{{ data.specificity }}</td>
-                </tr>
-            </table>
-        </div>
-        <div class="model-info-column">
-            <div class="top-buffer" ng-show="data.tpos != null">
-                <strong>Confusion Matrix:</strong>
-            </div>
-            <div class="confusion-matrix" ng-show="data.tpos !== null">
-                <table>
-                    <tbody>
-                        <tr>
-                            <td></td>
-                            <td colspan="2"><strong>Predicted Values</strong></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Actual</strong></td>
-                            <td><small><em>P</em></small></td>
-                            <td><small><em>NP</em></small></td>
-                        </tr>
-                        <tr>
-                            <td ><small><em>P</em></small></td>
-                            <td class=""> {{ data.tpos }}</td>
-                            <td class="">{{ data.fneg }}</td>                
-                        </tr>
-                        <tr class="">
-                            <td ><small><em>NP</em></small></td>
-                            <td class="">{{ data.fpos }}</td>
-                            <td class="">{{ data.tneg }}</td>                
-                        </tr>
-                    </tbody>
-                </table>
-                <div>
-                    <small><em>P = Present, NP = Not Present</em></small>
-                </div>
-            </div>
-        </div>
-        
-    </div>
-    <div class="col-xs-12" ng-hide="showValidationsFalg" >
-        <h4>The selected model was computed with a previous version of the Arbimon2 App.<br> Some features may not be available.
-        </h4>
-        <br>
-    </div>
-    <div class="col-xs-12" ng-hide="loadingValidations || !showValidationsFalg" >
-        <h3>Threshold Details</h3>
-        <div class="model-info-column row">
-           <strong>Current threshold:</strong> {{thresholdCurrent}}
-           <div><strong>New threshold:</strong><input id="newthres" type="text" size="5"/></div>
-           <div><div class="btn btn-default" ng-click="recalculate()">Recalculate</div></div>
-           <div><div class="btn btn-default" ng-click="saveThreshold()">Save threshold</div></div>{{messageSaved}}
-        </div>
-        <div class="model-info-column" >
-            <strong>Statistics</strong>
-            <table class="table">
-                <tr>
-                    <td><strong>Accuracy:</strong></td>
-                    <td>{{ thres.accuracy }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Precision:</strong></td>
-                    <td>{{ thres.precision }}</td>
-                </tr>
-                <tr ng-show="data.sensitivity != null"> 
-                    <td><strong>Sensitivity:</strong></td>
-                    <td>{{ thres.sensitivity }}</td>
-                </tr>
-                <tr ng-show="data.specificity != null"> 
-                    <td><strong>Specificity:</strong></td>
-                    <td>{{ thres.specificity }}</td>
-                </tr>
-            </table>
-        </div>
-        <div class="model-info-column" >
-            <div class="top-buffer" ng-show="data.tpos != null">
-                <strong>Confusion Matrix:</strong>
-            </div>
-            <div class="confusion-matrix" ng-show="data.tpos !== null">
-                <table>
-                    <tbody>
-                        <tr>
-                            <td></td>
-                            <td colspan="2"><strong>Predicted Values</strong></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Actual</strong></td>
-                            <td><small><em>P</em></small></td>
-                            <td><small><em>NP</em></small></td>
-                        </tr>
-                        <tr>
-                            <td ><small><em>P</em></small></td>
-                            <td class=""> {{ thres.tpos }}</td>
-                            <td class="">{{ thres.fneg }}</td>                
-                        </tr>
-                        <tr class="">
-                            <td ><small><em>NP</em></small></td>
-                            <td class="">{{ thres.fpos }}</td>
-                            <td class="">{{ thres.tneg }}</td>                
-                        </tr>
-                    </tbody>
-                </table>
-                <div>
-                    <small><em>P = Present, NP = Not Present</em></small>
-                </div>
-            </div>
-        </div>
-        
-    </div>
-</div>
-
-<div class="row" ng-show="valiDetails && showValidationsFalg">
-    <div ng-hide="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
-        <h3 class="inlineh3">
-            Validations 
-            <div class="btn btn-default" 
-                ng-csv="getValidations()" 
-                filename="matrixValues.csv"  
-                csv-header="['Site', 'Date', 'User presence','Model presence','Threshold presence' ,'Threshold value']">
-                <i class="fa fa-download"
-                    tooltip="Download Values in CSV" 
-                    tooltip-placement="bottom">
-                </i>
-            </div>
-        </h3>
-        <small><em>(Click in the recording row to show recording details)</em></small>
-        <a2-table  fields="fields" rows="validationsData" no-checkbox on-select="recDetails(row)"></a2-table>
-        
-    </div>
-    <div ng-show="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
-        <h3 class="inlineh3">
-            Loading data 
-        </h3>
-        <loader></loader>
-    </div>
-    <div class="col-sm-12 col-lg-8" ng-hide="showValidationsTable">
-        <h3>
+            </h3>
             <div class="row">
-                <div class="col-sm-4">Validation Recording Detail</div>
-                <div class="btn btn-default col-sm-1" 
-                    ng-click="closeRecValidationsDetails()" >
-                     <i class="fa fa-arrow-left"></i> 
-                    Back
+                <div class="col-sm-3"><b>Date:</b> {{recNameInVectorViewDate}}</div>
+                <div class="col-sm-3"><b >Site:</b> {{recNameInVectorViewSite}}</div>
+                <div class="col-sm-2"><b>User:</b> {{recNameInVectorViewUser}}</div>
+                <div class="col-sm-2"><b>Model:</b> {{recNameInVectorViewModel}}</div>
+                <div class="col-sm-2"><b>Threshold:</b> {{recNameInVectorViewTh}}</div>
+            </div>
+            
+            <div class="axisWrapper">
+                <div class="yaxisWrapper">
+                    1.0
+                    <div class="lowaxis2">0.0</div>
                 </div>
-                <div class="btn btn-default col-sm-2" 
-                    ng-click="gotoRec()" >
-                     <i class="fa fa-cubes"></i> 
-                    Open in Visualizer
+                <div class="vectorWrapper"><a2-vectorchart  minvect="data.minv" maxvect="data.maxv" vurl="selectedVectWatch" purl="project_url"></a2-vectorchart></div>
+            </div>
+            <div class="cleardiv"></div>
+    
+            <div class="axisWrapper">
+                <div class="yaxisWrapper vertical-text2">
+                    Hertz
                 </div>
+                <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="https://s3.amazonaws.com/arbimon2/{{selectedUri}}"/></div>
+                <small>Seconds</small>
             </div>
-        </h3>
-        <div class="row">
-            <div class="col-sm-3"><b>Date:</b> {{recNameInVectorViewDate}}</div>
-            <div class="col-sm-3"><b >Site:</b> {{recNameInVectorViewSite}}</div>
-            <div class="col-sm-2"><b>User:</b> {{recNameInVectorViewUser}}</div>
-            <div class="col-sm-2"><b>Model:</b> {{recNameInVectorViewModel}}</div>
-            <div class="col-sm-2"><b>Threshold:</b> {{recNameInVectorViewTh}}</div>
-        </div>
-        
-        <div class="axisWrapper">
-            <div class="yaxisWrapper">
-                1.0
-                <div class="lowaxis2">0.0</div>
-            </div>
-            <div class="vectorWrapper"><a2-vectorchart  minvect="data.minv" maxvect="data.maxv" vurl="selectedVectWatch" purl="project_url"></a2-vectorchart></div>
-        </div>
-        <div class="cleardiv"></div>
-
-        <div class="axisWrapper">
-            <div class="yaxisWrapper vertical-text2">
-                Hertz
-            </div>
-            <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="https://s3.amazonaws.com/arbimon2/{{selectedUri}}"/></div>
-            <small>Seconds</small>
         </div>
     </div>
 </div>
+    
