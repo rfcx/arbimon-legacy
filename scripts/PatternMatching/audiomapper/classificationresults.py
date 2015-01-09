@@ -55,7 +55,7 @@ for line in sys.stdin:
     songtype = int(songtype.strip(' '))
     with closing(db.cursor()) as cursor:
         cursor.execute("""
-            INSERT INTO `arbimon2`.`classification_results` (
+            INSERT INTO `classification_results` (
                 job_id, recording_id, species_id, songtype_id, present,
                 max_vector_value
             ) VALUES (%s, %s, %s, %s, %s,
@@ -70,7 +70,7 @@ log.write('saving stats to database')
 jsonStats = json.dumps({"minv": minVectorVal, "maxv": maxVectorVal})
 with closing(db.cursor()) as cursor:
     cursor.execute("""
-        INSERT INTO `arbimon2`.`classification_stats` (`job_id`, `json_stats`)
+        INSERT INTO `classification_stats` (`job_id`, `json_stats`)
         VALUES (%s, %s)
     """, [jobId, jsonStats])
     db.commit()
