@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 var debug = require('debug')('arbimon2');
 var app = require('../app');
+var redirectHttp = require('./utils/redirect-http');
 
-app.set('port', process.env.PORT || 3000);
+app.set('app-port', process.env.HTTP_PORT || 3001);
+app.set('http-redirect-port', process.env.HTTPS_PORT || 3000);
 
 if (app.get('env') === 'production') {
     
     var http = require('http');
-    http.createServer(app).listen(app.get('port'));
+    http.createServer(app).listen(app.get('app-port'));
+    http.createServer(redirectHttp).listen(app.get('http-redirect-port'));
 }
 
 else {

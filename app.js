@@ -18,7 +18,6 @@ AWS.config.update({
     region: config('aws').region
 });
 
-var redirectHttp = require('./utils/redirect-http');
 var tmpfilecache = require('./utils/tmpfilecache');
 var jobQueue = require('./utils/jobqueue');
 var model = require('./model');
@@ -36,7 +35,6 @@ app.set('view engine', 'ejs');
 
 if (app.get('env') === 'production') {
     app.enable('trust proxy');
-    app.use(redirectHttp());
 }
 
 app.use(favicon(__dirname + '/public/images/favicon.ico'));
