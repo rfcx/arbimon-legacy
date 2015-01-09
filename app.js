@@ -5,11 +5,11 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var session = require('express-session')
+var session = require('express-session');
 var SessionStore = require('express-mysql-session');
 var busboy = require('connect-busboy');
-
 var AWS = require('aws-sdk');
+
 
 var config = require('./config');
 AWS.config.update({
@@ -18,19 +18,26 @@ AWS.config.update({
     region: config('aws').region
 });
 
-
-var model = require('./model');
+var redirectHttp = require('./utils/redirect-http');
 var tmpfilecache = require('./utils/tmpfilecache');
 var jobQueue = require('./utils/jobqueue');
+var model = require('./model');
 
 tmpfilecache.cleanup();
 
 var app = express();
-// test
+
+// middleware and app settings
+// ----------------------------------------------------------
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+if (app.get('env') === 'production') {
+    app.enable('trust proxy');
+    app.use(redirectHttp());
+}
 
 app.use(favicon(__dirname + '/public/images/favicon.ico'));
 
@@ -66,13 +73,15 @@ var sessionConfig = {
 };
 
 if (app.get('env') === 'production') {
-    app.enable('trust proxy');
     sessionConfig.cookie = { secure: true }; // use secure cookies
 }
 
 app.use(session(sessionConfig));
 
+
 // routes
+// ---------------------------------------------------------------
+
 var login = require('./routes/login');
 var routes = require('./routes/index');
 
