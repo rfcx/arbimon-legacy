@@ -114,6 +114,7 @@ class Rec:
         #start_time = time.time()
         awsKeyId = self.config[5]
         awsKeySecret = self.config[6]
+        self.bucket = self.config[4]
         #conn = S3Connection(awsKeyId, awsKeySecret)
         #bucket = conn.get_bucket(self.bucket)
         #if self.logs :

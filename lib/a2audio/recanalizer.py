@@ -13,7 +13,7 @@ import math
 
 class Recanalizer:
     
-    def __init__(self, uri, speciesSurface, low, high, columns, tempFolder, logs=None, bucket):
+    def __init__(self, uri, speciesSurface, low, high, columns, tempFolder, logs=None, bucket=None):
         start_time = time.time()
         self.low = float(low)
         self.high = float(high)
@@ -30,7 +30,7 @@ class Recanalizer:
         if self.logs :
             self.logs.write("configuration time --- seconds ---" + str(time.time() - start_time))
         start_time = time.time()
-        self.rec = Rec(uri,tempFolder,config,bucket,logs)
+        self.rec = Rec(uri,tempFolder,config,'bucketname',logs)
         if self.logs:
             self.logs.write("retrieving recording from bucket --- seconds ---" + str(time.time() - start_time))
         if self.rec.status == 'HasAudioData':
