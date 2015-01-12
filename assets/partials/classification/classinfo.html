@@ -4,7 +4,7 @@
 <div class="modal-body">
     <div class="row">
         <div class="col-sm-11"><strong>Presence in recordings:</strong></div>
-        <div class="col-sm-1"><a class="btn btn-xs btn-default" ng-href="/api/project/classification/csv/{{id}}"><i class="fa fa-download " tooltip="Download CSV" tooltip-placement="bottom"  ></i></a></div>
+        <div class="col-sm-1"><a class="btn btn-xs btn-default" target="_blank" ng-href="/api/project/classification/csv/{{id}}"><i class="fa fa-download " tooltip="Download CSV" tooltip-placement="bottom"  ></i></a></div>
     </div>
     <div class="spacing-details-classification"></div>
     <table class="table">
@@ -32,8 +32,11 @@
             <td>
                 {{species.err}}
             </td>
-            <td>
+            <td ng-show="th">
                 {{th}}
+            </td>
+            <td ng-hide="th">
+                <small>No threshold saved.</small>
             </td>
         </tr>
     </table>
@@ -44,7 +47,7 @@
         <h2><i class="fa fa-caret-down" tooltip="More Details" tooltip-placement="bottom"  ng-click="more() | trackEvent:'Analysis-Classification-Info':'more clicked'"></i></h2>
     </div>
     <div  ng-show="showMore" class="text-centered-bordered">
-        <h2><i class="fa fa-caret-up" tooltip="Less Details" tooltip-placement="bottom"  ng-click="less() | trackEvent:'Analysis-Classification-Info':'less clicked'""></i></h2>
+        <h2><i class="fa fa-caret-up" tooltip="Less Details" tooltip-placement="bottom"  ng-click="less() | trackEvent:'Analysis-Classification-Info':'less clicked'"></i></h2>
         <ul class="ulnodeco">
             <li ng-repeat="rec in recs" class="linodeco">
                 <div class="cleardiv"></div>
@@ -54,13 +57,13 @@
                     <span ng-show="rec.present">Yes</span>
                     <span ng-hide="rec.present">No</span>
                 </span>
-                <span class="horizontal-blank-space">
+                <span class="horizontal-blank-space" ng-show="th">
                     Threshold Presence:
                     {{htresDeci}}
                 </span>
                 <div class="axisWrapper">
                     <div class="yaxisWrapper">
-                        1.0
+                        <div class="yAxishighvalue">{{maxvRounded}}</div>
                         <div class="lowaxis2">0.0</div>
                     </div>
                     <div class="vectorWrapper"><a2-vectorchart  minvect="minv" maxvect="maxv" vurl="rec.vect" purl="url"></a2-vectorchart></div>
@@ -71,7 +74,7 @@
                     <div class="yaxisWrapper vertical-text2">
                         Hertz
                     </div>
-                    <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="https://s3.amazonaws.com/arbimon2/{{rec.uri}}"/></div>
+                    <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="{{ rec.rec_image_url }}"/></div>
                     <small>Seconds</small>
                 </div>
                 <div class="bordeder-empy-div"></div>

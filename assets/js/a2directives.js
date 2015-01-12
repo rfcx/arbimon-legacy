@@ -123,9 +123,10 @@ angular.module('a2directives', ['a2services'])
             extSort: '&',
             checked: '=?',
             search: '=?',
-            noCheckbox: '@',
-            noSelect: '@',
-            dateFormat: '@'
+            noCheckbox: '@',    // disable row checkboxes
+            noSelect: '@',      // disable row selection
+            dateFormat: '@',    // moment date format, default: 'lll'
+            numberDecimals: '@' // decimal spaces 
         },
         templateUrl: '/partials/directives/table.html',
         link: function(scope, element, attrs) {
@@ -230,8 +231,15 @@ angular.module('a2directives', ['a2services'])
             
             scope.formatString = function(value) {
                 
-                if(value instanceof Date){
+                if(value instanceof Date) {
                     return moment(value).utc().format(attrs.dateFormat || 'lll');
+                }
+                else if(typeof value === 'number') {
+                    var precision = attrs.numberDecimals || 3;
+                    
+                    var p =  Math.pow(10,precision);
+                    
+                    return Math.round(value*p)/p;
                 }
                 return value;
             };

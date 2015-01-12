@@ -1,4 +1,4 @@
-<div ng-hide="data">   
+<div ng-show="invalid">
     <h4>Model Has Not Be Found</h4>
 </div>
 <div ng-show="data">   
@@ -196,39 +196,38 @@
             </div>
             
         </div>
-        <div class="col-xs-12" ng-hide="showValidationsFalg" >
-            <h4>The selected model was computed with a previous version of the Arbimon2 App.<br> Some features may not be available.
-            </h4>
-            <br>
+
+    <div class="col-xs-12" ng-hide="loadingValidations || !showValidationsFalg" >
+        <h3>Threshold Details</h3>
+        <div class="model-info-column row">
+           <strong>Saved threshold:</strong> {{databaseThreshold}}<br>
+           <strong>Suggested threshold:</strong> {{suggestedThreshold}}<br>
+           <strong>Current threshold:</strong> {{currentThreshold}}
+           <div><strong>New threshold:</strong><input id="newthres" type="text" size="5"/></div>
+           <div><div class="btn btn-default" ng-click="recalculate()">Recalculate</div></div>
+           <div><div class="btn btn-default" ng-click="saveThreshold()">Save current threshold</div></div>
+           <small>{{messageSaved}}</small>
         </div>
-        <div class="col-xs-12" ng-hide="loadingValidations || !showValidationsFalg" >
-            <h3>Threshold Details</h3>
-            <div class="model-info-column row">
-               <strong>Current threshold:</strong> {{thresholdCurrent}}
-               <div><strong>New threshold:</strong><input id="newthres" type="text" size="5"/></div>
-               <div><div class="btn btn-default" ng-click="recalculate()">Recalculate</div></div>
-               <div><div class="btn btn-default" ng-click="saveThreshold()">Save threshold</div></div>{{messageSaved}}
-            </div>
-            <div class="model-info-column" >
-                <strong>Statistics</strong>
-                <table class="table">
-                    <tr>
-                        <td><strong>Accuracy:</strong></td>
-                        <td>{{ thres.accuracy }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Precision:</strong></td>
-                        <td>{{ thres.precision }}</td>
-                    </tr>
-                    <tr ng-show="data.sensitivity != null"> 
-                        <td><strong>Sensitivity:</strong></td>
-                        <td>{{ thres.sensitivity }}</td>
-                    </tr>
-                    <tr ng-show="data.specificity != null"> 
-                        <td><strong>Specificity:</strong></td>
-                        <td>{{ thres.specificity }}</td>
-                    </tr>
-                </table>
+        <div class="model-info-column" >
+            <strong>Statistics</strong>
+            <table class="table">
+                <tr>
+                    <td><strong>Accuracy:</strong></td>
+                    <td>{{ thres.accuracy }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Precision:</strong></td>
+                    <td>{{ thres.precision }}</td>
+                </tr>
+                <tr ng-show="data.sensitivity != null"> 
+                    <td><strong>Sensitivity:</strong></td>
+                    <td>{{ thres.sensitivity }}</td>
+                </tr>
+                <tr ng-show="data.specificity != null"> 
+                    <td><strong>Specificity:</strong></td>
+                    <td>{{ thres.specificity }}</td>
+                </tr>
+            </table>
             </div>
             <div class="model-info-column" >
                 <div class="top-buffer" ng-show="data.tpos != null">
@@ -266,30 +265,49 @@
             
         </div>
     </div>
-    
-    <div class="row" ng-show="valiDetails && showValidationsFalg">
-        <div ng-hide="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
-            <h3 class="inlineh3">
-                Validations 
-                <div class="btn btn-default" 
-                    ng-csv="getValidations()" 
-                    filename="matrixValues.csv"  
-                    csv-header="['Site', 'Date', 'User presence','Model presence','Threshold presence' ,'Threshold value']">
-                    <i class="fa fa-download"
-                        tooltip="Download Values in CSV" 
-                        tooltip-placement="bottom">
-                    </i>
+</div>
+<div class="row" ng-hide="showModelValidations">
+    <div ng-hide="invalid">
+    <h4>The current model was computed using a previous version of the Arbimon2 App.<br>
+    The validation list feature is not available.</h4></div>
+</div>
+<div class="row" ng-show="valiDetails && showModelValidations">
+    <div ng-hide="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
+        <h3 class="inlineh3">
+            Validations 
+            <div class="btn btn-default" 
+                ng-csv="getValidations()" 
+                filename="matrixValues.csv"  
+                csv-header="['Site', 'Date', 'User presence','Model presence','Threshold presence' ,'Threshold value']">
+                <i class="fa fa-download"
+                    tooltip="Download Values in CSV" 
+                    tooltip-placement="bottom">
+                </i>
+            </div>
+        </h3>
+        <small><em>(Click in the recording row to show recording details)</em></small>
+        <a2-table  fields="fields" rows="validationsData" no-checkbox on-select="recDetails(row)"></a2-table>
+        
+    </div>
+    <div ng-show="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
+        <h3 class="inlineh3">
+            Loading data 
+        </h3>
+        <loader></loader>
+    </div>
+    <div class="col-sm-12 col-lg-8" ng-hide="showValidationsTable">
+        <h3>
+            <div class="row">
+                <div class="col-sm-4">Validation Recording Detail</div>
+                <div class="btn btn-default col-sm-1" 
+                    ng-click="closeRecValidationsDetails()" >
+                     <i class="fa fa-arrow-left"></i> 
+                    Back
                 </div>
             </h3>
             <small><em>(Click in the recording row to show recording details)</em></small>
             <a2-table  fields="fields" rows="validationsData" no-checkbox on-select="recDetails(row)"></a2-table>
             
-        </div>
-        <div ng-show="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
-            <h3 class="inlineh3">
-                Loading data 
-            </h3>
-            <loader></loader>
         </div>
         <div class="col-sm-12 col-lg-8" ng-hide="showValidationsTable">
             <h3>
@@ -314,23 +332,16 @@
                 <div class="col-sm-2"><b>Model:</b> {{recNameInVectorViewModel}}</div>
                 <div class="col-sm-2"><b>Threshold:</b> {{recNameInVectorViewTh}}</div>
             </div>
-            
-            <div class="axisWrapper">
-                <div class="yaxisWrapper">
-                    1.0
-                    <div class="lowaxis2">0.0</div>
-                </div>
-                <div class="vectorWrapper"><a2-vectorchart  minvect="data.minv" maxvect="data.maxv" vurl="selectedVectWatch" purl="project_url"></a2-vectorchart></div>
+        
+        <div class="axisWrapper">
+            <div class="yaxisWrapper">
+                <div class="yAxishighvalue">{{data.maxvRounded}}</div>
+                <div class="lowaxis2">0.0</div>
             </div>
             <div class="cleardiv"></div>
-    
-            <div class="axisWrapper">
-                <div class="yaxisWrapper vertical-text2">
-                    Hertz
-                </div>
-                <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="https://s3.amazonaws.com/arbimon2/{{selectedUri}}"/></div>
-                <small>Seconds</small>
-            </div>
+
+            <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="{{selectedUrl}}"/></div>
+            <small>Seconds</small>
         </div>
     </div>
 </div>

@@ -12,6 +12,6 @@ Object.keys(routes).forEach(function(route){
     router.use(route, routes[route]);
 });
 
-router.use("/",require('./model'));
+router.use("/", require('./models'));
 
 module.exports = router;

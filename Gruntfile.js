@@ -32,6 +32,13 @@ module.exports = function(grunt) {
                 dest: 'public/assets/js/arbimon2-templates.js'
             },
         },
+        ngdocs: { // angular code documentation
+            options:{
+                dest:'docs/front-end',
+                html5Mode: false
+            },
+            all:['assets/js/**/*.js'],
+        },
         copy: {
             bootstrap: {
                 expand: true,
@@ -213,7 +220,7 @@ module.exports = function(grunt) {
                 files: [
                     'app.js',
                     'routes/**/*.js',
-                    'models/**/*.js',
+                    'model/**/*.js',
                     'utils/**/*.js',
                     'config/**/*.js',
                     'config/**/*.json'
@@ -226,7 +233,7 @@ module.exports = function(grunt) {
             jobqueue: {
                 files: [
                     'jobqueue-app.js',
-                    'models/job_queues.js',
+                    'model/job_queues.js',
                     'utils/**/*.js',
                     'config/**/*.js',
                     'config/**/*.json'
@@ -274,9 +281,11 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-express-server');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-html2js');
-
+    grunt.loadNpmTasks('grunt-ngdocs');
+    
     grunt.registerTask('build', ['copy', 'less', 'html2js', 'concat']);
     grunt.registerTask('default', ['build']);
     grunt.registerTask('server', ['build', 'express:dev', 'watch']);
     grunt.registerTask('jobqueue-server', ['express:jobqueue', 'watch:jobqueue']);
+    grunt.registerTask('docs', ['ngdocs']);
 };

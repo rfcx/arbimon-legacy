@@ -6,7 +6,7 @@ var router = express.Router();
 var async = require('async');
 
 var jobQueue = require('../utils/jobqueue');
-var model = require('../models');
+var model = require('../model');
 
 router.use(function(req, res, next) {
     if(!req.session.user.isSuper)

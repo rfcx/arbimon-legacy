@@ -1,6 +1,6 @@
 var debug = require('debug')('arbimon2:route:project');
 var express = require('express');
-var model = require('../models');
+var model = require('../model');
 var router = express.Router();
 
 

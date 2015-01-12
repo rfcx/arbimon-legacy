@@ -2,7 +2,7 @@ from pylab import *
 import numpy
 import cPickle as pickle
 import scipy
-
+import math
 class Roiset:   
 
     def __init__(self, classId,setSRate):
@@ -27,8 +27,15 @@ class Roiset:
                 self.lowestFreq = lowFreq
                 self.highestFreq = highFreq
                 self.highestlowestFreq = lowFreq
-                self.lowesthighestFreq = highFreq  
+                self.lowesthighestFreq = highFreq
+                self.biggestRoi = spec
+                self.highestBand = highFreq - lowFreq
             else:
+                highestBand = highFreq - lowFreq
+                if self.maxColumns < columns:
+                    self.biggestRoi = spec
+                if self.highestBand <= highestBand and self.maxColumns < columns:
+                    self.biggestRoi = spec
                 if self.lowestFreq > lowFreq:
                     self.lowestFreq = lowFreq
                 if self.highestFreq < highFreq:
@@ -57,13 +64,40 @@ class Roiset:
             self.sampleLengths.append(columns)
             self.rows = rows
             self.roi.append(Roi(lowFreq,highFreq,sample_rate,spec)) 
-            self.roiCount = self.roiCount + 1     
-
+            self.roiCount = self.roiCount + 1
+            
     def alignSamples(self):
-        
+        surface = numpy.zeros(shape=(self.rows,self.maxColumns))
+        weights = numpy.zeros(shape=(self.rows,self.maxColumns))
+        freqs = [self.setSampleRate/2/(self.rows-1)*i for i in reversed(range(0,surface.shape[0]))]
+        for roi in self.roi:
+            high_index = 0
+            low_index = 0
+            while freqs[high_index] >= roi.highFreq:
+                high_index = high_index + 1
+                low_index  = low_index  + 1
+            while freqs[low_index ] >=  roi.lowFreq:
+                low_index  = low_index  + 1
+            distances = []
+            currColumns = roi.spec.shape[1]
+            for jj in range(self.maxColumns -currColumns ): 
+                subMatrix =   self.biggestRoi[high_index:low_index, jj:(jj+currColumns)]
+                distances.append(numpy.linalg.norm(subMatrix  - roi.spec[high_index:low_index,:]) )
+            if len(distances) > 0:
+                j = distances.index(min(distances))
+            else:
+                j = 0
 
+            surface[high_index:low_index, j:(j+currColumns)] = surface[high_index:low_index, j:(j+currColumns)] + roi.spec[high_index:low_index, :]            
+                
+            weights[high_index:low_index, j:(j+currColumns)] = weights[high_index:low_index, j:(j+currColumns)]  + 1
+            
+        self.meanSurface = numpy.divide(surface,weights)
+        self.meanSurface[numpy.isnan(self.meanSurface)]   = -10000
+        
+    def alignSamples2(self):
         self.surface = numpy.sum(self.maxrois,axis=0)
-        weights = numpy.ones(shape=(self.rows,self.maxColumns))
+        weights = numpy.zeros(shape=(self.rows,self.maxColumns))
         freqs = [self.setSampleRate/2/(self.rows-1)*i for i in reversed(range(0,self.surface.shape[0]))]
         high_index = 0
         low_index = 0
@@ -73,7 +107,7 @@ class Roiset:
         while freqs[low_index ] >=  self.lowestFreq:
             low_index  = low_index  + 1
         
-        weights[high_index:low_index ,:] = weights[high_index:low_index ,:]*len(self.maxrois)
+        weights[high_index:low_index ,:] = weights[high_index:low_index ,:] + len(self.maxrois)
         
         for i in self.varlengthsIndeces:
             distances = []
@@ -89,12 +123,14 @@ class Roiset:
             
             high_index = 0
             low_index = 0
+            
             while freqs[high_index] >= self.roi[i].highFreq:
                 high_index = high_index + 1
                 low_index  = low_index  + 1
+                
             while freqs[low_index ] >=  self.roi[i].lowFreq:
                 low_index  = low_index  + 1
-            low_index = low_index + 1
+                
             weights[high_index:low_index, j:(j+currColumns)] = weights[high_index:low_index, j:(j+currColumns)]  + 1
             
         #filename = '/home/rafa/debug_weights.data'    
@@ -167,4 +203,3 @@ class Roi:
         ax1.axis('auto')
         show()
         close()
-

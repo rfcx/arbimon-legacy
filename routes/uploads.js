@@ -5,16 +5,15 @@ var fs = require('fs');
 var path = require('path');
 var async = require('async');
 var util = require('util');
+var AWS = require('aws-sdk');
 
 
-var model = require('../models');
+var model = require('../model');
 var config = require('../config');
 var audioTool = require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
 var formatParse = require('../utils/format-parse');
 
-var AWS = require('aws-sdk');
-AWS.config.loadFromPath('./config/aws.json');
 var s3 = new AWS.S3(); 
 
 
@@ -36,12 +35,12 @@ var processUpload = function(upload, cb) {
     var thumbnail = tmpFileCache.key2File(fileInfo.filename + '.thumbnail.png');
 
     var fileURI = util.format('project_%d/site_%d/%d/%d/%s', 
-                    upload.project_id,
-                    siteId,
-                    fileInfo.year,
-                    fileInfo.month,
-                    fileInfo.filename
-                );
+        upload.project_id,
+        siteId,
+        fileInfo.year,
+        fileInfo.month,
+        fileInfo.filename
+    );
     
     debug('fileURI:', fileURI);
     
@@ -95,7 +94,7 @@ var processUpload = function(upload, cb) {
             debug('uploadFlac:', file.filename);
             
             var params = { 
-                Bucket: 'arbimon2', 
+                Bucket: config('aws').bucketName, 
                 Key: fileURI + '.flac',
                 ACL: 'public-read',
                 Body: fs.createReadStream(outFile)
@@ -115,7 +114,7 @@ var processUpload = function(upload, cb) {
             debug('uploadThumbnail:', file.filename);
             
             var params = { 
-                Bucket: 'arbimon2', 
+                Bucket: config('aws').bucketName, 
                 Key: fileURI + '.thumbnail.png',
                 ACL: 'public-read',
                 Body: fs.createReadStream(thumbnail)

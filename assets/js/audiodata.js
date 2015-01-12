@@ -410,7 +410,10 @@ angular.module('audiodata', [
     
     $scope.map = new google.maps.Map(document.getElementById('map-site'), mapOptions);
     
-    
+    $scope.close = function() {
+        $scope.creating = false;
+        $scope.editing = false;
+    };
     
     $scope.save = function() {
         var action = $scope.editing ? 'update' : 'create';

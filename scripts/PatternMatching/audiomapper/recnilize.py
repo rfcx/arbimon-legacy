@@ -4,7 +4,6 @@ import sys
 import numpy
 from pylab import *
 from a2audio.recanalizer import Recanalizer
-bucket = 'arbimon2'
 import tempfile
 from contextlib import closing
 import MySQLdb

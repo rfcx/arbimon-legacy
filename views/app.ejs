@@ -19,22 +19,43 @@
             </div>
         
             <div class="collapse navbar-collapse" id="navbar-collapse">
-                <ul class="nav navbar-nav">
-                    <li ui-sref-active="active"><a ui-sref="dashboard"><i class="fa fa-dashboard"></i> Dashboard</a></li>
-                    <li ui-sref-active="active"><a ui-sref="audiodata"><i class="fa fa-cloud-upload"></i> Data</a></li>
-                    <li ui-sref-active="active"><a ui-sref="visualizer"><i class="fa fa-cubes"></i> Visualizer</a></li>
-                    <li ui-sref-active="active"><a ui-sref="analysis"><i class="fa fa-send-o"></i> Analysis</a></li>
-                </ul>
-                <ul class="nav navbar-nav" ng-controller="StatusBarNavIndexController">
-                    <li ng-hide="jobslength">
-                        <a><i class="fa fa-cog"></i> No Active Jobs</a>
+                <ul class="nav navbar-nav hide-tooltip-lg">
+                    <li ui-sref-active="active">
+                        <a ui-sref="dashboard" tooltip="Dashboard" tooltip-placement="bottom">
+                            <i class="fa fa-dashboard"></i> 
+                            <span class="visible-lg-inline">Dashboard</span>
+                        </a>
                     </li>
+                    <li ui-sref-active="active" tooltip="Data" tooltip-placement="bottom">
+                        <a ui-sref="audiodata">
+                            <i class="fa fa-cloud-upload"></i> 
+                            <span class="visible-lg-inline">Data</span>
+                        </a>
+                    </li>
+                    <li ui-sref-active="active" tooltip="Visualizer" tooltip-placement="bottom">
+                        <a ui-sref="visualizer">
+                            <i class="fa fa-cubes"></i> 
+                            <span class="visible-lg-inline">Visualizer</span>
+                        </a>
+                    </li>
+                    <li ui-sref-active="active" tooltip="Analysis" tooltip-placement="bottom">
+                        <a ui-sref="analysis">
+                            <i class="fa fa-send-o"></i> 
+                            <span class="visible-lg-inline">Analysis</span>
+                        </a>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav hide-tooltip-lg" ng-controller="StatusBarNavIndexController">
                     <li ng-show="jobslength" ui-sref-active="active">
-                        <a ui-sref="jobs"><i class="fa fa-cog"></i> Active Jobs <span class="badge" ng-bind="jobslength"></span></a>
+                        <a ui-sref="jobs" tooltip="Active Jobs" tooltip-placement="bottom">
+                            <i class="fa fa-cogs"></i> 
+                            <span class="visible-lg-inline">Jobs</span> 
+                            <span class="badge"> {{ jobslength }}</span>
+                        </a>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li class=""><a><i class="fa fa-cubes"></i> <%=  project.name  %></a></li>
+                    <li class=""><a><i class="fa fa-sitemap"></i> <%=  project.name  %></a></li>
                     <li class=""><a><% if(user.isSuper) { %>Super<% } %> <i class="fa fa-user"></i> <%= user.username %></a></li>
                     <li class=""><a href="/user-settings" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
                     <li class=""><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>

@@ -29,7 +29,6 @@ log = Logger(jobId, 'recClassify.py', 'worker')
 log.write('script started')
 
 models = {}
-bucket = 'arbimon2'
 tempFolders = tempfile.gettempdir()
 currDir = os.path.dirname(os.path.abspath(__file__))
 

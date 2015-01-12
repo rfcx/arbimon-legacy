@@ -8,7 +8,7 @@ var util  = require('util');
 
 var sqlutil = require('../utils/sqlutil');
 var dbpool = require('../utils/dbpool');
-var model = require('../models');
+var model = require('../model');
 
 // local variables
 var s3;

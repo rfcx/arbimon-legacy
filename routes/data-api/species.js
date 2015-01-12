@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var model = require('../../models');
+var model = require('../../model');
 
 router.get('/list/:limit', function(req, res, next) {
     var limit = Number(req.param('limit'));

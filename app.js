@@ -5,38 +5,37 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var session = require('express-session')
+var session = require('express-session');
 var SessionStore = require('express-mysql-session');
 var busboy = require('connect-busboy');
+var AWS = require('aws-sdk');
+
 
 var config = require('./config');
-var model = require('./models');
+AWS.config.update({
+    accessKeyId: config('aws').accessKeyId, 
+    secretAccessKey: config('aws').secretAccessKey,
+    region: config('aws').region
+});
+
 var tmpfilecache = require('./utils/tmpfilecache');
 var jobQueue = require('./utils/jobqueue');
+var model = require('./model');
 
-// routes
-var login = require('./routes/login');
-var routes = require('./routes/index');
-
-var AWS = require('aws-sdk');
-AWS.config.loadFromPath('./config/aws.json');
+tmpfilecache.cleanup();
 
 var app = express();
-// test
+
+
+// middleware and app settings
+// ----------------------------------------------------------
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-tmpfilecache.cleanup();
-
 if (app.get('env') === 'production') {
-    app.use(function(req, res, next){
-        if(!req.secure) {
-            var securePort = app.get('tls_port') == 443 ? '' : ':' + app.get('tls_port');
-            return res.redirect('https://' + req.hostname + securePort + req.originalUrl);
-        }
-        next();
-    });
+    app.enable('trust proxy');
 }
 
 app.use(favicon(__dirname + '/public/images/favicon.ico'));
@@ -55,6 +54,9 @@ app.use(busboy());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+if(app.get('env') === 'development') {
+    app.use('/docs', express.static(path.join(__dirname, 'docs')));
+}
 
 var sessionConfig = {
     key    : config('session').key,
@@ -70,11 +72,17 @@ var sessionConfig = {
 };
 
 if (app.get('env') === 'production') {
-    app.set('trust proxy', 1) // trust first proxy
     sessionConfig.cookie = { secure: true }; // use secure cookies
 }
 
 app.use(session(sessionConfig));
+
+
+// routes
+// ---------------------------------------------------------------
+
+var login = require('./routes/login');
+var routes = require('./routes/index');
 
 app.use('/', login);
 app.use('/', routes);

@@ -61,8 +61,8 @@ run(function(Angularytics) {
         var nameRe = /[\w\d]+(\s?[\w\d]+)*/;
         
         if(
-            nameRe.exec($scope.project.name) === null
-            || (nameRe.exec($scope.project.name)[0] !== $scope.project.name)
+            nameRe.exec($scope.project.name) === null || 
+            nameRe.exec($scope.project.name)[0] !== $scope.project.name
         )
             $scope.error_name = true;
         else

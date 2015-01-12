@@ -541,9 +541,15 @@ var Projects = {
                 "extract(day from r.`datetime`) day , "+
                 "extract(hour from r.`datetime`) hour , "+
                 "extract(minute from r.`datetime`) min ,  "+
+                " m.`threshold` , "+
+                " m.`uri` , "+
+                " r.`uri` ruri  , "+
+		" cr.`max_vector_value` as mvv ," +
                 "SUBSTRING_INDEX(r.`uri` ,'/',-1 ) rec , cr.`present` , s.`name` , sp.`scientific_name` , st.`songtype` "+
-                "FROM `species` sp, `classification_results` cr, `recordings` r, `sites` s, `songtypes` st "+
-                "WHERE `job_id` ="+mysql.escape(cid)+" "+
+                "FROM `models` m , `job_params_classification`  jpc, `species` sp, `classification_results` cr, `recordings` r, `sites` s, `songtypes` st "+
+                "WHERE cr.`job_id` ="+mysql.escape(cid)+" "+
+                "AND jpc.`job_id` = cr.`job_id` "+
+                "AND jpc.`model_id` = m.`model_id` "+
                 "AND cr.`recording_id` = r.`recording_id` "+
                 "AND s.`site_id` = r.`site_id` "+
                 "AND sp.`species_id` = cr.`species_id` "+

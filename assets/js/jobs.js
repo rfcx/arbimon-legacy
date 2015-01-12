@@ -17,10 +17,10 @@
         var job_types;
         var url = Project.getUrl();
         var intervalPromise;
-        // $http.get('/api/project/'+url+'/progress').success(function(data) {
-        //     jobs = data;
-        //     jobslength = jobs.length;
-        // });
+        $http.get('/api/project/'+url+'/progress').success(function(data) {
+            jobs = data;
+            jobslength = jobs.length;
+        });
                     
         return {
                 geturl : function(){

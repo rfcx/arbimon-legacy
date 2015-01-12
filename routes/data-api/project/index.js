@@ -5,7 +5,7 @@ var async = require('async');
 var util = require('util');
 var gravatar = require('gravatar');
 
-var model = require('../../../models');
+var model = require('../../../model');
 
 // routes
 var recording_routes = require('./recordings');
@@ -113,8 +113,8 @@ router.get('/:projectUrl/info', function(req, res, next) {
 
 router.post('/:projectUrl/info/update', function(req, res, next) {
     
-    if(!req.haveAccess(req.project.project_id, "manage settings")) {
-        return res.json({ error: "you dont have permission to 'manage settings'" });
+    if(!req.haveAccess(req.project.project_id, "manage project settings")) {
+        return res.json({ error: "you dont have permission to 'manage project settings'" });
     }
     
     if(!req.body.project)
