@@ -420,9 +420,11 @@
 		    {
 			$scope.getRecVali ( $scope.validations[i],i );
 		    }
-		}
+		}              
+            })
+            .error(function() {
+                notify.error("Error Communicating With Server");
             });
-            
             
         
             $scope.getRecVali = function (currRec ,i) {
@@ -443,68 +445,175 @@
 			}
 			var vectorLength = vector.length;
 			
-			var vmax = Math.max.apply(null,vector);
+			var vmax = Math.max.apply(null,vector)
 			$scope.validations[i].vmax = vmax;
 			$scope.validations[i].vector = vector;
-			
 			if (currRec.presence == 'no')
 			{
 			    if($scope.vectorNoMax < vmax )
 			    {
-				$scope.vectorNoMax = vmax;
+				$scope.vectorNoMax = vmax
 			    }
 			}
 			
 			if (currRec.presence == 'yes')
 			{
-			    $scope.allYesMax.push(vmax);
+			    $scope.allYesMax.push(vmax)
 			}
+			
+			$scope.waitinFunction();
 		    }
 		    $scope.waitinFunction();
 		    
                 });
             };
-            
+	    
+            $scope.loadingValidations = true;           
             $scope.showModelValidations = true;
             
-            $scope.waitinFunction = function() {
-                $scope.waitCallsNUmberIndex = $scope.waitCallsNUmberIndex + 1;
-                if ($scope.waitCallsNUmber == $scope.waitCallsNUmberIndex)
-                {
+
+	    $scope.waitinFunction = function()
+	    {
+		$scope.waitCallsNUmberIndex = $scope.waitCallsNUmberIndex + 1
+		if ($scope.waitCallsNUmber == $scope.waitCallsNUmberIndex)
+		{
 		    if ($scope.allYesMax.length>0)
 		    {
 			$scope.allYesMax = $scope.allYesMax.sort();
 			var index  = 0;
-			for(var j = 0 ; j < $scope.allYesMax.length; j++)
+			for(var j = 0 ; j < $scope.allYesMax.length;j++)
 			{
 			    if ($scope.allYesMax[j]>=$scope.vectorNoMax)
 			    {
 				index = j;
 			    }
 			}
-			
 			$scope.data.maxv = Math.max.apply(null,$scope.allYesMax);
 			$scope.data.maxvRounded = Math.round($scope.data.maxv*1000)/1000;
 			$scope.suggestedThreshold =  Math.round($scope.allYesMax[index]*1000000)/1000000;
-			if(typeof $scope.suggestedThreshold === undefined || isNaN($scope.suggestedThreshold))
+			if (typeof $scope.suggestedThreshold == undefined || isNaN($scope.suggestedThreshold))
 			{
 			    $scope.suggestedThreshold =  Math.round($scope.allYesMax[0]*1000000)/1000000;
 			}
-			$scope.currentThreshold = ($scope.databaseThreshold != '-') ? $scope.databaseThreshold : $scope.suggestedThreshold ;
 			
-			if(isNaN($scope.currentThreshold))
+			
+			if (typeof $scope.suggestedThreshold == undefined || isNaN($scope.suggestedThreshold))
 			{
 			    $scope.showModelValidations = false;
-			    $scope.loadingValidations = false;
 			}
 			else
 			{
+			    var searchTh = $scope.suggestedThreshold;
+			    var thresholdObject = [];
+			    var precisionObject = [];
+			    var accuracyObject = [];
+			    var sensitivityObject = [];
+			    var specificityObject = [];
+			    var sumObject = [];
+			    while(searchTh > 0.01)
+			    {
+				for(var jj = 0 ; jj < $scope.validations.length;jj++)
+				{
+				    $scope.validations[jj].threshold = ($scope.validations[jj].vmax > searchTh) ? 'yes' : 'no';
+				}    
+				$scope.computeStats();
+				thresholdObject.push(searchTh)
+				precisionObject.push($scope.thres.precision)
+				accuracyObject.push($scope.thres.accuracy)
+				sensitivityObject.push($scope.thres.sensitivity)
+				specificityObject.push($scope.thres.specificity)
+				sumObject.push($scope.thres.specificity+$scope.thres.sensitivity+$scope.thres.accuracy+$scope.thres.precision)
+				searchTh = searchTh - 0.001;
+			    }
+			    var max = sumObject[0];
+			    var mindex = 0;
+			    for (var ii = 1; ii < sumObject.length; ii++) {
+				if (sumObject[ii] > max) {
+				    max = sumObject[ii];
+				    mindex = ii
+				}
+			    }			    
+			    max = precisionObject[0];
+			    
+			    for (var ii = 0; ii < precisionObject.length; ii++) {
+				if (precisionObject[ii] >= max) {
+				    max = precisionObject[ii];
+				}
+			    }
+			    
+			    var precisionMaxIndices = []
+			    for (var ii = 0; ii < precisionObject.length; ii++) {
+				if (precisionObject[ii] == max) {
+				    precisionMaxIndices.push(ii);
+				}
+			    }
+			    max = sensitivityObject[precisionMaxIndices[0]];
+			    
+			    for (var i = 0; i < precisionMaxIndices.length; i++) {
+				if (sensitivityObject[precisionMaxIndices[i]] >= max) {
+				    max = sensitivityObject[precisionMaxIndices[i]];
+				}
+			    }
+			    
+			    var sensitivityMaxIndices = []
+			    for (var i = 0; i < precisionMaxIndices.length; i++) {
+				if (sensitivityObject[precisionMaxIndices[i]] == max) {
+				    sensitivityMaxIndices.push(precisionMaxIndices[i]);
+				}
+			    }
+			    max = accuracyObject[sensitivityMaxIndices[0]];
+			    
+			    for (var i = 0; i < sensitivityMaxIndices.length; i++) {
+				if (accuracyObject[sensitivityMaxIndices[i]] >= max) {
+				    max = accuracyObject[sensitivityMaxIndices[i]];
+				}
+			    }
+			    
+			    var accuracyMaxIndices = []
+			    for (var i = 0; i < sensitivityMaxIndices.length; i++) {
+				if (accuracyObject[sensitivityMaxIndices[i]] == max) {
+				    accuracyMaxIndices.push(sensitivityMaxIndices[i]);
+				}
+			    }
+			    max = specificityObject[accuracyMaxIndices [0]];
+			    
+			    for (var i = 0; i < accuracyMaxIndices.length; i++) {
+				if (specificityObject[accuracyMaxIndices[i]] >= max) {
+				    max = specificityObject[accuracyMaxIndices[i]];
+				}
+			    }
+			    
+			    var specificityMaxIndices = []
+			    for (var i = 0; i < accuracyMaxIndices.length; i++) {
+				if (specificityObject[accuracyMaxIndices[i]] == max) {
+				    specificityMaxIndices.push(accuracyMaxIndices[i]);
+				}
+			    }
+			    
+			    var accum = 0.0;
+			    for (var i = 0 ; i < specificityMaxIndices.length;i++)
+			    {
+				accum = accum + thresholdObject[specificityMaxIndices[i]];
+				
+			    }
+			    accum = accum/specificityMaxIndices.length
+			    $scope.currentThreshold = $scope.databaseThreshold != '-'? $scope.databaseThreshold:accum;
+			    $scope.suggestedThreshold =  Math.round(accum*1000000)/1000000;
+			    $scope.currentThresholdRounded = $scope.databaseThreshold != '-'? $scope.databaseThreshold: Math.round(accum*1000000)/1000000;
+    
+			    if (typeof $scope.suggestedThreshold == undefined || isNaN($scope.suggestedThreshold) || !$scope.suggestedThreshold)
+			    {
+				$scope.currentThreshold = $scope.databaseThreshold != '-'? $scope.databaseThreshold: $scope.allYesMax[0]
+				$scope.suggestedThreshold =  Math.round($scope.allYesMax[0]*1000000)/1000000;
+				$scope.currentThresholdRounded = $scope.databaseThreshold != '-'? $scope.databaseThreshold: $scope.suggestedThreshold ;
+			    }
+
 			    for(var jj = 0 ; jj < $scope.validations.length;jj++)
 			    {
 				$scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
-			    }
-			    $scope.validationsData = $scope.validations;
+			    }    
 			    $scope.computeStats();
+			    $scope.validationsData = $scope.validations;
 			    $scope.loadingValidations = false;
 			}
 		    }
@@ -513,22 +622,33 @@
 			$scope.showModelValidations = false;
 			$scope.loadingValidations = false;			
 		    }
-                }
-            };
-            
+		}
+	    }
+	    
             $scope.thres = {
-                tpos: '-',
+	        tpos: '-',
                 fpos: '-',
                 tneg: '-',
                 fneg: '-',
-                accuracy: '-', 
-                precision: '-', 
-                sensitivity: '-', 
-                specificity: '-', 
-            };        
+		accuracy: '-', 
+		precision: '-', 
+		sensitivity: '-', 
+		specificity: '-', 
+	    };	    
+	    
             
             $scope.computeStats = function()
             {
+		$scope.thres = {
+		    tpos: '-',
+		    fpos: '-',
+		    tneg: '-',
+		    fneg: '-',
+		    accuracy: '-', 
+		    precision: '-', 
+		    sensitivity: '-', 
+		    specificity: '-', 
+		};	
                 var trupositive = 0;
                 var falsepositives = 0;
                 var truenegatives = 0;
@@ -598,30 +718,33 @@
                 });
             };
             
-            
-            $scope.recalculate = function()
-            {
-                var newval = $('#newthres').val();
-                $scope.messageSaved = '';
-                newval = parseFloat(newval);
-                
-                if (!isNaN(newval) && (newval<=1.0) && (newval>=0.0))
-                {
-                    $scope.currentThreshold =  Math.round(newval*1000000)/1000000;
-                    for(var jj = 0 ; jj < $scope.validations.length;jj++)
-                    {
-                    $scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
-                    }
-                    $scope.computeStats();   
-                }
-                else 
-                {
-                    $scope.messageSaved = 'Value should be between 0 and 1.';
-                }
-            };
-            
-            $scope.currentThreshold = '-';
             $scope.invalid = false;
+	    
+	    $scope.recalculate = function()
+	    {
+		var newval = $('#newthres').val();
+		$scope.messageSaved = '';
+		newval = parseFloat(newval);
+		
+		if (!isNaN(newval) && (newval<=1.0) && (newval>=0.0))
+		{
+		    $scope.currentThreshold =  newval;
+		    $scope.currentThresholdRounded =  Math.round(newval*1000000)/1000000;
+		    for(var jj = 0 ; jj < $scope.validations.length;jj++)
+		    {
+			$scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
+		    }
+		    $scope.computeStats();   
+		}
+		else
+		{
+		    $scope.messageSaved = 'Value should be between 0 and 1.';
+		}
+
+	    };
+	    
+	    $scope.currentThreshold = '-';
+	    $scope.currentThresholdRounded =  '-';
             $http.get('/api/project/' + $scope.project_url + '/models/' + $stateParams.modelId)
             .success(function(data) {
                 $scope.databaseThreshold = (data.threshold === null) ?  '-' : data.threshold;
