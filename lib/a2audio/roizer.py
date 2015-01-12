@@ -6,7 +6,7 @@ import math
 
 class Roizer:
 
-    def __init__(self, uri ,tempFolder,config ,iniSecs=5,endiSecs=15,lowFreq = 1000, highFreq = 2000,order = 6, bucket):
+    def __init__(self, uri ,tempFolder,config ,iniSecs=5,endiSecs=15,lowFreq = 1000, highFreq = 2000,order = 6, bucket=None):
 
         slicedrec = Rec(uri,tempFolder,config,bucket)
 
