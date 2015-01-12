@@ -42,7 +42,7 @@ angular.module('a2visobjects', [
         };
         // set it to the scope
         this.tiles.set.forEach((function(tile){
-            tile.src="/api/project/test1/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j;
+            tile.src="/api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j;
         }).bind(this));
     };
     recording.layers=[
