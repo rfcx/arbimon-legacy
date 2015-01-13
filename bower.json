@@ -3,27 +3,27 @@
   "version": "0.4.0",
   "private": true,
   "dependencies": {
-    "font-awesome": "~4.2.0",
-    "bootstrap": "~3.2.0",
     "angular": "1.2.26",
-    "angular-bootstrap": "~0.11.0",
-    "angular-ui-router": "0.2.11",
-    "ui-router-extras": "~0.0.10",
+    "angular-audio": "~1.4.1",
+    "angular-bootstrap": "~0.12.0",
     "angular-file-upload": "~1.1.1",
-    "d3": "~3.4.11",
-    "ng-table": "~0.3.3",
-    "angular-ui-select": "~0.8.2",
-    "selectize": "~0.8.5",
-    "moment": "~2.8.3",
-    "angular-audio": "*",
-    "jquery-ui": "~1.11.2",
     "angular-rangeslider": "~0.0.11",
+    "angular-ui-router": "0.2.11",
+    "angular-ui-select": "~0.8.2",
+    "angularytics" : "~0.3.0",
+    "bootstrap": "~3.2.0",
+    "d3": "~3.4.11",
+    "font-awesome": "~4.2.0",
     "humane-js": "~3.2.1",
+    "jquery-ui": "~1.11.2",
+    "moment": "~2.8.3",
     "ng-csv" : "~0.3.0",
-    "angularytics" : "~0.3.0"
+    "ng-table": "~0.3.3",
+    "selectize": "~0.8.5",
+    "ui-router-extras": "~0.0.10"
   },
   "resolutions": {
-    "d3": "~3.4.11",
-    "angular": "~1.2.25"
+    "angular": "~1.2.26",
+    "d3": "~3.4.11"
   }
 }
