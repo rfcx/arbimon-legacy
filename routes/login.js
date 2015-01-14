@@ -5,16 +5,20 @@ var model = require('../model/');
 var sha256 = require('../utils/sha256');
 var gravatar = require('gravatar');
 var mysql = require('mysql');
+var mcapi = require('mailchimp-api');
+var config = require('../config');
+
+mc = new mcapi.Mailchimp(config('mailchimp').key );
 
 var nodemailer = require('nodemailer');
 var smtpTransport = require('nodemailer-smtp-transport');
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 var transport = nodemailer.createTransport(smtpTransport({
-    host: 'smtp.sieve-analytics.com',
-    port: 587,
+    host: config('email').host,
+    port: config('email').port,
     auth: {
-        user: 'support',
-        pass: '6k9=qZzy8m58B2Y'
+        user: config('email').auth.user,
+        pass: config('email').auth.pass
     }
 }));
 
@@ -168,7 +172,6 @@ router.post('/register', function(req, res) {
     if (req.body.newsletter && req.body.newsletter==true)
     {
         newsletter = true;
-        //add code to send newsletter
     }
     
     if (password != confirm) {
@@ -271,7 +274,16 @@ router.post('/register', function(req, res) {
                                 'Follow this link to activate your account:<br><br>'+
                                 'https://arbimon.sieve-analytics.com/activate/'+hash
                         };
-                        
+                        var mcReq = {
+                            id: config('mailchimp').listId,
+                            email: { email: email },
+                            merge_vars: {
+                                EMAIL: email,
+                                FNAME: first_name,
+                                LNAME:last_name
+                            }
+                        };
+                                   
                         transport.sendMail(mailOptions, function(error, info){
                             if(error){
                                 debug('sendmail error', error);
@@ -294,19 +306,39 @@ router.post('/register', function(req, res) {
                             }
                             else{
                                 debug('email sent to:',email);
-                                return res.render('register', {
-                                    data: {
-                                        title: 'Register',
-                                        message: '',
-                                        first_name: first_name,
-                                        last_name: '',
-                                        email: email,
-                                        password: '',
-                                        confirm: '',
-                                        username: '',
-                                        emailsent: 1
+                                
+                                mc.lists.subscribe(mcReq ,
+                                    function(data) {
+                                        return res.render('register', {
+                                            data: {
+                                                title: 'Register',
+                                                message: '',
+                                                first_name: first_name,
+                                                last_name: '',
+                                                email: email,
+                                                password: '',
+                                                confirm: '',
+                                                username: '',
+                                                emailsent: 1
+                                            }
+                                        });
+                                    },
+                                    function(error) {
+                                        return res.render('register', {
+                                            data: {
+                                                title: 'Register',
+                                                message: '',
+                                                first_name: first_name,
+                                                last_name: '',
+                                                email: email,
+                                                password: '',
+                                                confirm: '',
+                                                username: '',
+                                                emailsent: 1
+                                            }
+                                        });
                                     }
-                                });
+                                );
                             }
                         });
                     }
