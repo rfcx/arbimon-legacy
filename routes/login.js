@@ -164,6 +164,12 @@ router.post('/register', function(req, res) {
     var email = mysql.escape(req.body.email ).replace('\'','').replace('\'','');
     var password = mysql.escape(req.body.password ).replace('\'','').replace('\'','');
     var confirm = mysql.escape(req.body.password_confirmation ).replace('\'','').replace('\'','');
+    var newsletter = false;
+    if (req.body.newsletter && req.body.newsletter==true)
+    {
+        newsletter = true;
+        //add code to send newsletter
+    }
     
     if (password != confirm) {
         return res.render('register', {
