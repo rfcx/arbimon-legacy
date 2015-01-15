@@ -410,7 +410,7 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
     
                             var rowSent = {
                                 site: recData[0].site,
-                                date: new Date(recData[0].date),
+                                date: (recData[0].date),
                                 presence: prec,
                                 model: modelprec,
                                 id: recData[0].id,
