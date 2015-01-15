@@ -4,6 +4,7 @@ var model = require('../../models');
 var tmpfilecache = require('../../utils/tmpfilecache');
 var fs = require('fs');
 var path = require('path');
+var config = require('./config');
 var recs;
 
 if(process.argv.length < 4){
@@ -14,7 +15,12 @@ if(process.argv.length < 4){
 var plist  = process.argv[2] | 0;
 var outdir = process.argv[3];
 
-AWS.config.loadFromPath('./config/aws.json');
+AWS.config.update({
+    accessKeyId: config('aws').accessKeyId, 
+    secretAccessKey: config('aws').secretAccessKey,
+    region: config('aws').region
+});
+
 
 async.waterfall([
     function(){
