@@ -7,6 +7,9 @@ var dataApi = require('./data-api');
 var uploads = require('./uploads');
 var admin = require('./admin');
 
+router.get('/terms', function(req, res) {
+    res.render('terms');
+});
 
 router.get('/alive', function(req, res) { // for health checks
     res.sendStatus(200);
@@ -40,6 +43,8 @@ router.get('/', function(req, res) {
 router.get('/home', function(req, res) {
     res.render('home', { title: "Home", user: req.session.user });
 });
+
+
 
 // INCOMPLETE
 router.get('/user-settings', function(req, res) {
