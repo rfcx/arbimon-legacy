@@ -46,22 +46,56 @@ router.use(function(req, res, next) {
     next();
 });
 
-router.get('/login', function(req, res) {
+router.get('/login', function(req, res) {  
     if(req.session) { 
         if(req.session.loggedIn) return res.redirect('/home'); 
-    }   
+    }
     res.render('login', { message: '' });
 });
                                                         
 router.post('/login', function(req, res, next) {
     var username = req.body.username;
     var password = req.body.password;
+    var retries = 3
+    var waitTime = 3600000 // miliseconds
+    
+    if(req.session) { 
+        if(req.session.retries)
+        {
+            req.session.retries = req.session.retries + 1
+        }
+        else
+        {
+            req.session.retries = 1
+        }
+    }
+    var d = new Date();
+    var n = d.getTime();
+    if (req.session.disabledTime && (n-req.session.disabledTime)>waitTime  )
+    {
+        req.session.retries = 1;
+        req.session.disabledTime = null;
+    }
+    else if(req.session.disabledTime && (n-req.session.disabledTime)<waitTime)
+    {
+        return res.render('login', { message: "too many tries. the login is disabled." });
+    }
     
     model.users.findByUsername(username, function(err, rows) {
         if(err) return next(err);
-        
-        if(!rows.length) {
-            return res.render('login', { message: "bad credentials" });
+        var d = new Date();
+        var n = d.getTime();
+        if (req.session.retries<retries)
+        {
+            if(!rows.length)
+            {
+                return res.render('login', { message: "bad credentials" });
+            }
+        }
+        else
+        {     
+            req.session.disabledTime = n;
+            return res.render('login', { message: "too many tries. the login is disabled." });
         }
         
         user = rows[0];
@@ -79,7 +113,8 @@ router.post('/login', function(req, res, next) {
         });
             
         req.session.loggedIn = true; 
-    
+        req.session.retries = 1
+        req.session.disabledTime = null;
         req.session.user = {
             id: user.user_id,
             username: user.login,
