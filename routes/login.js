@@ -57,7 +57,7 @@ router.post('/login', function(req, res, next) {
     var username = req.body.username;
     var password = req.body.password;
     var permitedRetries = 3
-    var waitTime = 10000//3600000 // miliseconds
+    var waitTime = 3600000 // miliseconds
     var request_ip = req.headers['X-Forwarded-For']?req.headers['X-Forwarded-For']:req.connection.remoteAddress;
     
     model.users.loginsTries(request_ip , function(err, rows) {
