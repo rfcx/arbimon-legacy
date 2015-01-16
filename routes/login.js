@@ -56,78 +56,101 @@ router.get('/login', function(req, res) {
 router.post('/login', function(req, res, next) {
     var username = req.body.username;
     var password = req.body.password;
-    var retries = 3
-    var waitTime = 3600000 // miliseconds
+    var permitedRetries = 3
+    var waitTime = 10000//3600000 // miliseconds
+    var request_ip = req.headers['X-Forwarded-For']?req.headers['X-Forwarded-For']:req.connection.remoteAddress;
     
-    if(req.session) { 
-        if(req.session.retries)
-        {
-            req.session.retries = req.session.retries + 1
-        }
-        else
-        {
-            req.session.retries = 1
-        }
-    }
-    var d = new Date();
-    var n = d.getTime();
-    if (req.session.disabledTime && (n-req.session.disabledTime)>waitTime  )
-    {
-        req.session.retries = 1;
-        req.session.disabledTime = null;
-    }
-    else if(req.session.disabledTime && (n-req.session.disabledTime)<waitTime)
-    {
-        return res.render('login', { message: "too many tries. the login is disabled." });
-    }
-    
-    model.users.findByUsername(username, function(err, rows) {
+    model.users.loginsTries(request_ip , function(err, rows) {
         if(err) return next(err);
-        var d = new Date();
-        var n = d.getTime();
-        if (req.session.retries<retries)
+        var retries = rows.length;
+        var last_retry_time = 0;
+        for(var i = 0 ; i < retries;i++)
         {
-            if(!rows.length)
+            if (last_retry_time<rows[i].time)
             {
-                return res.render('login', { message: "bad credentials" });
+                last_retry_time=rows[i].time
             }
         }
+        var d = new Date();
+        var n = d.getTime();
+        var can_try_login = true;
+        if (retries >= permitedRetries)
+        {
+            if ((n-last_retry_time)< waitTime)
+            {
+                can_try_login  = false;
+            }
+            else
+            {
+                model.users.removeLoginTries(
+                request_ip, 
+                function(err, rows) {
+                    if(err) return next(err);                     
+                });    
+            }
+        }
+        
+        if(can_try_login)
+        {
+            model.users.findByUsername(username, function(err, rows) {
+                if(err) return next(err);
+                var d = new Date();
+                var n = d.getTime();              
+                if(!rows.length)
+                {
+                    model.users.loginTry(request_ip,n,username,'invalid_user', function(err, rows) {
+                        if(err) return next(err);
+                        return res.render('login', { message: "invalid user or wrong password." });
+                    });
+                }
+                else
+                {          
+                    user = rows[0];
+                    
+                    if(sha256(password) !== user.password) {
+                        
+                        model.users.loginTry(request_ip,n,username,'invalid_password', function(err, rows) {
+                            if(err) return next(err);
+                            return res.render('login', { message: "invalid user or wrong password." });
+                        });
+                    }
+                    else
+                    {
+                        model.users.update({ 
+                            user_id: user.user_id,
+                            last_login: new Date()
+                        }, 
+                        function(err, rows) {
+                            if(err) return next(err);                     
+                        });
+
+                        model.users.removeLoginTries( 
+                        request_ip , 
+                        function(err, rows) {
+                            if(err) return next(err);                     
+                        });
+                        
+                        req.session.loggedIn = true; 
+                        req.session.user = {
+                            id: user.user_id,
+                            username: user.login,
+                            email: user.email,
+                            firstname: user.firstname,
+                            lastname: user.lastname,
+                            isSuper: user.is_super,
+                            imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure),
+                            projectLimit: user.project_limit
+                        };
+                        
+                        res.redirect('/home');
+                    }
+                }
+            });
+        }
         else
-        {     
-            req.session.disabledTime = n;
-            return res.render('login', { message: "too many tries. the login is disabled." });
+        {
+            return res.render('login', { message: "too many tries. login disabled for one hour." });
         }
-        
-        user = rows[0];
-        
-        if(sha256(password) !== user.password) {
-            return res.render('login', { message: "wrong password" });
-        }
-        
-        model.users.update({ 
-            user_id: user.user_id,
-            last_login: new Date()
-        }, 
-        function(err, rows) {
-            if(err) return next(err);                     
-        });
-            
-        req.session.loggedIn = true; 
-        req.session.retries = 1
-        req.session.disabledTime = null;
-        req.session.user = {
-            id: user.user_id,
-            username: user.login,
-            email: user.email,
-            firstname: user.firstname,
-            lastname: user.lastname,
-            isSuper: user.is_super,
-            imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure),
-            projectLimit: user.project_limit
-        };
-        
-        res.redirect('/home');
-        
     });
 });
 

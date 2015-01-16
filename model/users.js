@@ -28,7 +28,28 @@ var Users = {
         q = util.format(q, mysql.escape(user_id))
         queryHandler(q, callback)
     },
-    
+    loginTry: function(ip,time,user,msg, callback) {
+        var q = 'INSERT INTO `arbimon2`.`invalid_logins` '+
+                '(`ip`, `time`, `user`, `reason`) '+
+                'VALUES (\''+ip+'\', \''+time+'\', '+
+                mysql.escape(user)+', \''+msg+'\');';
+                
+        queryHandler(q, callback)
+    },
+    loginsTries: function(ip, callback) {
+        var q = 'SELECT * ' +
+                'FROM `invalid_logins` ' +
+                'WHERE ip=%s';
+        q = util.format(q, mysql.escape(ip))
+        queryHandler(q, callback)
+    },
+    removeLoginTries: function(ip, callback) {
+        var q = 'DELETE ' +
+                'FROM `invalid_logins` ' +
+                'WHERE ip=%s';
+        q = util.format(q, mysql.escape(ip))
+        queryHandler(q, callback)
+    },
     search: function(query, callback) {
         query = mysql.escape('%'+query+'%');
         
