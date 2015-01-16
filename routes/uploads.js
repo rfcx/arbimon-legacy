@@ -71,7 +71,7 @@ var processUpload = function(upload, cb) {
             );
         }],
         
-        monofile : ['insertUploadRecs', function(callback) {
+        monofile : ['convert', function(callback) {
                 
             debug('convert to mono:', file.filename);
             var args = [];
@@ -108,7 +108,7 @@ var processUpload = function(upload, cb) {
             );
         }],
         
-        uploadFlac: ['convert', function(callback, results) {
+        uploadFlac: ['monofile', function(callback, results) {
             debug('uploadFlac:', file.filename);
             
             var params = { 
