@@ -19,12 +19,31 @@
         <div class="col-xs-6" ng-show="soundscape.threshold || soundscape.frequency">
             <h4>Peak Filtering</h4>
             <ul class="list-unstyled details-list">
-            <li><strong>Amplitude:</strong> {{ soundscape.threshold }} </li>
-            <li><strong>Frequency:</strong> {{ soundscape.frequency }}Hz </li>
+                <li><strong>Amplitude:</strong> {{ soundscape.threshold }} </li>
+                <li><strong>Frequency:</strong> {{ soundscape.frequency }}Hz </li>
+            </ul>
             <a2-draw-peak-threshold threshold="soundscape.threshold" bandwidth="soundscape.frequency"></a2-draw-peak-threshold>
         </div>
     </div>
-</div>  
+
+    <div class="row" ng-show="index_H">
+        <div class="col-xs-12">
+            <h4>Acoustic Indices</h4>
+            <div class="index-plot">
+                <a2-line-chart values="index_H" width="500" height="75"></a2-line-chart>
+                <p>Average total entropy (H)</p>
+            </div>
+            <div class="index-plot">
+                <a2-line-chart values="index_ACI" width="500" height="75" color="blue"></a2-line-chart>
+                <p>Average acoustic complexity index (ACI)</p>
+            </div>
+            <div class="index-plot">
+                <a2-line-chart values="index_NP" width="500" height="75" color="green"></a2-line-chart>
+                <p>Average frequency peaks</p>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="modal-footer">  
     <button class="btn btn-primary" ng-click="$close()">Close</button>  
 </div>  

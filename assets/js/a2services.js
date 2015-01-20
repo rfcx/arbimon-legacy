@@ -1,4 +1,4 @@
-angular.module('a2services',[])
+angular.module('a2services', [])
 .factory('Project', ['$location', '$http', function($location, $http) {
     var urlparse = document.createElement('a');
     urlparse.href = $location.absUrl();
@@ -549,6 +549,10 @@ angular.module('a2services',[])
             }).success(function(data) {
                 callback(data);
             });
+        },
+        findIndices: function(soundscape, callback) {
+            $http.get('/api/project/'+ Project.getUrl() +'/soundscapes/' + soundscape.id + '/indices')
+                .success(callback);
         }
     };
 })

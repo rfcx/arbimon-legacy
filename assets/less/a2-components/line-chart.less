@@ -1,0 +1,44 @@
+svg.graph {
+    font: 10px sans-serif;
+}
+
+.graph {
+    .axis {
+        shape-rendering: crispEdges;
+    }
+
+    .x.axis line {
+        stroke: #000;
+    }
+
+    .x.axis .minor {
+        stroke-opacity: .5;
+    }
+
+    .x.axis path {
+        fill: none;
+        stroke: #000;
+    }
+
+    .y.axis line, .y.axis path {
+        fill: none;
+        stroke: #000;
+    }
+}
+
+.graph-tooltip {
+    font: 14px sans-serif;
+    color: #fff;
+    background-color: rgba(0,0,0,0.5);
+    position: absolute;
+    min-width:100px;
+    height: 30px;
+    text-align:center;
+    z-index:9999;
+    
+    p {
+        vertical-align: middle;
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+}

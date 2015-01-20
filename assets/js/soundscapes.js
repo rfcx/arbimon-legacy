@@ -321,8 +321,8 @@
                  $modalInstance.close( {url:url});
             };
         }
-    ).
-    directive('a2Aggregationtypeselector', function() {
+    )
+    .directive('a2Aggregationtypeselector', function() {
             return  {
                 restrict : 'E',
                 scope: {
@@ -421,9 +421,7 @@
             }
         };
     })
-    .directive('a2ThresholdSelector',
-        function()
-        {
+    .directive('a2ThresholdSelector', function() {
         return {    
             restrict : 'E',
             scope: {
@@ -444,11 +442,8 @@
                 
             }
         };
-    }
-    )
-    .directive('a2DrawPeakThreshold',
-        function()
-        {
+    })
+    .directive('a2DrawPeakThreshold', function() {
         return {    
             restrict : 'E',
             scope: {
@@ -621,15 +616,41 @@
                     .text("Hz");
             }
         };
-    }
-    )
+    })
     .controller('SoundscapesDetailsCtrl', [
         '$scope',
         'soundscape', 
         'playlist', 
-        function($scope, soundscape, playlist) {
+        'a2Soundscapes',
+        function($scope, soundscape, playlist, a2Soundscapes) {
+            
+            var data2xy = function(offset) {
+                offset = offset || 0;
+                
+                return function(d, i) {  
+                    return { x: i+offset, y: d };
+                };
+            };
+            
             $scope.soundscape = soundscape;
             $scope.playlist = playlist;
+            
+            $scope.chartOptions = { 
+                lineColor: '#c42',
+                width: 400, 
+                height: 400 
+            };
+            
+            
+            a2Soundscapes.findIndices(soundscape, function(result) {
+                
+                if(!result)
+                    return;
+                
+                $scope.index_H = result.H.map(data2xy(soundscape.min_t));
+                $scope.index_ACI = result.ACI.map(data2xy(soundscape.min_t));
+                $scope.index_NP = result.NP.map(data2xy(soundscape.min_t));
+            });
         }
     ]);
 })(angular);
