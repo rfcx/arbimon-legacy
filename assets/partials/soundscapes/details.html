@@ -26,19 +26,25 @@
         </div>
     </div>
 
-    <div class="row" ng-show="index_H">
+    <div class="row" ng-show="index">
         <div class="col-xs-12">
-            <h4>Acoustic Indices</h4>
+            <h3>Acoustic Indices
+                <div class="pull-right" ng-csv="indices" filename="{{ soundscape.name }}_indices.csv">
+                    <button class="btn btn-default" tooltip="Download Indices">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </h3>
             <div class="index-plot">
-                <a2-line-chart values="index_H" width="500" height="75"></a2-line-chart>
+                <a2-line-chart values="index.H" width="500" height="75"></a2-line-chart>
                 <p>Average total entropy (H)</p>
             </div>
             <div class="index-plot">
-                <a2-line-chart values="index_ACI" width="500" height="75" color="blue"></a2-line-chart>
+                <a2-line-chart values="index.ACI" width="500" height="75" color="blue"></a2-line-chart>
                 <p>Average acoustic complexity index (ACI)</p>
             </div>
             <div class="index-plot">
-                <a2-line-chart values="index_NP" width="500" height="75" color="green"></a2-line-chart>
+                <a2-line-chart values="index.NP" width="500" height="75" color="green"></a2-line-chart>
                 <p>Average frequency peaks</p>
             </div>
         </div>

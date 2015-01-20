@@ -1,6 +1,6 @@
 (function(angular)
 { 
-    var soundscapes = angular.module('soundscapes', ['ui.bootstrap' , 'a2services' , 'ui-rangeSlider']);
+    var soundscapes = angular.module('soundscapes', ['ui.bootstrap' , 'a2services' , 'ui-rangeSlider', 'ngCsv']);
     var template_root = '/partials/soundscapes/';
 
     soundscapes.controller('SoundscapesCtrl' , 
@@ -643,13 +643,38 @@
             
             
             a2Soundscapes.findIndices(soundscape, function(result) {
-                
                 if(!result)
                     return;
+                    
+                $scope.index = {
+                    H: [],
+                    ACI: [],
+                    NP: [],
+                };
+                $scope.indices = [];
                 
-                $scope.index_H = result.H.map(data2xy(soundscape.min_t));
-                $scope.index_ACI = result.ACI.map(data2xy(soundscape.min_t));
-                $scope.index_NP = result.NP.map(data2xy(soundscape.min_t));
+                $scope.indices.push({ 
+                    time: "TIME",
+                    H: "H",
+                    ACI: "ACI",
+                    NP: "NP",
+                });
+                
+                for(var i = 0; i < result.H.length; i++) {
+                    var t = i+soundscape.min_t;
+                    
+                    $scope.indices.push({ 
+                        time: t,
+                        H: result.H[i],
+                        ACI: result.ACI[i],
+                        NP: result.NP[i],
+                    });
+                    
+                    $scope.index.H.push({ x: t, y: result.H[i] });
+                    $scope.index.ACI.push({ x: t, y: result.ACI[i] });
+                    $scope.index.NP.push({ x: t, y: result.NP[i] });
+                }
+                
             });
         }
     ]);
