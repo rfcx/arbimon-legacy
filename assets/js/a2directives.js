@@ -744,4 +744,143 @@ angular.module('a2directives', ['a2services'])
         }        
     };
 })
- ;
+
+.directive('a2LineChart', function() {
+    
+    var drawChart = function(data, options) {
+        
+        var padding = {
+            left: 30,
+            right: 10,
+            top: 10,
+            bottom: 20
+        };
+        
+        var getY = function(value) { return value.y; };
+        var getX = function(value) { return value.x; };
+        
+        var yMin = d3.min(data, getY);
+        var yMax = d3.max(data, getY);
+        
+        var tMin = d3.min(data, getX);
+        var tMax = d3.max(data, getX);
+        
+        var element = options.element;
+        var lineColor = options.lineColor || "red";
+        var width = options.width,
+        height = options.height;
+        
+        var xScale = d3.scale.linear()
+        .domain([tMin, tMax])
+        .range([padding.left, width-padding.right]);
+        
+        var yScale = d3.scale.linear()
+        .domain([yMin, yMax])
+        .range([height-padding.bottom, padding.top]);
+        
+        var line = d3.svg.line()
+        .x(function(d) { return xScale(d.x); })
+        .y(function(d) { return yScale(d.y); })
+        .interpolate("linear");
+        
+        var symbol= d3.svg.symbol().type('circle');
+        
+        var xAxis = d3.svg.axis()
+        .scale(xScale).ticks(tMax-tMin);
+        
+        var yAxis = d3.svg.axis()
+        .scale(yScale).orient('left').ticks(3);
+        
+        var svg = element
+        .append('svg')
+        .attr('class', "graph")
+        .attr('height', height)
+        .attr('width', width);
+        
+        svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + (height-padding.bottom) + ")")
+        .call(xAxis);
+        
+        svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate("+ padding.left +",0)")
+        .call(yAxis);
+        
+        var dataG = svg.append('g')
+        .datum(data);
+        
+        var path = dataG.append('path')
+        .attr('stroke', lineColor)
+        .attr('stroke-width',"2")
+        .attr('fill',"none")
+        .attr('d', line);
+        
+        var totalLength = path.node().getTotalLength();
+        
+        path.attr("stroke-dasharray", totalLength)
+        .attr("stroke-dashoffset", totalLength)
+        .transition().delay(200)
+        .duration(1000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0)
+        .each("end", function(){
+            path.attr("stroke-dasharray", null)
+            .attr("stroke-dashoffset", null);
+        });
+        
+        
+        dataG.append("g").selectAll('path')
+        .data(function(d) { return d; })
+        .enter()
+        .append('path')
+        .attr('fill',"transparent")
+        .attr("transform", function(d) { 
+            return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")scale(0.7,0.7)"; 
+        })
+        .attr("d", symbol)
+        .attr('fill', lineColor)
+        .on('mouseenter', function(d) {
+            var body = d3.select('body');
+            var coords = d3.mouse(body.node()); 
+            
+            var tooltip = body.append('div')
+            .datum(d)
+            .attr('class', "graph-tooltip")
+            .style('top', (coords[1]-10)+'px')
+            .style('left', (coords[0]-10)+'px')
+            .on('mouseleave', function() {
+                body.selectAll('.graph-tooltip').remove();
+            })
+            .append('p')
+            .text(Math.round(d.y*1000)/1000);
+        });
+    };
+    
+    return {
+        restrict: 'E',
+        scope: {
+            values: '=',
+            height: '@',
+            width: '@',
+            color: '@?'
+        },
+        link: function (scope, element, attrs) {
+            
+            scope.$watch('values', function() {
+                
+                if(!scope.values)
+                    return;
+                
+                drawChart(scope.values, { 
+                    lineColor: scope.color, 
+                    element: d3.select(element[0]),
+                    width: Number(scope.width), 
+                    height: Number(scope.height) 
+                });
+            });
+            
+        }
+    };
+})
+;
