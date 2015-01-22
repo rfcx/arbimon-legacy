@@ -303,8 +303,8 @@
                     c: $scope.data.classifier.model_type_id,
                     tp: parseInt($scope.data.usePresentTraining),
                     tn: parseInt($scope.data.useNotPresentTraining),
-                    vp: $scope.data.usePresentValidation,
-                    vn: $scope.data.useNotPresentValidation
+                    vp: parseInt($scope.data.usePresentValidation),
+                    vn: parseInt($scope.data.useNotPresentValidation)
                 })
                 .success(
                     function(data, status, headers, config) {
