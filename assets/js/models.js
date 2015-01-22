@@ -307,10 +307,10 @@
                         n: $scope.data.name,
                         t: $scope.data.training.training_set_id,
                         c: $scope.data.classifier.model_type_id,
-                        tp: $scope.data.usePresentTraining,
-                        tn: $scope.data.useNotPresentTraining,
-                        vp: $scope.data.usePresentValidation,
-                        vn: $scope.data.useNotPresentValidation
+                        tp: parseInt($scope.data.usePresentTraining),
+                        tn: parseInt($scope.data.useNotPresentTraining),
+                        vp: parseInt($scope.data.usePresentValidation),
+                        vn: parseInt($scope.data.useNotPresentValidation)
                     })
                     .success(
                         function(data, status, headers, config) {
