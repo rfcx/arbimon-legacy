@@ -45,17 +45,21 @@ var Projects = {
             return callback(new Error("invalid type for 'project_id'"));
         
         var q = "SELECT s.site_id as id, \n"+
-                        "s.name, \n"+
-                        "s.lat, \n"+
-                        "s.lon, \n"+
-                        "s.alt, \n"+
-                        "count( r.recording_id ) as rec_count \n"+
+                "       s.name, \n"+
+                "       s.lat, \n"+
+                "       s.lon, \n"+
+                "       s.alt, \n"+
+                "       s.published, \n"+
+                "       COUNT( r.recording_id ) as rec_count, \n"+
+                "       s.project_id != %1$s AS imported \n"+
                 "FROM sites AS s \n"+
+                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = %1$s \n"+
                 "LEFT JOIN recordings AS r ON s.site_id = r.site_id \n"+
-                "WHERE s.project_id = %s \n"+
+                "WHERE s.project_id = %1$s \n"+
+                "OR pis.project_id = %1$s \n"+
                 "GROUP BY s.site_id";
         
-        q = util.format(q, mysql.escape(project_id));
+        q = sprintf(q, mysql.escape(project_id));
         return queryHandler(q , callback);
     },
 
@@ -103,7 +107,7 @@ var Projects = {
             is_private: Joi.number().optional(),
             is_enabled: Joi.number().optional(),
             recording_limit: Joi.number().optional()
-        }
+        };
         
         Joi.validate(project, schema, function(err, projectInfo){
             if(err) return callback(err);
@@ -396,7 +400,7 @@ var Projects = {
     },
     
     classificationDelete: function(cid, callback) {
-        var modUri = ''
+        var modUri = '';
         var q = "SELECT `uri` FROM `models` WHERE `model_id` = "+
             "(SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = "+cid+")";
         queryHandler(q,
@@ -415,22 +419,21 @@ var Projects = {
                         function (elem,callb)
                         {
                             var uri = elem.uri.split("/");
-                            uri = uri[uri.length-1]
+                            uri = uri[uri.length-1];
                             var cido = parseInt(cid.replace("'",""));
-                            allToDelete.push({Key:modUri+'/classification_'+cido+'_'+uri+'.vector'})
+                            allToDelete.push({Key:modUri+'/classification_'+cido+'_'+uri+'.vector'});
                             callb();
-                        }
-                        ,
+                        },
                         function(err){
                             if (err){
                                 return callback(err);
                             }
 
                             
-                            if (allToDelete.length==0)
+                            if (allToDelete.length===0)
                             {
-                               var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid
-                               console.log('exc quer 1')
+                               var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid;
+                               console.log('exc quer 1');
                                queryHandler(q,function(err,row)
                                    {
                                        if (err)
@@ -440,7 +443,7 @@ var Projects = {
                                        else
                                        {    
                                            var q = "DELETE FROM `classification_stats` WHERE `job_id` = "+cid ;
-                                           console.log('exc quer 2')
+                                           console.log('exc quer 2');
                                            queryHandler(q,
                                                 function(err,row)
                                                 {
@@ -451,7 +454,7 @@ var Projects = {
                                                     else
                                                     {    
                                                         var q = "DELETE FROM `job_params_classification` WHERE `job_id` ="+cid;
-                                                        console.log('exc quer 3')
+                                                        console.log('exc quer 3');
                                                         queryHandler(q,            
                                                             function(err,data)
                                                             {
@@ -460,7 +463,7 @@ var Projects = {
                                                                 }
                                                                 callback(null,{data:"Classification deleted succesfully"});
                                                             }
-                                                        )
+                                                        );
                                                     }
                                                 }
                                             );
@@ -481,13 +484,13 @@ var Projects = {
                                 };
                                 s3.deleteObjects(params, function(err, data) {
                                    if (err)
-                                   {console.log('error!!:',err)
+                                   {console.log('error!!:',err);
                                        callback(err);
                                    }
                                    else
                                    {
-                                       var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid
-                                       console.log('exc quer 1')
+                                       var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid;
+                                       console.log('exc quer 1');
                                        queryHandler(q,function(err,row)
                                            {
                                                if (err)
@@ -497,7 +500,7 @@ var Projects = {
                                                else
                                                {    
                                                    var q = "DELETE FROM `classification_stats` WHERE `job_id` = "+cid ;
-                                                   console.log('exc quer 2')
+                                                   console.log('exc quer 2');
                                                    queryHandler(q,
                                                         function(err,row)
                                                         {
@@ -508,7 +511,7 @@ var Projects = {
                                                             else
                                                             {    
                                                                 var q = "DELETE FROM `job_params_classification` WHERE `job_id` ="+cid;
-                                                                console.log('exc quer 3')
+                                                                console.log('exc quer 3');
                                                                 queryHandler(q,            
                                                                     function(err,data)
                                                                     {
@@ -517,7 +520,7 @@ var Projects = {
                                                                         }
                                                                         callback(null,{data:"Classification deleted succesfully"});
                                                                     }
-                                                                )
+                                                                );
                                                             }
                                                         }
                                                     );
@@ -553,14 +556,14 @@ var Projects = {
                 "AND cr.`recording_id` = r.`recording_id` "+
                 "AND s.`site_id` = r.`site_id` "+
                 "AND sp.`species_id` = cr.`species_id` "+
-                "AND cr.`songtype_id` = st.`songtype_id`  "
+                "AND cr.`songtype_id` = st.`songtype_id`  ";
 
         queryHandler(q, callback);
     },
     
     classificationErrors: function(project_url,cid, callback) {
         var q = "select count(*) as count "+
-                " from  `recordings_errors`  where `job_id` = "+mysql.escape(cid)
+                " from  `recordings_errors`  where `job_id` = "+mysql.escape(cid);
 
         queryHandler(q, callback);
     },

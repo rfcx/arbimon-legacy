@@ -59,9 +59,9 @@ angular.module('a2services', [])
         },
 
         getRecTotalQty: function(callback) {
-            $http.get('/api/project/'+url+'/recordings/count/')
+            $http.get('/api/project/'+url+'/recordings/count')
             .success(function(data) {
-                callback(data[0].count);
+                callback(data.count);
             });
         },
 
@@ -566,6 +566,47 @@ angular.module('a2services', [])
                 return callback(data);
             });
         },
+    };
+}])
+.factory('a2Sites',['$http', 'Project', function($http, Project){
+    return {
+        listPublished: function(callback) {
+            $http.get('/api/sites/published')
+            .success(function(data) {
+                callback(data);
+            });
+        },
+        
+        import: function(site, callback) {
+            $http.post('/api/project/'+ Project.getUrl() +'/sites/import', 
+            {
+                site: site,
+            })
+            .success(callback);
+        },
+        
+        update: function(site, callback) {
+            $http.post('/api/project/'+ Project.getUrl() +'/sites/update', 
+            {
+                site: site,
+            })
+            .success(callback);
+        },
+        
+        create: function(site, callback) {
+            $http.post('/api/project/'+ Project.getUrl() +'/sites/create', 
+            {
+                site: site,
+            })
+            .success(callback);
+        },
+        
+        delete: function(site, callback) {
+            $http.post('/api/project/'+ Project.getUrl() +'/sites/delete', {
+                site: site
+            })
+            .success(callback);
+        }
     };
 }])
 ;

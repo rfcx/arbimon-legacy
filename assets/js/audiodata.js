@@ -380,7 +380,7 @@ angular.module('audiodata', [
         }
     };
 })
-.controller('SitesCtrl', function($scope, Project, $http, $modal, notify) {
+.controller('SitesCtrl', function($scope, Project, $http, $modal, notify, a2Sites) {
     $scope.loading = true;
     
     Project.getInfo(function(info){
@@ -393,15 +393,6 @@ angular.module('audiodata', [
     });
     
     $scope.editing = false;
-    
-    $scope.fields = [
-        { name: 'Name', key: 'name' },
-        { name: 'Latidude', key:'lat' },
-        { name: 'Longitude', key: 'lon' },
-        { name: 'Altitude', key: 'alt' },
-        { name: 'Rec qty', key: 'rec_count' }
-    ];
-    
     
     var mapOptions = {
         center: { lat: 18.3, lng: -66.5},
@@ -418,13 +409,9 @@ angular.module('audiodata', [
     $scope.save = function() {
         var action = $scope.editing ? 'update' : 'create';
         
-        $http.post('/api/project/'+ action +'/site', {
-            project: $scope.project,
-            site: $scope.temp
-        })
-        .success(function(data) {
+        a2Sites[action]($scope.temp, function(data) {
             if(data.error)
-                notify.error(data.error);
+                return notify.error(data.error);
                 
             if(action === 'create') {
                 $scope.creating = false;
@@ -436,26 +423,24 @@ angular.module('audiodata', [
             Project.getSites(function(sites) {
                 $scope.sites = sites;
             });
-        })
-        .error(function(data) {
-            console.log(data);
+            
+            var message = (action == "update") ? "site updated" : "site created";
+            
+            notify.log(message);
         });
     };
     
     
     
     $scope.del = function() {
-        if(!$scope.checked || !$scope.checked.length)
+        if(!$scope.selected)
             return;
-            
-        var sitesNames = $scope.checked.map(function(row) {
-            return row.name;
-        });
         
-        var message = ["You are about to delete the following sites: "];
-        var message2 = ["Are you sure??"];
-        
-        $scope.messages = message.concat(sitesNames, message2);
+        $scope.messages = [
+            "You are about to delete: ",
+            $scope.selected.name,
+            "Are you sure??"
+        ];
         
         $scope.btnOk = "Yes, do it!";
         $scope.btnCancel = "No";
@@ -466,22 +451,45 @@ angular.module('audiodata', [
         });
         
         modalInstance.result.then(function() {
-            $http.post('/api/project/delete/sites', {
-                project: $scope.project,
-                sites: $scope.checked
-            })
-            .success(function(data) {
+            a2Sites.delete($scope.selected, function(data) {
                 if(data.error)
-                    alert(data.error);
-                    
-                    Project.getSites(function(sites) {
-                        $scope.sites = sites;
-                    });
-                })
-                .error(function(data) {
-                    alert(data);
+                    return notify.error(data.error);
+                
+                Project.getSites(function(sites) {
+                    $scope.sites = sites;
                 });
+                notify.log("site removed");
             });
+        });
+    };
+    
+    
+    $scope.browseShared = function() {
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/audiodata/browse-published-sites.html',
+            controller: 'PublishedSitesBrowserCtrl',
+            size: 'lg',
+            resolve: {
+                project: function() {
+                    var p = angular.copy($scope.project);
+                    p.sites = $scope.sites;
+                    return p;
+                }
+            }
+        });
+        
+        modalInstance.result.then(function(data) {
+            Project.getSites(function(sites) {
+                $scope.sites = sites;
+                $scope.loading = false;
+            });
+            notify.log(data.msg);
+        })
+        .catch(function(reason) {
+            if(reason) {
+                notify.error(reason);
+            }
+        });
     };
     
     $scope.create = function() {
@@ -511,12 +519,11 @@ angular.module('audiodata', [
     };
 
     $scope.edit = function() {
-        console.log($scope.editing);
         
         if(!$scope.selected)
             return;
             
-        $scope.temp = JSON.parse(JSON.stringify($scope.selected));
+        $scope.temp = angular.copy($scope.selected);
         
         $scope.marker.setDraggable(true);
         
@@ -559,6 +566,40 @@ angular.module('audiodata', [
     };
                     
 })
+.controller('PublishedSitesBrowserCtrl', [
+    '$scope', 
+    'a2Sites', 
+    'project', 
+    '$modalInstance',
+    function($scope, a2Sites, project, $modalInstance) {
+    
+        a2Sites.listPublished(function(sites) {
+            $scope.sites = sites;
+        });
+        
+        
+        $scope.addSite = function(site) {
+            
+            if(site.project_id === project.project_id) {
+                $modalInstance.dismiss("site is owned by this project");
+                return;
+            }
+            
+            var result = project.sites.filter(function(value) {
+                return value.id === site.id;
+            });
+            
+            if(result.length > 0) {
+                $modalInstance.dismiss("site is already on this project");
+                return;
+            }
+            
+            a2Sites.import(site, function(data) {
+                $modalInstance.close(data);
+            });
+        };
+    }
+])
 .controller('SpeciesCtrl', function($scope, Project, $modal, notify) {
     $scope.loading = true;
     
