@@ -46,11 +46,11 @@
                     </li>
                 </ul>
                 <ul class="nav navbar-nav hide-tooltip-lg" ng-controller="StatusBarNavIndexController">
-                    <li ng-show="jobslength" ui-sref-active="active">
+                    <li ui-sref-active="active">
                         <a ui-sref="jobs" tooltip="Active Jobs" tooltip-placement="bottom">
                             <i class="fa fa-cogs"></i> 
                             <span class="visible-lg-inline">Jobs</span> 
-                            <span class="badge"> {{ jobslength }}</span>
+                            <span ng-show="jobslength" class="badge"> {{ jobslength }}</span>
                         </a>
                     </li>
                 </ul>

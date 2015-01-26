@@ -436,14 +436,15 @@ angular.module('audiodata', [
         if(!$scope.selected)
             return;
         
-        $scope.messages = [
-            "You are about to delete: ",
-            $scope.selected.name,
-            "Are you sure??"
-        ];
-        
-        $scope.btnOk = "Yes, do it!";
-        $scope.btnCancel = "No";
+        $scope.popup = {
+            messages: [
+                "You are about to delete: ",
+                $scope.selected.name,
+                "Are you sure??"
+            ],
+            btnOk: "Yes, do it!",
+            btnCancel: "No",
+        };
         
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',
@@ -667,10 +668,11 @@ angular.module('audiodata', [
         var message = ["You are about to delete the following project species: "];
         var message2 = ["Are you sure??"];
         
-        $scope.messages = message.concat(speciesClasses, message2);
-        
-        $scope.btnOk = "Yes, do it!";
-        $scope.btnCancel = "No";
+        $scope.popup = {
+            messages: message.concat(speciesClasses, message2),
+            btnOk: "Yes, do it!",
+            btnCancel: "No",
+        };
         
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',
@@ -1130,10 +1132,12 @@ angular.module('audiodata', [
         var message = ["You are about to delete the following playlists: "];
         var message2 = ["Are you sure??"];
         
-        $scope.messages = message.concat(playlists, message2);
+        $scope.popup = {
+            messages: message.concat(playlists, message2),
+            btnOk: "Yes, do it!",
+            btnCancel: "No",
+        };
         
-        $scope.btnOk = "Yes, do it!";
-        $scope.btnCancel = "No";
         
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',

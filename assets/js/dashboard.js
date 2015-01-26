@@ -195,14 +195,17 @@ angular.module('dashboard',[
     
     $scope.del = function($index) {
         
-        $scope.messages = [
-            "You are about to remove: ",
-            $scope.users[$index].username,
-            "Are you sure??"
-        ];
         
-        $scope.btnOk = "Yes, do it!";
-        $scope.btnCancel = "No";
+        $scope.popup = {
+            messages : [
+                "You are about to remove: ",
+                $scope.users[$index].username,
+                "Are you sure??"
+            ],
+            btnOk: "Yes, do it!",
+            btnCancel: "No",
+        };
+        
         
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',
