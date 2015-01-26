@@ -4,7 +4,8 @@ angular.module('audiodata', [
     'ui.bootstrap', 
     'angularFileUpload',
     'visualizer-training-sets',
-    'humane'
+    'humane',
+    'google-maps'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.when("/audiodata", "/audiodata/sites");
@@ -572,9 +573,24 @@ angular.module('audiodata', [
     'a2Sites', 
     'project', 
     '$modalInstance',
-    function($scope, a2Sites, project, $modalInstance) {
+    'geocoding',
+    function($scope, a2Sites, project, $modalInstance, geocoding) {
     
         a2Sites.listPublished(function(sites) {
+            
+            sites.forEach(function(site) {
+                geocoding.geocode({ 
+                        location: { 
+                            lat: site.lat, 
+                            lng: site.lon 
+                        } 
+                }, function(result, status) {
+                    site.location = result[1].formatted_address || "";
+                    $scope.$apply();
+                });
+                
+            });
+            
             $scope.sites = sites;
         });
         
