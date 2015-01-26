@@ -55,16 +55,48 @@
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li class=""><a><i class="fa fa-sitemap"></i> <%=  project.name  %></a></li>
-                    <li class=""><a><% if(user.isSuper) { %>Super<% } %> <i class="fa fa-user"></i> <%= user.username %></a></li>
-                    <li class=""><a href="/user-settings" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
-                    <li class=""><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
+                    <li class="dropdown" dropdown>
+                        <a class="dropdown-toggle" dropdown-toggle>
+                            <i class="fa fa-sitemap"></i> <%=  project.name  %>
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a ui-sref="settings" ui-sref-active="active">
+                                    <i class="fa fa-wrench"></i> Settings
+                                </a>
+                            </li>
+                            <li>
+                                <a ui-sref="users" ui-sref-active="active">
+                                    <i class="fa fa-users"></i> Users
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="dropdown" dropdown>
+                        <a class="dropdown-toggle" dropdown-toggle>
+                            <% if(user.isSuper) { %>Super<% } %> 
+                            <i class="fa fa-user"></i> <%= user.username %> 
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li class="">
+                                <a href="/user-settings">
+                                    <i class="fa fa-wrench"></i> Settings
+                                </a>
+                            </li>
+                            <li class="">
+                                <a href="/logout">
+                                    <i class="fa fa-sign-out"></i> Log out
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
     <div id="page">
-        <div ui-view="dashboard" ng-show="$state.includes('dashboard')"></div>
         <div ui-view="audiodata" ng-show="$state.includes('audiodata')"></div>
         <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
         <div ui-view="analysis" ng-show="$state.includes('analysis')"></div>

@@ -8,29 +8,24 @@ angular.module('dashboard',[
 ])
 .config(function($stickyStateProvider, $stateProvider, $urlRouterProvider) {
 
-    $urlRouterProvider.when("/dashboard", "/dashboard/summary");
+    // $urlRouterProvider.when("/dashboard", "/dashboard/summary");
 
     $stateProvider.state('dashboard', {
         url: '/dashboard',
-        views: { 
-            'dashboard': { 
-                templateUrl: '/partials/dashboard/index.html',
-            } 
-        },
-        deepStateRedirect: true, 
+        controller:'SummaryCtrl',
+        templateUrl: '/partials/dashboard/index.html',
     })
     .state('dashboard.summary', {
         url: '/summary',
-        controller:'SummaryCtrl',
         templateUrl: '/partials/dashboard/summary.html'
     })
     
-    .state('dashboard.settings', {
+    .state('settings', {
         url: '/settings',
         controller:'SettingsCtrl',
         templateUrl: '/partials/dashboard/settings.html'
     })
-    .state('dashboard.users', {
+    .state('users', {
         url: '/users',
         controller:'UsersCtrl',
         templateUrl: '/partials/dashboard/users.html'
