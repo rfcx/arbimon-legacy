@@ -22,17 +22,32 @@ module.exports = function(grunt) {
         
         html2js: {
             options: {
+                module: 'templates-arbimon2',
                 base : 'assets',
                 rename: function (moduleName) {
                     return '/' + moduleName;
                 }
             },
-            arbimon2: {
-                src: [
-                    'assets/partials/**/*.html'
-                ],
-                dest: 'public/assets/js/arbimon2-templates.js'
+            prod: {
+                options: {
+                    htmlmin: {
+                        collapseBooleanAttributes: true,
+                        collapseWhitespace: true,
+                        removeAttributeQuotes: true,
+                        removeComments: true,
+                        removeEmptyAttributes: true,
+                        removeRedundantAttributes: true,
+                        removeScriptTypeAttributes: true,
+                        removeStyleLinkTypeAttributes: true
+                    }
+                },
+                src: ['assets/partials/**/*.html'],
+                dest: 'public/assets/js/arbimon2-templates.js',
             },
+            dev: {
+                src: ['assets/partials/**/*.html'],
+                dest: 'public/assets/js/arbimon2-templates.js',
+            }
         },
         
         // angular code documentation
@@ -186,15 +201,13 @@ module.exports = function(grunt) {
 
         concat: {
             dev: {
-                src: [
-                    'assets/js/**/*.js'
-                ], 
+                src: ['assets/js/**/*.js'], 
                 dest: 'public/assets/js/arbimon2.js'
             }
         },
         
         uglify: {
-            production: {
+            prod: {
                 options: {
                     mangle: false,
                     banner: '/*! <%= pkg.name %> v<%= pkg.version %> '+
@@ -283,6 +296,10 @@ module.exports = function(grunt) {
             }
         },
         
+        jshint: {
+            client: ['Gruntfile.js', 'assets/js/**/*.js']
+        },
+        
         clean: {
             assets: ['public/assets/*'],
             packages: ['bower_components', 'node_modules']
@@ -308,9 +325,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-html2js');
     grunt.loadNpmTasks('grunt-ngdocs');
     grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
     
-    grunt.registerTask('build', ['copy', 'less', 'html2js', 'concat']);
-    grunt.registerTask('prod', ['build', 'uglify']);
+    grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'concat']);
+    grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'concat', 'uglify']);
     grunt.registerTask('server', ['express:dev', 'watch']);
     grunt.registerTask('jobqueue-server', ['express:jobqueue', 'watch:jobqueue']);
     grunt.registerTask('docs', ['ngdocs']);
