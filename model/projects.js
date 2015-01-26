@@ -376,13 +376,13 @@ var Projects = {
        
     classifications: function(project_url, callback) {
             var q = "SELECT UNIX_TIMESTAMP( j.`date_created` )*1000  as date "+
-                    "  , j.`job_id`  , "+
+                    "  , j.`job_id`  , pl.`name` as playlistName,"+
                      " CONCAT(UCASE(LEFT(mode.`name`, 1)), SUBSTRING(mode.`name`, 2))  as modname  " +         
                     " , CONCAT(UCASE(LEFT(jpc.`name`, 1)), SUBSTRING(jpc.`name`, 2))  as cname  "+
                     " , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,"+
                     "  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser " + 
-                    " from `models` as mode , `jobs` as j ,`job_params_classification` as jpc , `projects` as p , `users` as u "+
-                    " WHERE mode.`model_id` = jpc.`model_id` and p.url  = "+mysql.escape(project_url)+" and j.`project_id` = p.`project_id`  and "+
+                    " from  `playlists`  as pl, `models` as mode , `jobs` as j ,`job_params_classification` as jpc , `projects` as p , `users` as u "+
+                    " WHERE pl.`playlist_id` = jpc.`playlist_id` and mode.`model_id` = jpc.`model_id` and p.url  = "+mysql.escape(project_url)+" and j.`project_id` = p.`project_id`  and "+
                     " j.`job_id` = jpc.`job_id` and j.`job_type_id` = 2 and j.`completed` = 1 and u.`user_id` = j.`user_id`";
 
         queryHandler(q, callback);
