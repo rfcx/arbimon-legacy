@@ -5,8 +5,8 @@
             <div class="row">
                 Show : 
                 <label ng-repeat="job_type in job_types.types" style="padding-left:25px; display:inline-block;">
-                    <input type="checkbox" class="hidden"  ng-model="show[job_type.id]" /> 
-                    <i class="fa" ng-class="show[job_type.id] ? 'fa-circle' : 'fa-circle-o'"
+                    <input type="checkbox" class="hidden"  ng-model="shows[job_type.id]" /> 
+                    <i class="fa" ng-class="shows[job_type.id] ? 'fa-circle' : 'fa-circle-o'"
                         ng-style="{color : job_type.color}"
                     ></i>
                     {{job_type.name}}
@@ -19,7 +19,7 @@
                 <div class="col-sm-3">Status</div>
             </div>
             <div data-ng-repeat="o in jobs" >
-                <div class="row" ng-show="show[o.job_type_id]" >
+                <div class="row" ng-show="shows[o.job_type_id]" >
                     <div class="bordered"></div>
                     <div class="col-sm-2 hidelongtext">
                         <i class="fa fa-circle" ng-style="{color : job_types.for[o.job_type_id].color}"></i>

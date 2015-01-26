@@ -127,6 +127,7 @@
                 c.color = colors[i % colors.length];
             });
         });
+	
     });
     
 
@@ -148,10 +149,10 @@
     
     
     jobs.controller('StatusBarNavController', function ($scope, $http,$modal,$interval, Project, JobsData){
-        $scope.show={};
+	$scope.shows = {}
         $scope.showClassifications = true;
         $scope.showTrainings = true;
-	    $scope.showSoundscapes = true;
+	$scope.showSoundscapes = true;
         $scope.url = '';
         $scope.successInfo = "";
         $scope.showSuccesss = false;
@@ -167,6 +168,13 @@
     		$scope.infoInfo = "";
     		$scope.showInfo = false;
         };
+        JobsData.getJobTypes().then(function(job_types){
+            $scope.types = job_types;
+            $scope.shows = {};
+            $scope.types.forEach(function(c,i){
+                $scope.shows[c.id] = true;
+            });
+        });		
         $scope.jobs = [];
         $scope.$watch(
             function(){
