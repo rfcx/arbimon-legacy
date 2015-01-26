@@ -1,0 +1,1 @@
+INSERT INTO `arbimon2`.`projects` (`project_id`, `name`, `url`, `description`, `owner_id`, `project_type_id`, `is_private`, `is_enabled`, `recording_limit`) VALUES ('0', 'arbimon sites', 'arbimon-sites', 'this is a system, project every site deleted with recordings is moved to this project ', '1', '1', '1', '1', '50000');
