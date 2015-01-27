@@ -1,10 +1,11 @@
 <div class="modal-header">
+    {{ popup.title }}
 </div>
 
 <div class="modal-body">
-    <p ng-repeat="msg in messages">{{ msg }}</p>
+    <p ng-repeat="msg in popup.messages">{{ msg }}</p>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-danger" ng-click="$close(true)  | trackEvent:'PopUp':'clicked ok'">{{ btnOk }}</button>
-    <button class="btn btn-default" ng-click="$dismiss()  | trackEvent:'PopUp':'clicked cancel'">{{ btnCancel }}</button>
+    <button class="btn btn-danger" ng-click="$close(true)  | trackEvent:'PopUp':'clicked ok'">{{ popup.btnOk }}</button>
+    <button class="btn btn-default" ng-click="$dismiss()  | trackEvent:'PopUp':'clicked cancel'">{{ popup.btnCancel }}</button>
 </div>
