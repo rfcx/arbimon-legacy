@@ -526,6 +526,7 @@ angular.module('audiodata', [
             return;
             
         $scope.temp = angular.copy($scope.selected);
+        $scope.temp.published = ($scope.temp.published === 1);
         
         $scope.marker.setDraggable(true);
         
