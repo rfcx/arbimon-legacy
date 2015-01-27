@@ -144,7 +144,7 @@ var Recordings = {
         var constraints = sqlutil.compile_query_constraints(urlquery, fields);
         if(!urlquery.id) {
             var pid = mysql.escape(project_id);
-            constraints.unshift('S.project_id = ' + pid + ' OR PIS.project_id = ' + pid);
+            constraints.unshift('(S.project_id = ' + pid + ' OR PIS.project_id = ' + pid +')');
         }
         
         var group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
@@ -558,7 +558,7 @@ var Recordings = {
                 " FROM `recordings` r,`sites` s  "+
                 " WHERE r.`uri` = "+mysql.escape(uri)+" and s.`site_id` = r.`site_id` " +
                 " and r.`site_id` in (SELECT s.`site_id` FROM `sites` s WHERE s.`project_id` = "+
-                " (SELECT p.`project_id` FROM `projects` p WHERE p.`url` ="+mysql.escape(project_uri)+"))"
+                " (SELECT p.`project_id` FROM `projects` p WHERE p.`url` ="+mysql.escape(project_uri)+"))";
         queryHandler(q, callback);        
     },
     findProjectRecordings: function(params, callback) {
@@ -606,8 +606,8 @@ var Recordings = {
                     "FROM recordings AS r \n"+
                     "JOIN sites AS s ON s.site_id = r.site_id \n"+
                     "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = %1$s\n"+
-                    "WHERE s.project_id = %1$s \n"+
-                    "OR pis.project_id = %1$s \n";
+                    "WHERE (s.project_id = %1$s \n"+
+                    "OR pis.project_id = %1$s) \n";
                     
             q = sprintf(q, parameters.project_id);
             

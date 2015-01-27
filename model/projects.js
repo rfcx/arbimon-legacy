@@ -55,8 +55,8 @@ var Projects = {
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = %1$s \n"+
                 "LEFT JOIN recordings AS r ON s.site_id = r.site_id \n"+
-                "WHERE s.project_id = %1$s \n"+
-                "OR pis.project_id = %1$s \n"+
+                "WHERE (s.project_id = %1$s \n"+
+                "OR pis.project_id = %1$s) \n"+
                 "GROUP BY s.site_id";
         
         q = sprintf(q, mysql.escape(project_id));
