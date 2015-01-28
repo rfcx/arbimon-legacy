@@ -33,12 +33,17 @@ run(function(Angularytics) {
             })
             .success(function(data){
                 if(data.error)
-                    return alert(data.error);
+                {
+                    notify.error('Error Communicating with Server');
                     
-                notify.log(data.message);
+                }
+                else
+                {    
+                    notify.log(data.message);
+                }
             })
             .error(function(err){
-                alert(err);
+                notify.error('Error Communicating with Server');
             });
         });
     };
@@ -58,7 +63,7 @@ run(function(Angularytics) {
                 notify.log(data.message);
             })
             .error(function(err){
-                alert(err);
+                notify.error('Error Communicating with Server');
             });
         });
     };

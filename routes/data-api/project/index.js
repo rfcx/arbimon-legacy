@@ -117,19 +117,37 @@ router.get('/:projectUrl/info', function(req, res, next) {
 
 router.post('/:projectUrl/info/update', function(req, res, next) {
     
+    var pid = req.body.project.project_id;
+    
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you dont have permission to 'manage project settings'" });
     }
     
     if(!req.body.project)
         return res.json({ error: "missing parameters" });
-    
-    
-    model.projects.update(req.body.project, function(err, result){
-        if(err) return next(err);
+
+    model.projects.findByUrl(req.body.project.url, function(err, result){
+        var can_update = true;
+        var updatingUrl = 'no';
+        if (result.length > 0)
+        {
+            if (pid != result[0].project_id)
+            {
+                res.json({ success: false , error : "A project already exists with such url." });
+                can_update = false;
+            }
+        }
+        else updatingUrl = 'yes';
         
-        debug("update project:", result);
-        res.json({ success: true });
+        if (can_update) 
+        {
+            model.projects.update(req.body.project, function(err, result){
+                if(err) return next(err);
+                
+                debug("update project:", result);
+                res.json({ success: true , url : updatingUrl ,newurl : req.body.project.url});
+            });
+        }
     });
 });
 

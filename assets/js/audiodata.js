@@ -706,7 +706,10 @@ angular.module('audiodata', [
                 project_classes: classesIds
             },
             function(err, result) {
-                if(err) alert(err);
+                if(err)
+                {
+                    notify.error('Error Communicating with Server');
+                }
                 
                 console.log(result);
                 Project.getClasses(function(classes){
