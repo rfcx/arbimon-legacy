@@ -173,7 +173,7 @@ module.exports = function(grunt) {
                 expand: true,
                 flatten: true,
                 cwd: 'bower_components/humane-js/',
-                src: ['humane.min.js', 'themes/libnotify.css'],
+                src: ['humane.min.js'],
                 dest: 'public/assets/humane-js/'
             },
             

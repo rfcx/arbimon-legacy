@@ -16,7 +16,7 @@ var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 
 // local variables
-var s3;
+var s3 = new AWS.S3();
 var queryHandler = dbpool.queryHandler;
 
 var date2UTC = function (field, next) {
@@ -161,7 +161,7 @@ var Recordings = {
         var sql = "SELECT " + group_by.project_part + projection + " \n" +
             "FROM recordings R \n" +
             "JOIN sites S ON S.site_id = R.site_id \n" +
-            "LEFT JOIN project_imported_sites PIS ON S.site_id = PIS.site_id AND pis.project_id = " + mysql.escape(project_id) + "\n"+
+            "LEFT JOIN project_imported_sites PIS ON S.site_id = PIS.site_id AND PIS.project_id = " + mysql.escape(project_id) + "\n"+
             "WHERE (" + constraints.join(") AND (") + ")" +
             group_by.clause +
             order_clause +
@@ -587,17 +587,18 @@ var Recordings = {
                 parameters.output = 'list';
             
             var select = {
-                list: ("SELECT r.recording_id AS id, \n"+
+                list: "SELECT r.recording_id AS id, \n"+
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
                       "       s.name as site, \n"+
                       "       r.uri, \n"+
                       "       r.datetime, \n"+
                       "       r.mic, \n"+
                       "       r.recorder, \n"+
-                      "       r.version \n"),
+                      "       r.version, \n"+
+                      "       s.project_id != %1$s as imported \n",
                       
-                date_range: ("SELECT DATE(MIN(r.datetime)) AS min_date, \n"+
-                            "       DATE(MAX(r.datetime)) AS max_date \n"),
+                date_range: "SELECT DATE(MIN(r.datetime)) AS min_date, \n"+
+                            "       DATE(MAX(r.datetime)) AS max_date \n",
                             
                 count: "SELECT COUNT(*) as count \n"
             };
@@ -660,6 +661,79 @@ var Recordings = {
             };
             queryHandler(query, callback);
         });
+    },
+    
+    delete: function(recs, project_id, callback) {
+        
+        var recIds = recs.map(function(rec) {
+            return rec.id;
+        });
+        
+        var sqlFilterImported = 
+            "SELECT r.recording_id AS id, \n"+
+            "    r.uri \n"+
+            "FROM recordings AS r  \n"+
+            "JOIN sites AS s ON s.site_id = r.site_id  \n"+
+            "WHERE r.recording_id IN (%s) \n"+
+            "AND s.project_id = %s";
+        
+        q = util.format(sqlFilterImported, mysql.escape(recIds), mysql.escape(project_id));
+        
+        queryHandler(q, function(err, rows) {
+            
+            if(!rows.length) {
+                return callback(null, { 
+                    deleted: [], 
+                    msg: 'No recordings were deleted' 
+                });
+            }
+            
+            var recIds = rows.map(function(rec) {
+                return rec.id;
+            });
+            
+            var recKeys = rows.map(function(rec) {
+                return { Key: rec.uri };
+            });
+            
+            
+            async.series([
+                function(cb) {
+                    var params = {
+                        Bucket: config('aws').bucketName,
+                        Delete: {
+                            Objects: recKeys,
+                        }
+                    };
+                    
+                    s3.deleteObjects(params, cb);
+                },
+                function(cb) {
+                    var sqlDelete = 
+                        "DELETE FROM recordings \n"+
+                        "WHERE recording_id IN (%s)";
+                            
+                    q = util.format(sqlDelete, mysql.escape(recIds));
+                    queryHandler(q, cb);
+                }
+            ],
+            
+            function(err, results) {
+                if(err) return callback(err);
+                
+                debug('delete recordings result:', results);
+                
+                var s = recIds.length > 1 ? 's' : '';
+                
+                callback(null, { 
+                    deleted: recIds, 
+                    msg: 'recording'+s+' deleted successfully' 
+                });
+            });
+        });
+        
+        
+        
     }
 };
 

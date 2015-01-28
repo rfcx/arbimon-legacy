@@ -1,5 +1,7 @@
 var express = require('express');
 var router = express.Router();
+var AWS = require('aws-sdk');
+
 var model = require('../../../model');
 
 
@@ -137,7 +139,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                         if(err){ next(err); return;}
                         res.json(rec);
                     });                    
-                })
+                });
             });
         break;
         case 'audio' : model.recordings.fetchAudioFile(recording, and_return.file); break;
@@ -170,6 +172,23 @@ router.get('/:recUrl?', function(req, res, next) {
         
         res.json(rows);
         return null;
+    });
+});
+
+
+router.post('/delete', function(req, res, next) {
+    if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
+        return res.json({ error: "you dont have permission to manage project recordings" });
+    }
+    
+    if(!req.body.recs) {
+        return res.json({ error: 'missing arguments' });
+    }
+    
+    model.recordings.delete(req.body.recs, req.project.project_id, function(err, result) {
+        if(err) return next(err);
+        
+        res.json(result);
     });
 });
 
