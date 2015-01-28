@@ -1,0 +1,8 @@
+{ 
+    "host": "smtp.something",
+    "port": 0,
+    "auth": {
+        "user": "secret",
+        "pass": "secret"
+    }
+}

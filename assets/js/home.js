@@ -158,7 +158,7 @@ run(function(Angularytics) {
                 
             })
             .error(function(err) {
-                alert(err);
+                notify.error('Error Communicating with Server');           
             });
         }
     };

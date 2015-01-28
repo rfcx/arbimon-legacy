@@ -2,7 +2,7 @@
 (function(angular)
 { 
     
-    var register = angular.module('register' , ['ui.bootstrap','angularytics']);
+    var register = angular.module('register' , ['ui.bootstrap','angularytics']);  
     
     register.config(function(AngularyticsProvider) {
        AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
@@ -12,6 +12,8 @@
     });  
     register.controller('UserRegisterCtrl', function($scope, $modal, $http){
         
+        $scope.terms_accepted = false;
+        $scope.subscribe = true;
         $scope.data = {
             first_name : '',
             last_name : '',
@@ -19,14 +21,14 @@
             useremail : '',
             password : '' ,
             confirm : ''
-        };
+        };   
         
         $scope.message = '';
         
         $scope.creating = function()
         {
             $scope.message = 'Creating account...';
-        }
+        };
         
         $scope.buttonEnable = function () 
         {
@@ -74,6 +76,7 @@
             
             return  (
                      passwordLength
+                     || !$scope.terms_accepted 
                      || userspaces 
                      || passwordDoNotMatch 
                      || emailFlag

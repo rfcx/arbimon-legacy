@@ -71,6 +71,24 @@ var processUpload = function(upload, cb) {
             );
         }],
         
+        monofile : ['convert', function(callback) {
+                
+            debug('convert to mono:', file.filename);
+            var args = [];
+            args.push(outFile)
+            args.push('-c',1) 
+            args.push(outFile)
+            
+            audioTool.sox(args, 
+                function(code, stdout, stderr) {
+                    if(code !== 0)
+                        return callback(new Error("error converting to mono: \n" + stderr));
+                    
+                    callback(null, code);
+                }
+            );
+        }],
+        
         thumbnail: ['insertUploadRecs', function(callback) {
             
             debug('gen thumbnail:', file.filename);
@@ -90,7 +108,7 @@ var processUpload = function(upload, cb) {
             );
         }],
         
-        uploadFlac: ['convert', function(callback, results) {
+        uploadFlac: ['monofile', function(callback, results) {
             debug('uploadFlac:', file.filename);
             
             var params = { 
@@ -164,7 +182,7 @@ var processUpload = function(upload, cb) {
         debug('process upload results:');
         debug(results);
         
-        cb(null, file.filename);
+        cb(null, inFile);
     });
 };
 
@@ -271,9 +289,9 @@ router.post('/audio/project/:projectid', function(req, res, next) {
                 user_id: req.session.user.id
             }, 
             function(err, file){
-                if(err) return console.error(file.filename, err);
+                if(err) return console.error(file, err);
                 
-                console.log(file.filename, 'processed successfully');
+                console.log(file, 'processed successfully');
             });
             
         });

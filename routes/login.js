@@ -5,16 +5,20 @@ var model = require('../model/');
 var sha256 = require('../utils/sha256');
 var gravatar = require('gravatar');
 var mysql = require('mysql');
+var mcapi = require('mailchimp-api');
+var config = require('../config');
+
+mc = new mcapi.Mailchimp(config('mailchimp').key );
 
 var nodemailer = require('nodemailer');
 var smtpTransport = require('nodemailer-smtp-transport');
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 var transport = nodemailer.createTransport(smtpTransport({
-    host: 'smtp.sieve-analytics.com',
-    port: 587,
+    host: config('email').host,
+    port: config('email').port,
     auth: {
-        user: 'support',
-        pass: '6k9=qZzy8m58B2Y'
+        user: config('email').auth.user,
+        pass: config('email').auth.pass
     }
 }));
 
@@ -42,54 +46,111 @@ router.use(function(req, res, next) {
     next();
 });
 
-router.get('/login', function(req, res) {
-    
+router.get('/login', function(req, res) {  
     if(req.session) { 
         if(req.session.loggedIn) return res.redirect('/home'); 
-    }   
+    }
     res.render('login', { message: '' });
 });
                                                         
 router.post('/login', function(req, res, next) {
     var username = req.body.username;
     var password = req.body.password;
+    var permitedRetries = 3
+    var waitTime = 3600000 // miliseconds
+    var request_ip = req.headers['X-Forwarded-For']?req.headers['X-Forwarded-For']:req.connection.remoteAddress;
     
-    model.users.findByUsername(username, function(err, rows) {
+    model.users.loginsTries(request_ip , function(err, rows) {
         if(err) return next(err);
-        
-        if(!rows.length) {
-            return res.render('login', { message: "bad credentials" });
+        var retries = rows.length;
+        var last_retry_time = 0;
+        for(var i = 0 ; i < retries;i++)
+        {
+            if (last_retry_time<rows[i].time)
+            {
+                last_retry_time=rows[i].time
+            }
+        }
+        var d = new Date();
+        var n = d.getTime();
+        var can_try_login = true;
+        if (retries >= permitedRetries)
+        {
+            if ((n-last_retry_time)< waitTime)
+            {
+                can_try_login  = false;
+            }
+            else
+            {
+                model.users.removeLoginTries(
+                request_ip, 
+                function(err, rows) {
+                    if(err) return next(err);                     
+                });    
+            }
         }
         
-        user = rows[0];
-        
-        if(sha256(password) !== user.password) {
-            return res.render('login', { message: "wrong password" });
+        if(can_try_login)
+        {
+            model.users.findByUsername(username, function(err, rows) {
+                if(err) return next(err);
+                var d = new Date();
+                var n = d.getTime();              
+                if(!rows.length)
+                {
+                    model.users.loginTry(request_ip,n,username,'invalid_user', function(err, rows) {
+                        if(err) return next(err);
+                        return res.render('login', { message: "invalid user or wrong password." });
+                    });
+                }
+                else
+                {          
+                    user = rows[0];
+                    
+                    if(sha256(password) !== user.password) {
+                        
+                        model.users.loginTry(request_ip,n,username,'invalid_password', function(err, rows) {
+                            if(err) return next(err);
+                            return res.render('login', { message: "invalid user or wrong password." });
+                        });
+                    }
+                    else
+                    {
+                        model.users.update({ 
+                            user_id: user.user_id,
+                            last_login: new Date()
+                        }, 
+                        function(err, rows) {
+                            if(err) return next(err);                     
+                        });
+
+                        model.users.removeLoginTries( 
+                        request_ip , 
+                        function(err, rows) {
+                            if(err) return next(err);                     
+                        });
+                        
+                        req.session.loggedIn = true; 
+                        req.session.user = {
+                            id: user.user_id,
+                            username: user.login,
+                            email: user.email,
+                            firstname: user.firstname,
+                            lastname: user.lastname,
+                            isSuper: user.is_super,
+                            imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure),
+                            projectLimit: user.project_limit
+                        };
+                        
+                        res.redirect('/home');
+                    }
+                }
+            });
         }
-        
-        model.users.update({ 
-            user_id: user.user_id,
-            last_login: new Date()
-        }, 
-        function(err, rows) {
-            if(err) return next(err);                     
-        });
-            
-        req.session.loggedIn = true; 
-    
-        req.session.user = {
-            id: user.user_id,
-            username: user.login,
-            email: user.email,
-            firstname: user.firstname,
-            lastname: user.lastname,
-            isSuper: user.is_super,
-            imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure),
-            projectLimit: user.project_limit
-        };
-        
-        res.redirect('/home');
-        
+        else
+        {
+            return res.render('login', { message: "too many tries. login disabled for one hour." });
+        }
     });
 });
 
@@ -165,6 +226,11 @@ router.post('/register', function(req, res) {
     var email = mysql.escape(req.body.email ).replace('\'','').replace('\'','');
     var password = mysql.escape(req.body.password ).replace('\'','').replace('\'','');
     var confirm = mysql.escape(req.body.password_confirmation ).replace('\'','').replace('\'','');
+    var newsletter = false;
+    if (req.body.newsletter && req.body.newsletter==true)
+    {
+        newsletter = true;
+    }
     
     if (password != confirm) {
         return res.render('register', {
@@ -266,7 +332,16 @@ router.post('/register', function(req, res) {
                                 'Follow this link to activate your account:<br><br>'+
                                 'https://arbimon.sieve-analytics.com/activate/'+hash
                         };
-                        
+                        var mcReq = {
+                            id: config('mailchimp').listId,
+                            email: { email: email },
+                            merge_vars: {
+                                EMAIL: email,
+                                FNAME: first_name,
+                                LNAME:last_name
+                            }
+                        };
+                                   
                         transport.sendMail(mailOptions, function(error, info){
                             if(error){
                                 debug('sendmail error', error);
@@ -289,19 +364,39 @@ router.post('/register', function(req, res) {
                             }
                             else{
                                 debug('email sent to:',email);
-                                return res.render('register', {
-                                    data: {
-                                        title: 'Register',
-                                        message: '',
-                                        first_name: first_name,
-                                        last_name: '',
-                                        email: email,
-                                        password: '',
-                                        confirm: '',
-                                        username: '',
-                                        emailsent: 1
+                                
+                                mc.lists.subscribe(mcReq ,
+                                    function(data) {
+                                        return res.render('register', {
+                                            data: {
+                                                title: 'Register',
+                                                message: '',
+                                                first_name: first_name,
+                                                last_name: '',
+                                                email: email,
+                                                password: '',
+                                                confirm: '',
+                                                username: '',
+                                                emailsent: 1
+                                            }
+                                        });
+                                    },
+                                    function(error) {
+                                        return res.render('register', {
+                                            data: {
+                                                title: 'Register',
+                                                message: '',
+                                                first_name: first_name,
+                                                last_name: '',
+                                                email: email,
+                                                password: '',
+                                                confirm: '',
+                                                username: '',
+                                                emailsent: 1
+                                            }
+                                        });
                                     }
-                                });
+                                );
                             }
                         });
                     }
