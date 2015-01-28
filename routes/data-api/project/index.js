@@ -8,6 +8,7 @@ var gravatar = require('gravatar');
 var model = require('../../../model');
 
 // routes
+var sites = require('./sites');
 var recording_routes = require('./recordings');
 var training_set_routes = require('./training_sets');
 var playlist_routes = require('./playlists');
@@ -22,7 +23,7 @@ router.post('/create', function(req, res, next) {
     async.parallel({   // check if there any conflict
         exceedsProjectLimit: function(callback) {
             model.users.ownedProjectsQty(req.session.user.id, function(err, rows) {
-                if(err) return next(err);
+                if(err) return callback(err);
 
                 if(rows[0].count < req.session.user.projectLimit)
                     callback(null, false);
@@ -32,7 +33,7 @@ router.post('/create', function(req, res, next) {
         },
         nameExists: function(callback) {
             model.projects.findByName(project.name, function(err, rows) {
-                if(err) return next(err);
+                if(err) return callback(err);
 
                 if(!rows.length)
                     callback(null, false);
@@ -42,7 +43,7 @@ router.post('/create', function(req, res, next) {
         },
         urlExists: function(callback) {
             model.projects.findByUrl(project.url, function(err, rows) {
-                if(err) return next(err);
+                if(err) return callback(err);
 
                 if(!rows.length)
                     callback(null, false);
@@ -52,6 +53,7 @@ router.post('/create', function(req, res, next) {
         }
     },
     function(err, results) {
+        if(err) return next(err);
 
         if(results.exceedsProjectLimit && !req.session.user.isSuper) {
             return res.json({ 
@@ -107,6 +109,8 @@ router.param('projectUrl', function(req, res, next, project_url){
     });
 });
 
+router.use('/:projectUrl/sites', sites);
+
 router.get('/:projectUrl/info', function(req, res, next) {
     res.json(req.project);
 });
@@ -133,98 +137,7 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
  /** Return a list of all the sites in a project.
  */
 
-router.get('/:projectUrl/sites', function(req, res, next) {
-    model.projects.getProjectSites(req.project.project_id, function(err, rows) {
-        if(err) return next(err);
-        res.json(rows);
-        return null;
-    });
-});
 
-router.post('/create/site', function(req, res, next) {
-    var project = req.body.project;
-    var site = req.body.site;
-
-    if(!req.haveAccess(project.project_id, "manage project sites")) {
-        return res.json({ error: "you dont have permission to 'manage project sites'" });
-    }
-
-    model.sites.exists(site.name, project.project_id, function(err, exists) {
-        if(err) return next(err);
-
-        if(exists)
-            return res.json({ error: 'site with same name already exists'});
-
-        site.project_id = project.project_id;
-
-        model.sites.insert(site, function(err, rows) {
-            if(err) return next(err);
-
-            model.projects.insertNews({
-                news_type_id: 2, // site created
-                user_id: req.session.user.id,
-                project_id: project.project_id,
-                data: JSON.stringify({ site: site.name })
-            });
-
-            res.json({ message: "New site created" });
-        });
-    });
-});
-
-router.post('/update/site', function(req, res, next) {
-    var project = req.body.project;
-    var site = req.body.site;
-
-    if(!req.haveAccess(project.project_id, "manage project sites")) {
-        return res.json({ error: "you dont have permission to 'manage project sites'" });
-    }
-
-    site.project_id = project.project_id;
-
-    model.sites.update(site, function(err, rows) {
-        if(err) return next(err);
-
-        model.projects.insertNews({
-            news_type_id: 3, // site updated
-            user_id: req.session.user.id,
-            project_id: project.project_id,
-            data: JSON.stringify({ site: site.name })
-        });
-
-        res.json({ message: "site updated" });
-    });
-});
-
-router.post('/delete/sites', function(req, res, next) {
-    var project = req.body.project;
-    var sites = req.body.sites;
-
-    if(!req.haveAccess(project.project_id, "manage project sites")) {
-        return res.json({ error: "you dont have permission to 'manage project sites'" });
-    }
-    
-    var sitesNames = sites.map(function(row) {
-        return row.name;
-    });
-    
-    var sitesIds = sites.map(function(row) {
-        return row.id;
-    });
-
-    model.sites.remove(sitesIds, function(err, rows) {
-        if(err) return next(err);
-
-        model.projects.insertNews({
-            news_type_id: 4, // site deleted
-            user_id: req.session.user.id,
-            project_id: project.project_id,
-            data: JSON.stringify({ sites: sitesNames.join(', ') })
-        });
-
-        res.json(rows);
-    });
-});
 
 router.get('/:projectUrl/classes', function(req, res, next) {
     model.projects.getProjectClasses(req.project.project_id, function(err, classes){

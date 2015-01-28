@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.41, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: arbimon2
+-- Host: 10.0.0.4    Database: arbimon2
 -- ------------------------------------------------------
--- Server version	5.5.40-0ubuntu0.14.04.1
+-- Server version	5.5.41-0ubuntu0.14.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -27,7 +27,8 @@ CREATE TABLE `classification_results` (
   `recording_id` int(11) NOT NULL,
   `species_id` int(11) NOT NULL,
   `songtype_id` int(11) NOT NULL,
-  `present` tinyint(4) NOT NULL
+  `present` tinyint(4) NOT NULL,
+  `max_vector_value` float DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -41,6 +42,21 @@ DROP TABLE IF EXISTS `classification_stats`;
 CREATE TABLE `classification_stats` (
   `job_id` int(11) NOT NULL,
   `json_stats` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `invalid_logins`
+--
+
+DROP TABLE IF EXISTS `invalid_logins`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `invalid_logins` (
+  `ip` text NOT NULL,
+  `time` bigint(11) NOT NULL,
+  `user` text NOT NULL,
+  `reason` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -113,11 +129,11 @@ CREATE TABLE `job_params_training` (
   KEY `training_set_id` (`training_set_id`),
   KEY `validation_set_id` (`validation_set_id`),
   KEY `trained_model_id` (`trained_model_id`),
-  CONSTRAINT `job_params_training_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`) ON DELETE CASCADE,
+  CONSTRAINT `job_params_training_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`),
   CONSTRAINT `job_params_training_ibfk_2` FOREIGN KEY (`model_type_id`) REFERENCES `model_types` (`model_type_id`),
   CONSTRAINT `job_params_training_ibfk_3` FOREIGN KEY (`training_set_id`) REFERENCES `training_sets` (`training_set_id`),
   CONSTRAINT `job_params_training_ibfk_4` FOREIGN KEY (`validation_set_id`) REFERENCES `validation_set` (`validation_set_id`),
-  CONSTRAINT `job_params_training_ibfk_5` FOREIGN KEY (`trained_model_id`) REFERENCES `models` (`model_id`)
+  CONSTRAINT `job_params_training_ibfk_5` FOREIGN KEY (`trained_model_id`) REFERENCES `models` (`model_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -136,8 +152,8 @@ CREATE TABLE `job_queue_enqueued_jobs` (
   PRIMARY KEY (`enqueued_job_id`),
   UNIQUE KEY `job_id` (`job_id`),
   KEY `job_queue_id` (`job_queue_id`),
-  CONSTRAINT `job_queue_enqueued_jobs_ibfk_2` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`) ON DELETE CASCADE,
-  CONSTRAINT `job_queue_enqueued_jobs_ibfk_1` FOREIGN KEY (`job_queue_id`) REFERENCES `job_queues` (`job_queue_id`) ON DELETE CASCADE
+  CONSTRAINT `job_queue_enqueued_jobs_ibfk_1` FOREIGN KEY (`job_queue_id`) REFERENCES `job_queues` (`job_queue_id`) ON DELETE CASCADE,
+  CONSTRAINT `job_queue_enqueued_jobs_ibfk_2` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -229,7 +245,7 @@ CREATE TABLE `model_classes` (
   KEY `songtype_id` (`songtype_id`),
   CONSTRAINT `model_classes_ibfk_1` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`),
   CONSTRAINT `model_classes_ibfk_2` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`),
-  CONSTRAINT `model_classes_ibfk_3` FOREIGN KEY (`model_id`) REFERENCES `models` (`model_id`)
+  CONSTRAINT `model_classes_ibfk_3` FOREIGN KEY (`model_id`) REFERENCES `models` (`model_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -244,7 +260,7 @@ CREATE TABLE `model_stats` (
   `model_id` int(10) unsigned NOT NULL,
   `json_stats` text NOT NULL,
   UNIQUE KEY `model_id` (`model_id`),
-  CONSTRAINT `model_stats_ibfk_1` FOREIGN KEY (`model_id`) REFERENCES `models` (`model_id`)
+  CONSTRAINT `model_stats_ibfk_1` FOREIGN KEY (`model_id`) REFERENCES `models` (`model_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -386,6 +402,23 @@ CREATE TABLE `project_classes` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `project_imported_sites`
+--
+
+DROP TABLE IF EXISTS `project_imported_sites`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_imported_sites` (
+  `site_id` int(10) unsigned NOT NULL,
+  `project_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`site_id`,`project_id`),
+  KEY `project_id` (`project_id`),
+  CONSTRAINT `project_imported_sites_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `project_imported_sites_ibfk_1` FOREIGN KEY (`site_id`) REFERENCES `sites` (`site_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='published sites added to projects';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `project_news`
 --
 
@@ -458,7 +491,7 @@ CREATE TABLE `projects` (
   `project_type_id` int(10) unsigned NOT NULL,
   `is_private` tinyint(1) NOT NULL,
   `is_enabled` tinyint(4) NOT NULL DEFAULT '1',
-  `recording_limit` int(10) unsigned NOT NULL DEFAULT '500',
+  `recording_limit` int(10) unsigned NOT NULL DEFAULT '50000',
   PRIMARY KEY (`project_id`),
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `url` (`url`),
@@ -610,12 +643,13 @@ DROP TABLE IF EXISTS `sites`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sites` (
   `site_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `site_type_id` int(10) unsigned NOT NULL,
   `project_id` int(10) unsigned NOT NULL,
   `name` varchar(255) NOT NULL,
   `lat` double NOT NULL,
   `lon` double NOT NULL,
   `alt` double NOT NULL,
-  `site_type_id` int(10) unsigned NOT NULL,
+  `published` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`site_id`),
   KEY `project_id` (`project_id`),
   KEY `site_type_id` (`site_type_id`),
@@ -1053,7 +1087,7 @@ CREATE TABLE `validation_set` (
   `job_id` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`validation_set_id`),
   KEY `job_id` (`job_id`),
-  CONSTRAINT `validation_set_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`)
+  CONSTRAINT `validation_set_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1066,4 +1100,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-12-29 14:58:14
+-- Dump completed on 2015-01-26 14:54:05

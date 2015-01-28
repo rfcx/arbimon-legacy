@@ -16,19 +16,8 @@ router.get('/alive', function(req, res) { // for health checks
 });
 
 
-router.get('/register', function(req, res) {
-    res.redirect('/');
-});
-
-
-router.get('/forgot', function(req, res) {
-    res.redirect('/');
-});
-
-
-// are available only to logged users
-
 // all routes after this middleware
+// are available only to logged users
 router.use(function(req, res, next) {                
     if(req.session) { 
         if(req.session.loggedIn) return next(); 

@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var routes = {
     '/user'      : require('./user'),
+    '/sites'     : require('./sites'),
     '/species'   : require('./species'),
     '/songtypes' : require('./songtypes'),
     '/project'   : require('./project')

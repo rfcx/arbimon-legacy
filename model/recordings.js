@@ -6,6 +6,7 @@ var mysql = require('mysql');
 var util  = require('util');
 var Joi   = require('joi');
 var im    = require('imagemagick');
+var sprintf = require("sprintf-js").sprintf;
 
 var config       = require('../config'); 
 var arrays_util  = require('../utils/arrays');
@@ -28,7 +29,7 @@ var date2UTC = function (field, next) {
     
     // console.log(d);
     return d;
-}
+};
 
 
 
@@ -128,7 +129,7 @@ var Recordings = {
             callback = options;
             options = null;
         }
-        options || (options = {});
+        options = options || {};
         var urlquery = this.parseUrlQuery(recording_url);
         var keep_keys = options.keep_keys;
         var limit_clause = (options.limit ?
@@ -142,7 +143,8 @@ var Recordings = {
         
         var constraints = sqlutil.compile_query_constraints(urlquery, fields);
         if(!urlquery.id) {
-            constraints.unshift('S.project_id = ' + mysql.escape(project_id));
+            var pid = mysql.escape(project_id);
+            constraints.unshift('(S.project_id = ' + pid + ' OR PIS.project_id = ' + pid +')');
         }
         
         var group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
@@ -159,6 +161,7 @@ var Recordings = {
         var sql = "SELECT " + group_by.project_part + projection + " \n" +
             "FROM recordings R \n" +
             "JOIN sites S ON S.site_id = R.site_id \n" +
+            "LEFT JOIN project_imported_sites PIS ON S.site_id = PIS.site_id AND pis.project_id = " + mysql.escape(project_id) + "\n"+
             "WHERE (" + constraints.join(") AND (") + ")" +
             group_by.clause +
             order_clause +
@@ -555,7 +558,7 @@ var Recordings = {
                 " FROM `recordings` r,`sites` s  "+
                 " WHERE r.`uri` = "+mysql.escape(uri)+" and s.`site_id` = r.`site_id` " +
                 " and r.`site_id` in (SELECT s.`site_id` FROM `sites` s WHERE s.`project_id` = "+
-                " (SELECT p.`project_id` FROM `projects` p WHERE p.`url` ="+mysql.escape(project_uri)+"))"
+                " (SELECT p.`project_id` FROM `projects` p WHERE p.`url` ="+mysql.escape(project_uri)+"))";
         queryHandler(q, callback);        
     },
     findProjectRecordings: function(params, callback) {
@@ -602,9 +605,11 @@ var Recordings = {
             var q = select[parameters.output] +
                     "FROM recordings AS r \n"+
                     "JOIN sites AS s ON s.site_id = r.site_id \n"+
-                    "WHERE s.project_id = %s \n";
+                    "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = %1$s\n"+
+                    "WHERE (s.project_id = %1$s \n"+
+                    "OR pis.project_id = %1$s) \n";
                     
-            q = util.format(q, parameters.project_id);
+            q = sprintf(q, parameters.project_id);
             
             if(parameters.range) {
                 q += 'AND r.datetime BETWEEN '+ mysql.escape(parameters.range.from) +' AND ' + mysql.escape(parameters.range.to) + ' \n';

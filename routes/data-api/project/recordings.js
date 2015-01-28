@@ -69,8 +69,17 @@ router.param('oneRecUrl', function(req, res, next, recording_url){
 });
 
 
-/** Return a list of all the recordings in a project.
- */
+
+router.get('/count', function(req, res, next) {
+    var recording_url = req.param('recUrl');
+    
+    model.projects.totalRecordings(req.project.project_id, function(err, rows) {
+        if(err) return next(err);
+            
+        res.json({ count: rows[0].count });
+    });
+});
+
 router.get('/count/:recUrl?', function(req, res, next) {
     var recording_url = req.param('recUrl');
     model.recordings.findByUrlMatch(recording_url, req.project.project_id, {count_only:true}, function(err, count) {

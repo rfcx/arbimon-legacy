@@ -510,7 +510,8 @@
 			    var sensitivityObject = [];
 			    var specificityObject = [];
 			    var sumObject = [];
-			    while(searchTh > 0.01)
+			    var tries = 0;
+			    while(searchTh > 0.01 && tries < 15)
 			    {
 				for(var jj = 0 ; jj < $scope.validations.length;jj++)
 				{
@@ -524,6 +525,7 @@
 				specificityObject.push($scope.thres.specificity)
 				sumObject.push($scope.thres.specificity+$scope.thres.sensitivity+$scope.thres.accuracy+$scope.thres.precision)
 				searchTh = searchTh - 0.001;
+				tries = tries + 1;
 			    }
 			    var max = sumObject[0];
 			    var mindex = 0;
