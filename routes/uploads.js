@@ -14,7 +14,11 @@ var audioTool = require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
 var formatParse = require('../utils/format-parse');
 
-var s3 = new AWS.S3(); 
+var s3 = new AWS.S3({ 
+    httpOptions: {
+        timeout: 30000,
+    }
+}); 
 
 
 var processUpload = function(upload, cb) {
@@ -31,6 +35,7 @@ var processUpload = function(upload, cb) {
     
     var recTime = new Date(fileInfo.year, --fileInfo.month, fileInfo.date, fileInfo.hour, fileInfo.min);
     var inFile = file.path;
+    var tempFile = tmpFileCache.key2File(fileInfo.filename + '.temp.flac');
     var outFile = tmpFileCache.key2File(fileInfo.filename + '.flac');
     var thumbnail = tmpFileCache.key2File(fileInfo.filename + '.thumbnail.png');
 
@@ -55,45 +60,41 @@ var processUpload = function(upload, cb) {
             callback);
         },
         
-        convert: ['insertUploadRecs', function(callback) {
-            if(extension === "flac") 
-                return callback(null, 0);
-                
-            debug('convert to flac:', file.filename);
-            
-            audioTool.transcode(inFile, outFile, { format: 'flac' }, 
-                function(code, stdout, stderr) {
-                    if(code !== 0)
-                        return callback(new Error("error transcoding: \n" + stderr));
-                    
-                    callback(null, code);
-                }
-            );
-        }],
-        
-        monofile : ['convert', function(callback) {
+        convertToMono : ['insertUploadRecs', function(callback) {
                 
             debug('convert to mono:', file.filename);
-            var args = [];
-            args.push(outFile)
-            args.push('-c',1) 
-            args.push(outFile)
+                        
+            audioTool.sox([inFile, '-c', 1, tempFile], function(code, stdout, stderr) {
+                if(code !== 0)
+                    return callback(new Error("error converting to mono: \n" + stderr));
+                
+                callback(null, code);
+            });
+        }],
+        
+        transcodeToFlac: ['convertToMono', function(callback) {
+            if(extension === "flac") {
+                outFile = tempFile;
+                return callback(null, 0);
+            }
+                
+            debug('transcode to flac:', file.filename);
             
-            audioTool.sox(args, 
+            audioTool.transcode(tempFile, outFile, { format: 'flac' }, 
                 function(code, stdout, stderr) {
                     if(code !== 0)
-                        return callback(new Error("error converting to mono: \n" + stderr));
+                        return callback(new Error("error transcoding to flac: \n" + stderr));
                     
                     callback(null, code);
                 }
             );
         }],
         
-        thumbnail: ['insertUploadRecs', function(callback) {
+        genThumbnail: ['convertToMono', function(callback) {
             
             debug('gen thumbnail:', file.filename);
             
-            audioTool.spectrogram(inFile, thumbnail, 
+            audioTool.spectrogram(tempFile, thumbnail, 
                 { 
                     maxfreq : 15000,
                     pixPerSec : (7),
@@ -108,7 +109,7 @@ var processUpload = function(upload, cb) {
             );
         }],
         
-        uploadFlac: ['monofile', function(callback, results) {
+        uploadFlac: ['transcodeToFlac', async.retry(function(callback, results) {
             debug('uploadFlac:', file.filename);
             
             var params = { 
@@ -126,9 +127,9 @@ var processUpload = function(upload, cb) {
                 callback(null, data);
             });
 
-        }],
+        })],
         
-        uploadThumbnail: ['thumbnail', function(callback, results) {
+        uploadThumbnail: ['genThumbnail', function(callback, results) {
             debug('uploadThumbnail:', file.filename);
             
             var params = { 
@@ -165,6 +166,7 @@ var processUpload = function(upload, cb) {
     function(err, results) {
         // delete temp files
         deleteFile(inFile);
+        deleteFile(tempFile);
         deleteFile(thumbnail);
         
         if(extension !== 'flac') {
@@ -182,7 +184,7 @@ var processUpload = function(upload, cb) {
         debug('process upload results:');
         debug(results);
         
-        cb(null, inFile);
+        cb(null, fileURI);
     });
 };
 
@@ -263,7 +265,7 @@ router.post('/audio/project/:projectid', function(req, res, next) {
             fileInfo = formatParse(info.format, fileUploaded.filename);
         } 
         catch(e) {
-            return next(fileInfo);
+            return next(e);
         }
         
         model.recordings.exists({
@@ -279,7 +281,6 @@ router.post('/audio/project/:projectid', function(req, res, next) {
                 return res.status(403).send(msg);
             }
             
-            res.status(202).send("upload done!");
 
             processUpload({ 
                 info: info,
@@ -288,12 +289,13 @@ router.post('/audio/project/:projectid', function(req, res, next) {
                 project_id: project_id,
                 user_id: req.session.user.id
             }, 
-            function(err, file){
-                if(err) return console.error(file, err);
+            function(err, filename){
+                if(err) return console.error(filename, err);
                 
-                console.log(file, 'processed successfully');
+                console.log(filename, 'processed successfully');
             });
             
+            res.status(202).send("upload done!");
         });
     });
     

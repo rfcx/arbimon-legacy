@@ -6,6 +6,7 @@ angular.module('audiodata.uploads', [
     'humane'
 ])
 .controller('UploadCtrl', function($scope, uploads, Project, $modal){ 
+    
     $scope.prettyBytes = function(bytes) {
         
         var labels = ['B', 'kB', 'MB', 'GB'];
@@ -98,6 +99,14 @@ angular.module('audiodata.uploads', [
             return !duplicate.length;
         }
     });
+    
+    $scope.removeCompleted = function() {
+        if(!$scope.uploader.queue.length) return;
+        
+        $scope.uploader.queue = $scope.uploader.queue.filter(function(file) {
+            return !file.isSuccess;
+        });
+    };
 })
 .controller('BatchInfoCtrl', function($scope, Project, info, $modalInstance) {
     
