@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var model = require('../../models');
+var model = require('../../model');
 
 router.get('/all', function(req, res, next) {
     model.songtypes.listAll(function(err, rows) {

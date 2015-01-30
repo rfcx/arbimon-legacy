@@ -7,19 +7,18 @@ var dataApi = require('./data-api');
 var uploads = require('./uploads');
 var admin = require('./admin');
 
-
-router.get('/register', function(req, res) {
-    res.redirect('/');
-});
-
-router.get('/forgot', function(req, res) {
-    res.redirect('/');
+router.get('/terms', function(req, res) {
+    res.render('terms');
 });
 
 
-// are available only to logged users
+router.get('/alive', function(req, res) { // for health checks
+    res.sendStatus(200);
+});
+
 
 // all routes after this middleware
+// are available only to logged users
 router.use(function(req, res, next) {                
     if(req.session) { 
         if(req.session.loggedIn) return next(); 
@@ -31,11 +30,15 @@ router.get('/', function(req, res) {
     res.redirect('/home');
 });
 
+router.get('/support', function(req, res) {
+    res.render('support', { title: "Support", user: req.session.user });
+});
+
 router.get('/home', function(req, res) {
     res.render('home', { title: "Home", user: req.session.user });
 });
 
-// INCOMPLETE
+
 router.get('/user-settings', function(req, res) {
     res.render('user-settings', { title: "User settings", user: req.session.user });
 });

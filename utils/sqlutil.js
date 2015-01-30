@@ -63,6 +63,33 @@ var sqlutil = {
     
     transaction : transaction,
     
+    
+    escape_compare : function(field, op, value){        
+        if(op == 'IN'){
+            if(value instanceof Array){
+                if(value.length == 1){
+                    return '(' + field + ' = '+mysql.escape(value)+')';
+                } else if(value.length > 1){
+                    value = value[1];
+                } else {
+                    value = undefined;
+                }
+            }
+            
+            op = '=';
+        }
+        if(!/^(=|==|===|!=|!==|<|<=|>|>=)$/.test(op)){
+            op = '=';
+        }
+        
+        if(value !== undefined){
+            return '('+field+' '+op+' '+mysql.escape(value)+')';
+        } else {
+            return '(1 = 0)';
+        }
+        
+    },
+    
     apply_query_contraint: function(subject, query){
         if(query){
             if (query['=']) {

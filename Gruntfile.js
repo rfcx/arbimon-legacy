@@ -1,7 +1,8 @@
 
 module.exports = function(grunt) {
-     grunt.initConfig({
+    var initcfg = {
         pkg: grunt.file.readJSON('package.json'),
+        
         less: {
             main: {
                 files: {
@@ -18,20 +19,46 @@ module.exports = function(grunt) {
                 }
             }
         },
+        
         html2js: {
             options: {
+                module: 'templates-arbimon2',
                 base : 'assets',
                 rename: function (moduleName) {
                     return '/' + moduleName;
                 }
             },
-            arbimon2: {
-                src: [
-                    'assets/partials/**/*.html'
-                ],
-                dest: 'public/assets/js/arbimon2-templates.js'
+            prod: {
+                options: {
+                    htmlmin: {
+                        collapseBooleanAttributes: true,
+                        collapseWhitespace: true,
+                        removeAttributeQuotes: true,
+                        removeComments: true,
+                        removeEmptyAttributes: true,
+                        removeRedundantAttributes: true,
+                        removeScriptTypeAttributes: true,
+                        removeStyleLinkTypeAttributes: true
+                    }
+                },
+                src: ['assets/partials/**/*.html'],
+                dest: 'public/assets/js/arbimon2-templates.js',
             },
+            dev: {
+                src: ['assets/partials/**/*.html'],
+                dest: 'public/assets/js/arbimon2-templates.js',
+            }
         },
+        
+        // angular code documentation
+        ngdocs: { 
+            options:{
+                dest:'docs/front-end',
+                html5Mode: false
+            },
+            all:['assets/js/**/*.js'],
+        },
+        
         copy: {
             bootstrap: {
                 expand: true,
@@ -146,7 +173,7 @@ module.exports = function(grunt) {
                 expand: true,
                 flatten: true,
                 cwd: 'bower_components/humane-js/',
-                src: ['humane.min.js', 'themes/libnotify.css'],
+                src: ['humane.min.js'],
                 dest: 'public/assets/humane-js/'
             },
             
@@ -174,18 +201,35 @@ module.exports = function(grunt) {
 
         concat: {
             dev: {
-                src: [
-                    'assets/js/**/*.js'
-                ], 
-
+                src: ['assets/js/**/*.js'], 
                 dest: 'public/assets/js/arbimon2.js'
             }
         },
-
+        
+        uglify: {
+            prod: {
+                options: {
+                    mangle: false,
+                    banner: '/*! <%= pkg.name %> v<%= pkg.version %> '+
+                            'build date: <%= grunt.template.today("yyyy-mm-dd") %> | ' +
+                            '(c) 2014-2015 Sieve Analytics, Inc. All rights reserved */\n'
+                },
+                files: [
+                    { 
+                        src: 'public/assets/js/arbimon2.js', 
+                        dest: 'public/assets/js/arbimon2.js' 
+                    },
+                    { 
+                        src: 'public/assets/js/arbimon2-templates.js', 
+                        dest: 'public/assets/js/arbimon2-templates.js' 
+                    }
+                ]
+            }
+        },
+        
         watch: {
             options: {
-                //reloads the browser with livereload plugin
-                livereload: true
+                livereload: true // reloads the browser with livereload plugin
             },
             html: {
                 files: [
@@ -214,12 +258,25 @@ module.exports = function(grunt) {
                 files: [
                     'app.js',
                     'routes/**/*.js',
-                    'models/**/*.js',
+                    'model/**/*.js',
                     'utils/**/*.js',
                     'config/**/*.js',
                     'config/**/*.json'
                 ],
                 tasks: ['express:dev'],
+                options: {
+                    spawn: false // for grunt-contrib-watch v0.5.0+
+                }
+            },
+            jobqueue: {
+                files: [
+                    'jobqueue-app.js',
+                    'model/job_queues.js',
+                    'utils/**/*.js',
+                    'config/**/*.js',
+                    'config/**/*.json'
+                ],
+                tasks: ['express:jobqueue'],
                 options: {
                     spawn: false // for grunt-contrib-watch v0.5.0+
                 }
@@ -231,14 +288,33 @@ module.exports = function(grunt) {
                 options: {
                     script: 'bin/www'
                 }
+            },
+            jobqueue: {
+                options: {
+                    script: 'bin/jobqueue'
+                }
             }
+        },
+        
+        jshint: {
+            client: ['Gruntfile.js', 'assets/js/**/*.js']
         },
         
         clean: {
             assets: ['public/assets/*'],
             packages: ['bower_components', 'node_modules']
         }
-    });
+    };
+    
+    var appserver  = grunt.cli.tasks.indexOf('server') >= 0;
+    var jobqserver = grunt.cli.tasks.indexOf('jobqueue-server') >= 0;
+    if(!jobqserver){
+        delete initcfg.watch.jobqueue;
+    } else if(!appserver){
+        initcfg.watch.options.livereload = false;
+    }
+    
+    grunt.initConfig(initcfg);
 
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-less');
@@ -247,8 +323,14 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-express-server');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-html2js');
-
-    grunt.registerTask('build', ['copy', 'less', 'html2js', 'concat']);
+    grunt.loadNpmTasks('grunt-ngdocs');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    
+    grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'concat']);
+    grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'concat', 'uglify']);
+    grunt.registerTask('server', ['express:dev', 'watch']);
+    grunt.registerTask('jobqueue-server', ['express:jobqueue', 'watch:jobqueue']);
+    grunt.registerTask('docs', ['ngdocs']);
     grunt.registerTask('default', ['build']);
-    grunt.registerTask('server', ['build', 'express:dev', 'watch']);
 };

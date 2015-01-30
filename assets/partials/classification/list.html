@@ -31,7 +31,10 @@
                     </td>
                     <td data-title="'Model'" sortable="'modname'" filter="{ 'modname': 'text' }" class="no-wrap-table-cell">
                         {{classification.modname}}
-                    </td>         
+                    </td>
+                    <td data-title="'Playlist'" sortable="'playlistName'" filter="{ 'playlistName': 'text' }" class="no-wrap-table-cell">
+                        {{classification.playlistName}}
+                    </td>
                     <td>
                         <button class="btn btn-default btn-xs" ng-click="showClassificationDetails(classification.job_id) | trackEvent:'Analysis-Classification-List':' show classification details'">Show details</button>
                     </td>

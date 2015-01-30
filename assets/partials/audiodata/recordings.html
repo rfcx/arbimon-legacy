@@ -106,21 +106,14 @@
 </div>
 <div class="row">
     <div class="col-sm-3">
-        <!-- in progress rec editor -->
-        <!-- <button class="btn btn-default" 
-            ng-click="edit()" 
-            tooltip="Edit check recordings"
-            tooltip-trigger="mouseenter">
-            <i class="fa fa-pencil"></i>
-        </button> -->
-        <!-- need to fix issue #67 -->
-        <!-- <button class="btn btn-danger" 
+        
+        <button class="btn btn-danger" 
             ng-click="del()" 
             ng-class="{ disabled: !checked || !checked.length }"
             tooltip="Delete recording(s)"
             tooltip-trigger="mouseenter">
             <i class="fa fa-trash"></i>
-        </button> -->
+        </button>
     </div>
 </div>
 <div class="row">
@@ -144,6 +137,9 @@
                 <button class="btn btn-default btn-sm" ng-model="limitPerPage" btn-radio="50">50</button>
                 <button class="btn btn-default btn-sm" ng-model="limitPerPage" btn-radio="100">100</button>
             </div>
+            <button class="btn btn-default btn-sm" tooltip="Reload list" ng-click="resetFilters()">
+                <i class="fa fa-refresh"></i>
+            </button>
         </div>
     </div>
 </div>

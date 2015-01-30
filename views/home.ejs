@@ -37,7 +37,7 @@
                             <a ng-class="{'disabled': !project.is_enabled }" 
                                ng-href="/project/{{ project.url }}/" 
                                class="list-group-item" 
-                               ng-repeat="project in projects | orderBy: 'name' | filter: search | paginate: currentPage : 10">
+                               ng-repeat="project in results = ( projects | orderBy: 'name' | filter: search ) | paginate: currentPage : 10">
                                
                                 <dt>
                                     {{ project.name }} 
@@ -47,7 +47,7 @@
                             </a>
                         </dl>
                     </div>
-                    <pagination ng-show="projects.length > 10" total-items="projects.length" ng-model="currentPage"></pagination>
+                    <pagination ng-show="results.length > 10" total-items="results.length" ng-model="currentPage"></pagination>
                 </div>
             </div>
         </div>

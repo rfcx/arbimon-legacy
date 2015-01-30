@@ -1,11 +1,12 @@
 <div class="row">
-    <div class="col-sm-5">
+    <div class="col-sm-12">
         <button class="btn btn-default" ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
             <i class="fa fa-pencil-square-o"></i> Batch Info
         </button>
         <div class="btn btn-primary btn-file">
             <i class="fa fa-plus"></i> Add files
-            <input accept="audio/x-wav,audio/wav,audio/mpeg,audio/flac" nv-file-select uploader="uploader" type="file" multiple>
+            <input accept="audio/x-wav,audio/wav,audio/mpeg,audio/flac" 
+                nv-file-select uploader="uploader" type="file" multiple>
         </div>
         <button type="button" class="btn btn-success" 
             ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'" 
@@ -17,14 +18,22 @@
             ng-disabled="!uploader.isUploading">
             <i class="fa fa-ban"></i> Stop all
         </button>
-        <button type="button" class="btn btn-danger btn-s" 
-            ng-click="uploader.clearQueue() | trackEvent:'Audiodata-Upload':'uploader.clearQueue'" 
-            ng-disabled="!uploader.queue.length">
-            <i class="fa fa-trash"></i> Remove all
-        </button>
+        <div class="btn-group" dropdown>
+            <button type="button" class="btn btn-danger dropdown-toggle"
+                dropdown-toggle>
+                <i class="fa fa-trash"></i> Remove 
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li><a ng-click="uploader.clearQueue() | trackEvent:'Audiodata-Upload':'uploader.clearQueue'">All</a></li>
+                <li><a ng-click="removeCompleted()">Completed</a></li>
+            </ul>
+        </div>
     </div>
-    <div class="col-sm-7">
-        <div class="panel panel-default">
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="panel panel-default upload-info-panel">
             <div class="panel-body">
                 <div class="upload-title">Batch Info</div>
                 <span ng-show="info">
@@ -66,9 +75,15 @@
                         </div>
                     </td>
                     <td>
+                        <span ng-show="item.isUploading"><i class="fa fa-cloud-upload"></i> Uploading</span>
                         <span ng-show="item.isSuccess"><i class="fa fa-check"></i> Success</span>
                         <span ng-show="item.isError"><i class="fa fa-remove"></i> Error</span>
-                        <span ng-show="item.isDuplicate">Duplicate</span>
+                        <span ng-show="item.isDuplicate">
+                            <i class="fa fa-files-o"></i> Duplicate
+                            <i class="fa fa-info-circle"
+                                tooltip="A file with the same name have already been uploaded to this site">
+                            </i>
+                        </span>
                     </td>
                     <td nowrap>
                         <button type="button" class="btn btn-warning btn-xs" ng-click="item.cancel() | trackEvent:'Audiodata-Upload':'item.cancel'" ng-disabled="!item.isUploading">

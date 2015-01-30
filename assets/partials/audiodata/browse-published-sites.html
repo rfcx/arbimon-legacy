@@ -1,0 +1,33 @@
+<div class="modal-header">
+    <h3>Published Sites</h3>
+</div>
+
+<div class="modal-body">
+    <a2-table2 rows="sites" no-checkbox selected="site">
+        <field title="Name" key="name">{{ row.name }}</field>
+        <field title="Rec qty" key="rec_count">
+            {{ row.rec_count }}
+        </field>
+        <field title="Location" key="location">
+            {{ row.location }}
+        </field>
+        <field title="Latidude" key="lat">
+            {{ row.lat | number:3 }}
+        </field>
+        <field title="Longitude" key="lon">
+            {{ row.lon | number:3 }}
+        </field>
+        <field title="Project" key="project_name">{{ row.project_name }}</field>
+        <field title="Owner" key="username">{{ row.username }}</field>
+    </a2-table2>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary"
+        ng-click="addSite(site)">
+        <i class="fa fa-plus"></i> Add 
+    </button>
+    <button class="btn btn-default" 
+        ng-click="$dismiss()">
+        <i class="fa fa-times"></i> Close
+    </button>
+</div>

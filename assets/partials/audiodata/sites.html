@@ -1,31 +1,63 @@
-<div class="row toolbar">
-    <div class="col-sm-5">
-            <button class="btn btn-default" 
-                ng-click="create() | trackEvent:'Dashboard-sites':'create site'"
-                tooltip="Add a site"
-                tooltip-trigger="mouseenter">
+<div class="row">
+    <div class="col-sm-push-3 col-sm-4 toolbar">
+        <input class="form-control" type="text" placeholder="Search" ng-model="search">
+    </div>
+    <div class="col-sm-3 col-sm-pull-4 toolbar">
+        <div class="btn-group" dropdown>
+            <button class="btn btn-default dropdown-toggle"
+                id="addsite"
+                aria-expanded="true"
+                dropdown-toggle>
                 <i class="fa fa-plus"></i>
             </button>
-            <button class="btn btn-default"
-                ng-click="edit() | trackEvent:'Dashboard-sites':'edit site'"
-                ng-class="{ disabled: !selected }"
-                tooltip="Edit site info"
-                tooltip-trigger="mouseenter">
-                <i class="fa fa-pencil"></i>
-            </button>
-            <!-- <button class="btn btn-danger"
-                ng-click="del()"
-                ng-disabled="!checked || !checked.length">
-                <i class="fa fa-trash"></i>
-            </button> -->
-    </div>
-    <div class="col-sm-2">
-        <input class="form-control" type="text" placeholder="Search" ng-model="search">
+            <ul class="dropdown-menu" role="menu" aria-labelledby="addsite">
+                <li role="presentation">
+                    <a role="menuitem" tabindex="-1" ng-click="create() | trackEvent:'Dashboard-sites':'add site'" >Create a new site</a>
+                </li>
+                <li role="presentation">
+                    <a role="menuitem" tabindex="-1" ng-click="browseShared()">Add from published sites</a>
+                </li>
+            </ul>
+        </div>
+        <button class="btn btn-default"
+            ng-click="edit() | trackEvent:'Dashboard-sites':'edit site'"
+            ng-disabled="!selected || selected.imported"
+            tooltip="Edit site info">
+            <i class="fa fa-pencil"></i>
+        </button>
+        <button class="btn btn-danger"
+            ng-click="del()"
+            ng-disabled="!selected"
+            tooltip="remove site">
+            <i class="fa fa-trash"></i>
+        </button>
     </div>
 </div>
 <div class="row">
     <div class="col-sm-7">
-        <a2-table fields="fields" rows="sites" on-select="sel(row)" checked="checked" search="search" no-checkbox></a2-table>
+        <a2-table2 rows="sites" on-select="sel(row)" checked="checked" search="search" no-checkbox>
+            <field title="Name" key="name">
+                <!-- <i ng-show="row.published && !row.imported" class="fa fa-globe"></i> -->
+                <!-- <i ng-show="row.imported" class="fa fa-users"></i> -->
+                {{ row.name }} 
+            </field>
+            <field>
+                <i ng-show="row.published && !row.imported" class="fa fa-globe"></i>
+                <i ng-show="row.imported" class="fa fa-users"></i>
+            </field>
+            <field title="Rec qty" key="rec_count">
+                {{ row.rec_count }}
+            </field>
+            <field title="Latidude" key="lat">
+                {{ row.lat | number:3 }}
+            </field>
+            <field title="Longitude" key="lon">
+                {{ row.lon | number:3 }}
+            </field>
+            <field title="Altitude" key="alt">
+                {{ row.alt | number:2 }}
+            </field>
+        </a2-table2>
         <div class="jumbotron" ng-show="(!sites || !sites.length > 0) && !loading">
             <h3 class="text-center">
                 This project don't have any <i class="fa fa-map-marker"></i> sites
@@ -40,7 +72,15 @@
                     <div class="form-group">
                         <label>Name:</label><input class="form-control" type="text" ng-model="temp.name" placeholder="Name Station">
                     </div>
-
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" ng-model="temp.published"> 
+                            publish site 
+                            <i class="text-info fa fa-info-circle"
+                                tooltip-placement="right"
+                                tooltip="when this option is checked, the site recordings become available to use in other projects"></i>
+                        </label>
+                    </div>
                     <div class="form-group">
                         <label>Location:</label>
                         <div class="input-group">
@@ -60,7 +100,12 @@
                             <input class="form-control" id="alt" type="text" ng-model="temp.alt" placeholder="Altitude">
                         </div>
                     </div>
-                    <button class="btn btn-primary" ng-click="save() | trackEvent:'Dashboard-sites':'save site'"><i class="fa fa-floppy-o"></i> Save</button>
+                    <button class="btn btn-primary" ng-click="save() | trackEvent:'Dashboard-sites':'save site'">
+                        <i class="fa fa-floppy-o"></i> Save
+                    </button>
+                    <button class="btn btn-default" ng-click="close() | trackEvent:'Dashboard-sites':'close site edit create'">
+                        <i class="fa fa-times"></i> Close
+                    </button>
                 </form>
             </div>
         </div>
@@ -71,4 +116,3 @@
         </div>
     </div>
 </div>
-{{ debug }}

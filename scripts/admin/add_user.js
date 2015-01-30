@@ -1,5 +1,5 @@
-var Users     = require('../../models/users');
-var Projects  = require('../../models/projects');
+var Users     = require('../../model/users');
+var Projects  = require('../../model/projects');
 var sha256    = require('../../utils/sha256');
 var async     = require('async');
 var prompt    = require('prompt');

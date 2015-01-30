@@ -4,7 +4,7 @@
 
 <div class="modal-body">
     <div class="alert alert-danger" role="alert" ng-show="error"> all fields are required</div>
-    <form name="uploadInfo"role="form">
+    <form name="uploadInfo" role="form">
         <div class="form-group">
             <ui-select ng-model="info.site" theme="bootstrap">
                 <ui-select-match placeholder="Site name">{{ $select.selected.name }}</ui-select-match>
@@ -38,7 +38,8 @@
                 required>
         </div>
     </form>
+</div>
 <div class="modal-footer">
     <button class="btn btn-primary" ng-click="close() | trackEvent:'Audiodata-Batchinfo':'close clicked'"><i class="fa fa-floppy-o"></i> Save &amp; Close </button>
-    <button class="btn" ng-click="$dismiss() | trackEvent:'Audiodata-Batchinfo':'dismiss clicked'"><i class="fa fa-times"></i> Close</button>
+    <button class="btn btn-default" ng-click="$dismiss() | trackEvent:'Audiodata-Batchinfo':'dismiss clicked'"><i class="fa fa-times"></i> Close</button>
 </div>

@@ -21,7 +21,11 @@ var bucketName = config('aws').bucketName;
 var filepath = process.argv[2];
 var key      = process.argv[3];
 var public_read = process.argv.length >= 5 && /public/.test(process.argv[4]);
-AWS.config.loadFromPath('./config/aws.json');
+AWS.config.update({
+    accessKeyId: config('aws').accessKeyId, 
+    secretAccessKey: config('aws').secretAccessKey,
+    region: config('aws').region
+});
 var s3 = new AWS.S3();
 
 

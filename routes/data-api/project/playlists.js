@@ -1,7 +1,7 @@
 var debug = require('debug')('arbimon2:route:playlists');
 var express = require('express');
 var router = express.Router();
-var model = require('../../../models');
+var model = require('../../../model');
 
 /** Return a list of all the playlists in a project.
  */

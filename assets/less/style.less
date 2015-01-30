@@ -36,13 +36,21 @@
 @import "a2-components/dashboard.less";
 @import "a2-components/audiodata.less";
 @import "a2-components/calendar.less";
+@import "a2-components/line-chart.less";
 @import "a2-components/loader.less";
 @import "a2-components/analysis.less";
+@import "a2-components/notifications.less";
 @import "a2-icons.less";
 
 /*
  * general styles
 */
+
+.nav.navbar-nav a.dropdown-toggle {
+    cursor: pointer;
+}
+
+
 .inline{
     display: inline-block;
 }
@@ -305,7 +313,7 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
 
 .login-form {
     padding: 10px;
-    background-color: #D7D7D7;
+    background-color: transparent;
     border-radius: 6px;
 
     & h3 {
@@ -873,7 +881,6 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
 }
 
 
-
 .inline-block{
     display:inline-block;
 }
@@ -897,4 +904,29 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
     margin-left:-10px;
 }
 
+.padded-div-20
+{
+    padding-left:20px;
+}
 
+.seconds-div-center
+{
+    text-align:center;
+}
+
+@media (min-width: 1200px) {
+    .hide-tooltip-lg .tooltip {
+        display: none !important;
+    }
+}
+
+
+.support-list {
+    & > dt {
+        font-size: 20px;
+    }
+    & > dd {
+        font-size: 16px;
+        padding-bottom:14px;
+    }
+}

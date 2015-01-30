@@ -1,6 +1,6 @@
 (function(angular)
 { 
-    var soundscapes = angular.module('soundscapes', ['ui.bootstrap' , 'a2services' , 'ui-rangeSlider']);
+    var soundscapes = angular.module('soundscapes', ['ui.bootstrap' , 'a2services' , 'ui-rangeSlider', 'ngCsv']);
     var template_root = '/partials/soundscapes/';
 
     soundscapes.controller('SoundscapesCtrl' , 
@@ -321,8 +321,8 @@
                  $modalInstance.close( {url:url});
             };
         }
-    ).
-    directive('a2Aggregationtypeselector', function() {
+    )
+    .directive('a2Aggregationtypeselector', function() {
             return  {
                 restrict : 'E',
                 scope: {
@@ -421,9 +421,7 @@
             }
         };
     })
-    .directive('a2ThresholdSelector',
-        function()
-        {
+    .directive('a2ThresholdSelector', function() {
         return {    
             restrict : 'E',
             scope: {
@@ -444,11 +442,8 @@
                 
             }
         };
-    }
-    )
-    .directive('a2DrawPeakThreshold',
-        function()
-        {
+    })
+    .directive('a2DrawPeakThreshold', function() {
         return {    
             restrict : 'E',
             scope: {
@@ -621,15 +616,66 @@
                     .text("Hz");
             }
         };
-    }
-    )
+    })
     .controller('SoundscapesDetailsCtrl', [
         '$scope',
         'soundscape', 
         'playlist', 
-        function($scope, soundscape, playlist) {
+        'a2Soundscapes',
+        function($scope, soundscape, playlist, a2Soundscapes) {
+            
+            var data2xy = function(offset) {
+                offset = offset || 0;
+                
+                return function(d, i) {  
+                    return { x: i+offset, y: d };
+                };
+            };
+            
             $scope.soundscape = soundscape;
             $scope.playlist = playlist;
+            
+            $scope.chartOptions = { 
+                lineColor: '#c42',
+                width: 400, 
+                height: 400 
+            };
+            
+            
+            a2Soundscapes.findIndices(soundscape, function(result) {
+                if(!result)
+                    return;
+                    
+                $scope.index = {
+                    H: [],
+                    ACI: [],
+                    NP: [],
+                };
+                $scope.indices = [];
+                
+                $scope.indices.push({ 
+                    time: "TIME",
+                    H: "H",
+                    ACI: "ACI",
+                    NP: "NP",
+                });
+                
+                for(var i = 0; i < result.H.length; i++) {
+                    var t = i+soundscape.min_t;
+                    
+                    $scope.indices.push({ 
+                        time: t,
+                        H: result.H[i],
+                        ACI: result.ACI[i],
+                        NP: result.NP[i],
+                    });
+                    
+                    $scope.index.H.push({ x: t, y: result.H[i] });
+                    $scope.index.ACI.push({ x: t, y: result.ACI[i] });
+                    $scope.index.NP.push({ x: t, y: result.NP[i] });
+                }
+                
+            });
         }
     ]);
 })(angular);

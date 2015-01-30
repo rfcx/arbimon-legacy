@@ -8,36 +8,31 @@ angular.module('dashboard',[
 ])
 .config(function($stickyStateProvider, $stateProvider, $urlRouterProvider) {
 
-    $urlRouterProvider.when("/dashboard", "/dashboard/summary");
+    // $urlRouterProvider.when("/dashboard", "/dashboard/summary");
 
     $stateProvider.state('dashboard', {
         url: '/dashboard',
-        views: { 
-            'dashboard': { 
-                templateUrl: '/partials/dashboard/index.html',
-            } 
-        },
-        deepStateRedirect: true, 
+        controller:'SummaryCtrl',
+        templateUrl: '/partials/dashboard/index.html',
     })
     .state('dashboard.summary', {
         url: '/summary',
-        controller:'SummaryCtrl',
         templateUrl: '/partials/dashboard/summary.html'
     })
     
-    .state('dashboard.settings', {
+    .state('settings', {
         url: '/settings',
         controller:'SettingsCtrl',
         templateUrl: '/partials/dashboard/settings.html'
     })
-    .state('dashboard.users', {
+    .state('users', {
         url: '/users',
         controller:'UsersCtrl',
         templateUrl: '/partials/dashboard/users.html'
     });
 
 })
-.controller('SummaryCtrl', function($scope, Project, a2TrainingSets, $timeout) {
+.controller('SummaryCtrl', function($scope, Project, a2TrainingSets, $timeout,notify) {
     
     $scope.loading = true;
 
@@ -50,13 +45,19 @@ angular.module('dashboard',[
     });
     
     Project.getModels(function(err, models){
-        if(err) return alert(err);
+        if(err)
+        {
+            notify.error('Error Communicating with Server');
+        }
         
         $scope.modelsQty = models.length;
     });
     
     Project.getClassi(function(err, classi){
-        if(err) return alert(err);
+        if(err)
+        {
+            notify.error('Error Communicating with Server');
+        }
         
         $scope.classiQty = classi.length;
     });
@@ -109,7 +110,7 @@ angular.module('dashboard',[
         $scope.recsQty = count;
     });
 })
-.controller('SettingsCtrl', function($scope, Project, notify) {
+.controller('SettingsCtrl', function($scope, Project, notify,$location,$window) {
     Project.getInfo(function(info) {
         $scope.project = info;
     });
@@ -119,18 +120,29 @@ angular.module('dashboard',[
             project: $scope.project
         }, 
         function(err, result){
-            if(err) alert(err);
-            
-            if(result.error) {
-                notify.error(result.error);
+            if(err)
+            {
+                notify.error('Error Communicating with Server');
             }
-            else {
-                notify.log('Project Info Updated');
+            else
+            {
+                if(result.error)
+                {
+                    notify.error(result.error);
+                }
+                else
+                {
+                    notify.log('Project Info Updated');
+                    if (result.url && result.url == 'yes')
+                    {                       
+                        $window.location.href='/project/'+result.newurl+'/#/settings';
+                    } 
+                }
             }
         });
     };
 })
-.controller('UsersCtrl', function($scope, $http, Project, $modal) {
+.controller('UsersCtrl', function($scope, $http, Project, $modal,notify) {
     
     Project.getInfo(function(info) {
         $scope.project = info;
@@ -155,16 +167,24 @@ angular.module('dashboard',[
         if(!$scope.userToAdd)
             return;
         
-        console.log('addUser');
         
         Project.addUser({
             project_id: $scope.project.project_id,
             user_id: $scope.userToAdd.id
         },
         function(err, result){
-            if(err) alert(err);
+            if(err)
+            {
+                notify.error('Error Communicating with Server');
+            }
             
-            console.log(result);
+            if(result.error) {
+                notify.error(result.error);
+            }
+            else {
+                notify.log('User Added to Project');
+            }
+            
             Project.getUsers(function(err, users){
                 $scope.users = users;
             });
@@ -172,7 +192,6 @@ angular.module('dashboard',[
     };
     
     $scope.changeRole = function($index) {
-        console.log($scope.users[$index]);
         
         var role = $scope.roles.filter(function(value){
             return $scope.users[$index].rolename === value.name;
@@ -184,9 +203,18 @@ angular.module('dashboard',[
             role_id: role.id
         },
         function(err, result){
-            if(err) alert(err);
+            if(err)
+            {
+                notify.error('Error Communicating with Server');
+            }
             
-            console.log(result);
+            if(result.error) {
+                notify.error(result.error);
+            }
+            else {
+                notify.log('User Role Updated');
+            }
+            
             Project.getUsers(function(err, users){
                 $scope.users = users;
             });
@@ -195,14 +223,17 @@ angular.module('dashboard',[
     
     $scope.del = function($index) {
         
-        $scope.messages = [
-            "You are about to remove: ",
-            $scope.users[$index].username,
-            "Are you sure??"
-        ];
         
-        $scope.btnOk = "Yes, do it!";
-        $scope.btnCancel = "No";
+        $scope.popup = {
+            messages : [
+                "You are about to remove: ",
+                $scope.users[$index].username,
+                "Are you sure??"
+            ],
+            btnOk: "Yes, do it!",
+            btnCancel: "No",
+        };
+        
         
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',
@@ -215,9 +246,18 @@ angular.module('dashboard',[
                 user_id: $scope.users[$index].id
             },
             function(err, result){
-                if(err) alert(err);
+                if(err)
+                {
+                    notify.error('Error Communicating with Server');
+                }
                 
-                console.log(result);
+                if(result.error) {
+                    notify.error(result.error);
+                }
+                else {
+                    notify.log('User Deleted from Project');
+                }
+                
                 Project.getUsers(function(err, users){
                     $scope.users = users;
                 });

@@ -20,7 +20,7 @@ angular.module('a2utils', [])
             };
             $templateCache.put(templateUrl, tmp_promise);
         }
-    }
+    };
 })
 .factory('itemSelection', function(){
     return {
@@ -197,8 +197,8 @@ angular.module('a2Infotags', [])
                     InfoTagService.getSpecies(newVal, function(data){
                         $timeout(function(){
                             $scope.data = data;
-                        })
-                    })
+                        });
+                    });
                 }
             });
         }
@@ -270,7 +270,10 @@ angular.module('d3', []).value('d3', d3);
 
 angular.module('humane', [])
 .service('notify', function() {
-    humane.error = humane.spawn({ addnCls: 'humane-libnotify-error' });
+    humane.baseCls = "humane-original";
+    humane.error = humane.spawn({ addnCls: humane.baseCls+'-error' });
+    humane.info = humane.spawn({ addnCls: humane.baseCls+'-info' });
+    humane.success = humane.spawn({ addnCls: humane.baseCls+'-success' });
 
     return humane;
 });

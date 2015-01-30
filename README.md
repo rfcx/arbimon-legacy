@@ -9,7 +9,7 @@ Bio-Acoustic Analyzer
    ```
    sudo add-apt-repository ppa:chris-lea/node.js
    sudo apt-get update
-   sudo apt-get install python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev gfortran libopenblas-dev liblapack-dev  libpng12-dev libfreetype6-dev libsndfile1 libsndfile-dev python-virtualenv r-base r-base-dev libfftw3-3 libfftw3-dev r-cran-rgl bwidget
+   sudo apt-get install -y python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev python-virtualenv
    ```
    
    
@@ -62,69 +62,33 @@ Bio-Acoustic Analyzer
    ```
    
    
- - R statistics
-   ```
-    sudo apt-get install r-base
-    sudo apt-get install r-base-dev
-    sudo apt-get install libfftw3-3 libfftw3-dev libsndfile1-dev r-cran-rgl bwidget
-   ```
-   
-   
- - R packages (tuneR,seewave)
-   ```
-   sudo Rscript scripts/setup/r-packages.R
-   ```
-   
-   
  - MySQL-python dependencies
    ```
    sudo apt-get install libmysqlclient-dev python-dev
    ```
    
-   
  - python virtualenv
    ```
    sudo apt-get install virtualenv
    ```
-   
-   
- - scipy dependencies
-   ```
-   sudo apt-get install gfortran libopenblas-dev liblapack-dev
-   ```
-   
-   
+      
  - matplotlib dependencies
    ```
    sudo apt-get install libpng12-dev libfreetype6-dev
    ```
-   
-   
- - scikits.audiolab dependencies
-   ```
-   sudo apt-get install libsndfile-dev
-   ```
-   
-   
+      
  - node global dependencies(`sudo npm install -g <package>`):
   - bower
   - grunt-cli
   
   
  - individual python dependencies (`sudo pip install`):
-    - numpy 
-    - scipy
     - MySQL-python 
-    - scikit-learn 
     - boto 
     - pypng  
     - matplotlib
-    - wsgiref
-    - argparse
     - virtualenv
-    - joblib
-    - scikits.audiolab
-
+    
 ---
 
 ### Build

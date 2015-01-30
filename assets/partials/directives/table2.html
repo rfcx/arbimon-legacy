@@ -1,0 +1,30 @@
+<table class="table table-hover a2-table">
+<thead>
+    <tr>
+        <th ng-hide="noCheck">
+            <input type="checkbox" ng-disabled="!rows.length" ng-model="checkall" ng-change="toggleAll()">
+        </th>
+        <th ng-repeat="field in fields" ng-click="sortBy(field) | trackEvent:'Directives-Table':'sort table'">
+            {{ field.title }}
+            <i ng-show="field.key" class="fa" ng-class="{ 'fa-chevron-up': (sortKey === field.key) && (!reverse), 'fa-chevron-down': (sortKey === field.key) && (reverse) }"></i>
+        </th>
+    </tr>
+</thead>
+<tbody>
+    <tr ng-repeat="row in rows | filter: query | orderBy: sort : reverse"
+        ng-click="sel(row, $index) | trackEvent:'Directives-Table':'select row'"
+        ng-class="[selected == row ? 'active':'', userStyle]"
+        tabindex="0"
+        ng-keypress="keyboardSel(row, $index, $event) | trackEvent:'Directives-Table':'select row'">
+        <td ng-hide="noCheck">
+            <input type="checkbox"
+                ng-model="row.checked"
+                ng-click="check($event, $index) | trackEvent:'Directives-Table':'check row'"
+                stop-click>
+        </td>
+        <td ng-repeat="field in fields" ng-class="field.tdclass ? field.tdclass : null">
+            <a2-table-content template="field.content" row="row"></a2-table-content>
+        </td>
+    </tr>
+</tbody>
+</table>

@@ -123,9 +123,10 @@ angular.module('a2directives', ['a2services'])
             extSort: '&',
             checked: '=?',
             search: '=?',
-            noCheckbox: '@',
-            noSelect: '@',
-            dateFormat: '@'
+            noCheckbox: '@',    // disable row checkboxes
+            noSelect: '@',      // disable row selection
+            dateFormat: '@',    // moment date format, default: 'lll'
+            numberDecimals: '@' // decimal spaces 
         },
         templateUrl: '/partials/directives/table.html',
         link: function(scope, element, attrs) {
@@ -230,11 +231,198 @@ angular.module('a2directives', ['a2services'])
             
             scope.formatString = function(value) {
                 
-                if(value instanceof Date){
+                if(value instanceof Date) {
                     return moment(value).utc().format(attrs.dateFormat || 'lll');
+                }
+                else if(typeof value === 'number') {
+                    var precision = attrs.numberDecimals || 3;
+                    
+                    var p =  Math.pow(10,precision);
+                    
+                    return Math.round(value*p)/p;
                 }
                 return value;
             };
+        }
+    };
+}])
+/**
+    this version of a2Table uses html to define fields
+*/
+.directive('a2Table2', ['$filter', '$templateCache', '$compile', function($filter, $templateCache, $compile) {
+    return {
+        restrict: 'E',
+        scope: {
+            rows: '=',
+            selected: '=?',
+            onSelect: '&',
+            extSort: '&',
+            checked: '=?',
+            search: '=?',
+            noCheckbox: '@',    // disable row checkboxes
+            noSelect: '@',      // disable row selection
+            dateFormat: '@',    // moment date format, default: 'lll'
+            numberDecimals: '@', // decimal spaces 
+        },
+        compile: function(tElement, tAttrs) {
+            var detaEle = tElement;
+            
+            var fields = [];
+            
+            for(var i = 0; i < detaEle[0].children.length; i++) {
+                var child = $(detaEle[0].children[i]);
+                // console.log(child);
+                
+                fields.push({
+                    title: child.attr('title'),
+                    key: child.attr('key'),
+                    content: child.html()
+                });
+            }
+            
+            // console.log(fields);
+            // console.log($templateCache.get('/partials/directives/table.html'));
+            
+            return function(scope, element, attrs) {
+                scope.fields = fields;
+                
+                if(attrs.noCheckbox !== undefined)
+                    scope.noCheck = true;
+                    
+                var updateChecked = function(rows) {
+                    if(rows) {
+                        var visible = $filter('filter')(rows, scope.query);
+                        
+                        scope.checked = visible.filter(function(row) {
+                            return row.checked | false;
+                        });
+                    }
+                };
+                
+                
+                if(attrs.search) {
+                    scope.$watch(attrs.search, function(value) {
+                        //~ console.log(value);
+                        scope.query = scope.search;
+                        updateChecked(scope.rows);
+                    });
+                }
+                    
+                scope.toggleAll = function() {
+                    var allFalse = true;
+                    
+                    for(var i in scope.rows) {
+                        if(scope.rows[i].checked) {
+                            allFalse = false;
+                            break;
+                        }
+                    }
+                    
+                    for(var j in scope.rows) {
+                        scope.rows[j].checked = allFalse;
+                    }
+                    
+                    scope.checkall = allFalse;
+                    
+                };
+                    
+                    
+                    
+                if(attrs.checked) {
+                    scope.$watch('rows', updateChecked, true);
+                }
+                    
+                    
+                scope.check = function($event, $index) {
+                    //~ console.log('$event:', $event);
+                    //~ console.log('$index:', $index);
+                    //~ console.log('last checked:', scope.lastChecked);
+                    
+                    if(scope.lastChecked && $event.shiftKey) {
+                        console.log('shift!');
+                        
+                        if(scope.lastChecked) {
+                            var rows;
+                            if(scope.lastChecked > $index) {
+                                rows = scope.rows.slice($index, scope.lastChecked);
+                            }
+                            else {
+                                rows = scope.rows.slice(scope.lastChecked, $index);
+                            }
+                                
+                            rows.forEach(function(row) {
+                                row.checked = true;
+                            });
+                        }
+                    }
+                            
+                    scope.lastChecked = $index;
+                };
+                            
+                scope.keyboardSel = function(row, $index, $event) {
+                    if($event.key === " " || $event.key === "Enter") 
+                        scope.sel(row, $index);
+                };
+                
+                scope.sel = function(row, $index) {
+                    if(attrs.noSelect !== undefined)
+                        return;
+                        
+                    scope.selected = row;
+                    if(attrs.onSelect)
+                        scope.onSelect({ row: row });
+                };
+                                    
+                scope.sortBy = function(field) {
+                    if(scope.sortKey !== field.key) {
+                        scope.sortKey = field.key;
+                        
+                        if(attrs.extSort === undefined)
+                            scope.sort = field.key;
+                        
+                        scope.reverse = false;
+                    }
+                    else {
+                        scope.reverse = !scope.reverse;
+                    }
+                        
+                    if(attrs.extSort)
+                        scope.extSort({ sortBy: field.key, reverse: scope.reverse });
+                };
+                        
+                scope.formatString = function(value) {
+                            
+                    if(value instanceof Date) {
+                        return moment(value).utc().format(attrs.dateFormat || 'lll');
+                    }
+                    else if(typeof value === 'number') {
+                        var precision = attrs.numberDecimals || 3;
+                        
+                        var p =  Math.pow(10,precision);
+                        
+                        return Math.round(value*p)/p;
+                    }
+                            return value;
+                };
+                
+                element.html($templateCache.get('/partials/directives/table2.html'));
+                
+                // console.log(scope);
+                $compile(element.contents())(scope);
+            };
+        }
+    };
+}])
+.directive('a2TableContent', ['$compile', function($compile){
+    return {
+        restrict: 'E',
+        scope: {
+            template: '=',
+            row: '='
+        },
+        link: function(scope, element, attrs) {
+                element.html(scope.template);
+                $compile(element.contents())(scope);
         }
     };
 }])
@@ -736,4 +924,143 @@ angular.module('a2directives', ['a2services'])
         }        
     };
 })
- ;
+
+.directive('a2LineChart', function() {
+    
+    var drawChart = function(data, options) {
+        
+        var padding = {
+            left: 30,
+            right: 10,
+            top: 10,
+            bottom: 20
+        };
+        
+        var getY = function(value) { return value.y; };
+        var getX = function(value) { return value.x; };
+        
+        var yMin = d3.min(data, getY);
+        var yMax = d3.max(data, getY);
+        
+        var tMin = d3.min(data, getX);
+        var tMax = d3.max(data, getX);
+        
+        var element = options.element;
+        var lineColor = options.lineColor || "red";
+        var width = options.width,
+        height = options.height;
+        
+        var xScale = d3.scale.linear()
+        .domain([tMin, tMax])
+        .range([padding.left, width-padding.right]);
+        
+        var yScale = d3.scale.linear()
+        .domain([yMin, yMax])
+        .range([height-padding.bottom, padding.top]);
+        
+        var line = d3.svg.line()
+        .x(function(d) { return xScale(d.x); })
+        .y(function(d) { return yScale(d.y); })
+        .interpolate("linear");
+        
+        var symbol= d3.svg.symbol().type('circle');
+        
+        var xAxis = d3.svg.axis()
+        .scale(xScale).ticks(tMax-tMin);
+        
+        var yAxis = d3.svg.axis()
+        .scale(yScale).orient('left').ticks(3);
+        
+        var svg = element
+        .append('svg')
+        .attr('class', "graph")
+        .attr('height', height)
+        .attr('width', width);
+        
+        svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + (height-padding.bottom) + ")")
+        .call(xAxis);
+        
+        svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate("+ padding.left +",0)")
+        .call(yAxis);
+        
+        var dataG = svg.append('g')
+        .datum(data);
+        
+        var path = dataG.append('path')
+        .attr('stroke', lineColor)
+        .attr('stroke-width',"2")
+        .attr('fill',"none")
+        .attr('d', line);
+        
+        var totalLength = path.node().getTotalLength();
+        
+        path.attr("stroke-dasharray", totalLength)
+        .attr("stroke-dashoffset", totalLength)
+        .transition().delay(200)
+        .duration(1000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0)
+        .each("end", function(){
+            path.attr("stroke-dasharray", null)
+            .attr("stroke-dashoffset", null);
+        });
+        
+        
+        dataG.append("g").selectAll('path')
+        .data(function(d) { return d; })
+        .enter()
+        .append('path')
+        .attr('fill',"transparent")
+        .attr("transform", function(d) { 
+            return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")scale(0.7,0.7)"; 
+        })
+        .attr("d", symbol)
+        .attr('fill', lineColor)
+        .on('mouseenter', function(d) {
+            var body = d3.select('body');
+            var coords = d3.mouse(body.node()); 
+            
+            var tooltip = body.append('div')
+            .datum(d)
+            .attr('class', "graph-tooltip")
+            .style('top', (coords[1]-10)+'px')
+            .style('left', (coords[0]-10)+'px')
+            .on('mouseleave', function() {
+                body.selectAll('.graph-tooltip').remove();
+            })
+            .append('p')
+            .text(Math.round(d.y*1000)/1000);
+        });
+    };
+    
+    return {
+        restrict: 'E',
+        scope: {
+            values: '=',
+            height: '@',
+            width: '@',
+            color: '@?'
+        },
+        link: function (scope, element, attrs) {
+            
+            scope.$watch('values', function() {
+                
+                if(!scope.values)
+                    return;
+                
+                drawChart(scope.values, { 
+                    lineColor: scope.color, 
+                    element: d3.select(element[0]),
+                    width: Number(scope.width), 
+                    height: Number(scope.height) 
+                });
+            });
+            
+        }
+    };
+})
+;
