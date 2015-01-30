@@ -18,9 +18,26 @@
                 </ul>
             <% } %>
             <ul class="nav navbar-nav navbar-right">
-                <li><a><% if(user.isSuper) { %>Super<% } %> <i class="fa fa-user"></i> <%= user.username %></a></li>
-                <li><a href="/user-settings" tooltip-placement="bottom" tooltip='User settings'><i class="fa fa-wrench"></i></a></li>
-                <li><a href="/logout" tooltip-placement="bottom" tooltip='Log out'><i class="fa fa-sign-out"></i></a></li>
+                <li class="dropdown" dropdown>
+                    <a class="dropdown-toggle" dropdown-toggle>
+                        <% if(user.isSuper) { %>Super<% } %> 
+                        <i class="fa fa-user"></i> <%= user.username %> 
+                        <i class="fa fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li class="">
+                            <a href="/user-settings">
+                                <i class="fa fa-wrench"></i> Settings
+                            </a>
+                        </li>
+                        <li class="">
+                            <a href="/logout">
+                                <i class="fa fa-sign-out"></i> Log out
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li><a href="/support"><i class="fa fa-life-ring"></i> Support</a></li>
             </ul>
         </div>
     </div>

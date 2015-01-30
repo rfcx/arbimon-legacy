@@ -11,6 +11,7 @@ router.get('/terms', function(req, res) {
     res.render('terms');
 });
 
+
 router.get('/alive', function(req, res) { // for health checks
     res.sendStatus(200);
 });
@@ -29,13 +30,15 @@ router.get('/', function(req, res) {
     res.redirect('/home');
 });
 
+router.get('/support', function(req, res) {
+    res.render('support', { title: "Support", user: req.session.user });
+});
+
 router.get('/home', function(req, res) {
     res.render('home', { title: "Home", user: req.session.user });
 });
 
 
-
-// INCOMPLETE
 router.get('/user-settings', function(req, res) {
     res.render('user-settings', { title: "User settings", user: req.session.user });
 });

@@ -42,11 +42,11 @@
             }
             else
             {
-                emailFlag = $scope.data.useremail.length == '';
+                emailFlag = $scope.data.useremail.length === '';
                 $("#data-message").html("");
             }
             
-            if ($scope.data.password != '' && $scope.data.confirm != '')
+            if ($scope.data.password !== '' && $scope.data.confirm !== '')
             {
                 if ($scope.data.password.length < 8 )
                 {
@@ -54,7 +54,7 @@
                     $scope.message = 'Password must have 8 or more characters.';
                 }else
                 {
-                    if ($scope.data.password != $scope.data.confirm )
+                    if ($scope.data.password !== $scope.data.confirm )
                     {
                         $scope.message = 'Passwords do not match';
                         passwordDoNotMatch= true;
@@ -68,28 +68,27 @@
             }
             
             var userspaces = false;
-            if ($scope.data.username != '' && $scope.data.username.split(' ').length > 1)
+            if ($scope.data.username !== '' && $scope.data.username.split(' ').length > 1)
             {
                 userspaces  = true;
                 $scope.message = 'Username cannot have spaces.';
             }
             
             return  (
-                     passwordLength
-                     || !$scope.terms_accepted 
-                     || userspaces 
-                     || passwordDoNotMatch 
-                     || emailFlag
-                     || $scope.data.first_name == ''
-                     || $scope.data.last_name == ''
-                     || $scope.data.username == ''
-                     || $scope.data.password == ''
-                     || $scope.data.confirm == ''
-                     );
+                passwordLength ||
+                !$scope.terms_accepted  ||
+                userspaces  ||
+                passwordDoNotMatch  ||
+                emailFlag ||
+                $scope.data.first_name === '' ||
+                $scope.data.last_name === '' ||
+                $scope.data.username === '' ||
+                $scope.data.password === '' ||
+                $scope.data.confirm === ''
+            );
         };
     })
     ;
 
 }
 )(angular);
-
