@@ -11,6 +11,7 @@ var s3 = new AWS.S3();
 
 var model = require('../../model');
 var jobQueue = require('../../utils/jobqueue');
+var pokeDaMonkey = require('../../utils/monkey');
 var scriptsFolder = __dirname+'/../../scripts/';
 var config = require('../../config');
 
@@ -54,7 +55,7 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
             while(i < rows.length)
             {
                 row = rows[i];
-                th = row['th']
+                th = row['th'];
 
                 var index = row['species_id']+'_'+row['songtype_id'];
                 if (typeof data[index]  == 'number')
@@ -195,7 +196,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             next();
         },
         function poke_the_monkey(next){
-            request.post(config('hosts').jobqueue + '/notify', function(){});
+            pokeDaMonkey();
             next();
         },
     ], function(err, data){
@@ -295,7 +296,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
             next();
         },
         function poke_the_monkey(next){
-            request.post(config('hosts').jobqueue + '/notify', function(){});
+            pokeDaMonkey();
             next();
         },
     ], function(err, data){
@@ -305,7 +306,7 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
             }
             return;
         } else {
-            res.json({ ok:"job created classificationJob:"+job_id});
+            res.json({ ok:"job created classification Job:"+job_id});
         }
     });
 });
@@ -468,7 +469,7 @@ router.get('/project/:projectUrl/progress/queue', function(req, res) {
                  ") (concurrency: "+ jobQueue.concurrency+
                  ") (started: "+ jobQueue.started+
                  ") (howmanyInqueue: "+ jobQueue.length()+
-                 ") (isPaused: "+ jobQueue.paused+")"
+                 ") (isPaused: "+ jobQueue.paused+")";
 
     res.json({"debug":string});
 
@@ -537,7 +538,7 @@ router.get('/project/classification/csv/:cid', function(req, res) {
                 for(var i = 0 ; i < row.length ; i++)
                 {
                         thisrow = row[i];
-                        var maxVal = thisrow['mvv']
+                        var maxVal = thisrow['mvv'];
                         var tprec = 0;
                         if(maxVal >= th )
                         {
@@ -583,7 +584,7 @@ router.get('/project/classification/csv/:cid', function(req, res) {
             else
             {
                 data.push('"rec","presence","site","year","month","day","hour","minute","species","songtype"');
-                for(var i =0;i < row.length;i++)
+                for(var i = 0; i < row.length; i++)
                 {
                     thisrow = row[i];
     
@@ -636,7 +637,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                 bin         : (req.body.b),
                 maxhertz    : (req.body.m),
                 frequency   : (req.body.f)
-            }
+            };
 
             next();
         },
@@ -663,7 +664,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             next();
         },
         function poke_the_monkey(next){
-            request.post(config('hosts').jobqueue + '/notify', function(){});
+            pokeDaMonkey();
             next();
         }
     ], function(err, job_id){

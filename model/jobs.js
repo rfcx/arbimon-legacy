@@ -168,32 +168,6 @@ var Jobs = {
         queryHandler(q, callback);
     },
 
-    allActiveJobs: function(callback) {
-        var q = "( SELECT j.`progress`, \n" +
-            "         j.`progress_steps`,  \n" +
-            "         j.`job_type_id`, \n" +
-            "         j.`job_id`, \n" +
-            "         CONCAT(UCASE(LEFT( jpt.`name`, 1)), SUBSTRING( jpt.`name`, 2)) as name,  \n" +
-            "         ROUND(100*(j.`progress`/j.`progress_steps`),1) as percentage \n" +
-            "FROM `job_params_training` as jpt, \n" +
-            "     `jobs` as j \n" +
-            "WHERE j.`hidden` = 0  \n" +
-            "AND jpt.`job_id` = j.`job_id` )\n" +
-            "UNION \n" +
-            "( SELECT j.`progress`, \n" +
-            "         j.`progress_steps`, \n" +
-            "         j.`job_type_id` , \n" +
-            "         j.`job_id` , \n" +
-            "         CONCAT(UCASE(LEFT( jpc.`name`, 1)), SUBSTRING( jpc.`name`, 2)) as name , \n" +
-            "         ROUND(100*(j.`progress`/j.`progress_steps`),1) as percentage \n" +
-            "FROM `job_params_classification` as jpc, \n" +
-            "     `jobs` as j \n" +
-            "WHERE j.`hidden` = 0  \n" +
-            "AND jpc.`job_id` = j.`job_id` )\n";
-
-        queryHandler(q, callback);
-    },
-
     activeJobs: function(project, callback) {
         if(project instanceof Function){
             callback = project;
