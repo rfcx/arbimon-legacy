@@ -50,9 +50,9 @@ palette_id = (
 
 configuration = Config()
 config = configuration.data()
-
-useMultiprocessing = False
-num_cores = multiprocessing.cpu_count()
+spec_config = config[7]
+num_cores = int(spec_config['multicpu'])
+useMultiprocessing = bool(int(spec_config['multicpu'])) and num_cores  > 1
 
 try:
     db = MySQLdb.connect(
@@ -148,7 +148,6 @@ try:
     px2sec = duration / num_of_cols 
     max_freq = sample_rate / 2
     px2hz  = max_freq / spectrogramMatrix.shape[0]
-    spec_config = config[7]
     tile_max_w = spec_config['tiles']['max_width']
     tile_max_h = spec_config['tiles']['max_height']
     tile_count_x = int(numpy.ceil(num_of_cols  * 1.0 / tile_max_w))
