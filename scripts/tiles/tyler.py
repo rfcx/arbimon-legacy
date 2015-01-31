@@ -50,6 +50,8 @@ palette_id = (
 
 configuration = Config()
 config = configuration.data()
+
+useMultiprocessing = False
 num_cores = multiprocessing.cpu_count()
 
 try:
@@ -196,9 +198,13 @@ def saveTile(t,r_uri):
         png.from_array(spectrogramMatrix[t['y']:(t['y1']-1),t['x']:(t['x1']-1)], 'L;8').save(tile_file.file)
 
 try:
-    Parallel(n_jobs=num_cores)(
-        delayed(saveTile)(tile ,rec_uri )
-        for tile in tile_set)
+    if useMultiprocessing:
+        Parallel(n_jobs=num_cores)(
+            delayed(saveTile)(tile ,rec_uri )
+            for tile in tile_set)
+    else:
+        for tile in tile_set:
+            saveTile(tile ,rec_uri )
 except:
     exit_error('Error saving tiles.')
     
