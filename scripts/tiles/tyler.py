@@ -1,27 +1,29 @@
 #! .env/bin/python
 
-import sys
-import os
-import multiprocessing
-from joblib import Parallel, delayed
-import MySQLdb
-import MySQLdb.cursors
-from a2pyutils import colors
-from contextlib import closing
-from a2pyutils.config import Config
-from a2pyutils import tempfilecache
-import a2pyutils.palette
-from pylab import *
-from boto.s3.connection import S3Connection
-from contextlib import closing
 import warnings
-import numpy
-import re
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
+    import sys
+    import os
+    import multiprocessing
+    from joblib import Parallel, delayed
+    import MySQLdb
+    import MySQLdb.cursors
+    from a2pyutils import colors
+    from contextlib import closing
+    from a2pyutils.config import Config
+    from a2pyutils import tempfilecache
+    import a2pyutils.palette
+    from pylab import *
+    from boto.s3.connection import S3Connection
+    from contextlib import closing
+    import numpy
+    import re
     from scikits.audiolab import Sndfile, Format
-import png
-import time
+    import png
+    import time
+    import json
+
 start_time = time.time()
 
 USAGE = """
@@ -73,7 +75,7 @@ with closing(db.cursor()) as cursor:
 
 if not rec_data:
     exit_error("Recording#{} not found".format(recording_id))
-print("--- config %s seconds ---" % str(time.time() - start_time))
+
 conn = S3Connection(awsKeyId, awsKeySecret)
 try:
     bucket = conn.get_bucket(bucketName, validate=False)
@@ -86,7 +88,7 @@ if isinstance(rec_file, tempfilecache.CacheMiss):
     k = bucket.get_key(rec_uri, validate=False)
     k.get_contents_to_filename(rec_file.file)
     rec_file = rec_file.retry_get()
-print("--- recing %s seconds ---" % str(time.time() - start_time))
+
 rec_path = rec_file['path']
 encoding = 0
 channs = 0
@@ -104,7 +106,6 @@ try:
         if len(encoding) > 0:
             encoding = int(encoding[0])
             if encoding not in [8,16,32,64]:
-                print encoding
                 if encoding < 8:
                     read_encoding = 8
                 elif encoding < 16:
@@ -126,32 +127,33 @@ try:
         original = f.read_frames(f.nframes,dtype=numpy.dtype('int'+str(read_encoding)))
 except:
     exit_error('Error reading recording.')
-print("--- read rec %s seconds ---" % str(time.time() - start_time))
+
 try:       
     Pxx, freqs, bins = mlab.specgram(original, NFFT=512, Fs=sample_rate , noverlap=256)
-    Pxx[:,:] =  10. * numpy.log10( Pxx[:,:].clip(min=0.0000000001))
-    smin = min([min((Pxx[j])) for j in range(Pxx.shape[0])])
-    smax = max([max((Pxx[j])) for j in range(Pxx.shape[0])])
-    spectrogramMatrix = numpy.flipud(255*(1-((Pxx - smin)/(smax-smin))))
+    Pxx =  10. * numpy.log10(Pxx[1:,:].clip(min=0.0000000001))
+    smin = numpy.min(Pxx)
+    smax = numpy.max(Pxx)
+    denom = smax - smin
+    spectrogramMatrix = numpy.flipud(255*(1-((Pxx - smin)/(denom))))
 except:
     exit_error('Error creating spectrogram.')
-print("--- spectro %s seconds ---" % str(time.time() - start_time))
+
 try:
-    num_of_cols = Pxx.shape[1]
+    num_of_cols = spectrogramMatrix.shape[1]
     num_of_tiles = 6
     cols_per_tile = int(floor(num_of_cols/num_of_tiles))
     last_tile_cols = num_of_cols- ( cols_per_tile * num_of_tiles)
     px2sec = duration / num_of_cols 
     max_freq = sample_rate / 2
-    px2hz  = max_freq / Pxx.shape[0]
+    px2hz  = max_freq / spectrogramMatrix.shape[0]
     spec_config = config[7]
     tile_max_w = spec_config['tiles']['max_width']
     tile_max_h = spec_config['tiles']['max_height']
     tile_count_x = int(numpy.ceil(num_of_cols  * 1.0 / tile_max_w))
-    tile_count_y = int(numpy.ceil(Pxx.shape[0] * 1.0 / tile_max_h))
+    tile_count_y = int(numpy.ceil(spectrogramMatrix.shape[0] * 1.0 / tile_max_h))
 except:
     exit_error('Error calculating params.')
-print("--- params %s seconds ---" % str(time.time() - start_time))
+
 try:
     tiles_x=[]
     tiles_y=[]
@@ -166,8 +168,8 @@ try:
     total_x_tiles = len(tiles_x)
     
     for tile_y in tiles_y:
-        tile_y0 = int(min( tile_y   *tile_max_h, Pxx.shape[0]))
-        tile_y1 = int(min((tile_y+1)*tile_max_h, Pxx.shape[0]))
+        tile_y0 = int(min( tile_y   *tile_max_h, spectrogramMatrix.shape[0]))
+        tile_y1 = int(min((tile_y+1)*tile_max_h, spectrogramMatrix.shape[0]))
         tile_h  = tile_y1 - tile_y0
         for tile_x in tiles_x:
             tile_x0 = min( tile_x  *tile_max_w, num_of_cols)
@@ -183,7 +185,7 @@ try:
             })
 except:
     exit_error('Error calculating tiles.')
-print("--- calc tiles %s seconds ---" % str(time.time() - start_time))   
+
 def saveTile(t,r_uri):
     ext = '.flac'
     if 'wav' in r_uri:
@@ -200,46 +202,26 @@ try:
 except:
     exit_error('Error saving tiles.')
     
-print("--- %s seconds ---" % str(time.time() - start_time))
+elapased = str(time.time() - start_time)
 
+tiles_data ={}
+tiles_data['x'] = total_x_tiles
+tiles_data['y'] = total_y_tiles
+tiles_data['set'] = tile_set
+output_data = {}
+output_data['input_file'] = rec_path
+output_data['channels'] = channs
+output_data['sample_rate'] = sample_rate
+output_data['precision'] = encoding
+output_data['samples'] = samples
+output_data['duration'] = duration
+output_data['sample_rate'] = sample_rate
+output_data['file_size'] = file_size
+output_data['bit_rate'] = bit_rate
+output_data['sample_encoding'] = str(encoding)+'-bit '+str(file_format)
+output_data['comment'] = '\'Comment=Processed by Tyler in '+elapased+' seconds\''
+output_data['tiles'] = tiles_data
 
-"""
-rec_path
-channs
-sample_rate
-encoding 
-samples 
-duration
-file_size
-bit_rate
-file_format
-
-
-{ input_file: '/home/rafa/node/arbimon2/tmpfilecache/de5dca52c973594fde2c247e3383f6da06a3424cc690678f9ba0992d8878bb8a.flac',
-  channels: 1,
-  sample_rate: 8000,
-  precision: 24,
-  samples: 480000,
-  duration: 60,
-  file_size: '870k',
-  bit_rate: '116k',
-  sample_encoding: '24-bit FLAC',
-  comment: '\'Comment=Processed by SoX\'' },
-tiles: 
-{ x: 11,
-  y: 1,
-  set: 
-   [ [Object],
-     [Object],
-     [Object],
-     [Object],
-     [Object],
-     [Object],
-     [Object],
-     [Object],
-     [Object],
-     [Object],
-     [Object] ] } }
-"""
+print json.dumps(output_data)
 
 

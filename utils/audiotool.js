@@ -65,6 +65,27 @@ var audiotools = {
             callback(code, stdout.value, stderr.value);
         });
     },
+    tyler : function(rec_id, callback){
+        debug('running tyler');        
+        var cp = childProcess.spawn('.env/bin/python',['scripts/tiles/tyler.py',rec_id]);
+        var stdout = {value:""}, stderr = {value:""};
+
+        cp.stderr.setEncoding('utf8');
+        cp.stderr.on('data', function(data) {
+            stderr.value += data;
+        });
+        cp.stdout.setEncoding('utf8');
+        cp.stdout.on('data', function(data) {
+            stdout.value += data;
+        });
+        
+        cp.on('close', function(code){
+            debug('tyler ended with code : ', code);
+            debug('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
+            debug('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
+            callback(code, JSON.parse(stdout.value), stderr.value);
+        });
+    },
     info : function(source_path, options, callback){
         if(options instanceof Function) { callback = options; }
         options = options || {};

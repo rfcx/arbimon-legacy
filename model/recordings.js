@@ -229,7 +229,9 @@ var Recordings = {
     fetchInfo : function(recording, callback){
         Recordings.fetchRecordingFile(recording, function(err, cachedRecording){
             if(err || !cachedRecording) { callback(err, cachedRecording); return; }
-            audiotool.info(cachedRecording.path, function(err, recStats){
+            audiotool.tyler(recording.id, function(err, recStats){
+                recording.tiles = recStats.tiles;
+                delete recStats.tiles;
                 recording.stats = recStats;
                 callback(null, recording);
             });
