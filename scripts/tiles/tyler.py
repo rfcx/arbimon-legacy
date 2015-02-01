@@ -131,8 +131,8 @@ except:
     exit_error('Error reading recording.')
 
 try:       
-    Pxx, freqs, bins = mlab.specgram(original, NFFT=512, Fs=sample_rate , noverlap=256)
-    Pxx =  10. * numpy.log10(Pxx[1:,:].clip(min=0.0000000001))
+    Pxx, freqs, bins = mlab.specgram(original, NFFT=(int(spec_config['height'])*2), Fs=sample_rate , noverlap=int(spec_config['height']))
+    Pxx =  10. * numpy.log10(Pxx[1:,:])
     smin = numpy.min(Pxx)
     smax = numpy.max(Pxx)
     denom = smax - smin
@@ -142,9 +142,6 @@ except:
 
 try:
     num_of_cols = spectrogramMatrix.shape[1]
-    num_of_tiles = 6
-    cols_per_tile = int(floor(num_of_cols/num_of_tiles))
-    last_tile_cols = num_of_cols- ( cols_per_tile * num_of_tiles)
     px2sec = duration / num_of_cols 
     max_freq = sample_rate / 2
     px2hz  = max_freq / spectrogramMatrix.shape[0]
