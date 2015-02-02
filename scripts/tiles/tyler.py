@@ -43,10 +43,14 @@ if len(sys.argv) < 2:
     print USAGE
     sys.exit()
 
+#inputs
 recording_id = int(sys.argv[1])
 palette_id = (
-    (int(sys.argv[2]) if len(sys.argv) > 2 else 0) %
+    (int(sys.argv[2]) if len(sys.argv) > 2 else 9) % # 9 grayscale
     len(a2pyutils.palette.palette))
+
+#image params
+bpp = 8
 
 configuration = Config()
 config = configuration.data()
@@ -184,25 +188,32 @@ try:
 except:
     exit_error('Error calculating tiles.')
 
+            
 def saveTile(t,r_uri):
     ext = '.flac'
     if 'wav' in r_uri:
         ext = '.wav'    
     tile_key = r_uri.replace(ext, '.tile_'+str(t['j'])+'_'+str(t['i'])+'.png');
     tile_file = file_cache.fetch(tile_key)
+    
     if isinstance(tile_file, tempfilecache.CacheMiss):
-        png.from_array(spectrogramMatrix[t['y']:(t['y1']-1),t['x']:(t['x1']-1)], 'L;8').save(tile_file.file)
+        w = png.Writer(
+                width=t['w'], height=t['h'], bitdepth=bpp, palette=a2pyutils.palette.get_palette(palette_id)
+            )
+        fout = file(tile_file.file, "wb")
+        w.write(fout,spectrogramMatrix[t['y']:(t['y1']),t['x']:(t['x1'])])
+        fout.close()
 
-try:
-    if useMultiprocessing:
-        Parallel(n_jobs=num_cores)(
-            delayed(saveTile)(tile ,rec_uri )
-            for tile in tile_set)
-    else:
-        for tile in tile_set:
-            saveTile(tile ,rec_uri )
-except:
-    exit_error('Error saving tiles.')
+#try:
+if useMultiprocessing:
+    Parallel(n_jobs=num_cores)(
+        delayed(saveTile)(tile ,rec_uri )
+        for tile in tile_set)
+else:
+    for tile in tile_set:
+        saveTile(tile ,rec_uri )
+#except:
+#exit_error('Error saving tiles.')
     
 elapased = str(time.time() - start_time)
 

@@ -83,7 +83,16 @@ var audiotools = {
             debug('tyler ended with code : ', code);
             debug('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
             debug('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
-            callback(code, JSON.parse(stdout.value), stderr.value);
+            output = '' 
+            if (code)
+            {
+                output = {"error":"error calling tyler"};
+            }
+            else
+            {
+                output = JSON.parse(stdout.value);
+            }
+            callback(code, output, stderr.value);
         });
     },
     info : function(source_path, options, callback){
