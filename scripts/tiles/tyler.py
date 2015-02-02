@@ -188,7 +188,8 @@ try:
 except:
     exit_error('Error calculating tiles.')
 
-            
+color_palette = a2pyutils.palette.get_palette(palette_id)
+           
 def saveTile(t,r_uri):
     ext = '.flac'
     if 'wav' in r_uri:
@@ -198,22 +199,22 @@ def saveTile(t,r_uri):
     
     if isinstance(tile_file, tempfilecache.CacheMiss):
         w = png.Writer(
-                width=t['w'], height=t['h'], bitdepth=bpp, palette=a2pyutils.palette.get_palette(palette_id)
+                width=t['w'], height=t['h'], bitdepth=bpp, palette=color_palette
             )
         fout = file(tile_file.file, "wb")
         w.write(fout,spectrogramMatrix[t['y']:(t['y1']),t['x']:(t['x1'])])
         fout.close()
 
-#try:
-if useMultiprocessing:
-    Parallel(n_jobs=num_cores)(
-        delayed(saveTile)(tile ,rec_uri )
-        for tile in tile_set)
-else:
-    for tile in tile_set:
-        saveTile(tile ,rec_uri )
-#except:
-#exit_error('Error saving tiles.')
+try:
+    if useMultiprocessing:
+        Parallel(n_jobs=num_cores)(
+            delayed(saveTile)(tile ,rec_uri )
+            for tile in tile_set)
+    else:
+        for tile in tile_set:
+            saveTile(tile ,rec_uri )
+except:
+    exit_error('Error saving tiles.')
     
 elapased = str(time.time() - start_time)
 
