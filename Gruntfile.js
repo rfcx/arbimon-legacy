@@ -9,7 +9,6 @@ module.exports = function(grunt) {
                     "public/assets/css/style.css" : "assets/less/style.less",
                 }
             },
-
             bootstrap: {
                 options: {
                     compress: true,
@@ -66,28 +65,24 @@ module.exports = function(grunt) {
                 src: ['fonts/*', 'js/*'],
                 dest: 'public/assets/bootstrap/',
             },
-
             jquery: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/jquery/dist/*',
                 dest: 'public/assets/jquery/',
             },
-            
             jqueryUi: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/jquery-ui/jquery-ui.min.js',
                 dest: 'public/assets/jquery/',
             },
-            
             fontAwesome: {
                 expand: true,
                 cwd: 'bower_components/font-awesome/',
                 src: ['css/*', 'fonts/*'],
                 dest: 'public/assets/font-awesome/',
             },
-
             d3: {
                 expand: true,
                 flatten: true,
@@ -99,50 +94,43 @@ module.exports = function(grunt) {
                 cwd: 'bower_components/ng-table/',
                 src: ['ng-table.min.js', 'ng-table.min.css'],
                 dest: 'public/assets/ng-table/',
-            },           
-
+            },
             angular: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/angular/*',
                 dest: 'public/assets/angular/'
             },
-
             angularAudio: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/angular-audio/app/angular.audio.js',
                 dest: 'public/assets/angular-audio/'
             },
-
             angularBootstrap: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/angular-bootstrap/*',
                 dest: 'public/assets/angular-bootstrap/'
             },
-
             angularUiRouter: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/angular-ui-router/release/*',
                 dest: 'public/assets/angular-ui-router/'
             },
-
             angularUiRouterExtras: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/ui-router-extras/release/ct-ui-router-extras.min.js',
                 dest: 'public/assets/ui-router-extras/'
             },
-            
             angularUiSelect: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/angular-ui-select/dist/select.min*',
                 dest: 'public/assets/angular-ui-select/'
             },
-            
             angularUiSelectSelectizeTheme: {
                 expand: true,
                 flatten: true,
@@ -161,14 +149,12 @@ module.exports = function(grunt) {
                 src: 'bower_components/moment/min/moment.min.js',
                 dest: 'public/assets/moment/'
             },
-
             angularFileUpload: {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/angular-file-upload/**/*.js',
                 dest: 'public/assets/angular-file-upload/'
             },
-            
             humanejs: {
                 expand: true,
                 flatten: true,
@@ -176,29 +162,32 @@ module.exports = function(grunt) {
                 src: ['humane.min.js'],
                 dest: 'public/assets/humane-js/'
             },
-            
             ngCsv : { 
                 expand: true,
                 flatten: true,
                 src: 'bower_components/ng-csv/build/ng-csv.min.js',
                 dest: 'public/assets/ng-csv/'             
             },
-            
             angularSanitize : {
                 expand: true,
                 flatten: true,
                 src: 'bower_components/angular-sanitize/angular-sanitize.min.js',
                 dest: 'public/assets/angular-sanitize/'               
             },
-            
             angularytics : {
                expand: true,
                flatten: true,
                src: 'bower_components/angularytics/dist/angularytics.min.js',
                dest: 'public/assets/angularytics/'           
+            },
+            zxcvbn: {
+               expand: true,
+               flatten: true,
+               src: 'bower_components/zxcvbn/zxcvbn.js',
+               dest: 'public/assets/zxcvbn/'
             }
         },
-
+        
         concat: {
             dev: {
                 src: ['assets/js/**/*.js'], 
@@ -282,7 +271,7 @@ module.exports = function(grunt) {
                 }
             },
         },
-
+        
         express: {
             dev: {
                 options: {
@@ -315,7 +304,7 @@ module.exports = function(grunt) {
     }
     
     grunt.initConfig(initcfg);
-
+    
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-copy');

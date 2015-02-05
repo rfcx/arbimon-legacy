@@ -299,6 +299,17 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     width:12em;
 }
 
+.registration-banner {
+    background: url('/images/login-banner.png');
+    // padding-top: @banner-padding;
+    // padding-bottom: @banner-padding;
+    height:500px;
+}
+
+.registration {
+    background-color: rgba(255, 255, 255, 0.62);
+}
+
 .dropdown-height-7 {
     overflow-y : auto;
     max-height : 7 * (2*@nav-link-padding-v + 14);
@@ -310,6 +321,7 @@ header .navbar-brand > img, header nav ul.nav > li a > img {
     padding-bottom: @banner-padding;
     height:500px;
 }
+
 
 .login-form {
     padding: 10px;
@@ -581,7 +593,7 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
     font-size: small;
 }
 .cleardiv{
-    	clear: both;
+    clear: both;
 }
 .horizontal-blank-space
 {
@@ -669,6 +681,7 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
 }
 
 #aggregationlist .ui-selected { background: #d5d5d5; font-weight: bold;}
+
 .aggregationaxis path,
 .aggregationaxis line {
         fill: none;
@@ -800,18 +813,6 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
     text-align:center;
 }
 
-.register-message{
-    height:30px;font-size:12px;color:red;
-}
-
-.register-cancel{
-    margin-top:2px;
-}
-
-.register-padding-text{
-    padding-bottom:20px;
-}
-
 .hidelongtext{
     text-overflow: ellipsis;
     overflow:hidden;
@@ -819,47 +820,6 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
 
 .widthtd{
     max-width:300px;
-}
-
-.btn-group-tabs > .btn{
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-bottom: -1px;
-}
-
-.text-shadow {
-    text-shadow: 1px 1px rgba(255,255,255,.5);
-    &.inverted{
-        text-shadow: 1px 1px rgba(0,0,0,.5);
-    }
-}
-
-.ghost-like {
-    opacity: 0.50;
-    pointer-events:none;
-    * {
-        pointer-events:auto;
-    }
-    &:hover{
-        opacity: 1;
-    }
-}
-
-
-
-.inline-block{
-    display:inline-block;
-}
-
-
-.fa-xs{
-    font-size:0.5em;
-}
-
-.btn-group-tabs > .btn{
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-bottom: -1px;
 }
 
 .text-shadow {
@@ -929,4 +889,23 @@ width: 12px; height: 13px; top: 2px; left: 1px; }
         font-size: 16px;
         padding-bottom:14px;
     }
+}
+
+.right-inner-icon {
+    position: relative;
+
+    input {
+        padding-right: 30px;    
+    }
+    i {
+        position: absolute;
+        padding: 10px 12px;
+        pointer-events: none;
+        top: 0px;
+        right: 0px;
+    }
+}
+
+.activation-text {
+    font-size:1.2em;
 }

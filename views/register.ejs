@@ -1,108 +1,198 @@
 <!DOCTYPE html>
-<html ng-app="register" >
+<html ng-app="register">
 
 <head>
     <% include head %>
-    <title>ARBIMON II - Register</title>
+        <title>ARBIMON II - Register</title>
 </head>
 
-<body ng-controller="UserRegisterCtrl" >    
-    <div class="container" >
+<body ng-controller="UserRegisterCtrl">
+    <div class="container">
         <div class="login-top">
-            <img src="/images/logo.svg">
+            <a href="/"><img src="/images/logo.svg"></a>
         </div>
     </div>
-    <div class="jumbotron login-banner">
-      <% if(data.emailsent == 0) { %>
-      <div class="container">
-        <div class="row centered-form">
-        <div class="col-xs-12 col-sm-8 col-md-4 col-sm-offset-2 col-md-offset-4">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Register an Arbimon Account</h3>
-          </div>
-          <div class="panel-body">
-                <form role="form" method="post" action="/register">
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                                <div class="form-group">
-                                  <input ng-model="data.first_name"  type="text" name="first_name" id="first_name" class="form-control input-sm" placeholder='First name'>
-                                </div>
+    <div class="registration-banner">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 col-md-8 col-md-offset-2 registration">
+                    <div ng-hide="completed">
+                        <div class="page-header">
+                            <h3>Register an Arbimon Account</h3>
                         </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                                <div class="form-group">
-                                  <input ng-model="data.last_name" type="text" name="last_name" id="last_name" class="form-control input-sm" placeholder="Last Name">
+                        <form name="regis" role="form" ng-submit="register($event)">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <input ng-model="user.firstName" 
+                                            type="text" 
+                                            name="first_name" 
+                                            id="first_name" 
+                                            class="form-control" 
+                                            placeholder='Name'required>
+                                    </div>
                                 </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <input ng-model="user.lastName" 
+                                            type="text" 
+                                            name="last_name" 
+                                            id="last_name" 
+                                            class="form-control " 
+                                            placeholder="Last name" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="form-group right-inner-icon">
+                                        <input ng-model="user.username" 
+                                            type="text" 
+                                            name="username" 
+                                            id="username" 
+                                            class="form-control" 
+                                            placeholder="Username"
+                                            pattern="([\d\w\.-]){4,32}"
+                                            ng-pattern="/^([\d\w\.-]){4,32}$/"
+                                            ng-change="testUsername()"
+                                            required />
+                                        <i ng-show="usernameOk" class="fa fa-check text-success"></i>
+                                        <i ng-show="usernameErr" class="fa fa-times text-danger"></i>
+                                    </div>
+                                </div>
+                                <div  class="col-sm-4">
+                                    <p ng-show="usernameOk" class="text-success">
+                                        {{ usernameOk }}
+                                    </p>
+                                    <p ng-show="usernameErr" class="text-danger">
+                                        {{ usernameErr }}
+                                    </p>
+                                </div>
+                            </div>
+                                    
+                                    
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="form-group right-inner-icon">
+                                        <input ng-model="user.email" 
+                                            type="email" 
+                                            name="email" 
+                                            id="email" 
+                                            class="form-control" 
+                                            placeholder="Email Address" 
+                                            ng-change="testEmail()"
+                                            required />
+                                        <i ng-show="emailOk" class="fa fa-check text-success"></i>
+                                        <i ng-show="emailErr" class="fa fa-times text-danger"></i>
+                                    </div>
+                                </div>
+                                <div  class="col-sm-4">
+                                    <p ng-show="emailOk" class="text-success">
+                                        {{ emailOk }}
+                                    </p>
+                                    <p ng-show="emailErr" class="text-danger">
+                                        {{ emailErr }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group right-inner-icon">
+                                        <input ng-model="user.password" 
+                                            type="password" 
+                                            name="password" 
+                                            id="password" 
+                                            class="form-control" 
+                                            placeholder="Password" 
+                                            ng-change="testPass()"
+                                            required />
+                                        <i ng-show="passResult.score >= requiredScore" class="fa fa-check text-success"></i>
+                                        <i ng-show="passResult.score < requiredScore" class="fa fa-times text-danger"></i>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <p ng-show="passResult" ng-style="{ 'color': passResult.color }">
+                                        <i ng-repeat="i in passResult.shields track by $index" 
+                                            class="fa fa-shield fa-lg">&nbsp;</i>
+                                        {{ passResult.msg }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group right-inner-icon">
+                                        <input ng-model="user.confirm" 
+                                            type="password" 
+                                            name="password_confirmation" 
+                                            id="password_confirmation" 
+                                            class="form-control" 
+                                            placeholder="Confirm Password" 
+                                            ng-change="testConfirm()"
+                                            required />
+                                        <i ng-show="confirmOk" class="fa fa-check text-success"></i>
+                                        <i ng-show="confirmErr" class="fa fa-times text-danger"></i>
+                                    </div>
+                                </div>
+                                <div  class="col-sm-6">
+                                    <p ng-show="confirmErr" class="text-danger">
+                                        {{ confirmErr }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <input ng-model="newsletter" 
+                                        type="checkbox" 
+                                        name="newsletter" 
+                                        ng-checked="true"> 
+                                        Subscribe to our newsletter.
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <input ng-model="terms_accepted" 
+                                        type="checkbox" 
+                                        name="terms" required>
+                                        I agree to the Sieve Analytics 
+                                        <a href="/terms" target="_blank" class="text-info">
+                                            terms of service
+                                        </a>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div g-recaptcha
+                                    data-sitekey="6LffYQETAAAAAAeEN-dJHFMHxlVVSGsL-tlWWFpE"
+                                    data-callback="captchaResponse(response)">
+                                </div>
+                            </div>
+                            <button type="submit"
+                                class="btn btn-success btn-block btn-lg">
+                                Register
+                            </button>
+                            <p class="help-block">Already a user? <a href="/login">Login here</a></p>
+                    
+                        </form>
+                    </div>
+                    <div ng-show="completed">
+                        <div class="page-header">
+                            <h3>Activate your Arbimon Account</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p class="activation-text">Hi <b>{{ user.firstName }} {{ user.lastName }},</b></p> 
+                            <p class="activation-text">
+                                thanks for your interest in Arbimon II, 
+                                your account is almost ready but first you need to activate it.
+                                An activation link has been sent to <b>{{ user.email }}</b>, 
+                                open the link to activate the account.
+                            </p>
                         </div>
                     </div>
- 
-                    <div class="form-group">
-                      <input ng-model="data.username" type="text" name="username" id="username" class="form-control input-sm" placeholder="Username">
-                    </div>
-                     
-                    <div class="form-group">
-                      <input ng-model="data.useremail"  type="email" name="email" id="email" class="form-control input-sm" placeholder="Email Address">
-                    </div>
-  
-                    <div class="row">
-                      <div class="col-xs-6 col-sm-6 col-md-6">
-                              <div class="form-group">
-                                      <input ng-model="data.password"  type="password" name="password" id="password" class="form-control input-sm" placeholder="Password">
-                              </div>
-                      </div>
-                      <div class="col-xs-6 col-sm-6 col-md-6">
-                              <div class="form-group">
-                                      <input ng-model="data.confirm"  type="password" name="password_confirmation" id="password_confirmation" class="form-control input-sm" placeholder="Confirm Password">
-                              </div>
-                      </div>
-                    </div>
-                    <div class="row register-message">
-                      <span class="col-sm-10" ng-bind="message">
-                      </span>
-                      <span class="col-sm-10" id="data-message">
-                          <%= data.message %>
-                      </span>
-                    </div>
-                    <div class="row register-padding-text">
-                        <small>
-                            <div  class="col-sm-12" >
-                                <span ><input ng-model="subscribe" type="checkbox" name="newsletter" value="true" checked="true" > Subscribe to our newsletter.</span>
-                            </div>
-                            <div  class="col-sm-12" style="vertical-align:middle">
-                                <span><input ng-model="terms_accepted" type="checkbox" name="terms" > I agree to the Sieve-Analytics <a href="/terms" target="_blank" class="text-info">Terms of service</a>.</span>
-                            </div>
-                        </small>
-                    </div>
-                   <input type="submit" value="Register" class="btn btn-success btn-block" ng-disabled="buttonEnable()"  >
-                </form>
+                </div>
             </div>
-            <div class="panel-body">
-                Already a user? 
-                <a class=""  class="register-cancel" href="/login">Login</a>
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
-    <% } %>
-    <% if(data.emailsent == 1) { %>
-      <div class="container" >
-        <div class="row centered-form">
-        <div class="col-xs-12 col-sm-8 col-md-4 col-sm-offset-2 col-md-offset-4">
-        <div class="panel panel-default" class="activate-height">
-          <div class="panel-heading">
-            <h3 class="panel-title">Activate your Arbimon Account</h3>
-          </div>
-          <div class="panel-body">
-              <div class="register-padding-text">Hi <%= data.first_name%>!</div>
-              <div class="register-padding-text">An email with an activation link has been sent to your email <%= data.email%>.</div>
-              <div>Please check your email.</div>
-          </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <% } %>
     </div>
 </body>
 
