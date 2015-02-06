@@ -85,7 +85,7 @@ var cache = {
         };
         
         fs.readdir(root, function(err, files){
-            async.each(files, function(subfile, callback){
+            async.each(files, function(subfile, next){
                 if (subfile == '.gitignore') {
                     return;
                 }
@@ -94,7 +94,10 @@ var cache = {
                     if(!filestats) {
                         fs.unlink(file, function(){
                             debug('   tmpcache file removed : ', file);
+                            next();
                         });
+                    } else {
+                        next();
                     }
                 });
             }, function(err){
