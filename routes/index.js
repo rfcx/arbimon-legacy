@@ -22,9 +22,13 @@ router.get('/alive', function(req, res) { // for health checks
 router.use(function(req, res, next) {                
     if(req.session) { 
         if(req.session.loggedIn) return next(); 
-    }   
-    res.redirect('/login');
+    }
+    
+    res.render('get_fragment_hack.ejs')
+    // res.redirect('/login');
 });
+
+https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:sort=instanceId
 
 router.get('/', function(req, res) {
     res.redirect('/home');

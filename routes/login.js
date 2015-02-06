@@ -56,6 +56,7 @@ router.get('/login', function(req, res) {
 router.post('/login', function(req, res, next) {
     var username = req.body.username;
     var password = req.body.password;
+    var redirect_url = req.query.redirect || '/home';
     var permitedRetries = 3
     var waitTime = 3600000 // miliseconds
     var request_ip = req.headers['X-Forwarded-For']?req.headers['X-Forwarded-For']:req.connection.remoteAddress;
@@ -142,7 +143,11 @@ router.post('/login', function(req, res, next) {
                             projectLimit: user.project_limit
                         };
                         
-                        res.redirect('/home');
+                        if(req.query.redirect){
+                            res.redirect(req.query.redirect);
+                        } else{
+                            res.redirect('/home');
+                        }
                     }
                 }
             });
