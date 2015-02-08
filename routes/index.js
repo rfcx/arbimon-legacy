@@ -7,10 +7,19 @@ var dataApi = require('./data-api');
 var uploads = require('./uploads');
 var admin = require('./admin');
 
+var login = require('./login');
+
+
+router.use('/', login);
+
 router.get('/terms', function(req, res) {
     res.render('terms');
 });
 
+
+router.get('/error', function(req, res, next) { 
+    next(new Error('test'));
+});
 
 router.get('/alive', function(req, res) { // for health checks
     res.sendStatus(200);
@@ -24,11 +33,9 @@ router.use(function(req, res, next) {
         if(req.session.loggedIn) return next(); 
     }
     
-    res.render('get_fragment_hack.ejs')
-    // res.redirect('/login');
+    res.render('get_fragment_hack.ejs');
 });
 
-https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:sort=instanceId
 
 router.get('/', function(req, res) {
     res.redirect('/home');

@@ -77,14 +77,9 @@ if (app.get('env') === 'production') {
 
 app.use(session(sessionConfig));
 
-
 // routes
-// ---------------------------------------------------------------
-
-var login = require('./routes/login');
 var routes = require('./routes/index');
 
-app.use('/', login);
 app.use('/', routes);
 
 // catch 404 and forward to error handler
@@ -92,34 +87,23 @@ app.use(function(req, res, next) {
     res.status(404).render('not-found');
 });
 
-// error handlers
-
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
-    app.use(function(err, req, res, next) {
-        res.status(err.status || 500);
-
-        console.log("- ERROR : ", err.message);
-        console.log(err.status);
-        console.log(err.stack);
-        console.dir(err);
-
+// error handler
+app.use(function(err, req, res, next) {
+    console.error(err.stack);
+    
+    res.status(err.status || 500);
+    if(app.get('env') === 'development') {
         res.render('error', {
             message: err.message,
             error: err
         });
-    });
-}
-
-// production error handler
-// no stacktraces leaked to user
-app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error', {
-        message: err.message,
-        error: {}
-    });
+    }
+    else {
+        res.render('error', {
+            message: "Something went wrong",
+            error: {}
+        });
+    }
 });
 
 
