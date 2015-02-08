@@ -225,6 +225,8 @@ router.post('/audio/project/:projectid', function(req, res, next) {
     
     req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
         
+        
+        
         async.parallel({
             getProjectInfo: function(callback) {
                 model.projects.findById(project_id, callback);
@@ -259,7 +261,6 @@ router.post('/audio/project/:projectid', function(req, res, next) {
         debug('info: ', info);
         debug('fileUploaded: ', fileUploaded);
         
-                
         var fileInfo;
         try {
             fileInfo = formatParse(info.format, fileUploaded.filename);
@@ -281,7 +282,8 @@ router.post('/audio/project/:projectid', function(req, res, next) {
                 return res.status(403).send(msg);
             }
             
-
+            res.status(202).send("upload done!");
+            
             processUpload({ 
                 info: info,
                 file: fileUploaded,
@@ -295,7 +297,6 @@ router.post('/audio/project/:projectid', function(req, res, next) {
                 console.log(filename, 'processed successfully');
             });
             
-            res.status(202).send("upload done!");
         });
     });
     

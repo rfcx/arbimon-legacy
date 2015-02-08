@@ -1,10 +1,9 @@
+<form name="uploadInfo" role="form">
 <div class="modal-header">
     <h2>Recordings batch information</h2>
 </div>
 
 <div class="modal-body">
-    <div class="alert alert-danger" role="alert" ng-show="error"> all fields are required</div>
-    <form name="uploadInfo" role="form">
         <div class="form-group">
             <ui-select ng-model="info.site" theme="bootstrap">
                 <ui-select-match placeholder="Site name">{{ $select.selected.name }}</ui-select-match>
@@ -14,10 +13,15 @@
             </ui-select>
         </div>
         <div class="form-group">
-            <label class="control-label" for="format" >Filename format:</label>
+            <label class="control-label" for="format" >
+                Filename format: 
+            </label>
+                <i tooltip="the system get the recording's date and time from 
+                    the filename by searching one of the patterns below"
+                    class="fa fa-info-circle"></i>
             <select name="format" id="format" class="form-control"  ng-model="info.format" required>
-                <option value="Arbimon">Arbimon (SITE_NAME-YEAR-MONTH-DAY_HOUR-MIN.format)</option>
-                <option value="Wildlife">Wildlife Acoustics (PREFIX_XXX_YYYYMMDD_HHMMSS.format)</option>
+                <option value="Arbimon">Arbimon (YYYY-MM-DD_HH-MM)</option>
+                <option value="Wildlife">Wildlife Acoustics (YYYYMMDD_HHMMSS)</option>
             </select>
         </div>
         <div class="form-group">
@@ -37,9 +41,9 @@
             <input class="form-control" name="sver" id="sver" type="text"  ng-model="info.sver"
                 required>
         </div>
-    </form>
 </div>
 <div class="modal-footer">
     <button class="btn btn-primary" ng-click="close() | trackEvent:'Audiodata-Batchinfo':'close clicked'"><i class="fa fa-floppy-o"></i> Save &amp; Close </button>
     <button class="btn btn-default" ng-click="$dismiss() | trackEvent:'Audiodata-Batchinfo':'dismiss clicked'"><i class="fa fa-times"></i> Close</button>
 </div>
+</form>

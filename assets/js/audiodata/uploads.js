@@ -108,7 +108,7 @@ angular.module('audiodata.uploads', [
         });
     };
 })
-.controller('BatchInfoCtrl', function($scope, Project, info, $modalInstance) {
+.controller('BatchInfoCtrl', function($scope, Project, info, $modalInstance, notify) {
     
     if(info) {
         $scope.info = angular.copy(info);
@@ -124,11 +124,11 @@ angular.module('audiodata.uploads', [
     
     
     $scope.close = function(){
-        if($scope.uploadInfo.$valid) {
-            $modalInstance.close($scope.info);
+        if($scope.uploadInfo.$valid && $scope.info.site) {
+            return $modalInstance.close($scope.info);
         }
         
-        $scope.error = true;
+        notify.error('all fields are required');
     };
 })
 .service('uploads', function(FileUploader){
