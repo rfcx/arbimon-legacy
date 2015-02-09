@@ -22,7 +22,8 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 var mc = new mcapi.Mailchimp(config('mailchimp').key);
 
 var mailTemplates = {
-    activate: ejs.compile(fs.readFileSync('./views/mail/activate-account.ejs').toString())
+    activate: ejs.compile(fs.readFileSync('./views/mail/activate-account.ejs').toString()),
+    resetPass: ejs.compile(fs.readFileSync('./views/mail/reset-password.ejs').toString())
 };
 
 var transport = nodemailer.createTransport({
@@ -225,13 +226,14 @@ router.get('/activate/:hash', function(req, res, next) {
         model.users.insert(userInfo, function (err,datas) {
                 if(err) return next(err);
                 
+                res.render('activate',{
+                    login: true,
+                    status:'<b>'+userInfo.login+'</b> your account has been activated.'
+                });
+                
                 model.users.removeRequest(data[0].support_request_id, function(error, info){
                      if(err) return next(err);
                      
-                    res.render('activate',{
-                        login: true,
-                        status:'<b>'+userInfo.login+'</b> your account has been activated.'
-                    });
                 });
             }
         );
@@ -242,7 +244,7 @@ router.get('/activate/:hash', function(req, res, next) {
 });
 
 router.post('/register', function(req, res, next) {
-    console.log(req.body);
+    // console.log(req.body);
     
     var user = req.body.user;
     var captchaResponse = req.body.captcha;
@@ -344,7 +346,7 @@ router.post('/register', function(req, res, next) {
             var mailOptions = {
                 from: 'Sieve-Analytics <support@sieve-analytics.com>', 
                 to: user.email, 
-                subject: 'Sieve-Analytics: Arbimon Account Activation', // Subject line
+                subject: 'Arbimon II: Account activation',
                 html: mailTemplates.activate({
                     fullName: user.firstName + ' ' + user.lastName,
                     username: user.username,
@@ -396,6 +398,84 @@ router.post('/register', function(req, res, next) {
         },
     ]);
     
+});
+
+router.get('/forgot_request', function(req, res) {
+    res.render('forgot-request');
+});
+
+router.post('/forgot_request', function(req, res, next) {
+    if(!validator.isEmail(req.body.email)) {
+        return res.json({ error: 'Invalid email address'});
+    }
+    
+    model.users.findByEmail(req.body.email, function(err, rows) {
+        if(err) return next(err);
+        
+        if(!rows.length) {
+            return res.json({ error: "no user register with that email"});
+        }
+        
+        var user = rows[0];
+        var salt = Math.ceil(new Date().getTime() / 1000).toString();
+        var hash = sha256(salt+user.username+user.firstname+user.lastname+user.email);
+        
+        var mailOptions = {
+            from: 'Sieve-Analytics <support@sieve-analytics.com>', 
+            to: user.email, 
+            subject: 'Arbimon II: Password reset',
+            html: mailTemplates.resetPass({
+                fullName: user.firstname + ' ' + user.lastname,
+                username: user.login,
+                hash: hash
+            })
+        };
+        
+        transport.sendMail(mailOptions, function(error, info){
+            if(error) return next(err);
+            
+            model.users.newPasswordResetRequest(user.user_id, hash, function(err, results) {
+                if(err) return next(err);
+                
+                res.json({ success: true });
+            });
+            
+        });
+    });
+});
+
+
+router.get('/reset_password/:hash', function(req, res, next) {
+    
+    model.users.findAccountSupportReq(req.params.hash, function(err, rows) {
+        if(err) return next(err);
+        
+        if(!rows.length) return res.status(404).render('not-found');
+        
+        res.render('reset-password');
+    });
+});
+
+router.post('/reset_password/:hash', function(req, res, next) {
+    model.users.findAccountSupportReq(req.params.hash, function(err, rows) {
+        if(err) return next(err);
+        
+        if(!rows.length) return res.status(404).render('not-found');
+        
+        model.users.update({
+            user_id: rows[0].user_id,
+            password: sha256(req.body.password),
+        },
+        function(err, results) {
+            if(err) return next(err);
+            
+            res.json({ success: true });
+            
+            model.users.removeRequest(rows[0].support_request_id, function(err, results) {
+                if(err) return next(err);
+            });
+        });
+    });
 });
 
 module.exports = router;

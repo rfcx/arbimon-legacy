@@ -32,9 +32,10 @@ var Sites = {
         
         for(var j in site) {
             if(j !== 'id') {
-                site[j] = mysql.escape(site[j]);
-                
-                values.push(util.format('`%s`=%s', j, site[j]));
+                values.push(util.format('%s = %s', 
+                    mysql.escapeId(j), 
+                    mysql.escape(site[j])
+                ));
             }
         }
         
@@ -70,7 +71,10 @@ var Sites = {
                 var key = tableFields[i];
                 var value = site[key]; 
 
-                values.push(util.format('`%s`=%s', key, mysql.escape(value)));
+                values.push(util.format('%s = %s', 
+                    mysql.escapeId(key), 
+                    mysql.escape(value)
+                ));
             }
         }
         

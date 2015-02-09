@@ -1,4 +1,4 @@
-angular.module('register' , ['ui.bootstrap','angularytics', 'g-recaptcha', 'humane'])
+angular.module('register' , ['ui.bootstrap','angularytics', 'g-recaptcha', 'humane', 'a2regis', 'a2directives'])
 .config(function(AngularyticsProvider) {
     AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
 })
@@ -8,8 +8,6 @@ angular.module('register' , ['ui.bootstrap','angularytics', 'g-recaptcha', 'huma
 .controller('UserRegisterCtrl', function($scope, $modal, $http, $timeout, $interval, notify){
     
     var captchaResp = '';
-    
-    $scope.requiredScore = 2;
     
     $scope.testUsername = function() {
         
@@ -29,7 +27,6 @@ angular.module('register' , ['ui.bootstrap','angularytics', 'g-recaptcha', 'huma
                                  " dash(-), underscore(_) and dot(.).";
             return;
         }
-        
         
         $scope.testUserTimeout = $timeout(function(){
             $http.get('/api/login_available', {
@@ -88,97 +85,9 @@ angular.module('register' , ['ui.bootstrap','angularytics', 'g-recaptcha', 'huma
     };
     
     
-    $scope.testConfirm = function() {
-        $scope.confirmOk = '';
-        $scope.confirmErr = '';
-        
-        if(!$scope.passResult || $scope.passResult.score < $scope.requiredScore) return;
-        
-        if($scope.user.password === $scope.user.confirm) {
-            $scope.confirmOk = true;
-        }
-        else {
-            $scope.confirmErr = "Passwords do not match";
-        }
-    };
-    
-    
-    $scope.testPass = function() {
-        
-        // wait for zxcvbn library to be available
-        
-        if(typeof zxcvbn === 'undefined') {
-            if($scope.waitForZxcvbn) return;
-            
-            $scope.waitForZxcvbn = $interval(function() {
-                if(typeof zxcvbn !== 'undefined') {
-                    $interval.cancel($scope.waitForZxcvbn);
-                    $scope.testPass();
-                }
-            }, 500);
-            
-            return;
-        }
-        
-        if($scope.waitForZxcvbn) {
-            $interval.cancel($scope.waitForZxcvbn);
-        }
-        
-        
-        $scope.passResult = {};
-        var colors = [
-            '#da3939',
-            '#da3939',
-            '#84b522',
-            '#62b522',
-            '#31b523',
-        ];
-        
-        var mesgs = [
-            'Very Weak',
-            'Weak',
-            'Average',
-            'Strong',
-            'Very strong',
-        ];
-        
-        if(!$scope.user.password) {
-            return;
-        }
-        else if($scope.user.password.length < 6) {
-            
-            $scope.passResult.shields = new Array(1);
-            $scope.passResult.color = colors[0];
-            $scope.passResult.msg = 'Too short, 6 characters or more';
-            return;
-        }
-        
-        var test = zxcvbn($scope.user.password, [
-            $scope.user.firstName || '',
-            $scope.user.lastName || '',
-            $scope.user.username || '',
-        ]);
-        
-        $scope.passResult.score = test.score;
-        
-        
-        $scope.passResult.shields = new Array(test.score+1);
-        $scope.passResult.color = colors[test.score];
-        $scope.passResult.msg = mesgs[test.score];
-    
-        $scope.testConfirm();
-    };
-    
-    
     $scope.register =  function($event) {
-        if($scope.user.password !== $scope.user.confirm) {
-            notify.log('Passwords dont match');
-        }
-        else if($scope.passResult.score < $scope.requiredScore) {
-            notify.log('Password is too weak');
-        }
-        else if($scope.user.password.length > 32) {
-            notify.log('Password is too long, max size 32 characters');
+        if(!$scope.passResult.valid) {
+            notify.error($scope.passResult.msg);
         }
         else if($scope.usernameErr) {
             notify.log($scope.usernameErr);
@@ -193,17 +102,20 @@ angular.module('register' , ['ui.bootstrap','angularytics', 'g-recaptcha', 'huma
             notify.log('Please complete the captcha');
         }
         else {
+            $scope.loading = true;
             $http.post('/register', {
                 user: $scope.user,
                 captcha: captchaResp,
                 newsletter: $scope.newsletter
             })
             .success(function(data) {
+                $scope.loading = false;
                 if(data.success) {
                     $scope.completed = true;
                 }
             })
             .error(function(data) {
+                $scope.loading = false;
                 if(data.error) {
                     return notify.error(data.error);
                 }

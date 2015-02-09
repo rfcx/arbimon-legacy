@@ -241,7 +241,7 @@ module.exports = function(grunt) {
                 files: [
                     'assets/partials/**/*.html'
                 ],
-                tasks: ['html2js']
+                tasks: ['html2js:dev']
             },
             backendjs: {
                 files: [

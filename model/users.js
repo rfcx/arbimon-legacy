@@ -78,9 +78,10 @@ var Users = {
         // process values to be updated
         for( var i in userData) {
             if(i !== 'user_id' && typeof userData[i] !== 'undefined') {
-                userData[i] = mysql.escape(userData[i]);
-
-                values.push(util.format('`%s`=%s', i, userData[i]));
+                values.push(util.format('%s = %s', 
+                    mysql.escapeId(i), 
+                    mysql.escape(userData[i])
+                ));
             }
         }
 
@@ -111,9 +112,10 @@ var Users = {
 
         for(i in userData) {
             if(i !== 'user_id') {
-                userData[i] = mysql.escape(userData[i]);
-
-                values.push(util.format('`%s`=%s', i, userData[i]));
+                values.push(util.format('%s = %s', 
+                    mysql.escapeId(i), 
+                    mysql.escape(userData[i])
+                ));
             }
         }
 
@@ -158,12 +160,12 @@ var Users = {
         queryHandler(q, callback);
     },
     
-    newAccountRequest : function(data,hash,callback){
+    newAccountRequest: function(params, hash, callback){
         var q = 'INSERT INTO user_account_support_request'+
                 '(support_type_id, hash, params, expires) \n'+
                 'VALUES (1,' + 
                 mysql.escape(hash) + ','+ 
-                mysql.escape(JSON.stringify(data))+ ','+
+                mysql.escape(JSON.stringify(params))+ ','+
                 '(\n'+
                 '    SELECT FROM_UNIXTIME( \n'+
                 '        UNIX_TIMESTAMP(now()) +\n' +
@@ -176,17 +178,35 @@ var Users = {
         queryHandler(q, callback);
     },
     
-    findAccountSupportReq: function(hash, callback) {
-        var q = 'SELECT * \n'+
-                'FROM user_account_support_request \n'+
-                'WHERE hash = ' + mysql.escape(hash);
-        
+    newPasswordResetRequest: function(user_id, hash, callback) {
+        var q = 'INSERT INTO user_account_support_request'+
+                '(support_type_id, user_id, hash, expires) \n'+
+                'VALUES (2,' + 
+                mysql.escape(user_id) + ','+
+                mysql.escape(hash) + ','+
+                '(\n'+
+                '    SELECT FROM_UNIXTIME( \n'+
+                '        UNIX_TIMESTAMP(now()) +\n' +
+                '        (SELECT max_lifetime \n'+
+                '         FROM user_account_support_type\n' + 
+                '         WHERE account_support_type_id = 2)\n'+
+                '    ) as expiresin \n'+
+                '))';
+
         queryHandler(q, callback);
     },
     
     removeRequest : function(id, callback) {
         var q = 'DELETE FROM user_account_support_request \n'+ 
                 'WHERE support_request_id = '+ mysql.escape(id);
+        
+        queryHandler(q, callback);
+    },
+    
+    findAccountSupportReq: function(hash, callback) {
+        var q = 'SELECT * \n'+
+                'FROM user_account_support_request \n'+
+                'WHERE hash = ' + mysql.escape(hash);
         
         queryHandler(q, callback);
     },

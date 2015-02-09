@@ -16,7 +16,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-12 col-md-8 col-md-offset-2 registration">
-                    <div ng-hide="completed">
+                    <div ng-hide="completed || loading">
                         <div class="page-header">
                             <h3>Register an Arbimon Account</h3>
                         </div>
@@ -70,8 +70,6 @@
                                     </p>
                                 </div>
                             </div>
-                                    
-                                    
                             <div class="row">
                                 <div class="col-sm-8">
                                     <div class="form-group right-inner-icon">
@@ -97,50 +95,10 @@
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group right-inner-icon">
-                                        <input ng-model="user.password" 
-                                            type="password" 
-                                            name="password" 
-                                            id="password" 
-                                            class="form-control" 
-                                            placeholder="Password" 
-                                            ng-change="testPass()"
-                                            required />
-                                        <i ng-show="passResult.score >= requiredScore" class="fa fa-check text-success"></i>
-                                        <i ng-show="passResult.score < requiredScore" class="fa fa-times text-danger"></i>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <p ng-show="passResult" ng-style="{ 'color': passResult.color }">
-                                        <i ng-repeat="i in passResult.shields track by $index" 
-                                            class="fa fa-shield fa-lg">&nbsp;</i>
-                                        {{ passResult.msg }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group right-inner-icon">
-                                        <input ng-model="user.confirm" 
-                                            type="password" 
-                                            name="password_confirmation" 
-                                            id="password_confirmation" 
-                                            class="form-control" 
-                                            placeholder="Confirm Password" 
-                                            ng-change="testConfirm()"
-                                            required />
-                                        <i ng-show="confirmOk" class="fa fa-check text-success"></i>
-                                        <i ng-show="confirmErr" class="fa fa-times text-danger"></i>
-                                    </div>
-                                </div>
-                                <div  class="col-sm-6">
-                                    <p ng-show="confirmErr" class="text-danger">
-                                        {{ confirmErr }}
-                                    </p>
-                                </div>
-                            </div>
+                            <password-input ng-model="user.password" 
+                                validation="passResult" 
+                                user-inputs="[user.username, user.firstName, user.lastName]">
+                            </password-input>
                             <div class="row">
                                 <div class="col-sm-12">
                                     <input ng-model="newsletter" 
@@ -176,19 +134,22 @@
                     
                         </form>
                     </div>
+                    <div ng-show="loading">
+                        <div class="panel-body test-center">
+                            <h4><loader></loader> Processing request</h4>
+                        </div>
+                    </div>
                     <div ng-show="completed">
                         <div class="page-header">
                             <h3>Activate your Arbimon Account</h3>
                         </div>
-                        <div class="panel-body">
-                            <p class="activation-text">Hi <b>{{ user.firstName }} {{ user.lastName }},</b></p> 
-                            <p class="activation-text">
-                                thanks for your interest in Arbimon II, 
-                                your account is almost ready but first you need to activate it.
-                                An activation link has been sent to <b>{{ user.email }}</b>, 
-                                open the link to activate the account.
-                            </p>
-                        </div>
+                        <p class="activation-text">Hi <b>{{ user.firstName }} {{ user.lastName }},</b></p> 
+                        <p class="activation-text">
+                            thanks for your interest in Arbimon II, 
+                            your account is almost ready but first you need to activate it.
+                            An activation link has been sent to <b>{{ user.email }}</b>, 
+                            open the link to activate the account.
+                        </p>
                     </div>
                 </div>
             </div>

@@ -82,8 +82,10 @@ var Projects = {
 
         for(i in project) {
             if(i !== 'id') {
-                project[i] = mysql.escape(project[i]);
-                values.push(util.format('`%s`=%s', i, project[i]));
+                values.push(util.format('%s = %s', 
+                    mysql.escapeId(i), 
+                    mysql.escape(project[i])
+                ));
             }
         }
 
@@ -116,8 +118,10 @@ var Projects = {
             
             for( var i in projectInfo) {
                 if(i !== 'project_id' && i !== 'recording_limit') {
-                    projectInfo[i] = mysql.escape(projectInfo[i]);
-                    values.push(util.format('`%s`=%s', i, projectInfo[i]));
+                    values.push(util.format('%s = %s', 
+                        mysql.escapeId(i), 
+                        mysql.escape(projectInfo[i])
+                    ));
                 }
             }
             
