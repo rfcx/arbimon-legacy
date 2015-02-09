@@ -32,7 +32,7 @@ $.expr.match.needsContext = new RegExp($.expr.match.needsContext.source + '|^(\\
 $.expr.match.UP_PARENT_SPECIAL = /^(\^+)/;
 
 
-angular.module('a2directives', ['a2services'])
+angular.module('a2directives', ['a2services', 'templates-arbimon2'])
 .run(function() {
     $(document).click( function(e){
         if($(e.target).closest('.calendar.popup:visible').length)
@@ -511,8 +511,6 @@ angular.module('a2directives', ['a2services'])
          templateUrl: '/partials/directives/loader.html'
      };
 })
-
- 
 /**   yearpick - complete year date picker
   
   example usage:
