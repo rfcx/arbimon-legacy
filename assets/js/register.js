@@ -98,14 +98,14 @@ angular.module('register' , ['ui.bootstrap','angularytics', 'g-recaptcha', 'huma
         else if(!$scope.terms_accepted) {
             notify.log('To register you must agree with our terms of service');
         }
-        else if(!captchaResp) {
+        else if(!$scope.captchaResp) {
             notify.log('Please complete the captcha');
         }
         else {
             $scope.loading = true;
             $http.post('/register', {
                 user: $scope.user,
-                captcha: captchaResp,
+                captcha: $scope.captchaResp,
                 newsletter: $scope.newsletter
             })
             .success(function(data) {
@@ -117,15 +117,13 @@ angular.module('register' , ['ui.bootstrap','angularytics', 'g-recaptcha', 'huma
             .error(function(data) {
                 $scope.loading = false;
                 if(data.error) {
+                    $scope.resetCaptcha();
+                    $scope.captchaResp = '';
                     return notify.error(data.error);
                 }
                 notify.error("something went wrong, please try again later");
             });
         }
-    };
-    
-    $scope.captchaResponse = function(response) {
-        captchaResp = response;
     };
 })
 ;

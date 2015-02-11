@@ -29,21 +29,22 @@ var Users = {
         q = util.format(q, mysql.escape(user_id));
         queryHandler(q, callback);
     },
-    loginTry: function(ip,time,user,msg, callback) {
-        var q = 'INSERT INTO invalid_logins(`ip`, `time`, `user`, `reason`) \n'+
+    loginTry: function(ip, user, msg, callback) {
+        
+        var q = 'INSERT INTO invalid_logins(`ip`, `user`, `reason`) \n'+
                 'VALUES ('+
                 mysql.escape(ip) +',' + 
-                mysql.escape(time) + ',' + 
                 mysql.escape(user) + ',' + 
                 mysql.escape(msg) + ')';
                 
         queryHandler(q, callback);
     },
-    loginsTries: function(ip, username, callback) {
-        var q = 'SELECT * \n' +
-                'FROM invalid_logins \n' +
-                'WHERE ip = %s OR user = %s';
-        q = util.format(q, mysql.escape(ip), mysql.escape(username));
+    invalidLogins: function(ip, callback) {
+        var q = 'SELECT COUNT(ip) as tries \n'+
+                'FROM invalid_logins \n'+
+                'WHERE ip = %s \n'+
+                'AND `time` BETWEEN (NOW() - interval 1 hour) and NOW()';
+        q = util.format(q, mysql.escape(ip));
         queryHandler(q, callback);
     },
     removeLoginTries: function(ip, callback) {

@@ -1,29 +1,41 @@
 angular.module('g-recaptcha',[])
-.directive('gRecaptcha', ['$interval', function($interval){
+.directive('gRecaptcha', ['$interval', '$timeout', function($interval, $timeout){
     return {
         restrict: "A",
         scope: {
             sitekey: '@',
             theme: '@?',
             type: '@?',
-            callback: '&'
+            response: '=',    // readonly captchaResponse 
+            resetWidget: '=?' // readonly method to reset the widget
         },
         link: function(scope, element, attr) {
             var waitForRecaptcha = $interval(function(){
                 if(typeof grecaptcha !== 'undefined') {
                     $interval.cancel(waitForRecaptcha);
-                    
-                    grecaptcha.render(element[0], {
+                                        
+                    scope.widgetId = grecaptcha.render(element[0], {
                         sitekey: scope.sitekey,
                         theme: scope.theme,
                         type: scope.type,
                         callback: function(response) {
-                            scope.callback({ response: response});
+                            scope.response = response;
+                            scope.$apply();
+                            
+                            scope.resetTimeout = $timeout(function() {
+                                grecaptcha.reset(scope.widgetId);
+                            }, 30000);
                         }
                     });
+                    
+                    scope.resetWidget = function() {
+                        if(scope.resetTimeout) {
+                            $timeout.cancel(scope.resetTimeout);
+                        }
+                        grecaptcha.reset(scope.widgetId);
+                    };
                 }
             }, 500);
-            
         }
     };
 }])

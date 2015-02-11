@@ -85,117 +85,176 @@ router.get('/api/email_available', function(req, res, next) {
     });
 });
 
-router.get('/login', function(req, res) {  
+router.get(['/','/login'], function(req, res) {  
     if(req.session) { 
         if(req.session.loggedIn) return res.redirect('/home'); 
     }
     res.render('login', { message: '' });
 });
-                                                        
+
 router.post('/login', function(req, res, next) {
     var username = req.body.username;
     var password = req.body.password;
+    var captchaResponse = req.body.captcha;
 
-    var redirect_url = req.query.redirect || '/home';
-    var permitedRetries = 3;
+    var redirectUrl = req.query.redirect || '/home';
+    var permitedRetries = 10;
+    var captchaRequired = 3;
     var waitTime = 3600000; // miliseconds
-    var request_ip = req.ip;
+    var now = new Date();
     
-    model.users.loginsTries(request_ip, username, function(err, rows) {
+    async.auto({
+        //find ip invalid login tries
+        invalidLogins: function(callback) {
+            model.users.invalidLogins(req.ip, callback);
+        },
+        //find user
+        findUser: function(callback) {
+            model.users.findByUsername(username, callback);
+        },
+        // verify if user not exceeded max retries
+        checkRetries: ['invalidLogins', 'findUser', function(callback, results) {
+            
+            var invalidLogins = results.invalidLogins[0][0];
+            var user = !results.findUser.length ? null : results.findUser[0][0];
+            
+            var tries;
+            
+            if(!user) {
+                tries = invalidLogins.tries;
+            }
+            else {
+                tries = Math.max(invalidLogins.tries, user.login_tries);
+            }
+            
+            debug('login tries:', tries);
+            
+            console.log('\n\n\n', typeof user.disabled_until, '\n\n\n');
+            console.log('\n\n\n', user, '\n\n\n');
+            
+            if(user && (user.disabled_until === '0000-00-00 00:00:00') ){
+                return res.json({ error: "This account had been disabled" });
+            }
+            
+            if(tries >=  permitedRetries || (user && (user.disabled_until > now) ) ) {
+                return res.json({ error: "Too many tries, try again in 1 hour. If you think this is wrong contact us." });
+            }
+            
+            callback(null, { tries: tries, user: user });
+        }],
+        // check captcha if needed
+        verifyCaptcha: ['checkRetries', function(callback, results) {
+            
+            if(results.checkRetries.tries >= captchaRequired) {
+                request({ 
+                    uri:'https://www.google.com/recaptcha/api/siteverify',
+                    qs: {
+                        secret: config('recaptcha').secret,
+                        response: captchaResponse,
+                        remoteip: req.ip,
+                    }
+                }, function(error, response, body) { 
+                    if(error) {
+                        return callback(error);
+                    }
+                    
+                    body = JSON.parse(body);
+                    
+                    debug('captcha validation:\n', body);
+                    
+                    callback(null, body.success);
+                });
+            }
+            else {
+                callback(null, true);
+            }
+        }]
+            
+            
+    },
+    function(err, results) {
         if(err) return next(err);
-        var retries = rows.length;
-        var last_retry_time = 0;
-        for(var i = 0 ; i < retries;i++)
-        {
-            if (last_retry_time < rows[i].time)
-            {
-                last_retry_time = rows[i].time;
-            }
+        
+        var user = results.checkRetries.user;
+        var tries = results.checkRetries.tries;
+        var response = {};
+        var reason = '';
+        
+        if(!results.verifyCaptcha) {
+            response.error = "Error validating captcha";
+            reason = 'invalid_captcha';
         }
-        var d = new Date();
-        var n = d.getTime();
-        var can_try_login = true;
-        if (retries >= permitedRetries)
-        {
-            if ((n-last_retry_time)< waitTime)
-            {
-                can_try_login  = false;
-            }
-            else
-            {
-                model.users.removeLoginTries(
-                request_ip, 
-                function(err, rows) {
-                    if(err) return next(err);                     
-                });    
-            }
+        else if(!user) {
+            response.error = "Invalid username or password";
+            reason = 'invalid_username';
+            
+        }
+        else if(sha256(password) !== user.password){
+            response.error = "Invalid username or password";
+            reason = 'invalid_password';
+        }
+        else {
+            
+            // update user info
+            model.users.update({ 
+                user_id: user.user_id,
+                last_login: new Date(),
+                login_tries: 0
+            }, 
+            function(err, rows) {
+                if(err) console.error(err);
+            });
+            
+            // set session
+            req.session.loggedIn = true; 
+            req.session.user = {
+                id: user.user_id,
+                username: user.login,
+                email: user.email,
+                firstname: user.firstname,
+                lastname: user.lastname,
+                isSuper: user.is_super,
+                imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure),
+                projectLimit: user.project_limit
+            };
+            
+            response.success = true;
+            response.redirect = redirectUrl;
         }
         
-        if(can_try_login)
-        {
-            model.users.findByUsername(username, function(err, rows) {
-                if(err) return next(err);
-                var d = new Date();
-                var n = d.getTime();              
-                if(!rows.length)
-                {
-                    model.users.loginTry(request_ip,n,username,'invalid user', function(err, rows) {
-                        if(err) return next(err);
-                        return res.render('login', { message: "Invalid user" });
-                    });
+        if(response.error) {
+            
+            now.setHours(now.getHours() + 1);
+            
+            if(user) {
+                var userInfo;
+                if(tries+1 >= permitedRetries) {
+                    userInfo = { 
+                        user_id: user.user_id,
+                        login_tries: 0,
+                        disabled_until: now
+                    };
                 }
-                else
-                {          
-                    user = rows[0];
-                    
-                    if(sha256(password) !== user.password) {
-                        
-                        model.users.loginTry(request_ip,n,username,'invalid_password', function(err, rows) {
-                            if(err) return next(err);
-                            return res.render('login', { message: "Wrong password" });
-                        });
-                    }
-                    else
-                    {
-                        model.users.update({ 
-                            user_id: user.user_id,
-                            last_login: new Date()
-                        }, 
-                        function(err, rows) {
-                            if(err) return next(err);
-                        });
-
-                        model.users.removeLoginTries( 
-                        request_ip , 
-                        function(err, rows) {
-                            if(err) return next(err);
-                        });
-                        
-                        req.session.loggedIn = true; 
-                        req.session.user = {
-                            id: user.user_id,
-                            username: user.login,
-                            email: user.email,
-                            firstname: user.firstname,
-                            lastname: user.lastname,
-                            isSuper: user.is_super,
-                            imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure),
-                            projectLimit: user.project_limit
-                        };
-                        
-                        if(req.query.redirect){
-                            res.redirect(req.query.redirect);
-                        } else{
-                            res.redirect('/home');
-                        }
-                    }
+                else {
+                    userInfo = { 
+                        user_id: user.user_id,
+                        login_tries: user.login_tries + 1
+                    };
                 }
+                
+                model.users.update(userInfo, function(err, rows) {
+                    if(err) console.error(err);
+                });
+            }
+            
+            model.users.loginTry(req.ip, username, reason, function(err, rows) {
+                if(err) console.error(err);
             });
+            
+            response.captchaNeeded = (tries + 1) >= captchaRequired;
         }
-        else
-        {
-            return res.render('login', { message: "too many tries. login disabled for one hour." });
-        }
+        
+        res.json(response);
     });
 });
 
@@ -214,39 +273,50 @@ router.get('/register', function(req, res) {
 router.get('/activate/:hash', function(req, res, next) {
     model.users.findAccountSupportReq(req.params.hash, function(err, data) {
         if(err) return next(err);
-
+        
+        var now = new Date();
+        
         if(!data.length) 
         {
             res.render('activate', {
                 login: false,
-                status: 'A registration entry with your information does not exists. You need to register again.'
+                status: 'Invalid activation link.'
             });
             
             return;
         }
+        
+        if(data[0].expires < now) {
+            model.users.removeRequest(data[0].support_request_id, function(error, info){
+                if(err) return next(err);
+                
+                res.render('activate', {
+                    login: false,
+                    status: 'Your activation link has expired. You need to register again.'
+                });
+            });
+            
+            return;
+        }
+        
         
         var userInfo = JSON.parse(data[0].params);
         
         debug('Activate user', userInfo);
         
         model.users.insert(userInfo, function (err,datas) {
+            if(err) return next(err);
+            
+            model.users.removeRequest(data[0].support_request_id, function(error, info){
                 if(err) return next(err);
                 
                 res.render('activate',{
                     login: true,
                     status:'<b>'+userInfo.login+'</b> your account has been activated.'
                 });
-                
-                model.users.removeRequest(data[0].support_request_id, function(error, info){
-                     if(err) return next(err);
-                     
-                });
-            }
-        );
-        
-        
+            });
+        });
     });
-    
 });
 
 router.post('/register', function(req, res, next) {
@@ -264,8 +334,8 @@ router.post('/register', function(req, res, next) {
         // validate userInfo
         function(callback) {
             var userInfoIsValid = (
-                validator.isAlphanumeric(user.firstName) &&
-                validator.isAlphanumeric(user.lastName) &&
+                validator.isLength(user.firstName, 1, 255) &&
+                validator.isLength(user.lastName, 1, 255) &&
                 /^([\d\w\.-]){4,32}$/.test(user.username) &&
                 validator.isEmail(user.email) &&
                 validator.isLength(user.password, 6, 32)
@@ -452,21 +522,44 @@ router.post('/forgot_request', function(req, res, next) {
 
 
 router.get('/reset_password/:hash', function(req, res, next) {
+    var now = new Date();
     
     model.users.findAccountSupportReq(req.params.hash, function(err, rows) {
         if(err) return next(err);
         
-        if(!rows.length) return res.status(404).render('not-found');
+        if(!rows.length) {
+            return res.render('reset-password', { error: 'Invalid reset password link'});
+        }
+        
+        if(rows[0].expires < now) {
+            model.users.removeRequest(rows[0].support_request_id, function(err, results) {
+                if(err) return next(err);
+                
+                res.render('reset-password', { error: 'Your reset password link has expired'});
+            });
+            return;
+        }
         
         res.render('reset-password');
     });
 });
 
 router.post('/reset_password/:hash', function(req, res, next) {
+    var now = new Date();
+    
     model.users.findAccountSupportReq(req.params.hash, function(err, rows) {
         if(err) return next(err);
         
-        if(!rows.length) return res.status(404).render('not-found');
+        if(!rows.length) return next();
+        
+        if(rows[0].expires < now) {
+            model.users.removeRequest(rows[0].support_request_id, function(err, results) {
+                if(err) return next(err);
+                
+                res.render('reset-password', { error: 'Your reset password link has expired'});
+            });
+            return;
+        }
         
         model.users.update({
             user_id: rows[0].user_id,
@@ -475,10 +568,10 @@ router.post('/reset_password/:hash', function(req, res, next) {
         function(err, results) {
             if(err) return next(err);
             
-            res.json({ success: true });
-            
             model.users.removeRequest(rows[0].support_request_id, function(err, results) {
                 if(err) return next(err);
+                
+                res.json({ success: true });
             });
         });
     });
