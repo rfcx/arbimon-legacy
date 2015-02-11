@@ -1,4 +1,4 @@
-angular.module('settings', ['templates-arbimon2', 'ui.bootstrap', 'humane','angularytics']).
+angular.module('settings', ['templates-arbimon2', 'ui.bootstrap', 'humane', 'angularytics', 'a2regis']).
 config(function(AngularyticsProvider) {
     AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
 }).
@@ -50,12 +50,16 @@ run(function(Angularytics) {
     
     
     $scope.changePass = function() {
+        console.log($scope.passResult);
+        
+        if(!$scope.passResult.valid) {
+            return notify.log($scope.passResult.msg);
+        }
+        
         confirmPass().result.then(function(pass) {
-            
             $http.post('/api/user/update/password', {
                 userData: {
-                    newPass1: $scope.newpass1,
-                    newPass2: $scope.newpass2
+                    newPass: $scope.newPass,
                 },
                 password: pass
             })

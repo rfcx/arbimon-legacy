@@ -104,18 +104,19 @@ router.post('/update/password', function(req, res, next){
     var userData = req.body.userData;
     var password = req.body.password;
     
+    if(!userData || !userData.newPass || !password) {
+        return res.json({ error: "missing parameters" });
+    }
+    
     model.users.findById(req.session.user.id, function(err, user){
         if(err) return next(err);
         
         if(sha256(password) !== user[0].password)
             return res.json({ error: "invalid password" });
         
-        if(userData.newPass1 !== userData.newPass2)
-            return res.json({ error: "new passwords don't match" });
-        
         model.users.update({
             user_id: req.session.user.id,
-            password: sha256(userData.newPass1)
+            password: sha256(userData.newPass)
         },
         function(err, result) {
             if(err) return next(err);
@@ -130,6 +131,10 @@ router.post('/update/password', function(req, res, next){
 router.post('/update/name', function(req, res, next){
     var userData = req.body.userData;
     var password = req.body.password;
+    
+    if(!userData || !userData.name || !userData.lastname || !password) {
+        return res.json({ error: "missing parameters" });
+    }
     
     model.users.findById(req.session.user.id, function(err, user){
         if(err) return next(err);
