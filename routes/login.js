@@ -304,6 +304,8 @@ router.get('/activate/:hash', function(req, res, next) {
         
         debug('Activate user', userInfo);
         
+        userInfo.created_on = new Date();
+        
         model.users.insert(userInfo, function (err,datas) {
             if(err) return next(err);
             
