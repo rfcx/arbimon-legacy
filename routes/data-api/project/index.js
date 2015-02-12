@@ -116,39 +116,55 @@ router.get('/:projectUrl/info', function(req, res, next) {
 });
 
 router.post('/:projectUrl/info/update', function(req, res, next) {
-    
-    var pid = req.body.project.project_id;
-    
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you dont have permission to 'manage project settings'" });
     }
     
-    if(!req.body.project)
+    if(!req.body.project) {
         return res.json({ error: "missing parameters" });
-
-    model.projects.findByUrl(req.body.project.url, function(err, result){
-        var can_update = true;
-        var updatingUrl = 'no';
-        if (result.length > 0)
-        {
-            if (pid != result[0].project_id)
-            {
-                res.json({ success: false , error : "A project already exists with such url." });
-                can_update = false;
+    }
+    
+    var newProjectInfo = req.body.project;
+    
+    async.waterfall([
+        function verifyName(callback) {
+            if(req.project.name !== newProjectInfo.name) {
+                model.projects.findByName(newProjectInfo.name, function(err, rows){
+                    if(rows.length > 0 && rows[0].project_id !== req.project.project_id) {
+                        return res.json({ success: false , error: "Name " + newProjectInfo.name +" not available" });
+                    }
+                    callback(null);
+                });
             }
-        }
-        else updatingUrl = 'yes';
-        
-        if (can_update) 
-        {
-            model.projects.update(req.body.project, function(err, result){
+            else {
+                callback(null);
+            }
+        },
+        function verifyUrl(callback) {
+            if(req.project.url !== newProjectInfo.url) {
+                model.projects.findByUrl(newProjectInfo.url, function(err, rows){
+                    if(rows.length > 0 && rows[0].project_id !== req.project.project_id) {
+                        return res.json({ success: false , error: "URL " + newProjectInfo.url +" not available" });
+                    }
+                    callback(null, true);
+                });
+            }
+            else {
+                callback(null, false);
+            }
+        },
+        function(urlChanged, callback) {
+            model.projects.update(newProjectInfo, function(err, result){
                 if(err) return next(err);
                 
+                var url = urlChanged ? newProjectInfo.url : undefined;
+                
                 debug("update project:", result);
-                res.json({ success: true , url : updatingUrl ,newurl : req.body.project.url});
+                res.json({ success: true , url: url });
             });
         }
-    });
+    ]);
+
 });
 
 

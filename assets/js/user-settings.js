@@ -1,4 +1,4 @@
-angular.module('settings', ['templates-arbimon2', 'ui.bootstrap', 'humane', 'angularytics', 'a2regis']).
+angular.module('settings', ['templates-arbimon2', 'ui.bootstrap', 'humane', 'angularytics', 'a2forms']).
 config(function(AngularyticsProvider) {
     AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
 }).

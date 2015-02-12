@@ -1,4 +1,4 @@
-angular.module('a2regis',['templates-arbimon2'])
+angular.module('a2forms',['templates-arbimon2'])
 .directive('passwordInput', [function() {
     return {
         restrict: 'E',
@@ -118,6 +118,77 @@ angular.module('a2regis',['templates-arbimon2'])
                 }
             };
         }],
+    };
+}])
+.directive('projectForm', [function() {
+    return {
+        restrict: 'E',
+        scope: {
+            project: '=ngModel', // password
+            valid: '=', // validation object
+        },
+        templateUrl: '/partials/directives/project-form.html',
+        controller: ['$scope', function($scope) {
+            console.log('project-form');
+            $scope.project = {
+                is_private: 0,
+            };
+            $scope.valid = false;
+            
+            var urlPattern = /^[a-z0-9]+([-_][a-z0-9]+)*$/;
+            
+            $scope.verify = function () {
+                var good = true;
+                $scope.errorName = '';
+                $scope.errorUrl = '';
+                $scope.errorDesc = '';
+                
+                // check name
+                if(!$scope.project.name) {
+                    good = false;
+                }
+                else if($scope.project.name.length < 6 && $scope.project.name.length > 0) {
+                    $scope.errorName = 'Name too short, 6 or more characters required';
+                    good = false;
+                }
+                else if($scope.project.name.length > 50) {
+                    $scope.errorName = 'Name too long, 50 characters max';
+                    good = false;
+                }
+                
+                //check URL
+                if(!$scope.project.url) {
+                    good = false;
+                }
+                else if(!urlPattern.test($scope.project.url)) {
+                    $scope.errorUrl = 'Invalid project URL alphanumeric characters '+
+                               'separated by dash(-) or underscore(_)';
+                    good = false;
+                }
+                else if($scope.project.url.length < 6) {
+                    $scope.errorUrl = 'URL too short, 6 or more alphanumeric characters '+
+                               'separated by dash(-) or underscore(_)';
+                    good = false;
+                }
+                else if($scope.project.url.length > 50) {
+                    $scope.errorUrl = 'URL too long, 50 characters max';
+                    good = false;
+                }
+                
+                // check description
+                if(!$scope.project.description) {
+                    good = false;
+                }
+                else if($scope.project.description.length < 50 && $scope.project.description.length > 0) {
+                    $scope.errorDesc = 'Description needs to be at least 50 characters '+
+                                       'long, you got ' + $scope.project.description.length;
+                    
+                    good = false;
+                }
+                
+                $scope.valid = good;
+            };
+        }]
     };
 }])
 ;
