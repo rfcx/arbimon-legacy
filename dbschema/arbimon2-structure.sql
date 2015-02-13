@@ -1063,7 +1063,7 @@ CREATE TABLE `users` (
   `firstname` varchar(255) NOT NULL,
   `lastname` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `last_login` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `last_login` datetime NULL DEFAULT NULL,
   `is_super` tinyint(1) NOT NULL DEFAULT '0',
   `project_limit` int(10) unsigned NOT NULL DEFAULT '1',
   `created_on` datetime DEFAULT NULL,
