@@ -129,9 +129,6 @@ router.post('/login', function(req, res, next) {
             
             debug('login tries:', tries);
             
-            console.log('\n\n\n', typeof user.disabled_until, '\n\n\n');
-            console.log('\n\n\n', user, '\n\n\n');
-            
             if(user && (user.disabled_until === '0000-00-00 00:00:00') ){
                 return res.json({ error: "This account had been disabled" });
             }
