@@ -9,6 +9,7 @@ var session = require('express-session');
 var SessionStore = require('express-mysql-session');
 var busboy = require('connect-busboy');
 var AWS = require('aws-sdk');
+var jwt = require('express-jwt');
 
 
 var config = require('./config');
@@ -49,8 +50,17 @@ else {
     app.use(logger('dev'));
 }
 
+app.use(jwt({ 
+    secret: config('session').secret,
+    userProperty: 'token',
+    credentialsRequired: false
+}));
 app.use(cookieParser());
-app.use(busboy());
+app.use(busboy({
+    limits: {
+        fileSize: 1073741824, // 1GB
+    }
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));

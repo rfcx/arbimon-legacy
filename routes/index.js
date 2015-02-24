@@ -16,23 +16,18 @@ router.get('/terms', function(req, res) {
     res.render('terms');
 });
 
-
-router.get('/error', function(req, res, next) { 
-    next(new Error('test'));
-});
-
 router.get('/alive', function(req, res) { // for health checks
     res.sendStatus(200);
 });
 
+router.use('/uploads', uploads);
 
 // all routes after this middleware
 // are available only to logged users
 router.use(function(req, res, next) {                
-    if(req.session) { 
-        if(req.session.loggedIn) return next(); 
+    if(req.session && req.session.loggedIn) { 
+        return next(); 
     }
-    
     res.render('get_fragment_hack.ejs');
 });
 
@@ -56,7 +51,6 @@ router.get('/user-settings', function(req, res) {
 
 router.use('/api', dataApi);
 router.use('/project', project);
-router.use('/uploads', uploads);
 
 router.use('/admin', admin);
 
