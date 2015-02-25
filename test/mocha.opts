@@ -1,0 +1,5 @@
+--ui bdd
+--reporter nyan
+--growl
+--inline-diffs
+--recursive
