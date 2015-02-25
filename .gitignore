@@ -18,9 +18,11 @@ a2.komodoproject
 .env
 
 # python compiled binaries
-*pyc
+*.pyc
 
 .env
 
 # docs (?)
 docs
+
+coverage
