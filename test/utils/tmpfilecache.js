@@ -1,5 +1,6 @@
-var should = require('chai').should();
+var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
+var sinon = require('sinon');
 var rewire = require('rewire');
 var tmpfilecache = rewire('../../utils/tmpfilecache');
 
@@ -14,17 +15,36 @@ var mocks = {
     tmpfilecache : {
         fs : {
             stat : function (file, callback){
-                if(this.__files__[file]){
-                    callback(null, this.__files__[file]);
+                var entry = this.__files__[file];
+                if(entry && entry.exists !== false){
+                    callback(null, entry);
                 } else {
                     callback(new Error('ENOENT'));
                 }
             },
             unlink : function mock_fs_unlink(file, callback){
                 delete this.__files__[file];
+                if(mock_fs_unlink.__spy__){
+                    mock_fs_unlink.__spy__.apply(null, Array.prototype.slice.call(arguments));
+                }
                 callback();
             },
-            writeFile : function (){},
+            writeFile : function mock_fs_writeFile(filename, data, options, callback){
+                if(mock_fs_writeFile.__spy__){
+                    mock_fs_writeFile.__spy__.apply(null, Array.prototype.slice.call(arguments));
+                }
+                if(options instanceof Function){
+                    callback = options;
+                    options = undefined;
+                }
+                var entry = this.__files__[filename];
+                if(!entry || entry.can_write !== false){
+                    this.__files__[filename] = {path:filename, atime:new Date(), data:data};
+                    callback();
+                } else {
+                    callback(new Error('Error cant mock file entry set to cant write'));
+                }
+            },
             readdir : function (){},
             __files__:{},
             __set_files__: function(files, options){
@@ -37,7 +57,7 @@ var mocks = {
                 files.forEach(function(f){
                     __files__[prefix + pathmap(f.path)] = f;
                 });
-            }            
+            }
         },
         config : function (key){
             return mock_config[key];
@@ -78,23 +98,178 @@ describe('tmpfilecache', function(){
         });
     });
     describe('#checkValidity()', function(){
-        it('Should return callback with existing valid files.', function(done){
+        beforeEach(function(){
             mocks.tmpfilecache.fs.__set_files__([
-                {path: 'this/is/a/test.txt.bmp', atime:new Date(new Date().getTime() - 100)}
+                {path: 'this/is/a/test.txt.bmp', atime:new Date(new Date().getTime() - 100)},
+                {path: 'this/is/a/barely/valid/test.txt.bmp', atime:new Date(new Date().getTime() - mock_config.tmpfilecache.maxObjectLifetime + 1)},
+                {path: 'this/is/a/recently/invalid/test.txt.bmp', atime:new Date(new Date().getTime() - mock_config.tmpfilecache.maxObjectLifetime)},
+                {path: 'this/is/a/very/old/file.txt', atime:new Date(0)}
             ], {prefix: mock_config.tmpfilecache.path, pathmap:tmpfilecache.hash_key.bind(tmpfilecache)});
-            
+            mocks.tmpfilecache.fs.unlink.__spy__ = sinon.spy();
+        });
+        it('Should callback with proper arguments for existing valid files', function(done){
             tmpfilecache.checkValidity(tmpfilecache.key2File('this/is/a/test.txt.bmp'), function(err, stat){
                 should.not.exist(err);
                 should.exist(stat);
-                should.exist(stat.path)
+                should.exist(stat.path);
+                should.exist(stat.stat);
                 stat.path.should.equal(tmpfilecache.key2File('this/is/a/test.txt.bmp'));
-                stat.should.have.ownProperty('stat');
+                done();
+            });
+        });
+        it('Should callback with error for non-existing files', function(done){
+            tmpfilecache.checkValidity(tmpfilecache.key2File('this/file/does/not/exists.txt'), function(err, stat){
+                should.exist(err);
+                should.not.exist(stat);
+                done();
+            });
+        });
+        it('Should callback with null for existing very old files, and delete them', function(done){
+            tmpfilecache.checkValidity(tmpfilecache.key2File('this/is/a/very/old/file.txt'), function(err, stat){
+                should.not.exist(err);
+                should.not.exist(stat);
+                mocks.tmpfilecache.fs.unlink.__spy__.calledOnce.should.be.true;
                 done();
             });
         });
     });
-    // define('#get()', function(){});
-    // define('#put()', function(){});
-    // define('#fetch()', function(){});
-    // define('#cleanup()', function(){});
+    describe('#get()', function(){
+        beforeEach(function(){
+            mocks.tmpfilecache.fs.__set_files__([
+                {path: 'this/is/a/test.txt.bmp', atime:new Date(new Date().getTime() - 100)},
+                {path: 'this/is/a/very/old/file.txt', atime:new Date(0)}
+            ], {prefix: mock_config.tmpfilecache.path, pathmap:tmpfilecache.hash_key.bind(tmpfilecache)});
+            mocks.tmpfilecache.fs.unlink.__spy__ = sinon.spy();
+        });
+        it('Should callback with proper arguments for existing valid keys', function(done){
+            tmpfilecache.get('this/is/a/test.txt.bmp', function(err, stat){
+                should.not.exist(err);
+                should.exist(stat);
+                should.exist(stat.path);
+                should.exist(stat.stat);
+                stat.path.should.equal(tmpfilecache.key2File('this/is/a/test.txt.bmp'));
+                done();
+            });
+        });
+        it('Should callback with error for non-existing files', function(done){
+            tmpfilecache.get('this/file/does/not/exists.txt', function(err, stat){
+                should.exist(err);
+                should.not.exist(stat);
+                done();
+            });
+        });
+        it('Should callback with null for existing very old files, and delete them', function(done){
+            tmpfilecache.get('this/is/a/very/old/file.txt', function(err, stat){
+                should.not.exist(err);
+                should.not.exist(stat);
+                mocks.tmpfilecache.fs.unlink.__spy__.calledOnce.should.be.true;
+                done();
+            });
+        });
+    });
+    describe('#put()', function(){
+        beforeEach(function(){
+            mocks.tmpfilecache.fs.__set_files__([
+                {path: 'unwritable/file.txt', exists:false, can_write:false}
+            ], {prefix: mock_config.tmpfilecache.path, pathmap:tmpfilecache.hash_key.bind(tmpfilecache)});
+            mocks.tmpfilecache.fs.writeFile.__spy__ = sinon.spy();
+        });
+        it('Should callback with proper arguments for existing valid keys', function(done){
+            tmpfilecache.put('write/this/file.txt', "data", function(err, stat){
+                should.not.exist(err);
+                should.exist(stat);
+                should.exist(stat.path);
+                stat.path.should.equal(tmpfilecache.key2File('write/this/file.txt'));
+                mocks.tmpfilecache.fs.writeFile.__spy__.calledOnce.should.be.true;
+                should.exist(mocks.tmpfilecache.fs.__files__[stat.path]);
+                done();
+            });
+        });
+        it('Should callback with error for non-writable files', function(done){
+            tmpfilecache.put('unwritable/file.txt', "data", function(err, stat){
+                var filepath=tmpfilecache.key2File('unwritable/file.txt');
+                should.exist(err);
+                should.not.exist(stat);
+                mocks.tmpfilecache.fs.writeFile.__spy__.calledOnce.should.be.true;
+                should.exist(mocks.tmpfilecache.fs.__files__[filepath]);
+                mocks.tmpfilecache.fs.__files__[filepath].exists.should.be.false;
+                done();
+            });
+        });
+    });
+    describe('#fetch()', function(){
+        beforeEach(function(){
+            mocks.tmpfilecache.fs.__set_files__([
+                {path: 'this/is/a/test.txt.bmp', atime:new Date(new Date().getTime() - 100)}
+            ], {prefix: mock_config.tmpfilecache.path, pathmap:tmpfilecache.hash_key.bind(tmpfilecache)});
+            mocks.tmpfilecache.fs.writeFile.__spy__ = sinon.spy();
+        });
+        it('Should call the results callback without calling on cache_miss first for existing valid keys', function(done){
+            tmpfilecache.fetch('this/is/a/test.txt.bmp', function(cache_miss){
+                    done(new Error("cache_miss callback called"));
+                },
+                function(err, stat){
+                    should.not.exist(err);
+                    should.exist(stat);
+                    should.exist(stat.path);
+                    stat.path.should.equal(tmpfilecache.key2File('this/is/a/test.txt.bmp'));
+                    done();
+                }
+            );
+        });
+        it('Should call the cache_miss callback, write the file, and call the results callback for invalid keys and using cache_miss.set_file_data', function(done){
+            tmpfilecache.fetch('non/existent/file.txt', function(cache_miss){
+                cache_miss.set_file_data("new file data");
+            }, function(err, stat){
+                should.not.exist(err);
+                should.exist(stat);
+                should.exist(stat.path);
+                stat.path.should.equal(tmpfilecache.key2File('non/existent/file.txt'));
+                mocks.tmpfilecache.fs.writeFile.__spy__.calledOnce.should.be.true;
+                should.exist(mocks.tmpfilecache.fs.__files__[stat.path]);
+                mocks.tmpfilecache.fs.__files__[stat.path].data.should.equal('new file data');
+                done();
+            });
+        });
+        it('Should call the cache_miss callback, and call the results callback with the new file for invalid keys and using cache_miss.retry_get, having added the file manually', function(done){
+            tmpfilecache.fetch('non/existent/file.txt', function(cache_miss){
+                mocks.tmpfilecache.fs.writeFile(cache_miss.file, "new file data", function(err){
+                    if(err){
+                        done(new Error("Could not create "+cache_miss.file+" in mock fs for some reason."));
+                    } else {
+                        cache_miss.retry_get();                        
+                    }
+                });
+            }, function(err, stat){
+                should.not.exist(err);
+                should.exist(stat);
+                should.exist(stat.path);
+                stat.path.should.equal(tmpfilecache.key2File('non/existent/file.txt'));
+                mocks.tmpfilecache.fs.writeFile.__spy__.calledOnce.should.be.true;
+                should.exist(mocks.tmpfilecache.fs.__files__[stat.path]);
+                mocks.tmpfilecache.fs.__files__[stat.path].data.should.equal('new file data');
+                done();
+            });
+        });
+        it('Should call the cache_miss callback, and call the results callback with an error for invalid keys and using cache_miss.retry_get, not having added the file at all.', function(done){
+            tmpfilecache.fetch('non/existent/file.txt', function(cache_miss){
+                cache_miss.retry_get();                        
+            }, function(err, stat){
+                should.exist(err);
+                should.not.exist(stat);
+                done();
+            });
+        });
+    });
+    // describe('#cleanup()', function(){
+    //     var old_setTimeout = global.setTimeout;
+    //     beforeEach(function(){
+    //         sinon.stub(global, 'setTimeout');
+    //     });
+    //     afterEach(function(){
+    //         global.setTimeout.restore();
+    //     })
+    //     it('Should clean invalid files and set a Timeout.', function(){
+    //     });
+    // });
 });

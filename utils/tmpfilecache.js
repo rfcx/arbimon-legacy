@@ -21,6 +21,7 @@ cache_miss.prototype.retry_get = function(){
 };
 
 
+
 var cache = {
     hash_key : function(key){
         var match = /^(.*?)((\.[^.\/]*)*)?$/.exec(key);
