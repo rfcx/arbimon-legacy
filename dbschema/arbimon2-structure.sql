@@ -2,7 +2,7 @@
 --
 -- Host: localhost    Database: arbimon2
 -- ------------------------------------------------------
--- Server version	5.5.41-0ubuntu0.14.10.1
+-- Server version	5.5.41-0ubuntu0.14.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -651,6 +651,7 @@ CREATE TABLE `sites` (
   `lon` double NOT NULL,
   `alt` double NOT NULL,
   `published` tinyint(1) NOT NULL DEFAULT '0',
+  `token_created_on` bigint(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`site_id`),
   KEY `project_id` (`project_id`),
   KEY `site_type_id` (`site_type_id`),
@@ -973,7 +974,7 @@ CREATE TABLE `uploads_processing` (
   `upload_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `project_id` int(10) unsigned NOT NULL,
   `site_id` int(10) unsigned NOT NULL,
-  `user_id` int(10) unsigned NOT NULL,
+  `user_id` int(10) unsigned DEFAULT NULL,
   `upload_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `filename` varchar(100) NOT NULL,
   PRIMARY KEY (`upload_id`),
@@ -983,8 +984,7 @@ CREATE TABLE `uploads_processing` (
   KEY `user_id` (`user_id`),
   KEY `upload_time` (`upload_time`),
   CONSTRAINT `uploads_processing_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `uploads_processing_ibfk_2` FOREIGN KEY (`site_id`) REFERENCES `sites` (`site_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `uploads_processing_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `uploads_processing_ibfk_2` FOREIGN KEY (`site_id`) REFERENCES `sites` (`site_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='recording uploaded and being process';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1063,7 +1063,7 @@ CREATE TABLE `users` (
   `firstname` varchar(255) NOT NULL,
   `lastname` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `last_login` datetime NULL DEFAULT NULL,
+  `last_login` datetime DEFAULT NULL,
   `is_super` tinyint(1) NOT NULL DEFAULT '0',
   `project_limit` int(10) unsigned NOT NULL DEFAULT '1',
   `created_on` datetime DEFAULT NULL,
@@ -1105,4 +1105,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-02-11 14:23:22
+-- Dump completed on 2015-02-25 16:38:26
