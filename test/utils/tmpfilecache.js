@@ -1,8 +1,16 @@
+/*jshint node:true */
+/*jshint mocha:true */
+/*jshint expr:true */
+"use strict";
+
+
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
 var rewire = require('rewire');
 var tmpfilecache = rewire('../../utils/tmpfilecache');
+var mock_fs = require('../mock_tools/mock_fs');
+
 
 var mock_config = {
     tmpfilecache : {
@@ -13,52 +21,7 @@ var mock_config = {
 };
 var mocks = {
     tmpfilecache : {
-        fs : {
-            stat : function (file, callback){
-                var entry = this.__files__[file];
-                if(entry && entry.exists !== false){
-                    callback(null, entry);
-                } else {
-                    callback(new Error('ENOENT'));
-                }
-            },
-            unlink : function mock_fs_unlink(file, callback){
-                delete this.__files__[file];
-                if(mock_fs_unlink.__spy__){
-                    mock_fs_unlink.__spy__.apply(null, Array.prototype.slice.call(arguments));
-                }
-                callback();
-            },
-            writeFile : function mock_fs_writeFile(filename, data, options, callback){
-                if(mock_fs_writeFile.__spy__){
-                    mock_fs_writeFile.__spy__.apply(null, Array.prototype.slice.call(arguments));
-                }
-                if(options instanceof Function){
-                    callback = options;
-                    options = undefined;
-                }
-                var entry = this.__files__[filename];
-                if(!entry || entry.can_write !== false){
-                    this.__files__[filename] = {path:filename, atime:new Date(), data:data};
-                    callback();
-                } else {
-                    callback(new Error('Error cant mock file entry set to cant write'));
-                }
-            },
-            readdir : function (){},
-            __files__:{},
-            __set_files__: function(files, options){
-                if(!(options && options.keep_existing === true)){
-                    this.__files__={};
-                }
-                var __files__ = this.__files__;
-                var prefix = (options && options.prefix) || '';
-                var pathmap = (options && options.pathmap) || function(x){return x;};
-                files.forEach(function(f){
-                    __files__[prefix + pathmap(f.path)] = f;
-                });
-            }
-        },
+        fs : mock_fs,
         config : function (key){
             return mock_config[key];
         }
@@ -105,7 +68,10 @@ describe('tmpfilecache', function(){
                 {path: 'this/is/a/recently/invalid/test.txt.bmp', atime:new Date(new Date().getTime() - mock_config.tmpfilecache.maxObjectLifetime)},
                 {path: 'this/is/a/very/old/file.txt', atime:new Date(0)}
             ], {prefix: mock_config.tmpfilecache.path, pathmap:tmpfilecache.hash_key.bind(tmpfilecache)});
-            mocks.tmpfilecache.fs.unlink.__spy__ = sinon.spy();
+            sinon.spy(mocks.tmpfilecache.fs, 'unlink');
+        });
+        afterEach(function(){
+            mocks.tmpfilecache.fs.unlink.restore();
         });
         it('Should callback with proper arguments for existing valid files', function(done){
             tmpfilecache.checkValidity(tmpfilecache.key2File('this/is/a/test.txt.bmp'), function(err, stat){
@@ -128,7 +94,7 @@ describe('tmpfilecache', function(){
             tmpfilecache.checkValidity(tmpfilecache.key2File('this/is/a/very/old/file.txt'), function(err, stat){
                 should.not.exist(err);
                 should.not.exist(stat);
-                mocks.tmpfilecache.fs.unlink.__spy__.calledOnce.should.be.true;
+                mocks.tmpfilecache.fs.unlink.calledOnce.should.be.true;
                 done();
             });
         });
@@ -139,7 +105,10 @@ describe('tmpfilecache', function(){
                 {path: 'this/is/a/test.txt.bmp', atime:new Date(new Date().getTime() - 100)},
                 {path: 'this/is/a/very/old/file.txt', atime:new Date(0)}
             ], {prefix: mock_config.tmpfilecache.path, pathmap:tmpfilecache.hash_key.bind(tmpfilecache)});
-            mocks.tmpfilecache.fs.unlink.__spy__ = sinon.spy();
+            sinon.spy(mocks.tmpfilecache.fs, 'unlink');
+        });
+        afterEach(function(){
+            mocks.tmpfilecache.fs.unlink.restore();
         });
         it('Should callback with proper arguments for existing valid keys', function(done){
             tmpfilecache.get('this/is/a/test.txt.bmp', function(err, stat){
@@ -162,7 +131,7 @@ describe('tmpfilecache', function(){
             tmpfilecache.get('this/is/a/very/old/file.txt', function(err, stat){
                 should.not.exist(err);
                 should.not.exist(stat);
-                mocks.tmpfilecache.fs.unlink.__spy__.calledOnce.should.be.true;
+                mocks.tmpfilecache.fs.unlink.calledOnce.should.be.true;
                 done();
             });
         });
@@ -172,7 +141,10 @@ describe('tmpfilecache', function(){
             mocks.tmpfilecache.fs.__set_files__([
                 {path: 'unwritable/file.txt', exists:false, can_write:false}
             ], {prefix: mock_config.tmpfilecache.path, pathmap:tmpfilecache.hash_key.bind(tmpfilecache)});
-            mocks.tmpfilecache.fs.writeFile.__spy__ = sinon.spy();
+            sinon.spy(mocks.tmpfilecache.fs, 'writeFile');
+        });
+        afterEach(function(){
+            mocks.tmpfilecache.fs.writeFile.restore();
         });
         it('Should callback with proper arguments for existing valid keys', function(done){
             tmpfilecache.put('write/this/file.txt', "data", function(err, stat){
@@ -180,7 +152,7 @@ describe('tmpfilecache', function(){
                 should.exist(stat);
                 should.exist(stat.path);
                 stat.path.should.equal(tmpfilecache.key2File('write/this/file.txt'));
-                mocks.tmpfilecache.fs.writeFile.__spy__.calledOnce.should.be.true;
+                mocks.tmpfilecache.fs.writeFile.calledOnce.should.be.true;
                 should.exist(mocks.tmpfilecache.fs.__files__[stat.path]);
                 done();
             });
@@ -190,7 +162,7 @@ describe('tmpfilecache', function(){
                 var filepath=tmpfilecache.key2File('unwritable/file.txt');
                 should.exist(err);
                 should.not.exist(stat);
-                mocks.tmpfilecache.fs.writeFile.__spy__.calledOnce.should.be.true;
+                mocks.tmpfilecache.fs.writeFile.calledOnce.should.be.true;
                 should.exist(mocks.tmpfilecache.fs.__files__[filepath]);
                 mocks.tmpfilecache.fs.__files__[filepath].exists.should.be.false;
                 done();
@@ -202,7 +174,10 @@ describe('tmpfilecache', function(){
             mocks.tmpfilecache.fs.__set_files__([
                 {path: 'this/is/a/test.txt.bmp', atime:new Date(new Date().getTime() - 100)}
             ], {prefix: mock_config.tmpfilecache.path, pathmap:tmpfilecache.hash_key.bind(tmpfilecache)});
-            mocks.tmpfilecache.fs.writeFile.__spy__ = sinon.spy();
+            sinon.spy(mocks.tmpfilecache.fs, 'writeFile');
+        });
+        afterEach(function(){
+            mocks.tmpfilecache.fs.writeFile.restore();
         });
         it('Should call the results callback without calling on cache_miss first for existing valid keys', function(done){
             tmpfilecache.fetch('this/is/a/test.txt.bmp', function(cache_miss){
@@ -225,7 +200,7 @@ describe('tmpfilecache', function(){
                 should.exist(stat);
                 should.exist(stat.path);
                 stat.path.should.equal(tmpfilecache.key2File('non/existent/file.txt'));
-                mocks.tmpfilecache.fs.writeFile.__spy__.calledOnce.should.be.true;
+                mocks.tmpfilecache.fs.writeFile.calledOnce.should.be.true;
                 should.exist(mocks.tmpfilecache.fs.__files__[stat.path]);
                 mocks.tmpfilecache.fs.__files__[stat.path].data.should.equal('new file data');
                 done();
@@ -245,7 +220,7 @@ describe('tmpfilecache', function(){
                 should.exist(stat);
                 should.exist(stat.path);
                 stat.path.should.equal(tmpfilecache.key2File('non/existent/file.txt'));
-                mocks.tmpfilecache.fs.writeFile.__spy__.calledOnce.should.be.true;
+                mocks.tmpfilecache.fs.writeFile.calledOnce.should.be.true;
                 should.exist(mocks.tmpfilecache.fs.__files__[stat.path]);
                 mocks.tmpfilecache.fs.__files__[stat.path].data.should.equal('new file data');
                 done();
@@ -261,15 +236,74 @@ describe('tmpfilecache', function(){
             });
         });
     });
-    // describe('#cleanup()', function(){
-    //     var old_setTimeout = global.setTimeout;
-    //     beforeEach(function(){
-    //         sinon.stub(global, 'setTimeout');
-    //     });
-    //     afterEach(function(){
-    //         global.setTimeout.restore();
-    //     })
-    //     it('Should clean invalid files and set a Timeout.', function(){
-    //     });
-    // });
+    describe('#cleanup()', function(){
+        var setCleanupTimeout_stub=null;
+        beforeEach(function(){
+            mocks.tmpfilecache.fs.__set_files__([
+                {path: 'this/is/a/test.txt.bmp', atime:new Date()},
+                {path: 'this/is/a/very/old/file.txt', atime:new Date(0)}
+            ], {prefix: mock_config.tmpfilecache.path, pathmap:tmpfilecache.hash_key.bind(tmpfilecache)});
+            mocks.tmpfilecache.fs.__set_files__([
+                {path: '.gitignore', atime:new Date()}
+            ], {prefix: mock_config.tmpfilecache.path, keep_existing: true});
+            sinon.stub(tmpfilecache, 'setCleanupTimeout', function(){
+                if(setCleanupTimeout_stub){
+                    setCleanupTimeout_stub();
+                }
+            });
+            sinon.spy(mocks.tmpfilecache.fs, 'unlink');
+        });
+        afterEach(function(){
+            mocks.tmpfilecache.fs.unlink.restore();
+            tmpfilecache.setCleanupTimeout.restore();
+        });
+        it('Should clean invalid files and set a Timeout.', function(done){
+            setCleanupTimeout_stub =  function(){
+                mocks.tmpfilecache.fs.unlink.callCount.should.equal(1);
+                mocks.tmpfilecache.fs.unlink.calledWith(tmpfilecache.key2File('this/is/a/very/old/file.txt'));
+                done();
+            };
+            tmpfilecache.cleanup();
+        });
+    });
+    describe('#setCleanupTimeout()', function(){
+        var cleanup_stub, clock;
+        beforeEach(function(){
+            clock = sinon.useFakeTimers();
+            sinon.stub(tmpfilecache, 'cleanup', function(){
+                if(cleanup_stub){
+                    cleanup_stub();
+                }
+            });
+        });
+        afterEach(function(){
+            tmpfilecache.cleanup.restore();
+            clock.restore();
+        });
+        it('Should set a timer and call cleanup after `delay` milliseconds.', function(done){
+            var cleanupInterval = mock_config.tmpfilecache.cleanupInterval;            
+            cleanup_stub = function(){
+                done(new Error("cleanup called before the "+cleanupInterval+" millisecond delay."));
+            };
+            tmpfilecache.setCleanupTimeout();            
+            should.exist(tmpfilecache.cleanupTimeout);
+            clock.tick(cleanupInterval - 1);
+            cleanup_stub = function(){
+                done();
+            };
+            clock.tick(1);
+        });
+        it('Should not set a timer if one is already set.', function(done){
+            var cleanupInterval = mock_config.tmpfilecache.cleanupInterval;
+            cleanup_stub = function(){
+                done(new Error("cleanup should not have been called."));
+            };
+            tmpfilecache.cleanupTimeout = setTimeout(done, cleanupInterval + 1000);
+            tmpfilecache.setCleanupTimeout();
+            should.exist(tmpfilecache.cleanupTimeout);
+            clock.tick(cleanupInterval);
+            clock.tick(1000);
+        });
+    });
+
 });
