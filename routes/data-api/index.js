@@ -6,7 +6,7 @@ var routes = {
     '/species'   : require('./species'),
     '/songtypes' : require('./songtypes'),
     '/project'   : require('./project')
-}
+};
 
 
 Object.keys(routes).forEach(function(route){

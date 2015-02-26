@@ -107,10 +107,10 @@ var Recordings = {
         if(query){
             if (query['=']) {
                 return subject + ' = ' + mysql.escape(query['=']);
-            } else if (query['IN']) {
-                return subject + ' IN (' + mysql.escape(query['IN']) + ')';
-            } else if (query['BETWEEN']) {
-                return subject + ' BETWEEN ' + mysql.escape(query['BETWEEN'][0]) + ' AND ' + mysql.escape(query['BETWEEN'][1]);
+            } else if (query.IN) {
+                return subject + ' IN (' + mysql.escape(query.IN) + ')';
+            } else if (query.BETWEEN) {
+                return subject + ' BETWEEN ' + mysql.escape(query.BETWEEN[0]) + ' AND ' + mysql.escape(query.BETWEEN[1]);
             }
         }
         return undefined;

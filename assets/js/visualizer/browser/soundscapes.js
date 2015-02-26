@@ -25,7 +25,7 @@ angular.module('a2browser_soundscapes', [])
             self.soundscapes_lovo.setArray(self.soundscapes, 'soundscape');
             self.soundscapes_lovo.update = function(){
                 self.activate();
-            }
+            };
             if(!self.lovo){
                 self.lovo = self.soundscapes_lovo;
                 a2Browser.setLOVO(self.lovo);

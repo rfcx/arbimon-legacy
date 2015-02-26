@@ -286,7 +286,16 @@ module.exports = function(grunt) {
         },
         
         jshint: {
-            client: ['Gruntfile.js', 'assets/js/**/*.js']
+            frontEnd: ['assets/js/**/*.js'],
+            backEnd: [
+                'Gruntfile.js',
+                'bin/www',
+                'app.js',
+                'config/index.js',
+                'routes/**/*.js', 
+                'model/**/*.js', 
+                'utils/**/*.js'
+            ]
         },
         
         clean: {

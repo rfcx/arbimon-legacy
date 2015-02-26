@@ -55,19 +55,19 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
             while(i < rows.length)
             {
                 row = rows[i];
-                th = row['th'];
+                th = row.th;
 
-                var index = row['species_id']+'_'+row['songtype_id'];
+                var index = row.species_id + '_' + row.songtype_id;
                 if (typeof data[index]  == 'number')
                 {
-                    data[index] = data[index] + parseInt(row['present']);
+                    data[index] = data[index] + parseInt(row.present);
                     total[index] = total[index] + 1;
                 }
                 else
                 {
-                    data[index] = parseInt(row['present']);
-                    species[index] = row['scientific_name'];
-                    songtype[index] = row['songtype'];
+                    data[index] = parseInt(row.present);
+                    species[index] = row.scientific_name;
+                    songtype[index] = row.songtype;
                     total[index] = 1;
                 }
                 i = i + 1;
@@ -517,7 +517,7 @@ router.get('/project/classification/csv/:cid', function(req, res) {
 
     model.projects.classificationName(req.params.cid, function(err, row) {
         if(err) throw err;
-        var cname = row[0]['name'];
+        var cname = row[0].name;
         res.set({
             'Content-Disposition' : 'attachment; filename="'+cname+'.csv"',
             'Content-Type' : 'text/csv'
@@ -529,7 +529,7 @@ router.get('/project/classification/csv/:cid', function(req, res) {
             
             var thisrow;
             thisrow = row[0];
-            var th = thisrow['threshold'];
+            var th = thisrow.threshold;
             
             if(th) {
 
@@ -538,17 +538,17 @@ router.get('/project/classification/csv/:cid', function(req, res) {
                 for(var i = 0 ; i < row.length ; i++)
                 {
                         thisrow = row[i];
-                        var maxVal = thisrow['mvv'];
+                        var maxVal = thisrow.mvv;
                         var tprec = 0;
                         if(maxVal >= th )
                         {
                             tprec = 1;
                         }                     
 
-                        data.push( '"'+ thisrow['rec']+'",'+ thisrow['present']+','+tprec +','+th+','+maxVal+','+
-                           thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
-                           thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
-                           thisrow['scientific_name']+'","'+ thisrow['songtype']+'"');
+                        data.push( '"'+ thisrow.rec +'",'+ thisrow.present+','+tprec +','+th+','+maxVal+','+
+                           thisrow.name+',' + thisrow.year+',' + thisrow.month+','+
+                           thisrow.day+',' + thisrow.hour+','+ thisrow.min+',"' +
+                           thisrow.scientific_name+'","'+ thisrow.songtype+'"');
                 }
                 res.send(data.join("\n"));
 /*
@@ -584,14 +584,14 @@ router.get('/project/classification/csv/:cid', function(req, res) {
             else
             {
                 data.push('"rec","presence","site","year","month","day","hour","minute","species","songtype"');
-                for(var i = 0; i < row.length; i++)
+                for(var j = 0; j < row.length; j++)
                 {
-                    thisrow = row[i];
+                    thisrow = row[j];
     
-                    data.push( '"'+ thisrow['rec']+'",'+ thisrow['present']+','+
-                            thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
-                            thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
-                            thisrow['scientific_name']+'","'+ thisrow['songtype']+'"');
+                    data.push( '"'+ thisrow.rec+'",'+ thisrow.present+','+
+                            thisrow.name+',' + thisrow.year+',' + thisrow.month+','+
+                            thisrow.day+',' + thisrow.hour+','+ thisrow.min+',"' +
+                            thisrow.scientific_name+'","'+ thisrow.songtype+'"');
                 }
                 res.send(data.join("\n"));
             }

@@ -57,7 +57,7 @@ transaction.prototype = {
             }).bind(this));
         }
     }
-}
+};
 
 var sqlutil = {
     
@@ -94,10 +94,10 @@ var sqlutil = {
         if(query){
             if (query['=']) {
                 return subject + ' = ' + mysql.escape(query['=']);
-            } else if (query['IN']) {
-                return subject + ' IN (' + mysql.escape(query['IN']) + ')';
-            } else if (query['BETWEEN']) {
-                return subject + ' BETWEEN ' + mysql.escape(query['BETWEEN'][0]) + ' AND ' + mysql.escape(query['BETWEEN'][1]);
+            } else if (query.IN) {
+                return subject + ' IN (' + mysql.escape(query.IN) + ')';
+            } else if (query.BETWEEN) {
+                return subject + ' BETWEEN ' + mysql.escape(query.BETWEEN[0]) + ' AND ' + mysql.escape(query.BETWEEN[1]);
             }
         }
         return undefined;
@@ -128,7 +128,7 @@ var sqlutil = {
      * @param {Boolean} options.count_only Whether to return the queried recordings, or to just count them
      */
     compute_groupby_constraints: function(query_contraints, fields, level, options) {
-        options || (options = {});
+        options = options || {};
         var count_only = options.count_only;
         var group_by = {
             curr    : fields[level],
@@ -141,8 +141,10 @@ var sqlutil = {
             project_part : ''
         };
         var auto_compute = (level == 'auto' || level == 'next');
+        var field;
+        
         for(var i in query_contraints){
-            var field = fields[i];
+            field = fields[i];
             var constraint = sqlutil.apply_query_contraint(field && field.subject, query_contraints[i]);
             if(constraint && auto_compute) {
                 if(field.level && (!group_by.curr || group_by.curr.level < field.level)) {
@@ -159,8 +161,8 @@ var sqlutil = {
                     group_by.curr = fields[group_by.curr_level];
                 }
             } else {
-                for(var i in fields){
-                    var field = fields[i];
+                for(var j in fields){
+                    field = fields[j];
                     if(field.level && (!group_by.curr || group_by.curr.level > field.level)) {
                         group_by.curr = field;
                         group_by.curr_level = i;

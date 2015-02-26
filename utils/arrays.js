@@ -26,13 +26,15 @@ module.exports = {
                 next_property(new Error("Property " + property + " cannot be computed."));
             }
         }, function(err){
-            err ? callback(err) : callback(null, row_set);
+            if(err) return callback(err);
+            
+            callback(null, row_set);
         });
     },
 
 
     group_rows_by : function(rows, grouping_attribs, options){
-        options || (options = {});
+        options = options || {};
         var keep_keys = options.keep_keys;
         var collapse_single_leaves = options.collapse_single_leaves;
         if(!grouping_attribs) {
@@ -41,10 +43,12 @@ module.exports = {
         var grouped_rows = {};
         var ge_1 = grouping_attribs.length - 1;
         for(var i=0, e = rows.length; i < e; ++i){
+            var grouping_attrib, key;
             var row = rows[i];
             var cgroup = grouped_rows;
             for(var gi=0; gi < ge_1; ++gi){
-                var grouping_attrib = grouping_attribs[gi], key = row[grouping_attrib];
+                grouping_attrib = grouping_attribs[gi];
+                key = row[grouping_attrib];
                 if(!keep_keys) {
                     delete row[grouping_attrib];
                 }
@@ -53,7 +57,8 @@ module.exports = {
                 }
                 cgroup = cgroup[key];
             }
-            var grouping_attrib = grouping_attribs[ge_1], key = row[grouping_attrib];
+            grouping_attrib = grouping_attribs[ge_1];
+            key = row[grouping_attrib];
             if(!keep_keys) {
                 delete row[grouping_attrib];
             }
@@ -67,4 +72,4 @@ module.exports = {
         }
         return grouped_rows;
     }
-}
+};
