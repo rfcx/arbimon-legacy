@@ -17,8 +17,6 @@ var config = require('../config');
 var model = require('../model/');
 var sha256 = require('../utils/sha256');
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 var mc = new mcapi.Mailchimp(config('mailchimp').key);
 
 var mailTemplates = {
@@ -31,6 +29,9 @@ var transport = nodemailer.createTransport({
     port: config('email').port,
     auth: config('email').auth,
     greetingTimeout: 60000, 
+    tls: {
+        rejectUnauthorized: false
+    }
 });
 
 router.use(function(req, res, next) {
