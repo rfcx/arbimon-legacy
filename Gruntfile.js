@@ -276,14 +276,20 @@ module.exports = function(grunt) {
                 'config/index.js',
                 'routes/**/*.js', 
                 'model/**/*.js', 
-                'utils/**/*.js'
-            ],
-            tests: ['test/**/*.js']
+                'utils/**/*.js',
+                'test/**/*.js'
+            ]
         },
         
         clean: {
             assets: ['public/assets/*'],
             packages: ['bower_components', 'node_modules']
+        },
+        
+        karma: {
+            unit: {
+                configFile: 'karma.conf.js'
+            }
         }
     };
     
@@ -299,7 +305,9 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-ngdocs');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-karma');
     
+    grunt.registerTask('test-frontend', ['jshint:frontEnd', 'karma']);
     grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'concat']);
     grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'concat', 'uglify']);
     grunt.registerTask('server', ['express:dev', 'watch']);

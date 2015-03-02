@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./bin/www",
     "setup": "./scripts/setup/setup.sh",
-    "test" : "node_modules/.bin/istanbul cover node_modules/.bin/_mocha test/**/*.js"
+    "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha test/**/*.js"
   },
   "dependencies": {
     "async": "^0.9.0",
@@ -48,7 +48,15 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-express-server": "^0.4.19",
     "grunt-html2js": "^0.2.9",
+    "grunt-karma": "^0.10.1",
     "grunt-ngdocs": "^0.2.6",
+    "karma": "^0.12.31",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^0.1.7",
+    "karma-coverage": "^0.2.7",
+    "karma-firefox-launcher": "^0.1.4",
+    "karma-mocha": "^0.1.10",
+    "karma-nyan-reporter": "0.0.51",
     "mocha": "^2.1.0",
     "rewire": "^2.3.1",
     "sinon": "^1.12.2"
