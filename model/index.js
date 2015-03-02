@@ -7,7 +7,6 @@ module.exports.species          = require('./species');
 module.exports.songtypes        = require('./songtypes');
 module.exports.models           = require('./models');
 module.exports.jobs             = require('./jobs');
-module.exports.job_queues       = require('./job_queues');
 module.exports.news             = require('./news');
 module.exports.playlists        = require('./playlists');
 module.exports.soundscapes      = require('./soundscapes');

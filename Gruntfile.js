@@ -257,19 +257,6 @@ module.exports = function(grunt) {
                     spawn: false // for grunt-contrib-watch v0.5.0+
                 }
             },
-            jobqueue: {
-                files: [
-                    'jobqueue-app.js',
-                    'model/job_queues.js',
-                    'utils/**/*.js',
-                    'config/**/*.js',
-                    'config/**/*.json'
-                ],
-                tasks: ['express:jobqueue'],
-                options: {
-                    spawn: false // for grunt-contrib-watch v0.5.0+
-                }
-            },
         },
         
         express: {
@@ -278,11 +265,6 @@ module.exports = function(grunt) {
                     script: 'bin/www'
                 }
             },
-            jobqueue: {
-                options: {
-                    script: 'bin/jobqueue'
-                }
-            }
         },
         
         jshint: {
@@ -305,14 +287,6 @@ module.exports = function(grunt) {
         }
     };
     
-    var appserver  = grunt.cli.tasks.indexOf('server') >= 0;
-    var jobqserver = grunt.cli.tasks.indexOf('jobqueue-server') >= 0;
-    if(!jobqserver){
-        delete initcfg.watch.jobqueue;
-    } else if(!appserver){
-        initcfg.watch.options.livereload = false;
-    }
-    
     grunt.initConfig(initcfg);
     
     grunt.loadNpmTasks('grunt-contrib-watch');
@@ -329,7 +303,6 @@ module.exports = function(grunt) {
     grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'concat']);
     grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'concat', 'uglify']);
     grunt.registerTask('server', ['express:dev', 'watch']);
-    grunt.registerTask('jobqueue-server', ['express:jobqueue', 'watch:jobqueue']);
     grunt.registerTask('docs', ['ngdocs']);
     grunt.registerTask('default', ['build']);
 };

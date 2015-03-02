@@ -10,7 +10,6 @@ var AWS = require('aws-sdk');
 var s3 = new AWS.S3();
 
 var model = require('../../model');
-var jobQueue = require('../../utils/jobqueue');
 var pokeDaMonkey = require('../../utils/monkey');
 var scriptsFolder = __dirname+'/../../scripts/';
 var config = require('../../config');
@@ -460,19 +459,6 @@ router.get('/project/:projectUrl/progress', function(req, res, next) {
 
         res.json(row);
     });
-});
-
-router.get('/project/:projectUrl/progress/queue', function(req, res) {
-
-    var string = "(running:"+jobQueue.running() +
-                 ") (idle: "+jobQueue.idle()+
-                 ") (concurrency: "+ jobQueue.concurrency+
-                 ") (started: "+ jobQueue.started+
-                 ") (howmanyInqueue: "+ jobQueue.length()+
-                 ") (isPaused: "+ jobQueue.paused+")";
-
-    res.json({"debug":string});
-
 });
 
 router.get('/job/types', function(req, res, next) {
