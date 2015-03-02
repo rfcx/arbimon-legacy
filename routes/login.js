@@ -540,7 +540,7 @@ router.get('/reset_password/:hash', function(req, res, next) {
             return;
         }
         
-        res.render('reset-password');
+        res.render('reset-password', { error: '' });
     });
 });
 
