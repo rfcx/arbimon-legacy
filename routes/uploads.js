@@ -21,7 +21,7 @@ var s3 = new AWS.S3({
 }); 
 
 
-var processUpload = function(upload, cb) {
+var processUpload = function(upload) {
     
     var file = upload.file;
     debug("processUpload:", file.filename);
@@ -182,7 +182,7 @@ var processUpload = function(upload, cb) {
                 });
         }
         
-        if(err) return cb(err);
+        if(err) return console.error(err);
         
         debug('process upload results:');
         debug(results);
