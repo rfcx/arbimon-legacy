@@ -295,7 +295,8 @@ module.exports = function(grunt) {
                 'routes/**/*.js', 
                 'model/**/*.js', 
                 'utils/**/*.js'
-            ]
+            ],
+            tests: ['test/**/*.js']
         },
         
         clean: {
