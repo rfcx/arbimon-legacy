@@ -285,7 +285,7 @@ describe('tmpfilecache', function(){
             cleanup_stub = function(){
                 done(new Error("cleanup called before the "+cleanupInterval+" millisecond delay."));
             };
-            tmpfilecache.setCleanupTimeout();            
+            tmpfilecache.setCleanupTimeout();
             should.exist(tmpfilecache.cleanupTimeout);
             clock.tick(cleanupInterval - 1);
             cleanup_stub = function(){

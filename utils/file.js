@@ -11,13 +11,13 @@ var file = function(filename, mode, callback){
 };
 
 var struct = {
-    ensure : function(buffer, size){
-        if(!buffer || buffer.length < size){
-            return new buffer.Buffer(size);
-        } else {
-            return buffer;
-        }
-    },
+    // ensure : function(buffer, size){
+    //     if(!buffer || buffer.length < size){
+    //         return new buffer.Buffer(size);
+    //     } else {
+    //         return buffer;
+    //     }
+    // },
 
     readLEUint : function(buffer, offset, count){
         var v=0;
@@ -53,20 +53,20 @@ var struct = {
                 }
                 times = 1;
                 bufdelta = 1;
-                if(_3 == 'Q'){
-                    times = (_2 | 0) || 1;
-                    bufdelta = 8;
-                } else if(_3 == 'U'){
-                    bufdelta = (_2 | 0) || 1;
-                } else if(_3 === undefined){
-                    return _0;
+                if(_3 !== undefined){
+                    if(_3 == 'Q'){
+                        times = (_2 | 0) || 1;
+                        bufdelta = 8;
+                    } else /* if(_3 == 'U') */ {
+                        bufdelta = (_2 | 0) || 1;
+                    }
+                    for(var ti=0, te=times; ti < te; ++ti){
+                        var v = readfn(buffer, bufpos, bufdelta);
+                        parts.push(v);
+                    }
+                    bufpos += bufdelta;
+                    last = i + _0.length;
                 }
-                for(var ti=0, te=times; ti < te; ++ti){
-                    var v = readfn(buffer, bufpos, bufdelta);
-                    parts.push(v);
-                }
-                bufpos += bufdelta;
-                last = i + _0.length;
                 return _0;
             });
             return parts;
