@@ -47,28 +47,8 @@
             </div>
             <div class="well">
                 <form name="pass">
-                    <div class="form-group" ng-class="{ 'has-error': !pass.newpass1.$valid, 'has-success': newpass1 === newpass2 }">
-                        <label for="newpass1">New password</label>
-                        <input type="password" 
-                            class="form-control" 
-                            id="newpass1" 
-                            ng-model="newpass1" 
-                            name="newpass1" 
-                            ng-minlength="8" 
-                            required 
-                            placeholder="new password: mininum 8 characters">
-                    </div>
-                    <div class="form-group" ng-class="{ 'has-error': !pass.newpass2.$valid, 'has-success': newpass1 === newpass2 }">
-                        <input type="password" 
-                            class="form-control" 
-                            id="newpass2" 
-                            ng-model="newpass2" 
-                            name="newpass2" 
-                            required 
-                            placeholder="repeat new password">
-                    </div>
-                    <p ng-hide="(newpass1 !== newpass2) || !pass.newpass1.$valid">Passwords match!</p>
-                    <button class="btn btn-primary" ng-click="changePass() | trackEvent:'User Settings':'changePass'" ng-disabled="(newpass1 !== newpass2) || !pass.newpass1.$valid">
+                    <password-input ng-model="newPass" user-inputs="[user.username, user.name, user.lastname]" validation="passResult"></password-input>
+                    <button class="btn btn-primary" ng-click="changePass() | trackEvent:'User Settings':'changePass'">
                         <i class="fa fa-key"></i> change password
                     </button>
                 </form>

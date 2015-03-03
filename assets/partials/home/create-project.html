@@ -1,51 +1,21 @@
+<form name="projectForm" role="form" ng-submit="create() | trackEvent:'Home-Create-Project':'ok'">
 <div class="modal-header">
     <h2>Create project</h2>
 </div>
 
 <div class="modal-body">
-    <alert ng-repeat="alert in errors" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</alert>
-    <form role="form">
-    <div class="form-group" ng-class="{'has-error': error_name }">
-        <label class="control-label" for="name" >Name:</label>
-        <input class="form-control" 
-            id="name" 
-            type="text" 
-            ng-model="project.name" 
-            ng-change="testName()" 
-            placeholder="Project Name">
+    <p ng-show="error" class="text-danger">
         
-    </div>
-    <div class="form-group" ng-class="{'has-error': error_url }">
-        <label class="control-label" for="url">URL: </label>
-        <input class="form-control" 
-            id="url"type="text" 
-            ng-model="project.url" 
-            ng-change="testUrl()" 
-            placeholder="example: project_url, project-url, projecturl">
-    </div>
-    <div class="form-group" ng-class="{'has-error': error_description }">
-        <label class="control-label" for="description">Description:</label>
-        <textarea class="form-control fixed-width" 
-            id="description" 
-            ng-model="project.description" 
-            placeholder="this project is about... (mininum 80 characters)"></textarea>
-        
-    </div>
-    <div class="radio">
-        <label class="control-label" for="public">
-            <input id="public" type="radio" ng-model="project.is_private" value="0">
-            <i class="fa fa-globe"></i> Public project - anyone can view it as a guest
-        </label>
-    </div>
-    <div class="radio">
-        <label class="control-label" for="private">
-            <input id="private" type="radio" ng-model="project.is_private" value="1">
-            <i class="fa fa-lock"></i> Private project - only you and user you authorize can see it
-        </label>
-    </div>
-    </form>
+    </p>
+    <project-form ng-model="project" valid="isValid"></project-form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="verify() | trackEvent:'Home-Create-Project':'ok'">OK</button>
-    <button class="btn btn-warning" ng-click="cancel() | trackEvent:'Home-Create-Project':'cancel'">Cancel</button>
+    <button class="btn btn-primary" type="submit" >
+        Create
+    </button>
+    <button class="btn btn-default" type="button" 
+        ng-click="$dismiss() | trackEvent:'Home-Create-Project':'cancel'">
+        Close
+    </button>
 </div>
+</form>

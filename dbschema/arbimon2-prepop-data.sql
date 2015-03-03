@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.40, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.41, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: arbimon2
 -- ------------------------------------------------------
--- Server version	5.5.40-0ubuntu0.14.04.1
+-- Server version	5.5.41-0ubuntu0.14.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -215,4 +215,4 @@ INSERT INTO `user_account_support_type` VALUES (2,'password_recovery','Allows a 
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-12-29 17:34:50
+-- Dump completed on 2015-02-25 16:38:30

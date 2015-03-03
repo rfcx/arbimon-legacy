@@ -1,6 +1,6 @@
-angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane','angularytics']).
+angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane','angularytics', 'a2forms']).
 config(function(AngularyticsProvider) {
-    AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
+    AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
 }).
 run(function(Angularytics) {
     Angularytics.init();
@@ -49,126 +49,34 @@ run(function(Angularytics) {
 })
 .controller('CreateProjectCtrl', function($scope, $http, $modalInstance, notify) {
     
-    $scope.errors = [];
     
-    $scope.project = {
-        is_private: 0
-    };
-    
-    $scope.testName = function() {
-        if(!$scope.project.name) return;
+    $scope.create = function() {
+        if(!$scope.isValid) return;
         
-        var nameRe = /[\w\d]+(\s?[\w\d]+)*/;
+        console.log('create');
         
-        if(
-            nameRe.exec($scope.project.name) === null || 
-            nameRe.exec($scope.project.name)[0] !== $scope.project.name
-        )
-            $scope.error_name = true;
-        else
-            $scope.error_name = false;
+        $http.post('/api/project/create', { project: $scope.project })
+        .success(function(data) {
+            if(!data.error)
+                $modalInstance.close(data.message);
+                
+            if(data.projectLimit) {
+                $modalInstance.dismiss();
+                notify.error('You have reached project limit, could not create new project. Contact us if you want to change the project limit');
+            }
             
+            if(data.nameExists) {
+                notify.error('Name <b>'+$scope.project.name+'</b> not available');
+            }
+            if(data.urlExists) {
+                notify.error('URL <b>'+$scope.project.url+'</b> taken choose another one');
+            }
+            
+        })
+        .error(function(err) {
+            notify.error('Error Communicating with Server');           
+        });
     };
     
-    $scope.testUrl = function() {
-        if(!$scope.project.url) return;
-        
-        var urlRe = /[a-z0-9]+((-{1}|_{1})?[a-z0-9]+)+/;
-        
-        if(
-            urlRe.exec($scope.project.url) === null
-            || (urlRe.exec($scope.project.url)[0] !== $scope.project.url)
-        )
-            $scope.error_url = true;
-        else
-            $scope.error_url = false;
-    };
-    
-    
-    $scope.verify = function () {
-        var good = true;
-        
-        
-        if($scope.error_name) {
-            $scope.errors.push({ 
-                type: 'danger', 
-                msg: 'Invalid project name only space, _, - and alphanumeric characters' 
-            });
-            good = false;
-        }
-        if($scope.error_url) {
-            $scope.errors.push({ 
-                type: 'danger', 
-                msg: 'Invalid project URL alphanumeric characters separated by - or _' 
-            });
-            good = false;
-        }
-                
-        if(!$scope.project.name) {
-            $scope.error_name = true;
-            good = false;          
-        }
-        
-        if(!$scope.project.url) {
-            $scope.error_url = true;
-            good = false;
-        }
-               
-        
-        if(!$scope.project.description) {
-            $scope.error_description = true;
-            good = false;
-        }
-        
-        
-        if($scope.project.description && $scope.project.description.length < 80) {
-            $scope.error_description = true;
-            $scope.errors.push({ 
-                type: 'danger', 
-                msg: 'Description needs to be at least 80 characters long, you got ' + $scope.project.description.length
-            });
-            good = false;
-        }
-        
-        if(good) {
-            $http.post('/api/project/create', { project: $scope.project })
-            .success(function(data) {
-                if(!data.error)
-                    $modalInstance.close(data.message);
-                    
-                if(data.projectLimit) {
-                    $modalInstance.dismiss();
-                    notify.error('You have reached project limit, can not create new project');
-                }
-                
-                if(data.nameExists) {
-                    $scope.errors.push({ 
-                        type: 'danger', 
-                        msg: 'Name taken choose another one'
-                    });
-                    $scope.error_name = true;
-                }
-                if(data.urlExists) {
-                    $scope.errors.push({ 
-                        type: 'danger', 
-                        msg: 'URL taken choose another one'
-                    });
-                    $scope.error_url = true;
-                }
-                
-            })
-            .error(function(err) {
-                notify.error('Error Communicating with Server');           
-            });
-        }
-    };
-    
-    $scope.closeAlert = function(index) {
-        $scope.errors.splice(index, 1);
-    };
-    
-    $scope.cancel = function () {
-        $modalInstance.dismiss('cancel');
-    };
 })
 ;

@@ -1,94 +1,129 @@
-
-(function(angular)
-{ 
+angular.module('register' , ['ui.bootstrap','angularytics', 'g-recaptcha', 'humane', 'a2forms', 'a2directives'])
+.config(function(AngularyticsProvider) {
+    AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
+})
+.run(function(Angularytics) {
+    Angularytics.init();
+})
+.controller('UserRegisterCtrl', function($scope, $modal, $http, $timeout, $interval, notify){
     
-    var register = angular.module('register' , ['ui.bootstrap','angularytics']);  
+    var captchaResp = '';
     
-    register.config(function(AngularyticsProvider) {
-       AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
-    });
-    register.run(function(Angularytics) {
-        Angularytics.init();
-    });  
-    register.controller('UserRegisterCtrl', function($scope, $modal, $http){
+    $scope.testUsername = function() {
         
-        $scope.terms_accepted = false;
-        $scope.subscribe = true;
-        $scope.data = {
-            first_name : '',
-            last_name : '',
-            username : '',
-            useremail : '',
-            password : '' ,
-            confirm : ''
-        };   
+        $scope.usernameOk = '';
+        $scope.usernameErr = '';
         
-        $scope.message = '';
+        if($scope.testUserTimeout) {
+            $timeout.cancel($scope.testUserTimeout);
+        }
         
-        $scope.creating = function()
-        {
-            $scope.message = 'Creating account...';
-        };
+        if($scope.regis.username.$error.required) {
+            return;
+        }
+        else if($scope.regis.username.$error.pattern) {
+            $scope.usernameErr = "Username must be at least 4 characters long "+
+                                 "and can only contain alphanumeric characters,"+
+                                 " dash(-), underscore(_) and dot(.).";
+            return;
+        }
         
-        $scope.buttonEnable = function () 
-        {
-            var emailFlag = false;
-            var passwordDoNotMatch = false;
-            var  passwordLength = false;
-
-            if ( !$scope.data.useremail)
-            {
-                emailFlag = true;
-            }
-            else
-            {
-                emailFlag = $scope.data.useremail.length === '';
-                $("#data-message").html("");
-            }
-            
-            if ($scope.data.password !== '' && $scope.data.confirm !== '')
-            {
-                if ($scope.data.password.length < 8 )
-                {
-                    passwordLength = true;
-                    $scope.message = 'Password must have 8 or more characters.';
-                }else
-                {
-                    if ($scope.data.password !== $scope.data.confirm )
-                    {
-                        $scope.message = 'Passwords do not match';
-                        passwordDoNotMatch= true;
+        $scope.testUserTimeout = $timeout(function(){
+            $http.get('/api/login_available', {
+                params: {
+                    username: $scope.user.username
+                }
+            })
+            .success(function(data) {
+                if(data.available) {
+                    $scope.usernameOk = $scope.user.username + " is available";
+                }
+                else {
+                    $scope.usernameErr = $scope.user.username + " is not available";
+                }
+            });
+        }, 1000);
+    };
+    
+    $scope.testEmail = function() {
+        $scope.emailOk = '';
+        $scope.emailErr = '';
+        
+        if($scope.testEmailTimeout) {
+            $timeout.cancel($scope.testEmailTimeout);
+        }
+        
+        if($scope.regis.email.$error.required) {
+            return;
+        }
+        else if($scope.regis.email.$error.email) {
+            $scope.emailErr = "Invalid email";
+            return;
+        }
+        
+        
+        $scope.testEmailTimeout = $timeout(function(){
+            $http.get('/api/email_available', {
+                params: {
+                    email: $scope.user.email
+                }
+            })
+            .success(function(data) {
+                if(data.available) {
+                    $scope.emailOk = $scope.user.email + " is available";
+                }
+                else {
+                    if(data.invalid) {
+                        $scope.emailErr = $scope.user.email + " is not a valid address";
                     }
-                    else
-                    {
-                        $scope.message = '';
-                        passwordDoNotMatch = false;
+                    else {
+                        $scope.emailErr = $scope.user.email + " is not available";
                     }
                 }
-            }
-            
-            var userspaces = false;
-            if ($scope.data.username !== '' && $scope.data.username.split(' ').length > 1)
-            {
-                userspaces  = true;
-                $scope.message = 'Username cannot have spaces.';
-            }
-            
-            return  (
-                passwordLength ||
-                !$scope.terms_accepted  ||
-                userspaces  ||
-                passwordDoNotMatch  ||
-                emailFlag ||
-                $scope.data.first_name === '' ||
-                $scope.data.last_name === '' ||
-                $scope.data.username === '' ||
-                $scope.data.password === '' ||
-                $scope.data.confirm === ''
-            );
-        };
-    })
-    ;
-
-}
-)(angular);
+            });
+        }, 1000);
+    };
+    
+    
+    $scope.register =  function($event) {
+        if(!$scope.passResult.valid) {
+            notify.error($scope.passResult.msg);
+        }
+        else if($scope.usernameErr) {
+            notify.log($scope.usernameErr);
+        }
+        else if($scope.emailErr) {
+            notify.log($scope.emailErr);
+        }
+        else if(!$scope.terms_accepted) {
+            notify.log('To register you must agree with our terms of service');
+        }
+        else if(!$scope.captchaResp) {
+            notify.log('Please complete the captcha');
+        }
+        else {
+            $scope.loading = true;
+            $http.post('/register', {
+                user: $scope.user,
+                captcha: $scope.captchaResp,
+                newsletter: $scope.newsletter
+            })
+            .success(function(data) {
+                $scope.loading = false;
+                if(data.success) {
+                    $scope.completed = true;
+                }
+            })
+            .error(function(data) {
+                $scope.loading = false;
+                if(data.error) {
+                    $scope.resetCaptcha();
+                    $scope.captchaResp = '';
+                    return notify.error(data.error);
+                }
+                notify.error("something went wrong, please try again later");
+            });
+        }
+    };
+})
+;

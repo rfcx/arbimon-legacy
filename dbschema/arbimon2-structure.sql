@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.5.41, for debian-linux-gnu (x86_64)
 --
--- Host: 10.0.0.4    Database: arbimon2
+-- Host: localhost    Database: arbimon2
 -- ------------------------------------------------------
 -- Server version	5.5.41-0ubuntu0.14.04.1
 
@@ -53,10 +53,11 @@ DROP TABLE IF EXISTS `invalid_logins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `invalid_logins` (
-  `ip` text NOT NULL,
-  `time` bigint(11) NOT NULL,
-  `user` text NOT NULL,
-  `reason` text NOT NULL
+  `ip` varchar(40) NOT NULL,
+  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `user` varchar(32) NOT NULL,
+  `reason` varchar(50) NOT NULL,
+  PRIMARY KEY (`ip`,`time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -525,7 +526,7 @@ CREATE TABLE `recording_validations` (
   KEY `songtype_id` (`songtype_id`),
   KEY `project_id` (`project_id`),
   KEY `project_id_2` (`project_id`),
-  CONSTRAINT `recording_validations_ibfk_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`),
+  CONSTRAINT `recording_validations_ibfk_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `recording_validations_ibfk_5` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `recording_validations_ibfk_6` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`),
   CONSTRAINT `recording_validations_ibfk_7` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`),
@@ -650,6 +651,7 @@ CREATE TABLE `sites` (
   `lon` double NOT NULL,
   `alt` double NOT NULL,
   `published` tinyint(1) NOT NULL DEFAULT '0',
+  `token_created_on` bigint(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`site_id`),
   KEY `project_id` (`project_id`),
   KEY `site_type_id` (`site_type_id`),
@@ -972,7 +974,7 @@ CREATE TABLE `uploads_processing` (
   `upload_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `project_id` int(10) unsigned NOT NULL,
   `site_id` int(10) unsigned NOT NULL,
-  `user_id` int(10) unsigned NOT NULL,
+  `user_id` int(10) unsigned DEFAULT NULL,
   `upload_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `filename` varchar(100) NOT NULL,
   PRIMARY KEY (`upload_id`),
@@ -982,8 +984,7 @@ CREATE TABLE `uploads_processing` (
   KEY `user_id` (`user_id`),
   KEY `upload_time` (`upload_time`),
   CONSTRAINT `uploads_processing_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `uploads_processing_ibfk_2` FOREIGN KEY (`site_id`) REFERENCES `sites` (`site_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `uploads_processing_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `uploads_processing_ibfk_2` FOREIGN KEY (`site_id`) REFERENCES `sites` (`site_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='recording uploaded and being process';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -999,11 +1000,12 @@ CREATE TABLE `user_account_support_request` (
   `user_id` int(10) unsigned DEFAULT NULL,
   `support_type_id` int(10) unsigned NOT NULL,
   `hash` varchar(64) NOT NULL,
-  `params` text NOT NULL,
-  `consumed` tinyint(1) NOT NULL,
+  `params` text,
+  `consumed` tinyint(1) NOT NULL DEFAULT '0',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `expires` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`support_request_id`),
+  UNIQUE KEY `idx_user_account_support_request_hash` (`hash`),
   KEY `user_id` (`user_id`),
   KEY `support_type_id` (`support_type_id`),
   CONSTRAINT `user_account_support_request_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
@@ -1061,9 +1063,12 @@ CREATE TABLE `users` (
   `firstname` varchar(255) NOT NULL,
   `lastname` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `last_login` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `last_login` datetime DEFAULT NULL,
   `is_super` tinyint(1) NOT NULL DEFAULT '0',
   `project_limit` int(10) unsigned NOT NULL DEFAULT '1',
+  `created_on` datetime DEFAULT NULL,
+  `login_tries` tinyint(3) unsigned DEFAULT '0',
+  `disabled_until` datetime DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `login` (`login`)
@@ -1100,4 +1105,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-01-26 14:54:05
+-- Dump completed on 2015-02-25 16:38:26

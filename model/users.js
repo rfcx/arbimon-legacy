@@ -1,54 +1,58 @@
 var util = require('util');
 var mysql = require('mysql');
-
-
+var Joi = require('joi');
+var sprintf = require("sprintf-js").sprintf;
 
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
+
 var Users = {
     findByUsername: function(username, callback) {
-        var q = 'SELECT * ' +
-                'FROM users ' +
-                'WHERE login=%s';
-        q = util.format(q, mysql.escape(username))
-        queryHandler(q, callback)
+        var q = 'SELECT * \n' +
+                'FROM users \n' +
+                'WHERE login = %s';
+        q = util.format(q, mysql.escape(username));
+        queryHandler(q, callback);
     },
     findByEmail: function(email, callback) {
-        var q = 'SELECT * ' +
-                'FROM users ' +
-                'WHERE email=%s';
-        q = util.format(q, mysql.escape(email))
-        queryHandler(q, callback)
+        var q = 'SELECT * \n' +
+                'FROM users \n' +
+                'WHERE email = %s';
+        q = util.format(q, mysql.escape(email));
+        queryHandler(q, callback);
     },
     findById: function(user_id, callback) {
-        var q = 'SELECT * ' +
-                'FROM users ' +
-                'WHERE user_id=%s';
-        q = util.format(q, mysql.escape(user_id))
-        queryHandler(q, callback)
+        var q = 'SELECT * \n' +
+                'FROM users \n' +
+                'WHERE user_id = %s';
+        q = util.format(q, mysql.escape(user_id));
+        queryHandler(q, callback);
     },
-    loginTry: function(ip,time,user,msg, callback) {
-        var q = 'INSERT INTO `arbimon2`.`invalid_logins` '+
-                '(`ip`, `time`, `user`, `reason`) '+
-                'VALUES (\''+ip+'\', \''+time+'\', '+
-                mysql.escape(user)+', \''+msg+'\');';
+    loginTry: function(ip, user, msg, callback) {
+        
+        var q = 'INSERT INTO invalid_logins(`ip`, `user`, `reason`) \n'+
+                'VALUES ('+
+                mysql.escape(ip) +',' + 
+                mysql.escape(user) + ',' + 
+                mysql.escape(msg) + ')';
                 
-        queryHandler(q, callback)
+        queryHandler(q, callback);
     },
-    loginsTries: function(ip, callback) {
-        var q = 'SELECT * ' +
-                'FROM `invalid_logins` ' +
-                'WHERE ip=%s';
-        q = util.format(q, mysql.escape(ip))
-        queryHandler(q, callback)
+    invalidLogins: function(ip, callback) {
+        var q = 'SELECT COUNT(ip) as tries \n'+
+                'FROM invalid_logins \n'+
+                'WHERE ip = %s \n'+
+                'AND `time` BETWEEN (NOW() - interval 1 hour) and NOW()';
+        q = util.format(q, mysql.escape(ip));
+        queryHandler(q, callback);
     },
     removeLoginTries: function(ip, callback) {
         var q = 'DELETE ' +
                 'FROM `invalid_logins` ' +
-                'WHERE ip=%s';
-        q = util.format(q, mysql.escape(ip))
-        queryHandler(q, callback)
+                'WHERE ip = %s';
+        q = util.format(q, mysql.escape(ip));
+        queryHandler(q, callback);
     },
     search: function(query, callback) {
         query = mysql.escape('%'+query+'%');
@@ -75,9 +79,10 @@ var Users = {
         // process values to be updated
         for( var i in userData) {
             if(i !== 'user_id' && typeof userData[i] !== 'undefined') {
-                userData[i] = mysql.escape(userData[i]);
-
-                values.push(util.format('`%s`=%s', i, userData[i]));
+                values.push(util.format('%s = %s', 
+                    mysql.escapeId(i), 
+                    mysql.escape(userData[i])
+                ));
             }
         }
 
@@ -106,11 +111,12 @@ var Users = {
                 return callback(new Error("required field '"+ requiredValues[i] + "' missing"));
         }
 
-        for( var i in userData) {
+        for(i in userData) {
             if(i !== 'user_id') {
-                userData[i] = mysql.escape(userData[i]);
-
-                values.push(util.format('`%s`=%s', i, userData[i]));
+                values.push(util.format('%s = %s', 
+                    mysql.escapeId(i), 
+                    mysql.escape(userData[i])
+                ));
             }
         }
 
@@ -153,48 +159,90 @@ var Users = {
         
         q = util.format(q, mysql.escape(user_id));
         queryHandler(q, callback);
-    }
-    ,
-    newAccountRequest : function(data,hash,callback)
-    {
-        var q = 'INSERT INTO `user_account_support_request` ' +
-                ' ( `support_type_id`, `hash`, `params`, `consumed`,  ' +
-                ' `timestamp`, `expires`) VALUES (1,\''+hash+'\',\''+JSON.stringify(data)+'\',0, ' +
-                ' now(),(SELECT FROM_UNIXTIME( UNIX_TIMESTAMP( now( ) ) ' +
-                ' + (SELECT `max_lifetime` FROM `user_account_support_type` ' + 
-                ' WHERE `account_support_type_id` = 1) ) as expiresin)) ';
+    },
+    
+    newAccountRequest: function(params, hash, callback){
+        var q = 'INSERT INTO user_account_support_request'+
+                '(support_type_id, hash, params, expires) \n'+
+                'VALUES (1,' + 
+                mysql.escape(hash) + ','+ 
+                mysql.escape(JSON.stringify(params))+ ','+
+                '(\n'+
+                '    SELECT FROM_UNIXTIME( \n'+
+                '        UNIX_TIMESTAMP(now()) +\n' +
+                '        (SELECT max_lifetime \n'+
+                '         FROM user_account_support_type\n' + 
+                '         WHERE account_support_type_id = 1)\n'+
+                '    ) as expiresin \n'+
+                '))';
 
         queryHandler(q, callback);
-    }
-    ,
-    accountSupportExistsByEmail : function(email,callback)
-    {
-        var q = 'SELECT * FROM `user_account_support_request` WHERE `params` like \'%'+email+'%\''
+    },
+    
+    newPasswordResetRequest: function(user_id, hash, callback) {
+        var q = 'INSERT INTO user_account_support_request'+
+                '(support_type_id, user_id, hash, expires) \n'+
+                'VALUES (2,' + 
+                mysql.escape(user_id) + ','+
+                mysql.escape(hash) + ','+
+                '(\n'+
+                '    SELECT FROM_UNIXTIME( \n'+
+                '        UNIX_TIMESTAMP(now()) +\n' +
+                '        (SELECT max_lifetime \n'+
+                '         FROM user_account_support_type\n' + 
+                '         WHERE account_support_type_id = 2)\n'+
+                '    ) as expiresin \n'+
+                '))';
+
+        queryHandler(q, callback);
+    },
+    
+    removeRequest : function(id, callback) {
+        var q = 'DELETE FROM user_account_support_request \n'+ 
+                'WHERE support_request_id = '+ mysql.escape(id);
         
         queryHandler(q, callback);
-    }
-    ,removeRequest : function(id,callback)
-    {
-        var q = 'delete FROM `user_account_support_request` WHERE `support_request_id` = \''+id+'\''
+    },
+    
+    findAccountSupportReq: function(hash, callback) {
+        var q = 'SELECT * \n'+
+                'FROM user_account_support_request \n'+
+                'WHERE hash = ' + mysql.escape(hash);
         
         queryHandler(q, callback);
-    }
-    ,
-    accountRequestExists : function(hash,callback)
-    {
-        var q = 'SELECT * FROM `user_account_support_request` WHERE `hash` = \''+hash+'\''
+    },
+    
+    usernameInUse: function(username, callback) {
+        var q = "SELECT (SELECT count(*) as count \n"+
+            "FROM user_account_support_request \n"+
+            "WHERE params LIKE %1$s) \n+\n"+
+            "(SELECT count(*) as count \n"+
+            "FROM users AS u \n"+
+            "WHERE login = %2$s) as count";
         
-        queryHandler(q, callback); 
-    }
-    ,
-    newUser : function(data,callback)
-    {
-        data = JSON.parse(data)
-        var q= "INSERT INTO `users`( `login`, `password`, `firstname`, `lastname`, `email`, `is_super`) "+
-                " VALUES ('"+data.username+"','"+data.password+"','"+data.first_name+"','"+data.last_name+"','"+data.email+"',0)"
+        q = sprintf(q, mysql.escape('%"'+username+'"%'), mysql.escape(username));
+        queryHandler(q, function(err, rows){
+            if(err) return callback(err);
+            
+            callback(null, rows[0].count > 0);
+        });
+    },
+    
+    emailInUse: function(username, callback) {
+        var q = "SELECT (SELECT count(*) as count \n"+
+            "FROM user_account_support_request \n"+
+            "WHERE params LIKE %1$s) \n+\n"+
+            "(SELECT count(*) as count \n"+
+            "FROM users AS u \n"+
+            "WHERE email = %2$s) as count";
         
-        queryHandler(q, callback); 
-    }
+        q = sprintf(q, mysql.escape('%"'+username+'"%'), mysql.escape(username));
+        queryHandler(q, function(err, rows){
+            if(err) return callback(err);
+            
+            callback(null, rows[0].count > 0);
+        });
+    },
 };
 
 module.exports = Users;

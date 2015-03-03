@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html ng-app="reset-password">
+
+<head>
+    <% include head %>
+        <title>ARBIMON II - Forgot credentials</title>
+</head>
+
+<body ng-controller="ResetRequestCtrl">
+    <div class="container">
+        <div class="login-top">
+            <a href="/"><img src="/images/logo.svg"></a>
+        </div>
+    </div>
+    <div class="login-banner">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-offset-3 col-sm-6 registration">
+                    <div class="panel-body">
+                        <h3>Reset your password</h3>
+                        <form ng-submit="request()" ng-hide="requestComplete || loading">
+                            <div class="form-group">
+                                <input ng-model="email" 
+                                    type="email" 
+                                    name="email" 
+                                    id="email" 
+                                    class="form-control" 
+                                    placeholder="Email Address"
+                                    required />
+                            </div>
+                            <button class="btn btn-primary">Continue</button>
+                        </form>
+                        <p class="activation-text">
+                            <span ng-show="loading">
+                                <loader></loader> Processing request
+                            </span>
+                            <span ng-show="requestComplete">
+                                A email with the instructions to reset your 
+                                password had been sent to <b>{{ email }}</b> 
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

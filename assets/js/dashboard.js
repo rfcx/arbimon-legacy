@@ -4,6 +4,7 @@ angular.module('dashboard',[
     'ui.bootstrap',
     'ui.router',
     'ct.ui.router.extras',
+    'a2forms',
     'humane'
 ])
 .config(function($stickyStateProvider, $stateProvider, $urlRouterProvider) {
@@ -110,34 +111,31 @@ angular.module('dashboard',[
         $scope.recsQty = count;
     });
 })
-.controller('SettingsCtrl', function($scope, Project, notify,$location,$window) {
+.controller('SettingsCtrl', function($scope, Project, notify, $window, $timeout) {
     Project.getInfo(function(info) {
         $scope.project = info;
     });
     
     $scope.save = function() {
+        if(!$scope.isValid)  return;
+        
         Project.updateInfo({
             project: $scope.project
         }, 
         function(err, result){
-            if(err)
-            {
-                notify.error('Error Communicating with Server');
+            if(err) {
+                return notify.error('Error Communicating with Server');
             }
-            else
-            {
-                if(result.error)
-                {
-                    notify.error(result.error);
-                }
-                else
-                {
-                    notify.log('Project Info Updated');
-                    if (result.url && result.url == 'yes')
-                    {                       
-                        $window.location.href='/project/'+result.newurl+'/#/settings';
-                    } 
-                }
+            
+            if(result.error) {
+                return notify.error(result.error);
+            }
+            
+            if(result.url) {
+                notify.log('Project Info Updated');
+                $timeout(function() {
+                    $window.location.assign('/project/'+ result.url +'/#/settings');
+                }, 1000);
             }
         });
     };

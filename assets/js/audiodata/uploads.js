@@ -16,16 +16,17 @@ angular.module('audiodata.uploads', [
         
         for(p=1; bytes/Math.pow(1024, p) > 1; p++) {
             newBytes = bytes/Math.pow(1024, p);
-        }        
+        }
         
         newBytes = Math.round(newBytes*100)/100;
         
-        return String(newBytes) + ' ' + labels[--p];
+        return String(newBytes) + ' ' + labels[p-1];
     }; 
     
     
     $scope.verifyAndUpload = function() {
-        $scope.uploader.queue.forEach(function(item) {
+        
+        angular.forEach($scope.uploader.queue, function(item) {
             
             Project.recExists($scope.info.site.id, item.file.name.split('.')[0], function(exists) {
                 if(item.isSuccess) // file uploaded on current batch
@@ -37,7 +38,18 @@ angular.module('audiodata.uploads', [
                     return;
                 }
                 
-                item.formData.push({ info: JSON.stringify($scope.info) });
+                item.formData.push({ 
+                    info: JSON.stringify({
+                        recorder: $scope.info.recorder,
+                        mic: $scope.info.mic,
+                        sver: $scope.info.sver
+                    })
+                });
+                
+                item.url = '/uploads/audio?project=' + $scope.project.project_id+
+                            '&site=' + $scope.info.site.id +
+                            '&nameformat=' + $scope.info.format;
+                
                 item.upload();
             });
 
@@ -45,10 +57,6 @@ angular.module('audiodata.uploads', [
 
     };
       
-    $scope.uploader = uploads.getUploader();
-    $scope.info = uploads.getBatchInfo();
-    
-    
     $scope.batchInfo = function() {
         var modalInstance = $modal.open({
             templateUrl: '/partials/audiodata/batch-info.html',
@@ -66,10 +74,12 @@ angular.module('audiodata.uploads', [
         });
     };
     
+    $scope.uploader = uploads.getUploader();
+    $scope.info = uploads.getBatchInfo();
+    
     
     Project.getInfo(function(info) {
         $scope.project = info;
-        $scope.uploader.url = '/uploads/audio/project/' + info.project_id;
     });
     
     $scope.uploader.filters.push({
@@ -108,7 +118,7 @@ angular.module('audiodata.uploads', [
         });
     };
 })
-.controller('BatchInfoCtrl', function($scope, Project, info, $modalInstance) {
+.controller('BatchInfoCtrl', function($scope, Project, info, $modalInstance, notify) {
     
     if(info) {
         $scope.info = angular.copy(info);
@@ -124,14 +134,15 @@ angular.module('audiodata.uploads', [
     
     
     $scope.close = function(){
-        if($scope.uploadInfo.$valid) {
-            $modalInstance.close($scope.info);
+        if($scope.uploadInfo.$valid && $scope.info.site) {
+            return $modalInstance.close($scope.info);
         }
         
-        $scope.error = true;
+        notify.error('all fields are required');
     };
 })
-.service('uploads', function(FileUploader){
+.factory('uploads', function(FileUploader){
+    
     var u = new FileUploader();
     
     var uploadInfo = null;
