@@ -63,14 +63,30 @@ var sqlutil = {
     
     transaction : transaction,
     
-    
+    /** Returns a properly escaped SQL comparison expression.
+     *  @param {String} field - the field name (or the lhs of the expression).
+     *                        this is assumed to be clean, and therefore not escaped.
+     *  @param {String} op - the comparisson operation. Can be one of 
+     *                     ['IN','=','==','===','!=','!==','<','<=','>','>=']
+     *                     If op is 'IN' and value is an array of length > 1, 
+     *                     then the comparisson is of the mode lhs IN (rhs[0], ...),
+     *                     with each rhs[0] properly escaped.
+     *  @param {Object} value - the value to compare to (the rhs of the expression).
+     *                        value is assumed to be unclean and gets escaped.
+     *                        If value is undefined, the the comparisson always returns false.
+     *  @return An sql comparisson expression with its rhs properly escaped.
+     *        'IN' comparissons with array values of more than one element are expanded,
+     *        and comparissons against undefined rhs are automatically false.
+     *        the expression is wrapped in parenthesis.
+     */
     escape_compare : function(field, op, value){        
         if(op == 'IN'){
             if(value instanceof Array){
                 if(value.length == 1){
                     return '(' + field + ' = '+mysql.escape(value)+')';
                 } else if(value.length > 1){
-                    value = value[1];
+                    value = value.map(mysql.escape);
+                    return '('+field+' IN ['+value.join(', ')+'])';
                 } else {
                     value = undefined;
                 }

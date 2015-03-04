@@ -1,3 +1,5 @@
+var mysql = require('mysql');
+
 var mock_mysql_connection = function(pool){
     this.pool = pool;
     if(pool){
@@ -54,5 +56,6 @@ module.exports = {
     types : {
         pool: mock_mysql_pool,
         connection : mock_mysql_connection
-    }
+    },
+    escape: mysql.escape.bind(mysql)
 };
