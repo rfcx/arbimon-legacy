@@ -86,7 +86,7 @@ var sqlutil = {
                     return '(' + field + ' = '+mysql.escape(value)+')';
                 } else if(value.length > 1){
                     value = value.map(mysql.escape);
-                    return '('+field+' IN ['+value.join(', ')+'])';
+                    return '('+field+' IN ('+value.join(', ')+'))';
                 } else {
                     value = undefined;
                 }
@@ -106,6 +106,17 @@ var sqlutil = {
         
     },
     
+    /** Returns a logical expression on a subject, given a query constraint.
+     *  @param {String} subject - the lhs of the expression.
+     *  @param {Object} query - the query constraint object. Must have only one attribute
+     *                          as defined below.
+     *  @param {Object} query['='] - if set, then the expression resolves to lhs = escape(rhs)
+     *  @param {Object} query.IN   - if set, then the expression resolves to lhs IN (escape(rhs))
+     *  @param {Object} query.BETWEEN  - if set, it must be an array of size two and 
+     *                               the expression resolves to lhs BETWEEN escape(rhs[0]) AND escape(rhs[1])
+     *  @return a logical expression resulting from applying the query constraint to the given subject.
+     *          or undefined, if the query constraint does not define a proper constraint.
+     */
     apply_query_contraint: function(subject, query){
         if(query){
             if (query['=']) {
@@ -119,6 +130,12 @@ var sqlutil = {
         return undefined;
     },
 
+    /** Returns an Array of valid query constraints applied to fields, given a list of fields and a list of query constraints.
+     *  @see apply_query_contraint().
+     *  @param {Array} query_contraints - Array of query constraints.
+     *  @param {Array} fields - Array of fields. Each item must have a subject attribute wich represents the field's subject.
+     *  @return an Array of valid query constraints applied their respective field's subject.
+     */
     compile_query_constraints : function(query_contraints, fields) {
         var compiled_constraints = [];
 
@@ -205,7 +222,6 @@ var sqlutil = {
         if(group_by.projection.length > 0) {
             group_by.project_part = group_by.projection.join(", ") + ",";
         }
-
         return group_by;
     }
 
