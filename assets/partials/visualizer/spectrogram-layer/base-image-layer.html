@@ -3,7 +3,12 @@
     a2-src="{{tile.src | a2UpdatedUrl}}" 
     style="position:absolute;z-index:-1"
     ng-class="tile.crisp ? 'crisp-image' : ''"
-    ng-style="{left:tile.s * layout.scale.sec2px + 'px', top: (layout.spectrogram.height - tile.hz * layout.scale.hz2px) + 'px', height: tile.dhz * layout.scale.hz2px + 'px', width: tile.ds * layout.scale.sec2px + 'px'}"
+    ng-style="{
+            left: Math.floor(tile.s * layout.scale.sec2px) + 'px', 
+            bottom: Math.floor(layout.spectrogram.height - tile.hz * layout.scale.hz2px) + 'px', 
+            height: Math.ceil(tile.dhz * layout.scale.hz2px + 1) + 'px', 
+            width: Math.ceil(tile.ds * layout.scale.sec2px + 1) + 'px' 
+        }"
 ></a2-img>
 <div a2-visualizer-spectrogram-affixed>
     {{$scope.visobject.getCaption()}}
