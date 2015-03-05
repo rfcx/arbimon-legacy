@@ -14,7 +14,8 @@ class Config(object):
 
         self.load('aws')
         self.load('db')
-
+        self.load('spectrograms')
+        
     @classmethod
     def for_path(cls, basepath):
         if basepath not in cls.scache:
@@ -29,7 +30,8 @@ class Config(object):
             self.dbConfig['database'],
             self.awsConfig['bucketName'],
             self.awsConfig['accessKeyId'],
-            self.awsConfig['secretAccessKey']
+            self.awsConfig['secretAccessKey'],
+            self.spectrogramsConfig['spectrograms']
         ]
 
     def load(self, cfg):

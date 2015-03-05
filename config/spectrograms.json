@@ -1,5 +1,6 @@
 {
     "spectrograms" : {
+        "multicpu" : 0,
         "pixPerSec" : 172,
         "height"    : 256,
         "tiles" : {
