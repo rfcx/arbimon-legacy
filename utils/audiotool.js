@@ -83,7 +83,7 @@ var audiotools = {
             debug('tyler ended with code : ', code);
             debug('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
             debug('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
-            output = '' 
+            output = '';
             if (code)
             {
                 output = {"error":"error calling tyler"};

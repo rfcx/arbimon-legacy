@@ -14,6 +14,7 @@ var tmpfilecache = require('../utils/tmpfilecache');
 var audiotool    = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
+var tyler        = require('../utils/tyler.js');
 
 // local variables
 var s3 = new AWS.S3();
@@ -31,7 +32,7 @@ var date2UTC = function (field, next) {
     return d;
 };
 
-
+var fileExtPattern = /\.(wav|flac)$/;
 
 // exports
 var Recordings = {
@@ -229,9 +230,7 @@ var Recordings = {
     fetchInfo : function(recording, callback){
         Recordings.fetchRecordingFile(recording, function(err, cachedRecording){
             if(err || !cachedRecording) { callback(err, cachedRecording); return; }
-            audiotool.tyler(recording.id, function(err, recStats){
-                recording.tiles = recStats.tiles;
-                delete recStats.tiles;
+            audiotool.info(cachedRecording.path, function(err, recStats){
                 recording.stats = recStats;
                 callback(null, recording);
             });
@@ -277,7 +276,7 @@ var Recordings = {
      * @param {Function} callback(err, path) funciton to call back with the recording audio file's path.
      */
     fetchAudioFile: function (recording, callback) {
-        var mp3audio_key = recording.uri.replace(/\.(wav|flac)/, '.mp3');
+        var mp3audio_key = recording.uri.replace(fileExtPattern, '.mp3');
         tmpfilecache.fetch(mp3audio_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
@@ -297,7 +296,7 @@ var Recordings = {
      * @param {Function} callback(err, path) funciton to call back with the recording spectrogram file's path.
      */
     fetchSpectrogramFile: function (recording, callback) {
-        var spectrogram_key = recording.uri.replace(/\.(wav|flac)/, '.png');
+        var spectrogram_key = recording.uri.replace(fileExtPattern, '.png');
         tmpfilecache.fetch(spectrogram_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
@@ -313,8 +312,6 @@ var Recordings = {
     },
 
     fetchSpectrogramTiles: function (recording, callback) {
-        var spectro_path;
-        var px2sec, px2hz, max_freq;
         async.waterfall([
             function(next){
                 if(!recording.stats){
@@ -327,75 +324,58 @@ var Recordings = {
                 recording = rec_info;
                 Recordings.fetchSpectrogramFile(recording, next);
             },
-            function(_1, next){
-                spectro_path = _1.path;
-                im.identify(spectro_path, next);
+            function(specFile, next){
+                tyler(specFile.path, next);
+                
+                // TODO to enabled file deletion need to skip file creation if tiles exists
+                // fs.unlink(filePath, function() {
+                //     if(err) console.error('failed to deleted spectrogram file');
+                // });
             },
-            function(spectro_info, next){
-                px2sec = recording.stats.duration    / spectro_info.width ;
-                max_freq = recording.stats.sample_rate / 2;
-                px2hz  = max_freq / spectro_info.height;
-                var tile_max_w = config("spectrograms").spectrograms.tiles.max_width;
-                var tile_max_h = config("spectrograms").spectrograms.tiles.max_height;
-                var tile_count_x = Math.ceil(spectro_info.width  * 1.0 / tile_max_w) | 0;
-                var tile_count_y = Math.ceil(spectro_info.height * 1.0 / tile_max_h) | 0;
-                var tiles_x=[], tiles_y=[], tile_set=[];
-                recording.tiles = {
-                    x : tile_count_x,
-                    y : tile_count_y,
-                    set: tile_set
-                };
-
-                for(var x=0; x < tile_count_x; ++x){ tiles_x.push(x); }
-                for(var y=0; y < tile_count_y; ++y){ tiles_y.push(y); }
-                async.eachLimit(tiles_y, 5, function(tile_y, next_tile_y){
-                    var tile_y0 = Math.min( tile_y   *tile_max_h, spectro_info.height),
-                        tile_y1 = Math.min((tile_y+1)*tile_max_h, spectro_info.height),
-                        tile_h  = tile_y1 - tile_y0;
-                    async.eachLimit(tiles_x, 5, function(tile_x, next_tile_x){
-                        var tile_x0 = Math.min( tile_x   *tile_max_w, spectro_info.width),
-                            tile_x1 = Math.min((tile_x+1)*tile_max_w, spectro_info.width),
-                            tile_w  = tile_x1 - tile_x0;
-                        var tile_key = recording.uri.replace(/\.(wav|flac)/, '.tile_'+tile_x+'_'+tile_y+'.png');
-                        tmpfilecache.fetch(tile_key, function(cache_miss){
-                            var tile_file = tmpfilecache.key2File(tile_key);
-                            Recordings.fetchRecordingFile(recording, function(err, recording_path){
-                                if(err) { next_tile_x(err); return; }
-                                im.convert([
-                                    spectro_path,
-                                    '-colorspace', 'RGB',
-                                    '-crop',
-                                    tile_w+'x'+tile_h+'+'+tile_x0+'+'+tile_y0,
-                                    '+repage',
-                                    '-colorspace', 'RGB',
-                                    tile_file
-                                ], function(err){
-                                    if(err) { next_tile_x(err); return; }
-                                    cache_miss.retry_get();
-                                });
-                            });
-                        }, function(err, val){
-                            if(err) { next_tile_x(err); return; }
-                            tile_set.push({
-                                j : tile_x , i : tile_y ,
-                                s  : tile_x0 * px2sec,  hz : max_freq - tile_y0 * px2hz,
-                                ds : tile_w * px2sec, dhz : tile_h * px2hz,
-                                x : tile_x0, y : tile_y0,
-                                w : tile_w , h : tile_h
-                            });
-                            next_tile_x();
+            function(specTiles, next){
+                
+                var maxFreq = recording.stats.sample_rate / 2;
+                var pixels2Secs = recording.stats.duration / specTiles.width ;
+                var pixels2Hz = maxFreq / specTiles.height;
+                
+                
+                async.map(specTiles.set, 
+                    function(t, cb) {
+                        
+                        var h = t.y1-t.y0;
+                        var w = t.x1-t.x0;
+                        
+                        cb(null, {
+                            j : t.x ,  // x index
+                            i : t.y ,  // y index
+                            s  : t.x0 * pixels2Secs, // x origin in secs
+                            hz : maxFreq - t.y0 * pixels2Hz, // y origin in hertz
+                            ds : w * pixels2Secs, // tile duration
+                            dhz : h * pixels2Hz, // tile bandwith
+                            x : t.x0, // x origin
+                            y : t.y0, // y origin
+                            w : w,  // tile width
+                            h : h   // tile height
                         });
-                    }, next_tile_y);
-                }, function(){
-                    var spectrogram_key = recording.uri.replace(/\.(wav|flac)/, '.png');
-                    next(null, recording);
-                });
+                    },
+                    function(err, tileSet) {
+                        if(err) return next(err);
+                        
+                        recording.tiles = {
+                            x : specTiles.x,
+                            y : specTiles.y,
+                            set: tileSet
+                        };
+                        next(null, recording);
+                    }
+                );
             }
-        ], callback);
+        ], 
+        callback);
     },
     
     fetchOneSpectrogramTile: function (recording, i, j, callback) {
-        var tile_key = recording.uri.replace(/\.(wav|flac)/, '.tile_'+j+'_'+i+'.png');
+        var tile_key = recording.uri.replace(fileExtPattern, '.tile_'+j+'_'+i+'.png');
         tmpfilecache.fetch(tile_key, function(cache_miss){
             Recordings.fetchSpectrogramTiles(recording, function(err, recording){
                 if(err) { callback(err); return; }
@@ -410,7 +390,7 @@ var Recordings = {
      * @param {Function} callback(err, path) funciton to call back with the recording spectrogram file's path.
      */
     fetchThumbnailFile: function (recording, callback) {
-        var thumbnail_key = recording.uri.replace(/\.(wav|flac)/, '.thumbnail.png');
+        var thumbnail_key = recording.uri.replace(fileExtPattern, '.thumbnail.png');
         tmpfilecache.fetch(thumbnail_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
