@@ -13,6 +13,7 @@ module.exports = {
     compute_row_properties : function(row_set, property_set, method_getter, callback){
         if(!property_set || !row_set){
             callback();
+            return;
         } else if(typeof(property_set) == 'string'){
             property_set = property_set.split(',');
         }
@@ -32,7 +33,14 @@ module.exports = {
         });
     },
 
-
+    /** Groups a set of row by a set of given attributes.
+     * @param {Array} rows set of rows to group by
+     * @param {Array} grouping_attribs array of attributes on wich to group the rows by.
+     * @param {Object} options options that modify the groupby behaviour
+     * @param {Boolean} options.keep_keys whether to keep the keys used in the group by on the rows, or to delete them (default is to delete them)
+     * @param {Boolean} options.collapse_single_leaves whether rows that end up with a single attribute get collapsed and substituted by their attribute's value, or not (default is not).
+     * @return an object containing groups of rows.
+     */
     group_rows_by : function(rows, grouping_attribs, options){
         options = options || {};
         var keep_keys = options.keep_keys;
