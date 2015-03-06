@@ -118,26 +118,68 @@ describe('monkey', function(){
             console.error.__spy__ = function(){done(new Error("Console error called, monkey wasn't poked."));};
             mocks.poke.__spy__ = function(url){done(new Error("Monkey was poked."));};
             mocks.spank.__spy__ = sinon.spy();
-            mock_ec2.waitFor('instanceStarted', function(){
+            mock_ec2.waitFor('instanceRunning', function(){
                 mocks.spank.__spy__.calledOnce.should.be.true;
                 done();
             });
             pokeDaMonkey();
         });
-        it('If describeInstances \'stopping\', then wait for it to stop and then, spank the monkey', function(done){
+        it('If describeInstances \'stopping\', then wait for it to stop and when it stopped, spank the monkey', function(done){
             mock_ec2.__setInstance(mock_config['job-queue'].instanceId, 'stopping');
             console.error.__spy__ = function(){done(new Error("Console error called, monkey wasn't poked."));};
             mocks.poke.__spy__ = function(url){done(new Error("Monkey was poked."));};
             mocks.spank.__spy__ = sinon.spy();
-            mock_ec2.waitFor('instanceStarted', function(){
+            mock_ec2.waitFor('instanceRunning', function(){
                 mocks.spank.__spy__.calledOnce.should.be.true;
                 done();
             });
             pokeDaMonkey();
             mock_ec2.__setInstance(mock_config['job-queue'].instanceId, 'stopped');
         });
-        // it('If describeInstances \'pending\', then', function(done){});
-        // it('If describeInstances \'shutting-down\', then', function(done){});
+        it('If describeInstances \'stopping\', then wait for it to stop and if error, then write it to error console', function(done){
+            mock_ec2.__setInstance(mock_config['job-queue'].instanceId, 'stopping', {'!cannot_be_stopped':true});
+            console.error.__spy__ = function(){
+                done();
+            };
+            mocks.poke.__spy__ = function(url){done(new Error("Monkey was poked."));};
+            mocks.spank.__spy__ = function(url){done(new Error("Monkey was spanked."));};
+            pokeDaMonkey();
+            mock_ec2.__setInstance(mock_config['job-queue'].instanceId, 'stopped');
+        });
+        it('If describeInstances \'pending\', then do nothing', function(done){
+            mock_ec2.__setInstance(mock_config['job-queue'].instanceId, 'pending');
+            console.error.__spy__ = function(){done(new Error("Console error called, monkey wasn't poked."));};
+            mocks.poke.__spy__ = function(url){done(new Error("Monkey was poked."));};
+            mocks.spank.__spy__ = function(url){done(new Error("Monkey was spanked."));};
+            pokeDaMonkey();
+            setImmediate(done);
+        });
+        it('If describeInstances \'shutting-down\', then do nothing', function(done){
+            mock_ec2.__setInstance(mock_config['job-queue'].instanceId, 'shutting-down');
+            console.error.__spy__ = function(){done(new Error("Console error called, monkey wasn't poked."));};
+            mocks.poke.__spy__ = function(url){done(new Error("Monkey was poked."));};
+            mocks.spank.__spy__ = function(url){done(new Error("Monkey was spanked."));};
+            pokeDaMonkey();
+            setImmediate(done);
+        });
+        it('If describeInstances \'terminated\', then do nothing', function(done){
+            mock_ec2.__setInstance(mock_config['job-queue'].instanceId, 'terminated');
+            console.error.__spy__ = function(){done(new Error("Console error called, monkey wasn't poked."));};
+            mocks.poke.__spy__ = function(url){done(new Error("Monkey was poked."));};
+            mocks.spank.__spy__ = function(url){done(new Error("Monkey was spanked."));};
+            pokeDaMonkey();
+            setImmediate(done);
+        });
+        it('If, after spaking, instance does not start, then write to console.error', function(done){
+            mock_ec2.__setInstance(mock_config['job-queue'].instanceId, 'stopped', {'!cannot_start':true});
+            console.error.__spy__ = function(){
+                mocks.spank.__spy__.calledOnce.should.be.true;
+                done();
+            };
+            mocks.poke.__spy__ = function(url){done(new Error("Monkey was poked."));};
+            mocks.spank.__spy__ = sinon.spy();
+            pokeDaMonkey();
+        });
     });
 
 });
