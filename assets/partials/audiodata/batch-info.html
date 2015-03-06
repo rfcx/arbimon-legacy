@@ -43,7 +43,15 @@
         </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="close() | trackEvent:'Audiodata-Batchinfo':'close clicked'"><i class="fa fa-floppy-o"></i> Save &amp; Close </button>
-    <button class="btn btn-default" ng-click="$dismiss() | trackEvent:'Audiodata-Batchinfo':'dismiss clicked'"><i class="fa fa-times"></i> Close</button>
+    <button class="btn btn-primary" 
+        type="submit" 
+        ng-click="close() | trackEvent:'Audiodata-Batchinfo':'Save clicked'">
+            <i class="fa fa-floppy-o"></i> Save &amp; Close 
+    </button>
+    <button class="btn btn-default" 
+        type="button"
+        ng-click="$dismiss() | trackEvent:'Audiodata-Batchinfo':'Close clicked'">
+            <i class="fa fa-times"></i> Close
+    </button>
 </div>
 </form>
