@@ -133,6 +133,7 @@ scidx.prototype = {
                     } else if(err2){
                         callback(err2);
                     } else {
+                        this.valid = true;
                         callback(null, this);
                     }
                 }).bind(this));
@@ -140,6 +141,7 @@ scidx.prototype = {
                 if(err){
                     callback(err);
                 } else {
+                    this.valid = true;
                     callback(null, this);
                 }
             }
