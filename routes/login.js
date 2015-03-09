@@ -94,8 +94,8 @@ router.get(['/','/login'], function(req, res) {
 });
 
 router.post('/login', function(req, res, next) {
-    var username = req.body.username;
-    var password = req.body.password;
+    var username = req.body.username || '';
+    var password = req.body.password || '';
     var captchaResponse = req.body.captcha;
 
     var redirectUrl = req.query.redirect || '/home';

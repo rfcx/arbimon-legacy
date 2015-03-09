@@ -96,9 +96,9 @@
             </div>
         </div>
     </nav>
-    <div id="page">
+    <div id="body">
         <div ui-view="audiodata" ng-show="$state.includes('audiodata')"></div>
-        <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
+        <div id="visualizer" ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
         <div ui-view="analysis" ng-show="$state.includes('analysis')"></div>
         <div ui-view></div>
     </div>
