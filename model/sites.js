@@ -202,7 +202,43 @@ var Sites = {
             q = util.format(q, mysql.escape(site_id), mysql.escape(project_id));
             queryHandler(q, callback);
         });
+    },
+
+    generateToken: function(site, callback){
+        var payload = { 
+            project: site.project_id,
+            site: site.site_id
+        };
+        var token = jwt.sign(payload, config('tokens').secret, config('tokens').options);
+        var iat = jwt.decode(token).iat;
+
+        queryHandler(
+            "UPDATE sites \n" + 
+            "SET token_created_on = "+mysql.escape(iat)+" \n" + 
+            "WHERE site_id = " + mysql.escape(site.site_id), 
+            function(err){
+                if(err){
+                    callback(err);
+                } else {
+                    callback(null, {
+                        type : "A2Token",
+                        name: site.name,
+                        expires: 0,
+                        token: token
+                    });
+                }
+            }
+        );
+    },
+
+    revokeToken: function(site, callback){
+        queryHandler(
+            "UPDATE sites \n" + 
+            "SET token_created_on = NULL \n" + 
+            "WHERE site_id = " + mysql.escape(site.site_id), 
+        callback);
     }
+
 };
 
 module.exports = Sites;

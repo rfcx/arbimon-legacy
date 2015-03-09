@@ -25,6 +25,12 @@
             tooltip="Edit site info">
             <i class="fa fa-pencil"></i>
         </button>
+        <button class="btn btn-default"
+            ng-click="register()"
+            ng-disabled="!selected || selected.imported"
+            tooltip="Create Site Token">
+            <i class="fa fa-link"></i>
+        </button>
         <button class="btn btn-danger"
             ng-click="del()"
             ng-disabled="!selected"

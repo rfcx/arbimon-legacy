@@ -1,4 +1,5 @@
 var debug = require('debug')('arbimon2:route:playlists');
+var async = require('async');
 var express = require('express');
 var router = express.Router();
 
@@ -103,6 +104,77 @@ router.post('/delete', function(req, res, next) {
     });
 });
 
+router.param('siteid', function(req, res, next, siteid){
+    model.sites.findById(siteid, 
+    function(err, sites) {
+        if(err) return next(err);
+
+        if(!sites.length){
+            return res.status(404).json({ error: "site not found"});
+        }
+        req.site = sites[0];
+        return next();
+    });
+});
+
+
+router.post('/generate-token', function(req, res, next){
+    if(!req.haveAccess(req.project.project_id, "manage project sites")) {
+        return res.json({ error: "you dont have permission to 'manage project sites'" });
+    }
+    if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
+        return res.json({ error: "you dont have permission to 'manage project sites'" });
+    }
+    var siteid = req.body.site;
+    async.waterfall([
+        function(next){
+            model.sites.findById(siteid, next);
+        },
+        function(sites){
+            var next = arguments[arguments.length-1];
+            if(sites.length){
+                model.sites.generateToken(sites[0], next);
+            } else {
+                next(new Error('Cannot find site ' + siteid));
+            }
+        }
+    ], function(err, token){
+        if(err){
+            next(err);
+        } else {
+            res.json(token);
+        }
+    });
+});
+
+router.post('/revoke-token', function(req, res, next){
+    if(!req.haveAccess(req.project.project_id, "manage project sites")) {
+        return res.json({ error: "you dont have permission to 'manage project sites'" });
+    } else if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
+        return res.json({ error: "you dont have permission to 'manage project sites'" });
+    } else {
+        var siteid = req.body.site;
+        async.waterfall([
+            function(next){
+                model.sites.findById(siteid, next);
+            },
+            function(sites){
+                var next = arguments[arguments.length-1];
+                if(sites.length){
+                    model.sites.revokeToken(sites[0], next);
+                } else {
+                    next(new Error('Cannot find site ' + siteid));
+                }
+            }
+        ], function(err){
+            if(err){
+                next(err);
+            } else {
+                res.status(200);
+            }
+        });
+    }
+});
 
 
 module.exports = router;

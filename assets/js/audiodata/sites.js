@@ -164,6 +164,42 @@ angular.module('audiodata.sites', [
         
         $scope.editing = true;
     };
+
+    $scope.register = function() {
+        
+        if(!$scope.selected || $scope.selected.imported)
+            return;
+            
+        $scope.popup = {
+            site: $scope.selected,
+            token_uri:null,
+            action : {
+                generate_token: function(){
+                    //
+                },
+                revoke_token: function(callback){
+                    callback();
+                },
+            }
+        };
+
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/audiodata/register-popup.html',
+            scope: $scope
+        });
+
+        modalInstance.result.then(function() {
+            a2Sites.delete($scope.selected, function(data) {
+                if(data.error)
+                    return notify.error(data.error);
+                
+                Project.getSites(function(sites) {
+                    $scope.sites = sites;
+                });
+                notify.log("site removed");
+            });
+        });
+    };
     
     $scope.sel = function(site) {
         //~ console.log('sel');
