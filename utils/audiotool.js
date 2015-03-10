@@ -107,7 +107,7 @@ var audiotools = {
      * @param {Object} options !!!!!unused!!!!!
      * @param {Function} callback function to call with the audio info, its arguments are (code, info).
      */
-    info : function(source_path, options, callback){
+    info : function(source_path, callback){
         var args = ['--info', source_path];
         audiotools.sox(args, function(code, stdout, stderr){
             var lines = stdout.split('\n');

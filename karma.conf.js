@@ -19,6 +19,7 @@ module.exports = function(config) {
         'bower_components/jquery/dist/jquery.js',
         'bower_components/angular/angular.js',
         'bower_components/angular-mocks/angular-mocks.js',
+        'public/assets/js/arbimon2-templates.js',
         'assets/js/**/*.js',
         'assets/test/**/*.js'
     ],

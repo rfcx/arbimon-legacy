@@ -198,7 +198,6 @@ module.exports = function(grunt) {
         uglify: {
             prod: {
                 options: {
-                    mangle: false,
                     banner: '/*! <%= pkg.name %> v<%= pkg.version %> '+
                             'build date: <%= grunt.template.today("yyyy-mm-dd") %> | ' +
                             '(c) 2014-2015 Sieve Analytics, Inc. All rights reserved */\n'
@@ -290,6 +289,16 @@ module.exports = function(grunt) {
             unit: {
                 configFile: 'karma.conf.js'
             }
+        },
+        
+        angular_architecture_graph: {
+            diagram: {
+                files: {
+                    "angular-depends": [
+                        "assets/js/**/*.js"
+                    ]
+                }
+            }
         }
     };
     
@@ -306,8 +315,11 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-angular-architecture-graph');
     
+    grunt.registerTask('angular-depends', ['angular_architecture_graph']);
     grunt.registerTask('test-frontend', ['jshint:frontEnd', 'karma']);
+    grunt.registerTask('test-backend', ['jshint:backEnd']);
     grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'concat']);
     grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'concat', 'uglify']);
     grunt.registerTask('server', ['express:dev', 'watch']);

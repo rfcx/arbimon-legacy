@@ -1,11 +1,12 @@
-angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane','angularytics', 'a2forms']).
-config(function(AngularyticsProvider) {
-    AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
-}).
-run(function(Angularytics) {
+angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane','angularytics', 'a2forms'])
+.config(['AngularyticsProvider', function(AngularyticsProvider) {
+        AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
+}])
+.run(['Angularytics', function(Angularytics) {
     Angularytics.init();
-})
-.controller('HomeCtrl', function($scope, $http, $modal, notify) {
+}])
+.controller('HomeCtrl', ['$scope', '$http', '$modal', 'notify', 
+    function($scope, $http, $modal, notify) {
     
     $scope.currentPage = 1;
     
@@ -46,37 +47,42 @@ run(function(Angularytics) {
             $scope.loadProjectList();
         });
     };
-})
-.controller('CreateProjectCtrl', function($scope, $http, $modalInstance, notify) {
-    
-    
-    $scope.create = function() {
-        if(!$scope.isValid) return;
-        
-        console.log('create');
-        
-        $http.post('/api/project/create', { project: $scope.project })
-        .success(function(data) {
-            if(!data.error)
-                $modalInstance.close(data.message);
+}])
+.controller('CreateProjectCtrl', [
+    '$scope', 
+    '$http', 
+    '$modalInstance', 
+    'notify', 
+    function($scope, $http, $modalInstance, notify) {
+        $scope.create = function() {
+            if(!$scope.isValid) return;
+            
+            console.log('create');
+            
+            $http.post('/api/project/create', { project: $scope.project })
+            .success(function(data) {
+                if(!data.error)
+                    $modalInstance.close(data.message);
+                    
+                if(data.projectLimit) {
+                    $modalInstance.dismiss();
+                    notify.error('You have reached project limit, '+
+                                'could not create new project. '+
+                                'Contact us if you want to change the project limit');
+                }
                 
-            if(data.projectLimit) {
-                $modalInstance.dismiss();
-                notify.error('You have reached project limit, could not create new project. Contact us if you want to change the project limit');
-            }
-            
-            if(data.nameExists) {
-                notify.error('Name <b>'+$scope.project.name+'</b> not available');
-            }
-            if(data.urlExists) {
-                notify.error('URL <b>'+$scope.project.url+'</b> taken choose another one');
-            }
-            
-        })
-        .error(function(err) {
-            notify.error('Error Communicating with Server');           
-        });
-    };
-    
-})
+                if(data.nameExists) {
+                    notify.error('Name <b>'+$scope.project.name+'</b> not available');
+                }
+                if(data.urlExists) {
+                    notify.error('URL <b>'+$scope.project.url+'</b> taken choose another one');
+                }
+                
+            })
+            .error(function(err) {
+                notify.error('Error Communicating with Server');           
+            });
+        };
+    }
+])
 ;

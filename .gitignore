@@ -1,4 +1,4 @@
-# node
+# nodejs
 node_modules
 npm-debug.log
 
@@ -25,4 +25,8 @@ a2.komodoproject
 # docs (?)
 docs
 
+#test coverage results
 coverage
+
+#angular dependencies graph
+angular-depends

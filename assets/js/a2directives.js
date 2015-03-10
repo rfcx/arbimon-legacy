@@ -1,47 +1,49 @@
-/*jshint -W030 */
-
-// add parent tag selector
-$.expr.filter.UP_PARENT_SPECIAL = function(_1){ 
-    var times = (_1 && _1.length) || 1;
-    return $.expr.createPseudo(function(seed,matches,_3,_4){
-        var dups=[];
-        seed.forEach(function(e, i){
-            var p=e;
-            for(var t=times; t > 0; --t){
-                p = p && (p.nodeType == 9 || p.parentNode.nodeType == 9  ? p : p.parentNode);
-            }
-            if(p){
-                for(var di=0, de=dups.length; di < de; ++di){
-                    if(dups[di] === p){
-                        p = null;
-                        break;
-                    }
-                }
-                if(p){
-                    dups.push(p);
-                }
-            }
-            matches[i] = p;
-            seed[i] = !p;
-        });
-        
-        return true;
-    });
-};
-$.expr.match.needsContext = new RegExp($.expr.match.needsContext.source + '|^(\\^)');
-$.expr.match.UP_PARENT_SPECIAL = /^(\^+)/;
-
-
 angular.module('a2directives', ['a2services', 'templates-arbimon2'])
-.run(function() {
+.run(['$window', function($window) {
+    var $ = $window.$;
+    
     $(document).click( function(e){
         if($(e.target).closest('.calendar.popup:visible').length)
             return;
             
         $('.calendar.popup:visible').hide();
     });
-})
-.directive('a2GlobalKeyup', function($timeout){
+    
+    // extend jQuery
+    // add parent tag selector
+    $.expr.filter.UP_PARENT_SPECIAL = function(_1){ 
+        var times = (_1 && _1.length) || 1;
+        return $.expr.createPseudo(function(seed,matches,_3,_4){
+            var dups=[];
+            seed.forEach(function(e, i){
+                var p=e;
+                for(var t=times; t > 0; --t){
+                    p = p && (p.nodeType == 9 || p.parentNode.nodeType == 9  ? p : p.parentNode);
+                }
+                if(p){
+                    for(var di=0, de=dups.length; di < de; ++di){
+                        if(dups[di] === p){
+                            p = null;
+                            break;
+                        }
+                    }
+                    if(p){
+                        dups.push(p);
+                    }
+                }
+                matches[i] = p;
+                seed[i] = !p;
+            });
+            
+            return true;
+        });
+    };
+    $.expr.match.needsContext = new RegExp($.expr.match.needsContext.source + '|^(\\^)');
+    $.expr.match.UP_PARENT_SPECIAL = /^(\^+)/;
+}])
+.directive('a2GlobalKeyup', ['$window', '$timeout', function($window, $timeout){
+    var $ = $window.$;
+    
     return {
         restrict : 'A',
         scope : {
@@ -59,8 +61,8 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             });
         }
     };
-})
-.directive('a2Scroll', function($parse) {
+}])
+.directive('a2Scroll',['$parse', function($parse) {
     var mkFunction = function(scope, attr){
         var fn = $parse(attr);
         return function(locals) {
@@ -111,7 +113,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             });
         }
     };
-})
+}])
 .directive('a2Table', ['$filter', function($filter) {
     return {
         restrict: 'E',
@@ -249,170 +251,174 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
 /**
     this version of a2Table uses html to define fields
 */
-.directive('a2Table2', ['$filter', '$templateCache', '$compile', function($filter, $templateCache, $compile) {
-    return {
-        restrict: 'E',
-        scope: {
-            rows: '=',
-            selected: '=?',
-            onSelect: '&',
-            extSort: '&',
-            checked: '=?',
-            search: '=?',
-            noCheckbox: '@',    // disable row checkboxes
-            noSelect: '@',      // disable row selection
-            dateFormat: '@',    // moment date format, default: 'lll'
-            numberDecimals: '@', // decimal spaces 
-        },
-        compile: function(tElement, tAttrs) {
-            var detaEle = tElement;
-            
-            var fields = [];
-            
-            for(var i = 0; i < detaEle[0].children.length; i++) {
-                var child = $(detaEle[0].children[i]);
-                // console.log(child);
+.directive('a2Table2', [
+    '$filter', 
+    '$templateCache', 
+    '$compile', 
+    function($filter, $templateCache, $compile) {
+        return {
+            restrict: 'E',
+            scope: {
+                rows: '=',
+                selected: '=?',
+                onSelect: '&',
+                extSort: '&',
+                checked: '=?',
+                search: '=?',
+                noCheckbox: '@',    // disable row checkboxes
+                noSelect: '@',      // disable row selection
+                dateFormat: '@',    // moment date format, default: 'lll'
+                numberDecimals: '@', // decimal spaces 
+            },
+            compile: function(tElement, tAttrs) {
+                var detaEle = tElement;
                 
-                fields.push({
-                    title: child.attr('title'),
-                    key: child.attr('key'),
-                    content: child.html()
-                });
-            }
-            
-            // console.log(fields);
-            // console.log($templateCache.get('/partials/directives/table.html'));
-            
-            return function(scope, element, attrs) {
-                scope.fields = fields;
+                var fields = [];
                 
-                if(attrs.noCheckbox !== undefined)
-                    scope.noCheck = true;
+                for(var i = 0; i < detaEle[0].children.length; i++) {
+                    var child = $(detaEle[0].children[i]);
+                    // console.log(child);
                     
-                var updateChecked = function(rows) {
-                    if(rows) {
-                        var visible = $filter('filter')(rows, scope.query);
-                        
-                        scope.checked = visible.filter(function(row) {
-                            return row.checked | false;
-                        });
-                    }
-                };
-                
-                
-                if(attrs.search) {
-                    scope.$watch(attrs.search, function(value) {
-                        //~ console.log(value);
-                        scope.query = scope.search;
-                        updateChecked(scope.rows);
+                    fields.push({
+                        title: child.attr('title'),
+                        key: child.attr('key'),
+                        content: child.html()
                     });
                 }
+                
+                // console.log(fields);
+                // console.log($templateCache.get('/partials/directives/table.html'));
+                
+                return function(scope, element, attrs) {
+                    scope.fields = fields;
                     
-                scope.toggleAll = function() {
-                    var allFalse = true;
-                    
-                    for(var i in scope.rows) {
-                        if(scope.rows[i].checked) {
-                            allFalse = false;
-                            break;
-                        }
-                    }
-                    
-                    for(var j in scope.rows) {
-                        scope.rows[j].checked = allFalse;
-                    }
-                    
-                    scope.checkall = allFalse;
-                    
-                };
-                    
-                    
-                    
-                if(attrs.checked) {
-                    scope.$watch('rows', updateChecked, true);
-                }
-                    
-                    
-                scope.check = function($event, $index) {
-                    //~ console.log('$event:', $event);
-                    //~ console.log('$index:', $index);
-                    //~ console.log('last checked:', scope.lastChecked);
-                    
-                    if(scope.lastChecked && $event.shiftKey) {
-                        console.log('shift!');
+                    if(attrs.noCheckbox !== undefined)
+                        scope.noCheck = true;
                         
-                        if(scope.lastChecked) {
-                            var rows;
-                            if(scope.lastChecked > $index) {
-                                rows = scope.rows.slice($index, scope.lastChecked);
-                            }
-                            else {
-                                rows = scope.rows.slice(scope.lastChecked, $index);
-                            }
-                                
-                            rows.forEach(function(row) {
-                                row.checked = true;
+                    var updateChecked = function(rows) {
+                        if(rows) {
+                            var visible = $filter('filter')(rows, scope.query);
+                            
+                            scope.checked = visible.filter(function(row) {
+                                return row.checked | false;
                             });
                         }
+                    };
+                    
+                    
+                    if(attrs.search) {
+                        scope.$watch(attrs.search, function(value) {
+                            //~ console.log(value);
+                            scope.query = scope.search;
+                            updateChecked(scope.rows);
+                        });
                     }
-                            
-                    scope.lastChecked = $index;
-                };
-                            
-                scope.keyboardSel = function(row, $index, $event) {
-                    if($event.key === " " || $event.key === "Enter") 
-                        scope.sel(row, $index);
-                };
-                
-                scope.sel = function(row, $index) {
-                    if(attrs.noSelect !== undefined)
-                        return;
                         
-                    scope.selected = row;
-                    if(attrs.onSelect)
-                        scope.onSelect({ row: row });
-                };
+                    scope.toggleAll = function() {
+                        var allFalse = true;
+                        
+                        for(var i in scope.rows) {
+                            if(scope.rows[i].checked) {
+                                allFalse = false;
+                                break;
+                            }
+                        }
+                        
+                        for(var j in scope.rows) {
+                            scope.rows[j].checked = allFalse;
+                        }
+                        
+                        scope.checkall = allFalse;
+                        
+                    };
+                        
+                        
+                        
+                    if(attrs.checked) {
+                        scope.$watch('rows', updateChecked, true);
+                    }
+                        
+                        
+                    scope.check = function($event, $index) {
+                        //~ console.log('$event:', $event);
+                        //~ console.log('$index:', $index);
+                        //~ console.log('last checked:', scope.lastChecked);
+                        
+                        if(scope.lastChecked && $event.shiftKey) {
+                            console.log('shift!');
+                            
+                            if(scope.lastChecked) {
+                                var rows;
+                                if(scope.lastChecked > $index) {
+                                    rows = scope.rows.slice($index, scope.lastChecked);
+                                }
+                                else {
+                                    rows = scope.rows.slice(scope.lastChecked, $index);
+                                }
                                     
-                scope.sortBy = function(field) {
-                    if(scope.sortKey !== field.key) {
-                        scope.sortKey = field.key;
-                        
-                        if(attrs.extSort === undefined)
-                            scope.sort = field.key;
-                        
-                        scope.reverse = false;
-                    }
-                    else {
-                        scope.reverse = !scope.reverse;
-                    }
-                        
-                    if(attrs.extSort)
-                        scope.extSort({ sortBy: field.key, reverse: scope.reverse });
-                };
-                        
-                scope.formatString = function(value) {
+                                rows.forEach(function(row) {
+                                    row.checked = true;
+                                });
+                            }
+                        }
+                                
+                        scope.lastChecked = $index;
+                    };
+                                
+                    scope.keyboardSel = function(row, $index, $event) {
+                        if($event.key === " " || $event.key === "Enter") 
+                            scope.sel(row, $index);
+                    };
+                    
+                    scope.sel = function(row, $index) {
+                        if(attrs.noSelect !== undefined)
+                            return;
                             
-                    if(value instanceof Date) {
-                        return moment(value).utc().format(attrs.dateFormat || 'lll');
-                    }
-                    else if(typeof value === 'number') {
-                        var precision = attrs.numberDecimals || 3;
-                        
-                        var p =  Math.pow(10,precision);
-                        
-                        return Math.round(value*p)/p;
-                    }
-                            return value;
+                        scope.selected = row;
+                        if(attrs.onSelect)
+                            scope.onSelect({ row: row });
+                    };
+                                        
+                    scope.sortBy = function(field) {
+                        if(scope.sortKey !== field.key) {
+                            scope.sortKey = field.key;
+                            
+                            if(attrs.extSort === undefined)
+                                scope.sort = field.key;
+                            
+                            scope.reverse = false;
+                        }
+                        else {
+                            scope.reverse = !scope.reverse;
+                        }
+                            
+                        if(attrs.extSort)
+                            scope.extSort({ sortBy: field.key, reverse: scope.reverse });
+                    };
+                            
+                    scope.formatString = function(value) {
+                                
+                        if(value instanceof Date) {
+                            return moment(value).utc().format(attrs.dateFormat || 'lll');
+                        }
+                        else if(typeof value === 'number') {
+                            var precision = attrs.numberDecimals || 3;
+                            
+                            var p =  Math.pow(10,precision);
+                            
+                            return Math.round(value*p)/p;
+                        }
+                                return value;
+                    };
+                    
+                    element.html($templateCache.get('/partials/directives/table2.html'));
+                    
+                    $compile(element.contents())(scope);
                 };
-                
-                element.html($templateCache.get('/partials/directives/table2.html'));
-                
-                // console.log(scope);
-                $compile(element.contents())(scope);
-            };
-        }
-    };
-}])
+            }
+        };
+    }
+])
 .directive('a2TableContent', ['$compile', function($compile){
     return {
         restrict: 'E',
@@ -463,39 +469,39 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
         }
     };
 })
-.directive('autoHeight', function () {
+.directive('autoHeight', ['$window', function($window) {
+    var $ = $window.$;
     return {
         restrict: 'A',
         link: function (scope, element, attr) {
-
+            
             var updateHeight = function() {
                 // console.log('window h:', $(window).height());
                 // console.log('ele pos:',  element.offset());
                 // console.log('ele h:', element.height());
-                var h = $(window).height() - element.offset().top;
-
+                var h = $($window).height() - element.offset().top;
+                
                 if(h < 500)
                     return;
 
-                window.requestAnimationFrame(function() {
+                $window.requestAnimationFrame(function() {
                     element.height(h);
                 });
             };
 
             updateHeight();
 
-            $( window ).resize(function() {
+            $($window).resize(function() {
                 updateHeight();
             });
         }
     };
- })
+}])
 .directive('stopClick', function () {
     return {
         restrict: 'A',
         link: function (scope, element, attr) {
             element.bind('click', function (e) {
-                //~ console.log("click stopped");
                 e.stopPropagation();
             });
         }
@@ -523,7 +529,10 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
   or, if you just want to show the component :
   <yearpick ng-model="dia" yearpick disable-empty="true" year="year" date-count="dateData"></yearpick>
  */
-.directive('yearpick', function($timeout) {
+.directive('yearpick', ['$timeout', '$window', function($timeout, $window) {
+    var d3 = $window.d3;
+    var $ = $window.$;
+    
     return {
         restrict: 'AE',
         scope: {
@@ -536,7 +545,9 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
         },
         link: function(scope, element, attrs) {
             var is_a_popup = !/yearpick/i.test(element[0].tagName);
+            
             var popup;
+            
             if(is_a_popup){
                 popup = $('<div></div>').insertAfter(element).addClass('calendar popup');
                 
@@ -789,21 +800,20 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             }
         }
     };
-})
-.directive('a2Img', function($compile){
+}])
+.directive('a2Img', ['$compile', '$window',  function($compile, $window){
+    var $ = $window.$;
     return {
         restrict : 'E',
         scope : {},
         link: function ($scope, $element, $attr) {
             $element.addClass('a2-img');
-            var loader = $compile(
-                '<loader hide-text="yes"></loader>'
-            )($scope).appendTo($element);
-            var img = $('<img />')
-                .load(function(){
+            
+            var loader = $compile('<loader hide-text="yes"></loader>')($scope).appendTo($element);
+            
+            var img = $('<img>').load(function(){
                     $element.removeClass('loading');
-                })
-                .appendTo($element);
+                }).appendTo($element);
 
             $attr.$observe('a2Src', function(new_src){
                 if(!new_src){
@@ -837,7 +847,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             
         }
     };
-})
+}])
 .directive('a2TrainingSetDataImage', function($compile, a2TrainingSets){
     return {
         restrict : 'E',
