@@ -1,6 +1,8 @@
 var util = require('util');
 var mysql = require('mysql');
 var Joi = require('joi');
+var jsonwebtoken = require('jsonwebtoken');
+var config = require('../config');
 
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
@@ -209,8 +211,8 @@ var Sites = {
             project: site.project_id,
             site: site.site_id
         };
-        var token = jwt.sign(payload, config('tokens').secret, config('tokens').options);
-        var iat = jwt.decode(token).iat;
+        var token = jsonwebtoken.sign(payload, config('tokens').secret, config('tokens').options);
+        var iat = jsonwebtoken.decode(token).iat;
 
         queryHandler(
             "UPDATE sites \n" + 
@@ -223,6 +225,7 @@ var Sites = {
                     callback(null, {
                         type : "A2Token",
                         name: site.name,
+                        created: iat,
                         expires: 0,
                         token: token
                     });

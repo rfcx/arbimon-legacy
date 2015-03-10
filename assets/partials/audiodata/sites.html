@@ -26,7 +26,7 @@
             <i class="fa fa-pencil"></i>
         </button>
         <button class="btn btn-default"
-            ng-click="register()"
+            ng-click="site_token()"
             ng-disabled="!selected || selected.imported"
             tooltip="Create Site Token">
             <i class="fa fa-link"></i>
@@ -48,8 +48,11 @@
                 {{ row.name }} 
             </field>
             <field>
-                <i ng-show="row.published && !row.imported" class="fa fa-globe"></i>
-                <i ng-show="row.imported" class="fa fa-users"></i>
+                <i ng-show="row.published && !row.imported" class="fa fa-globe"  title="Site is Published"></i>
+                <i ng-show="row.imported" class="fa fa-users" title="Site is Imported"></i>
+            </field>
+            <field>
+                <i ng-show="row.token_created_on && !row.imported" class="fa fa-link" title="Has a Token"></i>
             </field>
             <field title="Rec qty" key="rec_count">
                 {{ row.rec_count }}

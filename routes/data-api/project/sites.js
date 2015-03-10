@@ -170,7 +170,7 @@ router.post('/revoke-token', function(req, res, next){
             if(err){
                 next(err);
             } else {
-                res.status(200);
+                res.json({message:"token revoked"});
             }
         });
     }
