@@ -21,6 +21,7 @@ cache_miss.prototype.retry_get = function(){
 };
 
 
+
 var cache = {
     hash_key : function(key){
         var match = /^(.*?)((\.[^.\/]*)*)?$/.exec(key);
@@ -72,38 +73,39 @@ var cache = {
     cleanup : function(){
         debug('Cleaning up tmpcache.');
         var root = path.resolve(config("tmpfilecache").path);
-        var setCleanupTimeout = function(){
-            if (cache.cleanupTimeout) {
-                return;
-            }
-            var delay = config("tmpfilecache").cleanupInterval;
-            debug('Running tmpcache cleanup in : ', (delay/1000.0), ' seconds.');
-            cache.cleanupTimeout = setTimeout(function(){
-                cache.cleanupTimeout = 0;
-                cache.cleanup();
-            }, delay);
-        };
         
         fs.readdir(root, function(err, files){
             async.each(files, function(subfile, next){
                 if (subfile == '.gitignore') {
+                    next();
                     return;
                 }
                 var file = path.join(root, subfile);
                 cache.checkValidity(file, function (err, filestats){
                     if(!filestats) {
-                        fs.unlink(file, function(){
-                            debug('   tmpcache file removed : ', file);
+                        // fs.unlink(file, function(){
+                        //     debug('   tmpcache file removed : ', file);
                             next();
-                        });
+                        // });
                     } else {
                         next();
                     }
                 });
             }, function(err){
-                setCleanupTimeout();
+                cache.setCleanupTimeout();
             });
         });
+    },
+    setCleanupTimeout : function(){
+        if (cache.cleanupTimeout) {
+            return;
+        }
+        var delay = config("tmpfilecache").cleanupInterval;
+        debug('Running tmpcache cleanup in : ', (delay/1000.0), ' seconds.');
+        cache.cleanupTimeout = setTimeout(function(){
+            cache.cleanupTimeout = 0;
+            cache.cleanup();
+        }, delay);
     }
 };
 

@@ -28,7 +28,7 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
                 }
             }
         });
-    }
+    };
 
     var fetchTsetData = function(){
         var tset = self.tset && self.tset.name;
@@ -36,7 +36,7 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
         if(tset && rec) {
             if(!self.data || self.data.type != tset_type){
-                var cont_name = tset_type.replace(/(^|-|_)(\w)/g, function(_,_1,_2,_3){ return _2.toUpperCase()});
+                var cont_name = tset_type.replace(/(^|-|_)(\w)/g, function(_,_1,_2,_3){ return _2.toUpperCase(); });
                 cont_name = 'a2VisualizerTrainingSetLayer'+cont_name+'DataController';
                 self.data = $controller(cont_name,{$scope : $scope});
             }
@@ -66,13 +66,13 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
                 }
             });
         }
-    }
+    };
 })
 .controller('a2VisualizerAddTrainingSetModalController', function($scope, $modalInstance, Project, training_set_types, a2TrainingSets){
     $scope.data = {
         name : '',
         type : null
-    }
+    };
     $scope.loadingClasses = true;
     $scope.typedefs = training_set_types;
     Project.getClasses(function(project_classes){

@@ -204,7 +204,6 @@ module.exports = function(grunt) {
         uglify: {
             prod: {
                 options: {
-                    mangle: false,
                     banner: '/*! <%= pkg.name %> v<%= pkg.version %> '+
                             'build date: <%= grunt.template.today("yyyy-mm-dd") %> | ' +
                             '(c) 2014-2015 Sieve Analytics, Inc. All rights reserved */\n'
@@ -263,19 +262,6 @@ module.exports = function(grunt) {
                     spawn: false // for grunt-contrib-watch v0.5.0+
                 }
             },
-            jobqueue: {
-                files: [
-                    'jobqueue-app.js',
-                    'model/job_queues.js',
-                    'utils/**/*.js',
-                    'config/**/*.js',
-                    'config/**/*.json'
-                ],
-                tasks: ['express:jobqueue'],
-                options: {
-                    spawn: false // for grunt-contrib-watch v0.5.0+
-                }
-            },
         },
         
         express: {
@@ -284,30 +270,43 @@ module.exports = function(grunt) {
                     script: 'bin/www'
                 }
             },
-            jobqueue: {
-                options: {
-                    script: 'bin/jobqueue'
-                }
-            }
         },
         
         jshint: {
-            client: ['Gruntfile.js', 'assets/js/**/*.js']
+            frontEnd: ['assets/js/**/*.js'],
+            backEnd: [
+                'Gruntfile.js',
+                'bin/www',
+                'app.js',
+                'config/index.js',
+                'routes/**/*.js', 
+                'model/**/*.js', 
+                'utils/**/*.js',
+                'test/**/*.js'
+            ]
         },
         
         clean: {
             assets: ['public/assets/*'],
             packages: ['bower_components', 'node_modules']
+        },
+        
+        karma: {
+            unit: {
+                configFile: 'karma.conf.js'
+            }
+        },
+        
+        angular_architecture_graph: {
+            diagram: {
+                files: {
+                    "angular-depends": [
+                        "assets/js/**/*.js"
+                    ]
+                }
+            }
         }
     };
-    
-    var appserver  = grunt.cli.tasks.indexOf('server') >= 0;
-    var jobqserver = grunt.cli.tasks.indexOf('jobqueue-server') >= 0;
-    if(!jobqserver){
-        delete initcfg.watch.jobqueue;
-    } else if(!appserver){
-        initcfg.watch.options.livereload = false;
-    }
     
     grunt.initConfig(initcfg);
     
@@ -321,11 +320,15 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-ngdocs');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-angular-architecture-graph');
     
+    grunt.registerTask('angular-depends', ['angular_architecture_graph']);
+    grunt.registerTask('test-frontend', ['jshint:frontEnd', 'karma']);
+    grunt.registerTask('test-backend', ['jshint:backEnd']);
     grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'concat']);
     grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'concat', 'uglify']);
     grunt.registerTask('server', ['express:dev', 'watch']);
-    grunt.registerTask('jobqueue-server', ['express:jobqueue', 'watch:jobqueue']);
     grunt.registerTask('docs', ['ngdocs']);
     grunt.registerTask('default', ['build']);
 };

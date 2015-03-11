@@ -1,6 +1,13 @@
-angular.module('visualizer-soundscapes', ['visualizer-soundscape-info', 'visualizer-soundscape-regions']);
+angular.module('visualizer-soundscapes', [ 
+    'visualizer-soundscape-info', 
+    'visualizer-soundscape-regions'
+]);
 
-angular.module('visualizer-soundscape-regions', ['visualizer-services', 'a2utils', 'a2SoundscapeRegionTags'])
+angular.module('visualizer-soundscape-regions', [
+    'visualizer-services', 
+    'a2utils', 
+    'a2SoundscapeRegionTags'
+])
 .controller('a2VisualizerSoundscapeRegionsLayerController', function($scope, $modal, $location, a2Soundscapes, a22PointBBoxEditor){
     var self = this;
     var bbox2string = function(bbox){
@@ -241,7 +248,9 @@ angular.module('visualizer-soundscape-regions', ['visualizer-services', 'a2utils
 
 
 angular.module('visualizer-soundscape-info', [
-    'visualizer-services', 'a2utils', 'a2SoundscapeRegionTags', 'd3',
+    'visualizer-services', 
+    'a2utils', 
+    'a2SoundscapeRegionTags',
     'a2-url-update-service'
 ])
 .controller('a2VisualizerSoundscapeInfoLayerController', function($scope, $modal, $location, a2Soundscapes){
@@ -299,7 +308,7 @@ angular.module('visualizer-soundscape-info', [
         });
     };
 })
-.directive('a2PaletteDrawer', function(d3, a2Soundscapes){
+.directive('a2PaletteDrawer', function(a2Soundscapes){
     return {
         restrict : 'E',
         template : '<canvas class="palette"></canvas>',

@@ -12,7 +12,7 @@ angular.module('a2browser_recordings_by_site', [])
         this.order  = 'datetime';
         this.count  = 0;
         this.list   = [];
-    }
+    };
     lovo.prototype = {
         initialize: function(){
             var d = $q.defer();
@@ -98,16 +98,16 @@ angular.module('a2browser_recordings_by_site', [])
                                 for(var day in month_days){
                                     var akey = year + '-' + (month < 10 ? '0' : '' ) + month + '-' + (day < 10 ? '0' : '') + day;
                                     avail[akey] = (avail[akey] | 0) + month_days[day];
-                                };
-                            };
-                        };
-                    };
+                                }
+                            }
+                        }
+                    }
 
                     self.dates.cache.get(key).data = avail || {};
                     self.dates.date_counts = avail;
                     self.loading.dates = false;
                 });
-            })
+            });
         },
         fetch_year_range : function(site, callback){
             var site_name = site && site.name;
@@ -123,8 +123,8 @@ angular.module('a2browser_recordings_by_site', [])
                             range.count++;
                             range.min = Math.min(year, range.min);
                             range.max = Math.max(year, range.max);
-                        };
-                    };
+                        }
+                    }
                     if(!range.count){
                         range.max = range.min = new Date().getFullYear();
                     }
@@ -134,7 +134,7 @@ angular.module('a2browser_recordings_by_site', [])
                     self.loading.dates = false;
                     callback(range);
                 });
-            })
+            });
         },
         fetching  : false,
         available : {}
@@ -160,13 +160,13 @@ angular.module('a2browser_recordings_by_site', [])
             });
         });
         return defer.promise;
-    }
+    };
     this.deactivate = function(){
         var defer = $q.defer();
         defer.resolve();
         self.active = false;
         return defer.promise;
-    }
+    };
     this.auto_select = function(recording){
         if(recording) {
             var utcdateaslocal = new Date(recording.datetime);
@@ -191,12 +191,12 @@ angular.module('a2browser_recordings_by_site', [])
         var defer = $q.defer();
         Project.getOneRecording(location, function(recording){
             defer.resolve(recording);
-        })
+        });
         return defer.promise;
-    }
+    };
     this.get_location = function(recording){
         return 'rec/' + recording.id;
-    }
+    };
 
     var make_lovo = function(){
         var site = self.site;
@@ -205,7 +205,7 @@ angular.module('a2browser_recordings_by_site', [])
             self.lovo = new a2RecordingsBySiteLOVO(site, date);
         }
         return self.lovo;
-    }
+    };
 
     $scope.$watch('browser.$type.dates.display_year', function(new_display_year){
         if(!self.active){ return; }
@@ -240,10 +240,10 @@ angular.module('a2browser_recordings_by_site', [])
         if (site && date) {
             if(newValue && oldValue && newValue.getTime() == oldValue.getTime() && self.lovo){
                 a2Browser.setLOVO(self.lovo);
-                return
+                return;
             } else {
                 a2Browser.setLOVO(make_lovo());
             }
         }
     });
-})
+});

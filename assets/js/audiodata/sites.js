@@ -3,7 +3,8 @@ angular.module('audiodata.sites', [
     'a2directives', 
     'ui.bootstrap',
     'humane',
-    'google-maps', 'a2-qr-js'
+    'google-maps', 
+    'a2-qr-js'
 ])
 .controller('SitesCtrl', function($scope, Project, $http, $modal, notify, a2Sites) {
     $scope.loading = true;
@@ -259,13 +260,14 @@ angular.module('audiodata.sites', [
     'a2Sites', 
     'project', 
     '$modalInstance',
-    'geocoding',
-    function($scope, a2Sites, project, $modalInstance, geocoding) {
-    
+    '$window',
+    function($scope, a2Sites, project, $modalInstance, $window) {
+        var geocoder = new $window.google.maps.Geocoder();
+        
         a2Sites.listPublished(function(sites) {
             
             sites.forEach(function(site) {
-                geocoding.geocode({ 
+                geocoder.geocode({ 
                         location: { 
                             lat: site.lat, 
                             lng: site.lon 

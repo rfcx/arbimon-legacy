@@ -1,11 +1,10 @@
 var debug = require('debug')('arbimon2:route:admin');
 var express = require('express');
 var request = require('request');
-var config = require('../config');
 var router = express.Router();
 var async = require('async');
 
-var jobQueue = require('../utils/jobqueue');
+var config = require('../config');
 var model = require('../model');
 
 router.use(function(req, res, next) {

@@ -41,7 +41,7 @@ angular.module('a2visobjectsbrowser', [
             });
         }
 
-    }
+    };
 
     this.setLOVO = function(lovo, location){
         var old_lovo = self.lovo;
@@ -58,7 +58,7 @@ angular.module('a2visobjectsbrowser', [
                 }
             });
         }
-    }
+    };
     
     this.set_location = function(location){
         $scope.location = location;
@@ -94,7 +94,7 @@ angular.module('a2visobjectsbrowser', [
         }).then(function(){
             $scope.$emit('browser-vobject-type', type.vobject_type);
         });
-    }
+    };
 
     $scope.$watch('browser.type', function(new_type){
         setBrowserType(new_type);

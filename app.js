@@ -20,7 +20,6 @@ AWS.config.update({
 });
 
 var tmpfilecache = require('./utils/tmpfilecache');
-var jobQueue = require('./utils/jobqueue');
 var model = require('./model');
 
 tmpfilecache.cleanup();

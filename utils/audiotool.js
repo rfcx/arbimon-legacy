@@ -39,6 +39,12 @@ Options:
     Permute the colours in a colour or hybrid palette. The num parameter, from 1 (the default) to 6, selects the permutation.
  */
 var audiotools = {
+    /** Runs sox with the specified arguments, and returns the results in a callback.
+     * @param {Array} args array of parameters to give to sox. (warning!! arguments are not escaped, passing usecure arguments can lead to security problems.)
+     * @param {Object} options options that modify the call.
+     * @param {Boolean} options.stderr2stdout wether stderr output should be mixed with stdout ouput.
+     * @param {Function} callback function to call when the sox is done, its arguments are (code, stdout_output, stderr_output).
+     */
     sox : function(args, options, callback){
         debug('running sox with ', args);
         if(options instanceof Function) { callback = options; }
@@ -65,6 +71,7 @@ var audiotools = {
             callback(code, stdout.value, stderr.value);
         });
     },
+    // function calls python tyler.py script
     tyler : function(rec_id, callback){
         debug('running tyler');        
         var cp = childProcess.spawn('.env/bin/python',['scripts/tiles/tyler.py',rec_id]);
@@ -95,10 +102,12 @@ var audiotools = {
             callback(code, output, stderr.value);
         });
     },
-    info : function(source_path, options, callback){
-        if(options instanceof Function) { callback = options; }
-        options = options || {};
-        
+    /** Returns information about a given audio file
+     * @param {String} source_path audio file path
+     * @param {Object} options !!!!!unused!!!!!
+     * @param {Function} callback function to call with the audio info, its arguments are (code, info).
+     */
+    info : function(source_path, callback){
         var args = ['--info', source_path];
         audiotools.sox(args, function(code, stdout, stderr){
             var lines = stdout.split('\n');
@@ -124,7 +133,17 @@ var audiotools = {
             }
             callback(code, info);
         });
-    },    
+    },
+    /** Transcodes an audio file using the given parameters.
+     * @param {String} source_path audio file path
+     * @param {String} destination_path output audio file path
+     * @param {Object} options transcoding options
+     * @param {Object} options.sample_rate set output the sampling rate
+     * @param {Object} options.format set the output audio format
+     * @param {Object} options.compression set the output compression
+     * @param {Object} options.channels set the number of channels in the output
+     * @param {Function} callback function to call with the results.
+     */    
     transcode : function(source_path, destination_path, options, callback){
         if(options instanceof Function) { callback = options; }
         options = options || {};
@@ -188,7 +207,7 @@ var audiotools = {
             '-q', ((options.quantization | 0) || 249) // color quantization
         );
         
-        if(options.window && options.window in ['Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser']) {
+        if(options.window && ['Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser'].indexOf(options.window) >= 0) {
             args.push('-w', options.window); // just the raw spectrogram image
         }
         args.push('-lm');

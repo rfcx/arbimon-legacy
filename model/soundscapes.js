@@ -482,7 +482,7 @@ var Soundscapes = {
                     else
                     {
                         var q = " DELETE FROM `playlists` WHERE `playlist_id` IN "+
-                        " (SELECT `sample_playlist_id` FROM `soundscape_regions` WHERE `soundscape_id` = "+scape_id+")"
+                        " (SELECT `sample_playlist_id` FROM `soundscape_regions` WHERE `soundscape_id` = "+scape_id+")";
                         queryHandler(q,function(err,row)
                             {
                                 if (err)
