@@ -50,7 +50,7 @@ else {
 }
 
 app.use(jwt({ 
-    secret: config('session').secret,
+    secret: config('tokens').secret,
     userProperty: 'token',
     credentialsRequired: false
 }));
