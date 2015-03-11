@@ -38,6 +38,7 @@ Options:
 −p num
     Permute the colours in a colour or hybrid palette. The num parameter, from 1 (the default) to 6, selects the permutation.
  */
+
 var audiotools = {
     /** Runs sox with the specified arguments, and returns the results in a callback.
      * @param {Array} args array of parameters to give to sox. (warning!! arguments are not escaped, passing usecure arguments can lead to security problems.)
@@ -107,12 +108,13 @@ var audiotools = {
      * @param {Object} options !!!!!unused!!!!!
      * @param {Function} callback function to call with the audio info, its arguments are (code, info).
      */
-    info : function(source_path, callback){
+    info: function(source_path, callback){
         var args = ['--info', source_path];
         audiotools.sox(args, function(code, stdout, stderr){
             var lines = stdout.split('\n');
             var info = {};
             for(var i = 0, e = lines.length; i < e; ++i){
+                console.log(lines[i]);
                 var m = /^\s*([^:]+?)\s*:\s*(.*)$/.exec(lines[i]);
                 if (m) {
                     var param = m[1].toLowerCase().replace(/ /g, '_');
@@ -124,7 +126,7 @@ var audiotools = {
                         case 'precision'       : value = /^(\d+)-bit/.exec(value)[1] | 0; break;
                         case 'duration'        :
                             m = /^(\d+):(\d+):(\d+\.\d+)\s+=\s+(\d+)/.exec(value);
-                            value = ((m[1]|0)*60 + (m[2]|0))*60 + (m[3]|0);
+                            value = ( Number(m[1])*60 + Number(m[2]) )*60 + Number(m[3]);
                             info.samples = m[4] | 0;
                         break;
                     }
@@ -216,5 +218,11 @@ var audiotools = {
     }
 };
 
+audiotools.info('/home/chino/Desktop/long_rec-2010-03-29_11-00.flac', function(code, info) {
+    console.log(code);
+    console.log(info);
+    
+    var splitCommand = 'sox original-rec trim 0 60 : newfile : trim';
+});
 
 module.exports = audiotools;
