@@ -739,7 +739,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                         scope.$apply(function() {
                             d3.event.preventDefault();
                             scope.ngModel = d;
-                            is_a_popup && popup.css('display', 'none');
+                            if(is_a_popup) popup.css('display', 'none');
                         });
                     });
                 // .. also, add a rect on the background

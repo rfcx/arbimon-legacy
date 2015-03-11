@@ -273,7 +273,7 @@ module.exports = function(grunt) {
         },
         
         jshint: {
-            frontEnd: ['assets/js/**/*.js'],
+            frontEnd: ['assets/js/**/*.js', 'assets/test/**/*.js'],
             backEnd: [
                 'Gruntfile.js',
                 'bin/www',
@@ -324,7 +324,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-angular-architecture-graph');
     
     grunt.registerTask('angular-depends', ['angular_architecture_graph']);
-    grunt.registerTask('test-frontend', ['jshint:frontEnd', 'karma']);
+    grunt.registerTask('test-frontend', ['jshint:frontEnd', 'html2js:dev', 'karma']);
     grunt.registerTask('test-backend', ['jshint:backEnd']);
     grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'concat']);
     grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'concat', 'uglify']);
