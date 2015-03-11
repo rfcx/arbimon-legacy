@@ -8,6 +8,7 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
 var rewire = require('rewire');
+var debug = console.log;
 
 var audiotool = rewire('../../utils/audiotool');
 var mock_childProcess = require('../mock_tools/mock_child_process');
@@ -89,7 +90,7 @@ describe('audiotool', function(){
     describe('info', function(){
         it('Should return the info of an audio file.', function(done){
             mock_childProcess.running=[];
-            audiotool.info('audiofile.wav', {stderr2stdout:true}, function(code, info){
+            audiotool.info('audiofile.wav', function(code, info){
                 code.should.equal(0);
                 info.should.deep.equal({
                     bit_rate        : "337k",
