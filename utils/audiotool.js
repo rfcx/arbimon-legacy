@@ -104,9 +104,8 @@ var audiotools = {
         });
     },
     /** Returns information about a given audio file
-     * @param {String} source_path audio file path
-     * @param {Object} options !!!!!unused!!!!!
-     * @param {Function} callback function to call with the audio info, its arguments are (code, info).
+     * @param {String} source_path - audio file path
+     * @param {Function} callback(code,info) - function to call with the audio info, its arguments are (code, info).
      */
     info: function(source_path, callback){
         var args = ['--info', source_path];
@@ -218,11 +217,28 @@ var audiotools = {
     }
 };
 
-audiotools.info('/home/chino/Desktop/long_rec-2010-03-29_11-00.flac', function(code, info) {
+audiotools.info('/home/chino/Desktop/TEST_SM3_20140530_0630000.wav', function(code, info) {
     console.log(code);
     console.log(info);
     
-    var splitCommand = 'sox original-rec trim 0 60 : newfile : trim';
+    var splitCommand = 'sox original_file.flac original_file_%n.flac';
+    //' trim 0 60 : newfile : trim 0 60 :';
+    
+    // split if recording is longer than 2 mins
+    if(info.duration >= 120) {
+        var oneMinPieces = Math.floor(info.duration/60)-1;
+        var lastPieceLength = info.duration - (oneMinPieces*60);
+        
+        console.log(oneMinPieces, lastPieceLength);
+        
+        for(var i =0; i < oneMinPieces; i++) {
+            splitCommand += ' trim 0 60 : newfile :';
+        }
+        splitCommand += ' trim 0 '+ lastPieceLength;
+        
+        console.log(splitCommand);
+    }
+    
 });
 
 module.exports = audiotools;
