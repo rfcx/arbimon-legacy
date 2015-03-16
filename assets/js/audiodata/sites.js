@@ -3,7 +3,6 @@ angular.module('audiodata.sites', [
     'a2directives', 
     'ui.bootstrap',
     'humane',
-    'google-maps', 
     'a2-qr-js'
 ])
 .controller('SitesCtrl', function($scope, Project, $http, $modal, notify, a2Sites) {
