@@ -13,6 +13,7 @@ module.exports = {
     compute_row_properties : function(row_set, property_set, method_getter, callback){
         if(!property_set || !row_set){
             callback();
+            return;
         } else if(typeof(property_set) == 'string'){
             property_set = property_set.split(',');
         }
@@ -26,13 +27,22 @@ module.exports = {
                 next_property(new Error("Property " + property + " cannot be computed."));
             }
         }, function(err){
-            err ? callback(err) : callback(null, row_set);
+            if(err) return callback(err);
+            
+            callback(null, row_set);
         });
     },
 
-
+    /** Groups a set of row by a set of given attributes.
+     * @param {Array} rows set of rows to group by
+     * @param {Array} grouping_attribs array of attributes on wich to group the rows by.
+     * @param {Object} options options that modify the groupby behaviour
+     * @param {Boolean} options.keep_keys whether to keep the keys used in the group by on the rows, or to delete them (default is to delete them)
+     * @param {Boolean} options.collapse_single_leaves whether rows that end up with a single attribute get collapsed and substituted by their attribute's value, or not (default is not).
+     * @return an object containing groups of rows.
+     */
     group_rows_by : function(rows, grouping_attribs, options){
-        options || (options = {});
+        options = options || {};
         var keep_keys = options.keep_keys;
         var collapse_single_leaves = options.collapse_single_leaves;
         if(!grouping_attribs) {
@@ -41,10 +51,12 @@ module.exports = {
         var grouped_rows = {};
         var ge_1 = grouping_attribs.length - 1;
         for(var i=0, e = rows.length; i < e; ++i){
+            var grouping_attrib, key;
             var row = rows[i];
             var cgroup = grouped_rows;
             for(var gi=0; gi < ge_1; ++gi){
-                var grouping_attrib = grouping_attribs[gi], key = row[grouping_attrib];
+                grouping_attrib = grouping_attribs[gi];
+                key = row[grouping_attrib];
                 if(!keep_keys) {
                     delete row[grouping_attrib];
                 }
@@ -53,7 +65,8 @@ module.exports = {
                 }
                 cgroup = cgroup[key];
             }
-            var grouping_attrib = grouping_attribs[ge_1], key = row[grouping_attrib];
+            grouping_attrib = grouping_attribs[ge_1];
+            key = row[grouping_attrib];
             if(!keep_keys) {
                 delete row[grouping_attrib];
             }
@@ -67,4 +80,4 @@ module.exports = {
         }
         return grouped_rows;
     }
-}
+};

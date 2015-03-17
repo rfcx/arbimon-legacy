@@ -184,7 +184,7 @@ angular.module('visualizer-services', ['a2services'])
     var self = this;
     Project.getClasses(function(list){
         self.list = list;
-    })
+    });
 })
 .service('a22PointBBoxEditor', function($timeout, a2TrainingSets, training_set_types){
     var editor = function(){
@@ -247,4 +247,4 @@ angular.module('visualizer-services', ['a2services'])
     editor.prototype.super = editor.prototype;
     
     return editor;
-})
+});

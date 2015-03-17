@@ -3,7 +3,7 @@ angular.module('audiodata.sites', [
     'a2directives', 
     'ui.bootstrap',
     'humane',
-    'google-maps'
+    'a2-qr-js'
 ])
 .controller('SitesCtrl', function($scope, Project, $http, $modal, notify, a2Sites) {
     $scope.loading = true;
@@ -164,6 +164,67 @@ angular.module('audiodata.sites', [
         
         $scope.editing = true;
     };
+
+    $scope.site_token = function() {
+        
+        if(!$scope.selected || $scope.selected.imported)
+            return;
+            
+        var site = $scope.selected;
+        var popup = $scope.popup = {
+            site: site,
+            loading:{},
+            token:null,
+            action : {
+                generate_token: function(){
+                    popup.loading.generate = true;
+                    a2Sites.generateToken(site).success(function(data) {
+                        popup.loading.generate = false;
+                        if(data.error)
+                            return notify.error(data.error);
+
+                        site.token_created_on = data.created;
+                        popup.token = data;
+                        notify.log("New site token generated.");
+                    }).error(function(data) {
+                        popup.loading.generate = false;
+                        notify.error("Error communicating with server.");
+                    });
+                },
+                revoke_token: function(callback){
+                    var modalInstance = $modal.open({
+                        templateUrl: '/partials/pop-up.html',
+                        controller : function(){
+                            this.title = 'Confirm Revoke Token';
+                            this.messages = [
+                                "This action will revoke the token for the site " + site.name + ". " +
+                                "Are you sure you want to do this?"];
+                            this.btnOk = "Yes, Revoke Token";
+                            this.btnCancel = "No";
+                        },
+                        controllerAs : 'popup'
+                    });
+                    modalInstance.result.then(function() {
+                        popup.loading.revoke = true;
+                        a2Sites.revokeToken(site).success(function(data) {
+                            popup.loading.revoke = false;
+                            site.token_created_on = null;
+                            popup.token = null;
+                            notify.log("site token revoked.");
+                        }).error(function(data) {
+                            popup.loading.generate = false;
+                            notify.error("Error communicating with server.");
+                        });
+                    });
+                },
+            }
+        };
+
+        var modalInstance = $modal.open({
+            templateUrl: '/partials/audiodata/site-tokens-popup.html',
+            scope: $scope
+        });
+    };
     
     $scope.sel = function(site) {
         //~ console.log('sel');
@@ -198,13 +259,14 @@ angular.module('audiodata.sites', [
     'a2Sites', 
     'project', 
     '$modalInstance',
-    'geocoding',
-    function($scope, a2Sites, project, $modalInstance, geocoding) {
-    
+    '$window',
+    function($scope, a2Sites, project, $modalInstance, $window) {
+        var geocoder = new $window.google.maps.Geocoder();
+        
         a2Sites.listPublished(function(sites) {
             
             sites.forEach(function(site) {
-                geocoding.geocode({ 
+                geocoder.geocode({ 
                         location: { 
                             lat: site.lat, 
                             lng: site.lon 

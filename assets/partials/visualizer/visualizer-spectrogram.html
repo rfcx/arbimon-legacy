@@ -16,15 +16,21 @@
             <button class="btn btn-default btn-xs" 
                 ng-class="click2zoom.active ? 'active' : ''"
                 a2-global-keyup="($event.which == 90) && visobject.zoomable && click2zoom.toggle_active()"
-                ng-click="click2zoom.toggle_active('in')"><i class="fa fa-search-plus"></i></button>                
+                ng-click="click2zoom.toggle_active('in')">
+                    <i class="fa fa-search-plus"></i>
+            </button>                
             <button class="btn btn-default btn-xs top-right-2" 
-                ng-click="click2zoom.zoom_out()"><i class="fa fa-search-minus"></i></button>
+                ng-click="click2zoom.zoom_out()">
+                    <i class="fa fa-search-minus"></i>
+            </button>
             <button class="btn btn-default btn-xs top-right-2" 
                 a2-global-keyup="($event.which == 82) && visobject.zoomable && click2zoom.reset()"
-                ng-click="click2zoom.zoom_reset()"><span class="fa-stack fa-xs">
+                ng-click="click2zoom.zoom_reset()">
+                <span class="fa-stack fa-xs">
                     <i class="fa fa-search fa-stack-2x"></i>
                     <i class="fa fa-remove fa-stack-1x"></i>
-                </span></button>
+                </span>
+            </button>
         </div>
     </div>
     

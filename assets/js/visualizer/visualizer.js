@@ -61,7 +61,7 @@ angular.module('visualizer', [
                     location:''
                 },
                 reloadOnSearch : false,
-                template: '<a2-visualizer></a2-visualizer>'
+                template: '<a2-persistent name="visualizer"><a2-visualizer></a2-visualizer></a2-persistent>'
             }
         },
     });

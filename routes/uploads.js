@@ -259,7 +259,6 @@ var authorize = function(req, res, next) {
 
 var receiveUpload = function(req, res, next) {
     
-    
     async.parallel({
         getProjectInfo: function(callback) {
             model.projects.findById(req.upload.projectId, callback);
@@ -271,12 +270,14 @@ var receiveUpload = function(req, res, next) {
     function(err, results) {
         if(err) return next(err);
         
-        var project = results.getProjectInfo[0];
-        var total = results.getTotal[0].count;
+        var project = results.getProjectInfo[0][0];
+        var total = results.getTotal[0][0].count;
+        
+        console.log('project', project.recording_limit);
+        console.log('total', total);
         
         if(total >= project.recording_limit) {
-            file.resume();
-            return res.status(401).send("Project Recording limit reached");
+            return res.status(401).json({ error: "Project Recording limit reached"});
         }
         
         var info;
@@ -343,7 +344,7 @@ var receiveUpload = function(req, res, next) {
                     deleteFile(fileUploaded.path);
                     var msg = "filename "+ fileInfo.filename +
                               " already exists on site " + req.upload.siteId;
-                    return res.status(403).send(msg);
+                    return res.status(403).json({ error: msg });
                 }
                 
                 processUpload({ 

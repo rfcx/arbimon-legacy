@@ -495,6 +495,8 @@
                                 $scope.showModelValidations = false;
                             }
                             else {
+                                // TODO optimize this section
+                                
                                 var searchTh = $scope.suggestedThreshold;
                                 var thresholdObject = [];
                                 var precisionObject = [];
@@ -503,8 +505,10 @@
                                 var specificityObject = [];
                                 var sumObject = [];
                                 var tries = 0;
+                                var i, ii, jj;
+                                
                                 while (searchTh > 0.01 && tries < 15) {
-                                    for (var jj = 0; jj < $scope.validations.length; jj++) {
+                                    for (jj = 0; jj < $scope.validations.length; jj++) {
                                         $scope.validations[jj].threshold = ($scope.validations[jj].vmax > searchTh) ? 'yes' : 'no';
                                     }
                                     $scope.computeStats();
@@ -519,7 +523,7 @@
                                 }
                                 var max = sumObject[0];
                                 var mindex = 0;
-                                for (var ii = 1; ii < sumObject.length; ii++) {
+                                for (ii = 1; ii < sumObject.length; ii++) {
                                     if (sumObject[ii] > max) {
                                         max = sumObject[ii];
                                         mindex = ii;
@@ -527,63 +531,63 @@
                                 }
                                 max = precisionObject[0];
 
-                                for (var ii = 0; ii < precisionObject.length; ii++) {
+                                for (ii = 0; ii < precisionObject.length; ii++) {
                                     if (precisionObject[ii] >= max) {
                                         max = precisionObject[ii];
                                     }
                                 }
 
                                 var precisionMaxIndices = [];
-                                for (var ii = 0; ii < precisionObject.length; ii++) {
+                                for (ii = 0; ii < precisionObject.length; ii++) {
                                     if (precisionObject[ii] == max) {
                                         precisionMaxIndices.push(ii);
                                     }
                                 }
                                 max = sensitivityObject[precisionMaxIndices[0]];
 
-                                for (var i = 0; i < precisionMaxIndices.length; i++) {
+                                for (i = 0; i < precisionMaxIndices.length; i++) {
                                     if (sensitivityObject[precisionMaxIndices[i]] >= max) {
                                         max = sensitivityObject[precisionMaxIndices[i]];
                                     }
                                 }
 
                                 var sensitivityMaxIndices = [];
-                                for (var i = 0; i < precisionMaxIndices.length; i++) {
+                                for (i = 0; i < precisionMaxIndices.length; i++) {
                                     if (sensitivityObject[precisionMaxIndices[i]] == max) {
                                         sensitivityMaxIndices.push(precisionMaxIndices[i]);
                                     }
                                 }
                                 max = accuracyObject[sensitivityMaxIndices[0]];
 
-                                for (var i = 0; i < sensitivityMaxIndices.length; i++) {
+                                for (i = 0; i < sensitivityMaxIndices.length; i++) {
                                     if (accuracyObject[sensitivityMaxIndices[i]] >= max) {
                                         max = accuracyObject[sensitivityMaxIndices[i]];
                                     }
                                 }
 
                                 var accuracyMaxIndices = [];
-                                for (var i = 0; i < sensitivityMaxIndices.length; i++) {
+                                for (i = 0; i < sensitivityMaxIndices.length; i++) {
                                     if (accuracyObject[sensitivityMaxIndices[i]] == max) {
                                         accuracyMaxIndices.push(sensitivityMaxIndices[i]);
                                     }
                                 }
                                 max = specificityObject[accuracyMaxIndices[0]];
 
-                                for (var i = 0; i < accuracyMaxIndices.length; i++) {
+                                for (i = 0; i < accuracyMaxIndices.length; i++) {
                                     if (specificityObject[accuracyMaxIndices[i]] >= max) {
                                         max = specificityObject[accuracyMaxIndices[i]];
                                     }
                                 }
 
                                 var specificityMaxIndices = [];
-                                for (var i = 0; i < accuracyMaxIndices.length; i++) {
+                                for (i = 0; i < accuracyMaxIndices.length; i++) {
                                     if (specificityObject[accuracyMaxIndices[i]] == max) {
                                         specificityMaxIndices.push(accuracyMaxIndices[i]);
                                     }
                                 }
 
                                 var accum = 0.0;
-                                for (var i = 0; i < specificityMaxIndices.length; i++) {
+                                for (i = 0; i < specificityMaxIndices.length; i++) {
                                     accum = accum + thresholdObject[specificityMaxIndices[i]];
 
                                 }
@@ -598,7 +602,7 @@
                                     $scope.currentThresholdRounded = $scope.databaseThreshold != '-' ? $scope.databaseThreshold : $scope.suggestedThreshold;
                                 }
 
-                                for (var jj = 0; jj < $scope.validations.length; jj++) {
+                                for (jj = 0; jj < $scope.validations.length; jj++) {
                                     $scope.validations[jj].threshold = ($scope.validations[jj].vmax > $scope.currentThreshold) ? 'yes' : 'no';
                                 }
                                 $scope.computeStats();

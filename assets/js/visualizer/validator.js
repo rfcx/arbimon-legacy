@@ -13,7 +13,7 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
         link     : function($scope, $element, $attrs){
             var class2key = function(project_class){
                 var cls = /number|string/.test(typeof project_class) ? 
-                    $scope.classes.filter(function(pc){return pc.id == project_class}).shift() :
+                    $scope.classes.filter(function(pc){ return pc.id == project_class; }).shift() :
                     project_class;
                 return cls && [cls.species, cls.songtype].join('-');
             };
@@ -81,7 +81,7 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                             var key = class2key(validation);
                             $scope.validations[key] = validation.val;
                         });
-                    })
+                    });
                 }
                 
             };
@@ -95,10 +95,12 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 }
                 else returnVal = typeof val == 'undefined' ? val : ( val ? val_options[0]: val_options[1] );
                 return returnVal;
-            }
+            };
             $scope.$watch('recording', function(recording){
                 $scope.validations = {};
-                recording && recording.validations && recording.validations.forEach(add_validation);
+                if(recording && recording.validations) {
+                    recording.validations.forEach(add_validation);
+                }
             });
             
             load_project_classes();

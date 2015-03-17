@@ -606,6 +606,18 @@ angular.module('a2services', [])
                 site: site
             })
             .success(callback);
+        },
+        
+        // Uses Promises :-)
+        generateToken : function(site){
+            return $http.post('/api/project/'+ Project.getUrl() +'/sites/generate-token', {
+                site: site.id
+            });
+        },
+        revokeToken : function(site){
+            return $http.post('/api/project/'+ Project.getUrl() +'/sites/revoke-token', {
+                site: site.id
+            });
         }
     };
 }])

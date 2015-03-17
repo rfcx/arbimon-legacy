@@ -5,7 +5,8 @@ angular.module('audiodata.uploads', [
     'angularFileUpload',
     'humane'
 ])
-.controller('UploadCtrl', function($scope, uploads, Project, $modal){ 
+.controller('UploadCtrl', ['$scope', 'uploads', 'Project', '$modal', 
+    function($scope, uploads, Project, $modal){ 
     
     $scope.prettyBytes = function(bytes) {
         
@@ -22,7 +23,6 @@ angular.module('audiodata.uploads', [
         
         return String(newBytes) + ' ' + labels[p-1];
     }; 
-    
     
     $scope.verifyAndUpload = function() {
         
@@ -110,6 +110,14 @@ angular.module('audiodata.uploads', [
         }
     });
     
+    $scope.uploader.onErrorItem = function(item, response, status, headers) {
+        if( status >= 500) {
+            item.errorMsg = "Server Error";
+            return;
+        }
+        item.errorMsg = response.error;
+    };
+    
     $scope.removeCompleted = function() {
         if(!$scope.uploader.queue.length) return;
         
@@ -117,8 +125,9 @@ angular.module('audiodata.uploads', [
             return !file.isSuccess;
         });
     };
-})
-.controller('BatchInfoCtrl', function($scope, Project, info, $modalInstance, notify) {
+}])
+.controller('BatchInfoCtrl', [ '$scope', 'Project', 'info', '$modalInstance', 'notify', 
+    function($scope, Project, info, $modalInstance, notify) {
     
     if(info) {
         $scope.info = angular.copy(info);
@@ -140,8 +149,8 @@ angular.module('audiodata.uploads', [
         
         notify.error('all fields are required');
     };
-})
-.factory('uploads', function(FileUploader){
+}])
+.factory('uploads', ['FileUploader', function(FileUploader){
     
     var u = new FileUploader();
     
@@ -170,4 +179,4 @@ angular.module('audiodata.uploads', [
             uploadInfo = info;
         }
     };
-});
+}]);

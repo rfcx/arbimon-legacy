@@ -1,4 +1,4 @@
-# node
+# nodejs
 node_modules
 npm-debug.log
 
@@ -18,9 +18,15 @@ a2.komodoproject
 .env
 
 # python compiled binaries
-*pyc
+*.pyc
 
 .env
 
 # docs (?)
 docs
+
+#test coverage results
+coverage
+
+#angular dependencies graph
+angular-depends

@@ -90,7 +90,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 layout.y_axis.left = $element.scrollLeft();
                 $element.children('.axis-y').css({left: layout.y_axis.left + 'px'});
                 layout.x_axis.top = $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh - layout_tmp.gutter;
-                $element.children('.axis-x').css({top: layout.x_axis.top + 'px'});
+                $element.children('.axis-x').css({top: (layout.x_axis.top-1) + 'px'});
                 if(layout.legend){
                     layout.legend.left = $element.scrollLeft() + $element.width() - a2BrowserMetrics.scrollSize.width - layout_tmp.legend_width - layout_tmp.legend_gutter;
                     $element.children('.legend').css({left: layout.legend.left + 'px'});
@@ -151,7 +151,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 
                 d3_x_axis.append("rect").attr({
                     class : 'bg',
-                    x : 0, y : 0,
+                    x : 0, y : 1,
                     width : layout.l.x_axis.attr.width,
                     height: spec_h + layout_tmp.axis_lead
                 });
@@ -160,12 +160,12 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     attr('transform', 'translate('+ layout_tmp.axis_lead +', 1)').
                     call(make_axis(domain.x, scalex, "bottom"));
                 
-                
+                d3_y_axis.style('width', 61);
                 d3_y_axis.append("rect").attr({
                     class : 'bg',
                     x : 0, y : 0,
-                    width : layout.l.y_axis.attr.width,
-                    height: spec_h + layout_tmp.axis_lead + 2
+                    width : layout.l.y_axis.attr.width+1,
+                    height: spec_h + layout_tmp.axis_lead + 1
                 });
                 d3_y_axis.append("rect").attr({
                     class : 'bg',
@@ -175,7 +175,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 });
                 d3_y_axis.append("g").
                     attr('class', 'axis').
-                    attr('transform', 'translate('+ (layout_tmp.axis_sizew-1) +', '+ layout_tmp.axis_lead +')').
+                    attr('transform', 'translate('+ (layout_tmp.axis_sizew) +', '+ layout_tmp.axis_lead +')').
                     call(make_axis(domain.y, scaley, "left"));
                     
                 if(domain.legend){

@@ -1,6 +1,8 @@
 var util = require('util');
 var mysql = require('mysql');
 var Joi = require('joi');
+var jsonwebtoken = require('jsonwebtoken');
+var config = require('../config');
 
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
@@ -202,7 +204,44 @@ var Sites = {
             q = util.format(q, mysql.escape(site_id), mysql.escape(project_id));
             queryHandler(q, callback);
         });
+    },
+
+    generateToken: function(site, callback){
+        var payload = { 
+            project: site.project_id,
+            site: site.site_id
+        };
+        var token = jsonwebtoken.sign(payload, config('tokens').secret, config('tokens').options);
+        var iat = jsonwebtoken.decode(token).iat;
+
+        queryHandler(
+            "UPDATE sites \n" + 
+            "SET token_created_on = "+mysql.escape(iat)+" \n" + 
+            "WHERE site_id = " + mysql.escape(site.site_id), 
+            function(err){
+                if(err){
+                    callback(err);
+                } else {
+                    callback(null, {
+                        type : "A2Token",
+                        name: site.name,
+                        created: iat,
+                        expires: 0,
+                        token: token
+                    });
+                }
+            }
+        );
+    },
+
+    revokeToken: function(site, callback){
+        queryHandler(
+            "UPDATE sites \n" + 
+            "SET token_created_on = NULL \n" + 
+            "WHERE site_id = " + mysql.escape(site.site_id), 
+        callback);
     }
+
 };
 
 module.exports = Sites;

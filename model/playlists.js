@@ -144,7 +144,7 @@ var Playlists = {
                 qlimit.offset = query.offset;
             }
             if(qlimit.offset){
-                limit_clause += " OFFSET " + Math.max(0, (qlimit.offset | 0))
+                limit_clause += " OFFSET " + Math.max(0, (qlimit.offset | 0));
             }
         }
 

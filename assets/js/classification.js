@@ -503,9 +503,9 @@
                 }
         */
                 return  !(
-                            !((typeof $scope.datas.playlist) == 'string')
-                            && $scope.datas.name.length
-                            && !((typeof $scope.datas.classifier) == 'string')
+                            typeof $scope.datas.playlist !== 'string' &&
+                            $scope.datas.name.length &&
+                            typeof $scope.datas.classifier !== 'string'
                         ) ;
             };
 
@@ -575,7 +575,7 @@
 
                                 ctxContext.moveTo(i,canvasheight*(1- (($scope.data[i]-$scope.minvect)/($scope.maxvect-$scope.minvect))   ));
                                 //ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
-                                for(var i = 1; i < $scope.data.length; i++)
+                                for(i = 1; i < $scope.data.length; i++)
                                 {
                                     ctxContext.lineTo(i,canvasheight*(1- (($scope.data[i]-$scope.minvect)/($scope.maxvect-$scope.minvect)) ) );
                                     //ctxContext.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
@@ -601,7 +601,7 @@
                     };
                 }],
                 link: function (scope, element) {
-                    var ctx = element.children()
+                    var ctx = element.children();
                     ctx = ctx[0];
                     scope.$watch("vurl",function(newValue,oldValue) {
                         scope.setLoader();

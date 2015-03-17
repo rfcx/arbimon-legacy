@@ -67,6 +67,7 @@ angular.module('a2utils', [])
     
     return metrics;
 })
+// display localtime formated by momentjs
 .filter('moment',function() {
     return function(input, fmt) {
         if(!input)
@@ -75,6 +76,7 @@ angular.module('a2utils', [])
         return moment(input).format(fmt);
     };
 })
+// display UTC formated by momentjs
 .filter('momentUtc', function(){
     return function(x, fmt){
         if(!x)
@@ -83,6 +85,7 @@ angular.module('a2utils', [])
         return moment(x).utc().format(fmt);
     };
 })
+// divides array of into pages of limitPerPage size
 .filter('paginate', function() {
     return function(arr, currentPage, limitPerPage) {
         if(!arr)
@@ -94,7 +97,7 @@ angular.module('a2utils', [])
 /** Pluralizes singular words accoring to some heuristics that (hopefully)
  *  look like english grammar.
  */
-.filter('plural', function(){
+.filter('plural', function(){ 
     return function(x, fmt){
         if(!x)
             return undefined;
@@ -102,6 +105,7 @@ angular.module('a2utils', [])
         return x +'s';
     };
 })
+// replace underscores or dashes for spaces
 .filter('worded', function(){
     return function(x, fmt){
         if(!x)
@@ -110,6 +114,7 @@ angular.module('a2utils', [])
         return (''+x).replace(/[_-]/g, ' ');
     };
 })
+// capitalize words
 .filter('wordCaps', function(){
     return function(x, fmt){
         if(!x)
@@ -141,14 +146,16 @@ angular.module('a2-url-update-service', [])
                 var m = re.exec(query);
                 if(m){
                     url2 = url.substr(0,qidx) + '?' + query.replace(re, this.prefix + '=' + _t_);
-                } else {
+                } 
+                else {
                     url2 = url + '&' + this.prefix + '=' + _t_;
-                }                
-            } else {
+                }
+            } 
+            else {
                 url2 = url + '?' + this.prefix + '=' + _t_;
             }
             
-            this.cache[url] = url2;            
+            this.cache[url] = url2;
             $('[src="'+url+'"]').attr('src', '').attr('src', url2);
         },
         get: function(url){
@@ -264,16 +271,3 @@ angular.module('a2Classy', [])
     }
 })
 ;
-
-angular.module('d3', []).value('d3', d3);
-
-
-angular.module('humane', [])
-.service('notify', function() {
-    humane.baseCls = "humane-original";
-    humane.error = humane.spawn({ addnCls: humane.baseCls+'-error' });
-    humane.info = humane.spawn({ addnCls: humane.baseCls+'-info' });
-    humane.success = humane.spawn({ addnCls: humane.baseCls+'-success' });
-
-    return humane;
-});

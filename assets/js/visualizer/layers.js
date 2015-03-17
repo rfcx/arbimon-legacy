@@ -5,9 +5,10 @@ angular.module('visualizer-layers', ['visualizer-services', 'a2utils'])
         restrict : 'E',
         replace  : true,
         templateUrl : '/partials/visualizer/layer-item/default.html',
-        link     : function(scope, element, attrs){
+        link: function(scope, element, attrs){
             var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
             var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
+            
             if(layer_key && layer_key != 'default') {
                 var layer_url  = '/partials/visualizer/layer-item/' + layer_key + '.html';
                 var layer_tmp  = $templateFetch(layer_url, function(layer_tmp){
@@ -16,5 +17,5 @@ angular.module('visualizer-layers', ['visualizer-services', 'a2utils'])
                 });
             }
         }
-    }
+    };
 });

@@ -1,11 +1,8 @@
 <div class="row">
     <div class="col-sm-12">
-        <button class="btn btn-default" ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
-            <i class="fa fa-pencil-square-o"></i> Batch Info
-        </button>
         <div class="btn btn-primary btn-file">
             <i class="fa fa-plus"></i> Add files
-            <input accept="audio/x-wav,audio/wav,audio/mpeg,audio/flac" 
+            <input accept="audio/*,.flac" 
                 nv-file-select uploader="uploader" type="file" multiple>
         </div>
         <button type="button" class="btn btn-success" 
@@ -35,14 +32,20 @@
     <div class="col-sm-12">
         <div class="panel panel-default upload-info-panel">
             <div class="panel-body">
-                <div class="upload-title">Batch Info</div>
-                <span ng-show="info">
+                <div class="upload-title">
+                    Batch Info
+                    <a ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
+                        <i class="fa fa-pencil-square-o"></i>
+                    </a>
+                </div>
+                <p ng-hide="info"><small>You need to enter the batch info before start uploading</small></p>
+                <div ng-show="info">
                     <div class="upload-info">Site: <span class="label label-info">{{ info.site.name }}</span></div>
                     <div class="upload-info">Recorder: <span class="label label-info">{{ info.recorder }}</span></div>
                     <div class="upload-info">Microphone: <span class="label label-info">{{ info.mic }} </span></div>
                     <div class="upload-info">Software version: <span class="label label-info">{{ info.sver }} </span></div>
                     <div class="upload-info">Filename format: <span class="label label-info">{{ info.format }}</span></div>
-                </span>
+                </div>
             </div>
         </div>
     </div>
@@ -77,7 +80,12 @@
                     <td>
                         <span ng-show="item.isUploading"><i class="fa fa-cloud-upload"></i> Uploading</span>
                         <span ng-show="item.isSuccess"><i class="fa fa-check"></i> Success</span>
-                        <span ng-show="item.isError"><i class="fa fa-remove"></i> Error</span>
+                        <span ng-show="item.isError">
+                            Error 
+                            <i ng-show="item.errorMsg" 
+                                class="fa fa-exclamation-circle"
+                                tooltip="{{ item.errorMsg }}"></i>
+                        </span>
                         <span ng-show="item.isDuplicate">
                             <i class="fa fa-files-o"></i> Duplicate
                             <i class="fa fa-info-circle"

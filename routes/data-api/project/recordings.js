@@ -130,15 +130,19 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
             var url_comps = /(.*)\/([^/]+)\/([^/]+)/.exec(req.originalUrl);
             recording.audioUrl = url_comps[1] + "/audio/" + recording.id;
             recording.imageUrl = url_comps[1] + "/image/" + recording.id;
-            model.recordings.fetchInfo(recording, function(err, recording){
-                if(err){ next(err); return;}
-                model.recordings.fetchValidations(recording, function(err, validations){
-                    if(err){ next(err); return;}
-                    recording.validations = validations;
-                    model.recordings.fetchSpectrogramTiles(recording, function(err, rec){
-                        if(err){ next(err); return;}
+            model.recordings.fetchValidations(recording, function(err, validations){
+                if(err) return next(err);
+                
+                recording.validations = validations;
+                
+                model.recordings.fetchInfo(recording, function(err, rec){
+                    if(err) return next(err);
+                    
+                    model.recordings.fetchSpectrogramTiles(rec, function(err, rec){
+                        if(err) return next(err);
+                        
                         res.json(rec);
-                    });                    
+                    }); 
                 });
             });
         break;

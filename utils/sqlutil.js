@@ -57,20 +57,36 @@ transaction.prototype = {
             }).bind(this));
         }
     }
-}
+};
 
 var sqlutil = {
     
     transaction : transaction,
     
-    
+    /** Returns a properly escaped SQL comparison expression.
+     *  @param {String} field - the field name (or the lhs of the expression).
+     *                        this is assumed to be clean, and therefore not escaped.
+     *  @param {String} op - the comparisson operation. Can be one of 
+     *                     ['IN','=','==','===','!=','!==','<','<=','>','>=']
+     *                     If op is 'IN' and value is an array of length > 1, 
+     *                     then the comparisson is of the mode lhs IN (rhs[0], ...),
+     *                     with each rhs[0] properly escaped.
+     *  @param {Object} value - the value to compare to (the rhs of the expression).
+     *                        value is assumed to be unclean and gets escaped.
+     *                        If value is undefined, the the comparisson always returns false.
+     *  @return An sql comparisson expression with its rhs properly escaped.
+     *        'IN' comparissons with array values of more than one element are expanded,
+     *        and comparissons against undefined rhs are automatically false.
+     *        the expression is wrapped in parenthesis.
+     */
     escape_compare : function(field, op, value){        
         if(op == 'IN'){
             if(value instanceof Array){
                 if(value.length == 1){
                     return '(' + field + ' = '+mysql.escape(value)+')';
                 } else if(value.length > 1){
-                    value = value[1];
+                    value = value.map(mysql.escape);
+                    return '('+field+' IN ('+value.join(', ')+'))';
                 } else {
                     value = undefined;
                 }
@@ -90,19 +106,36 @@ var sqlutil = {
         
     },
     
+    /** Returns a logical expression on a subject, given a query constraint.
+     *  @param {String} subject - the lhs of the expression.
+     *  @param {Object} query - the query constraint object. Must have only one attribute
+     *                          as defined below.
+     *  @param {Object} query['='] - if set, then the expression resolves to lhs = escape(rhs)
+     *  @param {Object} query.IN   - if set, then the expression resolves to lhs IN (escape(rhs))
+     *  @param {Object} query.BETWEEN  - if set, it must be an array of size two and 
+     *                               the expression resolves to lhs BETWEEN escape(rhs[0]) AND escape(rhs[1])
+     *  @return a logical expression resulting from applying the query constraint to the given subject.
+     *          or undefined, if the query constraint does not define a proper constraint.
+     */
     apply_query_contraint: function(subject, query){
         if(query){
             if (query['=']) {
                 return subject + ' = ' + mysql.escape(query['=']);
-            } else if (query['IN']) {
-                return subject + ' IN (' + mysql.escape(query['IN']) + ')';
-            } else if (query['BETWEEN']) {
-                return subject + ' BETWEEN ' + mysql.escape(query['BETWEEN'][0]) + ' AND ' + mysql.escape(query['BETWEEN'][1]);
+            } else if (query.IN) {
+                return subject + ' IN (' + mysql.escape(query.IN) + ')';
+            } else if (query.BETWEEN) {
+                return subject + ' BETWEEN ' + mysql.escape(query.BETWEEN[0]) + ' AND ' + mysql.escape(query.BETWEEN[1]);
             }
         }
         return undefined;
     },
 
+    /** Returns an Array of valid query constraints applied to fields, given a list of fields and a list of query constraints.
+     *  @see apply_query_contraint().
+     *  @param {Array} query_contraints - Array of query constraints.
+     *  @param {Array} fields - Array of fields. Each item must have a subject attribute wich represents the field's subject.
+     *  @return an Array of valid query constraints applied their respective field's subject.
+     */
     compile_query_constraints : function(query_contraints, fields) {
         var compiled_constraints = [];
 
@@ -128,7 +161,7 @@ var sqlutil = {
      * @param {Boolean} options.count_only Whether to return the queried recordings, or to just count them
      */
     compute_groupby_constraints: function(query_contraints, fields, level, options) {
-        options || (options = {});
+        options = options || {};
         var count_only = options.count_only;
         var group_by = {
             curr    : fields[level],
@@ -141,8 +174,10 @@ var sqlutil = {
             project_part : ''
         };
         var auto_compute = (level == 'auto' || level == 'next');
+        var field;
+        
         for(var i in query_contraints){
-            var field = fields[i];
+            field = fields[i];
             var constraint = sqlutil.apply_query_contraint(field && field.subject, query_contraints[i]);
             if(constraint && auto_compute) {
                 if(field.level && (!group_by.curr || group_by.curr.level < field.level)) {
@@ -159,8 +194,8 @@ var sqlutil = {
                     group_by.curr = fields[group_by.curr_level];
                 }
             } else {
-                for(var i in fields){
-                    var field = fields[i];
+                for(var j in fields){
+                    field = fields[j];
                     if(field.level && (!group_by.curr || group_by.curr.level > field.level)) {
                         group_by.curr = field;
                         group_by.curr_level = i;
@@ -187,7 +222,6 @@ var sqlutil = {
         if(group_by.projection.length > 0) {
             group_by.project_part = group_by.projection.join(", ") + ",";
         }
-
         return group_by;
     }
 

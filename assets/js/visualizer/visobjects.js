@@ -74,8 +74,8 @@ angular.module('a2visobjects', [
     return recording;
 })
 .service('VisualizerObjectSoundscapeType', function ($q, Project, $injector) {
-    var khz_format = function(v){return (v/1000) | 0; };
-    var khz_unit_fmt = function(v){return (Math.floor(v/10.0)/100.0) + " kHz";}
+    var khz_format = function(v){ return (v/1000) | 0; };
+    var khz_unit_fmt = function(v){ return (Math.floor(v/10.0)/100.0) + " kHz"; };
     var aggregations = {
         'time_of_day'   : {
             time_unit : 'Time (Hour in Day)',
@@ -130,7 +130,7 @@ angular.module('a2visobjects', [
             var v0=this.min_value, v1=this.visual_max_value || this.max_value;
             var dt= t1 - t0 + 1, df= f1 - f0, dv = v1 - v0;
 
-            var aggregation = aggregations[this.aggregation] || aggregations['unknown'];
+            var aggregation = aggregations[this.aggregation] || aggregations.unknown;
             var time_unit = aggregation.time_unit;
 
             // setup the domains
