@@ -139,20 +139,26 @@
                     });
 
                     modalInstance.result.then(
-                        function() {
-                            var index = -1;
-                            var modArr = angular.copy($scope.modelsDataOrig);
-                            for (var i = 0; i < modArr.length; i++) {
-                                if (modArr[i].model_id === model_id) {
-                                    index = i;
-                                    break;
-                                }
-                            }
-                            if (index > -1) {
-                                $scope.modelsDataOrig.splice(index, 1);
-                                $scope.tableParams.reload();
-                                notify.log("Model Deleted Successfully");
-                            }
+                        function(ret) {
+			    if (ret.error) {
+				notify.error("Error: "+ret.error);
+			    }
+			    else
+			    {
+				var index = -1;
+				var modArr = angular.copy($scope.modelsDataOrig);
+				for (var i = 0; i < modArr.length; i++) {
+				    if (modArr[i].model_id === model_id) {
+					index = i;
+					break;
+				    }
+				}
+				if (index > -1) {
+				    $scope.modelsDataOrig.splice(index, 1);
+				    $scope.tableParams.reload();
+				    notify.log("Model Deleted Successfully");
+				}
+			    }
                         }
                     );
                 };
@@ -200,8 +206,8 @@
                                             notify.log("New Model Training on Queue");
                                         }
 
-                                        if (data.err) {
-                                            notify.error(err);
+                                        if (data.error) {
+                                            notify.error("Error: "+data.error);
                                         }
 
                                         if (data.url) {
@@ -343,7 +349,7 @@
                     $http.get('/api/project/' + url + '/models/' + model_id + "/delete")
                         .success(
                             function(data) {
-                                $modalInstance.close();
+                                $modalInstance.close(data);
                             }
                         ).error(
                             function() {

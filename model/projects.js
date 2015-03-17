@@ -397,8 +397,8 @@ var Projects = {
     },
     
     classificationName: function(cid, callback) {
-        var q = "select  REPLACE(lower(c.`name`),' ','_')  as name  "+
-                " from   `job_params_classification`  c where c.`job_id` = "+mysql.escape(cid);
+        var q = "select  REPLACE(lower(c.`name`),' ','_')  as name , j.`project_id` as pid  "+
+                " from   `job_params_classification`  c , `jobs` j where c.`job_id` = j.`job_id` and c.`job_id` = "+mysql.escape(cid);
 
         queryHandler(q, callback);
     },

@@ -517,7 +517,16 @@ router.get('/project/classification/csv/:cid', function(req, res) {
 
     model.projects.classificationName(req.params.cid, function(err, row) {
         if(err) throw err;
-        var cname = row[0]['name'];
+
+        var cname = row[0].name;
+        var pid = row[0].pid;
+ 
+        if(!req.haveAccess(pid, "manage models and classification")) {
+            return res.send('<html><body><a href="/home" class="navbar-brand">'+
+                            '<img src="/images/logo.svg"></a>'+
+                            '<hr><div style="font-size:14px;font-family:Helvetica,Arial,sans-serif;">Error: Cannot download CSV file. You dont have permission to \'manage models and classifications\'</div></body>');
+        }
+        
         res.set({
             'Content-Disposition' : 'attachment; filename="'+cname+'.csv"',
             'Content-Type' : 'text/csv'
@@ -622,8 +631,9 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             var project_id = rows[0].project_id;
 
             if(!req.haveAccess(project_id, "manage soundscapes")) {
+                console.log('user cannot create soundscape')
                 response_already_sent = true;
-                res.status(403).json({ error: "you dont have permission to 'manage soundscapes'" });
+                res.status(403).json({ err: "you dont have permission to 'manage soundscapes'" });
                 return next(new Error());
             }
 

@@ -123,22 +123,29 @@
                 });
 
                 modalInstance.result.then(
-                    function() {
-                        
-                        var index = -1;
-                        var modArr = angular.copy($scope.soundscapesOriginal);
-                        for (var i = 0; i < modArr.length; i++) {
-                            if (modArr[i].soundscape_id === id) {
-                                index = i;
-                                break;
-                            }
-                        }
-                        if (index > -1) {
-                            $scope.soundscapesOriginal.splice(index, 1);
-                            $scope.tableParams.reload();
-
-                            notify.log("Soundscape Deleted Successfully");
-                        }
+                    function(ret) {
+			console.log(ret)
+                        if (ret.error)
+			{
+			    notify.error("Error: "+ret.error)
+			}
+			else
+			{
+			    var index = -1;
+			    var modArr = angular.copy($scope.soundscapesOriginal);
+			    for (var i = 0; i < modArr.length; i++) {
+				if (modArr[i].soundscape_id === id) {
+				    index = i;
+				    break;
+				}
+			    }
+			    if (index > -1) {
+				$scope.soundscapesOriginal.splice(index, 1);
+				$scope.tableParams.reload();
+    
+				notify.log("Soundscape Deleted Successfully");
+			    }
+			}
                     }
                 );
             };
@@ -183,10 +190,10 @@
                             JobsData.updateJobs();
                             notify.log("New Soundscape on Queue");
                         }
-                        
+                        console.log(data)
                         if (data.err)
                         {
-                            notify.error("Error Creating Soundscape Job");
+                            notify.error(data.err);
                         }
                         
                         if (data.url)
@@ -233,7 +240,7 @@
             $scope.ok = function() {
                 $http.get('/api/project/' + url + '/soundscapes/' + id + "/delete")
                     .success(function(data) {
-                        $modalInstance.close();
+                        $modalInstance.close(data);
                     })
                     .error(function() {
                         notify.error("Error Communicating With Server");
@@ -299,7 +306,14 @@
                 .error(
                     function(data, status, headers, config) 
                     {
-                        $modalInstance.close( {err:"Cannot create job"});
+			if (data.err) {
+			    $modalInstance.close( {err:"Error: "+data.err});
+			}
+			else
+			{
+			    $modalInstance.close( {err:"Error: Cannot create soundscape job"});
+			}
+                        
                     }
                 );
             };
