@@ -36,7 +36,7 @@ module.exports = {
         });
     },
     
-    removeFromList:  function(upload_id, callback) {
+    removeFromList: function(upload_id, callback) {
         if(typeof upload_id !== "number")
             return callback(new Error("invalid value for upload_id"));
         

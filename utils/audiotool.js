@@ -1,5 +1,7 @@
 var debug = require('debug')('arbimon2:audiotool');
 var childProcess = require('child_process');
+var path = require('path');
+var sprintf = require("sprintf-js").sprintf;
 
 /**
 Options:
@@ -52,7 +54,9 @@ var audiotools = {
         options = options || {};
         
         var cp = childProcess.spawn('sox', args);
-        var stdout = {value:""}, stderr = {value:""};
+        var stdout = {value:""}, 
+            stderr = {value:""};
+            
         if(options.stderr2stdout) {
             stderr = stdout;
         }
@@ -73,7 +77,8 @@ var audiotools = {
         });
     },
     // function calls python tyler.py script
-    tyler : function(rec_id, callback){
+    
+    tyler : function(rec_id, callback){ // not in use
         debug('running tyler');        
         var cp = childProcess.spawn('.env/bin/python',['scripts/tiles/tyler.py',rec_id]);
         var stdout = {value:""}, stderr = {value:""};
@@ -113,7 +118,6 @@ var audiotools = {
             var lines = stdout.split('\n');
             var info = {};
             for(var i = 0, e = lines.length; i < e; ++i){
-                console.log(lines[i]);
                 var m = /^\s*([^:]+?)\s*:\s*(.*)$/.exec(lines[i]);
                 if (m) {
                     var param = m[1].toLowerCase().replace(/ /g, '_');
@@ -214,31 +218,54 @@ var audiotools = {
         args.push('-lm');
         args.push('-o', destination_path);
         audiotools.sox(args, {}, callback);
-    }
-};
-
-audiotools.info('/home/chino/Desktop/TEST_SM3_20140530_0630000.wav', function(code, info) {
-    console.log(code);
-    console.log(info);
+    },
     
-    var splitCommand = 'sox original_file.flac original_file_%n.flac';
-    //' trim 0 60 : newfile : trim 0 60 :';
-    
-    // split if recording is longer than 2 mins
-    if(info.duration >= 120) {
-        var oneMinPieces = Math.floor(info.duration/60)-1;
-        var lastPieceLength = info.duration - (oneMinPieces*60);
+    splitter: function(sourcePath, duration, callback) {
+        var rec = {};
+        rec.ext = path.extname(sourcePath);
+        rec.dir = path.dirname(sourcePath);
+        rec.filename = path.basename(sourcePath, rec.ext);
         
-        console.log(oneMinPieces, lastPieceLength);
+        var splitCommand = sprintf('sox %(dir)s/%(filename)s%(ext)s %(dir)s/%(filename)s.p%%1n%(ext)s', rec);
         
-        for(var i =0; i < oneMinPieces; i++) {
+        var files = [];
+        
+        // splits only if recording is longer than 2 mins
+        if(duration < 120) return callback(null, []);
+        
+        var oneMinPieces = Math.floor(duration/60)-1;
+        var lastPieceLength = duration - (oneMinPieces*60);
+        
+        for(var i=0; i < oneMinPieces; i++) {
+            files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, i+1, rec.ext));
             splitCommand += ' trim 0 60 : newfile :';
         }
+        files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, oneMinPieces+1, rec.ext));
         splitCommand += ' trim 0 '+ lastPieceLength;
         
-        console.log(splitCommand);
+        debug('splitter:', splitCommand);
+        
+        var split = childProcess.exec(splitCommand, function(error, stdout, stderr) {
+            // console.log('stdout: ' + stdout);
+            // console.log('stderr: ' + stderr);
+            // if (error !== null) {
+            //     console.log('exec error: ' + error);
+            // }
+            // console.log('splits', oneMinPieces+1);
+            callback(error, files);
+        });
     }
-    
-});
+};
+//
+// audiotools.info('/home/chino/Desktop/file_test.flac', function(code, info) {
+//     console.log(code);
+//     console.log(info);
+//     console.time('splitter');
+//     audiotools.splitter(info.input_file, info.duration, function(err, files) {
+//         console.timeEnd('splitter');
+//         console.log(files);
+//     });
+//     
+// });
 
 module.exports = audiotools;

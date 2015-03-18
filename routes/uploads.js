@@ -6,13 +6,15 @@ var path = require('path');
 var async = require('async');
 var util = require('util');
 var AWS = require('aws-sdk');
+var _ = require('lodash');
 
 
 var model = require('../model');
 var config = require('../config');
-var audioTool = require('../utils/audiotool');
+var audioTools= require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
 var formatParse = require('../utils/format-parse');
+
 
 var s3 = new AWS.S3({ 
     httpOptions: {
@@ -25,6 +27,7 @@ var deleteFile = function(filename) {
         if(err) console.error("failed to delete: %s", filename);
     });
 };
+
 /**
 Process recordings uploaded to the system
 
@@ -46,21 +49,19 @@ Process recordings uploaded to the system
  
 **/
 var processUpload = function(upload, done) {
-    
+    var start = new Date();
     debug("processUpload:", upload.name);
     
-    var recTime = new Date(upload.FFI.year, (upload.FFI.month-1), upload.FFI.date, upload.FFI.hour, upload.FFI.min);
+    var recTime = upload.FFI.datetime;
     var inFile = upload.path;
-    var tempFile = tmpFileCache.key2File(upload.FFI.filename + '.temp.flac');
-    var outFile = tmpFileCache.key2File(upload.FFI.filename + '.flac');
+    var outFile = tmpFileCache.key2File(upload.FFI.filename + '.out.flac');
     var thumbnail = tmpFileCache.key2File(upload.FFI.filename + '.thumbnail.png');
-    var extension = upload.FFI.filetype;
     
     var uri = util.format('project_%d/site_%d/%d/%d/%s', 
         upload.projectId,
         upload.siteId,
-        upload.FFI.year,
-        upload.FFI.month,
+        upload.FFI.datetime.getFullYear(),
+        upload.FFI.datetime.getMonth()+1,
         upload.FFI.filename
     );
     
@@ -80,41 +81,53 @@ var processUpload = function(upload, done) {
             callback);
         },
         
-        convertToMono : ['insertUploadRecs', function(callback) {
-                
-            debug('convert to mono:', upload.name);
-                        
-            audioTool.sox([inFile, '-c', 1, tempFile], function(code, stdout, stderr) {
+        convertMonoFlac: ['insertUploadRecs', function(callback) {
+            debug('convertMonoFlac:', upload.name);
+            var needConvert = false;
+            
+            args = [inFile];
+            
+            if(upload.info.channels > 1) {
+                needConvert = true;
+                args.push('-c', 1);
+            }
+            if(upload.FFI.filetype !== ".flac") {
+                needConvert = true;
+                args.push('-t', 'flac');
+            }
+            
+            args.push(outFile);
+            
+            if(!needConvert) {
+                outFile = inFile;
+                return callback(null, 'did not process');
+            }
+            
+            audioTools.sox(args, function(code, stdout, stderr) {
                 if(code !== 0)
-                    return callback(new Error("error converting to mono: \n" + stderr));
+                    return callback(new Error("error converting to mono and/or to flac: \n" + stderr));
                 
                 callback(null, code);
             });
         }],
         
-        transcodeToFlac: ['convertToMono', function(callback) {
-            if(extension === "flac") {
-                outFile = tempFile;
-                return callback(null, 0);
-            }
-                
-            debug('transcode to flac:', upload.name);
-            
-            audioTool.transcode(tempFile, outFile, { format: 'flac' }, 
-                function(code, stdout, stderr) {
-                    if(code !== 0)
-                        return callback(new Error("error transcoding to flac: \n" + stderr));
-                    
-                    callback(null, code);
+        // update audio file info after conversion
+        updateAudioInfo: ['convertMonoFlac', function(callback) {
+            debug('updateAudioInfo:', upload.name);
+            audioTools.info(outFile, function(code, info) {
+                if(code !== 0) {
+                    return res.status(500).json({ error: "error getting audio file info" });
                 }
-            );
+                
+                upload.info = info;
+                callback();
+            });
         }],
         
-        genThumbnail: ['convertToMono', function(callback) {
-            
+        genThumbnail: ['updateAudioInfo', function(callback) {
             debug('gen thumbnail:', upload.name);
             
-            audioTool.spectrogram(tempFile, thumbnail, 
+            audioTools.spectrogram(outFile, thumbnail, 
                 { 
                     maxfreq : 15000,
                     pixPerSec : (7),
@@ -129,7 +142,7 @@ var processUpload = function(upload, done) {
             );
         }],
         
-        uploadFlac: ['transcodeToFlac', async.retry(function(callback, results) {
+        uploadFlac: ['updateAudioInfo', async.retry(function(callback, results) {
             debug('uploadFlac:', upload.name);
             
             var params = { 
@@ -178,21 +191,25 @@ var processUpload = function(upload, done) {
                 datetime: recTime,
                 mic: upload.metadata.mic,
                 recorder: upload.metadata.recorder,
-                version: upload.metadata.sver
+                version: upload.metadata.sver,
+                sample_rate: upload.info.sample_rate,
+                precision: upload.info.precision,
+                duration: upload.info.duration,
+                samples: upload.info.samples,
+                file_size: upload.info.file_size,
+                bit_rate: upload.info.bit_rate,
+                sample_encoding: upload.info.sample_encoding
             },
             callback);
         }]
     },
     function(err, results) {
         // delete temp files
-        deleteFile(inFile);
-        deleteFile(tempFile);
         deleteFile(thumbnail);
+        deleteFile(inFile);
+        if(outFile !== inFile) deleteFile(outFile);
         
-        if(extension !== 'flac') {
-            deleteFile(outFile);
-        }
-        
+        // remove from uploads_processing table
         if(results.insertUploadRecs && 
             results.insertUploadRecs[0] && 
             results.insertUploadRecs[0].insertId) {
@@ -211,13 +228,18 @@ var processUpload = function(upload, done) {
         debug(results);
         
         console.log('done processing %s for site %s', upload.name, upload.siteId);
+        console.log('elapse:', ((new Date()) - start)/1000 + 's');
         done();
     });
 };
 
 // uploadQueue process  1 recording at a time per server instance
 var uploadQueue = async.queue(processUpload, 1); 
+uploadQueue.drain = function() {
+    console.log('done processing uploads on queue');
+};
 
+// middleware to handle upload auth
 var authorize = function(req, res, next) {
     req.upload = {};
     
@@ -333,7 +355,8 @@ var receiveUpload = function(req, res, next) {
                 return res.status(400).json({ error: e.message });
             }
             
-            var saveTo = tmpFileCache.key2File(filename);
+            var saveTo = tmpFileCache.key2File(Date.now()+filename);
+            //                                 ^__ concat now() to prevent collitions
             file.pipe(fs.createWriteStream(saveTo));
             
             upload.name = filename;
@@ -351,28 +374,79 @@ var receiveUpload = function(req, res, next) {
             debug('metadata: ', upload.metadata);
             debug('filename: ', upload.name);
             
-            model.recordings.exists({
-                site_id: req.upload.siteId,
-                filename: upload.FFI.filename
-            },
-            function(err, exists) {
-                if(err) next(err);
-                
-                if(exists) {
-                    deleteFile(upload.path);
-                    var msg = "filename "+ upload.FFI.filename +
-                              " already exists on site " + req.upload.siteId;
-                    return res.status(403).json({ error: msg });
+            async.waterfall([
+                function checkExists(callback) {
+                    model.recordings.exists({
+                        site_id: req.upload.siteId,
+                        filename: upload.FFI.filename
+                    },
+                    function(err, exists) {
+                        if(err) next(err);
+                        
+                        if(exists) {
+                            deleteFile(upload.path);
+                            var msg = "filename "+ upload.FFI.filename +
+                                      " already exists on site " + req.upload.siteId;
+                            return res.status(403).json({ error: msg });
+                        }
+                        
+                        callback();
+                        
+                        
+                    });
+                },
+                function getAudioInfo(callback) {
+                    audioTools.info(upload.path, function(code, info) {
+                        if(code !== 0) {
+                            return res.status(500).json({ error: "error getting audio file info" });
+                        }
+                        
+                        callback(null, info);
+                    });
+                },
+                function sendToProcess(info, callback) {
+                    
+                    upload.projectId = req.upload.projectId;
+                    upload.siteId = req.upload.siteId;
+                    upload.userId = req.upload.userId;
+                    upload.info = info;
+                    console.log(upload);
+                    
+                    if(info.duration >= 120) {
+                        audioTools.splitter(upload.path, info.duration, function(err, files) {
+                            var i = 0;
+                            async.eachSeries(files, function(f, callback) {
+                                var uploadPart = _.cloneDeep(upload);
+                                
+                                uploadPart.FFI.filename = uploadPart.FFI.filename +'.p'+ (i+1);
+                                
+                                uploadPart.FFI.datetime.setMinutes(uploadPart.FFI.datetime.getMinutes()+i);
+                                
+                                uploadPart.name = uploadPart.FFI.filename + uploadPart.FFI.filetype;
+                                uploadPart.path = f;
+                                
+                                console.log(uploadPart);
+                                uploadQueue.push(_.cloneDeep(uploadPart));
+                                
+                                i++;
+                                callback();
+                            }, function() {
+                                deleteFile(upload.path);
+                                res.status(202).send("upload done!");
+                            });
+                        });
+                    }
+                    else if(info.duration > 3600) {
+                        return res.status(403).json({ error: "recording is too long, please contact support" });
+                    }
+                    else {
+                        uploadQueue.push(upload);
+                        
+                        res.status(202).send("upload done!");
+                    }
                 }
-                
-                upload.projectId = req.upload.projectId;
-                upload.siteId = req.upload.siteId;
-                upload.userId = req.upload.userId;
-                console.log(upload);
-                uploadQueue.push(upload);
-                
-                res.status(202).send("upload done!");
-            });
+            ]);
+            
         });
         
         req.pipe(req.busboy);

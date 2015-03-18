@@ -17,21 +17,10 @@ var formatParse = function(formatName, filename) {
     
     return {
         filename: results[1],
-        year: results[2],
-        month: results[3],
-        date: results[4],
-        hour: results[5],
-        min: results[6],
-        filetype: results[7] 
+        datetime: new Date(results[2], (results[3]-1), results[4], results[5], results[6]),
+        filetype: results[7]
     };
 
 };
 
 module.exports = formatParse;
-
-// test
-// console.log(formatParse('Wildlife','TEST_SM3_ 20140530_0630000.mp3'));
-// console.log(formatParse('Wildlife','SM3_20140530_050000_000.wav'));
-// console.log(formatParse('Arbimon','2014-08-25_17-30.flac'));
-// console.log(formatParse('Arbimon','default-2014-08-25_17-30.flac'));
-// console.log(formatParse('arbimon','fsldfjslk/d'));

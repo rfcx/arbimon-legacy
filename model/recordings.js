@@ -11,7 +11,7 @@ var sprintf = require("sprintf-js").sprintf;
 var config       = require('../config'); 
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
-var audiotool    = require('../utils/audiotool');
+var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
@@ -230,7 +230,7 @@ var Recordings = {
     fetchInfo : function(recording, callback){
         Recordings.fetchRecordingFile(recording, function(err, cachedRecording){
             if(err || !cachedRecording) { callback(err, cachedRecording); return; }
-            audiotool.info(cachedRecording.path, function(err, recStats){
+            audioTools.info(cachedRecording.path, function(err, recStats){
                 recording.stats = recStats;
                 callback(null, recording);
             });
@@ -280,7 +280,7 @@ var Recordings = {
         tmpfilecache.fetch(mp3audio_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
-                audiotool.transcode(recording_path.path, cache_miss.file, {
+                audioTools.transcode(recording_path.path, cache_miss.file, {
                     sample_rate: 44100, format: 'mp3', channels: 1
                 }, function(status_code){
                     if(status_code) { callback({code:status_code}); return; }
@@ -300,7 +300,7 @@ var Recordings = {
         tmpfilecache.fetch(spectrogram_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
-                audiotool.spectrogram(recording_path.path, cache_miss.file, {
+                audioTools.spectrogram(recording_path.path, cache_miss.file, {
                     pixPerSec : config("spectrograms").spectrograms.pixPerSec,
                     height    : config("spectrograms").spectrograms.height
                 },function(status_code){
@@ -394,7 +394,7 @@ var Recordings = {
         tmpfilecache.fetch(thumbnail_key, function(cache_miss){
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) { callback(err); return; }
-                audiotool.spectrogram(recording_path.path, cache_miss.file, {
+                audioTools.spectrogram(recording_path.path, cache_miss.file, {
                     maxfreq   : 15000,
                     pixPerSec : (7),
                     height    : (153)
@@ -481,15 +481,24 @@ var Recordings = {
     insert: function(recording, callback) {
         
         var schema = {
-            site_id: Joi.number().required(),
-            uri: Joi.string().required(),
-            datetime: Joi.date().required(),
-            mic: Joi.string().required(),
-            recorder: Joi.string().required(),
-            version: Joi.string().required()
+            site_id:         Joi.number().required(),
+            uri:             Joi.string().required(),
+            datetime:        Joi.date().required(),
+            mic:             Joi.string().required(),
+            recorder:        Joi.string().required(),
+            version:         Joi.string().required(),
+            sample_rate:     Joi.number(),
+            precision:       Joi.number(),
+            duration:        Joi.number(),
+            samples:         Joi.number(),
+            file_size:       Joi.string(),
+            bit_rate:        Joi.string(),
+            sample_encoding: Joi.string()
         };
         
         Joi.validate(recording, schema, function(err, rec) {
+            if(err) return callback(err);
+            
             var values = [];
         
             for( var j in rec) {
