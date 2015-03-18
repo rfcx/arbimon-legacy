@@ -1,8 +1,8 @@
 <div class="row">
     <div class="col-sm-12">
-        <div class="panel panel-default upload-info-panel">
+        <div class="panel panel-default uploads info-panel">
             <div class="panel-body">
-                <div class="upload-title">
+                <div class="uploads title">
                     Batch Info
                     <a class="clickable" ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
                         <i class="fa fa-pencil-square-o"></i>
@@ -10,11 +10,11 @@
                 </div>
                 <p ng-hide="info"><small>You need to enter the batch info before start uploading</small></p>
                 <div ng-show="info">
-                    <div class="upload-info">Site: <span class="label label-info">{{ info.site.name }}</span></div>
-                    <div class="upload-info">Recorder: <span class="label label-info">{{ info.recorder }}</span></div>
-                    <div class="upload-info">Microphone: <span class="label label-info">{{ info.mic }} </span></div>
-                    <div class="upload-info">Software version: <span class="label label-info">{{ info.sver }} </span></div>
-                    <div class="upload-info">Filename format: <span class="label label-info">{{ info.format }}</span></div>
+                    <div class="uploads info">Site: <span class="label label-info">{{ info.site.name }}</span></div>
+                    <div class="uploads info">Recorder: <span class="label label-info">{{ info.recorder }}</span></div>
+                    <div class="uploads info">Microphone: <span class="label label-info">{{ info.mic }} </span></div>
+                    <div class="uploads info">Software version: <span class="label label-info">{{ info.sver }} </span></div>
+                    <div class="uploads info">Filename format: <span class="label label-info">{{ info.format }}</span></div>
                 </div>
             </div>
         </div>
@@ -27,18 +27,18 @@
             <input accept="audio/*,.flac" 
                 nv-file-select uploader="uploader" type="file" multiple>
         </div>
-        <button type="button" class="btn btn-success" 
+        <button type="button" class="btn btn-default" 
             ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'" 
             ng-disabled="!(uploader.getNotUploadedItems().length && info)">
             <i class="fa fa-cloud-upload"></i> Start
         </button>
-        <button type="button" class="btn btn-warning" 
+        <button type="button" class="btn btn-default" 
             ng-click="uploader.cancelAll() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'" 
             ng-disabled="!uploader.isUploading">
             <i class="fa fa-ban"></i> Stop all
         </button>
         <div class="btn-group" dropdown>
-            <button type="button" class="btn btn-danger dropdown-toggle"
+            <button type="button" class="btn btn-default dropdown-toggle"
                 dropdown-toggle>
                 <i class="fa fa-trash"></i> Remove 
                 <i class="fa fa-caret-down"></i>
@@ -48,9 +48,10 @@
                 <li><a ng-click="removeCompleted()">Completed</a></li>
             </ul>
         </div>
+        <button class="btn btn-default">Help</button>
     </div>
 </div>
-<div class="upload-list">
+<div class="uploads list">
     <div class="row">
         <div class="col-sm-12" ng-show="uploader.queue.length">
             <h4>Total uploaded: {{ uploaded }}/{{ uploader.queue.length }}</h4>
