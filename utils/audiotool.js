@@ -115,6 +115,7 @@ var audiotools = {
     info: function(source_path, callback){
         var args = ['--info', source_path];
         audiotools.sox(args, function(code, stdout, stderr){
+            // TODO catch error if code !== 0 and verify usage across the app
             var lines = stdout.split('\n');
             var info = {};
             for(var i = 0, e = lines.length; i < e; ++i){

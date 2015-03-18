@@ -4,8 +4,8 @@ var async = require('async');
 var AWS   = require('aws-sdk');
 var mysql = require('mysql');
 var util  = require('util');
-var Joi   = require('joi');
-var im    = require('imagemagick');
+var joi   = require('joi');
+var _     = require('lodash');
 var sprintf = require("sprintf-js").sprintf;
 
 var config       = require('../config'); 
@@ -156,7 +156,21 @@ var Recordings = {
         if (options.count_only) {
             projection = "COUNT(*) as count";
         } else {
-            projection = "R.recording_id AS id, SUBSTRING_INDEX(R.uri,'/',-1) as file,S.name as site, R.uri, R.datetime, R.mic, R.recorder, R.version";
+            projection = "R.recording_id AS id, \n"+
+                        "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
+                        "S.name as site, \n"+
+                        "R.uri, \n"+
+                        "R.datetime, \n"+
+                        "R.mic, \n"+
+                        "R.recorder, \n"+
+                        "R.version, \n"+
+                        "R.sample_rate, \n"+
+                        "R.duration, \n"+
+                        "R.samples, \n"+
+                        "R.file_size, \n"+
+                        "R.bit_rate, \n"+
+                        "R.precision, \n"+
+                        "R.sample_encoding";
         }
         
         var sql = "SELECT " + group_by.project_part + projection + " \n" +
@@ -228,11 +242,28 @@ var Recordings = {
      * @param {Function} callback called with the recording info.
      */
     fetchInfo : function(recording, callback){
+        if(recording.sample_rate) {
+            return callback(null, recording);
+        }
+        
         Recordings.fetchRecordingFile(recording, function(err, cachedRecording){
             if(err || !cachedRecording) { callback(err, cachedRecording); return; }
-            audioTools.info(cachedRecording.path, function(err, recStats){
-                recording.stats = recStats;
-                callback(null, recording);
+            audioTools.info(cachedRecording.path, function(code, recStats){
+                
+                recording.sample_rate = recStats.sample_rate;
+                recording.duration = recStats.duration;
+                recording.samples = recStats.samples;
+                recording.file_size = recStats.file_size;
+                recording.bit_rate = recStats.bit_rate;
+                recording.precision = recStats.precision;
+                recording.sample_encoding = recStats.sample_encoding;
+                
+                Recordings.update(_.cloneDeep(recording), function(err, results) {
+                    if(err) callback(err);
+                    console.log('rec %s info added to DB', recording.id);
+                    callback(null, recording);
+                });
+                
             });
         });
     },
@@ -314,7 +345,7 @@ var Recordings = {
     fetchSpectrogramTiles: function (recording, callback) {
         async.waterfall([
             function(next){
-                if(!recording.stats){
+                if(!recording.sample_rate || !recording.duration){
                     Recordings.fetchInfo(recording, next);
                 } else {
                     next(null, recording);
@@ -334,8 +365,8 @@ var Recordings = {
             },
             function(specTiles, next){
                 
-                var maxFreq = recording.stats.sample_rate / 2;
-                var pixels2Secs = recording.stats.duration / specTiles.width ;
+                var maxFreq = recording.sample_rate / 2;
+                var pixels2Secs = recording.duration / specTiles.width ;
                 var pixels2Hz = maxFreq / specTiles.height;
                 
                 
@@ -481,22 +512,22 @@ var Recordings = {
     insert: function(recording, callback) {
         
         var schema = {
-            site_id:         Joi.number().required(),
-            uri:             Joi.string().required(),
-            datetime:        Joi.date().required(),
-            mic:             Joi.string().required(),
-            recorder:        Joi.string().required(),
-            version:         Joi.string().required(),
-            sample_rate:     Joi.number(),
-            precision:       Joi.number(),
-            duration:        Joi.number(),
-            samples:         Joi.number(),
-            file_size:       Joi.string(),
-            bit_rate:        Joi.string(),
-            sample_encoding: Joi.string()
+            site_id:         joi.number().required(),
+            uri:             joi.string().required(),
+            datetime:        joi.date().required(),
+            mic:             joi.string().required(),
+            recorder:        joi.string().required(),
+            version:         joi.string().required(),
+            sample_rate:     joi.number(),
+            precision:       joi.number(),
+            duration:        joi.number(),
+            samples:         joi.number(),
+            file_size:       joi.string(),
+            bit_rate:        joi.string(),
+            sample_encoding: joi.string()
         };
         
-        Joi.validate(recording, schema, function(err, rec) {
+        joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
             if(err) return callback(err);
             
             var values = [];
@@ -512,6 +543,52 @@ var Recordings = {
                     'SET %s';
                     
             q = util.format(q, values.join(", "));
+            queryHandler(q, callback);
+        });
+    },
+    
+    update: function(recording, callback) {
+        
+        if(recording.id) {
+            recording.recording_id = recording.id;
+        }
+        
+        var schema = {
+            recording_id:    joi.number().required(),
+            site_id:         joi.number(),
+            uri:             joi.string(),
+            datetime:        joi.date(),
+            mic:             joi.string(),
+            recorder:        joi.string(),
+            version:         joi.string(),
+            sample_rate:     joi.number(),
+            precision:       joi.number(),
+            duration:        joi.number(),
+            samples:         joi.number(),
+            file_size:       joi.string(),
+            bit_rate:        joi.string(),
+            sample_encoding: joi.string()
+        };
+        
+        joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
+            if(err) return callback(err);
+            
+            var values = [];
+        
+            for( var j in rec) {
+                if(j !== "recording_id") {
+                    values.push(util.format('%s = %s', 
+                        mysql.escapeId(j), 
+                        mysql.escape(rec[j])
+                    ));
+                }
+            }
+            
+            var q = 'UPDATE recordings \n'+
+                    'SET %s \n'+
+                    'WHERE recording_id = %s';
+                    
+            q = util.format(q, values.join(", "), rec.recording_id);
             queryHandler(q, callback);
         });
     },
@@ -545,35 +622,46 @@ var Recordings = {
         Recordings.fetchSpectrogramTiles(recording, callback);
     },    
     
-    recordingInfoGivenUri : function(uri,project_uri,callback)
-    {
-        var q = "SELECT r.`recording_id` id , date_format(r.`datetime`,'%m-%d-%Y %H:%i') as date , s.`name` site ,r.`uri` " +
-                " FROM `recordings` r,`sites` s  "+
-                " WHERE r.`uri` = "+mysql.escape(uri)+" and s.`site_id` = r.`site_id` " +
-                " and r.`site_id` in (SELECT s.`site_id` FROM `sites` s WHERE s.`project_id` = "+
-                " (SELECT p.`project_id` FROM `projects` p WHERE p.`url` ="+mysql.escape(project_uri)+"))";
+    recordingInfoGivenUri : function(uri, project_uri, callback){
+        var q = "SELECT r.`recording_id` AS id, \n " +
+                "       date_format(r.`datetime`,'%m-%d-%Y %H:%i') as date, \n"+
+                "       s.`name` site, \n"+
+                "       r.`uri` " +
+                "FROM `recordings` r,`sites` s  "+
+                "WHERE r.`uri` = " + mysql.escape(uri) +
+                "AND s.`site_id` = r.`site_id` "+
+                "AND r.`site_id` IN ( \n"+
+                "       SELECT s.`site_id` \n"+
+                "       FROM `sites` s \n"+
+                "       WHERE s.`project_id` = ( \n"+
+                "           SELECT p.`project_id` \n"+
+                "           FROM `projects` p \n"+
+                "           WHERE p.`url` = "+mysql.escape(project_uri)+ " \n"+
+                "       )\n"+
+                ")";
         queryHandler(q, callback);        
     },
+    
     findProjectRecordings: function(params, callback) {
         var schema = {
-            project_id: Joi.number().required(),
-            range: Joi.object().keys({
-                from: Joi.date(),
-                to: Joi.date()
+            project_id: joi.number().required(),
+            range: joi.object().keys({
+                from: joi.date(),
+                to: joi.date()
             }).and('from', 'to'),
-            sites:  [Joi.string(), Joi.array().includes(Joi.string())],
-            years:  [Joi.number(), Joi.array().includes(Joi.number())],
-            months: [Joi.number(), Joi.array().includes(Joi.number())],
-            days:   [Joi.number(), Joi.array().includes(Joi.number())],
-            hours:  [Joi.number(), Joi.array().includes(Joi.number())],
-            limit:  Joi.number(),
-            offset: Joi.number(),
-            sortBy: Joi.string(),
-            sortRev: Joi.boolean(), 
-            output:  Joi.string()
+            sites:  [joi.string(), joi.array().includes(joi.string())],
+            years:  [joi.number(), joi.array().includes(joi.number())],
+            months: [joi.number(), joi.array().includes(joi.number())],
+            days:   [joi.number(), joi.array().includes(joi.number())],
+            hours:  [joi.number(), joi.array().includes(joi.number())],
+            limit:  joi.number(),
+            offset: joi.number(),
+            sortBy: joi.string(),
+            sortRev: joi.boolean(), 
+            output:  joi.string()
         };
         
-        Joi.validate(params, schema, function(err, parameters) {
+        joi.validate(params, schema, function(err, parameters) {
             if(err) return callback(err);
             
             if(!parameters.output)
