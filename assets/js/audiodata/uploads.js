@@ -5,8 +5,12 @@ angular.module('audiodata.uploads', [
     'angularFileUpload',
     'humane'
 ])
-.controller('UploadCtrl', ['$scope', 'uploads', 'Project', '$modal', 
-    function($scope, uploads, Project, $modal){ 
+.controller('UploadCtrl', [
+    '$scope', 
+    'uploads', 
+    'Project', 
+    '$modal', 
+    function($scope, uploads, Project, $modal) { 
     
     $scope.prettyBytes = function(bytes) {
         
@@ -125,6 +129,14 @@ angular.module('audiodata.uploads', [
             return !file.isSuccess;
         });
     };
+    
+    $scope.uploaded = 0;
+    $scope.uploader.onProgressAll = function() {
+        $scope.uploaded = Math.floor($scope.uploader.progress/100 * $scope.uploader.queue.length);
+        console.log($scope.uploaded);
+    };
+    
+    console.log($scope.uploaded);
 }])
 .controller('BatchInfoCtrl', [ '$scope', 'Project', 'info', '$modalInstance', 'notify', 
     function($scope, Project, info, $modalInstance, notify) {
@@ -156,7 +168,7 @@ angular.module('audiodata.uploads', [
     
     var uploadInfo = null;
 
-    window.addEventListener("beforeunload", function (e) {
+    window.addEventListener("beforeunload", function(e) {
         if(u.isUploading) {
             var confirmationMessage = "Upload is in progress, Are you sure to exit?";
         
