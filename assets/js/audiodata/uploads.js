@@ -10,7 +10,8 @@ angular.module('audiodata.uploads', [
     'uploads', 
     'Project', 
     '$modal', 
-    function($scope, uploads, Project, $modal) { 
+    '$window',
+    function($scope, uploads, Project, $modal, $window) { 
     
     $scope.prettyBytes = function(bytes) {
         
@@ -135,12 +136,20 @@ angular.module('audiodata.uploads', [
         $scope.uploaded = Math.floor($scope.uploader.progress/100 * $scope.uploader.queue.length);
     };
     
+    
     $scope.displayHelp = function() {
         $modal.open({
             templateUrl: '/partials/audiodata/uploader-help.html',
             size: 'lg'
         });
     };
+    
+    if($window.localStorage.getItem('data.uploads.help.viewed') === null) {
+        $scope.displayHelp();
+        $window.localStorage.setItem('data.uploads.help.viewed', true);
+    }
+    
+    
 }])
 .controller('BatchInfoCtrl', [ '$scope', 'Project', 'info', '$modalInstance', 'notify', 
     function($scope, Project, info, $modalInstance, notify) {
@@ -150,8 +159,12 @@ angular.module('audiodata.uploads', [
     }
     else {
         $scope.info = {};
-        $scope.info.format = "Arbimon";
     }
+    
+    $scope.formats = [
+        { name: "Arbimon", format: "(YYYY-MM-DD_HH-MM)" },
+        { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" },
+    ];
     
     Project.getSites(function(sites) {
         $scope.sites = sites;

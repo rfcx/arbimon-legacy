@@ -301,7 +301,7 @@ module.exports = function(grunt) {
                     'regex-selectors': false,
                     'unqualified-attributes': false,
                     'universal-selector': false,
-                    // 'ids': false,
+                    'ids': false,
                 }
             }
         },
