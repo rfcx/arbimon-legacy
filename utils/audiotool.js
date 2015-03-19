@@ -1,5 +1,7 @@
 var debug = require('debug')('arbimon2:audiotool');
 var childProcess = require('child_process');
+var path = require('path');
+var sprintf = require("sprintf-js").sprintf;
 
 /**
 Options:
@@ -38,6 +40,7 @@ Options:
 −p num
     Permute the colours in a colour or hybrid palette. The num parameter, from 1 (the default) to 6, selects the permutation.
  */
+
 var audiotools = {
     /** Runs sox with the specified arguments, and returns the results in a callback.
      * @param {Array} args array of parameters to give to sox. (warning!! arguments are not escaped, passing usecure arguments can lead to security problems.)
@@ -51,7 +54,9 @@ var audiotools = {
         options = options || {};
         
         var cp = childProcess.spawn('sox', args);
-        var stdout = {value:""}, stderr = {value:""};
+        var stdout = {value:""}, 
+            stderr = {value:""};
+            
         if(options.stderr2stdout) {
             stderr = stdout;
         }
@@ -72,13 +77,13 @@ var audiotools = {
         });
     },
     /** Returns information about a given audio file
-     * @param {String} source_path audio file path
-     * @param {Object} options !!!!!unused!!!!!
-     * @param {Function} callback function to call with the audio info, its arguments are (code, info).
+     * @param {String} source_path - audio file path
+     * @param {Function} callback(code,info) - function to call with the audio info, its arguments are (code, info).
      */
-    info : function(source_path, callback){
+    info: function(source_path, callback){
         var args = ['--info', source_path];
         audiotools.sox(args, function(code, stdout, stderr){
+            // TODO catch error if code !== 0 and verify usage across the app
             var lines = stdout.split('\n');
             var info = {};
             for(var i = 0, e = lines.length; i < e; ++i){
@@ -93,7 +98,7 @@ var audiotools = {
                         case 'precision'       : value = /^(\d+)-bit/.exec(value)[1] | 0; break;
                         case 'duration'        :
                             m = /^(\d+):(\d+):(\d+\.\d+)\s+=\s+(\d+)/.exec(value);
-                            value = ((m[1]|0)*60 + (m[2]|0))*60 + (m[3]|0);
+                            value = ( Number(m[1])*60 + Number(m[2]) )*60 + Number(m[3]);
                             info.samples = m[4] | 0;
                         break;
                     }
@@ -182,8 +187,54 @@ var audiotools = {
         args.push('-lm');
         args.push('-o', destination_path);
         audiotools.sox(args, {}, callback);
+    },
+    
+    splitter: function(sourcePath, duration, callback) {
+        var rec = {};
+        rec.ext = path.extname(sourcePath);
+        rec.dir = path.dirname(sourcePath);
+        rec.filename = path.basename(sourcePath, rec.ext);
+        
+        var splitCommand = sprintf('sox %(dir)s/%(filename)s%(ext)s %(dir)s/%(filename)s.p%%1n%(ext)s', rec);
+        
+        var files = [];
+        
+        // splits only if recording is longer than 2 mins
+        if(duration < 120) return callback(null, []);
+        
+        var oneMinPieces = Math.floor(duration/60)-1;
+        var lastPieceLength = duration - (oneMinPieces*60);
+        
+        for(var i=0; i < oneMinPieces; i++) {
+            files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, i+1, rec.ext));
+            splitCommand += ' trim 0 60 : newfile :';
+        }
+        files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, oneMinPieces+1, rec.ext));
+        splitCommand += ' trim 0 '+ lastPieceLength;
+        
+        debug('splitter:', splitCommand);
+        
+        var split = childProcess.exec(splitCommand, function(error, stdout, stderr) {
+            // console.log('stdout: ' + stdout);
+            // console.log('stderr: ' + stderr);
+            // if (error !== null) {
+            //     console.log('exec error: ' + error);
+            // }
+            // console.log('splits', oneMinPieces+1);
+            callback(error, files);
+        });
     }
 };
-
+//
+// audiotools.info('/home/chino/Desktop/file_test.flac', function(code, info) {
+//     console.log(code);
+//     console.log(info);
+//     console.time('splitter');
+//     audiotools.splitter(info.input_file, info.duration, function(err, files) {
+//         console.timeEnd('splitter');
+//         console.log(files);
+//     });
+//     
+// });
 
 module.exports = audiotools;

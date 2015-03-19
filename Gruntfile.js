@@ -286,6 +286,32 @@ module.exports = function(grunt) {
             ]
         },
         
+        lesslint: {
+            src: ['assets/less/style.less'],
+            options: {
+                imports: ['assets/less/**/*.less'],
+                csslint: {
+                    'known-properties': false,
+                    'box-model': false,
+                    'adjoining-classes': false,
+                    'box-sizing': false,
+                    'zero-units': false,
+                    'outline-none': false,
+                    'overqualified-elements': false,
+                    'important': false,
+                    'font-sizes': false,
+                    'compatible-vendor-prefixes': false,
+                    'qualified-headings': false,
+                    'duplicate-background-images': false,
+                    'fallback-colors': false,
+                    'regex-selectors': false,
+                    'unqualified-attributes': false,
+                    'universal-selector': false,
+                    'ids': false,
+                }
+            }
+        },
+        
         clean: {
             assets: ['public/assets/*'],
             packages: ['bower_components', 'node_modules']
@@ -322,6 +348,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-angular-architecture-graph');
+    grunt.loadNpmTasks('grunt-lesslint');
     
     grunt.registerTask('angular-depends', ['angular_architecture_graph']);
     grunt.registerTask('test-frontend', ['jshint:frontEnd', 'html2js:dev', 'karma']);
