@@ -12,12 +12,8 @@ describe('format-parse', function(){
         
         result.should.deep.equal({
             filename: 'TEST_SM3_ 20140530_0630000',
-            year: '2014',
-            month: '05',
-            date: '30',
-            hour: '06',
-            min: '30',
-            filetype: '.mp3' 
+            datetime: new Date(2014, 04, 30, 06, 30),
+            filetype: '.mp3'
         });
     });
     
@@ -26,11 +22,7 @@ describe('format-parse', function(){
         
         result.should.deep.equal({
             filename: 'default-2014-08-25_17-30',
-            year: '2014',
-            month: '08',
-            date: '25',
-            hour: '17',
-            min: '30',
+            datetime: new Date(2014, 07, 25, 17, 30),
             filetype: '.flac' 
         });
     });

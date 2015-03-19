@@ -20,8 +20,6 @@ a2.komodoproject
 # python compiled binaries
 *.pyc
 
-.env
-
 # docs (?)
 docs
 
@@ -30,3 +28,6 @@ coverage
 
 #angular dependencies graph
 angular-depends
+
+#temp file cache
+tmpfilecache/*

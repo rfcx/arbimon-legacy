@@ -8,23 +8,22 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
 var rewire = require('rewire');
-var debug = console.log;
 
-var audiotool = rewire('../../utils/audiotool');
+var audioTools= rewire('../../utils/audiotool');
 var mock_childProcess = require('../mock_tools/mock_child_process');
 
 var mocks = {
     childProcess : mock_childProcess
 };
 
-audiotool.__set__(mocks);
+audioTools.__set__(mocks);
 
 
-describe('audiotool', function(){
+describe('audioTools', function(){
     describe('sox', function(){
         it('Should call sox with the given arguments', function(done){
             mock_childProcess.running=[];
-            audiotool.sox(['arg1', 'arg2', 'arg3'], {}, function(code, stdout, stderr){
+            audioTools.sox(['arg1', 'arg2', 'arg3'], {}, function(code, stdout, stderr){
                 code.should.equal(0);
                 stdout.should.equal('data1data2');
                 stderr.should.equal('err1');
@@ -40,7 +39,7 @@ describe('audiotool', function(){
         });
         it('Options can be null/falsey', function(done){
             mock_childProcess.running=[];
-            audiotool.sox(['arg1', 'arg2', 'arg3'], null, function(code, stdout, stderr){
+            audioTools.sox(['arg1', 'arg2', 'arg3'], null, function(code, stdout, stderr){
                 code.should.equal(0);
                 stdout.should.equal('data1data2');
                 stderr.should.equal('err1');
@@ -56,7 +55,7 @@ describe('audiotool', function(){
         });
         it('Options are optional', function(done){
             mock_childProcess.running=[];
-            audiotool.sox(['arg1', 'arg2', 'arg3'], function(code, stdout, stderr){
+            audioTools.sox(['arg1', 'arg2', 'arg3'], function(code, stdout, stderr){
                 code.should.equal(0);
                 stdout.should.equal('data1data2');
                 stderr.should.equal('err1');
@@ -72,7 +71,7 @@ describe('audiotool', function(){
         });
         it('stderr2stdout option should mix stderr and stdout streams.', function(done){
             mock_childProcess.running=[];
-            audiotool.sox(['arg1', 'arg2', 'arg3'], {stderr2stdout:true}, function(code, stdout, stderr){
+            audioTools.sox(['arg1', 'arg2', 'arg3'], {stderr2stdout:true}, function(code, stdout, stderr){
                 code.should.equal(0);
                 stdout.should.equal('data1err1data2');
                 stderr.should.equal(stdout);
@@ -90,7 +89,7 @@ describe('audiotool', function(){
     describe('info', function(){
         it('Should return the info of an audio file.', function(done){
             mock_childProcess.running=[];
-            audiotool.info('audiofile.wav', function(code, info){
+            audioTools.info('audiofile.wav', function(code, info){
                 code.should.equal(0);
                 info.should.deep.equal({
                     bit_rate        : "337k",
@@ -126,7 +125,7 @@ describe('audiotool', function(){
     describe('transcode', function(){
         it('Should call sox with the proper arguments', function(done){
             mock_childProcess.running=[];
-            audiotool.transcode('input.wav', 'output.wav', {sample_rate:10, format:'qwerty', compression:-1, channels:10}, function(code, stdout, stderr){
+            audioTools.transcode('input.wav', 'output.wav', {sample_rate:10, format:'qwerty', compression:-1, channels:10}, function(code, stdout, stderr){
                 code.should.equal(0);
                 stdout.should.equal('data1data2');
                 done();
@@ -147,7 +146,7 @@ describe('audiotool', function(){
             async.series([
                 function(next_part){
                     mock_childProcess.running=[];
-                    audiotool.transcode('input.wav', 'output.wav', {}, function(code, stdout, stderr){
+                    audioTools.transcode('input.wav', 'output.wav', {}, function(code, stdout, stderr){
                         code.should.equal(0);
                         stdout.should.equal('data1data2');
                         next_part();
@@ -161,7 +160,7 @@ describe('audiotool', function(){
                 },
                 function(next_part){
                     mock_childProcess.running=[];
-                    audiotool.transcode('input.wav', 'output.wav', function(code, stdout, stderr){
+                    audioTools.transcode('input.wav', 'output.wav', function(code, stdout, stderr){
                         code.should.equal(0);
                         stdout.should.equal('data1data2');
                         next_part();
@@ -175,7 +174,7 @@ describe('audiotool', function(){
                 },
                 function(next_part){
                     mock_childProcess.running=[];
-                    audiotool.transcode('input.wav', 'output.wav', null, function(code, stdout, stderr){
+                    audioTools.transcode('input.wav', 'output.wav', null, function(code, stdout, stderr){
                         code.should.equal(0);
                         stdout.should.equal('data1data2');
                         next_part();
@@ -193,7 +192,7 @@ describe('audiotool', function(){
     describe('spectrogram', function(){
         it('Should call sox with the proper arguments', function(done){
             mock_childProcess.running=[];
-            audiotool.spectrogram('input.wav', 'output.wav', {maxfreq: 1000, height: 1, width: 1, pixPerSec: 1, quantization: 1, window: 'Hann'}, function(code, stdout, stderr){
+            audioTools.spectrogram('input.wav', 'output.wav', {maxfreq: 1000, height: 1, width: 1, pixPerSec: 1, quantization: 1, window: 'Hann'}, function(code, stdout, stderr){
                 code.should.equal(0);
                 stdout.should.equal('data1data2');
                 done();
@@ -213,7 +212,7 @@ describe('audiotool', function(){
             async.series([
                 function(next_part){
                     mock_childProcess.running=[];
-                    audiotool.spectrogram('input.wav', 'output.wav', {}, function(code, stdout, stderr){
+                    audioTools.spectrogram('input.wav', 'output.wav', {}, function(code, stdout, stderr){
                         code.should.equal(0);
                         stdout.should.equal('data1data2');
                         next_part();
@@ -231,7 +230,7 @@ describe('audiotool', function(){
                 },
                 function(next_part){
                     mock_childProcess.running=[];
-                    audiotool.spectrogram('input.wav', 'output.wav', function(code, stdout, stderr){
+                    audioTools.spectrogram('input.wav', 'output.wav', function(code, stdout, stderr){
                         code.should.equal(0);
                         stdout.should.equal('data1data2');
                         next_part();
@@ -249,7 +248,7 @@ describe('audiotool', function(){
                 },
                 function(next_part){
                     mock_childProcess.running=[];
-                    audiotool.spectrogram('input.wav', 'output.wav', null, function(code, stdout, stderr){
+                    audioTools.spectrogram('input.wav', 'output.wav', null, function(code, stdout, stderr){
                         code.should.equal(0);
                         stdout.should.equal('data1data2');
                         next_part();
@@ -266,6 +265,27 @@ describe('audiotool', function(){
                     cp.send('close', 0);
                 }
             ], done);
+        });
+    });
+    describe('splitter', function(){
+        it('should generate proper sox command to split audio with 150 secs', function() {
+            mock_childProcess.exec = sinon.stub();
+            mock_childProcess.exec.callsArgWith(1, [0, '', '']);
+            
+            var outputList = [
+                './audiofile.p1.wav',
+                './audiofile.p2.wav',
+            ];
+            var outputCommand = "sox ./audiofile.wav ./audiofile.p%1n.wav "+
+                                "trim 0 60 : newfile : trim 0 90";
+            
+            audioTools.splitter('audiofile.wav', 150, function(err, files) {
+                mock_childProcess.exec.args[0][0].should.equal(outputCommand);
+                files.should.deep.equal(outputList);
+                
+                delete mock_childProcess.exec;
+            });
+            
         });
     });
 });

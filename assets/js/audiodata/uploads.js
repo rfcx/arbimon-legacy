@@ -5,8 +5,13 @@ angular.module('audiodata.uploads', [
     'angularFileUpload',
     'humane'
 ])
-.controller('UploadCtrl', ['$scope', 'uploads', 'Project', '$modal', 
-    function($scope, uploads, Project, $modal){ 
+.controller('UploadCtrl', [
+    '$scope', 
+    'uploads', 
+    'Project', 
+    '$modal', 
+    '$window',
+    function($scope, uploads, Project, $modal, $window) { 
     
     $scope.prettyBytes = function(bytes) {
         
@@ -125,6 +130,26 @@ angular.module('audiodata.uploads', [
             return !file.isSuccess;
         });
     };
+    
+    $scope.uploaded = 0;
+    $scope.uploader.onProgressAll = function() {
+        $scope.uploaded = Math.floor($scope.uploader.progress/100 * $scope.uploader.queue.length);
+    };
+    
+    
+    $scope.displayHelp = function() {
+        $modal.open({
+            templateUrl: '/partials/audiodata/uploader-help.html',
+            size: 'lg'
+        });
+    };
+    
+    if($window.localStorage.getItem('data.uploads.help.viewed') === null) {
+        $scope.displayHelp();
+        $window.localStorage.setItem('data.uploads.help.viewed', true);
+    }
+    
+    
 }])
 .controller('BatchInfoCtrl', [ '$scope', 'Project', 'info', '$modalInstance', 'notify', 
     function($scope, Project, info, $modalInstance, notify) {
@@ -134,8 +159,12 @@ angular.module('audiodata.uploads', [
     }
     else {
         $scope.info = {};
-        $scope.info.format = "Arbimon";
     }
+    
+    $scope.formats = [
+        { name: "Arbimon", format: "(YYYY-MM-DD_HH-MM)" },
+        { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" },
+    ];
     
     Project.getSites(function(sites) {
         $scope.sites = sites;
@@ -156,7 +185,7 @@ angular.module('audiodata.uploads', [
     
     var uploadInfo = null;
 
-    window.addEventListener("beforeunload", function (e) {
+    window.addEventListener("beforeunload", function(e) {
         if(u.isUploading) {
             var confirmationMessage = "Upload is in progress, Are you sure to exit?";
         

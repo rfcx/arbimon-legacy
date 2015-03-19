@@ -7,55 +7,52 @@ body {
 }
 .humane,
 .humane-original {
-  position: fixed;
-  -moz-transition: all 0.2s ease-out;
-  -webkit-transition: all 0.2s ease-out;
-  -ms-transition: all 0.2s ease-out;
-  -o-transition: all 0.2s ease-out;
-  transition: all 0.2s ease-out;
-  z-index: 100000;
-  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+    position: fixed;
+    -moz-transition: all 0.2s ease-out;
+    -webkit-transition: all 0.2s ease-out;
+    -ms-transition: all 0.2s ease-out;
+    -o-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+    z-index: 100000;
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+    font-family: Ubuntu, Verdana, sans-serif;
+    line-height: 40px;
+    font-size: 18px;
+    top: 25%;
+    left: 30%;
+    opacity: 0;
+    width: 40%;
+    min-height: 40px;
+    padding: 5px;
+    text-align: center;
+    background-color: @humane-bg-color;
+    color: @humane-color;
+    -webkit-border-radius: 15px;
+    border-radius: 15px;
+
+    & p,
+    & ul {
+        margin: 0;  
+        padding: 0;
+    }
+    
+    & ul {
+        list-style: none;
+    }
+    
+    &.humane-original-info {
+        background-color: #111;
+    }
+    
+    &.humane-original-success {
+        background-color: #51c34b;
+    }
+    
+    &.humane-original-error {
+        background-color: #ab2323;
+    }
 }
-.humane,
-.humane-original {
-  font-family: Ubuntu, Verdana, sans-serif;
-  line-height: 40px;
-  font-size: 18px;
-  top: 25%;
-  left: 30%;
-  opacity: 0;
-  width: 40%;
-  min-height: 40px;
-  padding: 5px;
-  text-align: center;
-  background-color: @humane-bg-color;
-  color: @humane-color;
-  -webkit-border-radius: 15px;
-  border-radius: 15px;
-}
-.humane p,
-.humane-original p,
-.humane ul,
-.humane-original ul {
-  margin: 0;
-  padding: 0;
-}
-.humane ul,
-.humane-original ul {
-  list-style: none;
-}
-.humane.humane-original-info,
-.humane-original.humane-original-info {
-  background-color: #111;
-}
-.humane.humane-original-success,
-.humane-original.humane-original-success {
-  background-color: #51c34b;
-}
-.humane.humane-original-error,
-.humane-original.humane-original-error {
-  background-color: #ab2323;
-}
+
 .humane.humane-animate,
 .humane-original.humane-original-animate {
   opacity: 1;

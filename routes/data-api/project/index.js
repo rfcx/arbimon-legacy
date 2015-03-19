@@ -164,14 +164,7 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
             });
         }
     ]);
-
 });
-
-
- /** Return a list of all the sites in a project.
- */
-
-
 
 router.get('/:projectUrl/classes', function(req, res, next) {
     model.projects.getProjectClasses(req.project.project_id, function(err, classes){
