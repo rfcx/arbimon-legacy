@@ -1,5 +1,8 @@
 angular.module('a2-qr-js',[])
-.directive('a2QrCode', function(){
+.directive('a2QrCode', ['$window', function($window) {
+    var qr = $window.qr;
+    var $ = $window.$;
+    
     return {
         restrict : 'E',
         scope : {
@@ -17,4 +20,4 @@ angular.module('a2-qr-js',[])
             });
         }
     };
-});
+}]);

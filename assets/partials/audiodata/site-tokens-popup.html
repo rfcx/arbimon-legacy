@@ -1,31 +1,46 @@
 <div class="modal-header">
-    Create Token for site {{popup.site.name}}
+    <h3>Link <b>{{ site.name }}</b> with a recorder</h3>
 </div>
 
 <div class="modal-body">
     <p>
         This option allows you to create an access token for this site.
-        Using this token, ARBIMON recorders can upload its recordings to automatically.
-    </p>
-    <p ng-show="popup.site.token_created_on">
-        A token for this site was created on {{(popup.site.token_created_on * 1000) | moment}}.
-        <span ng-hide="popup.token">Only one token can be active at a time. Generating a new token will automatically invalidate any previously generated tokens.</span>
-    </p>
-    <p ng-hide="popup.site.token_created_on">
-        No access tokens have been created for this site.
-    </p>
-    <p ng-show="popup.token">
-        Token generated. <br />
-        <a2-qr-code data="{{popup.token}}" />
-        Scan this token with the ARBIMON recorder. <br />
-        
+        Using this token, an ARBIMON recorder can upload its recordings to 
+        this site automatically.
     </p>
 </div>
+<div class="modal-body">
+    <div ng-hide="token">
+        <p ng-show="site.token_created_on">
+            A token for this site was created on {{ site.token_created_on | moment: 'lll' }}.
+        </p>
+        <p ng-hide="site.token_created_on">
+            No access tokens have been created for this site.
+        </p>
+    </div>
+    <div ng-show="token">
+        <p class="lead">Token generated.</p>
+        <div>
+            <a2-qr-code data="{{token}}"></a2-qr-code>
+        </div>
+        <p>
+            Scan this token with the ARBIMON recorder or 
+            <a ng-href="data:text/plain;base64,{{ base64 }}" download="token.txt">
+                download as a file.
+            </a>
+        </p>
+    </div>
+</div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-disabled="popup.loading.generate || popup.token" ng-click="popup.action.generate_token()  | trackEvent:'PopUp':'generate'"
-        >{{
-        popup.loading.generate ? "Generating Token..." : (popup.token ? "Token Generated" : "Generate New Token")
-    }}</button>
-    <button ng-show="popup.site.token_created_on" ng-disabled="!popup.site.token_created_on || popup.loading.revoke" class="btn btn-danger" ng-click="popup.action.revoke_token($dismiss) | trackEvent:'SiteToken':'revoke'">{{popup.loading.revoke ? "Revoking Token..." : "Revoke Existing Token"}}</button>
+    <button class="btn btn-primary" 
+        ng-disabled="loading.generate || token" 
+        ng-click="generateToken() | trackEvent:'PopUp':'generate'">
+        {{ loading.generate ? "Generating Token..." : (token ? "Token Generated" : "Generate New Token") }}
+    </button>
+    <button class="btn btn-danger" 
+        ng-disabled="!site.token_created_on || loading.revoke" 
+        ng-click="revokeToken() | trackEvent:'SiteToken':'revoke'">
+            {{ loading.revoke ? "Revoking Token..." : "Revoke Existing Token"}}
+    </button>
     <button class="btn btn-default" ng-click="$dismiss()  | trackEvent:'PopUp':'close'">Close</button>
 </div>
