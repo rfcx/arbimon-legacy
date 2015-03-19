@@ -135,7 +135,12 @@ angular.module('audiodata.uploads', [
         $scope.uploaded = Math.floor($scope.uploader.progress/100 * $scope.uploader.queue.length);
     };
     
-    
+    $scope.displayHelp = function() {
+        $modal.open({
+            templateUrl: '/partials/audiodata/uploader-help.html',
+            size: 'lg'
+        });
+    };
 }])
 .controller('BatchInfoCtrl', [ '$scope', 'Project', 'info', '$modalInstance', 'notify', 
     function($scope, Project, info, $modalInstance, notify) {

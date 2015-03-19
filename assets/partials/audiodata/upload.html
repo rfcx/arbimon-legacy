@@ -27,18 +27,18 @@
             <input accept="audio/*,.flac" 
                 nv-file-select uploader="uploader" type="file" multiple>
         </div>
-        <button type="button" class="btn btn-default" 
+        <button type="button" class="btn btn-success" 
             ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'" 
             ng-disabled="!(uploader.getNotUploadedItems().length && info)">
             <i class="fa fa-cloud-upload"></i> Start
         </button>
-        <button type="button" class="btn btn-default" 
+        <button type="button" class="btn btn-warning" 
             ng-click="uploader.cancelAll() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'" 
             ng-disabled="!uploader.isUploading">
             <i class="fa fa-ban"></i> Stop all
         </button>
         <div class="btn-group" dropdown>
-            <button type="button" class="btn btn-default dropdown-toggle"
+            <button type="button" class="btn btn-danger dropdown-toggle"
                 dropdown-toggle>
                 <i class="fa fa-trash"></i> Remove 
                 <i class="fa fa-caret-down"></i>
@@ -48,7 +48,10 @@
                 <li><a ng-click="removeCompleted()">Completed</a></li>
             </ul>
         </div>
-        <button class="btn btn-default">Help</button>
+        <button ng-click="displayHelp() | trackEvent:'Audiodata-Upload':'help'"
+            class="btn btn-default">
+            Help
+        </button>
     </div>
 </div>
 <div class="uploads list">
