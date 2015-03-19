@@ -53,7 +53,7 @@ angular.module('audiodata.uploads', [
                 
                 item.url = '/uploads/audio?project=' + $scope.project.project_id+
                             '&site=' + $scope.info.site.id +
-                            '&nameformat=' + $scope.info.format;
+                            '&nameformat=' + $scope.info.format.name;
                 
                 item.upload();
             });

@@ -551,7 +551,7 @@ CREATE TABLE `recordings` (
   `version` varchar(255) NOT NULL,
   `sample_rate` mediumint(8) unsigned DEFAULT NULL,
   `precision` tinyint(3) unsigned DEFAULT NULL,
-  `duration` smallint(5) unsigned DEFAULT NULL,
+  `duration` float DEFAULT NULL,
   `samples` bigint(20) unsigned DEFAULT NULL,
   `file_size` varchar(45) DEFAULT NULL,
   `bit_rate` varchar(45) DEFAULT NULL,
@@ -1112,4 +1112,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-03-18 16:41:33
+-- Dump completed on 2015-03-19 14:21:26
