@@ -53,6 +53,7 @@
     "grunt-graphviz": "^0.1.1",
     "grunt-html2js": "^0.2.9",
     "grunt-karma": "^0.10.1",
+    "grunt-lesslint": "^1.1.14",
     "grunt-ngdocs": "^0.2.6",
     "karma": "^0.12.31",
     "karma-chai": "^0.1.0",
