@@ -125,10 +125,10 @@ router.post('/generate-token', function(req, res, next){
     if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
-    var siteid = req.body.site;
+    var siteId = req.body.site;
     async.waterfall([
         function(next){
-            model.sites.findById(siteid, next);
+            model.sites.findById(siteId, next);
         },
         function(sites){
             var next = arguments[arguments.length-1];
@@ -138,12 +138,12 @@ router.post('/generate-token', function(req, res, next){
                 next(new Error('Cannot find site ' + siteid));
             }
         }
-    ], function(err, token){
-        if(err){
-            next(err);
-        } else {
-            res.json(token);
-        }
+    ], function(err, tokenData){
+        if(err) return next(err); 
+        
+        tokenData.base64token = new Buffer(tokenData.token).toString('base64');
+        
+        res.json(tokenData);
     });
 });
 

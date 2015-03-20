@@ -1,9 +1,6 @@
-<div class="modal-header">
-    {{ popup.title }}
-</div>
-
+<div class="modal-header" ng-bind-html="popup.title"></div>
 <div class="modal-body">
-    <p ng-repeat="msg in popup.messages">{{ msg }}</p>
+    <p ng-repeat="msg in popup.messages" ng-bind-html="msg"></p>
 </div>
 <div class="modal-footer">
     <button class="btn btn-danger" ng-click="$close(true)  | trackEvent:'PopUp':'clicked ok'">{{ popup.btnOk }}</button>

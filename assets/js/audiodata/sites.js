@@ -61,19 +61,18 @@ angular.module('audiodata.sites', [
         if(!$scope.selected)
             return;
         
-        $scope.popup = {
-            messages: [
-                "You are about to delete: ",
-                $scope.selected.name,
-                "Are you sure??"
-            ],
-            btnOk: "Yes, do it!",
-            btnCancel: "No",
-        };
-        
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',
-            scope: $scope
+            controller: function() {
+                this.messages = [
+                    "You are about to delete: ",
+                    $scope.selected.name,
+                    "Are you sure??"
+                ];
+                this.btnOk = "Yes, do it!";
+                this.btnCancel = "No";
+            },
+            controllerAs: 'popup'
         });
         
         modalInstance.result.then(function() {
@@ -170,58 +169,10 @@ angular.module('audiodata.sites', [
         if(!$scope.selected || $scope.selected.imported)
             return;
             
-        var site = $scope.selected;
-        var popup = $scope.popup = {
-            site: site,
-            loading:{},
-            token:null,
-            action : {
-                generate_token: function(){
-                    popup.loading.generate = true;
-                    a2Sites.generateToken(site).success(function(data) {
-                        popup.loading.generate = false;
-                        if(data.error)
-                            return notify.error(data.error);
-
-                        site.token_created_on = data.created;
-                        popup.token = data;
-                        notify.log("New site token generated.");
-                    }).error(function(data) {
-                        popup.loading.generate = false;
-                        notify.error("Error communicating with server.");
-                    });
-                },
-                revoke_token: function(callback){
-                    var modalInstance = $modal.open({
-                        templateUrl: '/partials/pop-up.html',
-                        controller : function(){
-                            this.title = 'Confirm Revoke Token';
-                            this.messages = [
-                                "This action will revoke the token for the site " + site.name + ". " +
-                                "Are you sure you want to do this?"];
-                            this.btnOk = "Yes, Revoke Token";
-                            this.btnCancel = "No";
-                        },
-                        controllerAs : 'popup'
-                    });
-                    modalInstance.result.then(function() {
-                        popup.loading.revoke = true;
-                        a2Sites.revokeToken(site).success(function(data) {
-                            popup.loading.revoke = false;
-                            site.token_created_on = null;
-                            popup.token = null;
-                            notify.log("site token revoked.");
-                        }).error(function(data) {
-                            popup.loading.generate = false;
-                            notify.error("Error communicating with server.");
-                        });
-                    });
-                },
-            }
-        };
-
+        
         var modalInstance = $modal.open({
             templateUrl: '/partials/audiodata/site-tokens-popup.html',
+            controller: 'SitesTokenGenaratorCtrl',
             scope: $scope
         });
     };
@@ -252,7 +203,7 @@ angular.module('audiodata.sites', [
         $scope.map.panTo(position);
         //~ console.log($scope.selected);
     };
-                    
+    
 })
 .controller('PublishedSitesBrowserCtrl', [
     '$scope', 
@@ -300,6 +251,105 @@ angular.module('audiodata.sites', [
             
             a2Sites.import(site, function(data) {
                 $modalInstance.close(data);
+            });
+        };
+    }
+])
+.controller('SitesTokenGenaratorCtrl', [
+    '$scope', 
+    'a2Sites', 
+    '$modal',
+    'notify',
+    function($scope, a2Sites, $modal, notify){
+        $scope.site = $scope.selected;
+        $scope.loading = {};
+        
+        var confirmRevoke = function(title, btnOk) {
+            var modalInstance = $modal.open({
+                templateUrl: '/partials/pop-up.html',
+                controller : function(){
+                    this.title = title;
+                    this.messages = [
+                        "This action will revoke the current token for the site <b>" + 
+                        $scope.site.name + "</b>. " + 
+                        "Are you sure you want to do this?"
+                    ];
+                    this.btnOk = btnOk;
+                    this.btnCancel = "No";
+                },
+                controllerAs: 'popup'
+            });
+            return modalInstance;
+        };
+        
+        var genToken = function() {
+            a2Sites.generateToken($scope.site)
+                .success(function(data) {
+                    $scope.loading.generate = false;
+                    if(data.error)
+                        return notify.error(data.error);
+
+                    $scope.site.token_created_on = new Date(data.created*1000);
+                    $scope.base64 = data.base64token;
+                    $scope.token = {
+                        type: data.type,
+                        name: data.name,
+                        created: data.created,
+                        expires: data.expires,
+                        token: data.token
+                    };
+                    notify.log("New site token generated.");
+                })
+                .error(function(data) {
+                    $scope.loading.generate = false;
+                    notify.error("Error communicating with server.");
+                });
+        };
+        
+        
+        $scope.generateToken = function(){
+            $scope.loading.generate = true;
+            
+            if($scope.site.token_created_on) {
+                var modalInstance = confirmRevoke(
+                    "<h4>Confirm revoke and generate token</h4>",
+                    "Yes, revoke and generate a new token"
+                );
+                
+                modalInstance.result.then(function ok() {
+                    genToken();
+                }, function cancel() {
+                    $scope.loading.generate = false;
+                });
+            }
+            else {
+                genToken();
+            }
+            
+            
+        };
+        
+        $scope.revokeToken = function(){
+            
+            var modalInstance = confirmRevoke(
+                "<h4>Confirm revoke token</h4>", 
+                "Yes, revoke token"
+            );
+            
+            modalInstance.result.then(function() {
+                $scope.loading.revoke = true;
+                
+                a2Sites.revokeToken($scope.site)
+                    .success(function(data) {
+                        $scope.loading.revoke = false;
+                        $scope.site.token_created_on = null;
+                        $scope.token = null;
+                        notify.log("site token revoked.");
+                    })
+                    .error(function(data) {
+                        $scope.loading.generate = false;
+                        notify.error("Error communicating with server.");
+                    });
             });
         };
     }
