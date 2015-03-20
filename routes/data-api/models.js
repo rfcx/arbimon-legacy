@@ -617,7 +617,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             var project_id = rows[0].project_id;
 
             if(!req.haveAccess(project_id, "manage soundscapes")) {
-                console.log('user cannot create soundscape')
+                console.log('user cannot create soundscape');
                 response_already_sent = true;
                 res.status(403).json({ err: "you dont have permission to 'manage soundscapes'" });
                 return next(new Error());

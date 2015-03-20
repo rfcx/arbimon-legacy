@@ -133,10 +133,10 @@ module.exports = {
     
     watch: function(path, options, callback){
         if(!this.__watchers__){
-            this.__watchers__={};
+            this.__watchers__ = {};
         }
         if(!this.__watchers__[path]){
-            this.__watchers__[path] == [];
+            this.__watchers__[path] = [];
         }
         this.__watchers__[path].push(callback);
     },
@@ -144,7 +144,7 @@ module.exports = {
         var list = this.__watchers__ && this.__watchers__[path];
         if(list){
             for(var i=0, e=list.length; i<e; ++i){
-                list[i](event, filename)
+                list[i](event, filename);
             }
         }
     },

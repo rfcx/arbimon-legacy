@@ -177,7 +177,8 @@ describe('dbpool', function(){
             dbpool.pool.cache["update query"]={value : {affectedRows: 2, changedRows: 1}};
             dbpool.pool.cache["insert query"]={value : {insertId: 1}};
             dbpool.pool.cache["?? query"]={no_value : true};
-        })
+        });
+        
         it('Should propagate connection errors.', function(done){
             dbpool.pool.flag_fails_on_connection = true;
             dbpool.queryHandler("query 1", function(err, connection){

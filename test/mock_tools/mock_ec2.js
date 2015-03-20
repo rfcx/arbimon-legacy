@@ -83,7 +83,7 @@ mock_ec2.prototype = {
         var l=this.__listeners;
         insts.forEach(function(inst){
             if(!l[inst]){
-                l[inst] = {}
+                l[inst] = {};
             }
             var li = l[inst];
             if(!li[event]){

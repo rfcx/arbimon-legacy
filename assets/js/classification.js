@@ -3,8 +3,20 @@
     var classification = angular.module('classification', ['ui.bootstrap' , 'a2services', 'humane']);
     var template_root = '/partials/classification/';
 
-    classification.controller('ClassificationCtrl' ,
-        function ($scope, $http, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, $location, notify, $q)
+    classification.controller('ClassificationCtrl' , [
+        '$scope', 
+        '$http', 
+        '$modal', 
+        '$filter', 
+        'Project', 
+        'ngTableParams', 
+        'JobsData', 
+        'a2Playlists', 
+        '$location', 
+        'notify', 
+        '$q',
+        function ($scope, $http, $modal, $filter, Project, ngTableParams, 
+            JobsData, a2Playlists, $location, notify, $q)
         {
             $scope.loading = true;
             $scope.infoInfo = "Loading...";
@@ -219,7 +231,7 @@
                             JobsData.updateJobs();
                             notify.log("New Classification on Queue");
                         }
-			console.log(data)
+                        console.log(data);
                         if (data.error)
                         {
                             notify.error("Error: "+data.error);
@@ -284,8 +296,14 @@
                     }
                 );
             };
-    })
-    .controller('DeleteClassificationInstanceCtrl',
+    }])
+    .controller('DeleteClassificationInstanceCtrl', [
+        '$scope', 
+        '$modalInstance', 
+        '$http', 
+        'name', 
+        'id', 
+        'projectData',
         function($scope, $modalInstance, $http, name, id, projectData) {
             $scope.name = name;
             $scope.id = id;
@@ -308,8 +326,17 @@
             };
 
         }
-    )
-    .controller('ClassiDetailsInstanceCtrl',
+    ])
+    .controller('ClassiDetailsInstanceCtrl', [
+        '$scope', 
+        '$modalInstance', 
+        '$http', 
+        'notify', 
+        'data', 
+        'url', 
+        'id', 
+        'pid', 
+        'th',
         function ($scope, $modalInstance, $http, notify, data, url, id, pid, th)
         {
             $scope.th = th;
@@ -413,9 +440,15 @@
             };
 
         }
-    )
-    .controller('CreateNewClassificationInstanceCtrl',
-        function ($scope, $modalInstance, $http, data, projectData, playlists)
+    ])
+    .controller('CreateNewClassificationInstanceCtrl', [
+        '$scope', 
+        '$modalInstance', 
+        '$http', 
+        'data', 
+        'projectData', 
+        'playlists',
+        function($scope, $modalInstance, $http, data, projectData, playlists)
         {
             $scope.data = data;
             $scope.projectData = projectData;
@@ -488,7 +521,7 @@
 
             $scope.buttonEnable = function ()
             {
-        /*
+            /*
                 var flag = false;
                 if ($scope.recselected === 'all')
                     flag = true;
@@ -501,7 +534,7 @@
                     }
 
                 }
-        */
+            */
                 return  !(
                             typeof $scope.datas.playlist !== 'string' &&
                             $scope.datas.name.length &&
@@ -515,102 +548,79 @@
 
 
         }
-    )
-    .directive('a2Vectorchart',
-        function()
-        {
-            return  {
-                restrict : 'E',
-                scope: {
-                    vurl: '=',
-                    minvect: '=',
-                    maxvect: '=',
-                    purl: '='
-                },
-                templateUrl: template_root + 'vectorchart.html',
-                controller: ['$scope', '$http', function($scope, $http) {
+    ])
+    .directive('a2Vectorchart', function() {
+        return {
+            restrict: 'E',
+            scope: {
+                vurl: '=',
+                minvect: '=',
+                maxvect: '=',
+                purl: '='
+            },
+            templateUrl: template_root + 'vectorchart.html',
+            controller: ['$scope', '$http', 'notify', function($scope, $http, notify) {
+                $scope.loadingflag = true;
+                $scope.setLoader = function() {
                     $scope.loadingflag = true;
-                    $scope.setLoader = function()
-                    {
-                        $scope.loadingflag = true;
-                    };
+                };
 
-                    $scope.getVect = function(path,minve,maxve,ctx) {
-                        if(path)
-                        {
-                            $http.post('/api/project/'+$scope.purl+'/classification/vector',
-                            {
-                                v:path
-                            }
-                            ).
-                            success
-                            (
-                            function(data, status, headers, config)
-                            {
-                                $scope.data =  data.data.split(",") ;
-                                $scope.dataLength = $scope.data.length;
-                                var canvasheight = 50;
-                                var i = 0;
-                                ctx.width = $scope.dataLength;
-                                ctx.height = canvasheight;
-                                ctxContext = ctx.getContext('2d');
-                                ctxContext.beginPath();
+                $scope.getVect = function(path, minve, maxve, ctx) {
+                    if(path) {
+                        $http.post('/api/project/' + $scope.purl + '/classification/vector', {
+                            v: path
+                        })
+                        .success(function(data, status, headers, config) {
+                            $scope.data = data.data.split(",");
+                            $scope.dataLength = $scope.data.length;
+                            var canvasheight = 50;
+                            var i = 0;
+                            ctx.width = $scope.dataLength;
+                            ctx.height = canvasheight;
+                            ctxContext = ctx.getContext('2d');
+                            ctxContext.beginPath();
 
-                                //minvev = 99999999.0;
-                                //maxvev = -99999999.0;
-                                /*
-                                for(var jj = 0 ; jj < $scope.data.length; jj++)
-                                {
+                            //minvev = 99999999.0;
+                            //maxvev = -99999999.0;
+                            /*
+                            for(var jj = 0 ; jj < $scope.data.length; jj++)
+                            {
                                 $scope.data[jj] = parseFloat($scope.data[jj]);
-                                if (minvev >$scope.data[jj])
-                                {
+                                if(minvev >$scope.data[jj]) {
                                     minvev =$scope.data[jj];
                                 }
-                                if (maxvev<$scope.data[jj])
-                                {
+                                if(maxvev<$scope.data[jj]) {
                                     maxvev =$scope.data[jj];
                                 }
-                                }
-                                */
-
-                                ctxContext.moveTo(i,canvasheight*(1- (($scope.data[i]-$scope.minvect)/($scope.maxvect-$scope.minvect))   ));
-                                //ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
-                                for(i = 1; i < $scope.data.length; i++)
-                                {
-                                    ctxContext.lineTo(i,canvasheight*(1- (($scope.data[i]-$scope.minvect)/($scope.maxvect-$scope.minvect)) ) );
-                                    //ctxContext.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
-
-                                }
-                                ctxContext.strokeStyle = "#000";
-                                ctxContext.stroke();
-                                $scope.loadingflag = false;
                             }
-                            ).error(
-                            function()
-                            {
-                                $scope.errorInfo = "Error Communicating With Server";
-                                $scope.showError = true;
-                                $("#errorDiv").fadeTo(3000, 500).slideUp(500,
-                                function()
-                                {
-                                $scope.showError = false;
-                                });
-                            }
-                            );
-                        }
-                    };
-                }],
-                link: function (scope, element) {
-                    var ctx = element.children();
-                    ctx = ctx[0];
-                    scope.$watch("vurl",function(newValue,oldValue) {
-                        scope.setLoader();
-                        scope.getVect(scope.vurl,parseFloat(scope.minvect),parseFloat(scope.maxvect),ctx);
-                    });
-                }
-           };
+                            */
 
-        }
-    );
+                            ctxContext.moveTo(i, canvasheight * (1 - (($scope.data[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                            //ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+                            for (i = 1; i < $scope.data.length; i++) {
+                                ctxContext.lineTo(i, canvasheight * (1 - (($scope.data[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                                //ctxContext.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
+                            }
+                            ctxContext.strokeStyle = "#000";
+                            ctxContext.stroke();
+                            $scope.loadingflag = false;
+                        })
+                        .error(function() {
+                            notify.error("Error Communicating With Server");
+                        });
+                    }
+                };
+            }],
+            link: function(scope, element) {
+                var ctx = element.children();
+                ctx = ctx[0];
+                scope.$watch("vurl", function(newValue, oldValue) {
+                    scope.setLoader();
+                    scope.getVect(scope.vurl, parseFloat(scope.minvect), parseFloat(scope.maxvect), ctx);
+                });
+            }
+        };
+
+    });
 
 })(angular);
