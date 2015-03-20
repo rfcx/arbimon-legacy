@@ -35,12 +35,12 @@
     <button class="btn btn-primary" 
         ng-disabled="loading.generate || token" 
         ng-click="generateToken() | trackEvent:'PopUp':'generate'">
-        {{ loading.generate ? "Generating Token..." : (token ? "Token Generated" : "Generate New Token") }}
+        {{ loading.generate ? "Generating token..." : (token ? "Token generated" : "Generate new token") }}
     </button>
     <button class="btn btn-danger" 
         ng-disabled="!site.token_created_on || loading.revoke" 
         ng-click="revokeToken() | trackEvent:'SiteToken':'revoke'">
-            {{ loading.revoke ? "Revoking Token..." : "Revoke Existing Token"}}
+            {{ loading.revoke ? "Revoking token..." : "Revoke existing token"}}
     </button>
     <button class="btn btn-default" ng-click="$dismiss()  | trackEvent:'PopUp':'close'">Close</button>
 </div>

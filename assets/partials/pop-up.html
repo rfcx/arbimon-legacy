@@ -1,7 +1,4 @@
-<div class="modal-header">
-    {{ popup.title }}
-</div>
-
+<div class="modal-header" ng-bind-html="popup.title"></div>
 <div class="modal-body">
     <p ng-repeat="msg in popup.messages" ng-bind-html="msg"></p>
 </div>

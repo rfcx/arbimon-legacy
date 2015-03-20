@@ -264,16 +264,17 @@ angular.module('audiodata.sites', [
         $scope.site = $scope.selected;
         $scope.loading = {};
         
-        var confirmRevoke = function() {
+        var confirmRevoke = function(title, btnOk) {
             var modalInstance = $modal.open({
                 templateUrl: '/partials/pop-up.html',
                 controller : function(){
-                    this.title = 'Confirm Revoke Token';
+                    this.title = title;
                     this.messages = [
-                        "This action will revoke the token for the site <b>" + $scope.site.name + "</b>. " +
+                        "This action will revoke the current token for the site <b>" + 
+                        $scope.site.name + "</b>. " + 
                         "Are you sure you want to do this?"
                     ];
-                    this.btnOk = "Yes, Revoke Token";
+                    this.btnOk = btnOk;
                     this.btnCancel = "No";
                 },
                 controllerAs: 'popup'
@@ -310,10 +311,15 @@ angular.module('audiodata.sites', [
             $scope.loading.generate = true;
             
             if($scope.site.token_created_on) {
-                var modalInstance = confirmRevoke();
+                var modalInstance = confirmRevoke(
+                    "<h4>Confirm revoke and generate token</h4>",
+                    "Yes, revoke and generate a new token"
+                );
                 
-                modalInstance.result.then(function() {
+                modalInstance.result.then(function ok() {
                     genToken();
+                }, function cancel() {
+                    $scope.loading.generate = false;
                 });
             }
             else {
@@ -325,7 +331,10 @@ angular.module('audiodata.sites', [
         
         $scope.revokeToken = function(){
             
-            var modalInstance = confirmRevoke();
+            var modalInstance = confirmRevoke(
+                "<h4>Confirm revoke token</h4>", 
+                "Yes, revoke token"
+            );
             
             modalInstance.result.then(function() {
                 $scope.loading.revoke = true;
