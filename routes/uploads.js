@@ -76,7 +76,7 @@ var processUpload = function(upload, done) {
                 filename: upload.name,
                 project_id: upload.projectId,
                 site_id: upload.siteId,
-                user_id: upload.user_id,
+                user_id: upload.userId,
             }, 
             callback);
         },
