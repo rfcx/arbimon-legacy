@@ -1,7 +1,7 @@
 angular.module('a2-sites-service', [
     'a2-project-service'
 ])
-.factory('a2Sites',['$http', 'Project', function($http, Project){
+.factory('a2Sites',function($http, Project){
     return {
         listPublished: function(callback) {
             $http.get('/api/sites/published')
@@ -53,5 +53,5 @@ angular.module('a2-sites-service', [
             });
         }
     };
-}])
+})
 ;

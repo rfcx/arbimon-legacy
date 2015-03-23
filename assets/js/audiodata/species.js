@@ -105,7 +105,7 @@ angular.module('audiodata.species', [
             
     };
 })
-.controller('SelectSpeciesCtrl', ['$scope', 'Species', 'Songtypes',  function($scope, Species, Songtypes) {
+.controller('SelectSpeciesCtrl', function($scope, Species, Songtypes) {
     
     $scope.spFields = [ 
         { name: 'Species', key: 'scientific_name'},
@@ -133,5 +133,5 @@ angular.module('audiodata.species', [
             $scope.species = results;
         });
     };
-}])
+})
 ;

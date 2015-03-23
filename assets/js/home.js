@@ -1,12 +1,11 @@
 angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane','angularytics', 'a2forms'])
-.config(['AngularyticsProvider', function(AngularyticsProvider) {
+.config(function(AngularyticsProvider) {
         AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
-}])
-.run(['Angularytics', function(Angularytics) {
+})
+.run(function(Angularytics) {
     Angularytics.init();
-}])
-.controller('HomeCtrl', ['$scope', '$http', '$modal', 'notify', 
-    function($scope, $http, $modal, notify) {
+})
+.controller('HomeCtrl', function($scope, $http, $modal, notify) {
     
     $scope.currentPage = 1;
     
@@ -47,13 +46,8 @@ angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane
             $scope.loadProjectList();
         });
     };
-}])
-.controller('CreateProjectCtrl', [
-    '$scope', 
-    '$http', 
-    '$modalInstance', 
-    'notify', 
-    function($scope, $http, $modalInstance, notify) {
+})
+.controller('CreateProjectCtrl', function($scope, $http, $modalInstance, notify) {
         $scope.create = function() {
             if(!$scope.isValid) return;
             
@@ -83,6 +77,5 @@ angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane
                 notify.error('Error Communicating with Server');           
             });
         };
-    }
-])
+    })
 ;

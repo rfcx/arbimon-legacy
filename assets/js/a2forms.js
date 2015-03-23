@@ -1,5 +1,22 @@
 angular.module('a2forms',['templates-arbimon2'])
-.directive('passwordInput', [function() {
+.run(function($window) {
+    
+    // load zxcvbn 
+    var loadZXCVBN = function() {
+        var a, b;
+        b = $window.document.createElement("script");
+        b.src = "/assets/zxcvbn/zxcvbn.js";
+        b.type = "text/javascript";
+        b.async = !0;
+        a = $window.document.getElementsByTagName("script")[0];
+        return a.parentNode.insertBefore(b, a);
+    };
+    if($window.attachEvent)
+        $window.attachEvent("onload", loadZXCVBN);
+    else
+        $window.addEventListener("load", loadZXCVBN, !1);
+})
+.directive('passwordInput', function($window) {
     return {
         restrict: 'E',
         scope: {
@@ -8,7 +25,7 @@ angular.module('a2forms',['templates-arbimon2'])
             userInputs: '=?', // array of strings to test password (username, name, lastname, etc)
         },
         templateUrl: '/partials/directives/password-input.html',
-        controller: ['$scope', function($scope) {
+        controller: function($scope) {
             
             $scope.requiredScore = 2;
             $scope.minLength = 6;
@@ -56,12 +73,11 @@ angular.module('a2forms',['templates-arbimon2'])
             
             $scope.testPass = function() {
                 // wait for zxcvbn library to be available
-                
-                if(typeof zxcvbn === 'undefined') {
+                if(typeof $window.zxcvbn === 'undefined') {
                     if($scope.waitForZxcvbn) return;
                     
                     $scope.waitForZxcvbn = $interval(function() {
-                        if(typeof zxcvbn !== 'undefined') {
+                        if(typeof $window.zxcvbn !== 'undefined') {
                             $interval.cancel($scope.waitForZxcvbn);
                             $scope.testPass();
                         }
@@ -106,7 +122,7 @@ angular.module('a2forms',['templates-arbimon2'])
                     
                 }
                 else {
-                    var test = zxcvbn($scope.password, $scope.userInputs);
+                    var test = $window.zxcvbn($scope.password, $scope.userInputs);
                     
                     $scope.passResult.score = test.score;
                     
@@ -117,10 +133,10 @@ angular.module('a2forms',['templates-arbimon2'])
                     $scope.testConfirm();
                 }
             };
-        }],
+        },
     };
-}])
-.directive('projectForm', [function() {
+})
+.directive('projectForm', function() {
     return {
         restrict: 'E',
         scope: {
@@ -128,7 +144,7 @@ angular.module('a2forms',['templates-arbimon2'])
             valid: '=', // validation object
         },
         templateUrl: '/partials/directives/project-form.html',
-        controller: ['$scope', function($scope) {
+        controller: function($scope) {
             console.log('project-form');
             $scope.project = {
                 is_private: 0,
@@ -188,7 +204,7 @@ angular.module('a2forms',['templates-arbimon2'])
                 
                 $scope.valid = good;
             };
-        }]
+        }
     };
-}])
+})
 ;

@@ -1,8 +1,5 @@
 angular.module('a2-project-service', [])
-.factory('Project', [
-    '$location', 
-    '$http', 
-    function($location, $http) {
+.factory('Project', function($location, $http) {
         
         var nameRe = /\/?project\/([\w\_\-]+)/;
         var nrm = nameRe.exec($location.absUrl());
@@ -227,6 +224,5 @@ angular.module('a2-project-service', [])
                 });
             }
         };
-    }
-])
+    })
 ;

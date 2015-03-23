@@ -3,19 +3,7 @@
     var classification = angular.module('classification', ['ui.bootstrap' , 'a2services', 'humane']);
     var template_root = '/partials/classification/';
 
-    classification.controller('ClassificationCtrl' , [
-        '$scope', 
-        '$http', 
-        '$modal', 
-        '$filter', 
-        'Project', 
-        'ngTableParams', 
-        'JobsData', 
-        'a2Playlists', 
-        '$location', 
-        'notify', 
-        '$q',
-        function ($scope, $http, $modal, $filter, Project, ngTableParams, 
+    classification.controller('ClassificationCtrl' , function ($scope, $http, $modal, $filter, Project, ngTableParams, 
             JobsData, a2Playlists, $location, notify, $q)
         {
             $scope.loading = true;
@@ -296,15 +284,8 @@
                     }
                 );
             };
-    }])
-    .controller('DeleteClassificationInstanceCtrl', [
-        '$scope', 
-        '$modalInstance', 
-        '$http', 
-        'name', 
-        'id', 
-        'projectData',
-        function($scope, $modalInstance, $http, name, id, projectData) {
+    })
+    .controller('DeleteClassificationInstanceCtrl', function($scope, $modalInstance, $http, name, id, projectData) {
             $scope.name = name;
             $scope.id = id;
             $scope.deletingloader = false;
@@ -325,19 +306,8 @@
                 $modalInstance.dismiss('cancel');
             };
 
-        }
-    ])
-    .controller('ClassiDetailsInstanceCtrl', [
-        '$scope', 
-        '$modalInstance', 
-        '$http', 
-        'notify', 
-        'data', 
-        'url', 
-        'id', 
-        'pid', 
-        'th',
-        function ($scope, $modalInstance, $http, notify, data, url, id, pid, th)
+        })
+    .controller('ClassiDetailsInstanceCtrl', function ($scope, $modalInstance, $http, notify, data, url, id, pid, th)
         {
             $scope.th = th;
             $scope.data = data.data;
@@ -439,16 +409,8 @@
                 $scope.showMore = false;
             };
 
-        }
-    ])
-    .controller('CreateNewClassificationInstanceCtrl', [
-        '$scope', 
-        '$modalInstance', 
-        '$http', 
-        'data', 
-        'projectData', 
-        'playlists',
-        function($scope, $modalInstance, $http, data, projectData, playlists)
+        })
+    .controller('CreateNewClassificationInstanceCtrl', function($scope, $modalInstance, $http, data, projectData, playlists)
         {
             $scope.data = data;
             $scope.projectData = projectData;
@@ -547,8 +509,7 @@
             };
 
 
-        }
-    ])
+        })
     .directive('a2Vectorchart', function() {
         return {
             restrict: 'E',
@@ -559,7 +520,7 @@
                 purl: '='
             },
             templateUrl: template_root + 'vectorchart.html',
-            controller: ['$scope', '$http', 'notify', function($scope, $http, notify) {
+            controller: function($scope, $http, notify) {
                 $scope.loadingflag = true;
                 $scope.setLoader = function() {
                     $scope.loadingflag = true;
@@ -610,7 +571,7 @@
                         });
                     }
                 };
-            }],
+            },
             link: function(scope, element) {
                 var ctx = element.children();
                 ctx = ctx[0];

@@ -32,7 +32,7 @@ angular.module('visualizer', [
  * @description
  * The layout manager for the spectrogram.
  */
-.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+.config(function($stateProvider, $urlRouterProvider) {
     
     $urlRouterProvider
     .rule(function ($injector, $location) {
@@ -65,7 +65,7 @@ angular.module('visualizer', [
             }
         },
     });
-}])
+})
 .directive('a2Visualizer', function(){
     return { 
         restrict : 'E', 

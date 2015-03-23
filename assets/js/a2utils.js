@@ -176,7 +176,7 @@ angular.module('a2-url-update-service', [])
 
 
 angular.module('a2Infotags', [])
-.factory('InfoTagService', ['$location', '$http', function($location, $http){
+.factory('InfoTagService', function($location, $http){
     return {
         getSpecies: function(species_id, callback){
             $http.get('/api/species/'+species_id).success(function(data) {
@@ -189,7 +189,7 @@ angular.module('a2Infotags', [])
             });
         }
     };
-}])
+})
 .directive('a2Species', function (InfoTagService, $timeout) {
     return {
         restrict : 'E',

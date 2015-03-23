@@ -1,5 +1,5 @@
 angular.module('login', ['humane', 'g-recaptcha'])
-.controller('LoginCtrl', ['$scope', '$http', '$window', 'notify', function($scope, $http, $window, notify) {
+.controller('LoginCtrl', function($scope, $http, $window, notify) {
 
     
     $scope.login = function() {
@@ -33,4 +33,4 @@ angular.module('login', ['humane', 'g-recaptcha'])
         });
     };
     
-}]);
+});

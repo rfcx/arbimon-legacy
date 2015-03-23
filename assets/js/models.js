@@ -11,17 +11,7 @@
     ]);
     var template_root = '/partials/models/';
 
-    models.controller('ModelsCtrl', [
-        '$scope', 
-        '$http', 
-        '$modal', 
-        '$filter', 
-        'ngTableParams', 
-        'Project', 
-        'JobsData', 
-        '$location', 
-        'notify',
-        function($scope, $http, $modal, $filter, ngTableParams, Project, JobsData, $location, notify) {
+    models.controller('ModelsCtrl', function($scope, $http, $modal, $filter, ngTableParams, Project, JobsData, $location, notify) {
                 $scope.infoInfo = "Loading...";
                 $scope.showInfo = true;
                 $scope.loading = true;
@@ -230,17 +220,8 @@
                             notify.error("Error Communicating With Server");
                         });
                 };
-        }
-    ])
-    .controller('NewModelInstanceCtrl', [
-        '$scope', 
-        '$modalInstance', 
-        '$http', 
-        'projectData', 
-        'types', 
-        'trainings', 
-        'notify',
-        function($scope, $modalInstance, $http, projectData, types, trainings, notify) {
+        })
+    .controller('NewModelInstanceCtrl', function($scope, $modalInstance, $http, projectData, types, trainings, notify) {
             $scope.types = types;
             $scope.projectData = projectData;
             $scope.trainings = trainings;
@@ -353,17 +334,8 @@
                 });
             };
 
-        }
-    ])
-    .controller('DeleteModelInstanceCtrl', [
-        '$scope', 
-        '$modalInstance', 
-        '$http', 
-        'model_name', 
-        'model_id', 
-        'projectData', 
-        'notify',
-        function($scope, $modalInstance, $http, model_name, model_id, projectData, notify) {
+        })
+    .controller('DeleteModelInstanceCtrl', function($scope, $modalInstance, $http, model_name, model_id, projectData, notify) {
             $scope.model_name = model_name;
             $scope.model_id = model_id;
             $scope.projectData = projectData;
@@ -386,15 +358,9 @@
                 $modalInstance.dismiss('cancel');
             };
 
-        }
-    ])
+        })
     // TODO use popup.html
-    .controller('NewClassificationInstanceCtrl', [
-        '$scope', 
-        '$modalInstance', 
-        'model_name', 
-        'model_id',
-        function($scope, $modalInstance, model_name, model_id) {
+    .controller('NewClassificationInstanceCtrl', function($scope, $modalInstance, model_name, model_id) {
             $scope.model_name = model_name;
             $scope.model_id = model_id;
             
@@ -405,17 +371,8 @@
             $scope.cancel = function() {
                 $modalInstance.dismiss('cancel');
             };
-        }
-    ])
-    .controller('ModelDetailsCtrl', [
-        '$scope', 
-        '$http', 
-        '$stateParams', 
-        '$location', 
-        'Project', 
-        'notify', 
-        '$timeout',
-        function($scope, $http, $stateParams, $location, Project, notify, $timeout) {
+        })
+    .controller('ModelDetailsCtrl', function($scope, $http, $stateParams, $location, Project, notify, $timeout) {
 
             $scope.project_url = Project.getUrl();
             $scope.project_id = -1;
@@ -896,6 +853,5 @@
 
             $scope.validationRows = null;
 
-        }
-    ]);
+        });
 })(angular);

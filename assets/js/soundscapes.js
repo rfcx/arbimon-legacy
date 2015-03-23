@@ -8,19 +8,7 @@
     
     var template_root = '/partials/soundscapes/';
     
-    soundscapes.controller('SoundscapesCtrl' , [
-        '$scope', 
-        '$http', 
-        '$modal', 
-        '$filter', 
-        'Project', 
-        'JobsData', 
-        'ngTableParams', 
-        'a2Playlists', 
-        '$location', 
-        'a2Soundscapes', 
-        'notify',
-        function ($scope, $http, $modal, $filter, Project, JobsData, 
+    soundscapes.controller('SoundscapesCtrl' , function ($scope, $http, $modal, $filter, Project, JobsData, 
             ngTableParams, a2Playlists, $location, a2Soundscapes, notify) 
         {
             $scope.successInfo = "";
@@ -232,16 +220,8 @@
                 
             };
             
-        } // end SoundscapesCtrl
-    ])
-    .controller('DeleteSoundscapeInstanceCtrl',[ 
-        '$scope', 
-        '$modalInstance', 
-        '$http', 
-        'name', 
-        'id', 
-        'projectData',
-        function($scope, $modalInstance, $http, name, id, projectData) {
+        })
+    .controller('DeleteSoundscapeInstanceCtrl',function($scope, $modalInstance, $http, name, id, projectData) {
             $scope.name = name;
             $scope.id = id;
             $scope.projectData = projectData;
@@ -260,16 +240,8 @@
                 $modalInstance.dismiss('cancel');
             };
 
-        }
-    ])
-    .controller('CreateNewSoundscapeInstanceCtrl', [
-        '$scope', 
-        '$modalInstance', 
-        '$http', 
-        '$timeout', 
-        'projectData', 
-        'playlists',
-        function($scope, $modalInstance, $http, $timeout, projectData, playlists) {
+        })
+    .controller('CreateNewSoundscapeInstanceCtrl', function($scope, $modalInstance, $http, $timeout, projectData, playlists) {
         
             $scope.projectData = projectData;
             $scope.playlists = playlists;
@@ -349,8 +321,7 @@
             $scope.cancel = function (url) {
                  $modalInstance.close( {url:url});
             };
-        }
-    ])
+        })
     .directive('a2Aggregationtypeselector', function() {
             return  {
                 restrict : 'E',
@@ -358,7 +329,7 @@
                     "selected": "="
                 },
                 templateUrl: template_root + 'aggregationtypetelector.html',
-                controller: ['$scope', function($scope) {
+                controller: function($scope) {
                 
                     $scope.aggregations = [
                         {
@@ -401,11 +372,11 @@
                     $scope.select =  function(aggr) {
                         $scope.selected = aggr.id;
                     };
-                }]
+                }
             }; 
         }
     )
-    .directive('a2DrawAggregation', ['$window', function($window) {
+    .directive('a2DrawAggregation', function($window) {
         var d3 = $window.d3;
         
         return {
@@ -451,7 +422,7 @@
                 });
             }
         };
-    }])
+    })
     .directive('a2ThresholdSelector', function() {
         return {    
             restrict : 'E',
@@ -474,7 +445,7 @@
             }
         };
     })
-    .directive('a2DrawPeakThreshold', ['$window', function() {
+    .directive('a2DrawPeakThreshold', function() {
         var d3 = $window.d3;
         return {    
             restrict : 'E',
@@ -648,13 +619,8 @@
                     .text("Hz");
             }
         };
-    }])
-    .controller('SoundscapesDetailsCtrl', [
-        '$scope',
-        'soundscape', 
-        'playlist', 
-        'a2Soundscapes',
-        function($scope, soundscape, playlist, a2Soundscapes) {
+    })
+    .controller('SoundscapesDetailsCtrl', function($scope, soundscape, playlist, a2Soundscapes) {
             
             var data2xy = function(offset) {
                 offset = offset || 0;
@@ -708,6 +674,5 @@
                 }
                 
             });
-        }
-    ]);
+        });
 })(angular);

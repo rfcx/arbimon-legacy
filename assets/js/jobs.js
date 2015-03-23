@@ -82,13 +82,13 @@
         });
 
     angular.module('jobs', ['a2services', 'a2-job-data'])
-        .config(['$stateProvider', function($stateProvider) {
+        .config(function($stateProvider) {
             $stateProvider.state('jobs', {
                 url: '/jobs',
                 controller: 'StatusBarNavController',
                 templateUrl: '/partials/jobs/index.html'
             });
-        }])
+        })
         .controller('StatusBarNavIndexController',
             function($scope, $http, $timeout, JobsData) {
                 $scope.$watch(

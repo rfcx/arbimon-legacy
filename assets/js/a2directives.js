@@ -1,5 +1,5 @@
 angular.module('a2directives', ['a2services', 'templates-arbimon2'])
-.run(['$window', function($window) {
+.run(function($window) {
     var $ = $window.$;
     
     $(document).click( function(e){
@@ -40,8 +40,8 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
     };
     $.expr.match.needsContext = new RegExp($.expr.match.needsContext.source + '|^(\\^)');
     $.expr.match.UP_PARENT_SPECIAL = /^(\^+)/;
-}])
-.directive('a2GlobalKeyup', ['$window', '$timeout', function($window, $timeout){
+})
+.directive('a2GlobalKeyup', function($window, $timeout){
     var $ = $window.$;
     
     return {
@@ -61,8 +61,8 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             });
         }
     };
-}])
-.directive('a2Scroll',['$parse', function($parse) {
+})
+.directive('a2Scroll',function($parse) {
     var mkFunction = function(scope, attr){
         var fn = $parse(attr);
         return function(locals) {
@@ -113,8 +113,8 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             });
         }
     };
-}])
-.directive('a2Table', ['$filter', function($filter) {
+})
+.directive('a2Table', function($filter) {
     return {
         restrict: 'E',
         scope: {
@@ -247,15 +247,11 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             };
         }
     };
-}])
+})
 /**
     this version of a2Table uses html to define fields
 */
-.directive('a2Table2', [
-    '$filter', 
-    '$templateCache', 
-    '$compile', 
-    function($filter, $templateCache, $compile) {
+.directive('a2Table2', function($filter, $templateCache, $compile) {
         return {
             restrict: 'E',
             scope: {
@@ -417,9 +413,8 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 };
             }
         };
-    }
-])
-.directive('a2TableContent', ['$compile', function($compile){
+    })
+.directive('a2TableContent', function($compile){
     return {
         restrict: 'E',
         scope: {
@@ -431,7 +426,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 $compile(element.contents())(scope);
         }
     };
-}])
+})
 .directive('a2Persistent', function($rootScope, $compile, $timeout){
     var counter = 0;
     var poc = $('<div></div>');
@@ -469,7 +464,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
         }
     };
 })
-.directive('autoHeight', ['$window', function($window) {
+.directive('autoHeight', function($window) {
     var $ = $window.$;
     return {
         restrict: 'A',
@@ -496,7 +491,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             });
         }
     };
-}])
+})
 .directive('stopClick', function () {
     return {
         restrict: 'A',
@@ -529,7 +524,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
   or, if you just want to show the component :
   <yearpick ng-model="dia" yearpick disable-empty="true" year="year" date-count="dateData"></yearpick>
  */
-.directive('yearpick', ['$timeout', '$window', function($timeout, $window) {
+.directive('yearpick', function($timeout, $window) {
     var d3 = $window.d3;
     var $ = $window.$;
     
@@ -800,8 +795,8 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             }
         }
     };
-}])
-.directive('a2Img', ['$compile', '$window',  function($compile, $window){
+})
+.directive('a2Img', function($compile, $window){
     var $ = $window.$;
     return {
         restrict : 'E',
@@ -847,7 +842,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             
         }
     };
-}])
+})
 .directive('a2TrainingSetDataImage', function($compile, a2TrainingSets){
     return {
         restrict : 'E',
@@ -877,7 +872,9 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
         }
     };
 })
-.directive('a2InsertIn', function(){
+.directive('a2InsertIn', function($window){
+    var $ = $window.$;
+    
     var count=1;
     return {
         restrict: 'A',
@@ -932,8 +929,8 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
         }        
     };
 })
-
-.directive('a2LineChart', function() {
+.directive('a2LineChart', function($window) {
+    var d3 = $window.d3;
     
     var drawChart = function(data, options) {
         

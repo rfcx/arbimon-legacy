@@ -1,5 +1,5 @@
 angular.module('reset-password', ['a2forms', 'humane', 'a2directives'])
-.controller('ResetPassCtrl', ['$scope', '$http', '$window', 'notify', function($scope, $http, $window, notify) {
+.controller('ResetPassCtrl', function($scope, $http, $window, notify) {
     
     $scope.changePassword = function() {
         if(!$scope.passResult.valid) {
@@ -14,9 +14,8 @@ angular.module('reset-password', ['a2forms', 'humane', 'a2directives'])
             });
     };
     
-}])
-.controller('ResetRequestCtrl', ['$scope', '$http', 'notify', 
-    function($scope, $http, notify) {
+})
+.controller('ResetRequestCtrl', function($scope, $http, notify) {
         
         $scope.request = function() {
             $scope.loading = true;
@@ -31,6 +30,5 @@ angular.module('reset-password', ['a2forms', 'humane', 'a2directives'])
                     $scope.requestComplete = true;
                 });
         };
-    }
-])
+    })
 ;

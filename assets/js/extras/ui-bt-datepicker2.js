@@ -24,7 +24,7 @@ angular.module('ui.bt.datepicker2', ["ui.bt.dp2.tpls", 'ui.bootstrap.dateparser'
   maxDate: null
 })
 
-.controller('Datepicker2Controller', ['$scope', '$attrs', '$parse', '$interpolate', '$timeout', '$log', 'dateFilter', 'datepickerConfig', function($scope, $attrs, $parse, $interpolate, $timeout, $log, dateFilter, datepickerConfig) {
+.controller('Datepicker2Controller', function($scope, $attrs, $parse, $interpolate, $timeout, $log, dateFilter, datepickerConfig) {
   var self = this,
       ngModelCtrl = { $setViewValue: angular.noop }; // nullModelCtrl;
 
@@ -182,7 +182,7 @@ angular.module('ui.bt.datepicker2', ["ui.bt.dp2.tpls", 'ui.bootstrap.dateparser'
       self.refreshView();
     }
   };
-}])
+})
 
 .directive( 'datepicker2', function () {
   return {
@@ -204,7 +204,7 @@ angular.module('ui.bt.datepicker2', ["ui.bt.dp2.tpls", 'ui.bootstrap.dateparser'
   };
 })
 
-.directive('daypicker2', ['dateFilter', function (dateFilter) {
+.directive('daypicker2', function (dateFilter) {
   return {
     restrict: 'EA',
     replace: true,
@@ -310,9 +310,9 @@ angular.module('ui.bt.datepicker2', ["ui.bt.dp2.tpls", 'ui.bootstrap.dateparser'
       ctrl.refreshView();
     }
   };
-}])
+})
 
-.directive('monthpicker2', ['dateFilter', function (dateFilter) {
+.directive('monthpicker2', function (dateFilter) {
   return {
     restrict: 'EA',
     replace: true,
@@ -365,9 +365,9 @@ angular.module('ui.bt.datepicker2', ["ui.bt.dp2.tpls", 'ui.bootstrap.dateparser'
       ctrl.refreshView();
     }
   };
-}])
+})
 
-.directive('yearpicker2', ['dateFilter', function (dateFilter) {
+.directive('yearpicker2', function (dateFilter) {
   return {
     restrict: 'EA',
     replace: true,
@@ -424,15 +424,15 @@ angular.module('ui.bt.datepicker2', ["ui.bt.dp2.tpls", 'ui.bootstrap.dateparser'
       ctrl.refreshView();
     }
   };
-}])
-.run(["$templateCache", function($templateCache) {
+})
+.run(function($templateCache) {
   $templateCache.put("template/datepicker2/datepicker.html",
     "<div ng-switch=\"datepickerMode\" role=\"application\" ng-keydown=\"keydown($event)\">\n" +
     "  <daypicker2 ng-switch-when=\"day\" tabindex=\"0\"></daypicker2>\n" +
     "  <monthpicker2 ng-switch-when=\"month\" tabindex=\"0\"></monthpicker2>\n" +
     "  <yearpicker2 ng-switch-when=\"year\" tabindex=\"0\"></yearpicker2>\n" +
     "</div>");
-}]);
+});
 
 
 

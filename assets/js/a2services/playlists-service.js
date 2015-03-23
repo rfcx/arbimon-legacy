@@ -1,7 +1,7 @@
 angular.module('a2-playlists-service', [
     'a2-project-service'
 ])
-.factory('a2Playlists', ['Project', '$http', function(Project, $http) {
+.factory('a2Playlists', function(Project, $http) {
     var projectName = Project.getUrl();
     
     return {
@@ -80,5 +80,5 @@ angular.module('a2-playlists-service', [
             });
         },
     };
-}])
+})
 ;

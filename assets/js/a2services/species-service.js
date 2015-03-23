@@ -1,5 +1,5 @@
 angular.module('a2-species-service', [])
-.factory('Species',['$http', function($http){
+.factory('Species',function($http){
     var species;
 
     return {
@@ -20,8 +20,8 @@ angular.module('a2-species-service', [])
             });
         }
     };
-}])
-.factory('Songtypes',['$http', function($http){
+})
+.factory('Songtypes',function($http){
     var songs;
 
     return {
@@ -36,5 +36,5 @@ angular.module('a2-species-service', [])
             });
         }
     };
-}])
+})
 ;

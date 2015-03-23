@@ -1,7 +1,7 @@
 angular.module('a2-soundscapes-service', [
     'a2-project-service'
 ])
-.factory('a2Soundscapes', ['Project', '$http', '$q', function(Project, $http, $q) {
+.factory('a2Soundscapes', function(Project, $http, $q) {
     return {
         get: function(soundscape, callback) {
             var projectName = Project.getUrl();
@@ -148,5 +148,5 @@ angular.module('a2-soundscapes-service', [
                 .success(callback);
         }
     };
-}])
+})
 ;

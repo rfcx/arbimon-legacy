@@ -194,11 +194,28 @@ module.exports = function(grunt) {
             }
         },
         
-        concat: {
-            dev: {
-                src: ['assets/js/**/*.js'], 
-                dest: 'public/assets/js/arbimon2.js'
-            }
+        ngAnnotate: {
+            // add DI to all algular modules and concats code
+            main: {
+                options: {
+                    remove: true,
+                    add: true
+                },
+                files: [{
+                    'public/assets/js/arbimon2.js': 'assets/js/**/*.js'
+                }],
+            },
+            // remove DI on code
+            // remove: {
+            //     options: {
+            //         remove: true,
+            //         add:false,
+            //     },
+            //     files: [{
+            //         expand: true,
+            //         src: ['assets/js/**/*.js']
+            //     }],
+            // },
         },
         
         uglify: {
@@ -237,7 +254,6 @@ module.exports = function(grunt) {
             },
             frontendjs: {
                 files: [
-                    'assets/js/*.js',
                     'assets/js/**/*.js'
                 ],
                 tasks: ['concat:dev']
@@ -331,30 +347,32 @@ module.exports = function(grunt) {
                     ]
                 }
             }
-        }
+        },
+        
+
     };
     
     grunt.initConfig(initcfg);
     
-    grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-contrib-less');
-    grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.loadNpmTasks('grunt-express-server');
-    grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks('grunt-html2js');
-    grunt.loadNpmTasks('grunt-ngdocs');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-angular-architecture-graph');
+    grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-less');
+    grunt.loadNpmTasks('grunt-express-server');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-html2js');
+    grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-lesslint');
+    grunt.loadNpmTasks('grunt-ngdocs');
+    grunt.loadNpmTasks('grunt-ng-annotate');
     
     grunt.registerTask('angular-depends', ['angular_architecture_graph']);
     grunt.registerTask('test-frontend', ['jshint:frontEnd', 'html2js:dev', 'karma']);
     grunt.registerTask('test-backend', ['jshint:backEnd']);
-    grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'concat']);
-    grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'concat', 'uglify']);
+    grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'ngAnnotate:main']);
+    grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'ngAnnotate:main', 'uglify']);
     grunt.registerTask('server', ['express:dev', 'watch']);
     grunt.registerTask('docs', ['ngdocs']);
     grunt.registerTask('default', ['build']);
