@@ -11,24 +11,21 @@ angular.module('a2-sites-service', [
         },
         
         import: function(site, callback) {
-            $http.post('/api/project/'+ Project.getUrl() +'/sites/import', 
-            {
+            $http.post('/api/project/'+ Project.getUrl() +'/sites/import', {
                 site: site,
             })
             .success(callback);
         },
         
         update: function(site, callback) {
-            $http.post('/api/project/'+ Project.getUrl() +'/sites/update', 
-            {
+            $http.post('/api/project/'+ Project.getUrl() +'/sites/update', {
                 site: site,
             })
             .success(callback);
         },
         
         create: function(site, callback) {
-            $http.post('/api/project/'+ Project.getUrl() +'/sites/create', 
-            {
+            $http.post('/api/project/'+ Project.getUrl() +'/sites/create', {
                 site: site,
             })
             .success(callback);
@@ -47,6 +44,7 @@ angular.module('a2-sites-service', [
                 site: site.id
             });
         },
+        
         revokeToken : function(site){
             return $http.post('/api/project/'+ Project.getUrl() +'/sites/revoke-token', {
                 site: site.id
