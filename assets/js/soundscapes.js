@@ -445,7 +445,7 @@
             }
         };
     })
-    .directive('a2DrawPeakThreshold', function() {
+    .directive('a2DrawPeakThreshold', function($window) {
         var d3 = $window.d3;
         return {    
             restrict : 'E',

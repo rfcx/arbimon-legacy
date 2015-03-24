@@ -7,7 +7,7 @@ angular.module('a2-soundscapes-service', [
             var projectName = Project.getUrl();
             $http({
                 method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/' + (soundscape|0)
+                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape
             }).success(function(data) {
                 callback(data);
             });
@@ -26,7 +26,7 @@ angular.module('a2-soundscapes-service', [
             
             $http({
                 method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/' + (soundscape|0) + '/scidx',
+                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/scidx',
                 params : params
             }).success(function(data) {
                 if(callback){callback(data);}
@@ -147,6 +147,7 @@ angular.module('a2-soundscapes-service', [
                 callback(data);
             });
         },
+        // TODO change method to receive id
         findIndices: function(soundscape, callback) {
             $http.get('/api/project/'+ Project.getUrl() +'/soundscapes/' + soundscape.id + '/indices')
                 .success(callback);
