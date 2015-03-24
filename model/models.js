@@ -112,7 +112,7 @@ module.exports =
         },
 
         types: function(callback) {
-            var q = "SELECT `model_type_id`, `name` FROM `model_types` ";
+            var q = "SELECT `model_type_id`, `name` , `description` FROM `model_types` ";
 
             queryHandler(q, callback);
         },

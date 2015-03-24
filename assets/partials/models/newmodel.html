@@ -13,7 +13,8 @@
         <ui-select ng-model="data.classifier" theme="selectize" ng-disabled="disabled">
         <ui-select-match placeholder="Select a classifier...">{{$select.selected.name}}</ui-select-match>
             <ui-select-choices repeat="type in types | filter: $select.search" value="type.model_type_id">
-              {{type.name}}
+              <strong>{{type.name}}</strong>
+              <p><em><small>{{type.description}}</small></em></p>
             </ui-select-choices>
         </ui-select>
       </div>
