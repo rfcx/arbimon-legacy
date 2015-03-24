@@ -8,6 +8,7 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
 var rewire = require('rewire');
+var debug = console.log;
 
 var audioTools= rewire('../../utils/audiotool');
 var mock_childProcess = require('../mock_tools/mock_child_process');
@@ -268,10 +269,14 @@ describe('audioTools', function(){
         });
     });
     describe('splitter', function(){
-        it('should generate proper sox command to split audio with 150 secs', function() {
-            mock_childProcess.exec = sinon.stub();
-            mock_childProcess.exec.callsArgWith(1, [0, '', '']);
-            
+        beforeEach(function(){
+            mock_childProcess.running=[];
+            sinon.spy(mock_childProcess, 'exec');
+        });
+        afterEach(function(){
+            mock_childProcess.exec.restore();
+        });
+        it('should generate proper sox command to split audio with 150 secs', function(done) {            
             var outputList = [
                 './audiofile.p1.wav',
                 './audiofile.p2.wav',
@@ -282,10 +287,19 @@ describe('audioTools', function(){
             audioTools.splitter('audiofile.wav', 150, function(err, files) {
                 mock_childProcess.exec.args[0][0].should.equal(outputCommand);
                 files.should.deep.equal(outputList);
-                
-                delete mock_childProcess.exec;
+                done();
             });
+            mock_childProcess.running.length.should.equal(1);
+            mock_childProcess.running[0].send('close', 0);
             
+        });
+        it('should not split audio with duration less than 120 secs', function(done) {
+            audioTools.splitter('audiofile.wav', 119, function(err, files) {
+                mock_childProcess.exec.callCount.should.equal(0);
+                files.should.deep.equal([]);
+                done();
+            });            
+            mock_childProcess.running.length.should.equal(0);
         });
     });
 });
