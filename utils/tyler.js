@@ -26,6 +26,10 @@ function tyler(filePath, callback1) {
     
     
     lwip.open(filePath, function(err, image){
+        if(err){
+            callback1(new Error('Could not open image file ' + filePath));
+            return;
+        }
         var width = image.width();
         var height = image.height();
         
