@@ -99,20 +99,22 @@ angular.module('a2-soundscapes-service', [
         },
         addRecordingTag: function (soundscape, region, recording, tag, callback){
             var projectName = Project.getUrl();
-            var data = {tag:tag};
             return $http({
                 method : 'POST',
                 url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/'+ region + '/tags/' + recording + '/add',
-                data   : data
+                data   : { 
+                    tag: tag 
+                }
             }).success(callback);
         },
         removeRecordingTag: function (soundscape, region, recording, tag, callback){
             var projectName = Project.getUrl();
-            var data = {tag:tag};
             return $http({
                 method : 'POST',
                 url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/'+ region + '/tags/' + recording + '/remove',
-                data   : data
+                data   : { 
+                    tag: tag 
+                }
             }).success(callback);
         },
         getRegions: function(soundscape, query, callback) {
@@ -121,6 +123,7 @@ angular.module('a2-soundscapes-service', [
                 query = undefined;
             }
             var projectName = Project.getUrl();
+            
             $http({
                 method : 'GET',
                 url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions',
@@ -135,6 +138,7 @@ angular.module('a2-soundscapes-service', [
                 query = {};
             }
             var projectName = Project.getUrl();
+            
             $http({
                 method : 'GET',
                 url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/recordings/'+bbox,
