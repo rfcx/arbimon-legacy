@@ -14,7 +14,11 @@ angular.module('a2-species-service', [])
             });
         },
         search: function(query, callback) {
-            $http.get('/api/species/search/'+query)
+            $http.get('/api/species/search', {
+                params: {
+                    q: query
+                }
+            })
             .success(function(data){
                 callback(data);
             });

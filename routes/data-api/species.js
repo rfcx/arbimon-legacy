@@ -13,8 +13,8 @@ router.get('/list/:limit', function(req, res, next) {
     });
 });
 
-router.get('/search/:query', function(req, res, next) {
-    var query = req.param('query');
+router.get('/search', function(req, res, next) {
+    var query = req.query.q || '';
 
     model.species.search(query, function(err, rows){
         if(err)
