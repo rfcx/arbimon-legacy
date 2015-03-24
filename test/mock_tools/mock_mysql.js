@@ -57,5 +57,6 @@ module.exports = {
         pool: mock_mysql_pool,
         connection : mock_mysql_connection
     },
-    escape: mysql.escape.bind(mysql)
+    escape: mysql.escape.bind(mysql),
+    escapeId: mysql.escapeId.bind(mysql)
 };
