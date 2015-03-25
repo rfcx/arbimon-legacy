@@ -327,14 +327,15 @@ TrainingSets.types.roi_set = {
             },
             function crop_roi(spectro_info, next){
                 roiDuration = rdata.x2-rdata.x1;
-                px2sec = rec_stats.stats.duration    / spectro_info.width ;
+                px2sec = rec_data.duration/spectro_info.width ;
                 roiWidth = Math.ceil(roiDuration/px2sec);
                 roiBanwdwith = rdata.y2-rdata.y1;
-                max_freq = rec_stats.stats.sample_rate / 2;
+                max_freq = rec_data.sample_rate / 2;
                 px2hz  = max_freq / spectro_info.height;
                 roiHeight = Math.ceil(roiBanwdwith/px2hz);
                 roiStartX = Math.floor(rdata.x1/px2sec);
                 roiStartY = spectro_info.height-Math.floor(rdata.y2/px2hz);
+                // TODO change imagemagick for lwip
                 im.convert([
                     spec_data.path,
                     '-colorspace', 'RGB',
