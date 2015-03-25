@@ -30,9 +30,11 @@ describe('Module: a2-sites-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/sites/published')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Sites.listPublished(function(){});
+                a2Sites.listPublished(function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -41,9 +43,11 @@ describe('Module: a2-sites-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectPOST('/api/project/test/sites/import', { site: {} })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Sites.import({}, function(){});
+                a2Sites.import({}, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -52,9 +56,11 @@ describe('Module: a2-sites-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectPOST('/api/project/test/sites/update', { site: {} })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Sites.update({}, function(){});
+                a2Sites.update({}, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -63,9 +69,11 @@ describe('Module: a2-sites-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectPOST('/api/project/test/sites/create', { site: {} })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Sites.create({}, function(){});
+                a2Sites.create({}, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -74,9 +82,11 @@ describe('Module: a2-sites-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectPOST('/api/project/test/sites/delete', { site: {} })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Sites.delete({}, function(){});
+                a2Sites.delete({}, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -85,9 +95,12 @@ describe('Module: a2-sites-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectPOST('/api/project/test/sites/generate-token', { site: 1 })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Sites.generateToken({ id: 1 });
+                a2Sites.generateToken({ id: 1 })
+                    .success(function(data){
+                        expect(data).to.equal('data');
+                    });
                 
                 $httpBackend.flush();
             });
@@ -96,9 +109,12 @@ describe('Module: a2-sites-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectPOST('/api/project/test/sites/revoke-token', { site: 1 })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Sites.revokeToken({ id: 1 });
+                a2Sites.revokeToken({ id: 1 })
+                    .success(function(data){
+                        expect(data).to.equal('data');
+                    });
                 
                 $httpBackend.flush();
             });

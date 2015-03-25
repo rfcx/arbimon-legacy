@@ -38,9 +38,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/info')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                Project.getInfo(function(){});
+                Project.getInfo(function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -50,9 +52,11 @@ describe('Module: a2-project-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectPOST('/api/project/test/info/update', {})
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.updateInfo({}, function(){});
+                Project.updateInfo({}, function(err, data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -63,9 +67,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/sites')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                Project.getSites(function(){});
+                Project.getSites(function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -76,9 +82,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/classes')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                Project.getClasses(function(){});
+                Project.getClasses(function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -89,9 +97,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/search')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                Project.getRecs(function(){});
+                Project.getRecs(function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -100,14 +110,16 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/search?limit=10&offset=0&output=count&sites=test+site')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
                 Project.getRecs({
                     limit: 10,
                     offset: 0,
                     output: 'count',
                     sites: ['test site']
-                },function(){});
+                },function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -132,9 +144,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.getRecordings('', function(){});
+                Project.getRecordings('', function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -143,10 +157,12 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/test-2014-4-8')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
                 var key = 'test-2014-4-8';
-                Project.getRecordings(key, function(){});
+                Project.getRecordings(key, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -155,13 +171,15 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/test-2014-4-8?show=thumbnail-path')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
                 var key = 'test-2014-4-8';
                 var options = {
                     show:'thumbnail-path'
                 };
-                Project.getRecordings(key, options, function(){});
+                Project.getRecordings(key, options, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -172,10 +190,12 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/available/test-2014-4-8')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
                 var key = 'test-2014-4-8';
-                Project.getRecordingAvailability(key, function(){});
+                Project.getRecordingAvailability(key, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -186,9 +206,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/find/1')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.getOneRecording(1, function(){});
+                Project.getOneRecording(1, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -199,9 +221,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/info/1')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.getRecordingInfo(1, function(){});
+                Project.getRecordingInfo(1, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -212,9 +236,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/next/1')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.getNextRecording(1, function(){});
+                Project.getNextRecording(1, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -225,9 +251,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/previous/1')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.getPreviousRecording(1, function(){});
+                Project.getPreviousRecording(1, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -238,13 +266,15 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectPOST('/api/project/test/recordings/validate/1')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
                 var validation = {
                     class: "1-1",
                     val: 2
                 };
-                Project.validateRecording(1, validation, function(){});
+                Project.validateRecording(1, validation, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -255,9 +285,13 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/recordings/exists/site/1/file/recorder-2015-01-01_00-00')
-                    .respond(200, '');
+                    .respond(200, { exists: true });
                 
-                Project.recExists(1, 'recorder-2015-01-01_00-00', function(){});
+                Project.recExists(1, 'recorder-2015-01-01_00-00', function(data){
+                    /* jshint -W030 */
+                    expect(data).to.be.true;
+                    /* jshint +W030 */
+                });
                 
                 $httpBackend.flush();
             });
@@ -268,9 +302,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectPOST('/api/project/test/class/add', {})
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.addClass({}, function(){});
+                Project.addClass({}, function(err, data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -281,9 +317,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectPOST('/api/project/test/class/del', [{}])
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.removeClasses([{}], function(){});
+                Project.removeClasses([{}], function(err, data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -294,9 +332,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/users')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.getUsers(function(){});
+                Project.getUsers(function(err, data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -307,9 +347,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/roles')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.getRoles(function(){});
+                Project.getRoles(function(err, data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -320,10 +362,12 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectPOST('/api/project/test/user/add', {})
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
                 var userData = {};
-                Project.addUser(userData, function(){});
+                Project.addUser(userData, function(err, data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -334,10 +378,12 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectPOST('/api/project/test/user/del', {})
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
                 var userData = {};
-                Project.delUser(userData, function(){});
+                Project.delUser(userData, function(err, data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -348,10 +394,12 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectPOST('/api/project/test/user/role', {})
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
                 var userData = {};
-                Project.changeUserRole(userData, function(){});
+                Project.changeUserRole(userData, function(err, data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -362,9 +410,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/models')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.getModels(function(){});
+                Project.getModels(function(err, data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -375,9 +425,11 @@ describe('Module: a2-project-service', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/classifications')
-                    .respond(200, '');
+                    .respond(200, 'data');
                 
-                Project.getClassi(function(){});
+                Project.getClassi(function(err, data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });

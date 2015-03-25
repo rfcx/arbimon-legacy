@@ -7,16 +7,16 @@ angular.module('a2-playlists-service', [
     return {
         getList: function(callback) {
             $http.get('/api/project/'+projectName+'/playlists/')
-            .success(function(data) {
-                callback(data);
-            });
+                .success(function(data) {
+                    callback(data);
+                });
         },
 
         create: function(playlistParams, callback) {
             $http.post('/api/project/'+projectName+'/playlists/create', playlistParams)
-            .success(function(data) {
-                callback(data);
-            });
+                .success(function(data) {
+                    callback(data);
+                });
         },
         
         getRecordingPosition: function(playlist, recording, callback){
@@ -33,15 +33,17 @@ angular.module('a2-playlists-service', [
         //     });
         // },
         getPreviousRecording : function(playlist, recording, callback){
-            return $http.get('/api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/previous').success(function(data) {
-                callback(data);
-            });
+            return $http.get('/api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/previous')
+                .success(function(data) {
+                    callback(data);
+                });
         },
         
         getNextRecording : function(playlist, recording, callback){
-            return $http.get('/api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/next').success(function(data) {
-                callback(data);
-            });
+            return $http.get('/api/project/'+projectName+'/playlists/'+playlist+'/'+recording+'/next')
+                .success(function(data) {
+                    callback(data);
+                });
         },
         
         rename: function(playlist, callback) {

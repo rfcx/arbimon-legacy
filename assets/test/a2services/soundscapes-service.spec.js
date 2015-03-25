@@ -19,20 +19,22 @@ describe('Module: a2-soundscapes-service', function() {
             $httpBackend.verifyNoOutstandingRequest();
         });
         
-        /* jshint -W030 */
         it('should exist', function() {
+            /* jshint -W030 */
             expect(a2Soundscapes).to.exist;
+            /* jshint +W030 */
         });
-        /* jshint +W030 */
         
         describe('a2Soundscapes.get', function() {
             it('request to correct route', function() {
                 
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/1')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.get(1, function(){});
+                a2Soundscapes.get(1, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -42,9 +44,11 @@ describe('Module: a2-soundscapes-service', function() {
             it('request to correct route without params', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/1/scidx')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.getSCIdx(1, function(){});
+                a2Soundscapes.getSCIdx(1, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -52,9 +56,11 @@ describe('Module: a2-soundscapes-service', function() {
             it('request to correct route with params', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/1/scidx?param=test')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.getSCIdx(1, { param: 'test'}, function(){});
+                a2Soundscapes.getSCIdx(1, { param: 'test'}, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -64,18 +70,22 @@ describe('Module: a2-soundscapes-service', function() {
             it('request to correct route without params', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.getList(function(){});
+                a2Soundscapes.getList(function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
             it('request to correct route with params', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/?param=test')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.getList({ param: 'test' }, function(){});
+                a2Soundscapes.getList({ param: 'test' }, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -85,9 +95,11 @@ describe('Module: a2-soundscapes-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectPOST('/api/project/test/soundscapes/1/scale', { param: 'test' })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.setVisualScale(1, { param: 'test' }, function(){});
+                a2Soundscapes.setVisualScale(1, { param: 'test' }, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -100,9 +112,11 @@ describe('Module: a2-soundscapes-service', function() {
                         param: 'test', 
                         bbox: 'bbox'
                     })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.addRegion(1, 'bbox', { param: 'test' }, function(){});
+                a2Soundscapes.addRegion(1, 'bbox', { param: 'test' }, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -114,9 +128,11 @@ describe('Module: a2-soundscapes-service', function() {
                     .expectPOST('/api/project/test/soundscapes/1/regions/2/sample', { 
                         param: 'test'
                     })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.sampleRegion(1, 2, { param: 'test' }, function(){});
+                a2Soundscapes.sampleRegion(1, 2, { param: 'test' }, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -126,9 +142,11 @@ describe('Module: a2-soundscapes-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/1/regions/2')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.getRegion(1, 2, function(){});
+                a2Soundscapes.getRegion(1, 2, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -138,9 +156,11 @@ describe('Module: a2-soundscapes-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/1/regions/2/tags/3')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.getRecordingTags(1, 2, 3, function(){});
+                a2Soundscapes.getRecordingTags(1, 2, 3, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -152,9 +172,11 @@ describe('Module: a2-soundscapes-service', function() {
                     .expectPOST('/api/project/test/soundscapes/1/regions/2/tags/3/add', {
                         tag: 'test-tag'
                     })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.addRecordingTag(1, 2, 3, 'test-tag', function(){});
+                a2Soundscapes.addRecordingTag(1, 2, 3, 'test-tag', function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -166,9 +188,11 @@ describe('Module: a2-soundscapes-service', function() {
                     .expectPOST('/api/project/test/soundscapes/1/regions/2/tags/3/remove', {
                         tag: 'test-tag'
                     })
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.removeRecordingTag(1, 2, 3, 'test-tag', function(){});
+                a2Soundscapes.removeRecordingTag(1, 2, 3, 'test-tag', function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -178,18 +202,22 @@ describe('Module: a2-soundscapes-service', function() {
             it('request to correct route without params', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/1/regions')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.getRegions(1, function(){});
+                a2Soundscapes.getRegions(1, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
             it('request to correct route with params', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/1/regions?param=test')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.getRegions(1, { param: 'test' }, function(){});
+                a2Soundscapes.getRegions(1, { param: 'test' }, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -199,18 +227,22 @@ describe('Module: a2-soundscapes-service', function() {
             it('request to correct route without params', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/1/recordings/foo')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.getRecordings(1, 'foo', function(){});
+                a2Soundscapes.getRecordings(1, 'foo', function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
             it('request to correct route with params', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/1/recordings/foo?param=test')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.getRecordings(1, 'foo', { param: 'test' }, function(){});
+                a2Soundscapes.getRecordings(1, 'foo', { param: 'test' }, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
@@ -220,9 +252,11 @@ describe('Module: a2-soundscapes-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectGET('/api/project/test/soundscapes/1/indices')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                a2Soundscapes.findIndices({ id: 1 }, function(){});
+                a2Soundscapes.findIndices({ id: 1 }, function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });

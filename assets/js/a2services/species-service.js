@@ -8,10 +8,10 @@ angular.module('a2-species-service', [])
                 return callback(species);
 
             $http.get('/api/species/list/100')
-            .success(function(data) {
-                species = data;
-                callback(species);
-            });
+                .success(function(data) {
+                    species = data;
+                    callback(species);
+                });
         },
         search: function(query, callback) {
             $http.get('/api/species/search', {

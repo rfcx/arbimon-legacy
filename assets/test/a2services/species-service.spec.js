@@ -53,9 +53,11 @@ describe('Module: a2-species-service', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectGET('/api/species/search?q=coqui')
-                    .respond(200, '');
+                    .respond(200, 'data');
                     
-                Species.search('coqui', function(){});
+                Species.search('coqui', function(data){
+                    expect(data).to.equal('data');
+                });
                 
                 $httpBackend.flush();
             });
