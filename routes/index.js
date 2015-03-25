@@ -31,7 +31,7 @@ router.use(function(req, res, next) {
     res.render('get_fragment_hack.ejs');
 });
 
-
+// TODO[gio]:: this route is unused, since / gets handled in login, maybe delete?
 router.get('/', function(req, res) {
     res.redirect('/home');
 });
