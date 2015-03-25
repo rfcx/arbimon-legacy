@@ -1,3 +1,4 @@
+var rewire=require('rewire');
 
 var pre_wire = function pre_wire(import_module, mockups){
     var real_ones = {}, res, m;
@@ -7,7 +8,8 @@ var pre_wire = function pre_wire(import_module, mockups){
     for(m in mockups){
         if(!globals[m]){
             res = require.resolve(m);
-            real_ones[res] = require(m);
+            require(m);
+            real_ones[res] = rewire(m);
             require.cache[res].exports = mockups[m];
         }
     }
@@ -17,7 +19,7 @@ var pre_wire = function pre_wire(import_module, mockups){
             global[m] = mockups[m];
         }
     }
-    var mod = require(import_module);
+    var mod = rewire(import_module);
     for(res in real_ones){
         require.cache[res].exports = real_ones[res];
     }

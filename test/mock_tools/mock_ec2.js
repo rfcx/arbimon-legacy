@@ -7,7 +7,7 @@ var mock_ec2 = function(){
 
 mock_ec2.prototype = {
     startInstances: function(params, callback){
-// debug("startInstances", params);
+        // debug("startInstances", params);
         var i, e;
         var instances = [], self=this;
         var results={StartingInstances:[{Instances:instances}]};
