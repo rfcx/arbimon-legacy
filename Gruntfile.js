@@ -58,6 +58,23 @@ module.exports = function(grunt) {
             all:['assets/js/**/*.js'],
         },
         
+        //backend documentation
+        jsdoc : {
+            main: {
+                src: [
+                    'app.js',
+                    'routes/**/*.js',
+                    'model/**/*.js',
+                    'utils/**/*.js',
+                    'config/**/*.js'
+                ],
+                options: {
+                    destination: 'docs/backend',
+                    readme: './README.md'
+                }
+            }
+        },
+        
         copy: {
             bootstrap: {
                 expand: true,
@@ -367,6 +384,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-lesslint');
     grunt.loadNpmTasks('grunt-ngdocs');
     grunt.loadNpmTasks('grunt-ng-annotate');
+    grunt.loadNpmTasks('grunt-jsdoc');
     
     grunt.registerTask('angular-depends', ['angular_architecture_graph']);
     grunt.registerTask('test-frontend', ['jshint:frontEnd', 'html2js:dev', 'karma:unit']);
