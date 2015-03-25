@@ -68,7 +68,8 @@ angular.module('a2-training-sets-service', ['a2-project-service'])
                     callback(data);
                 });
         },
-        removeRoi: function(roi_id,training_set, callback) {
+        // TODO chance use of training_set.name to training_set_id, traing sets name are not url safe
+        removeRoi: function(roi_id, training_set, callback) {
             var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/'+training_set.name+'/remove-roi/'+roi_id)
                 .success(function(data) {
