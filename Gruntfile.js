@@ -356,6 +356,12 @@ module.exports = function(grunt) {
             }
         },
         
+        mocha_istanbul: {
+            coverage: {
+                src: 'test',
+            },
+        },
+        
         angular_architecture_graph: {
             diagram: {
                 files: {
@@ -385,10 +391,11 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-ngdocs');
     grunt.loadNpmTasks('grunt-ng-annotate');
     grunt.loadNpmTasks('grunt-jsdoc');
+    grunt.loadNpmTasks('grunt-mocha-istanbul');
     
     grunt.registerTask('angular-depends', ['angular_architecture_graph']);
     grunt.registerTask('test-frontend', ['jshint:frontEnd', 'html2js:dev', 'karma:unit']);
-    grunt.registerTask('test-backend', ['jshint:backEnd']);
+    grunt.registerTask('test-backend', ['jshint:backEnd', 'mocha_istanbul']);
     grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'ngAnnotate:main']);
     grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'ngAnnotate:main', 'uglify']);
     grunt.registerTask('server', ['express:dev', 'watch']);
