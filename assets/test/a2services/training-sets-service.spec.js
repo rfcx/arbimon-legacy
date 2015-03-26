@@ -7,7 +7,7 @@ describe('Module: a2-training-sets-service', function() {
         
     describe('a2TrainingSets', function() { 
         var $httpBackend;
-        var a2Sites;
+        var a2TrainingSets;
         
         beforeEach(inject(function($injector, _a2TrainingSets_) {
             $httpBackend = $injector.get('$httpBackend');

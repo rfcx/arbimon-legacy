@@ -4,7 +4,7 @@ angular.module('audiodata.recordings', [
     'ui.bootstrap',
     'humane'
 ])
-.controller('RecsCtrl', function($scope, Project, $http, $modal, a2Playlists, notify) {
+.controller('RecsCtrl', function($scope, Project, $http, $modal, notify) {
     $scope.loading = true;
     
     
@@ -36,7 +36,6 @@ angular.module('audiodata.recordings', [
         
         return params;
     };
-    
     var searchRecs = function(output) {
         var params = readFilters();
         params.limit = $scope.limitPerPage;
@@ -64,49 +63,6 @@ angular.module('audiodata.recordings', [
             }
         });
     };
-    
-    $scope.params = {};
-    $scope.sites = [];
-    $scope.years = [];
-    $scope.loading = true;
-    $scope.currentPage  = 1;
-    $scope.limitPerPage = 10;
-    $scope.days = d3.range(1,32);
-    $scope.months =  d3.range(12).map(function(month) {
-        return { value: month, string: moment().month(month).format('MMM') };
-    });
-    $scope.hours = d3.range(24).map(function(hour) {
-        return { value: hour, string: moment().hour(hour).minute(0).format('HH:mm') };
-    });
-    
-    Project.getSites(function(data){
-        $scope.sites = data;
-    });
-    
-    $scope.fields = [
-        { name: 'Site', key: 'site' },
-        { name: 'Time', key: 'datetime' },
-        { name: 'Recorder', key: 'recorder' },
-        { name: 'Microphone', key: 'mic' },
-        { name: 'Software ver', key: 'version' },
-        { name: 'Filename', key: 'file' },
-    ];
-    
-    searchRecs('count');
-    
-    $scope.$watch(function(scope) {
-        return [
-            $scope.currentPage,
-            $scope.limitPerPage
-        ];
-    }, 
-    function(){
-        searchRecs();
-    }, 
-    true);
-    
-    searchRecs('date_range');
-    
     $scope.sortRecs = function(sortKey, reverse) {
         $scope.sortKey = sortKey;
         $scope.reverse = reverse;
@@ -123,7 +79,6 @@ angular.module('audiodata.recordings', [
         searchRecs('count');
         searchRecs();
     };
-    
     $scope.createPlaylist = function() {
         var listParams = readFilters();
         
@@ -144,7 +99,6 @@ angular.module('audiodata.recordings', [
             notify.log('Playlist created');
         });
     };
-    
     $scope.del = function() {
             
         var recs = $scope.checked.filter(function(rec){ 
@@ -172,7 +126,7 @@ angular.module('audiodata.recordings', [
         msg = msg.concat(sites);
         msg.push("Are you sure??");
         
-        console.log(msg);
+        // console.log(msg);
         
         $scope.popup = {
             messages: msg,
@@ -203,6 +157,46 @@ angular.module('audiodata.recordings', [
                 });
         });
     };
+    $scope.params = {};
+    $scope.sites = [];
+    $scope.years = [];
+    $scope.loading = true;
+    $scope.currentPage  = 1;
+    $scope.limitPerPage = 10;
+    $scope.days = d3.range(1,32);
+    $scope.months =  d3.range(12).map(function(month) {
+        return { value: month, string: moment().month(month).format('MMM') };
+    });
+    $scope.hours = d3.range(24).map(function(hour) {
+        return { value: hour, string: moment().hour(hour).minute(0).format('HH:mm') };
+    });
+    Project.getSites(function(data){
+        $scope.sites = data;
+    });
+    $scope.fields = [
+        { name: 'Site', key: 'site' },
+        { name: 'Time', key: 'datetime' },
+        { name: 'Recorder', key: 'recorder' },
+        { name: 'Microphone', key: 'mic' },
+        { name: 'Software ver', key: 'version' },
+        { name: 'Filename', key: 'file' },
+    ];
+    
+    searchRecs('count');
+    searchRecs('date_range');
+    
+    $scope.$watch(function(scope) {
+        return [
+            $scope.currentPage,
+            $scope.limitPerPage
+        ];
+    }, 
+    function(){
+        searchRecs();
+    }, 
+    true);
+    
+    
 })
 .controller('SavePlaylistModalInstanceCtrl', function($scope, $modalInstance, a2Playlists, listParams) {
     $scope.savePlaylist = function(name) {

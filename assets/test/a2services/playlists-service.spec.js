@@ -7,7 +7,7 @@ describe('Module: a2-playlists-service', function() {
         
     describe('a2Playlists', function() { 
         var $httpBackend;
-        var a2Sites;
+        var a2Playlists;
         
         beforeEach(inject(function($injector, _a2Playlists_) {
             $httpBackend = $injector.get('$httpBackend');

@@ -1,4 +1,5 @@
 angular.module('a2services', [
+    'a2-classi-service',
     'a2-playlists-service',
     'a2-project-service',
     'a2-sites-service',

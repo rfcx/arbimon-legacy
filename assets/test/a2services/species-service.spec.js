@@ -5,7 +5,7 @@ describe('Module: a2-species-service', function() {
         
     describe('Species', function() { 
         var $httpBackend;
-        var a2Soundscapes;
+        var Species;
         
         beforeEach(inject(function($injector, _Species_) {
             $httpBackend = $injector.get('$httpBackend');
