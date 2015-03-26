@@ -273,7 +273,7 @@ module.exports = function(grunt) {
                 files: [
                     'assets/js/**/*.js'
                 ],
-                tasks: ['concat:dev']
+                tasks: ['ngAnnotate:main']
             },
             html2js: {
                 files: [

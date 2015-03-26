@@ -175,22 +175,8 @@ angular.module('a2-url-update-service', [])
 ;
 
 
-angular.module('a2Infotags', [])
-.factory('InfoTagService', function($location, $http){
-    return {
-        getSpecies: function(species_id, callback){
-            $http.get('/api/species/'+species_id).success(function(data) {
-                callback(data);
-            });
-        },
-        getSongtype: function(songtype_id, callback) {
-            $http.get('/api/songtypes/'+songtype_id).success(function(data) {
-                callback(data);
-            });
-        }
-    };
-})
-.directive('a2Species', function (InfoTagService, $timeout) {
+angular.module('a2Infotags', ['a2-species-service'])
+.directive('a2Species', function (Species, $timeout) {
     return {
         restrict : 'E',
         scope : {
@@ -201,7 +187,7 @@ angular.module('a2Infotags', [])
             $scope.$watch('species', function(newVal, oldVal){
                 $scope.data = null;
                 if(newVal){
-                    InfoTagService.getSpecies(newVal, function(data){
+                    Species.findById(newVal, function(data){
                         $timeout(function(){
                             $scope.data = data;
                         });
@@ -211,7 +197,7 @@ angular.module('a2Infotags', [])
         }
     };
 })
-.directive('a2Songtype', function (InfoTagService, $timeout) {
+.directive('a2Songtype', function (Songtypes, $timeout) {
     return {
         restrict : 'E',
         scope : {
@@ -222,7 +208,7 @@ angular.module('a2Infotags', [])
             $scope.$watch('songtype', function(newVal, oldVal){
                 $scope.data = null;
                 if(newVal){
-                    InfoTagService.getSongtype(newVal, function(data){
+                    Songtypes.findById(newVal, function(data){
                         $timeout(function(){
                             $scope.data = data;
                         });

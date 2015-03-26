@@ -62,15 +62,48 @@ describe('Module: a2-species-service', function() {
                 $httpBackend.flush();
             });
         });
+        
+        describe('Species.findById', function() {
+            it('request to correct route', function() {
+                $httpBackend
+                    .expectGET('/api/species/1')
+                    .respond(200, 'data');
+                    
+                Species.findById(1, function(data){
+                    expect(data).to.equal('data');
+                });
+                
+                $httpBackend.flush();
+            });
+        });
     });
     
     describe('Songtypes', function() { 
         var $httpBackend;
         var a2Soundscapes;
+        var songList;
         
         beforeEach(inject(function($injector, _Songtypes_) {
             $httpBackend = $injector.get('$httpBackend');
             Songtypes = _Songtypes_;
+            
+            songList = [
+                {
+                    id: 1,
+                    name: "Song 1",
+                    description: "Description 1"
+                },
+                {
+                    id: 2,
+                    name: "Song 2",
+                    description: "Description 2"
+                },
+                {
+                    id: 3,
+                    name: "Song 3",
+                    description: "Description 3"
+                },
+            ];
         }));
         
         afterEach(function() {
@@ -87,12 +120,6 @@ describe('Module: a2-species-service', function() {
         describe('Songtypes.get', function() {
             it('request to correct route and cache list after first request', function() {
                 
-                var songList = [
-                    'songtype1',
-                    'songtype2',
-                    'songtype3',
-                ];
-                
                 $httpBackend
                     .expectGET('/api/songtypes/all')
                     .respond(200, songList);
@@ -106,6 +133,24 @@ describe('Module: a2-species-service', function() {
                 //test cache
                 Songtypes.get(function(songs){
                     expect(songs).to.deep.equal(songList);
+                });
+            });
+        });
+        
+        describe('Songtypes.findById', function() {
+            it('request to correct route without cache and after return proper data from cache', function() {
+                $httpBackend
+                    .expectGET('/api/songtypes/all')
+                    .respond(200, songList);
+                    
+                Songtypes.findById(1, function(songs){
+                    expect(songs).to.deep.equal(songList[0]);
+                });
+                
+                $httpBackend.flush();
+                
+                Songtypes.findById(2, function(songs){
+                    expect(songs).to.deep.equal(songList[1]);
                 });
             });
         });
