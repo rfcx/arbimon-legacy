@@ -11,16 +11,14 @@ router.get('/:projecturl?/', function(req, res, next)
     debug('project_url', project_url);
     
     model.projects.findByUrl(project_url ,
-        function(err,rows)
-        {
+        function(err,rows) {
             if(err) return next(err);
 
             if(!rows.length) return next();
 
             var project = rows[0];
 
-            if(project.is_enabled)
-            {
+            if(project.is_enabled){
                 model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
 
                     if(project.is_private && !rows.length && req.session.user.isSuper === 0)
@@ -42,14 +40,8 @@ router.get('/:projecturl?/', function(req, res, next)
                     return res.render('app', { project: req.project, user: req.session.user });
 
                 });
-            }
-            else
-            {
-                res.send(
-                    '<html><head><title>Project ' + project + 
-                    ' is disabled</title></head><body>Your project ' + project + 
-                    ' has been disabled.</body></html>'
-                );
+            } else {
+                return res.render('project_disabled', { project: project});
             }
         }
     );

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html ng-app="reset-password">
+
+<head>
+    <% include head %>
+    <title>ARBIMON II - Project <%= project %> is disabled</title>
+</head>
+
+<body ng-controller="ResetPassCtrl">
+    <div class="container">
+        <div class="login-top">
+            <a href="/"><img src="/images/logo.svg"></a>
+        </div>
+    </div>
+    <div class="login-banner">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-offset-3 col-sm-6 registration">
+                    <div class="panel-body">
+                        Your project <%= project %> has been disabled.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

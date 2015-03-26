@@ -11,7 +11,7 @@ var validator = require('validator');
 var request = require('request');
 var ejs = require('ejs');
 var fs = require('fs');
-
+var dd = console.log;
 
 var config = require('../config');
 var model = require('../model/');
@@ -135,6 +135,7 @@ router.post('/login', function(req, res, next) {
             }
             
             if(tries >=  permitedRetries || (user && (user.disabled_until > now) ) ) {
+                // TODO:: esto dice una hora pero no necesariamente es una, o si?
                 return res.json({ error: "Too many tries, try again in 1 hour. If you think this is wrong contact us." });
             }
             
@@ -285,7 +286,7 @@ router.get('/activate/:hash', function(req, res, next) {
         }
         
         if(data[0].expires < now) {
-            model.users.removeRequest(data[0].support_request_id, function(error, info){
+            model.users.removeRequest(data[0].support_request_id, function(err, info){
                 if(err) return next(err);
                 
                 res.render('activate', {
@@ -307,7 +308,7 @@ router.get('/activate/:hash', function(req, res, next) {
         model.users.insert(userInfo, function (err,datas) {
             if(err) return next(err);
             
-            model.users.removeRequest(data[0].support_request_id, function(error, info){
+            model.users.removeRequest(data[0].support_request_id, function(err, info){
                 if(err) return next(err);
                 
                 res.render('activate',{
@@ -327,7 +328,7 @@ router.post('/register', function(req, res, next) {
     var subscribeToNewsletter = req.body.newsletter;
     
     if(!user || !captchaResponse) {
-        return res.status(400).json({ error: "missing paramenters" });
+        return res.status(400).json({ error: "missing parameters" });
     }
     
     async.waterfall([
@@ -508,7 +509,7 @@ router.post('/forgot_request', function(req, res, next) {
         };
         
         transport.sendMail(mailOptions, function(error, info){
-            if(error) return next(err);
+            if(error) return next(error);
             
             model.users.newPasswordResetRequest(user.user_id, hash, function(err, results) {
                 if(err) return next(err);
