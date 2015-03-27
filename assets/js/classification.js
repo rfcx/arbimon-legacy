@@ -297,7 +297,7 @@
                         
                         recVect.forEach(function(value) {
                             value = parseFloat(value);
-                        })
+                        });
 
                         var maxVal = Math.max.apply(null,recVect);
                         if (typeof $scope.th === 'number') {
