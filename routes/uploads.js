@@ -28,26 +28,20 @@ var deleteFile = function(filename) {
     });
 };
 
-/**
-Process recordings uploaded to the system
-
-@method processUpload
-@param upload {Object} - 
-    {
-        metadata: { 
-            recorder: 'recorder model', 
-            mic: 'microphone model', 
-            sver: 'software version' 
-        },
-        FFI: fileformat info object return by utils/formatParse()
-        name: 'original filename',
-        path: 'path uploaded file',
-        projectId: PROJECT ID,
-        siteId: SITE ID,
-        userId: USER ID
-    }
- 
-**/
+/** Process recordings uploaded to the system
+ * @method processUpload
+ * @param upload {Object} object containing upload info
+ * @param upload.metadata {Object} recording metadata
+ * @param upload.metadata.recorder {String} recorder model
+ * @param upload.metadata.mic {String} microphone model used in the recorder
+ * @param upload.metadata.sver {String} recorder's software version
+ * @param upload.FFI {String} fileformat info object returned by utils/formatParse()
+ * @param upload.name {String} original filename
+ * @param upload.path {String} path uploaded file
+ * @param upload.projectId {String} project id
+ * @param upload.siteId {String} site id
+ * @param upload.userId {String} user id
+ **/
 var processUpload = function(upload, done) {
     var start = new Date();
     debug("processUpload:", upload.name);

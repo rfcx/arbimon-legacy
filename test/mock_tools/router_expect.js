@@ -15,7 +15,7 @@ var router_expect = function(router, defaults){
 };
 
 router_expect.prototype = {
-    when: function(url, expectations){
+    when: function(url, expectations, scope){
         var request = lodash.cloneDeep(this.defaults);
         if(typeof url == 'string'){
             request.url = url;
@@ -23,6 +23,11 @@ router_expect.prototype = {
             lodash.merge(request, url);
         }
         var response = new expected_response(request, expectations);
+        
+        if(scope){
+            scope.req = request;
+            scope.res = response;
+        }
         
         this.router.handle(request, response, response.next.bind(response));
         
@@ -43,6 +48,7 @@ var make_expect_fn = function(name){
         } else {
             throw new Error("Unexpected call to res."+name+"("+args.map(JSON.stringify).join(", ")+")");
         }
+        return this;
     };
 };
 
@@ -55,7 +61,7 @@ var expected_response = function(request, expectations){
 };
 
 var expect_functions = {};
-["redirect","render","next"].forEach(function(fn){
+["redirect","render","next","send","status","sendStatus","json"].forEach(function(fn){
     expect_functions[fn] = make_expect_fn(fn);
 });
 

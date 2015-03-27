@@ -5,6 +5,19 @@ var mock_s3 = function(){
 mock_s3.buckets={};
 
 mock_s3.prototype = {
+    putObject: function(params, callback){
+        var bucket = mock_s3.buckets[params.Bucket];
+        if(!bucket){
+            setImmediate(callback, new Error("bucket " + params.Bucket + " not in cache."));
+        } else {
+            bucket[params.Key] = {
+                Key: params.Key,
+                ACL: params.ACL,
+                Body: params.Body
+            };
+            setImmediate(callback, null, {Message:"Object added OK"});
+        }
+    },
     deleteObjects: function(params, callback){
         var bucket = mock_s3.buckets[params.Bucket];
         if(!bucket){
