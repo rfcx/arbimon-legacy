@@ -6,18 +6,15 @@ angular.module('a2-project-service', [])
         var url = nrm ? nrm[1] : ''; 
 
         return {
-
             getUrl: function(){
                 return url;
             },
-            
             getInfo: function(callback) {
                 $http.get('/api/project/'+url+'/info')
                 .success(function(data) {
                     callback(data);
                 });
             },
-
             updateInfo: function(info, callback) {
                 $http.post('/api/project/'+url+'/info/update', info)
                 .success(function(data){
@@ -27,21 +24,18 @@ angular.module('a2-project-service', [])
                     callback(err);
                 });
             },
-
             getSites: function(callback) {
                 $http.get('/api/project/'+url+'/sites')
                 .success(function(data) {
                     callback(data);
                 });
             },
-
             getClasses: function(callback) {
                 $http.get('/api/project/'+url+'/classes')
                 .success(function(data) {
                     callback(data);
                 });
             },
-            
             // TODO should rename getRecs to findRecs
             getRecs: function(query, callback) { 
                 if(typeof query === "function") {
@@ -56,14 +50,12 @@ angular.module('a2-project-service', [])
                         callback(data);
                     });
             },
-
             getRecTotalQty: function(callback) {
                 $http.get('/api/project/'+url+'/recordings/count')
                 .success(function(data) {
                     callback(data.count);
                 });
             },
-
             getRecordings: function(key, options, callback) {
                 if(options instanceof Function){
                     callback = options;
@@ -76,56 +68,48 @@ angular.module('a2-project-service', [])
                         callback(data);
                     });
             },
-            
             getRecordingAvailability: function(key, callback) {
                 $http.get('/api/project/'+url+'/recordings/available/'+key)
                     .success(function(data) {
                         callback(data);
                     });
             },
-            
             getOneRecording: function(rec_id, callback) {
                 $http.get('/api/project/'+url+'/recordings/find/'+rec_id)
                     .success(function(data) {
                         callback(data);
                     });
             },
-            
             getRecordingInfo: function(rec_id, callback) {
                 $http.get('/api/project/'+url+'/recordings/info/'+rec_id)
                     .success(function(data) {
                         callback(data);
                     });
             },
-            
             getNextRecording: function(rec_id, callback) {
                 $http.get('/api/project/'+url+'/recordings/next/'+rec_id)
                     .success(function(data) {
                         callback(data);
                     });
             },
-            
             getPreviousRecording: function(rec_id, callback) {
                 $http.get('/api/project/'+url+'/recordings/previous/'+rec_id)
                     .success(function(data) {
                         callback(data);
                     });
             },
-            
             validateRecording: function(rec_id, validation, callback){
                 $http.post('/api/project/'+url+'/recordings/validate/'+rec_id, validation)
                     .success(function(data) {
                         callback(data);
                     });
             },
-            
             recExists: function(site_id, filename, callback) {
                 $http.get('/api/project/'+url+'/recordings/exists/site/'+ site_id +'/file/' + filename)
                     .success(function(data) {
                         callback(data.exists);
                     });
             },
-            
             addClass: function(projectClass, callback) {
                 $http.post('/api/project/'+url+'/class/add', projectClass)
                     .success(function(data){
@@ -135,7 +119,6 @@ angular.module('a2-project-service', [])
                         callback(err);
                     });
             },
-            
             removeClasses: function(projectClasses, callback) {
                 $http.post('/api/project/'+url+'/class/del', projectClasses)
                     .success(function(data){
@@ -145,7 +128,6 @@ angular.module('a2-project-service', [])
                         callback(err);
                     });
             },
-            
             getUsers: function(callback) {
                 $http.get('/api/project/'+url+'/users')
                     .success(function(data){
@@ -155,7 +137,6 @@ angular.module('a2-project-service', [])
                         callback(err);
                     });
             },
-            
             getRoles: function(callback) {
                 $http.get('/api/project/'+url+'/roles')
                     .success(function(data){
@@ -165,7 +146,6 @@ angular.module('a2-project-service', [])
                         callback(err);
                     });
             },
-            
             addUser: function(data, callback){
                 $http.post('/api/project/'+url+'/user/add', data)
                     .success(function(response){
@@ -175,7 +155,6 @@ angular.module('a2-project-service', [])
                         callback(err);
                     });
             },
-            
             // TODO should rename delUser to removeUser
             delUser: function(data, callback){
                 $http.post('/api/project/'+url+'/user/del', data)
@@ -186,7 +165,6 @@ angular.module('a2-project-service', [])
                     callback(err);
                 });
             },
-            
             changeUserRole: function(data, callback){
                 $http.post('/api/project/'+url+'/user/role', data)
                 .success(function(response){
@@ -196,7 +174,6 @@ angular.module('a2-project-service', [])
                     callback(err);
                 });
             },
-
             getModels: function(callback) {
                 $http.get('/api/project/'+url+'/models')
                 .success(function(response){
@@ -206,7 +183,6 @@ angular.module('a2-project-service', [])
                     callback(err);
                 });
             },
-            
             getClassi: function(callback) {
                 $http.get('/api/project/'+url+'/classifications')
                 .success(function(response){
@@ -216,12 +192,15 @@ angular.module('a2-project-service', [])
                     callback(err);
                 });
             },
-
             validationsCount: function(callback) {
                 $http.get('/api/project/'+url+'/validations/count')
                 .success(function(response){
                     callback(response.count);
                 });
+            },
+            validationBySpeciesSong: function(speciesId, songtypeId, callback) {
+                $http.get( '/api/project/' + url + '/validations/' + speciesId + "/" + songtypeId)
+                    .success(callback);
             }
         };
     })

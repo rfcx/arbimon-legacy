@@ -362,7 +362,7 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
     );
 });
 
-router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, next) {
+router.get('/project/:projectUrl/models/:modelId/validation-list', function(req, res, next) {
 
     if(!req.params.modelId)
         return res.json({ error: 'missing values' });
@@ -435,8 +435,7 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
     
             });
         }
-        else
-        {
+        else {
             res.json({"err": "Error fetching validation information."});
         }
     });
