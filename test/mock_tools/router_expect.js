@@ -9,6 +9,8 @@ var router_expect = function(router, defaults){
     this.router = router;
     this.defaults = lodash.merge({
         _params:{},
+        query:{},
+        params:{},
         param: function(p){return this._params[p];},
         method: 'GET'
     }, defaults || {});
@@ -46,7 +48,7 @@ var make_expect_fn = function(name){
                 exp.apply(null, args);
             }
         } else {
-            throw new Error("Unexpected call to res."+name+"("+args.map(JSON.stringify).join(", ")+")");
+            throw args.length > 0 && args[0] instanceof Error ? args[0] : new Error("Unexpected call to res."+name+"("+args.map(JSON.stringify).join(", ")+")");
         }
         return this;
     };
@@ -61,7 +63,7 @@ var expected_response = function(request, expectations){
 };
 
 var expect_functions = {};
-["redirect","render","next","send","status","sendStatus","json"].forEach(function(fn){
+["redirect","render","next","send","status","sendStatus","json", "write"].forEach(function(fn){
     expect_functions[fn] = make_expect_fn(fn);
 });
 
