@@ -110,7 +110,7 @@ var processUpload = function(upload, done) {
             debug('updateAudioInfo:', upload.name);
             audioTools.info(outFile, function(code, info) {
                 if(code !== 0) {
-                    return res.status(500).json({ error: "error getting audio file info" });
+                    return callback(new Error("error getting audio file info"));
                 }
                 
                 upload.info = info;
@@ -375,7 +375,10 @@ var receiveUpload = function(req, res, next) {
                         filename: upload.FFI.filename
                     },
                     function(err, exists) {
-                        if(err) next(err);
+                        if(err){ 
+                            next(err);
+                            return;
+                        }
                         
                         if(exists) {
                             deleteFile(upload.path);
@@ -406,7 +409,9 @@ var receiveUpload = function(req, res, next) {
                     upload.info = info;
                     console.log(upload);
                     
-                    if(info.duration >= 120) {
+                    if(info.duration >= 3600) {
+                        return res.status(403).json({ error: "recording is too long, please contact support" });
+                    } else if(info.duration >= 120) {
                         audioTools.splitter(upload.path, info.duration, function(err, files) {
                             var i = 0;
                             async.eachSeries(files, function(f, callback) {
@@ -429,9 +434,6 @@ var receiveUpload = function(req, res, next) {
                                 res.status(202).send("upload done!");
                             });
                         });
-                    }
-                    else if(info.duration > 3600) {
-                        return res.status(403).json({ error: "recording is too long, please contact support" });
                     }
                     else {
                         uploadQueue.push(upload);
