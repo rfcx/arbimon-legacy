@@ -8,7 +8,7 @@
     
     var template_root = '/partials/soundscapes/';
     
-    soundscapes.controller('SoundscapesCtrl' , function ($scope, $http, $modal, $filter, Project, JobsData, 
+    soundscapes.controller('SoundscapesCtrl' , function ($scope, $modal, $filter, Project, JobsData, 
             ngTableParams, a2Playlists, $location, a2Soundscapes, notify) 
         {
             $scope.successInfo = "";
@@ -67,34 +67,26 @@
             
             
             $scope.loadSoundscapes = function() {
-                $http.get('/api/project/'+Project.getUrl()+'/soundscapes/details')
-                .success(
-                    function(data) 
-                    {
-                        $scope.soundscapesOriginal = data;
-                        $scope.soundscapesData = data;
-                        $scope.infoInfo = "";
-                        $scope.showInfo = false;
-                        $scope.loading = false;
+                a2Soundscapes.getList2(function(data) {
+                    $scope.soundscapesOriginal = data;
+                    $scope.soundscapesData = data;
+                    $scope.infoInfo = "";
+                    $scope.showInfo = false;
+                    $scope.loading = false;
 
-                        $scope.infopanedata = "";
-                        if(data.length > 0)
-                        {
-                            if(!$scope.tableParams) {
-                                initTable();
-                            }
-                            else {
-                                $scope.tableParams.reload();
-                            }
+                    $scope.infopanedata = "";
+                    
+                    if(data.length > 0) {
+                        if(!$scope.tableParams) {
+                            initTable();
                         }
-                        else 
-                        {
-                            $scope.infopanedata = "No soundscapes found.";
+                        else {
+                            $scope.tableParams.reload();
                         }
                     }
-                )
-                .error(function() {
-                    notify.error("Error Communicating With Server");
+                    else {
+                        $scope.infopanedata = "No soundscapes found.";
+                    }
                 });
             };
             $scope.loadSoundscapes();
@@ -221,19 +213,15 @@
             };
             
         })
-    .controller('DeleteSoundscapeInstanceCtrl',function($scope, $modalInstance, $http, name, id, projectData) {
+    .controller('DeleteSoundscapeInstanceCtrl',function($scope, $modalInstance, a2Soundscapes, name, id, projectData) {
             $scope.name = name;
             $scope.id = id;
             $scope.projectData = projectData;
             var url = $scope.projectData.url;
             $scope.ok = function() {
-                $http.get('/api/project/' + url + '/soundscapes/' + id + "/delete")
-                    .success(function(data) {
-                        $modalInstance.close(data);
-                    })
-                    .error(function() {
-                        notify.error("Error Communicating With Server");
-                    });
+                a2Soundscapes.delete(id, function(data) {
+                    $modalInstance.close(data);
+                });
             };
 
             $scope.cancel = function() {
@@ -241,7 +229,7 @@
             };
 
         })
-    .controller('CreateNewSoundscapeInstanceCtrl', function($scope, $modalInstance, $http, $timeout, projectData, playlists) {
+    .controller('CreateNewSoundscapeInstanceCtrl', function($scope, $modalInstance, a2Soundscapes, $timeout, projectData, playlists) {
         
             $scope.projectData = projectData;
             $scope.playlists = playlists;
@@ -267,46 +255,34 @@
                 
                 var url = $scope.projectData.url;
                 $scope.nameMsg = '';        
-                $http.post('/api/project/'+url+'/soundscape/new', 
-                    {
-                        n:$scope.datasubmit.name,
-                        p:$scope.datasubmit.playlist,
-                        a:$scope.datasubmit.aggregation,
-                        t:$scope.datasubmit.threshold,
-                        m:22050,
-                        b:$scope.datasubmit.bin,
-                        f:$scope.datasubmit.bandwidth 
-                    }
-                )
-                .success(
-                    function(data, status, headers, config) 
-                    {
-                        if (data.name)
-                        {
+                a2Soundscapes.create({
+                        n: $scope.datasubmit.name,
+                        p: $scope.datasubmit.playlist,
+                        a: $scope.datasubmit.aggregation,
+                        t: $scope.datasubmit.threshold,
+                        m: 22050,
+                        b: $scope.datasubmit.bin,
+                        f: $scope.datasubmit.bandwidth 
+                    })
+                    .success(function(data) {
+                        if (data.name) {
                             $scope.nameMsg = 'Name exists';
                         }
                         else {
                             $modalInstance.close( data );
                         }
-                    }
-                )
-                .error(
-                    function(data, status, headers, config) 
-                    {
-            if (data.err) {
-                $modalInstance.close( {err:"Error: "+data.err});
-            }
-            else
-            {
-                $modalInstance.close( {err:"Error: Cannot create soundscape job"});
-            }
-                        
-                    }
-                );
+                    })
+                    .error(function(data) {
+                        if (data.err) {
+                            $modalInstance.close( {err:"Error: "+data.err});
+                        }
+                        else {
+                            $modalInstance.close( {err:"Error: Cannot create soundscape job"});
+                        }
+                    });
             };
             
-            $scope.buttonEnable = function () 
-            {
+            $scope.buttonEnable = function () {
                 return  (
                     $scope.datasubmit.bin === 0 || 
                     ((typeof $scope.datasubmit.bin.length)  == 'string') || 
@@ -640,7 +616,7 @@
             };
             
             
-            a2Soundscapes.findIndices(soundscape, function(result) {
+            a2Soundscapes.findIndices(soundscape.id, function(result) {
                 if(!result)
                     return;
                     

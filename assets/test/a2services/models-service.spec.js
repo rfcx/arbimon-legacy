@@ -13,7 +13,7 @@ describe('Module: a2-models-service', function() {
         beforeEach(inject(function($injector, notify, _a2Models_) {
             $httpBackend = $injector.get('$httpBackend');
             a2Models = _a2Models_;
-            notifyError = sinon.spy(notify, 'error');
+            notifyError = sinon.spy(notify, 'serverError');
         }));
         
         afterEach(function() {

@@ -1,18 +1,17 @@
 angular.module('a2-soundscapes-service', [
-    'a2-project-service'
+    'a2-project-service',
+    'humane'
 ])
-.factory('a2Soundscapes', function(Project, $http, $q) {
+.factory('a2Soundscapes', function(Project, $http, $q, notify) {
     return {
-        get: function(soundscape, callback) {
+        get: function(soundscapeId, callback) {
             var projectName = Project.getUrl();
-            $http({
-                method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape
-            }).success(function(data) {
-                callback(data);
-            });
+            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId)
+                .success(function(data) {
+                    callback(data);
+                });
         },
-        getSCIdx: function(soundscape, params, callback) {
+        getSCIdx: function(soundscapeId, params, callback) {
             if(params instanceof Function){
                 callback = params;
                 params = undefined;
@@ -24,133 +23,128 @@ angular.module('a2-soundscapes-service', [
             var d = $q.defer();
             var projectName = Project.getUrl();
             
-            $http({
-                method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/scidx',
-                params : params
-            }).success(function(data) {
-                if(callback){callback(data);}
-                d.resolve(data);
-            });
+            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/scidx', {
+                    params : params
+                })
+                .success(function(data) {
+                    if(callback) callback(data);
+                    
+                    d.resolve(data);
+                });
             return d.promise;
         },
+        // TODO fusion getList and getList2 routes to return needed data
         getList: function(query, callback) {
             if(query instanceof Function){
                 callback = query;
                 query = {};
             }
             var projectName = Project.getUrl();
-            $http({
-                method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/',
-                params : query
-            }).success(function(data) {
-                callback(data);
-            });
+            
+            $http.get('/api/project/'+projectName+'/soundscapes/', {
+                    params : query
+                })
+                .success(function(data) {
+                    callback(data);
+                });
         },
-        setVisualScale: function(soundscape, params, callback){
+        getList2: function(callback) {
+            $http.get('/api/project/'+Project.getUrl()+'/soundscapes/details')
+                .success(callback)
+                .error(notify.serverError);
+        },
+        setVisualScale: function(soundscapeId, params, callback){
             var projectName = Project.getUrl();
-            return $http({
-                method : 'POST',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/scale',
-                data   : params
-            }).success(function(data) {
-                callback(data);
-            });
+            $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/scale', params)
+                .success(function(data) {
+                    callback(data);
+                });
         },
-        addRegion: function(soundscape, bbox, params, callback) {
+        addRegion: function(soundscapeId, bbox, params, callback) {
             var projectName = Project.getUrl();
             params.bbox = bbox;
-            $http({
-                method : 'POST',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/add',
-                data   : params
-            }).success(function(data) {
-                callback(data);
-            });
+            $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/add', params)
+                .success(function(data) {
+                    callback(data);
+                });
         },
-        sampleRegion: function(soundscape, region, params, callback) {
+        sampleRegion: function(soundscapeId, region, params, callback) {
             var projectName = Project.getUrl();
-            $http({
-                method : 'POST',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/'+region+'/sample',
-                data   : params
-            }).success(function(data) {
-                callback(data);
-            });
+            $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+region+'/sample', params)
+                .success(function(data) {
+                    callback(data);
+                });
         },
-        getRegion: function(soundscape, region, callback) {
+        getRegion: function(soundscapeId, region, callback) {
             var projectName = Project.getUrl();
-            $http({
-                method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/' + region
-            }).success(function(data) {
-                callback(data);
-            });
+            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/' + region)
+                .success(function(data) {
+                    callback(data);
+                });
         },
-        getRecordingTags: function(soundscape, region, recording, callback){
+        getRecordingTags: function(soundscapeId, region, recording, callback){
             var projectName = Project.getUrl();
-            $http({
-                method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/'+ region + '/tags/' + recording
-            }).success(function(data) {
-                callback(data);
-            });
+            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+ region + '/tags/' + recording)
+                .success(function(data) {
+                    callback(data);
+                });
         },
-        addRecordingTag: function (soundscape, region, recording, tag, callback){
+        addRecordingTag: function (soundscapeId, region, recording, tag, callback){
             var projectName = Project.getUrl();
-            return $http({
-                method : 'POST',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/'+ region + '/tags/' + recording + '/add',
-                data   : { 
+            $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+ region + '/tags/' + recording + '/add', 
+                { 
                     tag: tag 
-                }
-            }).success(callback);
+                })
+                .success(callback);
         },
-        removeRecordingTag: function (soundscape, region, recording, tag, callback){
+        removeRecordingTag: function (soundscapeId, region, recording, tag, callback){
             var projectName = Project.getUrl();
-            return $http({
-                method : 'POST',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions/'+ region + '/tags/' + recording + '/remove',
-                data   : { 
-                    tag: tag 
-                }
-            }).success(callback);
+            $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/'+ region + '/tags/' + recording + '/remove',
+                {
+                    tag: tag
+                })
+                .success(callback);
         },
-        getRegions: function(soundscape, query, callback) {
+        getRegions: function(soundscapeId, query, callback) {
             if(query instanceof Function){
                 callback = query;
                 query = undefined;
             }
             var projectName = Project.getUrl();
             
-            $http({
-                method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/regions',
-                params : query
-            }).success(function(data) {
-                callback(data);
-            });
+            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions', {
+                    params : query
+                })
+                .success(function(data) {
+                    callback(data);
+                });
         },
-        getRecordings: function(soundscape, bbox, query, callback) {
+        getRecordings: function(soundscapeId, bbox, query, callback) {
             if(query instanceof Function){
                 callback = query;
                 query = {};
             }
             var projectName = Project.getUrl();
             
-            $http({
-                method : 'GET',
-                url    : '/api/project/'+projectName+'/soundscapes/' + soundscape + '/recordings/'+bbox,
-                params : query
-            }).success(function(data) {
-                callback(data);
-            });
+            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/recordings/'+bbox, {
+                    params : query
+                })
+                .success(function(data) {
+                    callback(data);
+                });
         },
         // TODO change method to receive id
-        findIndices: function(soundscape, callback) {
-            $http.get('/api/project/'+ Project.getUrl() +'/soundscapes/' + soundscape.id + '/indices')
+        findIndices: function(soundscapeId, callback) {
+            $http.get('/api/project/'+ Project.getUrl() +'/soundscapes/' + soundscapeId + '/indices')
                 .success(callback);
+        },
+        delete: function(soundscapeId, callback) {
+            $http.get('/api/project/' + Project.getUrl() + '/soundscapes/' + soundscapeId + "/delete")
+                .success(callback)
+                .error(notify.serverError);
+        },
+        create: function(soundscapeData) {
+            return $http.post('/api/project/'+ Project.getUrl() +'/soundscape/new', soundscapeData);
         }
     };
 })

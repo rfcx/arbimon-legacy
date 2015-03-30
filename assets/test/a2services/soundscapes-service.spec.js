@@ -8,15 +8,18 @@ describe('Module: a2-soundscapes-service', function() {
     describe('a2Soundscapes', function() { 
         var $httpBackend;
         var a2Soundscapes;
+        var notifyError;
         
-        beforeEach(inject(function($injector, _a2Soundscapes_) {
+        beforeEach(inject(function($injector, notify, _a2Soundscapes_) {
             $httpBackend = $injector.get('$httpBackend');
             a2Soundscapes = _a2Soundscapes_;
+            notifyError = sinon.spy(notify, 'serverError');
         }));
         
         afterEach(function() {
             $httpBackend.verifyNoOutstandingExpectation();
             $httpBackend.verifyNoOutstandingRequest();
+            notifyError.restore();
         });
         
         it('should exist', function() {
@@ -88,6 +91,40 @@ describe('Module: a2-soundscapes-service', function() {
                 });
                 
                 $httpBackend.flush();
+            });
+        });
+        
+        describe('a2Soundscapes.getList2', function() {
+            var request;
+            
+            beforeEach(function() {
+                request = $httpBackend
+                    .expectGET('/api/project/test/soundscapes/details');
+            });
+            
+            it('requests to the correct route and call success', function() {
+                request.respond(200, 'data');
+                
+                callback = sinon.spy();
+                
+                a2Soundscapes.getList2(callback);
+                
+                $httpBackend.flush();
+                
+                expect(callback.calledWith('data')).to.equal(true);
+            });
+            
+            it('requests to the correct route and call error', function() {
+                request.respond(500, 'data');
+                
+                callback = sinon.spy();
+                
+                a2Soundscapes.getList2(callback);
+                
+                $httpBackend.flush();
+                
+                expect(callback.called).to.equal(false);
+                expect(notifyError.calledOnce);
             });
         });
         
@@ -254,9 +291,69 @@ describe('Module: a2-soundscapes-service', function() {
                     .expectGET('/api/project/test/soundscapes/1/indices')
                     .respond(200, 'data');
                     
-                a2Soundscapes.findIndices({ id: 1 }, function(data){
+                a2Soundscapes.findIndices(1, function(data){
                     expect(data).to.equal('data');
                 });
+                
+                $httpBackend.flush();
+            });
+        });
+        
+        describe('a2Soundscapes.delete', function() {
+            var request;
+            
+            beforeEach(function() {
+                request = $httpBackend
+                    .expectGET('/api/project/test/soundscapes/1/delete');
+            });
+            
+            it('requests to the correct route and call success', function() {
+                request.respond(200, 'data');
+                
+                callback = sinon.spy();
+                
+                a2Soundscapes.delete(1, callback);
+                
+                $httpBackend.flush();
+                
+                expect(callback.calledWith('data')).to.equal(true);
+            });
+            
+            it('requests to the correct route and call error', function() {
+                request.respond(500, 'data');
+                
+                callback = sinon.spy();
+                
+                a2Soundscapes.delete(1, callback);
+                
+                $httpBackend.flush();
+                
+                expect(callback.called).to.equal(false);
+                expect(notifyError.calledOnce);
+            });
+        });
+        
+        describe('a2Soundscapes.create', function() {
+            var request,
+                data;
+            
+            beforeEach(function() {
+                data = {
+                    key1: 'value1',
+                    key2: 'value2',
+                };
+                
+                request = $httpBackend
+                    .expectPOST('/api/project/test/soundscape/new', data);
+            });
+            
+            it('requests to the correct route and call success', function() {
+                request.respond(200, 'data');
+                
+                var result = a2Soundscapes.create(data);
+                
+                expect(result).to.have.property('success');
+                expect(result).to.have.property('error');
                 
                 $httpBackend.flush();
             });

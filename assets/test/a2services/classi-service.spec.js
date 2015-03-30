@@ -13,7 +13,7 @@ describe('Module: a2-classi-service', function() {
         beforeEach(inject(function($injector, notify, _a2Classi_) {
             $httpBackend = $injector.get('$httpBackend');
             a2Classi = _a2Classi_;
-            notifyError = sinon.spy(notify, 'error');
+            notifyError = sinon.spy(notify, 'serverError');
         }));
         
         afterEach(function() {

@@ -3,25 +3,21 @@ angular.module('a2-models-service', [
     'humane'
 ])
 .factory('a2Models', function($http, Project, notify) {
-    var serverError = function() {
-        notify.error("Error Communicating With Server");
-    };
-    
     return {
         list: function(callback) {
             $http.get( '/api/project/' + Project.getUrl() + '/models')
                 .success(callback)
-                .error(serverError);
+                .error(notify.serverError);
         },
         getFormInfo: function(callback) {
             $http.get( '/api/project/' + Project.getUrl() + '/models/forminfo')
                 .success(callback)
-                .error(serverError);
+                .error(notify.serverError);
         },
         findById: function(modelId, callback) {
             $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId)
                 .success(callback)
-                .error(serverError);
+                .error(notify.serverError);
         },
         create: function(modelData) {
             return $http.post('/api/project/' + Project.getUrl() + '/models/new', modelData);
@@ -29,12 +25,12 @@ angular.module('a2-models-service', [
         delete: function(modelId, callback) {
             $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId + "/delete")
                 .success(callback)
-                .error(serverError);
+                .error(notify.serverError);
         },
         getValidationResults: function(modelId, callback) {
             $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId + '/validation-list/')
                 .success(callback)
-                .error(serverError);
+                .error(notify.serverError);
         },
         setThreshold: function(modelId, thresholdValue) {
             var data = {
