@@ -541,6 +541,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             minDate      : '=?',
             year         : '=?',
             dateCount    : '=?',
+            mode         : '@',
             disableEmpty : '&'
         },
         link: function(scope, element, attrs) {
@@ -554,8 +555,10 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 element.click(function(e) {
                     e.stopPropagation();
                     
-                    // console.log('toggle');
+                    // verify if hidden
                     var visible = popup.css('display') === 'none';
+                    
+                    // always hide any other open yearpick
                     $('.calendar.popup:visible').hide();
                     
                     if(visible) {
@@ -595,7 +598,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             var prev   = svg.append('g').attr('class', 'btn');
             var next   = svg.append('g').attr('class', 'btn');
             
-        
+            // draws previous year button
             prev.append('text')
                 .attr('text-anchor', 'start')
                 .attr('font-family', 'FontAwesome')
@@ -610,7 +613,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 });
             });
             
-            
+            // draws next year button
             next.append('text')
                 .attr('text-anchor', 'end')
                 .attr('font-family', 'FontAwesome')
@@ -625,6 +628,8 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 });
             });
             
+            
+            // draw legend
             var scale = {scale:[1, 50, 100], labels:['0','1','50','100']};
             var color = d3.scale.threshold().domain(scale.scale).range(scale);
             
@@ -639,16 +644,15 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 .attr('height', cubesize)
                 .attr('y', height-cubesize-10)
                 .attr('x', function(d, i) { return i*45+22; })
-                .attr('class', function(d) { return 'cal-level-'+d; })
-            ;
+                .attr('class', function(d) { return 'cal-level-'+d; });
             
             icon.append('text')
                 .attr('text-anchor', 'middle')
                 .attr('font-size', 10)
                 .attr('y', height-15)
                 .attr('x', function(d, i) { return i*45+10; })
-                .text(function(d, i) { return '+'+d; })
-            ;
+                .text(function(d, i) { return '+'+d; });
+            
             
             var drawCounts = function() {
                 if(!scope.dateCount) return;
@@ -672,15 +676,18 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             var draw = function() {
                 // set calendar year
                 calendar = cal.selectAll('g').data([scope.year]);
-                // on enter, create a new title
+                
+                // append new year 
                 var title = calendar.enter().append('g');
-                // .. and set it up
+                
+                // set text position
                 title.append('text')
                     .attr('text-anchor', 'middle')
                     .attr('font-size', 30)
                     .attr('x', width/2)
                     .attr('y', 30);
-                // .. and add a line underneath
+                
+                // set line position
                 title.append('line')
                     .attr('x1', 5)
                     .attr('y1', headerHeight)
@@ -688,42 +695,55 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                     .attr('y2', headerHeight)
                     .attr('stroke', 'rgba(0,0,0,0.5)')
                     .attr('stroke-width', 1);
-                // on exit, remove it
+                
+                // remove old year
                 calendar.exit().remove();
-                // re-set the title text on each draw
+                
+                // write year text
                 calendar.select('text').text(function(d) { return d; });
                 
                 prev.classed('disabled', scope.minDate && scope.minDate.getFullYear() >= scope.year);
                 next.classed('disabled', scope.maxDate && scope.year >= scope.maxDate.getFullYear());
                 
-                // setup the months container and set the years' month date range
-                var mon = calendar.append('g').attr('transform', 'translate(0,'+ headerHeight +')')
+                // setup the months containers and set the years' month date range
+                var mon = calendar.append('g')
+                    .attr('transform', 'translate(0,'+ headerHeight +')')
                     .selectAll('g')
                     .data(function(d) { 
                         // console.log(d);
                         return d3.time.months(new Date(d, 0, 1), new Date(d+1, 0, 1));
                     });
-                // on enter in months, append a g
+                
+                // on enter in months, append new months
                 mon.enter().append('g');
+                
                 // in months, transform each month to their place in the yearpick
                 mon.attr('transform', function(d, i) { 
                     return 'translate('+((d.getMonth()%4)*150+5)+','+(Math.floor(d.getMonth()/4)*150+5)+')'; 
                 });
+                
                 // in months, transform each month to their place in the yearpick
                 mon.append('text')
                     .attr('text-anchor', 'middle')
                     .attr('x', cubesize*7/2)
                     .attr('y', 15)
                     .text(function(d) { return monthName(d); });
-                // in months, on exit, remove
+                
+                // remove old months
                 mon.exit().remove();
+                
+                
                 // setup day containers for each months
                 days = mon.selectAll('g')
                     .data(function(d) { 
                         return d3.time.days(new Date(d.getFullYear(), d.getMonth(), 1), new Date(d.getFullYear(), d.getMonth() + 1, 1)); 
                     });
+                
                 //  in days, on enter, append a g of class btn
-                days.enter().append('g').attr('class', 'btn');
+                days.enter()
+                    .append('g')
+                    .attr('class', 'btn');
+                
                 //  for each day, move the text, add class hover and onclick event handler
                 days.attr('transform', function() { return 'translate(0,24)'; })
                     .classed('hover', true)
@@ -739,7 +759,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                         scope.$apply(function() {
                             d3.event.preventDefault();
                             scope.ngModel = d;
-                            is_a_popup && popup.css('display', 'none');
+                            if(is_a_popup) popup.css('display', 'none');
                         });
                     });
                 // .. also, add a rect on the background
@@ -748,21 +768,22 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                     .attr('height', cubesize)
                     .attr('y', function(d, i) { return weekOfMonth(d) * (cubesize+1); })
                     .attr('x', function(d, i) { return (d.getDay()) * (cubesize+1); })
-                    .attr('fill', 'white')
-                    ;
+                    .attr('fill', 'white');
+                    
                 // .. and append a text on the foreground
                 days.append('text')
                     .attr('text-anchor', 'middle')
                     .attr('font-size', 10)
                     .attr('y', function(d, i) { return weekOfMonth(d) * (cubesize+1)+13; })
                     .attr('x', function(d, i) { return (d.getDay()+1) * (cubesize+1)-10; })
-                    .text(function(d, i) { return d.getDate(); })
-                    ;
+                    .text(function(d, i) { return d.getDate(); });
+                
                 // if we have date counts, then draw them
                 if(attrs.dateCount) {
                     drawCounts();
                 }
-                // in days, on exit, remove
+                
+                // remove old days
                 days.exit().remove();
             };
             
