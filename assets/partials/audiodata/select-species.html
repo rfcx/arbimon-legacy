@@ -16,13 +16,27 @@
     </div>
     <div class="row">
         <div class="col-sm-8 species-lib">
-            <a2-table fields="spFields" rows="species" selected="selected.species" no-checkbox></a2-table>
+            <a2-table2 rows="species" selected="selected.species" no-checkbox>
+                <field title="Species" key="scientific_name">
+                    {{ row.scientific_name }}
+                </field>
+                <field title="Family" key="family">
+                    {{ row.family }}
+                </field>
+                <field title="Taxon" key="taxon">
+                    {{ row.taxon }}
+                </field>
+            </a2-table2>
             <div class="jumbotron" ng-hide="species.length">
-                <h4>Select a species, then select a songtype</h4>
+                <h4>Select a species, then select a sound type</h4>
             </div>
         </div>
         <div class="col-sm-4 species-lib" ng-show="selected.species">
-            <a2-table fields="songFields" rows="songtypes" selected="selected.song" no-checkbox></a2-table>
+            <a2-table2 rows="songtypes" selected="selected.song" no-checkbox>
+                <field title="Sound" key="name">
+                    {{ row.name }}
+                </field>
+            </a2-table2>
         </div>
     </div>
 </div>

@@ -16,44 +16,33 @@ angular.module('audiodata.training-sets', [
             lastSongtype;
             
         return {
-            getLastSet : function(callback)
-            {
-                callback ({ls:lastSet,lp:lastPage,lr:lastRoi,lrs:lastRoiSet,vs:viewState,sp:lastSpecie,sg:lastSongtype}) ;
-            },
-            setLastSet : function(val)
-            {
-                lastSet = val;
-            },
-            setLastPage: function(val)
-            {
-                lastPage = val;
-            },
-            setLastRoi: function(val)
-            {
-                lastRoi = val;
-            },
-            setLastRoiSet: function(val)
-            {
-                lastRoiSet = val;
-            },
-            setViewState: function(val)
-            {
-                viewState = val;
-            },
-            setLastSpecies: function(valsp,valsg)
-            {
-                lastSpecie = valsp;
-                lastSongtype = valsg;
-            }
+                getLastSet : function(callback) {
+                    callback ({ls:lastSet,lp:lastPage,lr:lastRoi,lrs:lastRoiSet,vs:viewState,sp:lastSpecie,sg:lastSongtype}) ;
+                },
+                setLastSet : function(val) {
+                    lastSet = val;
+                },
+                setLastPage: function(val) {
+                    lastPage = val;
+                },
+                setLastRoi: function(val) {
+                    lastRoi = val;
+                },
+                setLastRoiSet: function(val) {
+                    lastRoiSet = val;
+                },
+                setViewState: function(val) {
+                    viewState = val;
+                },
+                setLastSpecies: function(valsp,valsg) {
+                    lastSpecie = valsp;
+                    lastSongtype = valsg;
+                }
             };
     }
 )
 .controller('TrainingSetsCtrl', function($scope, a2TrainingSets, Project, $modal, a2TrainingSetHistory) {
-    $scope.fields = [
-        { name: 'Name', key: 'name' , tdclass :'widthtd hidelongtext' },
-        { name: 'Set type', key: 'type' },
-        { name: 'Date created', key: 'date_created' },
-    ];
+    
     $scope.loading = true;
     $scope.rois = [];
     $scope.selectedName = '';
@@ -309,22 +298,7 @@ angular.module('audiodata.training-sets', [
         a2TrainingSetHistory.setLastSet($scope.sets[setIndex]);
         $scope.selectedSet = $scope.sets[setIndex];
         $scope.selectedName = $scope.sets[setIndex].name;
-        $scope.species  = null;
-        $scope.songtype = null;
-        $scope.detailedView    = undefined;
-        $scope.totalRois       = undefined;
-        $scope.currentPage     = undefined;
-        $scope.totalpages      = undefined;
-        $scope.roi             = undefined;
-        $scope.currentDuration = undefined;
-        $scope.currentRoi      = undefined;
-        $scope.currentUrl      = undefined;
-        $scope.currentUri      = undefined;
-        $scope.currentlow      = undefined;
-        $scope.currenthigh     = undefined;
-        $scope.currentId       = undefined;
-        $scope.currentrois     = undefined;
-        $scope.rois            = undefined;
+        
         a2TrainingSets.getSpecies($scope.sets[setIndex].name, function(speciesData){
             $scope.species = speciesData[0].species;
             $scope.songtype = speciesData[0].songtype;

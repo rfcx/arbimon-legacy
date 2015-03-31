@@ -181,7 +181,7 @@ angular.module('a2forms',['templates-arbimon2'])
                 }
                 else if($scope.project.description.length < 50 && $scope.project.description.length > 0) {
                     $scope.errorDesc = 'Description needs to be at least 50 characters '+
-                                       'long, you got ' + $scope.project.description.length;
+                                       'long, you have ' + $scope.project.description.length;
                     
                     good = false;
                 }

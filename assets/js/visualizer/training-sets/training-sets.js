@@ -68,18 +68,21 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
         }
     };
 })
-.controller('a2VisualizerAddTrainingSetModalController', function($scope, $modalInstance, Project, training_set_types, a2TrainingSets){
+.controller('a2VisualizerAddTrainingSetModalController', function($scope, $modalInstance, Project, a2TrainingSets){
     $scope.data = {
         name : '',
         type : null
     };
+    
     $scope.loadingClasses = true;
-    $scope.typedefs = training_set_types;
+    
     Project.getClasses(function(project_classes){
         $scope.project_classes = project_classes;
         $scope.loadingClasses = false;
     });
+    
     $scope.loadingTypes = true;
+    
     a2TrainingSets.getTypes(function(tset_types){
         $scope.tset_types = tset_types;
         if(tset_types && tset_types.length == 1) {
@@ -87,46 +90,56 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
             $scope.loadingTypes = false;
         }
     });
+    
     $scope.ok = function(){
-        $scope.validation={count:0};
-        
-        var sdata=$scope.data, sval = $scope.validation;
+        $scope.creating = true;
+        $scope.validation = { 
+            count:0 
+        };
+            
         var tset_data = {};
-        var tst;
 
-        if(sdata.name){
+        if($scope.data.name){
             tset_data.name = $scope.data.name;
-        } else {
-            sval.name = "Training set name is required.";
-            sval.count++;
+        } 
+        else {
+            $scope.validation.name = "Training set name is required.";
+            $scope.validation.count++;
         }
 
-        if(sdata.type && sdata.type.id){
-            tset_data.type = sdata.type.identifier;
-            tst = training_set_types[sdata.type.identifier];
-        } else {
-            sval.type = "Training set type is required.";
-            sval.count++;
+        if($scope.data.type && $scope.data.type.id){
+            tset_data.type = $scope.data.type.identifier;
+        } 
+        else {
+            $scope.validation.type = "Training set type is required.";
+            $scope.validation.count++;
         }
-
-        if(tst && tst.action && tst.action.collect_new_tset_data){
-            tst.action.collect_new_tset_data(sdata, tset_data, sval);
+        
+        if($scope.data.class) {
+            tset_data.class = $scope.data.class.id;
         }
+        else {
+            $scope.validation.class = "Species sound is required.";
+            $scope.validation.count++;
+        }
+        
+        // $scope.form_data=tset_data;
 
-        $scope.form_data=tset_data;
-
-        if(sval.count ===  0) {
+        if($scope.validation.count ===  0) {
             a2TrainingSets.add(tset_data, function(new_tset) {
                 if(new_tset.error) {
                     
                     var field = new_tset.field || 'error';
                     
-                    sval[field] = new_tset.error;
+                    $scope.validation[field] = new_tset.error;
                     
                     return;
                 }
                 $modalInstance.close(new_tset);
             });
+        }
+        else {
+            $scope.creating = false;
         }
     };
 });

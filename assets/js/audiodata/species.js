@@ -6,17 +6,7 @@ angular.module('audiodata.species', [
 ])
 .controller('SpeciesCtrl', function($scope, Project, $modal, notify) {
     $scope.loading = true;
-    
-    $scope.fields = [
-        { name: 'Species', key: 'species_name' },
-        { name: 'Song', key: 'songtype_name' }
-    ];
-    
     $scope.selected = {};
-    
-    // Species.get(function(species){
-    //     $scope.species = species;
-    // });
     
     Project.getClasses(function(classes){
         $scope.classes = classes;
@@ -106,17 +96,6 @@ angular.module('audiodata.species', [
     };
 })
 .controller('SelectSpeciesCtrl', ['$scope', 'Species', 'Songtypes',  function($scope, Species, Songtypes) {
-    
-    $scope.spFields = [ 
-        { name: 'Species', key: 'scientific_name'},
-        { name: 'Family', key: 'family'},
-        { name: 'Taxon', key: 'taxon'},
-    ];
-    
-    
-    $scope.songFields = [ 
-        { name: 'Song types', key: 'name'},
-    ];
     
     Songtypes.get(function(songs) {
         $scope.songtypes = songs;

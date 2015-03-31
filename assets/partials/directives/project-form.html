@@ -51,13 +51,13 @@
     <div class="radio">
         <label class="control-label" for="public">
             <input id="public" type="radio" ng-model="project.is_private" value="0" ng-checked="true">
-            <i class="fa fa-globe"></i> Public project - anyone can view it as a guest
+            <i class="fa fa-globe"></i> Public - anyone can view this project as a guest. Only authorize users can edit
         </label>
     </div>
     <div class="radio">
         <label class="control-label" for="private">
             <input id="private" type="radio" ng-model="project.is_private" value="1">
-            <i class="fa fa-lock"></i> Private project - only you and user you authorize can see it
+            <i class="fa fa-lock"></i> Private - only you and users you authorize can access this project
         </label>
     </div>
 </ng-form>

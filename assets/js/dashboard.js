@@ -45,8 +45,8 @@ angular.module('dashboard',[
         var google = $window.google;
         
         var mapOptions = {
-            center: { lat: 18.3, lng: -66.5},
-            zoom: 8
+            center: { lat: 10, lng: -20 },
+            zoom: 1
         };
         
         Project.getInfo(function(info){
@@ -95,6 +95,9 @@ angular.module('dashboard',[
                 
                 $scope.map = new google.maps.Map($window.document.getElementById('summary-map'), mapOptions);
                 
+                if(!$scope.sites.length){
+                    return;
+                }
                 var bounds = new google.maps.LatLngBounds();
                     
                 angular.forEach($scope.sites, function(site){

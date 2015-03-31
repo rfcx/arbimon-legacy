@@ -2,7 +2,7 @@
     <table class="bg table table-condensed">
         <tr>
             <th>Species</th>
-            <th>Song</th>
+            <th>Sound</th>
             <th>Annotation</th>
         </tr>
         <tr ng-repeat="class in classes" ng-click="select(class, $event) | trackEvent:'Visualizer-Validator-Main':'Select'" ng-class="is_selected[class.id] ? 'active' : ''">

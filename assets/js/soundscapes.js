@@ -124,28 +124,27 @@
 
                 modalInstance.result.then(
                     function(ret) {
-			console.log(ret)
                         if (ret.error)
-			{
-			    notify.error("Error: "+ret.error)
-			}
-			else
-			{
-			    var index = -1;
-			    var modArr = angular.copy($scope.soundscapesOriginal);
-			    for (var i = 0; i < modArr.length; i++) {
-				if (modArr[i].soundscape_id === id) {
-				    index = i;
-				    break;
-				}
-			    }
-			    if (index > -1) {
-				$scope.soundscapesOriginal.splice(index, 1);
-				$scope.tableParams.reload();
+                        {
+                            notify.error("Error: "+ret.error);
+                        }
+                        else
+                        {
+                            var index = -1;
+                            var modArr = angular.copy($scope.soundscapesOriginal);
+                            for (var i = 0; i < modArr.length; i++) {
+                                if (modArr[i].soundscape_id === id) {
+                                    index = i;
+                                    break;
+                                }
+                            }
+                            if (index > -1) {
+                                $scope.soundscapesOriginal.splice(index, 1);
+                                $scope.tableParams.reload();
     
-				notify.log("Soundscape Deleted Successfully");
-			    }
-			}
+                                notify.log("Soundscape Deleted Successfully");
+                            }
+                        }
                     }
                 );
             };
@@ -188,9 +187,8 @@
                         if (data.ok)
                         {
                             JobsData.updateJobs();
-                            notify.log("New Soundscape on Queue");
+                            notify.log("Your new soundscape is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
                         }
-                        console.log(data)
                         if (data.err)
                         {
                             notify.error(data.err);
@@ -306,13 +304,13 @@
                 .error(
                     function(data, status, headers, config) 
                     {
-			if (data.err) {
-			    $modalInstance.close( {err:"Error: "+data.err});
-			}
-			else
-			{
-			    $modalInstance.close( {err:"Error: Cannot create soundscape job"});
-			}
+                        if (data.err) {
+                            $modalInstance.close( {err:"Error: "+data.err});
+                        }
+                        else
+                        {
+                            $modalInstance.close( {err:"Error: Cannot create soundscape job"});
+                        }
                         
                     }
                 );

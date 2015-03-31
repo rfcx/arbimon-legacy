@@ -217,9 +217,8 @@
                         if (data.ok)
                         {
                             JobsData.updateJobs();
-                            notify.log("New Classification on Queue");
+                            notify.log("Your new classification is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
                         }
-			console.log(data)
                         if (data.error)
                         {
                             notify.error("Error: "+data.error);
@@ -262,25 +261,25 @@
 
                 modalInstance.result.then(
                     function(ret) {
-			if (ret.err){
-			    notify.error("Error: "+ret.err);
-			}
-			else
-			{
-			    var index = -1;
-			    var modArr = angular.copy($scope.classificationsOriginal);
-			    for (var i = 0; i < modArr.length; i++) {
-				if (modArr[i].job_id === id) {
-				    index = i;
-				    break;
-				}
-			    }
-			    if (index > -1) {
-				$scope.classificationsOriginal.splice(index, 1);
-				$scope.tableParams.reload();
-				notify.log("Classification Deleted Successfully");
-			    }
-			}
+                        if (ret.err){
+                            notify.error("Error: "+ret.err);
+                        }
+                        else
+                        {
+                            var index = -1;
+                            var modArr = angular.copy($scope.classificationsOriginal);
+                            for (var i = 0; i < modArr.length; i++) {
+                                if (modArr[i].job_id === id) {
+                                    index = i;
+                                    break;
+                                }
+                            }
+                            if (index > -1) {
+                                $scope.classificationsOriginal.splice(index, 1);
+                                $scope.tableParams.reload();
+                                notify.log("Classification deleted successfully");
+                            }
+                        }
                     }
                 );
             };

@@ -5,12 +5,11 @@
             tooltip-trigger="mouseenter">
             <i class="fa fa-plus"></i>
         </button>
-        <!--
-        <button class="btn btn-danger" 
+        <!-- <button class="btn btn-danger" 
             tooltip="Delete training set"
             tooltip-trigger="mouseenter">
             <i class="fa fa-trash"></i>
-        </button>-->
+        </button> -->
     </div>
     <div class="col-sm-3">
         <input class="form-control" type="text" placeholder="Search" ng-model="search.name">
@@ -18,7 +17,17 @@
 </div>
 <div class="row">
     <div class="col-sm-6">
-        <a2-table search="search"  fields="fields" rows="sets" no-checkbox on-select="displaySetData(row)"></a2-table>
+        <a2-table2 search="search" rows="sets" no-checkbox on-select="displaySetData(row)">
+            <field title="Name" key="name">
+                {{ row.name }}
+            </field>
+            <field title="Type" key="type">
+                {{ row.type }}
+            </field>
+            <field title="Date created" key="date_created">
+                {{ row.date_created | moment: 'll' }}
+            </field>
+        </a2-table2>
         <div class="jumbotron" ng-show="(!sets || !sets.length > 0) && !loading">
             <h3>
                 No training sets found. <a ng-click="add_new_tset() | trackEvent:'Audiodata-Training Sets':'add_new_tset'"  ng-show="(!sets || !sets.length > 0) && !loading" >Create a training set.</a>
@@ -27,7 +36,7 @@
         <loader ng-hide="!loading"></loader>
     </div>
     <div class="col-sm-6">
-        <div ng-show="norois">No ROIs in Training Set {{selectedName}}. <a ui-sref="visualizer" href="#/visualizer">Open Visualizer to add ROIs.</a></div>
+        <div ng-show="norois">Training set <b>{{selectedName}}</b> is empty. <a ui-sref="visualizer" href="#/visualizer">Go to Visualizer to add data.</a></div>
         <div class="panel panel-default"  ng-show="loaderDisplay">
             <div class="trainingSetLoader">
                 <loader></loader>
@@ -62,7 +71,7 @@
                        <strong>Species:</strong>  {{species}}
                     </div>
                     <div class="col-sm-6">
-                       <strong>Songtype:</strong>  {{songtype}}
+                       <strong>Sound:</strong>  {{songtype}}
                     </div>
                 </div>
                 <div class="bordeder-empy-div"></div>
@@ -80,7 +89,7 @@
                     </div>
                     <div class="roi-list">
                         <div ng-repeat="roi in currentrois" class="roi-div-inline">
-                            <div tooltip-placement="right" tooltip="Duration: {{roi.dur}}s  Bandwidth:{{roi.y1}}-{{roi.y2}}Hz">
+                            <div tooltip-placement="left" tooltip="Duration: {{roi.dur}}s  Bandwidth: {{roi.y1}}-{{roi.y2}}Hz">
                                 <div class="roi-div-inline-remove">
                                     <button ng-click="removeRoi(roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'"
                                         class="roi-delete"

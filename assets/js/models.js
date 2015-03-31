@@ -704,7 +704,7 @@
                 $scope.invalid = false;
 
                 $scope.recalculate = function() {
-                    var newval = $('#newthres').val();
+                    var newval = $scope.newthres;
                     $scope.messageSaved = '';
                     newval = parseFloat(newval);
 

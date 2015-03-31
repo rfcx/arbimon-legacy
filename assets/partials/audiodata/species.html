@@ -4,23 +4,30 @@
             Project Species
             <button class="btn btn-default"
                 ng-click="add() | trackEvent:'Dashboard-species':'add species'"
-                tooltip="Select a species song"
+                tooltip="Select a species sound"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-plus"></i>
             </button>
             <button class="btn btn-danger"
                 ng-disabled="!checked || !checked.length"
                 ng-click="del() | trackEvent:'Dashboard-species':'delete species'"
-                tooltip="Remove species song"
+                tooltip="Remove species sound"
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-trash"></i>
             </button>
 
         </h4>
-        <a2-table fields="fields" rows="classes" checked="checked" no-select></a2-table>
+        <a2-table2 rows="classes" checked="checked" no-select>
+            <field title="Species" key="species_name">
+                {{ row.species_name }}
+            </field>
+            <field title="Sound" key="songtype_name">
+                {{ row.songtype_name }}
+            </field>
+        </a2-table2>
         <div class="jumbotron" ng-show="(!classes || !classes.length > 0) && !loading">
             <h3 class="text-center">
-                This project don't have any species assign
+                This project does not have any species assigned
             </h3>
         </div>
         <loader ng-hide="!loading"></loader>

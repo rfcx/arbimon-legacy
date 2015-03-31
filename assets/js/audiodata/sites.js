@@ -223,7 +223,14 @@ angular.module('audiodata.sites', [
                             lng: site.lon 
                         } 
                 }, function(result, status) {
-                    site.location = result[1].formatted_address || "";
+                    
+                    if(result.length){
+                        site.location = result[1].formatted_address;
+                    }
+                    else {
+                        site.location = 'unknown';
+                    }
+                    
                     $scope.$apply();
                 });
                 

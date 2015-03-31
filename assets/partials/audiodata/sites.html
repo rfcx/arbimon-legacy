@@ -54,10 +54,10 @@
             <field>
                 <i ng-show="row.token_created_on && !row.imported" class="fa fa-link" title="Has a Token"></i>
             </field>
-            <field title="Rec qty" key="rec_count">
+            <field title="No. of recordings" key="rec_count">
                 {{ row.rec_count }}
             </field>
-            <field title="Latidude" key="lat">
+            <field title="Latitude" key="lat">
                 {{ row.lat | number:3 }}
             </field>
             <field title="Longitude" key="lon">
@@ -79,7 +79,7 @@
             <div class="panel-body">
                 <form class="form">
                     <div class="form-group">
-                        <label>Name:</label><input class="form-control" type="text" ng-model="temp.name" placeholder="Name Station">
+                        <label>Name:</label><input class="form-control" type="text" ng-model="temp.name" placeholder="Site name">
                     </div>
                     <div class="checkbox">
                         <label>

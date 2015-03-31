@@ -5,7 +5,7 @@
                 <accordion-heading>
                     <i class="fa" ng-class="filters.open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                     Filters <i class="fa fa-filter"></i>
-                    <small><em>Filter recordings and save as playlists...</em></small> 
+                    <small><em>Filter recordings and save as playlists</em></small> 
                 </accordion-heading>
                 <div class="a2-filter-row">
                     <div class="a2-filter a2-filter-text">
@@ -95,7 +95,7 @@
                     </button>
                     <button class="btn btn-default" 
                         ng-click="createPlaylist() | trackEvent:'Audiodata-Recordings':'createPlaylist'" 
-                        tooltip="Save results as playlists"
+                        tooltip="Save filtered results as playlist"
                         tooltip-trigger="mouseenter">
                         <i class="fa fa-list-alt"></i>
                     </button>
@@ -106,7 +106,6 @@
 </div>
 <div class="row">
     <div class="col-sm-3">
-        
         <button class="btn btn-danger" 
             ng-click="del()" 
             ng-class="{ disabled: !checked || !checked.length }"
@@ -148,7 +147,7 @@
         <a2-table fields="fields" rows="recs" checked="checked" ext-sort="sortRecs(sortBy, reverse)" no-select></a2-table>
         <div class="jumbotron" ng-show="(!recs || !recs.length > 0) && !loading">
             <h3>
-                No recordings found. <a href="#/audiodata/uploads" ui-sref="audiodata.uploads">Upload some.</a>
+                No recordings found. <a href="#/audiodata/uploads" ui-sref="audiodata.uploads">Upload here</a>
             </h3>
         </div>
         <loader ng-hide="!loading"></loader>

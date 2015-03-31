@@ -5,22 +5,22 @@
 
     <form role="form">
       <div class="form-group">
-        <label for="modelName">Soundscape Name:</label>
+        <label for="modelName">Soundscape name:</label>
         <input type="text" ng-model="datasubmit.name"  class="form-control" placeholder="Enter soundscape name"/>
         <span ng-bind="nameMsg" class="nameExistsSpan"></span>
       </div>
       <div class="form-group">
-        <label for="classifier">Select Playlist:</label> <span ng-hide="playlists" class="red"><em>No playlists found <a ng-click="cancel('/audiodata/recordings') | trackEvent:'Analysis-Soundscapes-new':'cancel go to recordings'" >Create one.</a></em></span></em></span>
+        <label for="classifier">Select playlist:</label> <span ng-hide="playlists" class="red"><em>No playlists found <a ng-click="cancel('/audiodata/recordings') | trackEvent:'Analysis-Soundscapes-new':'cancel go to recordings'" >Create one.</a></em></span></em></span>
         <ui-select ng-model="datasubmit.playlist" theme="selectize" ng-disabled="disabled">
         <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
             <ui-select-choices repeat="playlist in playlists | filter: $select.search">
-              {{playlist.name}} <span class="trainingSetRoiCountSpan"><small><em> <strong >Count:</strong>({{playlist.count}})</em></small></span> 
+              {{playlist.name}} <span class="pull-right"><small><em> <strong >Count:</strong>({{playlist.count}})</em></small></span> 
             </ui-select-choices>
         </ui-select>
       </div>
       <div class="row">
         <div class="col-sm-6">
-            <label for="aggregation">Select Aggregation:</label>
+            <label for="aggregation">Select time aggregation:</label>
             <div class="row">
                  <div class="col-sm-12">
                     <a2-aggregationtypeselector selected="datasubmit.aggregation"></a2-aggregationtypeselector>
@@ -39,8 +39,13 @@
                 </ol>
             </div>
             <div class="row container-fluid" >
-                <label for="aggregation">Peak Filtering:</label>
-                <i class="fa fa-question-circle" tooltip="Only peaks above the amplitude threshold will be considered. If the frequency difference of two successive peaks is less than the frequency threshold, then the peak of highest amplitude will be kept only." tooltip-placement="right"></i> 
+                <label for="aggregation">Peak filtering:</label>
+                <i class="fa fa-question-circle" 
+                    tooltip="Only peaks above the amplitude threshold will be considered. 
+                            If the frequency difference of two successive peaks is less than the frequency threshold, 
+                            then only the peak of highest amplitude will be kept." 
+                    tooltip-placement="right">
+                </i> 
                 <a2-threshold-selector threshold="datasubmit.threshold" bandwidth="datasubmit.bandwidth" ></a2-threshold-selector>
                 
                 <!--
@@ -53,6 +58,6 @@
     </form>
 </div>  
 <div class="modal-footer">  
-    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Soundscapes-new':'OK'"  ng-disabled="buttonEnable()">Submit</button>  
-    <button class="btn btn-default" ng-click="cancel() | trackEvent:'Analysis-Soundscapes-new':'cancel'">Cancel</button>  
+    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Soundscapes-new':'OK'"  ng-disabled="buttonEnable()">Create</button>  
+    <button class="btn btn-default" ng-click="cancel() | trackEvent:'Analysis-Soundscapes-new':'cancel'">Close</button>  
 </div>  

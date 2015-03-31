@@ -7,11 +7,6 @@ angular.module('audiodata.playlists', [
 .controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify) {
     $scope.loading = true;
     
-    $scope.fields = [
-        { name: 'Name', key: 'name' },
-        { name: 'Rec qty', key: 'count' }
-    ];
-    
     a2Playlists.getList(function(data) {
         $scope.playlists = data;
         $scope.loading = false;
