@@ -20,6 +20,7 @@
 @rect-select-color: #4f0;
 @rect-select-border-color: #4f0;
 @rect-select-bg-color: rgba(10, 30, 4, 0.36);
+
 /*
  * additions to bootstrap styles
 */
@@ -271,6 +272,7 @@ header nav ul.nav > li a > img {
 }
 .banner {
     background: url("/images/login-banner.png");
+    background-position: center top; 
     height: 500px;
 }
 
@@ -285,10 +287,12 @@ header nav ul.nav > li a > img {
     background-color: rgba(255, 255, 255, 0.62);
     border-radius: 10px;
 }
+
 .dropdown-height-7 {
     overflow-y: auto;
-    max-height: 7 * (2*@nav-link-padding-v + 14);
+    max-height: 7 * (2 * @nav-link-padding-v + 14);
 }
+
 .login-form {
     padding: 10px;
     background-color: transparent;
