@@ -1,34 +1,42 @@
 <div class="visualizer">
-    <div class="sidebar show" >
-        <div class="fa drawer" onclick="$(event.target).parent().toggleClass('show');" ></div>
-        <div class="layers" >
-            <a2-visualizer-layer-item 
-                class="layer" 
-                ng-show="isSidebarVisible(layer)" 
-                ng-repeat="layer in layers | filter: canDisplayInSidebar"
-            ></a2-visualizer-layer-item>
+    <div class="hidden-md hidden-lg">
+        <p class="lead text-info">
+            This section currently does not support this device at the moment.
+        </p>
+    </div>
+    <div class="hidden-xs hidden-sm">
+        <div class="sidebar show">
+            <!-- <div class="fa drawer" onclick="$(event.target).parent().toggleClass('show');" ></div> -->
+            <div class="layers" >
+                <a2-visualizer-layer-item 
+                    class="layer" 
+                    ng-show="isSidebarVisible(layer)" 
+                    ng-repeat="layer in layers | filter: canDisplayInSidebar"
+                ></a2-visualizer-layer-item>
+            </div>
         </div>
+        <!-- <div class="divider"></div> -->
+        <div class="app-content">
+            <a2-visualizer-spectrogram></a2-visualizer-spectrogram>
+        </div>
+        <!-- <table style="position:absolute;bottom:0;right:0;z-index:90909090; max-width:500px" class="bg table">
+            <tr><th>layer
+                <span class="label" ng-class="(!!visobject) ? 'label-success' : 'label-danger'">s</span>
+            </th><th>reqs</th><th>sidebar</th><th>spectrogram</th></tr>
+            <tr ng-repeat="layer in layers">
+                <td>{{layer.type}}</td>
+                <td>
+                    <span class="label" ng-class="fullfillsRequirements(layer.require) ? 'label-success' : 'label-danger'">d</span>
+                </td>
+                <td>
+                    <span class="label" ng-class="isSidebarVisible(layer) ? 'label-success' : 'label-danger'">v</span>
+                    <span class="label" ng-class="canDisplayInSidebar(layer) ? 'label-success' : 'label-danger'">d</span>
+                </td>
+                <td>
+                    <span class="label" ng-class="isSpectrogramVisible(layer) ? 'label-success' : 'label-danger'">v</span>
+                    <span class="label" ng-class="canDisplayInSpectrogram(layer) ? 'label-success' : 'label-danger'">d</span>
+                </td>
+            </tr>
+        </table> -->
     </div>
-    <div class="app-content">
-        <a2-visualizer-spectrogram></a2-visualizer-spectrogram>
-    </div>
-    <!-- <table style="position:absolute;bottom:0;right:0;z-index:90909090; max-width:500px" class="bg table">
-        <tr><th>layer
-            <span class="label" ng-class="(!!visobject) ? 'label-success' : 'label-danger'">s</span>
-        </th><th>reqs</th><th>sidebar</th><th>spectrogram</th></tr>
-        <tr ng-repeat="layer in layers">
-            <td>{{layer.type}}</td>
-            <td>
-                <span class="label" ng-class="fullfillsRequirements(layer.require) ? 'label-success' : 'label-danger'">d</span>
-            </td>
-            <td>
-                <span class="label" ng-class="isSidebarVisible(layer) ? 'label-success' : 'label-danger'">v</span>
-                <span class="label" ng-class="canDisplayInSidebar(layer) ? 'label-success' : 'label-danger'">d</span>
-            </td>
-            <td>
-                <span class="label" ng-class="isSpectrogramVisible(layer) ? 'label-success' : 'label-danger'">v</span>
-                <span class="label" ng-class="canDisplayInSpectrogram(layer) ? 'label-success' : 'label-danger'">d</span>
-            </td>
-        </tr>
-    </table> -->
 </div>

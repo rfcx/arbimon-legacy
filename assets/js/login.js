@@ -1,7 +1,16 @@
 angular.module('login', ['humane', 'g-recaptcha'])
 .controller('LoginCtrl', ['$scope', '$http', '$window', 'notify', function($scope, $http, $window, notify) {
     
-    $scope.mode = "Login";
+    // $scope.mode have the String value of the next mode and 
+    // is used as text for the mode button
+    
+    if(/login/i.exec($window.location.pathname) !== null){
+        $scope.mode = "Sign up";
+    }
+    else {
+        $scope.mode = "Login";
+    }
+    
     
     $scope.switchMode = function() {
         if($scope.mode === "Sign up") {

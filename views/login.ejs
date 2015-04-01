@@ -7,16 +7,17 @@
 </head>
 
 <body ng-controller="LoginCtrl">
-    <div class="container">
-        <div class="login-top">
+    <div class="login-top">
+        <div class="container">
             <a href="/"><img src="/images/logo.svg"></a>
-            <button class="btn btn-default pull-right visible-xs-block visible-sm-block" ng-click="switchMode()">{{mode}}</button>
+            <button class="btn btn-default pull-right visible-xs-block visible-sm-block" ng-click="switchMode()">{{ mode }}</button>
         </div>
     </div>
     <div class="jumbotron login-banner">
         <div class="container">
             <div class="row">
-                <div class="col-sm-12 col-md-7 col-lg-7" ng-hide="mode === 'Sign up'">
+                <!--  visible-md-block visible-lg-block hide only on small and x-small screens -->
+                <div class="col-sm-12 col-md-7 col-lg-7" ng-class="mode === 'Sign up' ? 'visible-md-block visible-lg-block' : '' ">
                     <h1>Arbimon II</h1>
                     <p>
                         Bio-acoustics analyzer
@@ -24,7 +25,7 @@
                      <a href="/register" class="btn btn-success btn-lg">Sign up today</a> 
                 </div>
                 
-                <div class="col-sm-12 col-md-offset-1 col-md-4 col-lg-offset-2 col-lg-3" ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
+                <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-1 col-md-4 col-lg-offset-2 col-lg-3" ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
                     <div class="login-form">
                         <h3>Already a user?</h3>
                         <form role="form" ng-submit="login()">
@@ -67,11 +68,13 @@
     <div class="container">
         
         <div class="row">
-            <div class="col-lg-6 col-lg-offset-3 col-md-8 col-md-offset-2">
+            <div class="col-lg-7 col-lg-offset-3 col-md-8 col-md-offset-2">
                 <ul class="list-inline">
-                    <li><a target="_blank" href="http://www.sieve-analytics.com">sieve-analytics.com</a></li>
+                    <li><a href="/terms">Terms</a></li>
+                    <li><a href="/support">Support</a></li>
                     <li><a target="_blank" href="http://www.sieve-analytics.com/#!arbimon/cjg9">ARBIMON</a></li>
                     <li><a target="_blank" href="http://www.sieve-analytics.com/#!landmapper/ccoq">Land Mapper</a></li>
+                    <li><a target="_blank" href="http://www.sieve-analytics.com">sieve-analytics.com</a></li>
                     <li>
                         <a target="_blank" href="https://www.twitter.com/sieveAnalytics"><i class="fa fa-lg fa-twitter-square"></i></a>
                         <a target="_blank" href="https://www.facebook.com/sieveanalytics"><i class="fa fa-lg fa-facebook-square"></i></a>

@@ -80,12 +80,13 @@ header nav ul.nav > li a > img {
     font-size: 190%;
     color: rgb(144, 207, 176);
 }
-#visualizer {
+.visualizer {
     position: absolute;
     top: 52px;
     bottom: 0;
     left: 0;
     right: 0;
+    z-index:-1;
 }
 .make-full-column(@colstart; @colend; @gutter: @grid-gutter-width) {
     @columns: @colend - @colstart;
@@ -113,59 +114,58 @@ header nav ul.nav > li a > img {
         bottom: 0;
     }
     overflow-y: auto;
-    @media (min-width: @grid-float-breakpoint) {
-        .drawer {
-            display: none;
-        }
-    }
-    @media (max-width: @grid-float-breakpoint) {
-        right: 100%;
-        z-index: 910;
-        &.show {
-            min-height: 1px;
-            position: absolute;
-            @media (min-width: @screen-md-min) {
-                position: absolute;
-                left: 0;
-                right: @sidebar-width;
-                top: 0;
-                bottom: 0;
-            }
-            left: 0;
-            width: 100%;
-            right: auto;
-            .drawer {
-                right: 0;
-                &:before {
-                    content: "\f053";
-                }
-            }
-        }
-        .drawer {
-            // bootstrap-depend
-            // .button-variant(@btn-default-color; @btn-default-bg; @btn-default-border);
-            position: absolute;
-            top: 100px;
-            height: 100px;
-            right: -20px;
-            width: 20px;
-            border: 1px solid @btn-default-border;
-            z-index: 10;
-            &:before {
-                content: "\f054";
-                position: absolute;
-                top: 50%;
-            }
-        }
-    }
+    // @media (min-width: @grid-float-breakpoint) {
+    //     .drawer {
+    //         display: none;
+    //     }
+    // }
+    // @media (max-width: @grid-float-breakpoint) {
+    //     right: 100%;
+    //     z-index: 910;
+    //     &.show {
+    //         min-height: 1px;
+    //         position: absolute;
+    //         @media (min-width: @screen-md-min) {
+    //             position: absolute;
+    //             left: 0;
+    //             right: @sidebar-width;
+    //             top: 0;
+    //             bottom: 0;
+    //         }
+    //         left: 0;
+    //         width: 100%;
+    //         right: auto;
+    //         .drawer {
+    //             right: 0;
+    //             &:before {
+    //                 content: "\f053";
+    //             }
+    //         }
+    //     }
+    //     .drawer {
+    //         // bootstrap-depend
+    //         // .button-variant(@btn-default-color; @btn-default-bg; @btn-default-border);
+    //         position: absolute;
+    //         top: 100px;
+    //         height: 100px;
+    //         right: -20px;
+    //         width: 20px;
+    //         border: 1px solid @btn-default-border;
+    //         z-index: 10;
+    //         &:before {
+    //             content: "\f054";
+    //             position: absolute;
+    //             top: 50%;
+    //         }
+    //     }
+    // }
 }
 .app-content {
     min-height: 1px;
     padding-left: (@grid-gutter-width / 2);
     padding-right: (@grid-gutter-width / 2);
     position: absolute;
-    @media (min-width: @screen-md-min) {
-        position: absolute;
+    @media (min-width: @screen-sm-min) {
         left: @sidebar-width;
         right: 0;
         top: 0;
@@ -178,10 +178,23 @@ header nav ul.nav > li a > img {
     top: 0;
     bottom: 0;
     z-index: 900;
-    @media (min-width: @grid-float-breakpoint) {
-        width: auto;
-    }
+    // @media (min-width: @grid-float-breakpoint) {
+    //     width: auto;
+    // }
 }
+.divider {
+    position: absolute;
+    left: @sidebar-width;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    height: 100%;
+    background-color: #A0A0A0;
+    cursor: ew-resize;
+}
+
+
+
 @layer-padding-left: 15px;
 @layer-padding-right: 40px;
 @layer-padding-v: 10px;
@@ -303,7 +316,11 @@ header nav ul.nav > li a > img {
 }
 .login-top {
     padding-top: 15px;
-    height: 60px;
+    height: 52px;
+    border-bottom: 1px solid #ccc;
+    box-shadow: 0px 1px 8px #888;
+    margin-bottom: 6px;
+    
 }
 .dropdown-menu.datepicker {
     min-width: 290px;
@@ -623,7 +640,7 @@ textarea.fixed-width {
 }
 .toolbar {
     // top row
-    padding-top: 10px;
+    padding-bottom: 10px;
 }
 .dropdown-menu.has-badges > li {
     position: relative;

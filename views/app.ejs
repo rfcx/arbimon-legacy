@@ -23,25 +23,25 @@
                     <li ui-sref-active="active">
                         <a ui-sref="dashboard" tooltip="Dashboard" tooltip-placement="bottom">
                             <i class="fa fa-dashboard"></i> 
-                            <span class="visible-lg-inline">Dashboard</span>
+                            <span class="visible-lg-inline visible-xs-inline">Dashboard</span>
                         </a>
                     </li>
                     <li ui-sref-active="active" tooltip="Data" tooltip-placement="bottom">
                         <a ui-sref="audiodata">
                             <i class="fa fa-cloud-upload"></i> 
-                            <span class="visible-lg-inline">Data</span>
+                            <span class="visible-lg-inline visible-xs-inline">Data</span>
                         </a>
                     </li>
                     <li ui-sref-active="active" tooltip="Visualizer" tooltip-placement="bottom">
                         <a ui-sref="visualizer">
                             <i class="fa fa-cubes"></i> 
-                            <span class="visible-lg-inline">Visualizer</span>
+                            <span class="visible-lg-inline visible-xs-inline">Visualizer</span>
                         </a>
                     </li>
                     <li ui-sref-active="active" tooltip="Analysis" tooltip-placement="bottom">
                         <a ui-sref="analysis">
                             <i class="fa fa-send-o"></i> 
-                            <span class="visible-lg-inline">Analysis</span>
+                            <span class="visible-lg-inline visible-xs-inline">Analysis</span>
                         </a>
                     </li>
                 </ul>
@@ -49,7 +49,7 @@
                     <li ui-sref-active="active">
                         <a ui-sref="jobs" tooltip="Active Jobs" tooltip-placement="bottom">
                             <i class="fa fa-cogs"></i> 
-                            <span class="visible-lg-inline">Jobs</span> 
+                            <span class="visible-lg-inline visible-xs-inline">Jobs</span> 
                             <span ng-show="jobslength" class="badge" ng-bind="jobslength"></span>
                         </a>
                     </li>
@@ -97,9 +97,9 @@
         </div>
     </nav>
     <div id="body">
-        <div ui-view="audiodata" ng-show="$state.includes('audiodata')"></div>
-        <div id="visualizer" ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
-        <div ui-view="analysis" ng-show="$state.includes('analysis')"></div>
+        <div ui-view="audiodata"  ng-show="$state.includes('audiodata')"></div>
+        <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
+        <div ui-view="analysis"   ng-show="$state.includes('analysis')"></div>
         <div ui-view></div>
     </div>
 

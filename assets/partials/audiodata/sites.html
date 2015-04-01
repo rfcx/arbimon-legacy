@@ -1,8 +1,8 @@
 <div class="row">
-    <div class="col-sm-push-3 col-sm-4 toolbar">
+    <div class="col-md-push-3 col-md-4 toolbar">
         <input class="form-control" type="text" placeholder="Search" ng-model="search">
     </div>
-    <div class="col-sm-3 col-sm-pull-4 toolbar">
+    <div class="col-md-3 col-md-pull-4 toolbar">
         <div class="btn-group" dropdown>
             <button class="btn btn-default dropdown-toggle"
                 id="addsite"
@@ -40,7 +40,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-sm-7">
+    <div class="col-md-7" ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
         <a2-table2 rows="sites" on-select="sel(row)" checked="checked" search="search" no-checkbox>
             <field title="Name" key="name">
                 <!-- <i ng-show="row.published && !row.imported" class="fa fa-globe"></i> -->
@@ -74,7 +74,7 @@
         </div>
         <loader ng-hide="!loading"></loader>
     </div>
-    <div class="col-sm-5">
+    <div class="col-md-5">
         <div ng-show="editing || creating" class="panel panel-default">
             <div class="panel-body">
                 <form class="form">

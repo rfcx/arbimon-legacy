@@ -225,12 +225,6 @@ module.exports = function(grunt) {
             options: {
                 livereload: true // reloads the browser with livereload plugin
             },
-            html: {
-                files: [
-                    'views/**/*.ejs'
-                ],
-                tasks:[]
-            },
             less: {
                 files: ['assets/less/**/*.less'],
                 tasks: ['less']
@@ -255,7 +249,8 @@ module.exports = function(grunt) {
                     'model/**/*.js',
                     'utils/**/*.js',
                     'config/**/*.js',
-                    'config/**/*.json'
+                    'config/**/*.json',
+                    'views/**/*.ejs'
                 ],
                 tasks: ['express:dev'],
                 options: {

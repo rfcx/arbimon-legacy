@@ -16,6 +16,10 @@ router.get('/terms', function(req, res) {
     res.render('terms');
 });
 
+router.get('/support', function(req, res) {
+    res.render('support');
+});
+
 router.get('/alive', function(req, res) { // for health checks
     res.sendStatus(200);
 });
@@ -36,9 +40,6 @@ router.get('/', function(req, res) {
     res.redirect('/home');
 });
 
-router.get('/support', function(req, res) {
-    res.render('support', { title: "Support", user: req.session.user });
-});
 
 router.get('/home', function(req, res) {
     res.render('home', { title: "Home", user: req.session.user });

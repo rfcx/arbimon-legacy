@@ -16,7 +16,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-sm-6">
+    <div class="col-md-6">
         <a2-table2 search="search" rows="sets" no-checkbox on-select="displaySetData(row)">
             <field title="Name" key="name">
                 {{ row.name }}
@@ -35,7 +35,7 @@
         </div>
         <loader ng-hide="!loading"></loader>
     </div>
-    <div class="col-sm-6">
+    <div class="col-md-6">
         <div ng-show="norois">Training set <b>{{selectedName}}</b> is empty. <a ui-sref="visualizer" href="#/visualizer">Go to Visualizer to add data.</a></div>
         <div class="panel panel-default"  ng-show="loaderDisplay">
             <div class="trainingSetLoader">
