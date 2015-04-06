@@ -3,6 +3,7 @@
 
 <head>
     <% include head %>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Arbimon 2 - Support
     </title>
 </head>
@@ -28,12 +29,15 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-sm-12">
+            <div class="col-sm-12 col-md-10 col-lg-8">
                 <h3>Video Tutorial</h3>
-                <iframe width="853" height="480" src="https://www.youtube.com/embed/KJ9AG3VjPww?showinfo=0" frameborder="0" allowfullscreen></iframe>
+                <div class="embed-responsive embed-responsive-16by9">
+                    <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/KJ9AG3VjPww" frameborder="0" allowfullscreen></iframe>
+                </div>
             </div>
         </div>
     </div>
+    <% include footer %>
 </body>
 
 </html>
