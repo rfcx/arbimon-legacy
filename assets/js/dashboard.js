@@ -7,11 +7,7 @@ angular.module('dashboard',[
     'a2forms',
     'humane',
 ])
-.config([
-    '$stickyStateProvider', 
-    '$stateProvider', 
-    '$urlRouterProvider', 
-    function($stickyStateProvider, $stateProvider, $urlRouterProvider) {
+.config(function($stickyStateProvider, $stateProvider, $urlRouterProvider) {
         $stateProvider.state('dashboard', {
             url: '/dashboard',
             controller:'SummaryCtrl',
@@ -27,16 +23,8 @@ angular.module('dashboard',[
             controller:'UsersCtrl',
             templateUrl: '/partials/dashboard/users.html'
         });
-    }
-])
-.controller('SummaryCtrl', [
-    '$scope', 
-    'Project', 
-    'a2TrainingSets', 
-    '$timeout', 
-    'notify',
-    '$window',
-    function($scope, Project, a2TrainingSets, $timeout, notify, $window) {
+    })
+.controller('SummaryCtrl', function($scope, Project, a2TrainingSets, $timeout, notify, $window) {
         $scope.loading = 8;
         var done = function() {
             if($scope.loading > 0) --$scope.loading;
@@ -123,15 +111,8 @@ angular.module('dashboard',[
             $scope.recsQty = count;
             done();
         });
-    }
-])
-.controller('SettingsCtrl', [
-    '$scope',
-    'Project',
-    'notify',
-    '$window',
-    '$timeout',
-    function($scope, Project, notify, $window, $timeout) {
+    })
+.controller('SettingsCtrl', function($scope, Project, notify, $window, $timeout) {
         Project.getInfo(function(info) {
             $scope.project = info;
         });
@@ -160,15 +141,8 @@ angular.module('dashboard',[
                 }
             });
         };
-    }
-])
-.controller('UsersCtrl', [
-    '$scope', 
-    '$http', 
-    'Project', 
-    '$modal', 
-    'notify',
-    function($scope, $http, Project, $modal, notify) {
+    })
+.controller('UsersCtrl', function($scope, $http, Project, $modal, notify) {
     
         Project.getInfo(function(info) {
             $scope.project = info;
@@ -288,6 +262,5 @@ angular.module('dashboard',[
                 });
             });
         };
-    }
-])
+    })
 ;

@@ -6,21 +6,23 @@ router.get('/list/:limit', function(req, res, next) {
     var limit = Number(req.param('limit'));
 
     model.species.list(limit, function(err, rows) {
-        if(err)
+        if(err){
             next(err);
-
-        res.json(rows);
+        } else {
+            res.json(rows);
+        }        
     });
 });
 
-router.get('/search/:query', function(req, res, next) {
-    var query = req.param('query');
+router.get('/search', function(req, res, next) {
+    var query = req.query.q || '';
 
     model.species.search(query, function(err, rows){
-        if(err)
+        if(err){
             next(err);
-
-        res.json(rows);
+        } else {
+            res.json(rows);
+        }
     });
 });
 

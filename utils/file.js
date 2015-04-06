@@ -6,7 +6,18 @@ var file = function(filename, mode, callback){
     fs.open(filename, mode, (function(err, fd){
         this.fd = fd;
         this.position = 0;
-        callback(err, fd);
+        if(err){
+            callback(err);
+            return;
+        }
+        fs.stat(filename, (function(err2, stat){
+            if(err2){
+                callback(err2);
+            } else {
+                this.size = stat.size;
+                callback(null, fd);
+            }
+        }).bind(this));
     }).bind(this));
 };
 
@@ -91,6 +102,10 @@ file.prototype = {
         
     read: function(bytes, callback){
         this.ensure_capacity(bytes);
+        if(this.position >= this.size){
+            callback(new Error("EOF"));
+            return;
+        }
         fs.read(this.fd, this.buffer, 0, bytes, this.position, (function(err, bytesread, buffer){
             var lp = this.position;
             this.position += bytesread;

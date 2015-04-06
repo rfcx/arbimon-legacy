@@ -26,6 +26,7 @@ mocks.file.prototype = real_file.prototype;
 scidx.__set__(mocks);
 
 var datafile = path.resolve(__dirname, '../data/indexout.scidx');
+var brokendatafile = path.resolve(__dirname, '../data/indexincomplete.scidx');
 var invaliddatafile = path.resolve(__dirname, '../data/paletteout.png');
 
 var getBounds = function(index){
@@ -141,6 +142,14 @@ describe('scidx', function(){
                 done();
             });
         });
+        it('Fails if the file is corrupted.', function(done){
+            this.timeout(500);
+            new scidx().read(brokendatafile, function(err, indexfile){
+                should.exist(err);
+                should.not.exist(indexfile);
+                done();
+            });
+        });
         it('Fails if the file is not closed properly.', function(done){
             var real_close = mocks.file.prototype.close;
             sinon.stub(mocks.file.prototype, 'close', function(){
@@ -156,18 +165,18 @@ describe('scidx', function(){
             });
         });
     });
-    // describe('#__read_rows()', function(){
-    //     
-    // });
-    // describe('#__read_one_row()', function(){
-    //     
-    // });
-    // describe('#__read_cells()', function(){
-    //     
-    // });
-    // describe('#__read_one_cell()', function(){
-    //     
-    // });
+    describe('#__read_rows()', function(){
+        
+    });
+    describe('#__read_one_row()', function(){
+        
+    });
+    describe('#__read_cells()', function(){
+        
+    });
+    describe('#__read_one_cell()', function(){
+        
+    });
     describe('#flatten()', function(){
         it('Returns the set of recordings that participate in the index.', function(done){
             new scidx().read(datafile, function(err, indexfile){
@@ -202,5 +211,17 @@ describe('scidx', function(){
                 done();
             });
         });        
+    });
+    describe('#[pvt]str_repeat', function(){
+        var __str_repeat = scidx.__get__('str_repeat');
+        it('Should repeat a given string a given ammount of times', function(){
+            __str_repeat('a', 1).should.equal('a');
+            __str_repeat('a', 2).should.equal('aa');
+            __str_repeat('ab', 2).should.equal('abab');
+        });
+        it('Should return empty string if given string is empty or times is 0', function(){
+            __str_repeat('', 100).should.equal('');
+            __str_repeat('abc', 0).should.equal('');
+        });
     });
 });

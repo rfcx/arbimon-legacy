@@ -84,8 +84,10 @@ router.get('/info', function(req, res) {
 router.get('/search/:query', function(req, res, next) {
     var query = req.param('query');
     
-    if(!query)
+    if(!query){
         res.json({ error: "empty query" });
+        return;
+    }
     
     model.users.search(query, function(err, rows){
         if(err) return next(err);

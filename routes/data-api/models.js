@@ -362,7 +362,7 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
     );
 });
 
-router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, next) {
+router.get('/project/:projectUrl/models/:modelId/validation-list', function(req, res, next) {
 
     if(!req.params.modelId)
         return res.json({ error: 'missing values' });
@@ -435,8 +435,7 @@ router.get('/project/:projectUrl/validation/list/:modelId', function(req, res, n
     
             });
         }
-        else
-        {
+        else {
             res.json({"err": "Error fetching validation information."});
         }
     });
@@ -617,7 +616,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             var project_id = rows[0].project_id;
 
             if(!req.haveAccess(project_id, "manage soundscapes")) {
-                console.log('user cannot create soundscape')
+                console.log('user cannot create soundscape');
                 response_already_sent = true;
                 res.status(403).json({ err: "you dont have permission to 'manage soundscapes'" });
                 return next(new Error());

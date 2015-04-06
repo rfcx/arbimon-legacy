@@ -205,13 +205,7 @@ angular.module('audiodata.sites', [
     };
     
 })
-.controller('PublishedSitesBrowserCtrl', [
-    '$scope', 
-    'a2Sites', 
-    'project', 
-    '$modalInstance',
-    '$window',
-    function($scope, a2Sites, project, $modalInstance, $window) {
+.controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {
         var geocoder = new $window.google.maps.Geocoder();
         
         a2Sites.listPublished(function(sites) {
@@ -260,14 +254,8 @@ angular.module('audiodata.sites', [
                 $modalInstance.close(data);
             });
         };
-    }
-])
-.controller('SitesTokenGenaratorCtrl', [
-    '$scope', 
-    'a2Sites', 
-    '$modal',
-    'notify',
-    function($scope, a2Sites, $modal, notify){
+    })
+.controller('SitesTokenGenaratorCtrl', function($scope, a2Sites, $modal, notify){
         $scope.site = $scope.selected;
         $scope.loading = {};
         
@@ -359,6 +347,5 @@ angular.module('audiodata.sites', [
                     });
             });
         };
-    }
-])
+    })
 ;

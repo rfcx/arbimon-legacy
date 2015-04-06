@@ -1,3 +1,12 @@
+/** @module utils/formatparse
+*/
+/**
+ * parses filename and return datetime data and file extension
+ * @method formatParse
+ * @param {String} formatName - Name that indentifies the format in use on the filename
+ * @param {String} filename - filename to parse
+ */
+
 var formatParse = function(formatName, filename) {
     var formats = {
         Wildlife: /(.*(\d{4})(\d{2})(\d{2})[_|\$](\d{2})(\d{2})\d{2}.*)(\.\w+)$/,

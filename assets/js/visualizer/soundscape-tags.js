@@ -47,7 +47,7 @@ angular.module('a2SoundscapeRegionTags', ['a2Infotags'])
         }        
     };
     
-    var resolve_species_tag = function(element, text, InfoTagService, $compile, $scope){
+    var resolve_species_tag = function(element, text, $compile, $scope){
         element.empty().append($compile('<a2-species species="'+(text|0)+'"></a2-species species>')($scope));
     };
     

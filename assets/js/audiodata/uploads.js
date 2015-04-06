@@ -5,13 +5,7 @@ angular.module('audiodata.uploads', [
     'angularFileUpload',
     'humane'
 ])
-.controller('UploadCtrl', [
-    '$scope', 
-    'uploads', 
-    'Project', 
-    '$modal', 
-    '$window',
-    function($scope, uploads, Project, $modal, $window) { 
+.controller('UploadCtrl', function($scope, uploads, Project, $modal, $window) { 
     
     $scope.prettyBytes = function(bytes) {
         
@@ -150,9 +144,8 @@ angular.module('audiodata.uploads', [
     }
     
     
-}])
-.controller('BatchInfoCtrl', [ '$scope', 'Project', 'info', '$modalInstance', 'notify', 
-    function($scope, Project, info, $modalInstance, notify) {
+})
+.controller('BatchInfoCtrl', function($scope, Project, info, $modalInstance, notify) {
     
     if(info) {
         $scope.info = angular.copy(info);
@@ -178,8 +171,8 @@ angular.module('audiodata.uploads', [
         
         notify.error('all fields are required');
     };
-}])
-.factory('uploads', ['FileUploader', function(FileUploader){
+})
+.factory('uploads', function(FileUploader){
     
     var u = new FileUploader();
     
@@ -208,4 +201,4 @@ angular.module('audiodata.uploads', [
             uploadInfo = info;
         }
     };
-}]);
+});

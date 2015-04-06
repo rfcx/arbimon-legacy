@@ -1,10 +1,15 @@
-(function(angular)
-{ 
-    var soundscapes = angular.module('soundscapes', ['ui.bootstrap' , 'a2services' , 'ui-rangeSlider', 'ngCsv']);
+(function(angular) {
+    var soundscapes = angular.module('soundscapes', [
+        'ui.bootstrap' , 
+        'a2services' , 
+        'ui-rangeSlider', 
+        'ngCsv'
+    ]);
+    
     var template_root = '/partials/soundscapes/';
-
-    soundscapes.controller('SoundscapesCtrl' , 
-        function ($scope, $http, $modal, $filter, Project, JobsData, ngTableParams, a2Playlists, $location, a2Soundscapes, notify) 
+    
+    soundscapes.controller('SoundscapesCtrl' , function ($scope, $modal, $filter, Project, JobsData, 
+            ngTableParams, a2Playlists, $location, a2Soundscapes, notify) 
         {
             $scope.successInfo = "";
             $scope.showSuccess = false;
@@ -62,34 +67,26 @@
             
             
             $scope.loadSoundscapes = function() {
-                $http.get('/api/project/'+Project.getUrl()+'/soundscapes/details')
-                .success(
-                    function(data) 
-                    {
-                        $scope.soundscapesOriginal = data;
-                        $scope.soundscapesData = data;
-                        $scope.infoInfo = "";
-                        $scope.showInfo = false;
-                        $scope.loading = false;
+                a2Soundscapes.getList2(function(data) {
+                    $scope.soundscapesOriginal = data;
+                    $scope.soundscapesData = data;
+                    $scope.infoInfo = "";
+                    $scope.showInfo = false;
+                    $scope.loading = false;
 
-                        $scope.infopanedata = "";
-                        if(data.length > 0)
-                        {
-                            if(!$scope.tableParams) {
-                                initTable();
-                            }
-                            else {
-                                $scope.tableParams.reload();
-                            }
+                    $scope.infopanedata = "";
+                    
+                    if(data.length > 0) {
+                        if(!$scope.tableParams) {
+                            initTable();
                         }
-                        else 
-                        {
-                            $scope.infopanedata = "No soundscapes found.";
+                        else {
+                            $scope.tableParams.reload();
                         }
                     }
-                )
-                .error(function() {
-                    notify.error("Error Communicating With Server");
+                    else {
+                        $scope.infopanedata = "No soundscapes found.";
+                    }
                 });
             };
             $scope.loadSoundscapes();
@@ -122,14 +119,11 @@
                     $scope.loading = false;
                 });
 
-                modalInstance.result.then(
-                    function(ret) {
-                        if (ret.error)
-                        {
+                modalInstance.result.then(function(ret) {
+                        if (ret.error) {
                             notify.error("Error: "+ret.error);
                         }
-                        else
-                        {
+                        else {
                             var index = -1;
                             var modArr = angular.copy($scope.soundscapesOriginal);
                             for (var i = 0; i < modArr.length; i++) {
@@ -141,12 +135,11 @@
                             if (index > -1) {
                                 $scope.soundscapesOriginal.splice(index, 1);
                                 $scope.tableParams.reload();
-    
+                                
                                 notify.log("Soundscape Deleted Successfully");
                             }
                         }
-                    }
-                );
+                });
             };
             
             
@@ -154,52 +147,43 @@
                 $scope.infoInfo = "Loading...";
                 $scope.showInfo = true;
                 $scope.loading = true;
-                var modalInstance = $modal.open
-                (
-                    {
-                        templateUrl: template_root + 'createnewsoundscape.html',
-                        controller: 'CreateNewSoundscapeInstanceCtrl',
-                        resolve: {
-                            playlists:function()
-                            {
-                                return $scope.playlists;
-                            },
-                            projectData:function()
-                            {
-                                return $scope.projectData;
-                            }
+                var modalInstance = $modal.open({
+                    templateUrl: template_root + 'createnewsoundscape.html',
+                    controller: 'CreateNewSoundscapeInstanceCtrl',
+                    resolve: {
+                        playlists:function()
+                        {
+                            return $scope.playlists;
+                        },
+                        projectData:function()
+                        {
+                            return $scope.projectData;
                         }
                     }
-                );
+                });
                 
-                modalInstance.opened.then(function()
-                {
+                modalInstance.opened.then(function() {
                     $scope.infoInfo = "";
                     $scope.showInfo = false;
                     $scope.loading = false;
                 });
                 
-                modalInstance.result.then
-                (
-                    function (result) 
-                    {
-                        data = result;
-                        if (data.ok)
-                        {
-                            JobsData.updateJobs();
-                            notify.log("Your new soundscape is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
-                        }
-                        if (data.err)
-                        {
-                            notify.error(data.err);
-                        }
-                        
-                        if (data.url)
-                        {
-                            $location.path(data.url);
-                        }
+
+                modalInstance.result.then(function(result) {
+                    data = result;
+                    if (data.ok) {
+                        JobsData.updateJobs();
+                        notify.log("New Soundscape on Queue");
                     }
-                );
+                    
+                    if (data.err) {
+                        notify.error(data.err);
+                    }
+                    
+                    if (data.url) {
+                        $location.path(data.url);
+                    }
+                });
             };
             
             
@@ -227,32 +211,25 @@
                 });
                 
             };
-        }
-    )
-    .controller('DeleteSoundscapeInstanceCtrl',
-        function($scope, $modalInstance, $http, name, id, projectData) {
+            
+        })
+    .controller('DeleteSoundscapeInstanceCtrl',function($scope, $modalInstance, a2Soundscapes, name, id, projectData) {
             $scope.name = name;
             $scope.id = id;
             $scope.projectData = projectData;
             var url = $scope.projectData.url;
             $scope.ok = function() {
-                $http.get('/api/project/' + url + '/soundscapes/' + id + "/delete")
-                    .success(function(data) {
-                        $modalInstance.close(data);
-                    })
-                    .error(function() {
-                        notify.error("Error Communicating With Server");
-                    });
+                a2Soundscapes.delete(id, function(data) {
+                    $modalInstance.close(data);
+                });
             };
 
             $scope.cancel = function() {
                 $modalInstance.dismiss('cancel');
             };
 
-        }
-    )
-    .controller('CreateNewSoundscapeInstanceCtrl', 
-        function ($scope, $modalInstance, $http, $timeout, projectData, playlists) {
+        })
+    .controller('CreateNewSoundscapeInstanceCtrl', function($scope, $modalInstance, a2Soundscapes, $timeout, projectData, playlists) {
         
             $scope.projectData = projectData;
             $scope.playlists = playlists;
@@ -278,46 +255,34 @@
                 
                 var url = $scope.projectData.url;
                 $scope.nameMsg = '';        
-                $http.post('/api/project/'+url+'/soundscape/new', 
-                    {
-                        n:$scope.datasubmit.name,
-                        p:$scope.datasubmit.playlist,
-                        a:$scope.datasubmit.aggregation,
-                        t:$scope.datasubmit.threshold,
-                        m:22050,
-                        b:$scope.datasubmit.bin,
-                        f:$scope.datasubmit.bandwidth 
-                    }
-                )
-                .success(
-                    function(data, status, headers, config) 
-                    {
-                        if (data.name)
-                        {
+                a2Soundscapes.create({
+                        n: $scope.datasubmit.name,
+                        p: $scope.datasubmit.playlist,
+                        a: $scope.datasubmit.aggregation,
+                        t: $scope.datasubmit.threshold,
+                        m: 22050,
+                        b: $scope.datasubmit.bin,
+                        f: $scope.datasubmit.bandwidth 
+                    })
+                    .success(function(data) {
+                        if (data.name) {
                             $scope.nameMsg = 'Name exists';
                         }
                         else {
                             $modalInstance.close( data );
                         }
-                    }
-                )
-                .error(
-                    function(data, status, headers, config) 
-                    {
+                    })
+                    .error(function(data) {
                         if (data.err) {
                             $modalInstance.close( {err:"Error: "+data.err});
                         }
-                        else
-                        {
+                        else {
                             $modalInstance.close( {err:"Error: Cannot create soundscape job"});
                         }
-                        
-                    }
-                );
+                    });
             };
             
-            $scope.buttonEnable = function () 
-            {
+            $scope.buttonEnable = function () {
                 return  (
                     $scope.datasubmit.bin === 0 || 
                     ((typeof $scope.datasubmit.bin.length)  == 'string') || 
@@ -332,8 +297,7 @@
             $scope.cancel = function (url) {
                  $modalInstance.close( {url:url});
             };
-        }
-    )
+        })
     .directive('a2Aggregationtypeselector', function() {
             return  {
                 restrict : 'E',
@@ -341,7 +305,7 @@
                     "selected": "="
                 },
                 templateUrl: template_root + 'aggregationtypetelector.html',
-                controller: ['$scope', function($scope) {
+                controller: function($scope) {
                 
                     $scope.aggregations = [
                         {
@@ -384,11 +348,13 @@
                     $scope.select =  function(aggr) {
                         $scope.selected = aggr.id;
                     };
-                }]
+                }
             }; 
         }
     )
-    .directive('a2DrawAggregation', function() {
+    .directive('a2DrawAggregation', function($window) {
+        var d3 = $window.d3;
+        
         return {
             restrict : 'E',
             scope: {
@@ -455,7 +421,8 @@
             }
         };
     })
-    .directive('a2DrawPeakThreshold', function() {
+    .directive('a2DrawPeakThreshold', function($window) {
+        var d3 = $window.d3;
         return {    
             restrict : 'E',
             scope: {
@@ -572,16 +539,16 @@
                     var peaki = 1;
                     for (var i = 0 ; i < peaks.length;i++)
                     {
-                    if (peaks[i].y >= $scope.threshold && peaks[i].d > $scope.banwidthValue)
-                    {
-                    
-                        $scope.peakText = vis.append("text")     
-                        .attr("x", WIDTH*(peaks[i].x/lineData.length) )
-                        .attr("y",  50*(1-peaks[i].y) + 10 ).attr('font-size','11px')
-                        .style("text-anchor", "middle").attr('class','peakText')
-                        .text("P"+(peaki ));
-                        peaki  = peaki  + 1;
-                    }   
+                        if (peaks[i].y >= $scope.threshold && peaks[i].d > $scope.banwidthValue)
+                        {
+                        
+                            $scope.peakText = vis.append("text")     
+                            .attr("x", WIDTH*(peaks[i].x/lineData.length) )
+                            .attr("y",  50*(1-peaks[i].y) + 10 ).attr('font-size','11px')
+                            .style("text-anchor", "middle").attr('class','peakText')
+                            .text("P"+(peaki ));
+                            peaki  = peaki  + 1;
+                        }   
                     }
                     // $scope.onBandwidth($scope.banwidthValue);
                     // console.log($scope.banwidthValue);
@@ -589,14 +556,14 @@
                 );
                 
                 vis.append('svg:g')
-                .attr('class', 'thresholdaxis')
-                .attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')
-                .call(xAxis);
+                    .attr('class', 'thresholdaxis')
+                    .attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')
+                    .call(xAxis);
                  
                 vis.append('svg:g')
-                .attr('class', 'thresholdaxis')
-                .attr('transform', 'translate(' + (MARGINS.left) + ',0)')
-                .call(yAxis);
+                    .attr('class', 'thresholdaxis')
+                    .attr('transform', 'translate(' + (MARGINS.left) + ',0)')
+                    .call(yAxis);
                   
                 var lineFunc = d3.svg.line()
                     .x(function(d) {
@@ -629,12 +596,7 @@
             }
         };
     })
-    .controller('SoundscapesDetailsCtrl', [
-        '$scope',
-        'soundscape', 
-        'playlist', 
-        'a2Soundscapes',
-        function($scope, soundscape, playlist, a2Soundscapes) {
+    .controller('SoundscapesDetailsCtrl', function($scope, soundscape, playlist, a2Soundscapes) {
             
             var data2xy = function(offset) {
                 offset = offset || 0;
@@ -654,7 +616,7 @@
             };
             
             
-            a2Soundscapes.findIndices(soundscape, function(result) {
+            a2Soundscapes.findIndices(soundscape.id, function(result) {
                 if(!result)
                     return;
                     
@@ -688,6 +650,5 @@
                 }
                 
             });
-        }
-    ]);
+        });
 })(angular);

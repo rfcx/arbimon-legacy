@@ -28,26 +28,20 @@ var deleteFile = function(filename) {
     });
 };
 
-/**
-Process recordings uploaded to the system
-
-@method processUpload
-@param upload {Object} - 
-    {
-        metadata: { 
-            recorder: 'recorder model', 
-            mic: 'microphone model', 
-            sver: 'software version' 
-        },
-        FFI: fileformat info object return by utils/formatParse()
-        name: 'original filename',
-        path: 'path uploaded file',
-        projectId: PROJECT ID,
-        siteId: SITE ID,
-        userId: USER ID
-    }
- 
-**/
+/** Process recordings uploaded to the system
+ * @method processUpload
+ * @param upload {Object} object containing upload info
+ * @param upload.metadata {Object} recording metadata
+ * @param upload.metadata.recorder {String} recorder model
+ * @param upload.metadata.mic {String} microphone model used in the recorder
+ * @param upload.metadata.sver {String} recorder's software version
+ * @param upload.FFI {String} fileformat info object returned by utils/formatParse()
+ * @param upload.name {String} original filename
+ * @param upload.path {String} path uploaded file
+ * @param upload.projectId {String} project id
+ * @param upload.siteId {String} site id
+ * @param upload.userId {String} user id
+ **/
 var processUpload = function(upload, done) {
     var start = new Date();
     debug("processUpload:", upload.name);
@@ -116,7 +110,7 @@ var processUpload = function(upload, done) {
             debug('updateAudioInfo:', upload.name);
             audioTools.info(outFile, function(code, info) {
                 if(code !== 0) {
-                    return res.status(500).json({ error: "error getting audio file info" });
+                    return callback(new Error("error getting audio file info"));
                 }
                 
                 upload.info = info;
@@ -381,7 +375,10 @@ var receiveUpload = function(req, res, next) {
                         filename: upload.FFI.filename
                     },
                     function(err, exists) {
-                        if(err) next(err);
+                        if(err){ 
+                            next(err);
+                            return;
+                        }
                         
                         if(exists) {
                             deleteFile(upload.path);
@@ -412,7 +409,9 @@ var receiveUpload = function(req, res, next) {
                     upload.info = info;
                     console.log(upload);
                     
-                    if(info.duration >= 120) {
+                    if(info.duration >= 3600) {
+                        return res.status(403).json({ error: "recording is too long, please contact support" });
+                    } else if(info.duration >= 120) {
                         audioTools.splitter(upload.path, info.duration, function(err, files) {
                             var i = 0;
                             async.eachSeries(files, function(f, callback) {
@@ -435,9 +434,6 @@ var receiveUpload = function(req, res, next) {
                                 res.status(202).send("upload done!");
                             });
                         });
-                    }
-                    else if(info.duration > 3600) {
-                        return res.status(403).json({ error: "recording is too long, please contact support" });
                     }
                     else {
                         uploadQueue.push(upload);

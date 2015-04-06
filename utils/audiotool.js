@@ -1,9 +1,13 @@
+/**
+    @module utils/audiotool
+*/
+
 var debug = require('debug')('arbimon2:audiotool');
 var childProcess = require('child_process');
 var path = require('path');
 var sprintf = require("sprintf-js").sprintf;
 
-/**
+/*
 Options:
 −x num
     Change the (maximum) width (X-axis) of the spectrogram from its default value of 800 pixels to a given number between 100 and 200000. See also −X and −d.
@@ -43,7 +47,8 @@ Options:
 
 var audiotools = {
     /** Runs sox with the specified arguments, and returns the results in a callback.
-     * @param {Array} args array of parameters to give to sox. (warning!! arguments are not escaped, passing usecure arguments can lead to security problems.)
+     * @method sox
+     * @param {Array} args array of parameters to give to sox. (warning!! arguments are not escaped, passing unsecure arguments can lead to security problems.)
      * @param {Object} options options that modify the call.
      * @param {Boolean} options.stderr2stdout wether stderr output should be mixed with stdout ouput.
      * @param {Function} callback function to call when the sox is done, its arguments are (code, stdout_output, stderr_output).
@@ -76,39 +81,8 @@ var audiotools = {
             callback(code, stdout.value, stderr.value);
         });
     },
-    // function calls python tyler.py script
-    
-    tyler : function(rec_id, callback){ // not in use
-        debug('running tyler');        
-        var cp = childProcess.spawn('.env/bin/python',['scripts/tiles/tyler.py',rec_id]);
-        var stdout = {value:""}, stderr = {value:""};
-
-        cp.stderr.setEncoding('utf8');
-        cp.stderr.on('data', function(data) {
-            stderr.value += data;
-        });
-        cp.stdout.setEncoding('utf8');
-        cp.stdout.on('data', function(data) {
-            stdout.value += data;
-        });
-        
-        cp.on('close', function(code){
-            debug('tyler ended with code : ', code);
-            debug('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
-            debug('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
-            output = '';
-            if (code)
-            {
-                output = {"error":"error calling tyler"};
-            }
-            else
-            {
-                output = JSON.parse(stdout.value);
-            }
-            callback(code, output, stderr.value);
-        });
-    },
     /** Returns information about a given audio file
+     * @method info
      * @param {String} source_path - audio file path
      * @param {Function} callback(code,info) - function to call with the audio info, its arguments are (code, info).
      */
@@ -141,6 +115,7 @@ var audiotools = {
         });
     },
     /** Transcodes an audio file using the given parameters.
+     * @method transcode
      * @param {String} source_path audio file path
      * @param {String} destination_path output audio file path
      * @param {Object} options transcoding options
@@ -173,6 +148,7 @@ var audiotools = {
         audiotools.sox(args, {}, callback);
     },
     /** Generates a spectrogram of a given audio file.
+     * @method spectrogram
      * @param {String} source_path path to the source audio file.
      * @param {String} destination_path output path of the spectrogram.
      * @param {Object} options (optional) set of options.
@@ -221,6 +197,12 @@ var audiotools = {
         audiotools.sox(args, {}, callback);
     },
     
+    /** split a file longer than 120 seconds to to 1 minute files
+     * @method splitter
+     * @param {String} sourcePath path to the source audio file.
+     * @param {Number} duration of the recording in secon.
+     * @param {Function} callback (optional) set of options.
+     */
     splitter: function(sourcePath, duration, callback) {
         var rec = {};
         rec.ext = path.extname(sourcePath);
@@ -257,16 +239,5 @@ var audiotools = {
         });
     }
 };
-//
-// audiotools.info('/home/chino/Desktop/file_test.flac', function(code, info) {
-//     console.log(code);
-//     console.log(info);
-//     console.time('splitter');
-//     audiotools.splitter(info.input_file, info.duration, function(err, files) {
-//         console.timeEnd('splitter');
-//         console.log(files);
-//     });
-//     
-// });
 
 module.exports = audiotools;

@@ -25,7 +25,7 @@ mock_fs_fd.prototype = {
     }
 };
 
-module.exports = {
+var mock_fs = {
     stat : function (file, callback){
         var entry = this.__files__[file];
         if(entry && entry.exists !== false){
@@ -65,8 +65,13 @@ module.exports = {
         return (entry && entry.data) || '';
     },
     existsSync : function(filename){
-        var entry = this.__files__[file];
+        var entry = this.__files__[filename];
         return entry && entry.exists !== false;        
+    },
+    exists: function(filename, callback){
+        setImmediate(function(){
+            callback(mock_fs.existsSync(filename));
+        });
     },
     open : function(filename, flags, mode, callback){
         if(mode instanceof Function && callback === undefined){
@@ -133,10 +138,10 @@ module.exports = {
     
     watch: function(path, options, callback){
         if(!this.__watchers__){
-            this.__watchers__={};
+            this.__watchers__ = {};
         }
         if(!this.__watchers__[path]){
-            this.__watchers__[path] == [];
+            this.__watchers__[path] = [];
         }
         this.__watchers__[path].push(callback);
     },
@@ -144,7 +149,7 @@ module.exports = {
         var list = this.__watchers__ && this.__watchers__[path];
         if(list){
             for(var i=0, e=list.length; i<e; ++i){
-                list[i](event, filename)
+                list[i](event, filename);
             }
         }
     },
@@ -162,3 +167,6 @@ module.exports = {
         });
     }
 };
+
+
+module.exports = mock_fs;

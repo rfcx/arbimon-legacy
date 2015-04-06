@@ -14,6 +14,17 @@ mock_mysql_connection.prototype = {
             callback = values;
             values = undefined;
         }
+        if(this.query_callback || (this.pool && this.pool.query_callback)){
+            var cbs = [callback];
+            if(this.query_callback){cbs.push(this.query_callback);}
+            if(this.pool && this.pool.query_callback){cbs.push(this.pool.query_callback);}
+            callback = function(){
+                var args=Array.prototype.slice.call(arguments);
+                for(var i in cbs){
+                    cbs[i].apply(this, args);
+                }
+            };
+        }
         var entry = this.cache[sql];
         if(entry){
             if(entry.error){
@@ -57,5 +68,6 @@ module.exports = {
         pool: mock_mysql_pool,
         connection : mock_mysql_connection
     },
-    escape: mysql.escape.bind(mysql)
+    escape: mysql.escape.bind(mysql),
+    escapeId: mysql.escapeId.bind(mysql)
 };

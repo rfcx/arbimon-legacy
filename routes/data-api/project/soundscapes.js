@@ -151,7 +151,14 @@ router.get('/:soundscape/indices', function(req, res, next) {
         }
     },
     function(err, results) {
-        if(err) return next(err);
+        if(err) {
+            if(err.code && err.code === "NoSuchKey"){
+                return res.status(404).json({ error: "indices not found"});
+            }
+            else {
+                return next(err);
+            }
+        }
         
         res.json({
             H: JSON.parse(results.H.Body),

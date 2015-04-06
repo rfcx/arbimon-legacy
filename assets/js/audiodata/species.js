@@ -95,7 +95,7 @@ angular.module('audiodata.species', [
             
     };
 })
-.controller('SelectSpeciesCtrl', ['$scope', 'Species', 'Songtypes',  function($scope, Species, Songtypes) {
+.controller('SelectSpeciesCtrl', function($scope, Species, Songtypes) {
     
     Songtypes.get(function(songs) {
         $scope.songtypes = songs;
@@ -112,5 +112,5 @@ angular.module('audiodata.species', [
             $scope.species = results;
         });
     };
-}])
+})
 ;
