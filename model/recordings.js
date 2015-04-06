@@ -41,13 +41,13 @@ var fileExtPattern = /\.(wav|flac)$/;
 // exports
 var Recordings = {
     QUERY_FIELDS : {
-        id     : {subject: 'R.recording_id'    , project:  true},
-        site   : {subject: 'S.name'            , project: false, level:1, next: 'year'                },
-        year   : {subject: 'YEAR(R.datetime)'  , project: true , level:2, next: 'month' , prev:'site' },
-        month  : {subject: 'MONTH(R.datetime)' , project: true , level:3, next: 'day'   , prev:'year' },
-        day    : {subject: 'DAY(R.datetime)'   , project: true , level:4, next: 'hour'  , prev:'month'},
-        hour   : {subject: 'HOUR(R.datetime)'  , project: true , level:5, next: 'minute', prev:'day'  },
-        minute : {subject: 'MINUTE(R.datetime)', project: true , level:6                , prev:'hour' }
+        id     : { subject: 'R.recording_id',     project:  true },
+        site   : { subject: 'S.name',             project: false, level:1, next: 'year'                },
+        year   : { subject: 'YEAR(R.datetime)',   project: true,  level:2, next: 'month' , prev:'site' },
+        month  : { subject: 'MONTH(R.datetime)',  project: true,  level:3, next: 'day'   , prev:'year' },
+        day    : { subject: 'DAY(R.datetime)',    project: true,  level:4, next: 'hour'  , prev:'month'},
+        hour   : { subject: 'HOUR(R.datetime)',   project: true,  level:5, next: 'minute', prev:'day'  },
+        minute : { subject: 'MINUTE(R.datetime)', project: true,  level:6,                 prev:'hour' }
     },
     parseUrl: function(recording_url){
         var rec_match;
