@@ -15,8 +15,10 @@ angular.module('audiodata.recordings', [
         if($scope.params.range && $scope.params.range.from && $scope.params.range.to) {
             params.range = $scope.params.range;
             
-            params.range.to.setHours(23);
-            params.range.to.setMinutes(59);
+            params.range.from.setUTCHours(0);
+            params.range.from.setUTCMinutes(0);
+            params.range.to.setUTCHours(23);
+            params.range.to.setUTCMinutes(59);
         }
     
         if($scope.params.sites && $scope.params.sites.length)

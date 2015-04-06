@@ -630,35 +630,36 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             
             
             // draw legend
-            var scale = {scale:[1, 50, 100], labels:['0','1','50','100']};
-            var color = d3.scale.threshold().domain(scale.scale).range(scale);
-            
-            var icon = legend.selectAll('g')
-                .data(['1','50','100'])
-                .enter()
-                .append('g')
-                .attr('transform', 'translate(20,0)');
-            
-            icon.append('rect')
-                .attr('width', cubesize)
-                .attr('height', cubesize)
-                .attr('y', height-cubesize-10)
-                .attr('x', function(d, i) { return i*45+22; })
-                .attr('class', function(d) { return 'cal-level-'+d; });
-            
-            icon.append('text')
-                .attr('text-anchor', 'middle')
-                .attr('font-size', 10)
-                .attr('y', height-15)
-                .attr('x', function(d, i) { return i*45+10; })
-                .text(function(d, i) { return '+'+d; });
-            
+            if(scope.mode === "density") {
+                var scale = {scale:[1, 50, 100], labels:['0','1','50','100']};
+                var color = d3.scale.threshold().domain(scale.scale).range(scale);
+                
+                var icon = legend.selectAll('g')
+                    .data(['1','50','100'])
+                    .enter()
+                    .append('g')
+                    .attr('transform', 'translate(20,0)');
+                
+                icon.append('rect')
+                    .attr('width', cubesize)
+                    .attr('height', cubesize)
+                    .attr('y', height-cubesize-10)
+                    .attr('x', function(d, i) { return i*45+22; })
+                    .attr('class', function(d) { return 'cal-level-'+d; });
+                
+                icon.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('font-size', 10)
+                    .attr('y', height-15)
+                    .attr('x', function(d, i) { return i*45+10; })
+                    .text(function(d, i) { return '+'+d; });
+            }
             
             var drawCounts = function() {
-                if(!scope.dateCount) return;
+                if(scope.mode === "density" && !scope.dateCount) return;
                 
                 if(scope.disableEmpty()) {
-                    days.classed('cal-disabled', function(d) {
+                    days.classed('day-disabled', function(d) {
                         return $(this).hasClass('cal-oor') || !scope.dateCount[dateFormat(d)] ;
                     });
                 }                
@@ -742,12 +743,12 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 //  in days, on enter, append a g of class btn
                 days.enter()
                     .append('g')
-                    .attr('class', 'btn');
+                    .attr('class', 'day');
                 
                 //  for each day, move the text, add class hover and onclick event handler
                 days.attr('transform', function() { return 'translate(0,24)'; })
                     .classed('hover', true)
-                    .classed('cal-disabled cal-oor', function(d) {
+                    .classed('day-disabled cal-oor', function(d) {
                         // console.log(d ,scope.minDate, (d < scope.minDate) );
                         return (scope.minDate ? (d < scope.minDate) : false) ||
                                (scope.maxDate ? (scope.maxDate < d) : false);
@@ -793,18 +794,21 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 }
                 draw();
             });
+            
             scope.$watch('minDate', function(){
                 if(scope.minDate && scope.year < scope.minDate.getFullYear()){
                     scope.year = scope.minDate.getFullYear();
                 }
                 draw();
             });
+            
             scope.$watch('year', function(){
                 if(!scope.year){
                     scope.year = new Date().getFullYear();
                 }
                 draw();
             });
+            
             scope.$watch('ngModel', function(){
                 if(scope.ngModel){
                     scope.year = scope.ngModel.getFullYear();
@@ -814,7 +818,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 }
             });
             
-            if(attrs.dateCount) {
+            if(scope.mode === "density" && attrs.dateCount) {
                 scope.$watch('dateCount', function(value) {
                     drawCounts();
                 });

@@ -31,6 +31,7 @@
                 <div class="dropdown-form dropdown-menu datepicker" role="menu" aria-labelledby="dLabel">
                     <loader class="dropdown-loader" ng-show="browser.$type.loading.dates"></loader>
                     <yearpick
+                        mode="density"
                         ng-model="browser.$type.date"
                         max-date="browser.$type.dates.max_date"
                         min-date="browser.$type.dates.min_date"

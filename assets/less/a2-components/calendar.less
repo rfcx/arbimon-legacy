@@ -1,3 +1,9 @@
+@cal-level-cl-0   : white;  
+@cal-level-cl-1   : #adef9c;
+@cal-level-cl-50  : #70dd3a;
+@cal-level-cl-100 : #1EAD01;
+@cal-sel-cl : #003455;
+
 .calendar {
     background-color: white;
     -moz-user-select: none;
@@ -10,47 +16,56 @@
         border-radius: 5px;
         display: none;
     }
-}
-
-@cal-level-cl-0   : white;  
-@cal-level-cl-1   : #adef9c;
-@cal-level-cl-50  : #70dd3a;
-@cal-level-cl-100 : #1EAD01;
-@cal-sel-cl : #003455;
-
-.cal-level-0 { 
-    fill: @cal-level-cl-0;
-}
-.cal-level-1 {
-    fill: @cal-level-cl-1;
-}
-.cal-level-50 {
-    fill: @cal-level-cl-50;
-}
-.cal-level-100 {
-    fill: @cal-level-cl-100;
-}
-.cal-disabled {
-    pointer-events: none;
     
-    text {
-        stroke: #ccc;
+    .day {
+        cursor: pointer;
+        text {
+            fill: #333;
+        }
+        rect {
+            fill: #d4d4d4;
+        }
+    }
+    
+    .day-disabled {
         pointer-events: none;
-    }
-}
-.hover rect {
-    stroke: transparent;
-}
-.hover:hover rect {
-    stroke: black;
-}
-
-.selected {
-    rect{
-        stroke: @cal-sel-cl;
-    }
-    text{
-        fill: @cal-sel-cl;
+        
+        text {
+            fill: #ccc;
+            pointer-events: none;
+        }
+        rect {
+            fill: #fff;
+        }
     }
     
+    .cal-level-0 { 
+        fill: @cal-level-cl-0 + !important;
+    }
+    .cal-level-1 {
+        fill: @cal-level-cl-1 + !important;
+    }
+    .cal-level-50 {
+        fill: @cal-level-cl-50 + !important;
+    }
+    .cal-level-100 {
+        fill: @cal-level-cl-100 + !important;
+    }
+    
+    .hover rect {
+        stroke: transparent;
+    }
+    .hover:hover rect {
+        stroke: black;
+    }
+
+    .selected {
+        rect{
+            stroke: @cal-sel-cl;
+        }
+        text{
+            fill: @cal-sel-cl;
+        }
+        
+    }
 }

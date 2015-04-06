@@ -20,16 +20,20 @@ var tyler        = require('../utils/tyler.js');
 var s3 = new AWS.S3();
 var queryHandler = dbpool.queryHandler;
 
-var date2UTC = function (field, next) {
+
+var getUTC = function (date) {
+    console.log('\n date  ', date);
+    var d = new Date(date);
+    console.log('\n BEFORE', d);
+    d.setTime(d.getTime() + (d.getTimezoneOffset() * 60000));
+    console.log('\n AFTER ', d);
+    return d;
+};
+
+var parseUtcDatetime = function (field, next) {
     if (field.type !== 'DATETIME') return next(); // 1 = true, 0 = false
     
-    var d = new Date(field.string());
-    // console.log(d);
-    
-    d.setTime(d.getTime() - (d.getTimezoneOffset() * 60000));
-    
-    // console.log(d);
-    return d;
+    return new Date(field.string() + ' GMT');
 };
 
 var fileExtPattern = /\.(wav|flac)$/;
@@ -184,7 +188,7 @@ var Recordings = {
             
         var query = {
             sql: sql,
-            typeCast: date2UTC,
+            typeCast: parseUtcDatetime,
         };
         
         return queryHandler(query, function(err, data){
@@ -283,7 +287,7 @@ var Recordings = {
     /** Downloads a recording from the bucket, storing it in a temporary file cache, and returns its path.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
-     * @param {Function} callback(err, path) funciton to call back with the recording's path.
+     * @param {Function} callback(err, path) function to call back with the recording's path.
      */
     fetchRecordingFile: function(recording, callback){
         tmpfilecache.fetch(recording.uri, function(cache_miss){
@@ -304,7 +308,7 @@ var Recordings = {
     /** Returns the audio file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
-     * @param {Function} callback(err, path) funciton to call back with the recording audio file's path.
+     * @param {Function} callback(err, path) function to call back with the recording audio file's path.
      */
     fetchAudioFile: function (recording, callback) {
         var mp3audio_key = recording.uri.replace(fileExtPattern, '.mp3');
@@ -324,7 +328,7 @@ var Recordings = {
     /** Returns the spectrogram file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
-     * @param {Function} callback(err, path) funciton to call back with the recording spectrogram file's path.
+     * @param {Function} callback(err, path) function to call back with the recording spectrogram file's path.
      */
     fetchSpectrogramFile: function (recording, callback) {
         var spectrogram_key = recording.uri.replace(fileExtPattern, '.png');
@@ -418,7 +422,7 @@ var Recordings = {
     /** Returns the thumbnail file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
-     * @param {Function} callback(err, path) funciton to call back with the recording spectrogram file's path.
+     * @param {Function} callback(err, path) function to call back with the recording spectrogram file's path.
      */
     fetchThumbnailFile: function (recording, callback) {
         var thumbnail_key = recording.uri.replace(fileExtPattern, '.thumbnail.png');
@@ -444,7 +448,7 @@ var Recordings = {
      * @param {Object}  validation object containing the validation to add to this recording.
      * @param {String}  validation.class identifier used to obtain the class to be validated.
      * @param {Integer} validation.val   value used to validate the class in the given recording.
-     * @param {Function} callback(err, path) funciton to call back with the validation result.
+     * @param {Function} callback(err, path) function to call back with the validation result.
      */
     validate: function (recording, user_id, project_id, validation, callback) {
         if(!validation) {
@@ -694,7 +698,9 @@ var Recordings = {
             q = sprintf(q, parameters.project_id);
             
             if(parameters.range) {
-                q += 'AND r.datetime BETWEEN '+ mysql.escape(parameters.range.from) +' AND ' + mysql.escape(parameters.range.to) + ' \n';
+                console.log(parameters.range);
+                q += 'AND r.datetime BETWEEN '+ mysql.escape(getUTC(parameters.range.from)) +
+                    ' AND ' + mysql.escape(getUTC(parameters.range.to)) + ' \n';
             }
             
             if(parameters.sites){
@@ -738,7 +744,7 @@ var Recordings = {
             
             var query = {
                 sql: q,
-                typeCast: date2UTC,
+                typeCast: parseUtcDatetime,
             };
             queryHandler(query, callback);
         });
