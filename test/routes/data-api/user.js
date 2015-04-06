@@ -8,6 +8,7 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var sinon = require('sinon');
 var rewire= require('rewire');
 var events = require('events');
+var sha256 = require('../../../utils/sha256');
 var router_expect = require('../../mock_tools/router_expect');
 var dd=console.log;
 var user = rewire('../../../routes/data-api/user');
@@ -28,7 +29,7 @@ describe('user.js', function(){
     afterEach(function(){
         mock.model.news={};
         mock.model.projects={};
-        mock.model.user={};
+        mock.model.users={};
     });
     
     describe('get /projectlist', function(){
@@ -95,11 +96,134 @@ describe('user.js', function(){
         });
     });
     describe('get /info', function(){
+        it('Should return the user info associated with the current session.', function(done){
+            user_router.when({url:'/info',session:{user:{username:'pepe',email:'pepe@site.com',firstname:'Pepe',lastname:'User'}}}, { json: function(req, res, obj){
+                should.exist(obj);
+                obj.should.deep.equal({username:'pepe',email:'pepe@site.com',name:'Pepe',lastname:'User'});
+                done();
+            }});
+        });
     });
     describe('get /search/:query', function(){
+        it('Should return the set of users matching the given query.', function(done){
+            mock.model.users.search = function(q, cb){ cb(null, [{username:'pepe',email:'pepe@site.com',firstname:'Pepe',lastname:'User'}]); };
+            user_router.when({url:'/search/pepe',_params:{query:'pepe'}}, { json: function(req, res, obj){
+                should.exist(obj);
+                obj.should.deep.equal([{username:'pepe',email:'pepe@site.com',firstname:'Pepe',lastname:'User',imageUrl:'gravatar_image.png'}]);
+                done();
+            }});
+        });
+        it('Should fail if user search fails.', function(done){
+            mock.model.users.search = function(q, cb){ cb(new Error("I am error")); };
+            user_router.when({url:'/search/pepe',_params:{query:'pepe'}}, { next: function(req, res, err){
+                should.exist(err);
+                err.message.should.equal('I am error');
+                done();
+            }});
+        });
+        it('Should return error if query is empty.', function(done){
+            user_router.when({url:'/search/p',_params:{query:undefined}}, { json: function(req, res, obj){
+                should.exist(obj);
+                obj.should.deep.equal({error:'empty query'});
+                done();
+            }});
+        });
+
     });
     describe('post /update/password', function(){
+        it('Should update a logged user\'s password, if given password matches.', function(done){
+            mock.model.users.findById = function(q, cb){ cb(null, [{username:'pepe',email:'pepe@site.com',firstname:'Pepe',lastname:'User', password:sha256('oldpass')}]); };
+            mock.model.users.update = sinon.spy(function(_, cb){ cb(null);});
+            user_router.when({url:'/update/password',method:"POST", session:{user:{id:9393}}, body:{userData:{newPass:'newpass'},password:"oldpass"}}, { json: function(req, res, obj){
+                mock.model.users.update.calledOnce.should.be.true;
+                should.exist(obj);
+                obj.should.deep.equal({message:'success! password updated'});
+                done();
+            }});
+        });
+        it('Should respond with failure if parameters are missing.', function(done){
+            mock.model.users.update = sinon.spy(function(_, cb){ cb(null);});
+            user_router.when({url:'/update/password',method:"POST", session:{user:{id:9393}}, body:{}}, { json: function(req, res, obj){
+                mock.model.users.update.calledOnce.should.be.false;
+                should.exist(obj);
+                obj.should.deep.equal({error:'missing parameters'});
+                done();
+            }});
+        });
+        it('Should respond with failure if given password does not match.', function(done){
+            mock.model.users.findById = function(q, cb){ cb(null, [{username:'pepe',email:'pepe@site.com',firstname:'Pepe',lastname:'User', password:sha256('oldpass')}]); };
+            mock.model.users.update = sinon.spy(function(_, cb){ cb(null);});
+            user_router.when({url:'/update/password',method:"POST", session:{user:{id:9393}}, body:{userData:{newPass:'newpass'},password:"oldpassblah"}}, { json: function(req, res, obj){
+                mock.model.users.update.calledOnce.should.be.false;
+                should.exist(obj);
+                obj.should.deep.equal({error: "invalid password"});
+                done();
+            }});
+        });
+        it('Should fail if update fails.', function(done){
+            mock.model.users.findById = function(q, cb){ cb(null, [{username:'pepe',email:'pepe@site.com',firstname:'Pepe',lastname:'User', password:sha256('oldpass')}]); };
+            mock.model.users.update = sinon.spy(function(_, cb){ cb(new Error('I am error'));});
+            user_router.when({url:'/update/password',method:"POST", session:{user:{id:9393}}, body:{userData:{newPass:'newpass'},password:"oldpass"}}, { next: function(req, res, err){
+                should.exist(err);
+                err.message.should.equal('I am error');
+                done();
+            }});
+        });
+        it('Should fail if user search fails.', function(done){
+            mock.model.users.findById = function(q, cb){ cb(new Error('I am error')); };
+            user_router.when({url:'/update/password',method:"POST", session:{user:{id:9393}}, body:{userData:{newPass:'newpass'},password:"oldpass"}}, { next: function(req, res, err){
+                should.exist(err);
+                err.message.should.equal('I am error');
+                done();
+            }});
+        });
     });
     describe('post /update/name', function(){
+        it('Should update a logged user\'s firstname and lastname, if given password matches.', function(done){
+            mock.model.users.findById = function(q, cb){ cb(null, [{username:'pepe',email:'pepe@site.com',firstname:'Pepe',lastname:'User', password:sha256('oldpass')}]); };
+            mock.model.users.update = sinon.spy(function(_, cb){ cb(null);});
+            user_router.when({url:'/update/name',method:"POST", session:{user:{id:9393}}, body:{userData:{name:'Papo',lastname:'Maleante'},password:"oldpass"}}, { json: function(req, res, obj){
+                mock.model.users.update.calledOnce.should.be.true;
+                should.exist(obj);
+                obj.should.deep.equal({message:'success! Name updated'});
+                done();
+            }});
+        });
+        it('Should respond with failure if parameters are missing.', function(done){
+            mock.model.users.update = sinon.spy(function(_, cb){ cb(null);});
+            user_router.when({url:'/update/name',method:"POST", session:{user:{id:9393}}, body:{}}, { json: function(req, res, obj){
+                mock.model.users.update.calledOnce.should.be.false;
+                should.exist(obj);
+                obj.should.deep.equal({error:'missing parameters'});
+                done();
+            }});
+        });
+        it('Should respond with failure if given password does not match.', function(done){
+            mock.model.users.findById = function(q, cb){ cb(null, [{username:'pepe',email:'pepe@site.com',firstname:'Pepe',lastname:'User', password:sha256('oldpass')}]); };
+            mock.model.users.update = sinon.spy(function(_, cb){ cb(null);});
+            user_router.when({url:'/update/name',method:"POST", session:{user:{id:9393}}, body:{userData:{name:'Papo',lastname:'Maleante'},password:"oldpassblah"}}, { json: function(req, res, obj){
+                mock.model.users.update.calledOnce.should.be.false;
+                should.exist(obj);
+                obj.should.deep.equal({error: "invalid password"});
+                done();
+            }});
+        });
+        it('Should fail if update fails.', function(done){
+            mock.model.users.findById = function(q, cb){ cb(null, [{username:'pepe',email:'pepe@site.com',firstname:'Pepe',lastname:'User', password:sha256('oldpass')}]); };
+            mock.model.users.update = sinon.spy(function(_, cb){ cb(new Error('I am error'));});
+            user_router.when({url:'/update/name',method:"POST", session:{user:{id:9393}}, body:{userData:{name:'Papo',lastname:'Maleante'},password:"oldpass"}}, { next: function(req, res, err){
+                should.exist(err);
+                err.message.should.equal('I am error');
+                done();
+            }});
+        });
+        it('Should fail if user search fails.', function(done){
+            mock.model.users.findById = function(q, cb){ cb(new Error('I am error')); };
+            user_router.when({url:'/update/name',method:"POST", session:{user:{id:9393}}, body:{userData:{name:'Papo',lastname:'Maleante'},password:"oldpass"}}, { next: function(req, res, err){
+                should.exist(err);
+                err.message.should.equal('I am error');
+                done();
+            }});
+        });
     });
 });

@@ -11,7 +11,10 @@ var router_expect = function(router, defaults){
         _params:{},
         query:{},
         params:{},
-        param: function(p){return this._params[p];},
+        param: function(p){
+            var v = this._params[p];
+            return v;
+        },
         method: 'GET'
     }, defaults || {});
 };
