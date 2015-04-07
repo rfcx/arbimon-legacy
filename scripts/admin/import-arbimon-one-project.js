@@ -1,7 +1,8 @@
 #!/usr/bin/env nodejs
-var readline = require('readline');
 var mysql = require('mysql');
+var async = require('async');
 var argv = require('minimist')(process.argv.slice(2));
+var read = require("read");
 
 var dbpool = require('../../utils/dbpool');
 
@@ -42,23 +43,44 @@ var q = {
         "WHERE sv.event_data_id = ? ",
 };
 
-var rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-var arbimonOneDb = mysql.createConnection({
-    host : argv.dbhost || argv.h,
-    user : argv.user || argv.u,
-    password: ''
-});
-
-arbimonOneDb.query(q.projectInfo, [138], function(err, rows) {
-    if(err) return console.error(err);
+if(!argv.user && !argv.u) {
+    console.log('missing db username');
+    process.exit(1);
+    return;
+}
     
-    console.log(rows);
-    arbimonOneDb.end();
+if(!argv.dbhost && !argv.h) {
+    console.log('missing db host');
+    process.exit(1);
+    return;
+}
+    
+var user = argv.user || argv.u;
+var host = argv.dbhost || argv.h;
+
+read({ 
+        prompt: 'Enter the password for '+ user+': ', 
+        silent: true 
+    }, 
+    function(err, input) {
+
+    var arbimonOneDb = mysql.createConnection({
+        host: host,
+        user: user,
+        password: input
+    });
+    
+    arbimonOneDb.query(q.projectInfo, [138], function(err, rows) {
+        if(err) return console.error(err);
+        
+        console.log(rows);
+        arbimonOneDb.end();
+    });
 });
+
+
+
+
 
 // dbpool.getConnection(function(err, db) {
 //     if(err) return console.error(err);
