@@ -172,7 +172,6 @@ header nav ul.nav > li a > img {
         bottom: 0;
     }
     border-left: 1px solid #d0d0d0;
-    width: 100%;
     left: 0;
     right: 0;
     top: 0;
@@ -866,4 +865,14 @@ textarea.fixed-width {
 // use click icon
 .clickable {
     cursor: pointer;
+}
+
+.table-hide-btns tr .btn {
+    opacity: 0;
+    -webkit-transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease;
+}
+
+.table-hide-btns tr:hover .btn {
+    opacity: 1;
 }

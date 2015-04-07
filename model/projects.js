@@ -198,14 +198,16 @@ var Projects = {
             "SELECT pc.project_class_id as id, \n"+
             "       pc.species_id as species, \n"+
             "       pc.songtype_id as songtype, \n"+
+            "       st.taxon, \n"+
             "       sp.scientific_name as species_name, \n"+
             "       so.songtype as songtype_name \n"+
             "FROM project_classes AS pc \n"+
             "JOIN species AS sp on sp.species_id = pc.species_id \n"+
             "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
+            "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id \n" +
             "WHERE pc.project_id = " + mysql.escape(project_id) +
             (class_id ? "\n  AND pc.project_class_id = " + (class_id|0) : '') +
-            " ORDER BY species_name"
+            " ORDER BY st.taxon, sp.scientific_name"
         );
 
         return queryHandler(sql , callback);
