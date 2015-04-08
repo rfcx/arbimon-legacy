@@ -162,8 +162,7 @@ router.post('/validate/:oneRecUrl?', function(req, res, next) {
         return res.json({ error: "you dont have permission to validate species" });
     }
 
-    var recording = req.recording;
-    model.recordings.validate(recording, req.session.user.id, req.project.project_id, req.body, function(err, validations) {
+    model.recordings.validate(req.recording, req.session.user.id, req.project.project_id, req.body, function(err, validations) {
         if(err) return next(err);
         return res.json(validations);
     });
