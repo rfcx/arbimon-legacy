@@ -6,7 +6,6 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
         scope : {
             recording : '=recording'
         },
-        // replace: true,
         templateUrl: '/partials/visualizer/validator-main.html',
         link: function($scope, $element, $attrs){
             var class2key = function(project_class){
@@ -46,7 +45,7 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 });
             };
             
-            // $scope.$on('a2-persisted', load_project_classes);
+            $scope.$on('a2-persisted', load_project_classes);
             
             $scope.classes = [];
             $scope.is_selected = {};
