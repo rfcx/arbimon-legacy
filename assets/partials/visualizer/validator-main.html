@@ -5,21 +5,25 @@
             <th>Sound</th>
             <th>Annotation</th>
         </tr>
-        <tr ng-repeat="class in classes" ng-click="select(class, $event) | trackEvent:'Visualizer-Validator-Main':'Select'" ng-class="is_selected[class.id] ? 'active' : ''">
-            <td ng-bind="class.species_name"></td>
-            <td ng-bind="class.songtype_name"> </td>
+        <tr ng-repeat="class in classes" 
+            ng-click="select(class, $event) | trackEvent:'Visualizer-Validator-Main':'Select'" 
+            ng-class="is_selected[class.id] ? 'active' : ''">
+            <td> {{ class.species_nameclass }} {{ class }}</td>
+            <td> {{ class.songtype_name }} </td>
             <td>
                 <div class="dropdown">
                     <button class="btn-a2-validate btn btn-xs btn-block btn-default" role="button" data-toggle="dropdown">
-                        <span class="fa"
-                            ng-class="'val-'+val_state(class.id).val"
-                        ></span>
+                        <span class="fa" ng-class="'val-'+val_state(class.id).val"></span>
                         {{ val_state(class.id).label || "---"}}
+                        {{ val_options }}
                         <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
+                    <ul class="dropdown-menu dropdown-height-7" role="menu">
                         <li ng-repeat="option in val_options">
-                            <a ng-click="validate(class.id, option.val) | trackEvent:'Visualizer-Validator-Main':'Validate'"><i class="fa" ng-class="'val-'+option.val"></i> {{option.label}}</a>
+                            <a ng-click="validate(class.id, option.val) | trackEvent:'Visualizer-Validator-Main':'Validate'">
+                                <i class="fa" ng-class="'val-'+option.val"></i> 
+                                {{option.label}}
+                            </a>
                         </li>
                     </ul>
                 </div>

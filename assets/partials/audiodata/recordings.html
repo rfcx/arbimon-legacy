@@ -144,12 +144,28 @@
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <a2-table fields="fields" rows="recs" checked="checked" ext-sort="sortRecs(sortBy, reverse)" no-select></a2-table>
-        <div class="jumbotron" ng-show="(!recs || !recs.length > 0) && !loading">
-            <h3>
-                No recordings found. <a href="#/audiodata/uploads" ui-sref="audiodata.uploads">Upload here</a>
-            </h3>
-        </div>
+        <a2-table2 class="table-hide-btns" rows="recs" checked="checked" ext-sort="sortRecs(sortBy, reverse)" default-sort="site" no-select>
+            <field title="">
+                <a class="btn btn-default btn-xs" 
+                    ng-href="#/visualizer/rec/{{row.id}}"
+                    title="View in Visualizer">
+                    <i class="fa fa-cubes"></i>
+                </a>
+            </field>
+            <field title="Filename"   key="file"     >{{ row.file     }}</field>
+            <field title="Site"       key="site"     >{{ row.site     }}</field>
+            <field title="Time"       key="datetime" >{{ row.datetime | momentUtc: 'lll'}}
+                <!-- <span class="on-row-hover">
+                    <a ng-href="#/visualizer/rec/{{row.id}}">
+                        <i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i>
+                    </a>
+                </span> -->
+            </field>
+            <field title="Recorder"   key="recorder" >{{ row.recorder }}</field>
+            <field title="Microphone" key="mic"      >{{ row.mic      }}</field>
+            <field title="Software"   key="version"  >{{ row.version  }}</field>
+            <!-- <field title=""   key=""     >{{ row.file     }}</field> -->
+        </a2-table2>
         <loader ng-hide="!loading"></loader>
     </div>
 </div>
