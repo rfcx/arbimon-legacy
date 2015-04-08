@@ -16,7 +16,7 @@ angular.module('a2browser_soundscapes', [])
             self.loading.soundscapes = false;
             self.soundscapes = soundscapes;
             self.soundscapes.forEach(function(soundscape){
-                soundscape.caption2 = 'scale:' + (soundscape.visual_max_value !== null ? soundscape.visual_max_value : soundscape.max_value);
+                soundscape.caption2 = soundscape.normalized ? 'normalized' : ('scale:' + (soundscape.visual_max_value !== null ? soundscape.visual_max_value : soundscape.max_value));
             });
 
             if(!self.soundscapes_lovo){

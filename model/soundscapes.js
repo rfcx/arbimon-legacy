@@ -65,6 +65,7 @@ var Soundscapes = {
             "       SC.bin_size, \n"+
             "       SC.threshold, \n"+
             "       SC.frequency, \n"+
+            "       SC.normalized, \n"+
             "       SCAT.identifier as aggregation, \n" +
             "       SCAT.name as aggr_name, \n" +
             "       SCAT.scale as aggr_scale, \n" +
@@ -126,6 +127,70 @@ var Soundscapes = {
             var idx = new scidx();
             idx.read(scidx_path.path, filters, callback);
         });                
+    },
+
+
+    aggregations : {
+        'time_of_day': {
+            'date': ['%H'], 'projection': [1], 'range': [0,  23]
+        },
+        'day_of_month': {
+            'date': ['%d'], 'projection': [1], 'range': [1,  31]
+        },
+        'day_of_year': {
+            'date': ['%j'], 'projection': [1], 'range': [1, 366]
+        },
+        'month_in_year': {
+            'date': ['%m'], 'projection': [1], 'range': [1,  12]
+        },
+        'day_of_week': {
+            'date': ['%w'], 'projection': [1], 'range': [0,   6]
+        },
+        'year': {
+            'date': ['%Y'], 'projection': [1], 'range': 'auto'
+        }
+    },
+
+    /** Fetches the soundscape's normalization vector.
+     * @param {Object}  soundscape    soundscape object
+     * @param {Function} callback     called back with the index file.
+     */
+    fetchNormVector : function(soundscape, callback){
+        if(!soundscape){
+            callback(new Error('Soundscape not given'));
+            return;
+        }
+        var aggregation = this.aggregations[soundscape.aggregation.id];
+        if(!aggregation){
+            callback(new Error('Invalid soundscape aggregation ' + soundscape.aggregation.id));
+            return;
+        }
+        
+        var proy = aggregation.projection, proylen = aggregation.projection.length;
+        var dateparts = aggregation.date.map(function(datepart){
+            return 'DATE_FORMAT(R.datetime, "'+datepart+'")';
+        });
+        
+        queryHandler(
+            "SELECT " + dateparts.map(function(dp, i){
+                return dp + " as dp_"+i;
+            }).join(", ") + ", COUNT(*) as count\n" +
+            "FROM `soundscapes` S\n" +
+            "JOIN `playlist_recordings` PR ON S.playlist_id = PR.playlist_id\n" +
+            "JOIN `recordings` R ON R.recording_id = PR.recording_id\n" +
+            "WHERE S.soundscape_id = " + mysql.escape(soundscape.id) + "\n" +
+            "GROUP BY " + dateparts.join(", "), function(err, rows){
+                if(err){ callback(err); return; }
+                var normvec = {};
+                rows.forEach(function(row){
+                    var date=0;
+                    for(var i=0; i < proylen; ++i){
+                        date += proy[i] * row['dp_' + i];
+                    }
+                    normvec[date] = row.count;
+                });
+                callback(null, normvec);
+        });
     },
 
     region_schema : joi.object().keys({
@@ -537,23 +602,24 @@ var Soundscapes = {
     },
 
 
-    /** sets the soundscape's visualization scale.
+    /** sets the soundscape's visualization options.
      * @param {Object}  soundscape   soundscape 
-     * @param {Object}  scale        scale object
-     * @param {Integer} scale.max    max value
+     * @param {Object}  options        options object
+     * @param {Integer} options.max    max value
      * @param {Function} callback called back with the results.
      */
-    setVisualScale: function(soundscape, scale, callback){
-        if(!scale){
-            scale = {};
+    setVisualizationOptions: function(soundscape, options, callback){
+        if(!options){
+            options = {};
         }
         
-        var max = (scale.max || soundscape.max_value);
-        var palette = scale.palette === undefined ?  soundscape.visual_palette : (scale.palette | 0);
+        var max = (options.max || soundscape.max_value);
+        var palette = options.palette === undefined ?  soundscape.visual_palette : (options.palette | 0);
+        var normalized = options.normalized | 0;
         var cmd;
         var script = child_process.spawn(
             '.env/bin/python', cmd=[
-                'scripts/Soundscapes/set_visual_scale.py', (soundscape.id|0), max == '-' ? '-' : (max|0), palette]
+                'scripts/Soundscapes/set_visual_scale.py', (soundscape.id|0), max == '-' ? '-' : (max|0), palette, normalized]
         );
         console.log(cmd);
         script.on('close', function(code){

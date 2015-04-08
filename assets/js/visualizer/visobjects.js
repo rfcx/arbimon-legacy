@@ -127,6 +127,10 @@ angular.module('a2visobjects', [
             var t0=this.min_t, t1=this.max_t;
             var f0=this.min_f, f1=this.max_f;
             var v0=this.min_value, v1=this.visual_max_value || this.max_value;
+            if(this.normalized){
+                v0=0;
+                v1=100;
+            }
             var dt= t1 - t0 + 1, df= f1 - f0, dv = v1 - v0;
 
             var aggregation = aggregations[this.aggregation] || aggregations.unknown;
@@ -157,6 +161,9 @@ angular.module('a2visobjects', [
                 }
 
             };
+            if(this.normalized){
+                this.domain.legend.tick_format = function(v){ return v+'%';};
+            }
             // set it to the scope
             this.tiles = { x:1, y:1, set : [{
                 i:0, j:0, 

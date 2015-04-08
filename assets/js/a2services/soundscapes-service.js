@@ -33,6 +33,18 @@ angular.module('a2-soundscapes-service', [
                 });
             return d.promise;
         },
+        getNormVector: function(soundscapeId, callback) {
+            var d = $q.defer();
+            var projectName = Project.getUrl();
+            
+            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/norm-vector')
+                .success(function(data) {
+                    if(callback) callback(data);
+                    
+                    d.resolve(data);
+                });
+            return d.promise;
+        },
         // TODO fusion getList and getList2 routes to return needed data
         getList: function(query, callback) {
             if(query instanceof Function){
@@ -53,7 +65,7 @@ angular.module('a2-soundscapes-service', [
                 .success(callback)
                 .error(notify.serverError);
         },
-        setVisualScale: function(soundscapeId, params, callback){
+        setVisualizationOptions: function(soundscapeId, params, callback){
             var projectName = Project.getUrl();
             $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/scale', params)
                 .success(function(data) {

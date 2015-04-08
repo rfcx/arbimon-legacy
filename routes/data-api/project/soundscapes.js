@@ -120,6 +120,17 @@ router.get('/:soundscape/scidx', function(req, res, next) {
     });
 });
 
+router.get('/:soundscape/norm-vector', function(req, res, next) {
+    var soundscape = req.soundscape;
+    model.soundscapes.fetchNormVector(req.soundscape, function(err, vector){
+        if(err){
+            next(err);
+        } else {
+            res.json(vector);
+        }
+    });
+});
+
 router.get('/:soundscape/indices', function(req, res, next) {
     
     var uri = sprintf('project_%(project_id)s/soundscapes/%(soundscape_id)s/', {
@@ -172,9 +183,10 @@ router.post('/:soundscape/scale', function(req, res, next) {
     if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
         return res.json({ error: "you dont have permission to 'manage soundscapes'" });
         
-    model.soundscapes.setVisualScale(req.soundscape, {
+    model.soundscapes.setVisualizationOptions(req.soundscape, {
         max : req.body.max,
-        palette : (req.body.palette | 0)
+        palette : (req.body.palette | 0),
+        normalized : !!req.body.normalized
     }, function(err, soundscape){
         if(err){
             next(err);
