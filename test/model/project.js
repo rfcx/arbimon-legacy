@@ -79,9 +79,30 @@ projects.__set__({
     }
 });
 
-var project={project_id:1, url:'project/url', name:'project', description:'description', owner_id:9393, project_type_id:1, is_private:1};
-var insertproject={id:1, url:'project/url', name:'project', description:'description', owner_id:9393, project_type_id:1, is_private:1};
-var news = {user_id:9393, project_id:1, data:'news #5', news_type_id:1};
+var project = {
+    project_id: 1,
+    url: 'project/url',
+    name: 'project',
+    description: 'description',
+    owner_id: 9393,
+    project_type_id: 1,
+    is_private: 1
+};
+var insertproject = {
+    id: 1,
+    url: 'project/url',
+    name: 'project',
+    description: 'description',
+    owner_id: 9393,
+    project_type_id: 1,
+    is_private: 1
+};
+var news = {
+    user_id: 9393,
+    project_id: 1,
+    data: 'news #5',
+    news_type_id: 1
+};
 
 describe('Project', function(){    
     describe('listAll', function(){
@@ -318,18 +339,23 @@ describe('Project', function(){
         });
     });
     describe('getProjectClasses', function(){
-        beforeEach(function(){mock_mysql.pool.cache = {};});
+        beforeEach(function() {
+            mock_mysql.pool.cache = {};
+        });
+        
         it('Should return the list of all the class in the project.', function(done){
             dbpool.pool.cache[
                 "SELECT pc.project_class_id as id, \n" +
                 "       pc.species_id as species, \n" +
                 "       pc.songtype_id as songtype, \n" +
+                "       st.taxon, \n"+
                 "       sp.scientific_name as species_name, \n" +
                 "       so.songtype as songtype_name \n" +
                 "FROM project_classes AS pc \n" +
                 "JOIN species AS sp on sp.species_id = pc.species_id \n" +
                 "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
-                "WHERE pc.project_id = 1 ORDER BY species_name"
+                "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id \n" +
+                "WHERE pc.project_id = 1 ORDER BY st.taxon, sp.scientific_name"
             ]={value:['class1','class2']};
             projects.getProjectClasses(1, function(err, results){
                 should.not.exist(err);
@@ -342,13 +368,15 @@ describe('Project', function(){
                 "SELECT pc.project_class_id as id, \n" +
                 "       pc.species_id as species, \n" +
                 "       pc.songtype_id as songtype, \n" +
+                "       st.taxon, \n"+
                 "       sp.scientific_name as species_name, \n" +
                 "       so.songtype as songtype_name \n" +
                 "FROM project_classes AS pc \n" +
                 "JOIN species AS sp on sp.species_id = pc.species_id \n" +
                 "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
+                "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id \n" +
                 "WHERE pc.project_id = 1\n" +
-                "  AND pc.project_class_id = 1 ORDER BY species_name"
+                "  AND pc.project_class_id = 1 ORDER BY st.taxon, sp.scientific_name"
             ]={value:['class1']};
             projects.getProjectClasses(1, 1, function(err, results){
                 should.not.exist(err);
