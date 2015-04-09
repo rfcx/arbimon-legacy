@@ -19,16 +19,16 @@
         <div ng-hide="loading">
             <table ng-table="tableParams" class="table table-hide-btns" show-filter="true" >
                 <tr ng-repeat="soundscape in soundscapesData" >
-                    <td data-title="'Date'" class="no-wrap-table-cell" sortable="'date'" >
+                    <td data-title="'Date'" class="no-wrap-table-cell" data-sortable="'date'" >
                         {{soundscape.date | moment : 'lll' }} 
                     </td> 
-                    <td data-title="'Name'" class="no-wrap-table-cell hidelongtext widthtd" sortable="'name'"  filter="{ 'name': 'text' }">
+                    <td data-title="'Name'" class="no-wrap-table-cell hidelongtext widthtd" data-sortable="'name'"  filter="{ 'name': 'text' }">
                         {{soundscape.name}}
                     </td>
-                    <td data-title="'User'" class="no-wrap-table-cell" sortable="'user'"  filter="{ 'user': 'text' }">
+                    <td data-title="'User'" class="no-wrap-table-cell" data-sortable="'user'"  filter="{ 'user': 'text' }">
                         {{soundscape.user}}
                     </td>
-                    <td data-title="'Playlist'" class="no-wrap-table-cell hidelongtext widthtd" sortable="'playlist'"  filter="{ 'playlist': 'text' }">
+                    <td data-title="'Playlist'" class="no-wrap-table-cell hidelongtext widthtd" data-sortable="'playlist'"  filter="{ 'playlist': 'text' }">
                         {{soundscape.playlist}}
                     </td>
                     <td>

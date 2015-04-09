@@ -669,10 +669,8 @@
             $scope.invalid = false;
 
             $scope.recalculate = function() {
-                // TODO need fix jQuery most be used only on directives
-                var newval = $('#newthres').val(); 
                 $scope.messageSaved = '';
-                newval = parseFloat(newval);
+                var newval = parseFloat($scope.newthres);
 
                 if (!isNaN(newval) && (newval <= 1.0) && (newval >= 0.0)) {
                     $scope.currentThreshold = newval;
