@@ -1,7 +1,11 @@
 <div class="content">
+    <p ng-hide="byTaxon.length">
+        You need to add species sounds <a ui-sref="audiodata.species">here</a>
+    </p>
     <accordion close-others="false" class="accordion-group">
-        <accordion-group is-open="status.open" ng-repeat="(taxon, list) in byTaxon" class="accordion-table">
+        <accordion-group is-open="byTaxon[taxon].open" ng-repeat="(taxon, list) in byTaxon" class="accordion-table">
             <accordion-heading>
+                <i class="fa" ng-class="byTaxon[taxon].open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                 {{ taxon }}
             </accordion-heading>
             <table class="table table-condensed">

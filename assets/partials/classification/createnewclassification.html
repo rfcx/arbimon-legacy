@@ -43,6 +43,15 @@
     </form>
 </div>  
 <div class="modal-footer">  
-    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Classification-new classification modal':'Submit'"  ng-disabled="buttonEnable()">Create</button>  
-    <button class="btn btn-warning" ng-click="cancel() | trackEvent:'Analysis-Classification-new classification modal':'Cancel'">Close</button>  
+    <button class="btn btn-primary" 
+        ng-click="ok() | trackEvent:'Analysis-Classification-new classification modal':'Submit'" 
+        ng-disabled="buttonEnable()">
+            <i class="fa fa-cogs"></i> 
+            Create
+    </button>  
+    <button class="btn btn-default" 
+        ng-click="cancel() | trackEvent:'Analysis-Classification-new classification modal':'Cancel'">
+            <i class="fa fa-times"></i> 
+            Close
+    </button>  
 </div>  
