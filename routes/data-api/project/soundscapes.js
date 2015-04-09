@@ -1,6 +1,7 @@
 var debug = require('debug')('arbimon2:route:soundscapes');
 var express = require('express');
 var sprintf = require("sprintf-js").sprintf;
+var csv_stringify = require("csv-stringify");
 var async = require('async');
 var AWS = require('aws-sdk');
 
@@ -89,6 +90,7 @@ router.get('/details', function(req, res, next) {
 });
 
 
+
 router.get('/:soundscape', function(req, res, next) {
     res.json(req.soundscape);
 });
@@ -130,6 +132,57 @@ router.get('/:soundscape/norm-vector', function(req, res, next) {
         }
     });
 });
+
+router.get('/:soundscape/export-list', function(req, res, next) {
+    var soundscape = req.soundscape;
+    var filename = soundscape.name.replace(/[^a-zA-Z0-9-_]/g, '_').replace(/_+/g,'_') + '.' + new Date().getTime() + '.csv';
+    model.soundscapes.fetchSCIDX(req.soundscape, function(err, scidx){
+        if(err){
+            next(err);
+        } else {
+            var cols = ["site", "recording", "time index", "frequency"];
+            var recdata={};
+            var stringifier = csv_stringify({header:true, columns:cols});
+            res.setHeader('Content-disposition', 'attachment; filename='+filename);
+            stringifier.pipe(res);
+            async.eachSeries(Object.keys(scidx.index), function(freq_bin, next_row){
+                var row = scidx.index[freq_bin];
+                var freq = freq_bin * soundscape.bin_size;
+                async.eachSeries(Object.keys(row), function(time, next_cell){
+                    async.eachSeries(row[time], function(rec_idx, next_rec){
+                        var recId = scidx.recordings[rec_idx];
+                        async.waterfall([
+                            function(next_step){
+                                if(recdata[recId]){
+                                    next_step();
+                                } else {
+                                    model.recordings.findByUrlMatch(recId, null, next_step);
+                                }
+                            },
+                            function(recordings){
+                                var next_step = arguments[arguments.length - 1];
+                                if(!recdata[recId] && recordings && recordings.length > 0){
+                                    recdata[recId] = recordings[0];
+                                }
+                                next_step(null, recdata[recId]);
+                            }
+                        ], function(err, recording){
+                            if(err || !recording){
+                                stringifier.write(["-", "id:"+recId, time, freq]);
+                            } else {
+                                stringifier.write([recording.site, recording.file, time, freq]);
+                            }
+                            next_rec();
+                        });
+                    }, next_cell);
+                }, next_row);
+            }, function(){
+                stringifier.end();
+            });
+        }
+    });
+});
+
 
 router.get('/:soundscape/indices', function(req, res, next) {
     

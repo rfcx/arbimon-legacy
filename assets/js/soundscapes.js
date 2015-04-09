@@ -8,9 +8,10 @@
     
     var template_root = '/partials/soundscapes/';
     
-    soundscapes.controller('SoundscapesCtrl' , function ($scope, $modal, $filter, Project, JobsData, 
+    soundscapes.controller('SoundscapesCtrl' , function ($window, $scope, $modal, $filter, Project, JobsData, 
             ngTableParams, a2Playlists, $location, a2Soundscapes, notify) 
         {
+            var $=$window.$;
             $scope.successInfo = "";
             $scope.showSuccess = false;
             $scope.errorInfo = "";
@@ -208,6 +209,18 @@
                         
                     });
                     
+                });
+                
+            };
+
+
+            $scope.exportSoundscape = function(soundscape_id) {
+                a2Soundscapes.getExportUrl(soundscape_id).then(function(export_url){
+                    var a = $('<a></a>').attr('href', export_url).appendTo('body');
+                    $window.setTimeout(function(){
+                        a[0].click();
+                        a.remove();
+                    }, 0);
                 });
                 
             };

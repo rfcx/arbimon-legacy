@@ -87,6 +87,12 @@ angular.module('a2-soundscapes-service', [
                     callback(data);
                 });
         },
+        getExportUrl: function(soundscapeId){
+            var d = $q.defer();
+            var projectName = Project.getUrl();
+            d.resolve('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/export-list');
+            return d.promise;
+        },
         getRegion: function(soundscapeId, region, callback) {
             var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/regions/' + region)
