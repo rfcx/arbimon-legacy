@@ -30,9 +30,11 @@ module.exports = function(grunt) {
             prod: {
                 options: {
                     htmlmin: {
-                        // collapseBooleanAttributes: true,
-                        // removeAttributeQuotes: true,
                         removeComments: true,
+                        collapseWhitespace: true,
+                        conservativeCollapse: true,
+                        collapseBooleanAttributes: true,
+                        removeAttributeQuotes: true,
                     }
                 },
                 src: ['assets/partials/**/*.html'],

@@ -4,10 +4,10 @@
         Species Presence Validation
         <span class="pull-right badge">
                 <i class="fa val-1"></i>
-                {{ (recording.validations | filter:{present:1}).length }}
+                {{ (visobject.validations | filter:{present:1}).length }}
                 /
                 <i class="fa val-0"></i>
-                {{ (recording.validations | filter:{present:0}).length }}
+                {{ (visobject.validations | filter:{present:0}).length }}
         </span>
     </h5>
     <a2-species-validator recording="visobject" ng-show="layer.is_open"></a2-species-validator>

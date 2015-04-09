@@ -74,7 +74,7 @@ angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane
                 
             })
             .error(function(err) {
-                notify.error('Error Communicating with Server');           
+                notify.serverError();
             });
         };
     })

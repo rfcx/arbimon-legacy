@@ -136,7 +136,7 @@
                                 $scope.soundscapesOriginal.splice(index, 1);
                                 $scope.tableParams.reload();
                                 
-                                notify.log("Soundscape Deleted Successfully");
+                                notify.log("Soundscape deleted successfully");
                             }
                         }
                 });
@@ -173,7 +173,7 @@
                     data = result;
                     if (data.ok) {
                         JobsData.updateJobs();
-                        notify.log("New Soundscape on Queue");
+                        notify.log("Your new soundscape is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
                     }
                     
                     if (data.err) {

@@ -297,7 +297,7 @@ angular.module('audiodata.sites', [
                 })
                 .error(function(data) {
                     $scope.loading.generate = false;
-                    notify.error("Error communicating with server.");
+                    notify.serverError();
                 });
         };
         
@@ -343,7 +343,7 @@ angular.module('audiodata.sites', [
                     })
                     .error(function(data) {
                         $scope.loading.generate = false;
-                        notify.error("Error communicating with server.");
+                        notify.serverError();
                     });
             });
         };
