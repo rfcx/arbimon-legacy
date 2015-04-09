@@ -49,7 +49,7 @@ angular.module('dashboard',[
         
         Project.getModels(function(err, models){
             if(err) {
-                notify.error('Error Communicating with Server');
+                notify.serverError();
             }
             
             $scope.modelsQty = models.length;
@@ -58,7 +58,7 @@ angular.module('dashboard',[
         
         Project.getClassi(function(err, classi){
             if(err) {
-                notify.error('Error Communicating with Server');
+                notify.serverError();
             }
             
             $scope.classiQty = classi.length;
@@ -125,14 +125,14 @@ angular.module('dashboard',[
             }, 
             function(err, result){
                 if(err) {
-                    return notify.error('Error Communicating with Server');
+                    return notify.serverError();
                 }
                 
                 if(result.error) {
                     return notify.error(result.error);
                 }
                 
-                notify.log('Project Info Updated');
+                notify.log('Project info updated');
                 
                 if(result.url) {
                     $timeout(function() {
@@ -174,14 +174,14 @@ angular.module('dashboard',[
             },
             function(err, result){
                 if(err) {
-                    notify.error('Error Communicating with Server');
+                    notify.serverError();
                 }
                 
                 if(result.error) {
                     notify.error(result.error);
                 }
                 else {
-                    notify.log('User Added to Project');
+                    notify.log('User added to project');
                 }
                 
                 Project.getUsers(function(err, users){
@@ -204,14 +204,14 @@ angular.module('dashboard',[
             function(err, result){
                 if(err)
                 {
-                    notify.error('Error Communicating with Server');
+                    notify.serverError();
                 }
                 
                 if(result.error) {
                     notify.error(result.error);
                 }
                 else {
-                    notify.log('User Role Updated');
+                    notify.log('User role updated');
                 }
                 
                 Project.getUsers(function(err, users){
@@ -246,14 +246,14 @@ angular.module('dashboard',[
                 function(err, result){
                     if(err)
                     {
-                        notify.error('Error Communicating with Server');
+                        notify.serverError();
                     }
                     
                     if(result.error) {
                         notify.error(result.error);
                     }
                     else {
-                        notify.log('User Deleted from Project');
+                        notify.log('User deleted from project');
                     }
                     
                     Project.getUsers(function(err, users){

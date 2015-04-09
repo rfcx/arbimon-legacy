@@ -166,23 +166,18 @@ angular.module('audiodata.recordings', [
     $scope.currentPage  = 1;
     $scope.limitPerPage = 10;
     $scope.days = d3.range(1,32);
+    
     $scope.months =  d3.range(12).map(function(month) {
         return { value: month, string: moment().month(month).format('MMM') };
     });
+    
     $scope.hours = d3.range(24).map(function(hour) {
         return { value: hour, string: moment().hour(hour).minute(0).format('HH:mm') };
     });
+    
     Project.getSites(function(data){
         $scope.sites = data;
     });
-    $scope.fields = [
-        { name: 'Site', key: 'site' },
-        { name: 'Time', key: 'datetime' },
-        { name: 'Recorder', key: 'recorder' },
-        { name: 'Microphone', key: 'mic' },
-        { name: 'Software ver', key: 'version' },
-        { name: 'Filename', key: 'file' },
-    ];
     
     searchRecs('count');
     searchRecs('date_range');

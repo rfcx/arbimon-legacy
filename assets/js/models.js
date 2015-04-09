@@ -150,7 +150,7 @@
                             if (index > -1) {
                                 $scope.modelsDataOrig.splice(index, 1);
                                 $scope.tableParams.reload();
-                                notify.log("Model Deleted Successfully");
+                                notify.log("Model deleted successfully");
                             }
                         }
                     }
@@ -195,7 +195,7 @@
                             data = result;
                             if (data.ok) {
                                 JobsData.updateJobs();
-                                notify.log("New Model Training on Queue");
+                                notify.log("Your new model training is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
                             }
 
                             if (data.error) {
@@ -264,7 +264,7 @@
             $scope.$watch('data.training',
                 function() {
                     if ($scope.data.training !== '') {
-                        Project.getValidationsBySpeciesSong($scope.data.training.species_id, $scope.data.training.songtype_id,
+                        Project.validationBySpeciesSong($scope.data.training.species_id, $scope.data.training.songtype_id,
                             function(data) {
                                 $scope.data.totalValidations = data[0].total;
                                 $scope.data.presentValidations = data[0].present;

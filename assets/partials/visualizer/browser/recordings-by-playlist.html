@@ -30,12 +30,16 @@
 <div class="col-sm-12">
     <div class="btn-toolbar text-center" ng-show="browser.lovo.paging && browser.lovo.paging.last_page > 0">
         <div class="pull-left btn-group">
-            <button class="btn btn-default btn-xs" ng-disabled="browser.lovo.paging.is_at_first_page" 
-                ng-click="browser.lovo.paging.set_page('first')"
-            ><i class="fa fa-angle-double-left"></i></button>
-            <button class="btn btn-default btn-xs" ng-disabled="browser.lovo.paging.is_at_first_page" 
-                ng-click="browser.lovo.paging.set_page('previous')"
-            ><i class="fa fa-angle-left"></i></button>
+            <button class="btn btn-default btn-xs" 
+                ng-disabled="browser.lovo.paging.is_at_first_page" 
+                ng-click="browser.lovo.paging.set_page('first')">
+                    <i class="fa fa-angle-double-left"></i>
+            </button>
+            <button class="btn btn-default btn-xs" 
+                ng-disabled="browser.lovo.paging.is_at_first_page" 
+                ng-click="browser.lovo.paging.set_page('previous')">
+                    <i class="fa fa-angle-left"></i>
+            </button>
         </div>
         <div class="inline-block">
             <div class="btn-group">

@@ -1,6 +1,7 @@
 angular.module('a2visobjectsbrowser', [
     'a2utils', 'a2browser_common',
-    'a2browser_recordings_by_site', 'a2browser_recordings_by_playlist',
+    'a2browser_recordings_by_site', 
+    'a2browser_recordings_by_playlist',
     'a2browser_soundscapes',
 ])
 .directive('a2VisObjectBrowser', function () {

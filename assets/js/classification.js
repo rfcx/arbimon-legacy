@@ -245,7 +245,7 @@
                         if (index > -1) {
                             $scope.classificationsOriginal.splice(index, 1);
                             $scope.tableParams.reload();
-                            notify.log("Classification Deleted Successfully");
+                            notify.log("Classification deleted successfully");
                         }
                     }
                 });

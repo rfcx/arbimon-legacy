@@ -1,28 +1,38 @@
 <!DOCTYPE html>
-<html ng-app="reset-password">
+<html>
 
 <head>
     <% include head %>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ARBIMON II - Project <%= project.name %> is disabled</title>
 </head>
 
-<body ng-controller="ResetPassCtrl">
-    <div class="container">
-        <div class="login-top">
+<body>
+    <div class="login-top">
+        <div class="container">
             <a href="/"><img src="/images/logo.svg"></a>
         </div>
     </div>
-    <div class="login-banner">
+    <div class="jumbotron login-banner">
         <div class="container">
             <div class="row">
-                <div class="col-sm-offset-3 col-sm-6 registration">
-                    <div class="panel-body">
-                        Your project <%= project.name %> has been disabled.
+                <div class="col-sm-offset-3 col-sm-6">
+                    <div class="panel panel-warning">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Project disabled</h3>
+                        </div>
+                        <div class="panel-body">
+                            The project <%= project.name %> has been disabled.
+                            <br />
+                            Please <a href="mailto:support@sieve-analytics.com">contact us</a> if you feel this project should be enabled.
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+<% include footer %>
 </body>
 
 </html>

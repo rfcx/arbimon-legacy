@@ -132,16 +132,16 @@
                 .success(
                     function(data) {
                         if (data.err) {
-                            notify.error("Error Communicating With Server");
+                            notify.serverError();
                         }
                         else {
                             JobsData.updateJobs();
-                            notify.log("Job Hidden Successfully");
+                            notify.log("Job hidden successfully");
                         }
                     }
                 )
                 .error(function() {
-                    notify.error("Error Communicating With Server");
+                    notify.serverError();
                 });
         };
 
