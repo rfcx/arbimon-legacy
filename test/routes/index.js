@@ -22,6 +22,18 @@ describe('index.js', function(){
             });
         });
     });
+    describe('GET /support', function(){
+        it('Should show the support page.', function(done){
+            routes.handle({ method:'get', url:'/support'}, {
+                render: function(page){
+                    page.should.equal('support');
+                    done();
+                }
+            }, function(err){
+                done(err || new Error("Request was wrongly handled"));
+            });
+        });
+    });
     describe('GET /alive', function(){
         it('Should return a 200 status.', function(done){
             routes.handle({method:'get', url:'/alive'}, {
@@ -70,28 +82,7 @@ describe('index.js', function(){
             });
         });
     });
-    describe('GET /support', function(){
-        it('Should show the support page.', function(done){
-            routes.handle({method:'get', url:'/support', session:{loggedIn:true}}, {
-                render: function(page){
-                    page.should.equal('support');
-                    done();
-                }
-            }, function(err){
-                done(err || new Error("Request was wrongly handled"));
-            });
-        });
-        it('Should restrict access if not logged in.', function(done){
-            routes.handle({method:'get', url:'/support'}, {
-                render: function(page){
-                    page.should.equal('get_fragment_hack.ejs');
-                    done();
-                }
-            }, function(err){
-                done(err || new Error("Request was wrongly handled"));
-            });
-        });
-    });
+    
     describe('GET /home', function(){
         it('Should show the home page to logged in users.', function(done){
             routes.handle({method:'get', url:'/home', session:{loggedIn:true}}, {

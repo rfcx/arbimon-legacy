@@ -491,7 +491,7 @@ var Recordings = {
         
         var classes = validation['class'].split(',');
         
-        async.mapLimit(classes, 5, function(val_class, next){
+        async.map(classes, function(val_class, next){
             var cm = /(\d+)(-(\d+))?/.exec(val_class);
             if(!cm) {
                 next(new Error("validation class is missing."));

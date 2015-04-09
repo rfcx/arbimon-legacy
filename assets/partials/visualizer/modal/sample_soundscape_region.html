@@ -1,12 +1,24 @@
 <div class="modal-header">
-    <h3 class="modal-title">Sample Region {{region.name}}</h3>
+    <h3 class="modal-title">
+        Sample Region
+        <small>
+            <i class="fa fa-question-circle"
+                tooltip="This will create a playlist with a percent of the recordings found on this region"
+                tooltip-placement="bottom"
+                tooltip-append-to-body>
+            </i>
+        </small>
+    </h3>
 </div>
 <div class="modal-body" ng-form>
+    <p><b>Region name:</b> {{region.name}}</p>
     <div class="form form-horizontal">
         <div class="form-group" ng-class="{'has-error': validation.name}" >
-            <label class="col-sm-3 control-label">Percent: </label>
+            <label class="col-sm-3 control-label">
+                Percent:
+            </label>
             <div class="col-sm-9">
-                <input type="number" min="0" max="100" ng-model="data.percent" style="width:4em" />% 
+                <input type="number" class="text-right" min="0" max="100" ng-model="data.percent" style="width:60px;">% 
                 <span class="badge" style="margin-left:15px">{{Math.floor(region.count * data.percent / 100)}}</span>
             </div>
             <div class="pull-right text-danger" ng-show="validation.percent">{{validation.percent}}</div>
@@ -14,6 +26,6 @@
     </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Visualizer-Sample-Soundscape-Region':'Ok'">OK</button>
-    <button class="btn btn-warning" ng-click="$dismiss() | trackEvent:'Visualizer-Sample-Soundscape-Region':'Cancel'">Cancel</button>
+    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Visualizer-Sample-Soundscape-Region':'Ok'">Create sample</button>
+    <button class="btn btn-default" ng-click="$dismiss() | trackEvent:'Visualizer-Sample-Soundscape-Region':'Cancel'">Close</button>
 </div>

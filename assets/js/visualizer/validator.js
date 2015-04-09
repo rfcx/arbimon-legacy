@@ -6,7 +6,6 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
         scope : {
             recording : '=recording'
         },
-        replace: true,
         templateUrl: '/partials/visualizer/validator-main.html',
         link: function($scope, $element, $attrs){
             var class2key = function(project_class){
@@ -18,8 +17,6 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 else {
                     cls = project_class;
                 }
-                
-                console.log(cls);
                 
                 return cls && [cls.species, cls.songtype].join('-');
             };
@@ -33,15 +30,27 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
             var load_project_classes = function(){
                 Project.getClasses(function(classes){
                     $scope.classes = classes;
+                    
+                    var taxons = {};
+                    
+                    for(var i = 0; i < classes.length; i++) {
+                        var c = classes[i];
+                        
+                        if(!taxons[c.taxon]) taxons[c.taxon] = [];
+                        
+                        taxons[c.taxon].push(c);
+                    }
+                    
+                    $scope.byTaxon = taxons;
                 });
             };
             
-            // $scope.$on('a2-persisted', load_project_classes);
+            $scope.$on('a2-persisted', load_project_classes);
             
             $scope.classes = [];
             $scope.is_selected = {};
             
-            $scope.select = function(project_class, $event){
+            $scope.select = function(project_class, $event) {
                 if($($event.target).is('button, a')){
                     return;
                 }
@@ -74,7 +83,7 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
             
             $scope.validations = {};
             
-            $scope.validate = function(project_class, val){
+            $scope.validate = function(project_class, val) {
                 var keys = [],
                     key_idx = {};
                     
@@ -102,7 +111,13 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                     }, function(validations) {
                         validations.forEach(function(validation) {
                             var key = class2key(validation);
-                            $scope.validations[key] = validation.val;
+                            
+                            if(validation.val == 2) {
+                                delete $scope.validations[key];
+                            }
+                            else {
+                                $scope.validations[key] = validation.val;
+                            }
                         });
                     });
                 }
@@ -122,14 +137,12 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                 var key = class2key(project_class), 
                     val = $scope.validations[key];
                 
-                console.log('val state', key, val);
-                
-                var returnVal;
-                if (val == 2) {
-                    returnVal = val_options[2];
+                if(typeof val === 'undefined') {
+                    return;
                 }
-                else returnVal = typeof val == 'undefined' ? val : ( val ? val_options[0]: val_options[1] );
-                return returnVal;
+                else{
+                    return val_options.filter(function(v) { return v.val == val; })[0];
+                }
             };
             
             $scope.$watch('recording', function(recording){

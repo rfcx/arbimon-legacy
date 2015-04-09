@@ -125,126 +125,38 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             extSort: '&',
             checked: '=?',
             search: '=?',
-            noCheckbox: '@',    // disable row checkboxes
-            noSelect: '@',      // disable row selection
+            // noCheckbox: '@',    // disable row checkboxes
+            // noSelect: '@',      // disable row selection
             dateFormat: '@',    // moment date format, default: 'lll'
             numberDecimals: '@' // decimal spaces 
         },
+        controller: 'a2TableCtrl',
         templateUrl: '/partials/directives/table.html',
         link: function(scope, element, attrs) {
             
-            
-            if(attrs.noCheckbox !== undefined)
+            if(attrs.noCheckbox !== undefined) {
                 scope.noCheck = true;
-
-            var updateChecked = function(rows) {
-                if(rows) {
-                    var visible = $filter('filter')(rows, scope.query);
-
-                    scope.checked = visible.filter(function(row) {
-                        return row.checked | false;
-                    });
-                }
-            };
-
-
+            }
+            
+            if(attrs.noSelect !== undefined) {
+                scope.noSelect = true;
+            }
+            
             if(attrs.search) {
-                scope.$watch(attrs.search, function(value) {
+                scope.$watch('search', function(value) {
                     //~ console.log(value);
                     scope.query = scope.search;
-                    updateChecked(scope.rows);
+                    scope.updateChecked();
                 });
             }
-
-            scope.toggleAll = function() {
-                var allFalse = true;
-
-                for(var i in scope.rows) {
-                    if(scope.rows[i].checked) {
-                        allFalse = false;
-                        break;
-                    }
-                }
-
-                for(var j in scope.rows) {
-                    scope.rows[j].checked = allFalse;
-                }
-
-                scope.checkall = allFalse;
-
-            };
-
-
-
+            
+            if(attrs.defaultSort) { 
+                scope.sortKey = attrs.defaultSort;
+            }
+            
             if(attrs.checked) {
                 scope.$watch('rows', updateChecked, true);
             }
-
-
-            scope.check = function($event, $index) {
-                //~ console.log('$event:', $event);
-                //~ console.log('$index:', $index);
-                //~ console.log('last checked:', scope.lastChecked);
-
-                if(scope.lastChecked && $event.shiftKey) {
-                    console.log('shift!');
-
-                    if(scope.lastChecked) {
-                        var rows;
-                        if(scope.lastChecked > $index)
-                            rows = scope.rows.slice($index, scope.lastChecked);
-                        else
-                            rows = scope.rows.slice(scope.lastChecked, $index);
-
-                        rows.forEach(function(row) {
-                            row.checked = true;
-                        });
-                    }
-                }
-
-                scope.lastChecked = $index;
-            };
-
-            scope.sel = function(row, $index) {
-                if(attrs.noSelect !== undefined)
-                    return;
-
-                scope.selected = row;
-                if(attrs.onSelect)
-                    scope.onSelect({ row: row });
-            };
-
-            scope.sortBy = function(field) {
-                if(scope.sortKey !== field.key) {
-                    scope.sortKey = field.key;
-                     
-                    if(attrs.extSort === undefined)
-                        scope.sort = field.key;
-                    
-                    scope.reverse = false;
-                }
-                else {
-                    scope.reverse = !scope.reverse;
-                }
-                
-                if(attrs.extSort)
-                    scope.extSort({ sortBy: field.key, reverse: scope.reverse });
-            };
-            
-            scope.formatString = function(value) {
-                
-                if(value instanceof Date) {
-                    return moment(value).utc().format(attrs.dateFormat || 'lll');
-                }
-                else if(typeof value === 'number') {
-                    var precision = attrs.numberDecimals || 3;
-                    
-                    var p =  Math.pow(10,precision);
-                    
-                    return Math.round(value*p)/p;
-                }
-                return value;
-            };
         }
     };
 })
@@ -300,10 +212,10 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 }
                 
                 if(attrs.search) {
-                    scope.$watch(attrs.search, function(value) {
-                        //~ console.log(value);
+                    scope.$watch('search', function(value) {
+                        console.log(value);
                         scope.query = scope.search;
-                        scope.updateChecked(scope.rows);
+                        scope.updateChecked();
                     });
                 }
                 
@@ -323,9 +235,9 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
     };
 })
 .controller('a2TableCtrl', function($scope, $filter) {
-    $scope.updateChecked = function(rows) {
-        if(rows) {
-            var visible = $filter('filter')(rows, $scope.query);
+    $scope.updateChecked = function() {
+        if($scope.rows) {
+            var visible = $filter('filter')($scope.rows, $scope.query);
             
             $scope.checked = visible.filter(function(row) {
                 return row.checked | false;
@@ -352,9 +264,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
     };
     
     $scope.check = function($event, $index) {
-        //~ console.log('$event:', $event);
-        //~ console.log('$index:', $index);
-        //~ console.log('last checked:', $scope.lastChecked);
         
         if($scope.lastChecked && $event.shiftKey) {
             console.log('shift!');
