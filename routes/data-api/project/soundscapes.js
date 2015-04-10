@@ -233,13 +233,14 @@ router.get('/:soundscape/indices', function(req, res, next) {
 });
 
 router.post('/:soundscape/scale', function(req, res, next) {
-    if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
+    if(!req.haveAccess(req.project.project_id, "manage soundscapes")){
         return res.json({ error: "you dont have permission to 'manage soundscapes'" });
-        
+    }
     model.soundscapes.setVisualizationOptions(req.soundscape, {
         max : req.body.max,
         palette : (req.body.palette | 0),
-        normalized : !!req.body.normalized
+        normalized : !!req.body.normalized,
+        amplitude : req.body.amplitude,
     }, function(err, soundscape){
         if(err){
             next(err);

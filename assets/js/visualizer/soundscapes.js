@@ -294,13 +294,15 @@ angular.module('visualizer-soundscape-info', [
     $scope.data = {
         palette : soundscape.visual_palette,
         visual_max : soundscape.visual_max_value || soundscape.max_value,
-        normalized : !!soundscape.normalized
+        normalized : !!soundscape.normalized,
+        amplitudeThreshold : soundscape.threshold
     };
     $scope.ok = function(){
         a2Soundscapes.setVisualizationOptions(soundscape.id, {
             max: $scope.data.visual_max,
             palette: $scope.data.palette,
-            normalized: $scope.data.normalized
+            normalized: $scope.data.normalized,
+            amplitude: $scope.data.amplitudeThreshold
         }, function(sc){
             if(soundscape.update){
                 soundscape.update(sc);
@@ -343,7 +345,7 @@ angular.module('visualizer-soundscape-info', [
         scope    : {
             soundscape : '&',
             normalized : '&',
-            amplitudeTheshold : '&',
+            amplitudeThreshold : '&',
             palette    : '&',
             visualMax  : '&'
         },

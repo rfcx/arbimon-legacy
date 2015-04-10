@@ -5,7 +5,7 @@ import a2pyutils.palette
 from soundscape.set_visual_scale_lib import run
 
 USAGE = """
-{prog} soundscape_id max_visual_scale [palette_id] [normalized]
+{prog} soundscape_id max_visual_scale [palette_id] [normalized] [amplitude]
     soundscape_id - id of the soundscape whose image to edit
     max_visual_scale - clip range maximum (if '-', then it is
                        computed automatically)
@@ -13,6 +13,7 @@ USAGE = """
                 (defined in a2pyutils.palette)
     normalized - wether to normalize the the image by the
                 number of recordings in analized per column.
+    amplitude  - threshold the image using the given amplitude.
 """.format(
     prog=sys.argv[0]
 )
@@ -29,8 +30,12 @@ def main(argv):
             (int(argv[3]) if len(argv) > 3 else 0) %
             len(a2pyutils.palette.palette))
         normalized = int(argv[4] if len(argv) > 4 else 0) != 0
-        run(soundscapeId, clipMax, paletteId, normalized)
+        amplitude_th = float(argv[5] if len(argv) > 5 else 0)
+        print (soundscapeId, clipMax, paletteId, normalized, amplitude_th)
+        run(soundscapeId, clipMax, paletteId, normalized, amplitude_th)
         print 'end'
 
 if __name__ == '__main__':
     main(sys.argv)
+    import sys
+    sys.stdout.flush()

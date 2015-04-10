@@ -5,17 +5,23 @@
     <div class="form form-horizontal">
         <div class="form-group" ng-class="{'has-error': validation.name, 'disabled':data.normalized}" >
             <label class="col-sm-3 control-label">Scale: </label>
-            <div class="col-sm-9">
+            <div class="col-sm-4">
                 0
                 -
                 <input type="number" min="1" ng-model="data.visual_max" style="width:4em" ng-disabled="data.normalized" />
                 (default: {{soundscape.max_value}})
             </div>
-            <label class="col-sm-7 control-label" style="font-weight: normal">
+            <label class="col-sm-5 control-label" style="font-weight: normal; text-align: left">
                 <input type="checkbox" ng-model="data.normalized" />
-                Normalize data along columns
-                <a2-info tooltip="If checked, then each column in the soundscape will be normalized using the number of recordings in the playlist that fall in that column. Note: This disables the scale parameter." tooltip-placement="bottom" tooltip-append-to-body="true"/>
+                Normalize data
+                <a2-info tooltip="Check to normalize each value in the soundscape using the number of recordings in the playlist that fall in that column. Note: This overrides the scale parameter." tooltip-placement="bottom" tooltip-append-to-body="true"/>
             </label>
+        </div>
+        <div class="form-group" ng-class="{'has-error': validation.name, 'disabled':data.normalized}" >
+            <label class="col-sm-3 control-label">Amplitude: </label>
+            <div class="col-sm-7">
+                <div range-slider min="0" max="1" step="0.01" decimal-places="2" model-min="data.amplitudeThreshold" pin-handle="max" show-values="true" attach-handle-values="true"></div>
+            </div>
         </div>
         <div class="form-group" ng-class="{'has-error': validation.name}" >
             <label class="col-sm-3 control-label">Colors: </label>
@@ -35,7 +41,7 @@
         </div>
         <a2-soundscape-drawer class="crisp-image" style="width:100%; height:300px; padding:0px 50px" 
             soundscape="soundscape" visual-max="data.visual_max" palette="palettes[data.palette]" normalized="data.normalized"
-            amplitudeThreshold="data.amplitudeThreshold" ></a2-soundscape-drawer>
+            amplitude-threshold="data.amplitudeThreshold" ></a2-soundscape-drawer>
     </div>
 </div>
 <div class="modal-footer">

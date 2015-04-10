@@ -616,12 +616,16 @@ var Soundscapes = {
         var max = (options.max || soundscape.max_value);
         var palette = options.palette === undefined ?  soundscape.visual_palette : (options.palette | 0);
         var normalized = options.normalized | 0;
+        var amplitude = +options.amplitude;
         var cmd;
         var script = child_process.spawn(
             '.env/bin/python', cmd=[
-                'scripts/Soundscapes/set_visual_scale.py', (soundscape.id|0), max == '-' ? '-' : (max|0), palette, normalized]
+                'scripts/Soundscapes/set_visual_scale.py', (soundscape.id|0), max == '-' ? '-' : (max|0), palette, normalized, amplitude]
         );
         console.log(cmd);
+        script.stdout.on('data', function(data){
+            console.log(data);
+        });        
         script.on('close', function(code){
             Soundscapes.find({id:soundscape.id}, callback);
         });        

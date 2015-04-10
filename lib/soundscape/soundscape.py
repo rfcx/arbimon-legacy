@@ -148,12 +148,12 @@ class Soundscape():
             if bin and x in bin:
                 cell = bin[x]
                 if amp_th:
-                    v = len([x for x in cell if cell[x] > amp_th])
+                    v = len([x for x in cell if cell[x] >= amp_th])
                 else:
                     v = len(cell) if cell else 0
             else:
                 v = 0
-            yield scalefn(v)
+            yield scalefn(v, x)
 
     @classmethod
     def rows_gen(cls, bins, scalefn, from_y, to_y, from_x, to_x, amp_th=None):
@@ -192,9 +192,9 @@ class Soundscape():
             sfn = scalefn
 
             def nv_scalefn(x, col):
-                nv = float(self.norm_vector.get(col, 0) or 0)
+                nv = float(self.norm_vector.get(col, 1) or 1)
                 v = sfn(x / nv, col)
-                print v
+                # print v
                 return v
             scalefn = nv_scalefn
 
