@@ -343,6 +343,7 @@ angular.module('visualizer-soundscape-info', [
         scope    : {
             soundscape : '&',
             normalized : '&',
+            amplitudeTheshold : '&',
             palette    : '&',
             visualMax  : '&'
         },
@@ -354,6 +355,7 @@ angular.module('visualizer-soundscape-info', [
             var draw = function(){
                 if(!soundscape || !scidx){return;}
                 var vmax = $scope.visualMax() || soundscape.max_value;
+                var ampTh = ($scope.amplitudeThreshold && $scope.amplitudeThreshold()) || 0;
                 
                 var pal = $scope.palette();
                 if(!pal || !pal.length){return;}
@@ -383,7 +385,16 @@ angular.module('visualizer-soundscape-info', [
                 for(var i in scidx.index){ 
                     var row = scidx.index[i];
                     for(var j in row){
-                        ctx.fillStyle = color(row[j], j);
+                        var cell = row[j];
+                        if(ampTh && cell[1]){
+                            var act=0;
+                            for(var al=cell[1], ali=0,ale=al.length; ali < ale; ++ali){
+                                if(al[ali] > ampTh){ ++act; }
+                            }                            
+                            ctx.fillStyle = color(act, j);
+                        } else {
+                            ctx.fillStyle = color(cell[0], j);                            
+                        }
                         ctx.fillRect(j, h - i - 1, 1, 1);
                     }
                 }
@@ -412,6 +423,7 @@ angular.module('visualizer-soundscape-info', [
                 }
             });
             $scope.$watch('palette()', draw);
+            $scope.$watch('amplitudeThreshold()', draw);
             $scope.$watch('visualMax()', draw);
 
         }

@@ -33,6 +33,7 @@ class Soundscape():
         self.start_bin = 0
         self.max_bins = max_bins
         self.bin_size = bin_size
+        self.amplitude_th = None
         self.max_list_global = None
         self.norm_vector = None
         bins = {}
@@ -50,19 +51,14 @@ class Soundscape():
         else:
             for i in self.get_peak_list(finp):
                 i_bin, i_idx, i_id = (i['bin'], i['idx'], i['id'])
+                amp = i.get('amplitude', 255)
                 stats['min_idx'] = min(stats['min_idx'], i_idx)
                 stats['max_idx'] = max(stats['max_idx'], i_idx)
 
-                if i_id not in recordings:
-                    recordings[i_id] = 1
-                if i_bin not in bins:
-                    bins[i_bin] = {}
-                bin = bins[i_bin]
-                if i_idx not in bin:
-                    bin[i_idx] = {}
-                recs = bin[i_idx]
-                if i_id not in recs:
-                    recs[i_id] = 1
+                recs = self.insert_rec_entry(
+                    i_id, i_bin, i_idx, recordings, bins,
+                    amp
+                )
 
                 if not max_list or len(max_list) < len(recs):
                     max_list = recs
@@ -73,7 +69,7 @@ class Soundscape():
         self.bins = bins
         self.stats = stats
 
-    def insert_peaks(self, date, freqs, i_id):
+    def insert_peaks(self, date, freqs, amplitudes, i_id):
         aggregation = self.aggregation
         max_bins = self.max_bins
         bin_size = self.bin_size
@@ -84,18 +80,12 @@ class Soundscape():
         ]))
         self.stats['min_idx'] = min(self.stats['min_idx'], idx)
         self.stats['max_idx'] = max(self.stats['max_idx'], idx)
-        for f in freqs:
+        for f, amp in zip(freqs, amplitudes):
             i_bin = min(int(f * 1000 / bin_size), max_bins)
-            if i_id not in self.recstemp:
-                self.recstemp[i_id] = 1
-            if i_bin not in self.bins:
-                self.bins[i_bin] = {}
-            bin = self.bins[i_bin]
-            if idx not in bin:
-                bin[idx] = {}
-            recs = bin[idx]
-            if i_id not in recs:
-                recs[i_id] = 1
+            recs = self.insert_rec_entry(
+                i_id, i_bin, idx, self.recstemp, self.bins,
+                amp
+            )
 
             if not max_list or len(max_list) < len(recs):
                 max_list = recs
@@ -105,12 +95,27 @@ class Soundscape():
         self.recordings = self.recordings.keys()
         self.recordings.sort()
 
+    @staticmethod
+    def insert_rec_entry(i_id, i_bin, i_idx, recordings, bins, amp):
+        if i_id not in recordings:
+            recordings[i_id] = 1
+        if i_bin not in bins:
+            bins[i_bin] = {}
+        bin = bins[i_bin]
+        if i_idx not in bin:
+            bin[i_idx] = {}
+        recs = bin[i_idx]
+        if i_id not in recs:
+            recs[i_id] = amp
+        return recs
+
+
     def get_peak_list(self, finp):
         "Generator that reads a file and yields peaks in an aggregated form"
         aggregation = self.aggregation
         max_bins = self.max_bins
         bin_size = self.bin_size
-        hwhitelist = ["date", "id", "PeaksFrec"]
+        hwhitelist = ["date", "id", "PeaksFrec", "Amplitud"]
         header = []
         for i, l in enumerate(finp):
             if i == 0:
@@ -129,23 +134,32 @@ class Soundscape():
                     int(float(l['PeaksFrec']) * 1000 / bin_size),
                     max_bins
                 )
+                l['amplitude'] = l['Amplitud']
 
                 del l['date']
                 del l['PeaksFrec']
+                del l['Amplitud']
                 yield l
 
     @staticmethod
-    def cols_gen(bin, scalefn, from_x, to_x):
+    def cols_gen(bin, scalefn, from_x, to_x, amp_th=None):
         "yields counts for each column in a cell"
         for x in range(from_x, to_x):
-            v = len(bin[x]) if bin and x in bin else 0
-            yield scalefn(v, x)
+            if bin and x in bin:
+                cell = bin[x]
+                if amp_th:
+                    v = len([x for x in cell if cell[x] > amp_th])
+                else:
+                    v = len(cell) if cell else 0
+            else:
+                v = 0
+            yield scalefn(v)
 
     @classmethod
-    def rows_gen(cls, bins, scalefn, from_y, to_y, from_x, to_x):
+    def rows_gen(cls, bins, scalefn, from_y, to_y, from_x, to_x, amp_th=None):
         "yields column iterators for each row in the index"
         for y in range(to_y-1, from_y-1, -1):
-            yield cls.cols_gen(bins.get(y), scalefn, from_x, to_x)
+            yield cls.cols_gen(bins.get(y), scalefn, from_x, to_x, amp_th)
 
     def write_image(self, imgout, palette):
         "Writes the soundscape to an image file"
@@ -187,7 +201,7 @@ class Soundscape():
         fout = file(imgout, "wb")
         w.write(fout, self.rows_gen(
             self.bins, scalefn,
-            0, height, offsetx, offsetx + width
+            0, height, offsetx, offsetx + width, self.amplitude_th
         ))
 
     def write_index(self, indexout):
@@ -211,7 +225,7 @@ class Soundscape():
 
     @classmethod
     def read_from_index(self, filename):
-        (bins, recordings, offsetx, width, offsety, height,
+        (version, bins, recordings, offsetx, width, offsety, height,
             minx, maxx, miny, maxy) = scidx.read_scidx(filename)
         aggregation = {
             "range": [offsetx, width + offsetx - 1]
