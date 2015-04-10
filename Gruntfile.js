@@ -33,7 +33,6 @@ module.exports = function(grunt) {
                         removeComments: true,
                         collapseWhitespace: true,
                         conservativeCollapse: true,
-                        collapseBooleanAttributes: true,
                         removeAttributeQuotes: true,
                     }
                 },
