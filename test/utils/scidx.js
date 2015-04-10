@@ -2,7 +2,7 @@
 /*jshint mocha:true */
 /*jshint expr:true */
 "use strict";
-var debug=console.log;
+var dd=console.log;
 
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
@@ -26,6 +26,7 @@ mocks.file.prototype = real_file.prototype;
 scidx.__set__(mocks);
 
 var datafile = path.resolve(__dirname, '../data/indexout.scidx');
+var datafilev2 = path.resolve(__dirname, '../data/index-v2.scidx');
 var brokendatafile = path.resolve(__dirname, '../data/indexincomplete.scidx');
 var invaliddatafile = path.resolve(__dirname, '../data/paletteout.png');
 
@@ -74,13 +75,26 @@ describe('scidx', function(){
             delete mocks.file.__err__;
         });
         it('Should read valid scidx files.', function(done){
-            new scidx().read(datafile, function(err, indexfile){
+            new scidx().read(datafilev2, function(err, indexfile){
                 should.not.exist(err);
                 should.exist(indexfile);
                 should.exist(indexfile.index);
                 should.exist(indexfile.recordings);
                 indexfile.valid.should.be.true;
                 indexfile.should.contain.keys(['width', 'height', 'offsetx', 'offsety']);
+                indexfile.version.should.equal(2);
+                done();
+            });
+        });
+        it('Should read valid scidx files (version 1).', function(done){
+            new scidx().read(datafile, function(err, indexfile){
+                should.not.exist(err);
+                should.exist(indexfile);
+                should.exist(indexfile.index);
+                should.exist(indexfile.recordings);
+                indexfile.valid.should.be.true;
+                indexfile.should.contain.keys(['version', 'width', 'height', 'offsetx', 'offsety']);
+                indexfile.version.should.equal(1);
                 done();
             });
         });
@@ -112,7 +126,8 @@ describe('scidx', function(){
                 should.exist(indexfile.index);
                 should.exist(indexfile.recordings);
                 indexfile.valid.should.be.true;
-                indexfile.should.contain.keys(['width', 'height', 'offsetx', 'offsety']);
+                indexfile.should.contain.keys(['version', 'width', 'height', 'offsetx', 'offsety']);
+                indexfile.version.should.equal(1);
                 done();
             });
         });
@@ -123,7 +138,8 @@ describe('scidx', function(){
                 should.exist(indexfile.index);
                 should.not.exist(indexfile.recordings);
                 indexfile.valid.should.be.true;
-                indexfile.should.contain.keys(['width', 'height', 'offsetx', 'offsety']);
+                indexfile.should.contain.keys(['version', 'width', 'height', 'offsetx', 'offsety']);
+                indexfile.version.should.equal(1);
                 done();
             });
         });
@@ -185,7 +201,8 @@ describe('scidx', function(){
                 should.exist(indexfile.index);
                 should.exist(indexfile.recordings);
                 indexfile.valid.should.be.true;
-                indexfile.should.contain.keys(['width', 'height', 'offsetx', 'offsety']);
+                indexfile.should.contain.keys(['version', 'width', 'height', 'offsetx', 'offsety']);
+                indexfile.version.should.equal(1);
                 
                 indexfile.flatten().should.deep.equal([
                     476, 477, 478, 479, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497,
@@ -205,8 +222,8 @@ describe('scidx', function(){
                 should.exist(indexfile.index);
                 should.exist(indexfile.recordings);
                 indexfile.valid.should.be.true;
-                indexfile.should.contain.keys(['width', 'height', 'offsetx', 'offsety']);
-                
+                indexfile.should.contain.keys(['version', 'width', 'height', 'offsetx', 'offsety']);
+                indexfile.version.should.equal(1);
                 indexfile.count().should.equal(87);
                 done();
             });

@@ -311,8 +311,8 @@ scidx.prototype = {
             row = idx[y];
             for(var x in row){
                 cell = row[x];
-                for(var z in cell){
-                    var rec = cell[z];
+                for(var z in cell[0]){
+                    var rec = cell[0][z];
                     if(!recs[rec]){
                         recs[rec] = true;
                         ++count;
