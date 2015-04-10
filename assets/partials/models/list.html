@@ -19,16 +19,16 @@
         <div ng-hide="loading">
             <table ng-table="tableParams" class="table table-hide-btns"  show-filter="true" >
                 <tr ng-repeat="model in modelsData" >
-                    <td data-title="'Date'" sortable="'date'">
+                    <td data-title="'Date'" data-sortable="'date'">
                         {{ model.date | moment : 'lll' }}
                     </td>
-                    <td data-title="'Name'" class="hidelongtext widthtd" sortable="'mname'"  filter="{ 'mname': 'text' }">
+                    <td data-title="'Name'" class="hidelongtext widthtd" data-sortable="'mname'"  filter="{ 'mname': 'text' }">
                         {{model.mname}}
                     </td>
-                    <td data-title="'Type'" sortable="'mtname'" filter="{ 'mtname': 'text' }">
+                    <td data-title="'Type'" data-sortable="'mtname'" filter="{ 'mtname': 'text' }">
                         {{model.mtname}}
                     </td>
-                    <td data-title="'User'" sortable="'muser'" filter="{ 'muser': 'text' }" class="no-wrap-table-cell">
+                    <td data-title="'User'" data-sortable="'muser'" filter="{ 'muser': 'text' }" class="no-wrap-table-cell">
                         {{model.muser}}
                     </td>
                     <td>

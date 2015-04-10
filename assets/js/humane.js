@@ -8,7 +8,8 @@ angular.module('humane', [])
     humane.success = humane.spawn({ addnCls: humane.baseCls+'-success' });
     
     humane.serverError = function() {
-        humane.error("Error Communicating With Server");
+        humane.error("Error communicating with server");
+        
     };
     
     return humane;

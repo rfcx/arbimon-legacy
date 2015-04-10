@@ -83,7 +83,7 @@ angular.module('audiodata.species', [
             },
             function(err, result) {
                 if(err) {
-                    notify.error('Error Communicating with Server');
+                    notify.serverError();
                 }
                 
                 console.log(result);

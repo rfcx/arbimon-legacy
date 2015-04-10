@@ -34,7 +34,7 @@ run(function(Angularytics) {
             .success(function(data){
                 if(data.error)
                 {
-                    notify.error('Error Communicating with Server');
+                    notify.serverError();
                     
                 }
                 else
@@ -43,7 +43,7 @@ run(function(Angularytics) {
                 }
             })
             .error(function(err){
-                notify.error('Error Communicating with Server');
+                notify.serverError();
             });
         });
     };
@@ -67,7 +67,7 @@ run(function(Angularytics) {
                 notify.log(data.message);
             })
             .error(function(err){
-                notify.error('Error Communicating with Server');
+                notify.serverError();
             });
         });
     };
