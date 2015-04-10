@@ -129,7 +129,6 @@ def write_image(img_file, scidx_file, clip_max, palette_id, norm_vector=None,
 
         sc.write_image(img_file, a2pyutils.palette.get_palette(palette_id))
     except:
-        raise
         exit_error('cannot write image file.')
 
 

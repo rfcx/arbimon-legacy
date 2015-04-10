@@ -335,7 +335,7 @@ class Test_set_visual_scale_lib(unittest.TestCase):
         readFromIndex = Mock(side_effect=IOError)
         with mock.patch('soundscape.set_visual_scale_lib.exit_error', exitErr, create=False):
             with mock.patch('soundscape.set_visual_scale_lib.soundscape.Soundscape.read_from_index',readFromIndex,create=False):
-                write_image('/a/image/file.png',{'path':'/scidx/index/path/file.scidx'},None,1)
+                write_image('/a/image/file.png',{'path':'/scidx/index/path/file.scidx'},None,1, 0)
 
         readFromIndex.assert_any_calls('/scidx/index/path/file.scidx')
         exitErr.assert_any_calls('cannot write image file.')
@@ -396,8 +396,8 @@ class Test_set_visual_scale_lib(unittest.TestCase):
         from soundscape.set_visual_scale_lib import update_db
         with mock.patch('contextlib.closing', mock_closing , create=False):
             dbMock = db_mock()
-            update_db(dbMock,1, 2, 3, 4)
-        correctCalls= [{'q': '\n                UPDATE `soundscapes`\n                SET visual_max_value = %s, visual_palette = %s,\n                    normalized = %s\n                WHERE soundscape_id = %s\n            ', 'a': [1, 2, 4, 3], 'f': 'execute'}, {'f': 'close'}]
+            update_db(dbMock,1, 2, 3, 4, 5)
+        correctCalls= [{'q': '\n                UPDATE `soundscapes`\n                SET visual_max_value = %s, visual_palette = %s,\n                    normalized = %s, threshold = %s\n                WHERE soundscape_id = %s\n            ', 'a': [1, 2, 4, 5, 3], 'f': 'execute'}, {'f': 'close'}]
         self.assertEqual(close_obj_calls,correctCalls,msg="update_db: incorrect calls sequence")
 
 sys_exit_calls = []
@@ -415,9 +415,9 @@ outputstringcorrect = """    soundscape_id - id of the soundscape whose image to
                 (defined in a2pyutils.palette)"""
 
 run_mock_calls = []
-def run_mock(a,b,c,d):
+def run_mock(a,b,c,d, e):
     global run_mock_calls
-    run_mock_calls.append([a,b,c,d])
+    run_mock_calls.append([a,b,c,d,e])
     
 class Test_set_visual_scale(unittest.TestCase):
     def test_file_can_be_called(self):
@@ -452,12 +452,12 @@ class Test_set_visual_scale(unittest.TestCase):
         set_visual_scale.sys = sys_exit()
         set_visual_scale.a2pyutils.palette.palette = [1]
         set_visual_scale.run = run_mock
-        set_visual_scale.main([1,2,3,0])
+        set_visual_scale.main([1,2,3,0,0])
         outputString = output.getvalue()
         output.close()
         sys.stdout = saved_stdout
         self.assertEqual(len(sys_exit_calls),0,msg="no exit calls expected")
-        self.assertEqual(run_mock_calls[0],[2, 3, 0, 0],msg="incorrect call to run function")
+        self.assertEqual(run_mock_calls[0],[2, 3, 0, False, 0.0],msg="incorrect call to run function")
         self.assertEqual('end\n',outputString,msg="file_can_be_called: Incorrect output message")
         
 if __name__ == '__main__':

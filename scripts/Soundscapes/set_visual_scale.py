@@ -31,7 +31,6 @@ def main(argv):
             len(a2pyutils.palette.palette))
         normalized = int(argv[4] if len(argv) > 4 else 0) != 0
         amplitude_th = float(argv[5] if len(argv) > 5 else 0)
-        print (soundscapeId, clipMax, paletteId, normalized, amplitude_th)
         run(soundscapeId, clipMax, paletteId, normalized, amplitude_th)
         print 'end'
 
