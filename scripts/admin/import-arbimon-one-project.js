@@ -109,7 +109,6 @@ var getSiteRecs = function(station, next) {
                     request.get(url)
                         .pipe(fs.createWriteStream(path.join(os.tmpdir(), file + '.flac')))
                         .on('finish', function() {
-                            
                             arbimonOneDb.end();
                             arbimonTwoDb.release();
                             process.exit(1);

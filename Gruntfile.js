@@ -67,7 +67,8 @@ module.exports = function(grunt) {
                 ],
                 options: {
                     destination: 'docs/backend',
-                    readme: './README.md'
+                    readme: './README.md',
+                    configure: 'jsdoc.conf.json'
                 }
             }
         },

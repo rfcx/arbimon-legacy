@@ -8,6 +8,8 @@ var path = require('path');
 var sprintf = require("sprintf-js").sprintf;
 
 /*
+Sox spectrogram effect  options
+
 Options:
 −x num
     Change the (maximum) width (X-axis) of the spectrogram from its default value of 800 pixels to a given number between 100 and 200000. See also −X and −d.

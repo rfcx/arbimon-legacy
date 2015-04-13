@@ -1,10 +1,17 @@
-/** @module utils/formatparse
-*/
 /**
  * parses filename and return datetime data and file extension
- * @method formatParse
+ * @exports utils/format-parse
  * @param {String} formatName - Name that indentifies the format in use on the filename
  * @param {String} filename - filename to parse
+ * 
+ * @example
+ * var formatParse = require('util/format-parse');
+ * 
+ * ffi = formatParse('Arbimon', 'stereo_wav-2014-07-14_08-20.wav');
+ * @returns ffi - file format info [Object]<br>
+ *  - ffi.filename [String] - filename without file extension<br>
+ *  - ffi.datetime [Date] - time read from format<br>
+ *  - ffi.filetype [String] - file extension<br>
  */
 
 var formatParse = function(formatName, filename) {
