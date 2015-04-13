@@ -29,6 +29,13 @@
         </div>
         <div class="col-sm-6">
             <div class="row container-fluid " >
+                <input type="checkbox" ng-model="datasubmit.normalize"/><label for="aggregation">Normalize Data</label>
+                <i class="fa fa-question-circle" 
+                    tooltip="Check to normalize each value in the soundscape using the number of recordings in the playlist that fall in that column."
+                    tooltip-placement="right">
+                </i>
+            </div>
+            <div class="row container-fluid " >
                 <label for="aggregation">Bin bandwidth (Hz):</label>
                 <ol id="" class="btn-group binhzpadding">
                   <li btn-radio="21" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">21</span></li>
@@ -45,7 +52,7 @@
                             If the frequency difference of two successive peaks is less than the frequency threshold, 
                             then only the peak of highest amplitude will be kept." 
                     tooltip-placement="right">
-                </i> 
+                </i>
                 <a2-threshold-selector threshold="datasubmit.threshold" bandwidth="datasubmit.bandwidth" ></a2-threshold-selector>
                 
                 <!--

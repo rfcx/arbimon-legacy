@@ -56,11 +56,11 @@ var Jobs = {
             new: function(params, db, callback) {
                 db.query(
                     "INSERT INTO `job_params_soundscape`( \n"+
-                    "   `job_id`, `playlist_id`, `max_hertz`, `bin_size`, `soundscape_aggregation_type_id`, `name`, `threshold` , `frequency` \n" +
+                    "   `job_id`, `playlist_id`, `max_hertz`, `bin_size`, `soundscape_aggregation_type_id`, `name`, `threshold` , `frequency` , `normalize` \n" +
                     ") VALUES ( \n" + 
                     "    " + mysql.escape([params.job_id, params.playlist, params.maxhertz, params.bin]) + ", \n"+
                     "    (SELECT `soundscape_aggregation_type_id` FROM `soundscape_aggregation_types` WHERE `identifier` = " + mysql.escape(params.aggregation) + "), \n" +
-                    "    " + mysql.escape([params.name, params.threshold, params.frequency]) + " \n" +
+                    "    " + mysql.escape([params.name, params.threshold, params.frequency , params.normalize]) + " \n" +
                     ")", callback
                 );
             },

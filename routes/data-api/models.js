@@ -621,7 +621,6 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                 res.status(403).json({ err: "you dont have permission to 'manage soundscapes'" });
                 return next(new Error());
             }
-
             params = {
                 name        : (req.body.n),
                 user        : req.session.user.id,
@@ -631,7 +630,8 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                 threshold   : (req.body.t),
                 bin         : (req.body.b),
                 maxhertz    : (req.body.m),
-                frequency   : (req.body.f)
+                frequency   : (req.body.f),
+                normalize   : (req.body.nv)
             };
 
             next();

@@ -253,7 +253,8 @@
                 aggregation : '',
                 threshold : 0,
                 bin : 86,
-                bandwidth : 0
+                bandwidth : 0,
+				normalize:false
             };
             
             $scope.nameMsg = '';
@@ -275,7 +276,8 @@
                         t: $scope.datasubmit.threshold,
                         m: 22050,
                         b: $scope.datasubmit.bin,
-                        f: $scope.datasubmit.bandwidth 
+                        f: $scope.datasubmit.bandwidth,
+						nv:$scope.datasubmit.normalize
                     })
                     .success(function(data) {
                         if (data.name) {
