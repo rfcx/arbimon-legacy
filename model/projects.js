@@ -417,6 +417,9 @@ var Projects = {
             function(err,data)
             {
                 if(err) return callback(err);
+                
+                if(!data.length) return callback(new Error('Classification not found'));
+                
                 modUri = data[0].uri.replace('.mod','');
                 q = "SELECT `uri` FROM `recordings` WHERE `recording_id` in "+
                 "(SELECT `recording_id` FROM `classification_results` WHERE `job_id` = "+cid+") ";
