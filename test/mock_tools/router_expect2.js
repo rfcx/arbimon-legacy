@@ -1,3 +1,4 @@
+var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var sinon = require('sinon');
 var lodash = require('lodash');
 var dd = console.log;
@@ -30,13 +31,14 @@ router_expect.prototype = {
      * @method mock_tools/router_expect#when
      * @param url {Object} request object
      * @param expectations {Object} response expectations
-     * @param scope (optional) {Object} object which request and reponse object are assigned to
+     * @param [scope] {Object} object which request and reponse object are assigned to
      */
     when: function(url, expectations, scope){
         var request = lodash.cloneDeep(this.defaults);
         if(typeof url == 'string'){
             request.url = url;
-        } else {
+        } 
+        else {
             lodash.merge(request, url);
         }
         var response = new expected_response(request, expectations);
@@ -47,8 +49,6 @@ router_expect.prototype = {
         }
         
         this.router.handle(request, response, response.next.bind(response));
-        
-        
     }
 };
 
@@ -57,12 +57,19 @@ var make_expect_fn = function(name){
     return function(){
         var args = slice.call(arguments);
         var exp = this.expect && this.expect[name];
+        // if(exp){
+        //     if(exp instanceof Function){
+        //         args.unshift(this.request, this);
+        //         exp.apply(null, args);
+        //     }
+        // } 
+        // else {
+        //     throw args.length > 0 && args[0] instanceof Error ? args[0] : new Error("Unexpected call to res."+name+"("+args.map(JSON.stringify).join(", ")+")");
+        // }
         if(exp){
-            if(exp instanceof Function){
-                args.unshift(this.request, this);
-                exp.apply(null, args);
-            }
-        } else {
+            expect([exp]).to.deep.equal(args);
+        } 
+        else {
             throw args.length > 0 && args[0] instanceof Error ? args[0] : new Error("Unexpected call to res."+name+"("+args.map(JSON.stringify).join(", ")+")");
         }
         return this;

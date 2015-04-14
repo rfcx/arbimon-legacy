@@ -197,7 +197,8 @@ var receiveUpload = function(req, res, next) {
                     
                     if(info.duration >= 3600) {
                         return res.status(403).json({ error: "recording is too long, please contact support" });
-                    } else if(info.duration >= 120) {
+                    } 
+                    else if(info.duration >= 120) {
                         audioTools.splitter(upload.path, info.duration, function(err, files) {
                             var i = 0;
                             async.eachSeries(files, function(f, callback) {

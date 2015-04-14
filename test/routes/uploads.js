@@ -8,14 +8,15 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var sinon = require('sinon');
 var pre_wire= require('../mock_tools/pre_wire');
 var router_expect = require('../mock_tools/router_expect');
+var router_expect2 = require('../mock_tools/router_expect2');
 var mock_aws = require('../mock_tools/mock_aws');
-// var dd=console.log;
 
 var mock_pipe = function(){};
 mock_pipe.prototype = {
     pipe:function(){}, 
     resume:function(){}
 };
+
 var event_sink = function(){
     this.listeners={};
 };
@@ -58,15 +59,17 @@ var make_result_delegate = function(name, async, err){
 var uploads = pre_wire('../../routes/uploads', {
     'aws-sdk' : mock_aws
 });
+
 var mock_config = {
     aws: {
         bucketName: 'kfc_bucket'
     }
 };
+
 var mock = {
     config: function(k){return mock_config[k];},
     fs: {
-        unlink:  make_result_delegate('fs.unlink', true),
+        unlink: make_result_delegate('fs.unlink', true),
         createWriteStream: function(){return {info:'this is a write stream'};},
         createReadStream: function(){return {info:'this is a read stream'};}
     },
@@ -87,20 +90,27 @@ var mock = {
         recordings : {}
     }
 };
+
 uploads.__set__(mock);
+
 var _uploadQueue = uploads.__get__('uploadQueue');
-var processUpload = uploads.__get__('processUpload');
 
 var uploads_router = router_expect(uploads, {
     method: "POST"
 });
 
-describe('uploads.js', function(){
+var uploads_router2 = router_expect2(uploads, {
+    method: "POST"
+});
+
+describe('routes/uploads.js', function(){
     var console_log, console_error;
+    
     before(function(){
         console_log = console.log;
         console_error = console.error;
     });
+    
     beforeEach(function(){
         delete mock_aws.S3.buckets.kfc_bucket;
         delete mock.fs.unlink.result;
@@ -112,8 +122,8 @@ describe('uploads.js', function(){
         console.log = function(){};
         console.error = function(){};
         mock.model.uploads = {
-            insertRecToList : function(obj, cb){setImmediate(cb, null, {insertId:1}, {fields:1});},
-            removeFromList : function(id, cb){setImmediate(cb, null, {affectedRows:1}, {fields:1});}
+            insertRecToList : function(obj, cb){ process.nextTick(cb, null, {insertId:1}, {fields:1});},
+            removeFromList : function(id, cb){ process.nextTick(cb, null, {affectedRows:1}, {fields:1});}
         };
         mock.model.sites = {
             findById : function(id, cb){ setImmediate(cb, null, [
@@ -130,7 +140,9 @@ describe('uploads.js', function(){
             insert : function(obj, cb){ setImmediate(cb, null, {insertId:1}, {});},
             exists : function(obj, cb){ setImmediate(cb, null, false);}
         };
+        
     });
+    
     afterEach(function(){
         if(_uploadQueue.push.restore){
             _uploadQueue.push.restore();
@@ -143,32 +155,62 @@ describe('uploads.js', function(){
             console.error.restore();
         }
     });
+    
     after(function(){
         console.log = console_log;
         console.error = console_error;
     });
-    describe('post /audio', function(){
+    
+    describe('POST /audio', function(){
 
-        it('Should upload a file posted by a logged in user with permissions.', function(done){
+        it('Should accept a file submited by a logged in user with permissions.', function(done){
             var scope={};
             mock_aws.S3.buckets.kfc_bucket = {};
             mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [0, {duration:60, channels:1, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'}];
-            mock.audioTools.spectrogram.result = [0, {info:"this is a spectrogram"}];
-            mock.formatParse.result = {datetime:new Date(), filename:'recordingfile.flac', filetype:'.flac'};            
-            sinon.stub(console, 'log', function(msg){
-                if(msg == "done processing uploads on queue"){
-                    scope.res.status.calledOnce.should.be.true;
-                    scope.res.status.args[0].should.deep.equal([202]);
-                    scope.res.send.calledOnce.should.be.true;
-                    scope.res.send.args[0].should.deep.equal(['upload done!']);
-                    done();
-                }
-            });
-            uploads_router.when({url:'/audio',
-                session:{loggedIn:true, user:{id:1}},
-                query:{project:1, site:2, nameformat:20},
-                haveAccess: function(proj, perm){return perm == "manage project recordings";},
+            mock.audioTools.info.result = [0, {
+                duration: 60,
+                channels: 1,
+                sample_rate: 44100,
+                precision: 16,
+                samples: 2646000,
+                file_size: 1024,
+                bit_rate: 1,
+                sample_encoding: 'PCM'
+            }];
+            
+            mock.formatParse.result = {
+                datetime: new Date(),
+                filename: 'recordingfile.flac',
+                filetype: '.flac'
+            };
+            mock.audioTools.spectrogram.result = [0, {
+                info: "this is a spectrogram"
+            }];
+            
+            // sinon.stub(console, 'log', function(msg){
+            //     if(msg == "done processing uploads on queue"){
+            //         scope.res.status.calledOnce.should.be.true;
+            //         scope.res.status.args[0].should.deep.equal([202]);
+            //         scope.res.send.calledOnce.should.be.true;
+            //         scope.res.send.args[0].should.deep.equal(['upload done!']);
+            //         done();
+            //     }
+            // });
+            
+            uploads_router2.when({
+                url:'/audio',
+                session:{
+                    loggedIn:true, 
+                    user: { id:1 }
+                },
+                query:{ 
+                    project:1, 
+                    site:2, 
+                    nameformat:20
+                },
+                haveAccess: function(proj, perm) {
+                    return perm == "manage project recordings";
+                },
                 busboy : new event_sink(),
                 pipe: function(busboy){
                     busboy.send('field', 'info', JSON.stringify({}));
@@ -176,8 +218,34 @@ describe('uploads.js', function(){
                     busboy.send('finish');
                 }
             }, {
-                status:true, send:true
+                status: 202, 
+                send: 'upload done!'
             }, scope);
+            
+            // uploads_router.when({
+            //     url:'/audio',
+            //     session:{
+            //         loggedIn:true, 
+            //         user: { id:1 }
+            //     },
+            //     query:{ 
+            //         project:1, 
+            //         site:2, 
+            //         nameformat:20
+            //     },
+            //     haveAccess: function(proj, perm) {
+            //         return perm == "manage project recordings";
+            //     },
+            //     busboy : new event_sink(),
+            //     pipe: function(busboy){
+            //         busboy.send('field', 'info', JSON.stringify({}));
+            //         busboy.send('file', 'file', new mock_pipe(), 'recordingfile.flac', 'plain file encoding', 'audio/flac');
+            //         busboy.send('finish');
+            //     }
+            // }, {
+            //     status:true, 
+            //     send:true
+            // }, scope);
         });
         
         it('Should write to console error if deleting temp file fails.', function(done){
@@ -200,9 +268,9 @@ describe('uploads.js', function(){
                 }
             });
             uploads_router.when({url:'/audio',
-                session:{loggedIn:true, user:{id:1}},
-                query:{project:1, site:2, nameformat:20},
-                haveAccess: function(proj, perm){return perm == "manage project recordings";},
+                session:{ loggedIn:true, user: { id:1 } },
+                query: { project:1, site:2, nameformat:20 },
+                haveAccess: function(proj, perm){ return perm == "manage project recordings"; },
                 busboy : new event_sink(),
                 pipe: function(busboy){
                     busboy.send('field', 'info', JSON.stringify({}));
@@ -213,6 +281,7 @@ describe('uploads.js', function(){
                 status:true, send:true
             }, scope);
         });
+
         it('Should ignore fields other than \'info\' or file-type fields.', function(done){
             var scope={};
             mock_aws.S3.buckets.kfc_bucket = {};
@@ -273,7 +342,6 @@ describe('uploads.js', function(){
             }, scope);
         });
 
-
         it('Should fail if fetching project info or fetching total recordings fail.', function(done){
             var scope={};
             mock_aws.S3.buckets.kfc_bucket = {};
@@ -300,7 +368,6 @@ describe('uploads.js', function(){
                 }
             }, scope);
         });
-
 
         it('Should respond 400 if processing of info field fails.', function(done){
             var scope={};
@@ -373,7 +440,6 @@ describe('uploads.js', function(){
                 }
             }, scope);
         });
-
 
         it('Should respond 400 if POST is not multipart  (busboy doesnt exist in the request).', function(done){
             var scope={};
@@ -518,6 +584,7 @@ describe('uploads.js', function(){
                 }
             }, scope);
         });
+
         it('Should respond 400 if any parameter is missing.', function(done){
             var scope={};
             uploads_router.when({url:'/audio',
@@ -532,6 +599,7 @@ describe('uploads.js', function(){
                 }
             }, scope);
         });
+        
         it('Should respond 401 if logged in user has no permission to upload.', function(done){
             var scope={};
             uploads_router.when({url:'/audio',
@@ -546,13 +614,14 @@ describe('uploads.js', function(){
                     done();
                 }
             }, scope);
-        });        
+        });
+        
         it('Should split the recording if its duration is longer than 120 secs.', function(done){
             var scope={};
             mock_aws.S3.buckets.kfc_bucket = {};
             mock.fs.unlink.result = [];
             mock.audioTools.info.result = [0, {duration:121, channels:1, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'}];
-            mock.audioTools.spectrogram.result = [0, {info:"this is a spectrogram"}];
+            mock.audioTools.spectrogram.result = [0, { info: "this is a spectrogram"}];
             mock.audioTools.splitter.result = [null, ['f1', 'f2']];
             mock.formatParse.result = {datetime:new Date(), filename:'recordingfile.flac', filetype:'.flac'};
             sinon.spy(_uploadQueue, 'push');
@@ -580,6 +649,7 @@ describe('uploads.js', function(){
                 status:true, send:true
             }, scope);
         });
+
         it('Should respond 403 if the recording duration is longer than 3600 secs.', function(done){
             var scope={};
             mock_aws.S3.buckets.kfc_bucket = {};
@@ -606,6 +676,7 @@ describe('uploads.js', function(){
                 }
             }, scope);
         });        
+
         it('Should convert to flac if file is a wav.', function(done){
             var scope={};
             mock_aws.S3.buckets.kfc_bucket = {};
@@ -637,6 +708,7 @@ describe('uploads.js', function(){
                 status:true, send:true
             }, scope);
         });
+
         it('Should output to console.error if conversion to flac/mono fails.', function(done){
             var scope={};
             mock_aws.S3.buckets.kfc_bucket = {};
@@ -663,7 +735,6 @@ describe('uploads.js', function(){
                 status:true, send:true
             }, scope);
         });
-
 
         it('Should convert to mono if file is stereo.', function(done){
             var scope={};
@@ -696,6 +767,7 @@ describe('uploads.js', function(){
                 status:true, send:true
             }, scope);
         });
+
         it('Should upload a file posted with a valid jsonwebtoken.', function(done){
             var scope={};
             var iat_time = new Date().getTime();
@@ -727,6 +799,7 @@ describe('uploads.js', function(){
                 status:true, send:true
             }, scope);
         });
+
         it('Should respond 401 if jsonwebtoken is expired.', function(done){
             var scope={};
             var iat_time = new Date().getTime();
@@ -745,6 +818,7 @@ describe('uploads.js', function(){
                 }
             }, scope);
         });
+
         it('Should respond 401 if site in jsonwebtoken is not found.', function(done){
             var scope={};
             var iat_time = new Date().getTime();
@@ -763,6 +837,7 @@ describe('uploads.js', function(){
                 }
             }, scope);
         });
+
         it('Should fail if search of in jsonwebtoken fails.', function(done){
             var scope={};
             var iat_time = new Date().getTime();
@@ -782,6 +857,7 @@ describe('uploads.js', function(){
                 }
             }, scope);
         });
+
         it('Should respond 401 if post has no valid jsonwebtoken and no valid session.', function(done){
             uploads_router.when('/audio', {
                 sendStatus:function(req, res, status){
@@ -789,112 +865,6 @@ describe('uploads.js', function(){
                     done();
                 }
             });
-        });
-    });
-    describe("#processUpload()", function(){
-        it('Should output to console.error if updating audio info of uploaded file fails.', function(done){
-            mock_aws.S3.buckets.kfc_bucket = {};
-            mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [1];
-            mock.audioTools.sox.result = [0, 'stdout', 'stderr'];
-            mock.audioTools.spectrogram.result = [0, {info:"this is a spectrogram"}];
-            mock.formatParse.result = {datetime:new Date(), filename:'recordingfile.wav', filetype:'.wav'};
-            sinon.stub(console, 'error', function(){
-                arguments[0].message.should.equal('error getting audio file info');
-                done();
-            });
-            processUpload({
-                projectId: 1, siteId:2, userId:9393,
-                info: {duration:60, channels:2, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'},
-                name: 'recordingfile.wav',
-                FFI: {datetime:new Date(), filename:'recordingfile.wav', filetype:'.wav'},
-                metadata:{},
-                path: 'recilfepath.wav'
-            }, function(){});
-        });
-        it('Should output to console.error if generating spectrogram fails.', function(done){
-            mock_aws.S3.buckets.kfc_bucket = {};
-            mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [0, {duration:60, channels:2, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'}];
-            mock.audioTools.sox.result = [0, 'stdout', 'stderr'];
-            mock.audioTools.spectrogram.result = [1, {info:"this is a spectrogram"}];
-            mock.formatParse.result = {datetime:new Date(), filename:'recordingfile.wav', filetype:'.wav'};
-            sinon.stub(console, 'error', function(){
-                arguments[0].message.should.equal('error generating spectrogram: \nundefined');
-                done();
-            });
-            processUpload({
-                projectId: 1, siteId:2, userId:9393,
-                info: {duration:60, channels:2, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'},
-                name: 'recordingfile.wav',
-                FFI: {datetime:new Date(), filename:'recordingfile.wav', filetype:'.wav'},
-                metadata:{},
-                path: 'recilfepath.wav'
-            }, function(){});
-        });
-        it('Should output to console.error if uploading flac to bucket fails.', function(done){
-            // mock_aws.S3.buckets.kfc_bucket = {};
-            mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [0, {duration:60, channels:2, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'}];
-            mock.audioTools.sox.result = [0, 'stdout', 'stderr'];
-            mock.audioTools.spectrogram.result = [0, {info:"this is a spectrogram"}];
-            mock.formatParse.result = {datetime:new Date(), filename:'recordingfile.wav', filetype:'.wav'};
-            sinon.stub(console, 'error', function(){
-                arguments[0].message.should.equal('bucket kfc_bucket not in cache.');
-                done();
-            });
-            processUpload({
-                projectId: 1, siteId:2, userId:9393,
-                info: {duration:60, channels:2, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'},
-                name: 'recordingfile.wav',
-                FFI: {datetime:new Date(), filename:'recordingfile.wav', filetype:'.wav'},
-                metadata:{},
-                path: 'recilfepath.wav'
-            }, function(){});
-        });
-        it('Should output to console.error if fails while removing from upload list.', function(done){
-            mock_aws.S3.buckets.kfc_bucket = {};
-            mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [0, {duration:60, channels:2, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'}];
-            mock.audioTools.sox.result = [0, 'stdout', 'stderr'];
-            mock.audioTools.spectrogram.result = [0, {info:"this is a spectrogram"}];
-            mock.formatParse.result = {datetime:new Date(), filename:'recordingfile.wav', filetype:'.wav'};
-            mock.model.uploads.removeFromList = function(id, cb){setImmediate(cb, new Error("I am error"));};
-
-            sinon.stub(console, 'error', function(){
-                arguments[0].message.should.equal('I am error');
-                done();
-            });
-            processUpload({
-                projectId: 1, siteId:2, userId:9393,
-                info: {duration:60, channels:2, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'},
-                name: 'recordingfile.wav',
-                FFI: {datetime:new Date(), filename:'recordingfile.wav', filetype:'.wav'},
-                metadata:{},
-                path: 'recilfepath.wav'
-            }, function(){});
-        });
-        it('Should output to console.error if fails to add recording to upload list.', function(done){
-            mock_aws.S3.buckets.kfc_bucket = {};
-            mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [0, {duration:60, channels:2, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'}];
-            mock.audioTools.sox.result = [0, 'stdout', 'stderr'];
-            mock.audioTools.spectrogram.result = [0, {info:"this is a spectrogram"}];
-            mock.formatParse.result = {datetime:new Date(), filename:'recordingfile.wav', filetype:'.wav'};
-            mock.model.uploads.insertRecToList = function(obj, cb){setImmediate(cb, new Error("I am error"));};
-
-            sinon.stub(console, 'error', function(){
-                arguments[0].message.should.equal('I am error');
-                done();
-            });
-            processUpload({
-                projectId: 1, siteId:2, userId:9393,
-                info: {duration:60, channels:2, sample_rate:44100, precision:16, samples:2646000, file_size: 1024, bit_rate:1, sample_encoding:'PCM'},
-                name: 'recordingfile.wav',
-                FFI: {datetime:new Date(), filename:'recordingfile.wav', filetype:'.wav'},
-                metadata:{},
-                path: 'recilfepath.wav'
-            }, function(){});
         });
     });
 });

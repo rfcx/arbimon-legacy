@@ -11,6 +11,7 @@
 
 
 var fs = require('fs');
+var util = require('util');
 var debug = require('debug')('arbimon2:upload-queue');
 var async = require('async');
 var AWS = require('aws-sdk');

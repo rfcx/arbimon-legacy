@@ -63,7 +63,8 @@ module.exports = function(grunt) {
                     'routes/**/*.js',
                     'model/**/*.js',
                     'utils/**/*.js',
-                    'config/**/*.js'
+                    'config/**/*.js',
+                    'test/**/*.js'
                 ],
                 options: {
                     destination: 'docs/backend',
