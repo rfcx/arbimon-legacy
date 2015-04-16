@@ -24,8 +24,9 @@ angular.module('dashboard',[
             templateUrl: '/partials/dashboard/users.html'
         });
     })
-.controller('SummaryCtrl', function($scope, Project, a2TrainingSets, $timeout, notify, $window) {
+.controller('SummaryCtrl', function($scope, Project, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
         $scope.loading = 8;
+        var infowindow_scope = $scope.$new();
         var done = function() {
             if($scope.loading > 0) --$scope.loading;
         };
@@ -81,19 +82,29 @@ angular.module('dashboard',[
             
             $timeout(function() {
                 
-                $scope.map = new google.maps.Map($window.document.getElementById('summary-map'), mapOptions);
+                var map = $scope.map = new google.maps.Map($window.document.getElementById('summary-map'), mapOptions);
                 
                 if(!$scope.sites.length){
                     return;
                 }
                 var bounds = new google.maps.LatLngBounds();
                     
+                var infowindow = new google.maps.InfoWindow();
+                $templateFetch('/partials/dashboard/site-info-window.html', function(layer_tmp){
+                    var el = $compile(layer_tmp)(infowindow_scope)[0];
+                    infowindow.setContent(el);
+                });
                 angular.forEach($scope.sites, function(site){
                     var position = new google.maps.LatLng(site.lat, site.lon);
                     
                     var marker = new google.maps.Marker({
                         position: position,
                         title: site.name
+                    });
+                    google.maps.event.addListener(marker, 'click', function() {
+                        infowindow_scope.site = site;
+                        infowindow_scope.$apply();
+                        infowindow.open(map,marker);
                     });
                     
                     bounds.extend(position);
