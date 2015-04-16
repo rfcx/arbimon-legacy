@@ -147,7 +147,8 @@
 
 
         JobsData.getJobTypes().then(function(job_types) {
-            var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528'];
+            // TODO use CSS classes instead of hard coded colors
+            var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528']; 
 
             $scope.job_types = {};
             $scope.job_types.types = job_types;

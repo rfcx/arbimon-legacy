@@ -41,16 +41,10 @@
  * general styles
 */
 
-// ui-bootstrap no href fix
-.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
-
-.navbar {
-    border-radius: 0px;
-    -webkit-box-shadow: 0px 1px 8px #888;
-    -moz-box-shadow: 0px 1px 8px #888;
-    box-shadow: 0px 1px 8px #888;
-}
-
+// .inline -> newmodel.html, frequency-adjust-layer.html
+// .a2-block-inline -> (directive)a2TrainingSetDataImage
+// .ib -> new_roi_set_tset_partial.html
+// .inline-block -> browser/recordings-by
 .inline,
 .a2-block-inline,
 .ib, 
@@ -58,26 +52,35 @@
     display: inline-block;
 }
 
+// used in frequency-adjust-layer.html
 .w5em {
     width: 6em;
 }
+
+// used in new_roi_set_tset_partial.html
 .w12em {
     width: 12em;
 }
 
+// unused
 .a2-header {
     position: relative;
     z-index: 1030;
 }
-header nav ul > li > a {
-    height: 52px;
-}
-header .navbar-brand > img,
-header nav ul.nav > li a > img {
-    vertical-align: middle;
-    margin-top: -5px;
-}
 
+
+// no effect
+// header nav ul > li > a {
+//     height: 52px;
+// }
+// header .navbar-brand > img,
+// header nav ul.nav > li a > img {
+//     vertical-align: middle;
+//     margin-top: -5px;
+// }
+
+
+// unused
 .logo-text {
     position: relative;
     z-index: 0;
@@ -95,7 +98,7 @@ header nav ul.nav > li a > img {
     }
 }
 
-
+// unused
 .make-full-column(@colstart; @colend; @gutter: @grid-gutter-width) {
     @columns: @colend - @colstart;
     min-height: 1px;
@@ -114,29 +117,39 @@ header nav ul.nav > li a > img {
 
 @banner-padding: 60px;
 
+// -> register.ejs
 .banner {
     background: url("/images/login-banner.png");
     background-position: center top; 
     height: 500px;
 }
 
+// -> login.ejs, activate.ejs, forgot.ejs, not-found.ejs, project_diasabled.ejs,
+//    reset-password.ejs, terms.ejs
 .login-banner {
     .banner();
     padding-top: @banner-padding;
     padding-bottom: @banner-padding;
 }
 
+
+// ->  activate.ejs, forgot-request.ejs, register.ejs, reset-password.ejs
 .registration {
     background-color: #fff;
     background-color: rgba(255, 255, 255, 0.62);
     border-radius: 10px;
 }
 
+// -> validator-main.html, recordings-by-playlist.html, recordings-by-site.html,
+//    browser/soundscapes.html, training-data.html, add_tset.html, 
+//    edit_soundscape_visual_scale.html, new_roi_set_tset_partial.html
 .dropdown-height-7 {
     overflow-y: auto;
     max-height: 7 * (2 * @nav-link-padding-v + 14);
 }
 
+
+// -> login.ejs
 .login-form {
     padding: 10px;
     background-color: transparent;
@@ -145,6 +158,9 @@ header nav ul.nav > li a > img {
         margin: 3px;
     }
 }
+
+// -> activate.ejs, forgot-request.ejs, login.ejs, not-found.ejs, terms.ejs,
+//    project_disabled.ejs, register.ejs, reset-password.ejs, support.ejs
 .login-top {
     padding-top: 15px;
     height: 52px;
@@ -155,50 +171,71 @@ header nav ul.nav > li a > img {
     margin-bottom: 6px;
     
 }
+
+// -> recordings-by-site.html
 .dropdown-menu.datepicker {
     min-width: 290px;
     padding: 5px;
 }
+
+// unused
 .alert {
     width: 30%;
     margin: 0 auto;
 }
+
+// -> create-playlist.html, createnewclassification.html, newmodel.html, 
+//    createnewsoundscape.html
 .red {
     color: red;
     float: right;
     font-size: small;
 }
+
+// -> modelinfo.html, newmodel.html
 .top-buffer {
     margin-top: 8px;
 }
+
+// unused
 .hrline {
     color: #000;
     width: 100%;
     height: 1px;
 }
+
+// unused
 .model-details {
     border-bottom: 1px solid #e5e5e5;
     width: 100%;
 }
+
+//unused
 .models-modal-window .modal-dialog {
     //width: 80%;
     min-width: 850px;
 }
+
+// -> createnewclassification.html
 .scrollul {
     height: 160px;
     width: 94%;
-}
-.scrollul {
     overflow: hidden;
     overflow-y: scroll;
     list-style-type: none;
 }
+
+// -> classinfo.html
 .ulnodeco {
     list-style-type: none;
 }
+
+// -> classinfo.html, createnewclassification.html
 .linodeco {
     text-decoration: none;
 }
+
+// unused
 .progressbar {
     z-index: 1009;
     position: fixed;
@@ -212,11 +249,15 @@ header nav ul.nav > li a > img {
     overflow-y: auto;
 }
 
+// unused
 .progressbardiv {
     width: 95%;
     margin-left: 45px;
 }
 
+
+// -> spectrogram.js, visualizer/main.html, soundscape-info-layer.html,
+//    soundscape-regions-layer.html, roi_set.html
 .bg {
     min-height: 20px;
     padding: 19px;
@@ -263,7 +304,7 @@ header nav ul.nav > li a > img {
     margin-left: 135px;
 }
 
-
+// duplicated bootstrap class
 .has-error {
     @text-color: @state-danger-text;
     @border-color: @state-danger-text;
@@ -275,10 +316,13 @@ header nav ul.nav > li a > img {
         //        background-color: @background-color;
     }
 }
+
+// unused
 .pointer-events {
     pointer-events: auto;
 }
 
+// -> project-form.html
 textarea.fixed-width {
     max-width: 100%;
     min-width: 100%;
@@ -289,7 +333,7 @@ textarea.fixed-width {
 @training-job-color: #178fd5;
 @classify-job-color: #f45151;
 @soundscape-job-color: #090;
-//progress bar colors
+//progress bar colors -- unused colors are hardcoded on js need to use classes
 .barColor1 {
     //training
     background-image: none;
@@ -306,6 +350,7 @@ textarea.fixed-width {
     background-color: @soundscape-job-color;
 }
 
+// unused
 .checkSelectors {
     input[type=checkbox] {
         visibility: hidden;
@@ -355,21 +400,30 @@ textarea.fixed-width {
         left: 1px;
     }
 }
+
+
+// unused
 .bordered {
     border-top: 1px solid #bbb;
     padding-bottom: 12px;
     margin-left: 14px;
     width: 60%;
 }
+
+// -> visualizer-spectrogram.html
 .vertical-text {
     display: inline-block;
     transform: rotate(-90deg);
     white-space: nowrap;
     width: 0;
 }
+
+// -> visualizer-spectrogram.html
 .no-wrap {
     white-space: nowrap;
 }
+
+// unused
 .rotatedtext {
     top: 64px;
     -ms-transform: rotate(270deg);
@@ -382,77 +436,114 @@ textarea.fixed-width {
     /* Opera */
     transform: rotate(270deg);
 }
+
+// unused
 .bottom-border {
     border-bottom: 1px solid #9e9e9e;
 }
+
+//unused
 .side-border {
     border-left: 1px solid #9e9e9e;
 }
+
+// unused
 .spaced-td {
     padding-left: 10px;
 }
+
+// classinfo.html
 .text-centered-bordered {
     text-align: center;
     border-top: 1px solid #ddd;
 }
+
+// classinfo.html, modelinfo.html
 .sm-result-thumb {
     height: 100px;
     width: 100%;
 }
+
+// vectorchart.html
 .vector-chart {
     height: 50px;
     border: 1px solid #9e9e9e;
     width: 100%;
 }
+
+// -> classification.js
 .details-modal-window .modal-dialog {
     min-width: 800px;
 }
+
+// classinfo.html, modelinfo.html
 .axisWrapper {
     width: 100%;
     margin: auto;
 }
+
+// classinfo.html, modelinfo.html
 .yaxisWrapper {
     width: 20px;
     font-size: x-small;
     float: left;
 }
+
+// classinfo.html, modelinfo.html
 .vectorWrapper {
     margin-left: 20px;
 }
+
+// classinfo.html, modelinfo.html
 .lowaxis2 {
     line-height: 50px;
     vertical-align: bottom;
 }
+
+// classinfo.html, modelinfo.html
 .vertical-text2 {
     line-height: 110px;
     transform: rotate(-90deg);
     vertical-align: bottom;
     font-size: small;
 }
+
+// classinfo.html, modelinfo.html
 .cleardiv {
     clear: both;
 }
+
+// classinfo.html
 .horizontal-blank-space {
     padding-left: 30px;
 }
+
+// training-sets.html, classinfo.html
 .bordeder-empy-div {
     border-top: 1px solid #ddd;
     width: 100%;
     height: 1px;
     padding: 2px;
 }
+
+// unused
 .on-queue {
     color: #777;
     text-align: center;
 }
+
+// classinfo.html
 .spacing-details-classification {
     margin-top: 4px;
 }
+
+// vectorchart.html
 .vector-loader-pos {
     padding-top: 10px;
     text-align: center;
 }
 
+// -> validator-main.html
 .no-select {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -462,6 +553,7 @@ textarea.fixed-width {
     user-select: none;
 }
 
+// a2-table directive style
 .a2-table {
     & > tbody > tr.active > td {
         background-color: #ccc;
@@ -475,10 +567,14 @@ textarea.fixed-width {
         white-space: nowrap;
     }
 }
+
+// -> recordings.html, sites.html, training-sets.html
 .toolbar {
     // top row
     padding-bottom: 10px;
 }
+
+
 .dropdown-menu.has-badges > li {
     position: relative;
     div {

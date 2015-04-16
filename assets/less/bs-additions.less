@@ -1,4 +1,15 @@
 
+// ui-bootstrap no href fix
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+
+
+.navbar {
+    border-radius: 0px;
+    -webkit-box-shadow: 0px 1px 8px #888;
+    -moz-box-shadow: 0px 1px 8px #888;
+    box-shadow: 0px 1px 8px #888;
+}
+
 // class for 
 .no-gutter > [class*='col-'] {
     &:not(:first-child){
@@ -14,8 +25,9 @@
 }
 
 // for some reasong bottom left tooltips dont have the proper margin
-.tooltip {
-  &.bottom-left { margin-top:   3px; padding: @tooltip-arrow-width 0; }
+.tooltip.bottom-left { 
+    margin-top: 3px; 
+    padding: @tooltip-arrow-width 0;
 }
 
 // .tooltip .tooltip-inner {

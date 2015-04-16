@@ -21,6 +21,7 @@ angular.module('admin', ['ui.bootstrap', 'a2utils'])
         
         $http.get('/api/job/types')
             .success(function(jobTypes) {
+                // TODO use CSS classes instead of hard coded colors
                 var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528'];
                 
                 $scope.show = {};
@@ -35,6 +36,7 @@ angular.module('admin', ['ui.bootstrap', 'a2utils'])
                 $scope.job_types = jobTypes;
             });
         
+        // TODO use CSS classes instead of hard coded colors
         $scope.states = {
             waiting: {
                 color: 'black',
