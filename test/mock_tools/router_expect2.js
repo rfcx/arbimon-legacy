@@ -35,27 +35,22 @@ var MockResponse = function(expectations, done) {
 MockResponse.prototype.verify = function() {
     var self = this;
     
+    self.actual = {};
+    
     responseMethods.forEach(function(fn){
-        var emsg;
-        
-        if(self.expectations[fn]) {
-            if(self[fn].callCount !== 1)  {
-                emsg = "Expected 1 call to res." + fn + " instead got " + 
-                       self[fn].callCount + "calls";
-                throw new Error();
-            }
-            expect(self[fn].firstCall.args).to.deep.equal(self.expectations[fn]);
-        }
-        else {
-            if(self[fn].callCount > 0)  {
-                emsg = "Expected 0 call to res." + fn + " instead got " + 
-                       self[fn].callCount + "calls";
-                throw new Error();
-            }
+        if(self[fn].callCount > 0) {
+            self.actual[fn] = self[fn].firstCall.args;
+            // console.log(fn, self[fn].firstCall.args);
         }
     });
     
-    this.done();
+    try {
+        expect(self.actual).to.deep.equal(self.expectations);
+        self.done();
+    }
+    catch(e) {
+        self.done(e);
+    }
 };
 
 

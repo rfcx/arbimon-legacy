@@ -109,6 +109,12 @@ var receiveUpload = function(req, res, next) {
             if(fieldname === 'info') {
                 try {
                     upload.metadata = JSON.parse(val);
+                    
+                    if(!upload.metadata.recorder || 
+                        !upload.metadata.sver ||
+                        !upload.metadata.mic) {
+                        return res.status(400).json({ error: "missing basic metadata" });
+                    }
                 }
                 catch(err) {
                     error = true;
@@ -156,10 +162,7 @@ var receiveUpload = function(req, res, next) {
                         filename: upload.FFI.filename
                     },
                     function(err, exists) {
-                        if(err){ 
-                            next(err);
-                            return;
-                        }
+                        if(err) return next(err);
                         
                         if(exists) {
                             deleteFile(upload.path);
