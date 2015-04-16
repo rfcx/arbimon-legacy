@@ -39,27 +39,20 @@
         width: 30px;
         height: 20px;
         vertical-align: middle;
+        text-align:center;
     }
     
-    .project-progress-level1 {
-        border-color:#56bb47 !important;
+    .progress-level(@fg, @bg){
+        border-color:@fg !important;
+        color:@fg !important;
         &.full {
-            background-color:#98d68c;
+            background-color:@bg;
         }
     }
     
-    .project-progress-level2 {
-        border-color:#47a2c9 !important;
-        &.full {
-            background-color:#a9d4ea;
-        }
-    }
+    .project-progress-level1 { .progress-level(#56bb47, #98d68c); }
+    .project-progress-level2 { .progress-level(#47a2c9, #a9d4ea); }
+    .project-progress-level3 { .progress-level(#b86ef5, #bc90e9); }
     
-    .project-progress-level3 {
-        border-color:#b86ef5 !important;
-        &.full {
-            background-color:#bc90e9;
-        }
-    }   
     
 }
