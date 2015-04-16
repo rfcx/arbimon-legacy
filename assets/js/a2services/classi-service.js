@@ -3,7 +3,16 @@ angular.module('a2-classi-service', [
     'humane'
 ])
 .factory('a2Classi', function($http, Project, notify) {
+    var saveData = null;
     return {
+        saveState : function(data)
+        {
+            saveData = data;
+        },
+        getState : function()
+        {
+            return saveData;
+        },
         list: function(callback) {
             $http.get('/api/project/'+Project.getUrl()+'/classifications')
                 .success(callback)

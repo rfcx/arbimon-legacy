@@ -3,7 +3,16 @@ angular.module('a2-soundscapes-service', [
     'humane'
 ])
 .factory('a2Soundscapes', function(Project, $http, $q, notify) {
+    var saveData = null;
     return {
+        saveState : function(data)
+        {
+            saveData = data;
+        },
+        getState : function()
+        {
+            return saveData;
+        },
         get: function(soundscapeId, callback) {
             var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId)

@@ -3,7 +3,25 @@ angular.module('a2-models-service', [
     'humane'
 ])
 .factory('a2Models', function($http, Project, notify) {
+    var saveData = null;
+    var openedModel = false
     return {
+        modelState : function(s)
+        {
+            openedModel = s;
+        },
+        isModelOpen : function()
+        {
+            return openedModel;
+        },
+        saveState : function(data)
+        {
+            saveData = data;
+        },
+        getState : function()
+        {
+            return saveData;
+        },
         list: function(callback) {
             $http.get( '/api/project/' + Project.getUrl() + '/models')
                 .success(callback)

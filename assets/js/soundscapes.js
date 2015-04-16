@@ -33,17 +33,22 @@
             });
             
             
-            var initTable = function() {
+            var initTable = function(p,c,s,f,t) {
+				var sortBy = {};
+				var acsDesc = 'desc'
+				if (s[0]=='+') {
+					acsDesc = 'asc'
+				}
+				sortBy[s.substring(1)] = acsDesc;
                 $scope.tableParams = new ngTableParams(
                     {
-                        page: 1,
-                        count: 10,
-                        sorting: {
-                            name: 'asc'
-                        }
+						page: p,
+						count: c,
+						sorting: sortBy,
+						filter:f
                     }, 
                     {
-                        total: $scope.soundscapesOriginal.length,
+                        total: t,
                         getData: function ($defer, params) 
                         {
                             $scope.infopanedata = "";
@@ -61,6 +66,13 @@
                                 $scope.infopanedata = "No classifications found.";
                             }
                             $scope.soundscapesData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+							a2Soundscapes.saveState({'data':$scope.soundscapesOriginal,
+										'filtered': $scope.soundscapesData,
+										'f':params.filter(),
+										'o':params.orderBy(),
+										'p':params.page(),
+										'c':params.count(),
+										't':orderedData.length});
                         }
                     }
                 );
@@ -79,7 +91,7 @@
                     
                     if(data.length > 0) {
                         if(!$scope.tableParams) {
-                            initTable();
+                            initTable(1,10,"+name",{},data.length);
                         }
                         else {
                             $scope.tableParams.reload();
@@ -90,9 +102,26 @@
                     }
                 });
             };
-            $scope.loadSoundscapes();
+			var stateData = a2Soundscapes.getState();
             
-            
+   			if (stateData == null)
+			{
+				$scope.loadSoundscapes();
+			}
+			else
+			{
+				if (stateData.data.length > 0) {
+					$scope.soundscapesData = stateData.filtered;
+					$scope.soundscapesOriginal = stateData.data;
+					initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
+				}
+				else {
+					$scope.infopanedata = "No models found.";
+				}			
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+			}         
             $scope.deleteSoundscape = function (id, name) {
                 
                 $scope.infoInfo = "Loading...";
