@@ -1,7 +1,63 @@
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var sinon = require('sinon');
 var lodash = require('lodash');
-var dd = console.log;
+
+// methods from express API
+var responseMethods = [
+    "redirect",
+    "render",
+    "next",
+    "send",
+    "status",
+    "sendStatus",
+    "json"
+];
+
+var MockResponse = function(expectations, done) {
+    this.expectations = expectations;
+    this.done = done;
+    var self = this;
+    
+    responseMethods.forEach(function(fn){
+        
+        self[fn] = sinon.spy(function() {
+            
+            if(fn === "status")
+                return this;
+            else {
+                this.verify();
+            }
+            
+        });
+    });
+};
+
+MockResponse.prototype.verify = function() {
+    var self = this;
+    
+    responseMethods.forEach(function(fn){
+        var emsg;
+        
+        if(self.expectations[fn]) {
+            if(self[fn].callCount !== 1)  {
+                emsg = "Expected 1 call to res." + fn + " instead got " + 
+                       self[fn].callCount + "calls";
+                throw new Error();
+            }
+            expect(self[fn].firstCall.args).to.deep.equal(self.expectations[fn]);
+        }
+        else {
+            if(self[fn].callCount > 0)  {
+                emsg = "Expected 0 call to res." + fn + " instead got " + 
+                       self[fn].callCount + "calls";
+                throw new Error();
+            }
+        }
+    });
+    
+    this.done();
+};
+
 
 /**
  * @class mock_tools/router_expect
@@ -15,7 +71,7 @@ var router_expect = function(router, defaults){
     }
     this.router = router;
     this.defaults = lodash.merge({
-        _params:{},
+        _params:[],
         query:{},
         params:{},
         param: function(p){
@@ -33,7 +89,7 @@ router_expect.prototype = {
      * @param expectations {Object} response expectations
      * @param [scope] {Object} object which request and reponse object are assigned to
      */
-    when: function(url, expectations, scope){
+    whenExpect: function(url, expectations, done){
         var request = lodash.cloneDeep(this.defaults);
         if(typeof url == 'string'){
             request.url = url;
@@ -41,52 +97,9 @@ router_expect.prototype = {
         else {
             lodash.merge(request, url);
         }
-        var response = new expected_response(request, expectations);
-        
-        if(scope){
-            scope.req = request;
-            scope.res = response;
-        }
-        
+        var response = new MockResponse(expectations, done);
         this.router.handle(request, response, response.next.bind(response));
     }
 };
-
-var slice = Array.prototype.slice;
-var make_expect_fn = function(name){
-    return function(){
-        var args = slice.call(arguments);
-        var exp = this.expect && this.expect[name];
-        // if(exp){
-        //     if(exp instanceof Function){
-        //         args.unshift(this.request, this);
-        //         exp.apply(null, args);
-        //     }
-        // } 
-        // else {
-        //     throw args.length > 0 && args[0] instanceof Error ? args[0] : new Error("Unexpected call to res."+name+"("+args.map(JSON.stringify).join(", ")+")");
-        // }
-        if(exp){
-            expect([exp]).to.deep.equal(args);
-        } 
-        else {
-            throw args.length > 0 && args[0] instanceof Error ? args[0] : new Error("Unexpected call to res."+name+"("+args.map(JSON.stringify).join(", ")+")");
-        }
-        return this;
-    };
-};
-
-var expected_response = function(request, expectations){
-    this.request = request;
-    this.expect = expectations;
-    for(var i in expect_functions){
-        this[i] = sinon.spy(expect_functions[i]);
-    }
-};
-
-var expect_functions = {};
-["redirect","render","next","send","status","sendStatus","json", "write"].forEach(function(fn){
-    expect_functions[fn] = make_expect_fn(fn);
-});
 
 module.exports = router_expect;

@@ -60,8 +60,6 @@ var authorize = function(req, res, next) {
             
             var site = rows[0];
             
-            console.log(site);
-            
             if(site.token_created_on !== req.token.iat) return res.sendStatus(401);
             
             req.upload = {
@@ -95,9 +93,6 @@ var receiveUpload = function(req, res, next) {
         
         var project = results.getProjectInfo[0][0];
         var total = results.getTotal[0][0].count;
-        
-        console.log('project', project.recording_limit);
-        console.log('total', total);
         
         if(total >= project.recording_limit) {
             return res.status(401).json({ error: "Project Recording limit reached"});
@@ -193,7 +188,7 @@ var receiveUpload = function(req, res, next) {
                     upload.siteId = req.upload.siteId;
                     upload.userId = req.upload.userId;
                     upload.info = info;
-                    console.log(upload);
+                    
                     
                     if(info.duration >= 3600) {
                         return res.status(403).json({ error: "recording is too long, please contact support" });
@@ -211,7 +206,7 @@ var receiveUpload = function(req, res, next) {
                                 uploadPart.name = uploadPart.FFI.filename + uploadPart.FFI.filetype;
                                 uploadPart.path = f;
                                 
-                                console.log(uploadPart);
+                                debug('upload', uploadPart);
                                 uploadQueue.push(_.cloneDeep(uploadPart));
                                 
                                 i++;
@@ -223,8 +218,8 @@ var receiveUpload = function(req, res, next) {
                         });
                     }
                     else {
+                        debug('upload', upload);
                         uploadQueue.push(upload);
-                        
                         res.status(202).send("upload done!");
                     }
                 }
