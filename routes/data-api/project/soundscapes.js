@@ -140,16 +140,21 @@ router.get('/:soundscape/export-list', function(req, res, next) {
         if(err){
             next(err);
         } else {
-            var cols = ["site", "recording", "time index", "frequency"];
+            var cols = ["site", "recording", "time index", "frequency", "amplitude"];
             var recdata={};
             var stringifier = csv_stringify({header:true, columns:cols});
-            res.setHeader('Content-disposition', 'attachment; filename='+filename);
+            // res.setHeader('Content-disposition', 'attachment; filename='+filename);
             stringifier.pipe(res);
             async.eachSeries(Object.keys(scidx.index), function(freq_bin, next_row){
                 var row = scidx.index[freq_bin];
                 var freq = freq_bin * soundscape.bin_size;
                 async.eachSeries(Object.keys(row), function(time, next_cell){
-                    async.eachSeries(row[time], function(rec_idx, next_rec){
+                    var recs = row[time][0];
+                    var amps = row[time][1];
+                    var c_idxs=[]; for(var ri=0,re=recs.length; ri<re;++ri){ c_idxs.push(ri); }
+                    async.eachSeries(c_idxs, function(c_idx, next_rec){
+                        var rec_idx = recs[c_idx];
+                        var amp = amps && amps[c_idx] || '-';
                         var recId = scidx.recordings[rec_idx];
                         async.waterfall([
                             function(next_step){
@@ -168,9 +173,9 @@ router.get('/:soundscape/export-list', function(req, res, next) {
                             }
                         ], function(err, recording){
                             if(err || !recording){
-                                stringifier.write(["-", "id:"+recId, time, freq]);
+                                stringifier.write(["-", "id:"+recId, time, freq, amp]);
                             } else {
-                                stringifier.write([recording.site, recording.file, time, freq]);
+                                stringifier.write([recording.site, recording.file, time, freq, amp]);
                             }
                             next_rec();
                         });
