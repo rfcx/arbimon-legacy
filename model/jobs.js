@@ -259,7 +259,7 @@ var Jobs = {
             constraints.push(sqlutil.escape_compare("J.job_id", "IN",  query.id));
         }
         if(query.type){
-            if(!query.type instanceof Array){
+            if(!(query.type instanceof Array)){
                 query.type = [query.type];
             }
             var type_ids = query.type.map(function(type){

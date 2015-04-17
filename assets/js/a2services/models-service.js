@@ -4,7 +4,8 @@ angular.module('a2-models-service', [
 ])
 .factory('a2Models', function($http, Project, notify) {
     var saveData = null;
-    var openedModel = false
+    var openedModel = false;
+    
     return {
         modelState : function(s)
         {

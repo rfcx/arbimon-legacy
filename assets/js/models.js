@@ -32,17 +32,17 @@
             });
 
             var initTable = function(p,c,s,f,t) {
-				var sortBy = {};
-				var acsDesc = 'desc'
-				if (s[0]=='+') {
-					acsDesc = 'asc'
-				}
-				sortBy[s.substring(1)] = acsDesc;
+                var sortBy = {};
+                var acsDesc = 'desc';
+                if (s[0]=='+') {
+                    acsDesc = 'asc';
+                }
+                sortBy[s.substring(1)] = acsDesc;
                 $scope.tableParams = new ngTableParams({
                     page: p,
                     count: c,
                     sorting: sortBy,
-					filter:f
+                    filter:f
                 }, {
                     total: t,
                     getData: function($defer, params) {
@@ -61,17 +61,17 @@
                             $scope.infopanedata = "No models found.";
                         }
                         $scope.modelsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-						a2Models.saveState({'data':$scope.modelsDataOrig,
-										   'filtered': $scope.modelsData,
-										   'f':params.filter(),
-										   'o':params.orderBy(),
-										   'p':params.page(),
-										   'c':params.count(),
-										   't':orderedData.length});
+                        a2Models.saveState({'data':$scope.modelsDataOrig,
+                                           'filtered': $scope.modelsData,
+                                           'f':params.filter(),
+                                           'o':params.orderBy(),
+                                           'p':params.page(),
+                                           'c':params.count(),
+                                           't':orderedData.length});
                     }
                 });
             };
-			
+            
             $scope.loadModels = function() {
                 a2Models.list(function(data) {
                     $scope.modelsData = data;
@@ -93,28 +93,28 @@
                     }
                 });
             };
-			
-			
-			var stateData = a2Models.getState();
-			if (stateData == null)
-			{
-				$scope.loadModels();
-			}
-			else
-			{
-				if (stateData.data.length > 0) {
-					$scope.modelsData = stateData.filtered;
-					$scope.modelsDataOrig = stateData.data;
-					initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
-				}
-				else {
-					$scope.infopanedata = "No models found.";
-				}			
+            
+            
+            var stateData = a2Models.getState();
+            if (stateData === null)
+            {
+                $scope.loadModels();
+            }
+            else
+            {
+                if (stateData.data.length > 0) {
+                    $scope.modelsData = stateData.filtered;
+                    $scope.modelsDataOrig = stateData.data;
+                    initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
+                }
+                else {
+                    $scope.infopanedata = "No models found.";
+                }            
                 $scope.infoInfo = "";
                 $scope.showInfo = false;
                 $scope.loading = false;
-			}
-            			
+            }
+                        
             $scope.newClassification = function(model_id, model_name) {
 
                 var modalInstance = $modal.open({
@@ -391,13 +391,13 @@
         function($scope, a2Models, $stateParams, $location, Project, a2Classi, notify) {
             $scope.project_url = Project.getUrl();
             $scope.project_id = -1;
-			a2Models.modelState(true);
+            a2Models.modelState(true);
             Project.getInfo(function(data) {
                 $scope.project_id = data.project_id;
             });
-			 $scope.$on("$destroy", function() {
-				a2Models.modelState(false);
-			});
+             $scope.$on("$destroy", function() {
+                a2Models.modelState(false);
+            });
             $scope.showValidationsTable = true;
             $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
@@ -767,73 +767,73 @@
                         bw: Math.round(((parseFloat(data.json.roihighfreq) - parseFloat(data.json.roilowfreq)) * 100)) / 100,
                         freqMax: data.json.roisamplerate / 2, //ok
                     };
-					
+                    
                 }
                 else $scope.invalid = true;
-				
+                
             });
-			$scope.getPatternHeight = function () {
-				return { 'h': $("#paternImage").height() ,  'w': $("#paternImage").width() };
-			};
-			$scope.patw = 0
-			$scope.$watch($scope.getPatternHeight, function (newValue, oldValue) {
-				if (newValue.h != oldValue.h && newValue.h > 0 )
-				{
-					var hh = newValue.h;
-					var ww = newValue.w;
-					if (hh > ww)
-					{
-						$scope.heightDominates = true;
-					}
-					$scope.hh = hh;
-					$scope.patternFactor = hh/ww;
-					
-					if($scope.heightDominates){
-						if (hh>500) {
-							hh = 500;
-							ww = hh/$scope.patternFactor;
-						}
-					}
-					$scope.patw = ww;
-					$("#yaxis").height(hh);
-					$("#zoomDiv").css("left", ww +70);
-					if (hh<18)
-					{
-						$("#yaxis").hide();
-					}
-					else $("#yaxis").show();
-					$("#patternDivMain").css("min-width", ww);
-				}
-			}, true);
-			$scope.zoomout = function()
-			{
-				var v = Math.round($scope.patw /2);
-				if($scope.heightDominates){
-					if ($scope.patternFactor*v>500) {
-						var hh = 500;
-						v = hh/$scope.patternFactor;
-					}
-				}
-				if (v<200) {
-					v = 200;
-				}
-				$("#patternDivMain").css("min-width", v);				
-			}
-			$scope.zoomin = function()
-			{
-				var v = Math.round($scope.patw *2);
-				if($scope.heightDominates){
-					if ($scope.patternFactor*v>500) {
-						var hh = 500;
-						v = hh/$scope.patternFactor;
-					}
-				}
-				if (v > 800) {
-					v = 800;
-				}
+            $scope.getPatternHeight = function () {
+                return { 'h': $("#paternImage").height() ,  'w': $("#paternImage").width() };
+            };
+            $scope.patw = 0;
+            $scope.$watch($scope.getPatternHeight, function (newValue, oldValue) {
+                if (newValue.h != oldValue.h && newValue.h > 0 )
+                {
+                    var hh = newValue.h;
+                    var ww = newValue.w;
+                    if (hh > ww)
+                    {
+                        $scope.heightDominates = true;
+                    }
+                    $scope.hh = hh;
+                    $scope.patternFactor = hh/ww;
+                    
+                    if($scope.heightDominates){
+                        if (hh>500) {
+                            hh = 500;
+                            ww = hh/$scope.patternFactor;
+                        }
+                    }
+                    $scope.patw = ww;
+                    $("#yaxis").height(hh);
+                    $("#zoomDiv").css("left", ww +70);
+                    if (hh<18)
+                    {
+                        $("#yaxis").hide();
+                    }
+                    else $("#yaxis").show();
+                    $("#patternDivMain").css("min-width", ww);
+                }
+            }, true);
+            $scope.zoomout = function()
+            {
+                var v = Math.round($scope.patw /2);
+                if($scope.heightDominates){
+                    if ($scope.patternFactor*v>500) {
+                        var hh = 500;
+                        v = hh/$scope.patternFactor;
+                    }
+                }
+                if (v<200) {
+                    v = 200;
+                }
+                $("#patternDivMain").css("min-width", v);
+            };
+            $scope.zoomin = function()
+            {
+                var v = Math.round($scope.patw *2);
+                if($scope.heightDominates){
+                    if ($scope.patternFactor*v>500) {
+                        var hh = 500;
+                        v = hh/$scope.patternFactor;
+                    }
+                }
+                if (v > 800) {
+                    v = 800;
+                }
 
-				$("#patternDivMain").css("min-width", v);
-			}
+                $("#patternDivMain").css("min-width", v);
+            };
             $scope.getValidations = function() {
                 var vals = [];
                 for (var i = 0; i < $scope.validationsData.length; i++) {

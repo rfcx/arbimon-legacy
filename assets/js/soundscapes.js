@@ -34,18 +34,18 @@
             
             
             var initTable = function(p,c,s,f,t) {
-				var sortBy = {};
-				var acsDesc = 'desc'
-				if (s[0]=='+') {
-					acsDesc = 'asc'
-				}
-				sortBy[s.substring(1)] = acsDesc;
+                var sortBy = {};
+                var acsDesc = 'desc';
+                if (s[0]=='+') {
+                    acsDesc = 'asc';
+                }
+                sortBy[s.substring(1)] = acsDesc;
                 $scope.tableParams = new ngTableParams(
                     {
-						page: p,
-						count: c,
-						sorting: sortBy,
-						filter:f
+                        page: p,
+                        count: c,
+                        sorting: sortBy,
+                        filter:f
                     }, 
                     {
                         total: t,
@@ -66,13 +66,13 @@
                                 $scope.infopanedata = "No classifications found.";
                             }
                             $scope.soundscapesData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-							a2Soundscapes.saveState({'data':$scope.soundscapesOriginal,
-										'filtered': $scope.soundscapesData,
-										'f':params.filter(),
-										'o':params.orderBy(),
-										'p':params.page(),
-										'c':params.count(),
-										't':orderedData.length});
+                            a2Soundscapes.saveState({'data':$scope.soundscapesOriginal,
+                                        'filtered': $scope.soundscapesData,
+                                        'f':params.filter(),
+                                        'o':params.orderBy(),
+                                        'p':params.page(),
+                                        'c':params.count(),
+                                        't':orderedData.length});
                         }
                     }
                 );
@@ -102,26 +102,26 @@
                     }
                 });
             };
-			var stateData = a2Soundscapes.getState();
+            var stateData = a2Soundscapes.getState();
             
-   			if (stateData == null)
-			{
-				$scope.loadSoundscapes();
-			}
-			else
-			{
-				if (stateData.data.length > 0) {
-					$scope.soundscapesData = stateData.filtered;
-					$scope.soundscapesOriginal = stateData.data;
-					initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
-				}
-				else {
-					$scope.infopanedata = "No models found.";
-				}			
+            if (stateData === null)
+            {
+                $scope.loadSoundscapes();
+            }
+            else
+            {
+                if (stateData.data.length > 0) {
+                    $scope.soundscapesData = stateData.filtered;
+                    $scope.soundscapesOriginal = stateData.data;
+                    initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
+                }
+                else {
+                    $scope.infopanedata = "No models found.";
+                }            
                 $scope.infoInfo = "";
                 $scope.showInfo = false;
                 $scope.loading = false;
-			}         
+            }         
             $scope.deleteSoundscape = function (id, name) {
                 
                 $scope.infoInfo = "Loading...";
@@ -283,7 +283,7 @@
                 threshold : 0,
                 bin : 86,
                 bandwidth : 0,
-				normalize:false
+                normalize:false
             };
             
             $scope.nameMsg = '';
@@ -306,7 +306,7 @@
                         m: 22050,
                         b: $scope.datasubmit.bin,
                         f: $scope.datasubmit.bandwidth,
-						nv:$scope.datasubmit.normalize
+                        nv:$scope.datasubmit.normalize
                     })
                     .success(function(data) {
                         if (data.name) {
