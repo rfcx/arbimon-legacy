@@ -146,7 +146,11 @@ var Jobs = {
 
         queryHandler(q, callback);
     },
-    
+    cancel: function(jId, callback) {
+        var q = "update `jobs` set `cancel_requested`  = 1 where `job_id` = " + jId;
+
+        queryHandler(q, callback);
+    },    
     classificationNameExists: function(p, callback) {
         var q = "SELECT count(*) as count FROM `jobs` J ,  `job_params_classification` JPC " +
             " WHERE `project_id` = " + mysql.escape(p.pid) + " and `job_type_id` = 2 and J.`job_id` = JPC.`job_id` " +
