@@ -148,7 +148,7 @@ class Soundscape():
             if bin and x in bin:
                 cell = bin[x]
                 if amp_th:
-                    v = len([x for x in cell if cell[x] >= amp_th])
+                    v = len([cx for cx in cell if cell[cx] >= amp_th])
                 else:
                     v = len(cell) if cell else 0
             else:
