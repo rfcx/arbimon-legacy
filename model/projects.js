@@ -5,13 +5,14 @@ var async = require('async');
 var Joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;
 var AWS = require('aws-sdk');
+
 var config       = require('../config');
-var s3;
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
 var species = require('./species');
 var songtypes = require('./songtypes');
+var s3;
 
 var Projects = {
     
@@ -64,7 +65,7 @@ var Projects = {
         return queryHandler(q , callback);
     },
 
-    insert: function(project, callback) {
+    create: function(project, callback) {
         var values = [];
 
         var requiredValues = [
@@ -95,7 +96,21 @@ var Projects = {
 
         q = util.format(q, values.join(", "));
 
-        queryHandler(q, callback);
+        queryHandler(q, function(err, result) {
+            if(err) return callback(err);
+
+            var projectId = result.insertId;
+
+            Projects.addUser({
+                user_id: project.owner_id,
+                project_id: projectId,
+                role_id: 4 // owner role id
+            }, function(err) {
+                if(err) return callback(err);
+                
+                callback(null, projectId);
+            });
+        });
     },
 
     update: function(project, callback) {
@@ -611,10 +626,10 @@ var Projects = {
     },
 
     validationSets: function(project_url, callback) {
-        var q = "SELECT `validation_set_id` , ts.`name` " +
-                " FROM `validation_set` ts, `projects` p " +
-                " where ts.`project_id` = p.`project_id` and p.`url` = " + mysql.escape(project_url);
-
+        var q = "SELECT `validation_set_id` , ts.`name` \n" +
+                "FROM `validation_set` ts, `projects` p \n" +
+                "WHERE ts.`project_id` = p.`project_id` \n" +
+                "AND p.`url` = " + mysql.escape(project_url);
         queryHandler(q, callback);
     },
    
@@ -633,16 +648,14 @@ var Projects = {
         queryHandler(q, callback);
     },
     
-    modelValidationUri: function(model_id, callback)
-    {
-        var q = "SELECT vs.`uri` FROM `validation_set` vs, `models` m "+
-            " WHERE m.`validation_set_id` = vs.`validation_set_id` "+
-            " and m.`model_id` = "+ mysql.escape(model_id);
+    modelValidationUri: function(model_id, callback) {
+        var q = "SELECT vs.`uri` FROM `validation_set` vs, `models` m \n"+
+                "WHERE m.`validation_set_id` = vs.`validation_set_id` \n"+
+                "AND m.`model_id` = "+ mysql.escape(model_id);
         
         queryHandler(q, callback);      
     },
 
-    
     removeUser: function(user_id, project_id, callback){
         if(typeof project_id !== 'number')
             return callback(new Error("invalid type for 'project_id'"));

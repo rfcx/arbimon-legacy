@@ -9,7 +9,7 @@ var async = require('async');
 var argv = require('minimist')(process.argv.slice(2));
 var read = require("read");
 
-var dbpool = require('../../utils/dbpool');
+var model = require('../../model');
 
 var q = {
     projectInfo: 
@@ -52,106 +52,93 @@ var q = {
         "WHERE sv.event_data_id = ? ",
 };
 
-if(!argv.user && !argv.u) {
-    console.log('missing db username');
-    process.exit(1);
-    return;
-}
-    
-if(!argv.dbhost && !argv.h) {
-    console.log('missing db host');
-    process.exit(1);
-    return;
-}
 
-if(!argv.project && !argv.p) {
-    console.log('missing project id');
-    process.exit(1);
-    return;
-}
-    
-var projectId = argv.project || argv.p;
-var user = argv.user || argv.u;
-var host = argv.dbhost || argv.h;
 var arbimonOneDb;
-var arbimonTwoDb;
+// var arbimonTwoDb;
 
 var project = {};
+var newProject = {};
 
 
-var getSiteRecs = function(station, next) {
+
+
+
+var getSiteRecs = function(station, nextStation) {
     console.log('station', station.name);
     
-    async.waterfall([
-        function(callback) {
-            arbimonOneDb.query(q.stationRecordings, [station.station_id], function(err, rows) {
-                if(err) return next(err);
+    // insert station
+    
+    arbimonOneDb.query(q.stationRecordings, [station.station_id], function(err, rows) {
+        if(err) return nextStation(err);
+        
+        var getRec = function(rec, nextRec) {
+            rec.rec_data = JSON.parse(rec.rec_data);
+            
+            console.dir(rec);
+            
+            var file = path.basename(rec.rec_data.filename, path.extname(rec.rec_data.filename));
+            
+            var month = (rec.datetime.getMonth() + 1);
+            month = month < 10 ? "0" + month : "" + month;
+            
+            rec.filePath = "grabaciones_" + station.project_url + 
+                            "/" + station.name +
+                            "/" + rec.datetime.getFullYear() +
+                            "/" + month +
+                            "/" + file;
+            
+            var url = 'http://136.145.231.21/media/' + rec.filePath + '.flac';
+            console.log(url);
+            
+            // request.get(url)
+            //     .pipe(fs.createWriteStream(path.join(os.tmpdir(), file + '.flac')))
+            //     .on('finish', function() {
+            //         arbimonOneDb.end();
+            //         arbimonTwoDb.release();
+            //         process.exit(1);
+            //     });
+            // 
+            
+            // insert rec
+            
+            arbimonOneDb.query(q.recValidations, [rec.event_data_id], function(err, rows) {
+                if(err) return nextRec(err);
                 
-                var getRec = function(rec, next2) {
-                    rec.rec_data = JSON.parse(rec.rec_data);
+                console.log(rows.length, 'validations');
+                
+                var insertValidations = function(vali, nextVali){
+                    console.log(vali);
                     
-                    console.dir(rec);
-                    
-                    var file = path.basename(rec.rec_data.filename, path.extname(rec.rec_data.filename));
-                    
-                    var month = (rec.datetime.getMonth() + 1);
-                    month = month < 10 ? "0" + month : "" + month;
-                    
-                    rec.filePath = "grabaciones_" + station.project_url + 
-                                    "/" + station.name +
-                                    "/" + rec.datetime.getFullYear() +
-                                    "/" + month +
-                                    "/" + file;
-                    
-                    var url = 'http://136.145.231.21/media/' + rec.filePath + '.flac';
-                    console.log(url);
-                    
-                    request.get(url)
-                        .pipe(fs.createWriteStream(path.join(os.tmpdir(), file + '.flac')))
-                        .on('finish', function() {
-                            arbimonOneDb.end();
-                            arbimonTwoDb.release();
-                            process.exit(1);
-                        });
-                    
+                    // insert validation
                 };
                 
-                async.eachSeries(rows, getRec, callback);
+                async.eachSeries(rows, insertValidations, nextRec);
             });
-        },
-        function done() {
-            next();
-        }
-    ]);
+            
+        };
+        
+        async.eachSeries(rows, getRec, nextStation);
+        // console.log(rows.length, 'recordings');
+        // nextStation();
+    });
 };
 
-var main = function() {
+var main = function(dbInfo, projectId, ownerId) {
+    
+    
     async.waterfall([
         function dbConnection1(callback) {
-            read({ 
-                    prompt: 'Enter the password for '+ user+': ', 
-                    silent: true 
-                }, 
-                function(err, input) {
-
-                arbimonOneDb = mysql.createConnection({
-                    host: host,
-                    user: user,
-                    password: input
-                });
-                
-                callback();
-            });
+            arbimonOneDb = mysql.createConnection(dbInfo);
+            callback();
         },
-        function dbConnection2(callback) {
-            dbpool.getConnection(function(err, db) {
-                if(err) return callback(err);
-                
-                arbimonTwoDb = db;
-                
-                callback();
-            });
-        },
+        // function dbConnection2(callback) {
+        //     dbpool.getConnection(function(err, db) {
+        //         if(err) return callback(err);
+        //         
+        //         arbimonTwoDb = db;
+        //         callback();
+        //     });
+        // },
         function projectInfo(callback) {
             console.log('projectInfo');
             arbimonOneDb.query(q.projectInfo, [projectId], function(err, rows) {
@@ -161,8 +148,16 @@ var main = function() {
                     return callback('no project found');
                 }
                 
-                project.info = rows;
-                callback();
+                project.info = rows[0];
+                
+                project.info.owner_id = ownerId;
+                project.info.project_type_id = 1;
+                project.info.is_private = true;
+                
+                // insert project
+                model.projects.create(project.info, function() {
+                    
+                });
             });
         },
         function projectStations(callback) {
@@ -196,5 +191,43 @@ var main = function() {
 
 
 if(require.main === module) {
-    main();
+    
+    if(!argv.user && !argv.u) {
+        console.log('missing db username');
+        process.exit(1);
+        return;
+    }
+        
+    if(!argv.dbhost && !argv.h) {
+        console.log('missing db host');
+        process.exit(1);
+        return;
+    }
+
+    if(!argv.project && !argv.p) {
+        console.log('missing project id');
+        process.exit(1);
+        return;
+    }
+        
+    var projectId = argv.project || argv.p;
+    var user = argv.user || argv.u;
+    var host = argv.dbhost || argv.h;
+    
+    read({ 
+            prompt: 'Enter the password for '+ user+': ', 
+            silent: true 
+        }, 
+        function(err, input) {
+            
+            var dbInfo = {
+                host: host,
+                user: user,
+                password: input
+            };
+            
+            main(dbInfo, projectId);
+            
+        }
+    );
 }

@@ -69,7 +69,7 @@ router.post('/create', function(req, res, next) {
         }
 
         // no error create new project
-        model.projects.insert(project, function(err, rows) {
+        model.projects.create(project, function(err, rows) {
             if(err) return next(err);
 
             var project_id = rows.insertId;

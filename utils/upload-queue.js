@@ -229,14 +229,15 @@ var processUpload = function(upload, done) {
         
         console.log('done processing %s for site %s', upload.name, upload.siteId);
         console.log('elapse:', ((new Date()) - start)/1000 + 's');
-        done();
+        done(null, results);
     });
 };
 
-// uploadQueue process  1 recording at a time per server instance
+// uploadQueue process 1 recording at a time per server instance
 var uploadQueue = async.queue(processUpload, 1); 
 uploadQueue.drain = function() {
     console.log('done processing uploads on queue');
 };
 
-module.exports = uploadQueue;
+exports.uploadQueue = uploadQueue;
+exports.processUpload = processUpload;
