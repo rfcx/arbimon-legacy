@@ -245,7 +245,7 @@
 
             $scope.exportSoundscape = function(soundscape_id) {
                 a2Soundscapes.getExportUrl(soundscape_id).then(function(export_url){
-                    var a = $('<a></a>').attr('href', export_url).appendTo('body');
+                    var a = $('<a></a>').attr('target', '_blank').attr('href', export_url).appendTo('body');
                     $window.setTimeout(function(){
                         a[0].click();
                         a.remove();

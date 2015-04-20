@@ -135,7 +135,7 @@ router.get('/:soundscape/norm-vector', function(req, res, next) {
 
 router.get('/:soundscape/export-list', function(req, res, next) {
     var soundscape = req.soundscape;
-    var filename = soundscape.name.replace(/[^a-zA-Z0-9-_]/g, '_').replace(/_+/g,'_') + '.' + new Date().getTime() + '.csv';
+    var filename = soundscape.name.replace(/[^a-zA-Z0-9-_]/g, '_').replace(/_+/g,'_')  + '.csv';
     model.soundscapes.fetchSCIDX(req.soundscape, function(err, scidx){
         if(err){
             next(err);
@@ -143,7 +143,7 @@ router.get('/:soundscape/export-list', function(req, res, next) {
             var cols = ["site", "recording", "time index", "frequency", "amplitude"];
             var recdata={};
             var stringifier = csv_stringify({header:true, columns:cols});
-            // res.setHeader('Content-disposition', 'attachment; filename='+filename);
+            res.setHeader('Content-disposition', 'attachment; filename='+filename);
             stringifier.pipe(res);
             async.eachSeries(Object.keys(scidx.index), function(freq_bin, next_row){
                 var row = scidx.index[freq_bin];
