@@ -123,7 +123,7 @@ router.post('/generate-token', function(req, res, next){
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
     if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
-        return res.json({ error: "you dont have permission to 'manage project sites'" });
+        return res.json({ error: "you dont have permission to 'manage project recordings'" });
     }
     var siteId = req.body.site;
     async.waterfall([

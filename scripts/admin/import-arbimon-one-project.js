@@ -10,6 +10,7 @@ var argv = require('minimist')(process.argv.slice(2));
 var read = require("read");
 
 var model = require('../../model');
+var processUpload = require('../../utils/upload-queue').processUpload;
 
 var q = {
     projectInfo: 
@@ -60,71 +61,153 @@ var project = {};
 var newProject = {};
 
 
-
-
-
 var getSiteRecs = function(station, nextStation) {
     console.log('station', station.name);
     
-    // insert station
+    var siteId, recId;
     
-    arbimonOneDb.query(q.stationRecordings, [station.station_id], function(err, rows) {
-        if(err) return nextStation(err);
-        
-        var getRec = function(rec, nextRec) {
-            rec.rec_data = JSON.parse(rec.rec_data);
+    async.series([
+        function(callback) {
+            var siteInfo = {
+                project_id: newProject.id,
+                name: station.name,
+                lat: station.lat,
+                lon: station.lon,
+                alt: station.alt,
+            };
             
-            console.dir(rec);
-            
-            var file = path.basename(rec.rec_data.filename, path.extname(rec.rec_data.filename));
-            
-            var month = (rec.datetime.getMonth() + 1);
-            month = month < 10 ? "0" + month : "" + month;
-            
-            rec.filePath = "grabaciones_" + station.project_url + 
-                            "/" + station.name +
-                            "/" + rec.datetime.getFullYear() +
-                            "/" + month +
-                            "/" + file;
-            
-            var url = 'http://136.145.231.21/media/' + rec.filePath + '.flac';
-            console.log(url);
-            
-            // request.get(url)
-            //     .pipe(fs.createWriteStream(path.join(os.tmpdir(), file + '.flac')))
-            //     .on('finish', function() {
-            //         arbimonOneDb.end();
-            //         arbimonTwoDb.release();
-            //         process.exit(1);
-            //     });
-            // 
-            
-            // insert rec
-            
-            arbimonOneDb.query(q.recValidations, [rec.event_data_id], function(err, rows) {
-                if(err) return nextRec(err);
+            model.sites.insert(siteInfo, function(err, result) {
+                if(err) return nextStation(err);
                 
-                console.log(rows.length, 'validations');
+                newProject.sites.push(result.insertId);
+                siteId = result.insertId;
+                callback();
+            });
+        },
+        function(callback) {
+            arbimonOneDb.query(q.stationRecordings, [station.station_id], function(err, rows) {
+                if(err) return nextStation(err);
                 
-                var insertValidations = function(vali, nextVali){
-                    console.log(vali);
+                var getRec = function(rec, nextRec) {
+                    rec.rec_data = JSON.parse(rec.rec_data);
                     
-                    // insert validation
+                    console.dir(rec);
+                    
+                    
+                    var file = path.basename(rec.rec_data.filename, path.extname(rec.rec_data.filename));
+                    
+                    var month = (rec.datetime.getMonth() + 1);
+                    month = month < 10 ? "0" + month : "" + month;
+                    
+                    rec.filePath = "grabaciones_" + station.project_url + 
+                                    "/" + station.name +
+                                    "/" + rec.datetime.getFullYear() +
+                                    "/" + month +
+                                    "/" + file;
+                    
+                    var url = 'http://136.145.231.21/media/' + rec.filePath + '.flac';
+                    // console.log(url);
+                    
+                    rec.path = path.join(os.tmpdir(), file + '.flac');
+                    
+                    request.get(url)
+                        .pipe(fs.createWriteStream(rec.path))
+                        .on('finish', function() {
+                            
+                            var upload = {
+                                name: rec.rec_data.filename,
+                                path: rec.path,
+                                projectId: newProject.id,
+                                siteId: siteId,
+                                userId: newProject.ownerId,
+                                metadata: {
+                                    recorder: 'n/a',
+                                    mic: 'n/a',
+                                    sver: 'n/a'
+                                },
+                                FFI: {
+                                    filename: file,
+                                    datetime: rec.datetime,
+                                    filetype: '.flac',
+                                },
+                                info: {
+                                    channels: rec.rec_data.num_channels,
+                                }
+                            };
+                            
+                            processUpload(upload, function(err, results) {
+                                if(err) return nextRec(err);
+                                
+                                // console.dir(results);
+                                // 
+                                // { insertUploadRecs: 
+                                //    [ { fieldCount: 0,
+                                //        affectedRows: 1,
+                                //        insertId: 149,
+                                //        serverStatus: 2,
+                                //        warningCount: 0,
+                                //        message: '',
+                                //        protocol41: true,
+                                //        changedRows: 0 },
+                                //      undefined ],
+                                //   convertMonoFlac: 'did not process',
+                                //   updateAudioInfo: undefined,
+                                //   genThumbnail: 0,
+                                //   uploadThumbnail: { ETag: '"5e11e7a0fcec8f0b08978eae663be2aa"' },
+                                //   uploadFlac: { ETag: '"6da26cc01d99ef759204bf01017a0e61"' },
+                                //   insertOnDB: 
+                                //    [ { fieldCount: 0,
+                                //        affectedRows: 1,
+                                //        insertId: 10096473,
+                                //        serverStatus: 2,
+                                //        warningCount: 0,
+                                //        message: '',
+                                //        protocol41: true,
+                                //        changedRows: 0 },
+                                //      undefined ] }
+                                
+                                recId = results.insertOnDB[0].insertId;
+                                
+                                arbimonOneDb.query(q.recValidations, [rec.event_data_id], function(err, rows) {
+                                    if(err) return nextRec(err);
+                                    
+                                    console.log(rows.length, 'validations');
+                                    
+                                    if(!rows.length) return nextRec();
+                                    
+                                    var insertValidations = function(vali, nextVali){
+                                        console.log(vali);
+                                        
+                                        // insert validation
+                                        model.recordings.validate(
+                                            { id: recId }, 
+                                            newProject.ownerId, 
+                                            newProject.id, 
+                                            { 
+                                                class: vali.species_id+'-'+vali.songtype_id,
+                                                val: vali.is_present
+                                            }, nextVali);
+                                    };
+                                    
+                                    async.eachSeries(rows, insertValidations, nextRec);
+                                });
+                                
+                            });
+                        });
+                    
                 };
                 
-                async.eachSeries(rows, insertValidations, nextRec);
+                async.eachSeries(rows, getRec, nextStation);
+                // console.log(rows.length, 'recordings');
+                // nextStation();
             });
-            
-        };
-        
-        async.eachSeries(rows, getRec, nextStation);
-        // console.log(rows.length, 'recordings');
-        // nextStation();
-    });
+        },
+    ]);
 };
 
 var main = function(dbInfo, projectId, ownerId) {
     
+    newProject.ownerId = ownerId;
     
     async.waterfall([
         function dbConnection1(callback) {
@@ -150,13 +233,17 @@ var main = function(dbInfo, projectId, ownerId) {
                 
                 project.info = rows[0];
                 
+                project.info.description = "imported from Arbimon One";
                 project.info.owner_id = ownerId;
                 project.info.project_type_id = 1;
                 project.info.is_private = true;
                 
                 // insert project
-                model.projects.create(project.info, function() {
+                model.projects.create(project.info, function(err, insertId) {
+                    if(err) return callback(err);
                     
+                    newProject.id = insertId;
+                    callback();
                 });
             });
         },
@@ -175,6 +262,8 @@ var main = function(dbInfo, projectId, ownerId) {
         },
         function stationRecs(callback) {
             console.log('stationsRecs');
+            
+            newProject.sites = [];
             async.eachSeries(project.sites, getSiteRecs, callback);
         }
     ], 
@@ -185,7 +274,6 @@ var main = function(dbInfo, projectId, ownerId) {
         console.dir(project);
         // console.dir(project.sites[0].recs);
         arbimonOneDb.end();
-        arbimonTwoDb.release();
     });
 };
 
@@ -226,7 +314,7 @@ if(require.main === module) {
                 password: input
             };
             
-            main(dbInfo, projectId);
+            main(dbInfo, projectId, 2);
             
         }
     );

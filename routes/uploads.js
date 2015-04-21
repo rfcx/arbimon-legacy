@@ -11,7 +11,7 @@ var model = require('../model');
 var audioTools= require('../utils/audiotool');
 var tmpFileCache = require('../utils/tmpfilecache');
 var formatParse = require('../utils/format-parse');
-var uploadQueue = require('../utils/upload-queue');
+var uploadQueue = require('../utils/upload-queue').uploadQueue;
 
 var deleteFile = function(filename) {
     fs.unlink(filename, function(err) {

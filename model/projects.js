@@ -2,7 +2,7 @@ var debug = require('debug')('arbimon2:model:projects');
 var util = require('util');
 var mysql = require('mysql');
 var async = require('async');
-var Joi = require('joi');
+var joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;
 var AWS = require('aws-sdk');
 
@@ -68,21 +68,27 @@ var Projects = {
     create: function(project, callback) {
         var values = [];
 
-        var requiredValues = [
-            "name",
-            "url",
-            "description",
-            "owner_id",
-            "project_type_id",
-            "is_private"
-        ];
-
-        for(var i in requiredValues) {
-            if(typeof project[requiredValues[i]] === "undefined")
-                return callback(new Error("required field '"+ requiredValues[i] + "' missing"));
+        var schema = {
+            name: joi.string(),
+            url: joi.string(),
+            description: joi.string(),
+            owner_id: joi.number(),
+            project_type_id: joi.number(),
+            is_private: joi.boolean()
+        };
+        
+        var result = joi.validate(project, schema, {
+            stripUnknown: true,
+            presence: 'required',
+        });
+        
+        if(result.error) {
+            return callback(result.error);
         }
-
-        for(i in project) {
+        
+        project = result.value;
+        
+        for(var i in project) {
             if(i !== 'id') {
                 values.push(util.format('%s = %s', 
                     mysql.escapeId(i), 
@@ -116,18 +122,18 @@ var Projects = {
     update: function(project, callback) {
         
         var schema = {
-            project_id: Joi.number().required(),
-            name: Joi.string().optional(),
-            url: Joi.string().optional(),
-            description: Joi.string().optional(),
-            owner_id: Joi.number().optional(),
-            project_type_id: Joi.number().optional(),
-            is_private: Joi.number().optional(),
-            is_enabled: Joi.number().optional(),
-            recording_limit: Joi.number().optional()
+            project_id: joi.number().required(),
+            name: joi.string(),
+            url: joi.string(),
+            description: joi.string(),
+            owner_id: joi.number(),
+            project_type_id: joi.number(),
+            is_private: joi.number(),
+            is_enabled: joi.number(),
+            recording_limit: joi.number()
         };
         
-        Joi.validate(project, schema, function(err, projectInfo){
+        joi.validate(project, schema, function(err, projectInfo){
             if(err) return callback(err);
             
             var values = [];
@@ -153,13 +159,13 @@ var Projects = {
     insertNews: function(news, callback) {
         
         var schema = {
-            user_id: Joi.number().required(), 
-            project_id: Joi.number().required(), 
-            data: Joi.string().required(), 
-            news_type_id: Joi.number().required()
+            user_id: joi.number().required(), 
+            project_id: joi.number().required(), 
+            data: joi.string().required(), 
+            news_type_id: joi.number().required()
         };
         
-        Joi.validate(news, schema, function(err, newsVal) {
+        joi.validate(news, schema, function(err, newsVal) {
             if(err) {
                 if(callback) {
                     return callback(err);
@@ -230,12 +236,12 @@ var Projects = {
 
     insertClass: function(project_class, callback) {
         var schema = {
-            species: Joi.string().required(),
-            songtype: Joi.string().required(),
-            project_id: Joi.number().required() 
+            species: joi.string().required(),
+            songtype: joi.string().required(),
+            project_id: joi.number().required() 
         };
 
-        Joi.validate(project_class, schema, function(err, value) {
+        joi.validate(project_class, schema, function(err, value) {
             if(err) return callback(err);
 
             async.auto({
@@ -309,9 +315,9 @@ var Projects = {
     },
 
     removeClasses: function(project_classes, callback) {
-        var schema = Joi.array().min(1).includes(Joi.number());
+        var schema = joi.array().min(1).includes(joi.number());
 
-        Joi.validate(project_classes, schema, function(err, value) {
+        joi.validate(project_classes, schema, function(err, value) {
             if(err) return callback(err);
 
             value = '(' + mysql.escape(value) + ')';
@@ -344,12 +350,12 @@ var Projects = {
     
     addUser: function(userProjectRole, callback) {
         var schema = {
-            user_id: Joi.number().required(),
-            project_id: Joi.number().required(),
-            role_id: Joi.number().required()
+            user_id: joi.number().required(),
+            project_id: joi.number().required(),
+            role_id: joi.number().required()
         };
         
-        Joi.validate(userProjectRole, schema, function(err, upr){
+        joi.validate(userProjectRole, schema, function(err, upr){
             if(err) return callback(err);
             
             var user_id = mysql.escape(upr.user_id);
@@ -367,12 +373,12 @@ var Projects = {
     
     changeUserRole: function(userProjectRole, callback) {
         var schema = {
-            user_id: Joi.number().required(),
-            project_id: Joi.number().required(),
-            role_id: Joi.number().required()
+            user_id: joi.number().required(),
+            project_id: joi.number().required(),
+            role_id: joi.number().required()
         };
             
-        Joi.validate(userProjectRole, schema, function(err, upr){
+        joi.validate(userProjectRole, schema, function(err, upr){
             if(err) return callback(err);
             
             var user_id = mysql.escape(upr.user_id);

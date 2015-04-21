@@ -69,26 +69,19 @@ router.post('/create', function(req, res, next) {
         }
 
         // no error create new project
-        model.projects.create(project, function(err, rows) {
+        model.projects.create(project, function(err, projectId) {
             if(err) return next(err);
 
-            var project_id = rows.insertId;
+            var project_id = projectId;
 
-            model.projects.addUser({
+            model.projects.insertNews({
+                news_type_id: 1, // project created
                 user_id: project.owner_id,
                 project_id: project_id,
-                role_id: 4 // owner role id
-            },
-            function(err, rows) {
-                if(err) next(err);
-
-                model.projects.insertNews({
-                    news_type_id: 1, // project created
-                    user_id: project.owner_id,
-                    project_id: project_id,
-                    data: JSON.stringify({})
-                });
-                res.json({ message: util.format("Project '%s' successfully created!", project.name) });
+                data: JSON.stringify({})
+            });
+            res.json({ 
+                message: util.format("Project '%s' successfully created!", project.name) 
             });
         });
     });

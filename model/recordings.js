@@ -59,9 +59,9 @@ var Recordings = {
             if(rec_match) return {
                 id    : rec_match[ 1] | 0
             };
-        //                site     year     month    day       hour     minute
-        //                1      2 3      4 5      6 7       8 9     10 11    10987654321
-        //                1     01 2     12 3     23 4      34 5     45 6     54 3 2 1
+            //                site     year     month    day       hour     minute
+            //                1        2 3      4 5      6 7       8 9     10 11    10987654321
+            //                1       01 2     12 3     23 4      34 5     45 6     54 3 2 1
             rec_match = /^([^-]*)(-([^-]*)(-([^-]*)(-([^-_]*)([_-]([^-]*)(-([^-]*))?)?)?)?)?(\.(wav|flac))?/.exec(recording_url);
             if(rec_match) return {
                 site   : rec_match[ 1],
@@ -446,7 +446,7 @@ var Recordings = {
      * @param {Integer} user_id id of the user to associate to this validation.
      * @param {Integer} project_id id associated to the project that is to be validated.
      * @param {Object}  validation object containing the validation to add to this recording.
-     * @param {String}  validation.class identifier used to obtain the class to be validated.
+     * @param {String}  validation.class comma separated list of species-songtype pairs. ej: '7-1,3-2'
      * @param {Integer} validation.val   value used to validate the class in the given recording.
      * @param {Function} callback(err, path) function to call back with the validation result.
      */
@@ -466,7 +466,7 @@ var Recordings = {
                 project_id: project_id
             };
 
-            if (valobj.val== 2) // 0 is not present , 1 is present and 2 is clear
+            if (valobj.val == 2) // 0 is not present , 1 is present and 2 is clear
             {
                 queryHandler(
                     "DELETE FROM `recording_validations` "+
@@ -495,7 +495,8 @@ var Recordings = {
             var cm = /(\d+)(-(\d+))?/.exec(val_class);
             if(!cm) {
                 next(new Error("validation class is missing."));
-            } else if(!cm[2]){
+            } 
+            else if(!cm[2]){
                 var project_class = cm[1] | 0;
                 queryHandler(
                     "SELECT species_id as species, songtype_id as songtype \n" +
@@ -506,10 +507,11 @@ var Recordings = {
                     if (!data || !data.length) { next(new Error("project class " + project_class + " not found")); return; }
                     add_one_validation(species_id, songtype_id, next);
                 });
-            } else {
+            } 
+            else {
                 add_one_validation(cm[1] | 0, cm[3] | 0, next);
             }
-        }, callback);        
+        }, callback);
         
     },
     

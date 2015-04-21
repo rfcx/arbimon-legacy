@@ -27,6 +27,12 @@ var deleteFile = function(filename) {
     });
 };
 
+AWS.config.update({
+    accessKeyId: config('aws').accessKeyId, 
+    secretAccessKey: config('aws').secretAccessKey,
+    region: config('aws').region
+});
+
 var s3 = new AWS.S3({ 
     httpOptions: {
         timeout: 30000,
@@ -40,6 +46,7 @@ var s3 = new AWS.S3({
  * @param upload.metadata.recorder {String} recorder model
  * @param upload.metadata.mic {String} microphone model used in the recorder
  * @param upload.metadata.sver {String} recorder's software version
+ * @param upload.info.channels {Number} number of audio channels on file
  * @param upload.FFI {String} fileformat info object returned by utils/formatParse()
  * @param upload.name {String} original filename
  * @param upload.path {String} path uploaded file
