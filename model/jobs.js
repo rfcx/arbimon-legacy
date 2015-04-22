@@ -56,11 +56,11 @@ var Jobs = {
             new: function(params, db, callback) {
                 db.query(
                     "INSERT INTO `job_params_soundscape`( \n"+
-                    "   `job_id`, `playlist_id`, `max_hertz`, `bin_size`, `soundscape_aggregation_type_id`, `name`, `threshold` , `frequency` \n" +
+                    "   `job_id`, `playlist_id`, `max_hertz`, `bin_size`, `soundscape_aggregation_type_id`, `name`, `threshold` , `frequency` , `normalize` \n" +
                     ") VALUES ( \n" + 
                     "    " + mysql.escape([params.job_id, params.playlist, params.maxhertz, params.bin]) + ", \n"+
                     "    (SELECT `soundscape_aggregation_type_id` FROM `soundscape_aggregation_types` WHERE `identifier` = " + mysql.escape(params.aggregation) + "), \n" +
-                    "    " + mysql.escape([params.name, params.threshold, params.frequency]) + " \n" +
+                    "    " + mysql.escape([params.name, params.threshold, params.frequency , params.normalize]) + " \n" +
                     ")", callback
                 );
             },
@@ -146,7 +146,11 @@ var Jobs = {
 
         queryHandler(q, callback);
     },
-    
+    cancel: function(jId, callback) {
+        var q = "update `jobs` set `cancel_requested`  = 1 where `job_id` = " + jId;
+
+        queryHandler(q, callback);
+    },    
     classificationNameExists: function(p, callback) {
         var q = "SELECT count(*) as count FROM `jobs` J ,  `job_params_classification` JPC " +
             " WHERE `project_id` = " + mysql.escape(p.pid) + " and `job_type_id` = 2 and J.`job_id` = JPC.`job_id` " +
@@ -259,7 +263,7 @@ var Jobs = {
             constraints.push(sqlutil.escape_compare("J.job_id", "IN",  query.id));
         }
         if(query.type){
-            if(!query.type instanceof Array){
+            if(!(query.type instanceof Array)){
                 query.type = [query.type];
             }
             var type_ids = query.type.map(function(type){

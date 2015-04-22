@@ -31,17 +31,22 @@
             });
 
 
-            var initTable = function() {
+            var initTable = function(p,c,s,f,t) {
+                var sortBy = {};
+                var acsDesc = 'desc';
+                if (s[0]=='+') {
+                    acsDesc = 'asc';
+                }
+                sortBy[s.substring(1)] = acsDesc;
                 var tableConfig = {
-                    page: 1,
-                    count: 10,
-                    sorting: {
-                        cname: 'asc'
-                    }
+                    page: p,
+                    count: c,
+                    sorting: sortBy,
+                    filter:f
                 };
                 
                 $scope.tableParams = new ngTableParams(tableConfig, {
-                    total: $scope.classificationsOriginal.length,
+                    total: t,
                     getData: function ($defer, params) {
                         $scope.infopanedata = "";
                         var filteredData = params.filter() ? $filter('filter')($scope.classificationsOriginal , params.filter()) : $scope.classificationsOriginal;
@@ -58,6 +63,13 @@
                         }
 
                         $scope.classificationsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+                        a2Classi.saveState({'data':$scope.classificationsOriginal,
+                           'filtered': $scope.classificationsData,
+                           'f':params.filter(),
+                           'o':params.orderBy(),
+                           'p':params.page(),
+                           'c':params.count(),
+                           't':orderedData.length});
                     }
                 });
             };
@@ -75,7 +87,7 @@
 
                     if(data.length> 0) {
                         if(!$scope.tableParams) {
-                            initTable();
+                            initTable(1,10,"+cname",{},data.length);
                         }
                         else {
                             $scope.tableParams.reload();
@@ -87,8 +99,25 @@
                 });
             };
             
-            $scope.loadClassifications();
-
+            var stateData = a2Classi.getState();
+            if (stateData === null)
+            {
+                $scope.loadClassifications();
+            }
+            else
+            {
+                if (stateData.data.length > 0) {
+                    $scope.classificationsData = stateData.filtered;
+                    $scope.classificationsOriginal = stateData.data;
+                    initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
+                }
+                else {
+                    $scope.infopanedata = "No models found.";
+                }            
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+            }
 
             $scope.showClassificationDetails = function (classi_id) {
 
