@@ -311,7 +311,6 @@ var Soundscapes = {
         var tx = new sqlutil.transaction();
         var db;
         var playlist_id, rercordings;
-        
         async.waterfall([
             function fetch_scidx(next){
                 var filters = {

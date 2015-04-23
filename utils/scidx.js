@@ -292,8 +292,8 @@ scidx.prototype = {
             row = idx[y];
             for(var x in row){
                 cell = row[x];
-                for(var z in cell){
-                    recs[cell[z]] = true;
+                for(var z in cell[0]){
+                    recs[cell[0][z]] = true;
                 }
             }
         }
