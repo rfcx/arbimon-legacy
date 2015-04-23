@@ -29,12 +29,12 @@
         </div>
         <button type="button" class="btn btn-success" 
             ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'" 
-            ng-disabled="!(uploader.getNotUploadedItems().length && info)">
+            ng-disabled="!uploader.getNotUploadedItems().length || !info || uploading">
             <i class="fa fa-cloud-upload"></i> Start
         </button>
         <button type="button" class="btn btn-warning" 
-            ng-click="uploader.cancelAll() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'" 
-            ng-disabled="!uploader.isUploading">
+            ng-click="stopQueue() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'" 
+            ng-disabled="!uploading">
             <i class="fa fa-ban"></i> Stop all
         </button>
         <div class="btn-group" dropdown>
