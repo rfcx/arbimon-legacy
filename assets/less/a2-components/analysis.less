@@ -1,57 +1,69 @@
 @pattern-img-width: 210px;
 
 
+
 .model-pattern {
     position: relative;
     margin-top:10px;
     margin-bottom:10px;
     
-    & > .yaxiscontainer {
-        position: absolute;
-        left:0px;
 
-    }
 
-    & > .yaxisrelative {
-        position: relative;
-    }
-    
     & > .zoomDivClass
     {
         position:absolute;top:10px;
     }
     
     & > .patternDiv{
-        position: absolute;
-        left:66px;
-        min-width:200px;
-        top:10px;
+        height:100px;
+        width:@pattern-img-width;
+        
+        & > .yaxiscontainer {
+            height: 100%;
+            position: absolute;
+            left:0px;
+            & > .yaxisrelative {
+                height: 100%;
+                position: relative;
+                
+                & > .lowfreq{
+                    position: absolute;
+                    bottom: -18px;
+                }
+            }
+        }
+        
+        & > .patternWidth{
+            height: 100%;
+            width:100%;
+            & > .patternImg{
+                margin-top:10px;
+                margin-left:80px;
+                height: 100%;
+                width:100%;
+            }
+        }
+        
+            
+        & > .patternWidthAxis{
+            margin-top:10px;
+            margin-left:65px;
+            position: relative;
+            width:100%;
+            & > .secs0axis{
+                position:absolute;
+                left:15px;
+            }
+            & > .secslaxis{
+                position:absolute;
+                right:-20px;
+            }
+        }
     }
-    
-    & > .patternWidth{
-        width:100%;
-    }
-    
-    & > .patternWidthAxis{
-        position: relative;
-        width:100%;
-    }
-    
-    & > .patternImg{
-        margin-left:16px;
-        width:100%;
-        height:auto;
-        min-height:0px;
-    }
+
     
     & > .axisy1 {
         position: absolute;bottom: -18px;
-    }
-    & > .axis-x1 {
-
-    }
-    & > .axis-x2 {
-
     }
 }
 
@@ -63,6 +75,13 @@
 .model-info-column {
     float:left;
     padding-right: 20px;
+    & > .newthersholddiv{
+        padding: 5px 0px;
+        & > .thresholdinput{
+            width:50px;
+            display:inline-block;
+        }
+    }
 }
 
 .confusion-matrix {

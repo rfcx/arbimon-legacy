@@ -772,67 +772,15 @@
                 else $scope.invalid = true;
                 
             });
-            $scope.getPatternHeight = function () {
-                return { 'h': $("#paternImage").height() ,  'w': $("#paternImage").width() };
-            };
-            $scope.patw = 0;
-            $scope.$watch($scope.getPatternHeight, function (newValue, oldValue) {
-                if (newValue.h != oldValue.h && newValue.h > 0 )
-                {
-                    var hh = newValue.h;
-                    var ww = newValue.w;
-                    if (hh > ww)
-                    {
-                        $scope.heightDominates = true;
-                    }
-                    $scope.hh = hh;
-                    $scope.patternFactor = hh/ww;
-                    
-                    if($scope.heightDominates){
-                        if (hh>500) {
-                            hh = 500;
-                            ww = hh/$scope.patternFactor;
-                        }
-                    }
-                    $scope.patw = ww;
-                    $("#yaxis").height(hh);
-                    $("#zoomDiv").css("left", ww +70);
-                    if (hh<18)
-                    {
-                        $("#yaxis").hide();
-                    }
-                    else $("#yaxis").show();
-                    $("#patternDivMain").css("min-width", ww);
-                }
-            }, true);
             $scope.zoomout = function()
             {
-                var v = Math.round($scope.patw /2);
-                if($scope.heightDominates){
-                    if ($scope.patternFactor*v>500) {
-                        var hh = 500;
-                        v = hh/$scope.patternFactor;
-                    }
-                }
-                if (v<200) {
-                    v = 200;
-                }
-                $("#patternDivMain").css("min-width", v);
+                $("#patternDivMain").css("min-width", 210);
+				$("#patternDivMain").css("height", 100);
             };
             $scope.zoomin = function()
             {
-                var v = Math.round($scope.patw *2);
-                if($scope.heightDominates){
-                    if ($scope.patternFactor*v>500) {
-                        var hh = 500;
-                        v = hh/$scope.patternFactor;
-                    }
-                }
-                if (v > 800) {
-                    v = 800;
-                }
-
-                $("#patternDivMain").css("min-width", v);
+                $("#patternDivMain").css("min-width", 420);
+				$("#patternDivMain").css("height", 150);
             };
             $scope.getValidations = function() {
                 var vals = [];
