@@ -294,7 +294,7 @@ var Projects = {
     },
 
     removeClasses: function(project_classes, callback) {
-        var schema = Joi.array().min(1).includes(Joi.number());
+        var schema = Joi.array().min(1).items(Joi.number());
 
         Joi.validate(project_classes, schema, function(err, value) {
             if(err) return callback(err);

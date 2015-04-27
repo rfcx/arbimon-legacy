@@ -338,7 +338,8 @@ module.exports = function(grunt) {
         
         clean: {
             assets: ['public/assets/*'],
-            packages: ['bower_components', 'node_modules']
+            bower: ['bower_components'],
+            npm: ['node_modules'],
         },
         
         karma: {
