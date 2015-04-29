@@ -185,7 +185,8 @@ var Jobs = {
             }
             if(project.id){
                 constraints.push('J.project_id = ' + (project.id|0));
-            } else if(project.url){
+            } 
+            else if(project.url){
                 constraints.push('P.url = ' + mysql.escape(project.url));
                 tables.push('JOIN projects P ON J.project_id = P.project_id');
             }
@@ -213,9 +214,7 @@ var Jobs = {
             );
         }
         
-        queryHandler("(\n" + 
-            union.join("\n) UNION (\n") + 
-        "\n)", callback);
+        queryHandler("(\n" + union.join("\n) UNION (\n") + "\n)", callback);
     },
 
 

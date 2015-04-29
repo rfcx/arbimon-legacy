@@ -128,8 +128,8 @@ var Projects = {
             description: joi.string(),
             owner_id: joi.number(),
             project_type_id: joi.number(),
-            is_private: joi.number(),
-            is_enabled: joi.number(),
+            is_private: [joi.number().valid(0,1), joi.boolean()],
+            is_enabled: [joi.number().valid(0,1), joi.boolean()],
             recording_limit: joi.number()
         };
         

@@ -3,98 +3,28 @@
 
 <head>
     <% include head %>
-    <title>Arbimon 2 - <%=title %></title>
+    <title>Arbimon 2 - Admin</title>
 </head>
 
-<body ng-controller="AdminCtrl">
+<body>
     <% include home-nav %>
     <div class="container">
-        <!-- <div class="row">
-            <div class="col-sm-5">
-            <div class="well">
-                last update: {{ lastUpdate | date : 'M/d/yy HH:mm:ss' }}
-            </div>
-            </div>
-        </div> -->
         <div class="row">
-            <div class="col-sm-5">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        JobsQueue
-                    </div>
-                    <ul class="list-group">
-                        <li class="list-group-item" ng-repeat="(param, val) in jobsStatus">{{tr[param] || param}}: {{ val }}</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="col-sm-7">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        Active jobs
-                    </div>                    
-                    <div>
-                        States:
-                        <ul class="list-inline">
-                            <li ng-repeat="(state, obj) in states">
-                                <label ng-style="{color:obj.color}"><input ng-model="obj.show" type="checkbox">{{state}}</label>
-                            </li>
-                        </ul>
-                    </div>
-                    <div>
-                        Types:
-                        <ul class="list-inline">
-                            <li ng-repeat="type in job_types">
-                                <label><input ng-model="show[type.id]" type="checkbox">{{type.name}}</label>
-                            </li>
-                        </ul>
-                    </div>
-                    <!-- {{activeJobs}} -->
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>id</th>
-                                <th>Name</th>
-                                <th>Status</th>
-                                <th>Type</th>
-                                <th>Last Update</th>
-                            </tr>
-                        <thead>
-                        <tbody>
-                            <tr ng-repeat="job in activeJobs" ng-show="show[job.job_type_id] && states[job.state].show">
-                                <td>{{job.job_id }}</td>
-                                <td>
-                                    <i class="fa fa-circle" ng-style="{color : colors[job.job_type_id]}"
-                                        tooltip="{{job.type}}" tooltip-append-to-body="true"
-                                    ></i>
-                                    {{ job.name }}
-                                </td>
-                                <td>
-                                    <div ng-hide="job.state == 'processing' && job.percentage" 
-                                        ng-style="{color: states[job.state].color}" >
-                                        {{job.state}}
-                                    </div>
-                                    <div ng-show="job.state == 'processing' && job.percentage">
-                                        <div class="progress progress-striped active"> 
-                                         <div ng-style="{'background-color':colors[job.job_type_id], width : ( job.percentage + '%' ) }" 
-                                            aria-valuemax="100" 
-                                            aria-valuemin="0" 
-                                            aria-valuenow="{{job.percentage}}" 
-                                            role="progressbar" 
-                                            class="progress-bar">
-                                            {{job.percentage}}%
-                                         </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>{{job.type}}</td>
-                                <td>{{ job.last_update | moment : 'lll' }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
+            <div class="col-sm-12">
+                <ul class="nav nav-tabs">
+                    <li ui-sref-active="active" >
+                        <a ui-sref="projects">Projects</a>
+                    </li>
+                    <li ui-sref-active="active" >
+                        <a ui-sref="users">Users</a>
+                    </li>
+                    <li ui-sref-active="active" >
+                        <a ui-sref="jobs">Jobs</a>
+                    </li>
+                </ul>
             </div>
         </div>
+        <div ui-view></div>
     </div>
 </body>
 

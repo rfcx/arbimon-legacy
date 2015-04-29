@@ -243,6 +243,22 @@ var Users = {
             callback(null, rows[0].count > 0);
         });
     },
+    
+    list: function(callback) {
+        var q = 'SELECT user_id AS id, \n' +
+                'login AS username, \n' +
+                'firstname, \n' +
+                'lastname, \n' +
+                'email, \n' +
+                'last_login, \n' +
+                'is_super, \n' +
+                'project_limit, \n' +
+                'created_on, \n' +
+                'disabled_until \n' +
+                'FROM users';
+        
+        queryHandler(q, callback);
+    },
 };
 
 module.exports = Users;

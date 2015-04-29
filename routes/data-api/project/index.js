@@ -117,9 +117,27 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
         return res.json({ error: "missing parameters" });
     }
     
-    var newProjectInfo = req.body.project;
+    // make sure project requested is the one updated
+    req.body.project.project_id = req.project.project_id;
+    
+    var newProjectInfo;
     
     async.waterfall([
+        function(callback) {
+            var schema = {
+                project_id: joi.number().required(),
+                name: joi.string(),
+                url: joi.string(),
+                description: joi.string(),
+                is_private: joi.number(),
+            };
+            
+            joi.validate(req.body.project, schema, { stripUnknown: true }, 
+                function(err, projectInfo){ 
+                    newProjectInfo = projectInfo;
+                    callback();
+            });
+        },
         function verifyName(callback) {
             if(req.project.name !== newProjectInfo.name) {
                 model.projects.findByName(newProjectInfo.name, function(err, rows){
@@ -200,6 +218,7 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
         res.json({ success: true });
     });
 });
+
 router.post('/:projectUrl/class/del', function(req, res, next){
     if(!req.body.project_id || !req.body.project_classes) {
         return res.json({ error: "missing parameters"});
