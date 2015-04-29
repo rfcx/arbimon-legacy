@@ -33,6 +33,7 @@ describe('user.js', function(){
     });
     
     describe('get /projectlist', function(){
+        
         it('Should return a list of projects visible to this user.', function(done){
             mock.model.users.projectList = function(uid, cb){cb(null, [{project_id:1, name:"p1"}]);};
             user_router.when('/projectlist', { json: function(req, res, obj){
@@ -41,6 +42,7 @@ describe('user.js', function(){
                 done();
             }});
         });
+        
         it('Should fail if there was any error.', function(done){
             mock.model.users.projectList = function(uid, cb){cb(new Error("I am error"));};
             user_router.when('/projectList', { next: function(req, res, err){
@@ -49,6 +51,7 @@ describe('user.js', function(){
                 done();
             }});
         });
+        
         it('Should return a list of all projects if user is super.', function(done){
             mock.model.projects.listAll = function(cb){cb(null, [{project_id:1, name:"p1"}]);};
             user_router.when({url:'/projectlist', session:{user:{isSuper:1}}}, { json: function(req, res, obj){
@@ -57,6 +60,7 @@ describe('user.js', function(){
                 done();
             }});
         });
+        
         it('Should fail if there was any error fetching all the projects.', function(done){
             mock.model.projects.listAll = function(cb){cb(new Error("I am error"));};
             user_router.when({url:'/projectlist', session:{user:{isSuper:1}}}, { next: function(req, res, err){
@@ -122,7 +126,7 @@ describe('user.js', function(){
             }});
         });
         it('Should return error if query is empty.', function(done){
-            user_router.when({url:'/search/p',_params:{query:undefined}}, { json: function(req, res, obj){
+            user_router.when({url:'/search/' }, { json: function(req, res, obj){
                 should.exist(obj);
                 obj.should.deep.equal({error:'empty query'});
                 done();

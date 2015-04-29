@@ -1,7 +1,7 @@
 import struct
 import math
 
-VERSION = 1
+VERSION = 2
 
 
 class file_pointer_write_loc(object):
@@ -112,12 +112,15 @@ def write_scidx(filename, index, recordings, offsetx, width, offsety, height):
                     # file position, relative to row_pointers[y]
                     cell_pointers[x].update()
                     cell = row[off_x]
+                    rec_count = len(cell)
                     # fout.write(struct.pack(">6s", "[CELL]"))
-                    fout.write(struct.pack(">H", len(cell)))
-                    for rec in cell:
+                    fout.write(struct.pack(">H", rec_count))
+                    recs, amps = cell.keys(), cell.values()
+                    for rec in recs:
                         fout.write(struct.pack(
                             rcfmt, *uint2BEbytes(rec_idx[rec], rcbytes)
                         ))
+                    fout.write(struct.pack(">"+("f"*rec_count), *amps))
 
 
 def read_cell_recs(finp, rcfmt, rcbytes, count):
@@ -164,7 +167,7 @@ def read_scidx(filename, filter=None):
     #     rows_ptr[] 	array of 8 byte file offset from start - indicates
     #                   begining of each entry of rows[]
     #     rows[] 	array of row structures of size height
-    magic, VERSION, offsetx, width, offsety, height = struct.unpack(
+    magic, version, offsetx, width, offsety, height = struct.unpack(
         ">6sHHHHH", finp.read(16)
     )
 
@@ -232,8 +235,16 @@ def read_scidx(filename, filter=None):
                     # )
                     cell_count, = struct.unpack(">H", finp.read(2))
                     # print cell_count, rcfmt, rcbytes
-                    row[offsetx + x] = [
+                    cell_recs = [
                         i  # recordings[i]
                         for i in read_cell_recs(finp, rcfmt, rcbytes, cell_count)
                     ]
-    return (index, recordings, offsetx, width, offsety, height, minx, maxx, miny, maxy)
+                    if version >= 2:
+                        cell_amps = struct.unpack(
+                            ">" + ("f" * cell_count), finp.read(4 * cell_count)
+                        )
+                    else:
+                        cell_amps = [1024] * cell_count
+                    row[offsetx + x] = dict(zip(cell_recs, cell_amps))
+    return (version, index, recordings, offsetx, width, offsety, height,
+            minx, maxx, miny, maxy)

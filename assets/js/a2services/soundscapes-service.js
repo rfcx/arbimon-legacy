@@ -3,7 +3,16 @@ angular.module('a2-soundscapes-service', [
     'humane'
 ])
 .factory('a2Soundscapes', function(Project, $http, $q, notify) {
+    var saveData = null;
     return {
+        saveState : function(data)
+        {
+            saveData = data;
+        },
+        getState : function()
+        {
+            return saveData;
+        },
         get: function(soundscapeId, callback) {
             var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId)
@@ -33,6 +42,18 @@ angular.module('a2-soundscapes-service', [
                 });
             return d.promise;
         },
+        getNormVector: function(soundscapeId, callback) {
+            var d = $q.defer();
+            var projectName = Project.getUrl();
+            
+            $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/norm-vector')
+                .success(function(data) {
+                    if(callback) callback(data);
+                    
+                    d.resolve(data);
+                });
+            return d.promise;
+        },
         // TODO fusion getList and getList2 routes to return needed data
         getList: function(query, callback) {
             if(query instanceof Function){
@@ -53,7 +74,7 @@ angular.module('a2-soundscapes-service', [
                 .success(callback)
                 .error(notify.serverError);
         },
-        setVisualScale: function(soundscapeId, params, callback){
+        setVisualizationOptions: function(soundscapeId, params, callback){
             var projectName = Project.getUrl();
             $http.post('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/scale', params)
                 .success(function(data) {
@@ -74,6 +95,12 @@ angular.module('a2-soundscapes-service', [
                 .success(function(data) {
                     callback(data);
                 });
+        },
+        getExportUrl: function(soundscapeId){
+            var d = $q.defer();
+            var projectName = Project.getUrl();
+            d.resolve('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/export-list');
+            return d.promise;
         },
         getRegion: function(soundscapeId, region, callback) {
             var projectName = Project.getUrl();

@@ -125,8 +125,39 @@
             $scope.infoInfo = "";
             $scope.showInfo = false;
         };
-
-
+        
+        $scope.cancel = function(job)
+        {
+            var jobId = job.job_id;
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            if (job.percentage < 100) {
+                checkJob('Cancel','cancel',cancelJob,jobId);
+            }
+            else {
+                cancelJob(jobId);
+            }
+        };
+        
+        var cancelJob = function(jobId)
+        {
+            $http.get('/api/project/' + Project.getUrl() + '/job/cancel/' + jobId)
+                .success(
+                    function(data) {
+                        if (data.err) {
+                            notify.serverError();
+                        }
+                        else {
+                            JobsData.updateJobs();
+                            notify.log("Job canceled successfully");
+                        }
+                    }
+                )
+                .error(function() {
+                    notify.serverError();
+                });
+        };
+        
         var hideJob = function(jobId) {
             $http.get('/api/project/' + Project.getUrl() + '/job/hide/' + jobId)
                 .success(
@@ -178,19 +209,12 @@
             JobsData.cancelTimer();
         });
 
-        $scope.hide = function(job) {
-
-            var jobId = job.job_id;
-
-            $scope.infoInfo = "Loading...";
-            $scope.showInfo = true;
-
-            if (job.percentage < 100) {
-
+        var checkJob = function(titlen,buttonn,fn,vl)
+        {
                 $scope.popup = {
-                    title: "Hide running job",
+                    title: titlen+"running job",
                     messages: ["This job has not finished yet. Are you sure?"],
-                    btnOk: "Yes, hide it",
+                    btnOk: "Yes, "+buttonn+" it",
                     btnCancel: "No"
                 };
 
@@ -205,10 +229,20 @@
                 });
 
                 modalInstance.result.then(function(ok) {
-                    if (ok) {
-                        hideJob(jobId);
-                    }
+                    fn(vl);
                 });
+        }
+        
+        $scope.hide = function(job) {
+
+            var jobId = job.job_id;
+
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            if (job.percentage < 100) {
+
+                checkJob('Hide','hide',hideJob,jobId);
+ 
             }
             else {
                 hideJob(jobId);

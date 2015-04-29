@@ -480,6 +480,19 @@ router.get('/project/:projectUrl/job/hide/:jId', function(req, res) {
     });
 });
 
+router.get('/project/:projectUrl/job/cancel/:jId', function(req, res) {
+
+    model.jobs.cancel(req.params.jId, function(err, rows) {
+        if(err) res.json('{ "err" : "Error removing job"}');
+
+        model.jobs.activeJobs(req.params.projectUrl, function(err, row) {
+            if(err) return next(err);
+
+            res.json(row);
+        });
+    });
+});
+
 router.post('/project/:projectUrl/classification/vector', function(req, res, next) {
 
     s3.getObject({
@@ -621,7 +634,6 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                 res.status(403).json({ err: "you dont have permission to 'manage soundscapes'" });
                 return next(new Error());
             }
-
             params = {
                 name        : (req.body.n),
                 user        : req.session.user.id,
@@ -631,7 +643,8 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                 threshold   : (req.body.t),
                 bin         : (req.body.b),
                 maxhertz    : (req.body.m),
-                frequency   : (req.body.f)
+                frequency   : (req.body.f),
+                normalize   : (req.body.nv)
             };
 
             next();

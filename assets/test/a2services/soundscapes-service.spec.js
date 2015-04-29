@@ -67,6 +67,45 @@ describe('Module: a2-soundscapes-service', function() {
                 
                 $httpBackend.flush();
             });
+
+            it('request to correct route, using returned promise', function() {
+                $httpBackend
+                    .expectGET('/api/project/test/soundscapes/1/scidx')
+                    .respond(200, 'data');
+                    
+                a2Soundscapes.getSCIdx(1).then(function(data){
+                    expect(data).to.equal('data');
+                });
+                
+                $httpBackend.flush();
+            });
+
+        });
+        
+        describe('a2Soundscapes.getNormVector', function() {
+            it('request to correct route with a given callback', function() {
+                $httpBackend
+                    .expectGET('/api/project/test/soundscapes/1/norm-vector')
+                    .respond(200, 'data');
+                    
+                a2Soundscapes.getNormVector(1, function(data){
+                    expect(data).to.equal('data');
+                });
+                
+                $httpBackend.flush();
+            });
+            
+            it('request to correct route using returned promise', function() {
+                $httpBackend
+                    .expectGET('/api/project/test/soundscapes/1/norm-vector')
+                    .respond(200, 'data');
+                    
+                a2Soundscapes.getNormVector(1).then(function(data){
+                    expect(data).to.equal('data');
+                });
+                
+                $httpBackend.flush();
+            });
         });
         
         describe('a2Soundscapes.getList', function() {
@@ -128,13 +167,13 @@ describe('Module: a2-soundscapes-service', function() {
             });
         });
         
-        describe('a2Soundscapes.setVisualScale', function() {
+        describe('a2Soundscapes.setVisualizationOptions', function() {
             it('request to correct route', function() {
                 $httpBackend
                     .expectPOST('/api/project/test/soundscapes/1/scale', { param: 'test' })
                     .respond(200, 'data');
                     
-                a2Soundscapes.setVisualScale(1, { param: 'test' }, function(data){
+                a2Soundscapes.setVisualizationOptions(1, { param: 'test' }, function(data){
                     expect(data).to.equal('data');
                 });
                 

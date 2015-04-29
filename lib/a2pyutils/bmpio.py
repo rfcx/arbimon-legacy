@@ -37,6 +37,7 @@ class Writer(object):
             100, 100,
             256, 0
         ]
+
         outfile.write(struct.pack("<2sIHHIIiiHHIIiiII", *header))
 
         # write palette

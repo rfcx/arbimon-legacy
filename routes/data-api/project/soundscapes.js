@@ -1,6 +1,7 @@
 var debug = require('debug')('arbimon2:route:soundscapes');
 var express = require('express');
 var sprintf = require("sprintf-js").sprintf;
+var csv_stringify = require("csv-stringify");
 var async = require('async');
 var AWS = require('aws-sdk');
 
@@ -89,6 +90,7 @@ router.get('/details', function(req, res, next) {
 });
 
 
+
 router.get('/:soundscape', function(req, res, next) {
     res.json(req.soundscape);
 });
@@ -119,6 +121,73 @@ router.get('/:soundscape/scidx', function(req, res, next) {
         }
     });
 });
+
+router.get('/:soundscape/norm-vector', function(req, res, next) {
+    var soundscape = req.soundscape;
+    model.soundscapes.fetchNormVector(req.soundscape, function(err, vector){
+        if(err){
+            next(err);
+        } else {
+            res.json(vector);
+        }
+    });
+});
+
+router.get('/:soundscape/export-list', function(req, res, next) {
+    var soundscape = req.soundscape;
+    var filename = soundscape.name.replace(/[^a-zA-Z0-9-_]/g, '_').replace(/_+/g,'_')  + '.csv';
+    model.soundscapes.fetchSCIDX(req.soundscape, function(err, scidx){
+        if(err){
+            next(err);
+        } else {
+            var cols = ["site", "recording", "time index", "frequency", "amplitude"];
+            var recdata={};
+            var stringifier = csv_stringify({header:true, columns:cols});
+            res.setHeader('Content-disposition', 'attachment; filename='+filename);
+            stringifier.pipe(res);
+            async.eachSeries(Object.keys(scidx.index), function(freq_bin, next_row){
+                var row = scidx.index[freq_bin];
+                var freq = freq_bin * soundscape.bin_size;
+                async.eachSeries(Object.keys(row), function(time, next_cell){
+                    var recs = row[time][0];
+                    var amps = row[time][1];
+                    var c_idxs=[]; for(var ri=0,re=recs.length; ri<re;++ri){ c_idxs.push(ri); }
+                    async.eachSeries(c_idxs, function(c_idx, next_rec){
+                        var rec_idx = recs[c_idx];
+                        var amp = amps && amps[c_idx] || '-';
+                        var recId = scidx.recordings[rec_idx];
+                        async.waterfall([
+                            function(next_step){
+                                if(recdata[recId]){
+                                    next_step();
+                                } else {
+                                    model.recordings.findByUrlMatch(recId, null, next_step);
+                                }
+                            },
+                            function(recordings){
+                                var next_step = arguments[arguments.length - 1];
+                                if(!recdata[recId] && recordings && recordings.length > 0){
+                                    recdata[recId] = recordings[0];
+                                }
+                                next_step(null, recdata[recId]);
+                            }
+                        ], function(err, recording){
+                            if(err || !recording){
+                                stringifier.write(["-", "id:"+recId, time, freq, amp]);
+                            } else {
+                                stringifier.write([recording.site, recording.file, time, freq, amp]);
+                            }
+                            next_rec();
+                        });
+                    }, next_cell);
+                }, next_row);
+            }, function(){
+                stringifier.end();
+            });
+        }
+    });
+});
+
 
 router.get('/:soundscape/indices', function(req, res, next) {
     
@@ -169,12 +238,14 @@ router.get('/:soundscape/indices', function(req, res, next) {
 });
 
 router.post('/:soundscape/scale', function(req, res, next) {
-    if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
+    if(!req.haveAccess(req.project.project_id, "manage soundscapes")){
         return res.json({ error: "you dont have permission to 'manage soundscapes'" });
-        
-    model.soundscapes.setVisualScale(req.soundscape, {
+    }
+    model.soundscapes.setVisualizationOptions(req.soundscape, {
         max : req.body.max,
-        palette : (req.body.palette | 0)
+        palette : (req.body.palette | 0),
+        normalized : !!req.body.normalized,
+        amplitude : req.body.amplitude,
     }, function(err, soundscape){
         if(err){
             next(err);

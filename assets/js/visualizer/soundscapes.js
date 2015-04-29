@@ -251,7 +251,8 @@ angular.module('visualizer-soundscape-info', [
     'visualizer-services', 
     'a2utils', 
     'a2SoundscapeRegionTags',
-    'a2-url-update-service'
+    'a2-url-update-service',
+    'a2directives'
 ])
 .controller('a2VisualizerSoundscapeInfoLayerController', function($scope, $modal, $location, a2Soundscapes){
     var self = this;
@@ -292,12 +293,16 @@ angular.module('visualizer-soundscape-info', [
     $scope.palettes = a2VisualizerSoundscapeGradients;
     $scope.data = {
         palette : soundscape.visual_palette,
-        visual_max : soundscape.visual_max_value || soundscape.max_value
+        visual_max : soundscape.visual_max_value || soundscape.max_value,
+        normalized : !!soundscape.normalized,
+        amplitudeThreshold : soundscape.threshold
     };
     $scope.ok = function(){
-        a2Soundscapes.setVisualScale(soundscape.id, {
+        a2Soundscapes.setVisualizationOptions(soundscape.id, {
             max: $scope.data.visual_max,
             palette: $scope.data.palette,
+            normalized: $scope.data.normalized,
+            amplitude: $scope.data.amplitudeThreshold
         }, function(sc){
             if(soundscape.update){
                 soundscape.update(sc);
@@ -333,12 +338,14 @@ angular.module('visualizer-soundscape-info', [
         }
     };
 })
-.directive('a2SoundscapeDrawer', function(d3, a2Soundscapes){
+.directive('a2SoundscapeDrawer', function(a2Soundscapes){
     return {
         restrict : 'E',
         template : '<canvas class="soundscape"></canvas>',
         scope    : {
             soundscape : '&',
+            normalized : '&',
+            amplitudeThreshold : '&',
             palette    : '&',
             visualMax  : '&'
         },
@@ -346,17 +353,29 @@ angular.module('visualizer-soundscape-info', [
         link     : function($scope, $element, $attrs){
             var scidx;
             var soundscape;
+            var norm_vector;
             var draw = function(){
                 if(!soundscape || !scidx){return;}
                 var vmax = $scope.visualMax() || soundscape.max_value;
+                var ampTh = ($scope.amplitudeThreshold && $scope.amplitudeThreshold()) || 0;
                 
                 var pal = $scope.palette();
                 if(!pal || !pal.length){return;}
                 var pallen1 = 1.0 * (pal.length-1);
                 var color = function(v){
+                    console.log('the other one');
                     var i = Math.max(0, Math.min(((v * pallen1 / vmax) | 0), pallen1));
                     return pal[i];
                 };
+                
+                if(norm_vector){
+                    vmax = 1;
+                    var _cl = color;
+                    color = function(v, j){
+                        var n = norm_vector[j] || 1;
+                        return _cl(v / n);
+                    };
+                }
                 
                 var w = scidx.width, h = scidx.height;
                 $element.attr('width', w);
@@ -368,8 +387,19 @@ angular.module('visualizer-soundscape-info', [
                 
                 for(var i in scidx.index){ 
                     var row = scidx.index[i];
-                    for(var j in row){ 
-                        ctx.fillStyle = color(row[j]);
+                    for(var j in row){
+                        var cell = row[j];
+                        if(ampTh && cell[1]){
+                            var act=0;
+                            for(var al=cell[1], ali=0,ale=al.length; ali < ale; ++ali){
+                                if(al[ali] > ampTh){ ++act; }
+                            }                            
+                            ctx.fillStyle = color(act, j);
+                        } 
+                        else {
+                            console.log('this one',cell[0], j,"=",color(cell[0], j));
+                            ctx.fillStyle = color(cell[0], j);                            
+                        }
                         ctx.fillRect(j, h - i - 1, 1, 1);
                     }
                 }
@@ -382,7 +412,23 @@ angular.module('visualizer-soundscape-info', [
                     draw();
                 });
             });
+            $scope.$watch('normalized()', function(_normalized){
+                if(!_normalized){ 
+                    norm_vector = null; 
+                    draw();
+                } else {
+                    if(norm_vector){
+                        draw();
+                    } else {
+                        a2Soundscapes.getNormVector(soundscape.id).then(function(_norm_vector){
+                            norm_vector = _norm_vector;
+                            draw();
+                        });
+                    }
+                }
+            });
             $scope.$watch('palette()', draw);
+            $scope.$watch('amplitudeThreshold()', draw);
             $scope.$watch('visualMax()', draw);
 
         }

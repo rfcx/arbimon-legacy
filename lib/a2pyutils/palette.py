@@ -2,6 +2,7 @@ from a2pyutils import colors
 import pylab
 
 
+
 palette = [
     colors.MultiGradient([
         colors.LinearGradient(
@@ -30,15 +31,15 @@ def get_palette(id=1):
 
 
 def export_palette(palette, fileout):
-    if fileout[:4] == ".png":
+    if fileout[len(fileout)-4:] == ".png":
         import png
         W = png.Writer(
-            width=width, height=height, bitdepth=bpp, palette=palette
+            width=1, height=len(palette), bitdepth=8, palette=palette
         )
     else:
         import bmpio
         W = bmpio.Writer
-
+        
     h = len(palette)
     w = W(width=1, height=h, bitdepth=8, palette=palette)
     with file(fileout, "wb") as fout:

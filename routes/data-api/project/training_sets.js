@@ -51,7 +51,7 @@ router.get('/types', function(req, res, next) {
  */
 router.get('/list/:trainingSet/:recUrl?', function(req, res, next) {
     model.training_sets.fetchData(req.trainingSet, {
-        recording: req.param('recUrl')
+        recording: req.params.recUrl
     }, function(err, count) {
         if(err) return next(err);
 

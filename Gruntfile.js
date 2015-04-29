@@ -33,7 +33,6 @@ module.exports = function(grunt) {
                         removeComments: true,
                         collapseWhitespace: true,
                         conservativeCollapse: true,
-                        collapseBooleanAttributes: true,
                         removeAttributeQuotes: true,
                     }
                 },
@@ -341,7 +340,8 @@ module.exports = function(grunt) {
         
         clean: {
             assets: ['public/assets/*'],
-            packages: ['bower_components', 'node_modules']
+            bower: ['bower_components'],
+            npm: ['node_modules'],
         },
         
         karma: {

@@ -19,27 +19,30 @@
         <div ng-hide="loading">
             <table ng-table="tableParams" class="table table-hide-btns" show-filter="true" >
                 <tr ng-repeat="soundscape in soundscapesData" >
-                    <td data-title="'Date'" class="no-wrap-table-cell" sortable="'date'" >
+                    <td data-title="'Date'" class="no-wrap-table-cell" data-sortable="'date'" >
                         {{soundscape.date | moment : 'lll' }} 
                     </td> 
-                    <td data-title="'Name'" class="no-wrap-table-cell hidelongtext widthtd" sortable="'name'"  filter="{ 'name': 'text' }">
+                    <td data-title="'Name'" class="no-wrap-table-cell hidelongtext widthtd" data-sortable="'name'"  filter="{ 'name': 'text' }">
                         {{soundscape.name}}
                     </td>
-                    <td data-title="'User'" class="no-wrap-table-cell" sortable="'user'"  filter="{ 'user': 'text' }">
+                    <td data-title="'User'" class="no-wrap-table-cell" data-sortable="'user'"  filter="{ 'user': 'text' }">
                         {{soundscape.user}}
                     </td>
-                    <td data-title="'Playlist'" class="no-wrap-table-cell hidelongtext widthtd" sortable="'playlist'"  filter="{ 'playlist': 'text' }">
+                    <td data-title="'Playlist'" class="no-wrap-table-cell hidelongtext widthtd" data-sortable="'playlist'"  filter="{ 'playlist': 'text' }">
                         {{soundscape.playlist}}
                     </td>
                     <td>
-                        <button class="btn btn-default btn-xs" 
-                            ng-click="showDetails(soundscape.soundscape_id) | trackEvent:'Analysis-Soundscapes-List':' show soundscapes details'">
-                                Show details
-                        </button>
-                        <button class="btn btn-default btn-xs" 
-                            ng-click="deleteSoundscape(soundscape.soundscape_id,soundscape.name) | trackEvent:'Analysis-Soundscapes list':'delete soundscape'">
-                                Delete
-                        </button>
+                        <a class="btn btn-default btn-xs" ng-href="#/visualizer/soundscape/{{soundscape.soundscape_id}}"
+                        ><i class="fa fa-cubes"></i> View</a>
+
+                        <button class="btn btn-default btn-xs" ng-click="showDetails(soundscape.soundscape_id) | trackEvent:'Analysis-Soundscapes-List':' show soundscapes details'"
+                        ><i class="fa fa-list-alt"></i> Show details</button>
+
+                        <button class="btn btn-default btn-xs" ng-click="exportSoundscape(soundscape.soundscape_id) | trackEvent:'Analysis-Soundscapes list':'export soundscape'"
+                        ><i class="fa fa-download"></i> Export</button>
+                        
+                        <button class="btn btn-default btn-xs" ng-click="deleteSoundscape(soundscape.soundscape_id,soundscape.name) | trackEvent:'Analysis-Soundscapes list':'delete soundscape'"
+                        ><i class="fa fa-trash"></i> Delete</button>
                     </td>
                 </tr>
             </table>

@@ -315,7 +315,7 @@ var Projects = {
     },
 
     removeClasses: function(project_classes, callback) {
-        var schema = joi.array().min(1).includes(joi.number());
+        var schema = Joi.array().min(1).items(Joi.number());
 
         joi.validate(project_classes, schema, function(err, value) {
             if(err) return callback(err);
@@ -438,6 +438,9 @@ var Projects = {
             function(err,data)
             {
                 if(err) return callback(err);
+                
+                if(!data.length) return callback(new Error('Classification not found'));
+                
                 modUri = data[0].uri.replace('.mod','');
                 q = "SELECT `uri` FROM `recordings` WHERE `recording_id` in "+
                 "(SELECT `recording_id` FROM `classification_results` WHERE `job_id` = "+cid+") ";

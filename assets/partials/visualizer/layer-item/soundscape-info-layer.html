@@ -9,12 +9,19 @@
             <tr><td>Bin Size   </td><td colspan="2">{{visobject.bin_size}} Hz</td></tr>
             <tr><td>Frequency  </td><td colspan="2">{{visobject.domain.y.unit_format(visobject.domain.y.from)}} - {{visobject.domain.y.unit_format(visobject.domain.y.to)}}</td></tr>
             <tr><td>Visualization Scale</td><td>
-                0 - {{visobject.visual_max_value != null ? visobject.visual_max_value : (visobject.max_value + ' (auto)')}}
-            </td><td>
-                <button class="btn btn-default btn-sm" ng-click="layer.info.edit_visual_scale(visobject)" tooltip="Edit Visualization Scale">
+                {{
+                    visobject.normalized ? "Normalized" : (
+                        "0 - " + (
+                            visobject.visual_max_value != null ? visobject.visual_max_value : (visobject.max_value + ' (auto)')
+                        )
+                    )
+                }}
+            </td><td rowspan="2" style="vertical-align: middle; text-align: center">
+                <button class="btn btn-default btn-sm" ng-click="layer.info.edit_visual_scale(visobject)" tooltip="Edit Visualization Options">
                     <i class="fa fa-wrench"></i>
                 </button>
             </td></tr>
+            <tr><td>Amplitude Threshold</td><td>{{visobject.threshold}}</td></tr>
         </table>
     </div>
 </div>

@@ -1012,4 +1012,11 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
         }
     };
 })
+.directive('a2Info', function(){
+    return {
+        replace:true,
+        restrict : 'E',
+        template:'<i class="text-info fa fa-info-circle"></i>'
+    };
+})
 ;

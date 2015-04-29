@@ -31,15 +31,20 @@
                 $scope.projectData = data;
             });
 
-            var initTable = function() {
+            var initTable = function(p,c,s,f,t) {
+                var sortBy = {};
+                var acsDesc = 'desc';
+                if (s[0]=='+') {
+                    acsDesc = 'asc';
+                }
+                sortBy[s.substring(1)] = acsDesc;
                 $scope.tableParams = new ngTableParams({
-                    page: 1,
-                    count: 10,
-                    sorting: {
-                        mname: 'asc'
-                    }
+                    page: p,
+                    count: c,
+                    sorting: sortBy,
+                    filter:f
                 }, {
-                    total: $scope.modelsDataOrig.length,
+                    total: t,
                     getData: function($defer, params) {
                         $scope.infopanedata = "";
                         var filteredData = params.filter() ?
@@ -56,10 +61,17 @@
                             $scope.infopanedata = "No models found.";
                         }
                         $scope.modelsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+                        a2Models.saveState({'data':$scope.modelsDataOrig,
+                                           'filtered': $scope.modelsData,
+                                           'f':params.filter(),
+                                           'o':params.orderBy(),
+                                           'p':params.page(),
+                                           'c':params.count(),
+                                           't':orderedData.length});
                     }
                 });
             };
-
+            
             $scope.loadModels = function() {
                 a2Models.list(function(data) {
                     $scope.modelsData = data;
@@ -70,7 +82,7 @@
 
                     if (data.length > 0) {
                         if (!$scope.tableParams) {
-                            initTable();
+                            initTable(1,10,"+mname",{},data.length);
                         }
                         else {
                             $scope.tableParams.reload();
@@ -81,8 +93,28 @@
                     }
                 });
             };
-            $scope.loadModels();
-
+            
+            
+            var stateData = a2Models.getState();
+            if (stateData === null)
+            {
+                $scope.loadModels();
+            }
+            else
+            {
+                if (stateData.data.length > 0) {
+                    $scope.modelsData = stateData.filtered;
+                    $scope.modelsDataOrig = stateData.data;
+                    initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
+                }
+                else {
+                    $scope.infopanedata = "No models found.";
+                }            
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+            }
+                        
             $scope.newClassification = function(model_id, model_name) {
 
                 var modalInstance = $modal.open({
@@ -100,7 +132,7 @@
 
                 modalInstance.result.then(
                     function() {
-                        console.log('new classification: ' + new Date());
+                        //console.log('new classification: ' + new Date());
                     }
                 );
             };
@@ -359,11 +391,13 @@
         function($scope, a2Models, $stateParams, $location, Project, a2Classi, notify) {
             $scope.project_url = Project.getUrl();
             $scope.project_id = -1;
-
+            a2Models.modelState(true);
             Project.getInfo(function(data) {
                 $scope.project_id = data.project_id;
             });
-
+             $scope.$on("$destroy", function() {
+                a2Models.modelState(false);
+            });
             $scope.showValidationsTable = true;
             $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
@@ -488,7 +522,6 @@
                                 tries = tries + 1;
                             }
                             
-                            console.log(sumObject.length);
                             
                             var max = sumObject[0];
                             var mindex = 0;
@@ -669,10 +702,8 @@
             $scope.invalid = false;
 
             $scope.recalculate = function() {
-                // TODO need fix jQuery most be used only on directives
-                var newval = $('#newthres').val(); 
                 $scope.messageSaved = '';
-                newval = parseFloat(newval);
+                var newval = parseFloat($scope.newthres);
 
                 if (!isNaN(newval) && (newval <= 1.0) && (newval >= 0.0)) {
                     $scope.currentThreshold = newval;
@@ -736,12 +767,21 @@
                         bw: Math.round(((parseFloat(data.json.roihighfreq) - parseFloat(data.json.roilowfreq)) * 100)) / 100,
                         freqMax: data.json.roisamplerate / 2, //ok
                     };
+                    
                 }
                 else $scope.invalid = true;
+                
             });
-
-
-
+            $scope.zoomout = function()
+            {
+                $("#patternDivMain").css("min-width", 210);
+				$("#patternDivMain").css("height", 100);
+            };
+            $scope.zoomin = function()
+            {
+                $("#patternDivMain").css("min-width", 420);
+				$("#patternDivMain").css("height", 150);
+            };
             $scope.getValidations = function() {
                 var vals = [];
                 for (var i = 0; i < $scope.validationsData.length; i++) {
@@ -768,7 +808,6 @@
 
 
             $scope.recDetails = function(rec) {
-                console.log(rec);
                 var selected = rec;
                 $scope.recNameInVectorViewDate = rec.date;
                 $scope.recNameInVectorViewSite = rec.site;

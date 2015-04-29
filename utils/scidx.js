@@ -79,7 +79,7 @@ scidx.prototype = {
                 if(upc[0] != "SCIDX "){
                     next(new Error("Invalid soundscape index file format."));
                 }
-                _.version   = upc[1];
+                this.version   = _.version   = upc[1];
                 this.offsetx   = _.offsetx   = upc[2];
                 this.width     = _.width     = upc[3];
                 this.offsety   = _.offsety   = upc[4];
@@ -229,7 +229,7 @@ scidx.prototype = {
                     } else {
                         if(cell_list){
                             if(_.just_count){
-                                cell_list = cell_list.length;
+                                cell_list = [cell_list[0].length, cell_list[1]];
                             }
                             row[_.offsetx + _.x] = cell_list;
                             ++cells_read;
@@ -250,6 +250,7 @@ scidx.prototype = {
         if(cell_ptr && minx <= x && x <= maxx){
             // # seek to cell location denoted by cell_ptr,
             _.finp.seek(cell_ptr);
+            var cell=[null, null];
             async.waterfall([
                 function fetch_cell_count(next){
                     _.finp.unpack(">H", 2, next);
@@ -262,7 +263,19 @@ scidx.prototype = {
                     _.finp.unpack(">" + str_repeat(_.rcfmt, _.cell_count), _.rec_bytes * _.cell_count, next);
                 },
                 function(upc, next){
-                    next(null, upc);
+                    cell[0] = upc;
+                    next();
+                },
+                function(next){
+                    if(_.version >= 2){
+                        _.finp.unpack(">" + str_repeat('f', _.cell_count), 4 * _.cell_count, next);
+                    } else {
+                        next(null, null);
+                    }
+                },
+                function(upc, next){
+                    cell[1] = upc;
+                    next(null, cell);
                 }
             ], callback);
             // # print cell_count, rcfmt, rcbytes
@@ -279,8 +292,8 @@ scidx.prototype = {
             row = idx[y];
             for(var x in row){
                 cell = row[x];
-                for(var z in cell){
-                    recs[cell[z]] = true;
+                for(var z in cell[0]){
+                    recs[cell[0][z]] = true;
                 }
             }
         }
@@ -298,8 +311,8 @@ scidx.prototype = {
             row = idx[y];
             for(var x in row){
                 cell = row[x];
-                for(var z in cell){
-                    var rec = cell[z];
+                for(var z in cell[0]){
+                    var rec = cell[0][z];
                     if(!recs[rec]){
                         recs[rec] = true;
                         ++count;

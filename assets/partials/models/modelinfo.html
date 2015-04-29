@@ -97,13 +97,32 @@
                 </div>
                 <div class="model-info-column">
                     <h4>Training set pattern:</h4>
-                    <div class="model-pattern">
-                        <img class="pattern" ng-src="{{data.png}}" />
-                        <div class="axis-y1">{{data.lfreq}}Hz-</div>
-                        <div class="axis-y2">{{data.hfreq}}Hz-</div>
-                        <div class="axis-x1">0s</div>
-                        <div class="axis-x2">{{ data.rlength }}s</div>
+                    <div id="zoomDiv" class="zoomDivClass">
+                            <b>Zoom</b>: <button ng-click="zoomout()" class="btn btn-default btn-xs"><i class="fa fa-search-minus" ></i></button>
+                            <button ng-click="zoomin()" class="btn btn-default btn-xs"><i class="fa fa-search-plus" ></i></button>
                     </div>
+                    <div class="model-pattern">
+                        <div id="patternDivMain" class="patternDiv">
+                            <div class="yaxiscontainer" >
+                                <div id="yaxis" class="yaxisrelative">
+                                    <div >{{data.hfreq}}Hz-</div>
+                                    <div class='lowfreq'>{{data.lfreq}}Hz-</div>
+                                </div>
+                            </div>
+                        
+                        
+                            <div class="patternWidth">
+                                <img id="paternImage" ng-src="{{data.png}}"  class="patternImg"/> <!-- margin-left:16px;width:100%;height:auto;min-height:0px;/> -->
+                            </div>
+                            
+                            <div class="patternWidthAxis">
+                                <div class="secs0axis">0s</div>
+                                <div class="secslaxis">{{ data.rlength }}s</div>
+                            </div>
+                            
+                        </div>
+
+                    </div>    
                 </div>
             </div>
         </div>
@@ -212,13 +231,13 @@
                     <strong>Saved threshold:</strong> {{databaseThreshold}}<br>
                     <strong>Suggested threshold:</strong> {{suggestedThreshold}}<br>
                     <strong>Current threshold:</strong> {{currentThresholdRounded}}
-                    <div style="padding: 5px 0px;">
+                    <div class="newthersholddiv" style="">
                         <label>New threshold:</label>
                         <input type="text" 
                             ng-model="newthres"
                             class="form-control input-sm" 
                             aria-describedby="enter new threshold" 
-                            style="width:50px; display:inline-block">
+                            style="width:50px; display:inline-block;"></input>
                     </div>
                     <button class="btn btn-default" ng-click="recalculate()">
                         Recalculate
@@ -226,7 +245,7 @@
                     <button class="btn btn-default" ng-click="saveThreshold()">
                         Save current threshold
                     </button>
-                    <small>{{messageSaved}}</small>
+                    <p><small>{{messageSaved}}</small></p>
             </div>
             <div class="model-info-column" >
                 <strong>Statistics</strong>

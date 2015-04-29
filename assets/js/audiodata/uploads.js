@@ -25,16 +25,32 @@ angular.module('audiodata.uploads', [
     
     $scope.verifyAndUpload = function() {
         
-        angular.forEach($scope.uploader.queue, function(item) {
+        var index = 0;
+        $scope.uploading = true;
+        
+        
+        var _verifyAndUpload = function() {
+            var item = $scope.uploader.queue[index];
+            
+            var next = function() {
+                index++;
+                _verifyAndUpload();
+            };
+            
+            if(!item || !$scope.uploading){
+                $scope.uploading = false;
+                return;
+            }
+            
+            if(item.isSuccess) // file uploaded on current batch
+                return next();
             
             Project.recExists($scope.info.site.id, item.file.name.split('.')[0], function(exists) {
-                if(item.isSuccess) // file uploaded on current batch
-                    return;
                 
                 if(exists) {
                     console.log('duplicated');
                     item.isDuplicate = true;
-                    return;
+                    return next();
                 }
                 
                 item.formData.push({ 
@@ -50,12 +66,22 @@ angular.module('audiodata.uploads', [
                             '&nameformat=' + $scope.info.format.name;
                 
                 item.upload();
+                item.onSuccess = next;
+                item.onError = next;
             });
-
-        });
-
+        };
+        
+        _verifyAndUpload();
     };
       
+    
+    $scope.stopQueue = function() {
+        $scope.uploading = false;
+        angular.forEach($scope.uploader.queue, function(item) { 
+            item.cancel();
+        });
+    };
+    
     $scope.batchInfo = function() {
         var modalInstance = $modal.open({
             templateUrl: '/partials/audiodata/batch-info.html',
