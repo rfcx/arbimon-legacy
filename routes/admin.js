@@ -30,12 +30,9 @@ router.get('/job-queue', function(req, res, next) {
         .pipe(res);
 });
 
-router.get('/active-jobs', function(req, res, next) {
-    model.jobs.activeJobs(function(err, rows) {
-        if(err) return next(err);
-        
-        res.json(rows);
-    });
+router.get('/jobs', function(req, res, next) {
+    console.dir(req.query);
+    res.json(req.query);
 });
 
 router.get('/projects', function(req, res, next) {

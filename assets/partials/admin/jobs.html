@@ -4,21 +4,42 @@
             <div class="panel-heading">
                 Active jobs
             </div>                    
-            <div>
-                States:
-                <ul class="list-inline">
-                    <li ng-repeat="(state, obj) in states">
-                        <label ng-style="{color:obj.color}"><input ng-model="obj.show" type="checkbox">{{state}}</label>
-                    </li>
-                </ul>
-            </div>
-            <div>
-                Types:
-                <ul class="list-inline">
-                    <li ng-repeat="type in job_types">
-                        <label><input ng-model="show[type.id]" type="checkbox">{{type.name}}</label>
-                    </li>
-                </ul>
+            <div class="panel-body">
+                <div class="a2-filter-row">
+                    <div class="a2-filter" style="width: 121px;">
+                        <ui-select multiple ng-model="params.states" theme="bootstrap">
+                            <ui-select-match placeholder="Status">{{$item.name}}</ui-select-match>
+                            <ui-select-choices repeat="state in states | filter:$select.search">
+                                {{ state.name }}
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                    <div class="a2-filter" style="width: 186px;">
+                        <ui-select multiple ng-model="params.types" theme="bootstrap">
+                            <ui-select-match placeholder="Type">{{ $item.name }}</ui-select-match>
+                            <ui-select-choices repeat="type in job_types | filter:$select.search">
+                                {{ type.name }}
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                    <div class="a2-filter">
+                        <input placeholder="Search key:'value'" 
+                            style="display:inline-block;"
+                            class="form-control"
+                            ng-model="params.search">
+                    </div>
+                    <div class="a2-filter">
+                        <div class="btn-group">
+                            <button class="btn btn-default"
+                                ng-click="findJobs()">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            <button class="btn btn-default">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- {{activeJobs}} -->
             <table class="table">

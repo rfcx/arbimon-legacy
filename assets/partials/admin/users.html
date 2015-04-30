@@ -1,5 +1,10 @@
 <div class="row" style="margin-top:10px;">
-    <div class="col-sm-12">
+    <div class="col-sm-4">
+        <ul class="list-group">
+            <li class="list-group-item" ng-repeat="u in users">{{ u.username }}</li>
+        </ul>
+    </div>
+    <div class="col-sm-8">
         <div class="btn-toolbar" role="toolbar">
             <div class="btn-group" role="group">
                 <button class="btn btn-default">
@@ -8,12 +13,5 @@
                 </button>
             </div>
         </div>
-    </div>
-</div>
-<div class="row">
-    <div class="col-sm-4">
-        <ul class="list-group">
-            <li class="list-group-item" ng-repeat="u in users">{{ u.username }}</li>
-        </ul>
     </div>
 </div>

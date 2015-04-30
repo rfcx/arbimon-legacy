@@ -3,7 +3,8 @@ angular.module('admin', [
     'ui.bootstrap', 
     'a2utils',
     'templates-arbimon2',
-    'humane'
+    'humane',
+    'ui.select',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/projects");
@@ -34,15 +35,80 @@ angular.module('admin', [
             });
     };
     
-    var getActiveJobs = function(argument) {
-        $http.get('/admin/active-jobs')
+    $scope.findJobs = function() {
+        
+        var query = {};
+        var getTags = /(\w+):["'](.+)["']|(\w+):([\w\-]+)/g;
+        
+        // iterate over getTags results
+        $scope.params.search.replace(getTags, function(match, key1, value1, key2, value2) {
+            // key1 matches (\w+):["'](.+)["']
+            // key2 matches (\w+):([\w\-]+)
+            
+            var key = key1 ? key1 : key2;
+            var value = value1 ? value1 : value2;
+            
+            if(!query[key]) 
+                query[key] = [];
+            
+            query[key].push(value);
+        });
+        
+        console.log($scope.params.search);
+        console.table(query);
+        
+        $http.get('/admin/jobs', {
+                params: query
+            })
             .success(function(data) {
-                $scope.activeJobs = data;
+                // $scope.activeJobs = data;
+                console.log(query);
             });
     };
     
+    $scope.params = {};
+    $scope.job_types = [];
+    $scope.states = [
+        {
+            name: 'waiting',
+            color: 'black',
+            show: true
+        },
+        {
+            name: 'initializing',
+            color: 'blue',
+            show: true
+        },
+        {
+            name: 'ready',
+            color: '#007777',
+            show: true
+        },
+        {
+            name: 'processing',
+            color: 'olive',
+            show: true
+        },
+        {
+            name: 'completed',
+            color: 'green',
+            show: false
+        },
+        {
+            name: 'error',
+            color: 'red',
+            show: true
+        },
+        {
+            name: 'canceled',
+            color: 'gray',
+            show: false
+        },
+    ];
+    
     getJobQueueInfo();
-    getActiveJobs();
+    // findJobs();
+    
     
     $http.get('/api/job/types')
         .success(function(jobTypes) {
@@ -52,6 +118,7 @@ angular.module('admin', [
             $scope.colors = {};
             
             for(var i = 0; i < jobTypes.length; i++) {
+                
                 var t = jobTypes[i];
                 $scope.show[t.id] = true;
                 $scope.colors[t.id] = colors[i % colors.length];
@@ -60,49 +127,20 @@ angular.module('admin', [
             $scope.job_types = jobTypes;
         });
     
-    $scope.states = {
-        waiting: {
-            color: 'black',
-            show: true
-        },
-        initializing: {
-            color: 'blue',
-            show: true
-        },
-        ready: {
-            color: '#007777',
-            show: true
-        },
-        processing: {
-            color: 'olive',
-            show: true
-        },
-        completed: {
-            color: 'green',
-            show: false
-        },
-        error: {
-            color: 'red',
-            show: true
-        },
-        canceled: {
-            color: 'gray',
-            show: false
-        },
-    };
 
+    
     $scope.queueLoop = $interval(function() {
         getJobQueueInfo();
     }, 5000);
-    
-    $scope.jobsLoop = $interval(function() {
-        getActiveJobs();
-    }, 5000);
+    // 
+    // $scope.jobsLoop = $interval(function() {
+    //     findJobs();
+    // }, 5000);
     
     // kill loops after page is exited
     $scope.$on('$destroy', function() {
         $interval.cancel($scope.queueLoop);
-        $interval.cancel($scope.jobsLoop);
+        // $interval.cancel($scope.jobsLoop);
     });
 })
 .controller('AdminProjectsCtrl', function($scope, $http, notify) {

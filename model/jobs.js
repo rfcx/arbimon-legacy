@@ -242,7 +242,8 @@ var Jobs = {
         if(query instanceof Function){
             callback = query;
             query = null;
-        } else if(options instanceof Function){
+        } 
+        else if(options instanceof Function){
             callback = options;
             options = null;
         }
@@ -295,7 +296,8 @@ var Jobs = {
         
         if(options.id_only){
             projection = ['J.job_id as id'];
-        } else {
+        } 
+        else {
             projection = [
                 'J.job_id as id', 'J.job_type_id as type_id', 'J.date_created', 'J.last_update', 
                 'J.project_id as project', 'J.user_id as user', 'J.uri', 'J.state', 'J.cancel_requested', 'J.progress', 
@@ -308,20 +310,18 @@ var Jobs = {
             }
         }
 
+        var q = "SELECT "+projection.join(",")+" \n" +
+                "FROM `jobs` J" + 
+                (tables.length ? "\n"+tables.join('\n') : '') + 
+                (constraints.length ? "\nWHERE " + constraints.join("\n  AND ") : "") +
+                limit_clause;
         
-        queryHandler(
-            "SELECT "+projection.join(",")+" \n" +
-            "FROM `jobs` J" + 
-            (tables.length ? "\n"+tables.join('\n') : '') + 
-            (constraints.length ? "\nWHERE " + constraints.join("\n  AND ") : "") +
-            limit_clause,
-            function(err, rows){
-            if(err){
-                callback(err);
-                return;
-            }
+        
+        queryHandler(q, function(err, rows){
+            if(err) return callback(err);
+            
             if(options.unpack_single){
-                debug("if(options.unpack_single){");
+                debug("options.unpack_single");
                 var cb = callback;
                 callback = function(err, rows){
                     debug("callback = function(err, rows){");
@@ -333,12 +333,13 @@ var Jobs = {
                 };
             }
             if(options.compute){
-                debug("if(options.compute){");
+                debug("options.compute");
                 arrays_util.compute_row_properties(rows, options.compute, function(property){
                     debug("arrays_util.compute_row_properties(rows, options.compute, function(property){");
                     return Jobs['__compute_' + property.replace(/-/g,'_')];
                 }, callback);
-            } else {
+            } 
+            else {
                 callback(null, rows);
             }                           
         });
@@ -376,3 +377,11 @@ var Jobs = {
 };
 
 module.exports = Jobs;
+
+
+Jobs.find(function(err, rows) {
+    if(err) return console.error(err);
+    
+    console.dir(rows);
+    
+});
