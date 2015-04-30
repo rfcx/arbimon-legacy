@@ -7,6 +7,7 @@ var child_process = require('child_process');
 var scidx        = require('../utils/scidx');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
+var arrays       = require('../utils/arrays');
 var config       = require('../config');
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
@@ -326,15 +327,7 @@ var Soundscapes = {
                 next(null, scidx.flatten());
             },
             function random_sort_and_sample(idx_recs, next){
-                var e = idx_recs.length, e_1 = e-1;
-                count = Math.min(idx_recs.length, count);
-                for(var i = 0; i < count; ++i, --e){
-                    var j = i + (Math.random(e) | 0) % e;
-                    var t = idx_recs[i];
-                    idx_recs[j] = idx_recs[i];
-                    idx_recs[i] = t;
-                }
-                recordings = idx_recs.slice(0, count);
+                recordings = arrays.sample_without_replacement(idx_recs, count);
                 next();
             },            
             dbpool.getConnection,
