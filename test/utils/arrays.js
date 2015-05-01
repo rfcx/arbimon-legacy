@@ -142,4 +142,30 @@ describe('arrays', function(){
             arrays.group_rows_by(rowset, false).should.equal(rowset);
         });
     });
+    describe('sample_without_replacement', function(){
+        it('Should return a sample of the given array.', function(){
+            var array=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29];
+            var result = arrays.sample_without_replacement(array, 10);
+            should.exist(result);
+        });
+        it('Sample should be of requested size.', function(){
+            var array=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29];
+            var result = arrays.sample_without_replacement(array, 10);
+            result.length.should.equal(10);
+        });
+        it('Items should not be repeated.', function(){
+            var array=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29];
+            var result = arrays.sample_without_replacement(array, 10);
+            should.exist(result);
+            var k={};
+            result.forEach(function(item){ should.not.exist(k[item]); k[item]=1;});
+        });
+        it('Sample should be a subset of the given array.', function(){
+            var array=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29];
+            var result = arrays.sample_without_replacement(array, 10);
+            result.forEach(function(item){ array.should.contain(item); });
+            
+        });
+    });
+
 });

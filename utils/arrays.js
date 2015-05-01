@@ -33,6 +33,19 @@ module.exports = {
         });
     },
 
+    sample_without_replacement: function(array, count){
+        var copy = array.slice();
+        var results = [];
+        if(count > array.length){
+            throw new Error("count > array.length");
+        }
+        for(var i=0; i < count; ++i){
+            j = ((Math.random() * copy.length) | 0) % copy.length;
+            results.push(copy.splice(j, 1)[0]);
+        }
+        return results;
+    },
+
     /** Groups a set of row by a set of given attributes.
      * @param {Array} rows set of rows to group by
      * @param {Array} grouping_attribs array of attributes on wich to group the rows by.
