@@ -238,27 +238,76 @@ var Jobs = {
      *                            - per_type_data : data that depends on the job type
      * @param {Function} callback called back with the queried results.
      */
-    find: function(query, options, callback) {
+    find: function(query, callback) {
         if(query instanceof Function){
             callback = query;
-            query = null;
-        } 
-        else if(options instanceof Function){
-            callback = options;
-            options = null;
-        }
-        
-        if(!query){
             query = {};
         }
-        if(!options){
-            options = {};
+        
+        debug(query);
+        
+        var q = "SELECT j.job_id, \n"+
+                "       j.progress, \n"+
+                "       j.progress_steps, \n"+
+                "       j.state, \n"+
+                "       j.completed, \n"+
+                "       u.login as user, \n"+
+                "       p.name as project, \n"+
+                "       j.project_id, \n"+
+                "       j.date_created AS created, \n"+
+                "       j.last_update, \n"+
+                "       jt.name as type, \n"+
+                "       j.hidden, \n"+
+                "       j.remarks, \n"+
+                "       j.cancel_requested \n"+
+                "FROM jobs AS j \n"+
+                "JOIN users AS u ON j.user_id = u.user_id \n"+
+                "JOIN projects AS p ON j.project_id = p.project_id \n"+
+                "JOIN job_types AS jt ON j.job_type_id = jt.job_type_id \n"+
+                "WHERE ";
+        
+        var where = [];
+        
+        if(query.is) {
+            if(query.is === "visible") {
+                where.push('j.hidden = 0');
+            }
+            else if(query.is === "hidden") {
+                where.push('j.hidden = 1');
+            }
         }
         
+        if(query.states) {
+            where.push('j.state IN ('+ mysql.escape(query.states)+')');
+        }
+        
+        if(query.types) {
+            where.push('j.job_type_id IN ('+ mysql.escape(query.types)+')');
+        }
+        
+        if(query.project_id) {
+            where.push('j.project_id IN ('+ mysql.escape(query.project_id)+')');
+        }
+        
+        if(query.user_id) {
+            where.push('j.user_id IN ('+ mysql.escape(query.user_id)+')');
+        }
+        
+        
+        if(where.length) {
+            q += where.join(' \nAND ');
+        }
+        else {
+            q += '1';
+        }
+        
+        queryHandler(q, callback);
+        
+        /*
         var constraints = [], tables = [];
         var projection;
         var limit_clause="";
-
+        
         if(query.id){
             constraints.push(sqlutil.escape_compare("J.job_id", "IN",  query.id));
         }
@@ -310,7 +359,7 @@ var Jobs = {
             }
         }
 
-        var q = "SELECT "+projection.join(",")+" \n" +
+        var q = "SELECT " + projection.join(",") + " \n" +
                 "FROM `jobs` J" + 
                 (tables.length ? "\n"+tables.join('\n') : '') + 
                 (constraints.length ? "\nWHERE " + constraints.join("\n  AND ") : "") +
@@ -320,18 +369,18 @@ var Jobs = {
         queryHandler(q, function(err, rows){
             if(err) return callback(err);
             
-            if(options.unpack_single){
-                debug("options.unpack_single");
-                var cb = callback;
-                callback = function(err, rows){
-                    debug("callback = function(err, rows){");
-                    if(err){
-                        cb(err);
-                        return;
-                    }
-                    cb(null, rows.length == 1 ? rows[0] : rows);
-                };
-            }
+            // if(options.unpack_single){
+            //     debug("options.unpack_single");
+            //     var cb = callback;
+            //     callback = function(err, rows){
+            //         debug("callback = function(err, rows){");
+            //         if(err){
+            //             cb(err);
+            //             return;
+            //         }
+            //         cb(null, rows.length == 1 ? rows[0] : rows);
+            //     };
+            // }
             if(options.compute){
                 debug("options.compute");
                 arrays_util.compute_row_properties(rows, options.compute, function(property){
@@ -343,7 +392,7 @@ var Jobs = {
                 callback(null, rows);
             }                           
         });
-
+        */
     },
     
     set_job_state: function(job, new_state, callback){

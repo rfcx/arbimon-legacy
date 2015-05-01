@@ -1,9 +1,9 @@
 <div class="row" style="margin-top:10px;">
-    <div class="col-sm-7">
+    <div class="col-sm-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                Active jobs
-            </div>                    
+                Jobs
+            </div>
             <div class="panel-body">
                 <div class="a2-filter-row">
                     <div class="a2-filter" style="width: 121px;">
@@ -46,49 +46,43 @@
                 <thead>
                     <tr>
                         <th>id</th>
-                        <th>Name</th>
-                        <th>Status</th>
                         <th>Type</th>
-                        <th>Last Update</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                        <th>%</th>
+                        <th>Created on</th>
+                        <th>Last update</th>
                     </tr>
                 <thead>
                 <tbody>
-                    <tr ng-repeat="job in activeJobs" ng-show="show[job.job_type_id] && states[job.state].show">
+                    <tr ng-repeat="job in activeJobs">
                         <td>{{job.job_id }}</td>
                         <td>
                             <i class="fa fa-circle" 
-                                ng-style="{color : colors[job.job_type_id]}"
+                                ng-style="{color : colors[job.type]}"
                                 tooltip="{{job.type}}" 
                                 tooltip-append-to-body="true">
                             </i>
-                            {{ job.name }}
+                            {{ job.type }}
                         </td>
                         <td>
                             <div ng-hide="job.state == 'processing' && job.percentage" 
                                 ng-style="{color: states[job.state].color}" >
                                 {{job.state}}
                             </div>
-                            <div ng-show="job.state == 'processing' && job.percentage">
-                                <div class="progress progress-striped active"> 
-                                 <div ng-style="{'background-color':colors[job.job_type_id], width : ( job.percentage + '%' ) }" 
-                                    aria-valuemax="100" 
-                                    aria-valuemin="0" 
-                                    aria-valuenow="{{job.percentage}}" 
-                                    role="progressbar" 
-                                    class="progress-bar">
-                                    {{job.percentage}}%
-                                 </div>
-                                </div>
-                            </div>
                         </td>
-                        <td>{{job.type}}</td>
+                        <td>
+                            {{ job.progress }}/{{ job.progress_steps }}
+                        </td>
+                        <td>{{ (job.progress/job.progress_steps)*100 | number }}%</td>
+                        <td>{{ job.created | moment : 'lll' }}</td>
                         <td>{{ job.last_update | moment : 'lll' }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
-    <div class="col-sm-5">
+    <!-- <div class="col-sm-5">
         <div class="panel panel-default">
             <div class="panel-heading">
                 JobsQueue
@@ -97,5 +91,5 @@
                 <li class="list-group-item" ng-repeat="(param, val) in jobsStatus">{{tr[param] || param}}: {{ val }}</li>
             </ul>
         </div>
-    </div>
+    </div> -->
 </div>

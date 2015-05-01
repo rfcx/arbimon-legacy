@@ -36,37 +36,51 @@ angular.module('admin', [
     };
     
     $scope.findJobs = function() {
-        
+        console.log('findJobs');
         var query = {};
         var getTags = /(\w+):["'](.+)["']|(\w+):([\w\-]+)/g;
         
-        // iterate over getTags results
-        $scope.params.search.replace(getTags, function(match, key1, value1, key2, value2) {
-            // key1 matches (\w+):["'](.+)["']
-            // key2 matches (\w+):([\w\-]+)
-            
-            var key = key1 ? key1 : key2;
-            var value = value1 ? value1 : value2;
-            
-            if(!query[key]) 
-                query[key] = [];
-            
-            query[key].push(value);
-        });
+        if($scope.params.search) {
+            // iterate over getTags results
+            $scope.params.search.replace(getTags, function(match, key1, value1, key2, value2) {
+                // key1 matches (\w+):["'](.+)["']
+                // key2 matches (\w+):([\w\-]+)
+                
+                var key = key1 ? key1 : key2;
+                var value = value1 ? value1 : value2;
+                
+                if(!query[key]) 
+                    query[key] = [];
+                
+                query[key].push(value);
+            });
+        }
         
-        console.log($scope.params.search);
+        if($scope.params.states) {
+            query.states = $scope.params.states.map(function(s) { return s.name; });
+        }
+        if($scope.params.types) {
+            query.types = $scope.params.types.map(function(t) { return t.id; });
+        } 
+        
         console.table(query);
         
         $http.get('/admin/jobs', {
                 params: query
             })
             .success(function(data) {
-                // $scope.activeJobs = data;
-                console.log(query);
+                $scope.activeJobs = data;
+                // console.log(query);
             });
     };
     
-    $scope.params = {};
+    $scope.initParams = function() {
+        $scope.params = {
+            search: "is:visible "
+        };
+    };
+    
+    
     $scope.job_types = [];
     $scope.states = [
         {
@@ -104,44 +118,48 @@ angular.module('admin', [
             color: 'gray',
             show: false
         },
+        {
+            name: 'stalled',
+            color: 'gray',
+            show: false
+        },
     ];
     
+    $scope.initParams();
     getJobQueueInfo();
-    // findJobs();
     
     
     $http.get('/api/job/types')
         .success(function(jobTypes) {
             var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528'];
             
-            $scope.show = {};
             $scope.colors = {};
             
             for(var i = 0; i < jobTypes.length; i++) {
                 
                 var t = jobTypes[i];
-                $scope.show[t.id] = true;
-                $scope.colors[t.id] = colors[i % colors.length];
+                $scope.colors[t.name] = colors[i % colors.length];
             }
             
             $scope.job_types = jobTypes;
         });
     
 
+    $scope.findJobs();
     
-    $scope.queueLoop = $interval(function() {
-        getJobQueueInfo();
-    }, 5000);
+    // $scope.queueLoop = $interval(function() {
+    //     getJobQueueInfo();
+    // }, 5000);
     // 
     // $scope.jobsLoop = $interval(function() {
     //     findJobs();
     // }, 5000);
     
     // kill loops after page is exited
-    $scope.$on('$destroy', function() {
-        $interval.cancel($scope.queueLoop);
-        // $interval.cancel($scope.jobsLoop);
-    });
+    // $scope.$on('$destroy', function() {
+    //     $interval.cancel($scope.queueLoop);
+    //     // $interval.cancel($scope.jobsLoop);
+    // });
 })
 .controller('AdminProjectsCtrl', function($scope, $http, notify) {
     $scope.loadProject = function() {

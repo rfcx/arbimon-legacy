@@ -31,8 +31,11 @@ router.get('/job-queue', function(req, res, next) {
 });
 
 router.get('/jobs', function(req, res, next) {
-    console.dir(req.query);
-    res.json(req.query);
+    model.jobs.find(req.query, function(err, jobs) {
+        if(err) return next(err);
+        
+        res.json(jobs);
+    });
 });
 
 router.get('/projects', function(req, res, next) {
