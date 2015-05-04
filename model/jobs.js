@@ -2,11 +2,11 @@ var util = require('util');
 var mysql = require('mysql');
 var async = require('async');
 var debug = require('debug')('arbimon2:models:jobs');
-var validator = require('validator');
+var joi   = require('joi');
+
 var dbpool = require('../utils/dbpool');
 var sqlutil = require('../utils/sqlutil');
 var arrays_util  = require('../utils/arrays');
-
 var queryHandler = dbpool.queryHandler;
 
 var Jobs = {
@@ -244,8 +244,6 @@ var Jobs = {
             query = {};
         }
         
-        debug(query);
-        
         var q = "SELECT j.job_id, \n"+
                 "       j.progress, \n"+
                 "       j.progress_steps, \n"+
@@ -263,17 +261,23 @@ var Jobs = {
                 "FROM jobs AS j \n"+
                 "JOIN users AS u ON j.user_id = u.user_id \n"+
                 "JOIN projects AS p ON j.project_id = p.project_id \n"+
-                "JOIN job_types AS jt ON j.job_type_id = jt.job_type_id \n"+
-                "WHERE ";
+                "JOIN job_types AS jt ON j.job_type_id = jt.job_type_id \n";
+                
         
         var where = [];
         
+        if(typeof query.is === 'string') {
+            query.is = [query.is];
+        }
         if(query.is) {
-            if(query.is === "visible") {
+            if(query.is.indexOf('visible') > -1) {
                 where.push('j.hidden = 0');
             }
-            else if(query.is === "hidden") {
+            if(query.is.indexOf('hidden') >  -1) {
                 where.push('j.hidden = 1');
+            }
+            if(query.is.indexOf('completed') > -1) {
+                where.push('j.completed = 1');
             }
         }
         
@@ -293,106 +297,21 @@ var Jobs = {
             where.push('j.user_id IN ('+ mysql.escape(query.user_id)+')');
         }
         
+        if(query.project) {
+            where.push('p.name IN ('+ mysql.escape(query.project)+')');
+        }
+        
+        if(query.user) {
+            where.push('u.login IN ('+ mysql.escape(query.user)+')');
+        }
+        
         
         if(where.length) {
-            q += where.join(' \nAND ');
-        }
-        else {
-            q += '1';
+            q += "WHERE " + where.join(' \nAND ');
         }
         
         queryHandler(q, callback);
         
-        /*
-        var constraints = [], tables = [];
-        var projection;
-        var limit_clause="";
-        
-        if(query.id){
-            constraints.push(sqlutil.escape_compare("J.job_id", "IN",  query.id));
-        }
-        if(query.type){
-            if(!(query.type instanceof Array)){
-                query.type = [query.type];
-            }
-            var type_ids = query.type.map(function(type){
-                return /^\d+$/.test(type) ? type : (Jobs.job_types[type] ? Jobs.job_types[type].type_id : undefined);
-            });
-            constraints.push(sqlutil.escape_compare("J.job_type_id", "IN",  type_ids));
-        }
-        if(query.user){
-            constraints.push(sqlutil.escape_compare("J.user_id", "IN",  query.user));
-        }
-        if(query.state){
-            constraints.push(sqlutil.escape_compare("J.state", "IN",  query.state));
-        }
-        if(query.hidden){
-            constraints.push(sqlutil.escape_compare("J.hidden", "IN",  query.hidden));
-        }
-        if(query.project){
-            constraints.push(sqlutil.escape_compare("J.project_id", "IN",  query.project));
-        }
-        if(query.completed){
-            constraints.push(sqlutil.escape_compare("J.completed", "IN",  query.completed));
-        }
-        if(query.limit){
-            var limit = query.limit;
-            if(typeof limit != "object"){
-                limit = {count:limit};
-            }
-            limit_clause = "\nLIMIT " + (limit.count|0) + (limit.offset ? " OFFSET " + (limit.offset|0) : "");
-        }        
-        
-        if(options.id_only){
-            projection = ['J.job_id as id'];
-        } 
-        else {
-            projection = [
-                'J.job_id as id', 'J.job_type_id as type_id', 'J.date_created', 'J.last_update', 
-                'J.project_id as project', 'J.user_id as user', 'J.uri', 'J.state', 'J.cancel_requested', 'J.progress', 
-                'J.completed', 'J.remarks', 'J.progress_steps', 'J.hidden'
-            ];
-            projection.push('JT.identifier as type');
-            tables.push('JOIN job_types JT ON J.job_type_id = JT.job_type_id');
-            if(options.script){
-                projection.push('JT.script');
-            }
-        }
-
-        var q = "SELECT " + projection.join(",") + " \n" +
-                "FROM `jobs` J" + 
-                (tables.length ? "\n"+tables.join('\n') : '') + 
-                (constraints.length ? "\nWHERE " + constraints.join("\n  AND ") : "") +
-                limit_clause;
-        
-        
-        queryHandler(q, function(err, rows){
-            if(err) return callback(err);
-            
-            // if(options.unpack_single){
-            //     debug("options.unpack_single");
-            //     var cb = callback;
-            //     callback = function(err, rows){
-            //         debug("callback = function(err, rows){");
-            //         if(err){
-            //             cb(err);
-            //             return;
-            //         }
-            //         cb(null, rows.length == 1 ? rows[0] : rows);
-            //     };
-            // }
-            if(options.compute){
-                debug("options.compute");
-                arrays_util.compute_row_properties(rows, options.compute, function(property){
-                    debug("arrays_util.compute_row_properties(rows, options.compute, function(property){");
-                    return Jobs['__compute_' + property.replace(/-/g,'_')];
-                }, callback);
-            } 
-            else {
-                callback(null, rows);
-            }                           
-        });
-        */
     },
     
     set_job_state: function(job, new_state, callback){
@@ -426,11 +345,3 @@ var Jobs = {
 };
 
 module.exports = Jobs;
-
-
-Jobs.find(function(err, rows) {
-    if(err) return console.error(err);
-    
-    console.dir(rows);
-    
-});

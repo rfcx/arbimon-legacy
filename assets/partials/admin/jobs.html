@@ -5,57 +5,58 @@
                 Jobs
             </div>
             <div class="panel-body">
-                <div class="a2-filter-row">
-                    <div class="a2-filter" style="width: 121px;">
-                        <ui-select multiple ng-model="params.states" theme="bootstrap">
-                            <ui-select-match placeholder="Status">{{$item.name}}</ui-select-match>
-                            <ui-select-choices repeat="state in states | filter:$select.search">
-                                {{ state.name }}
-                            </ui-select-choices>
-                        </ui-select>
-                    </div>
-                    <div class="a2-filter" style="width: 186px;">
-                        <ui-select multiple ng-model="params.types" theme="bootstrap">
-                            <ui-select-match placeholder="Type">{{ $item.name }}</ui-select-match>
-                            <ui-select-choices repeat="type in job_types | filter:$select.search">
-                                {{ type.name }}
-                            </ui-select-choices>
-                        </ui-select>
-                    </div>
-                    <div class="a2-filter">
-                        <input placeholder="Search key:'value'" 
-                            style="display:inline-block;"
-                            class="form-control"
-                            ng-model="params.search">
-                    </div>
-                    <div class="a2-filter">
-                        <div class="btn-group">
-                            <button class="btn btn-default"
-                                ng-click="findJobs()">
-                                <i class="fa fa-search"></i>
-                            </button>
-                            <button class="btn btn-default">
-                                <i class="fa fa-times"></i>
-                            </button>
+                <form ng-submit="findJobs()">
+                        <div class="col-sm-3">
+                            <ui-select multiple ng-model="params.states" theme="bootstrap">
+                                <ui-select-match placeholder="Status">{{$item.name}}</ui-select-match>
+                                <ui-select-choices repeat="state in states | filter:$select.search">
+                                    {{ state.name }}
+                                </ui-select-choices>
+                            </ui-select>
                         </div>
-                    </div>
-                </div>
+                        <div class="col-sm-3">
+                            <ui-select multiple ng-model="params.types" theme="bootstrap">
+                                <ui-select-match placeholder="Type">{{ $item.name }}</ui-select-match>
+                                <ui-select-choices repeat="type in job_types | filter:$select.search">
+                                    {{ type.name }}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                        <div class="col-sm-4">
+                            <input placeholder="Search key:'value'" 
+                                style="display:inline-block;"
+                                class="form-control"
+                                ng-model="params.search">
+                        </div>
+                        <div class="col-sm-2">
+                            <div class="btn-group">
+                                <button type="submit" class="btn btn-default">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                                <button class="btn btn-default"
+                                    ng-click="initParams()">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                </form>
             </div>
             <!-- {{activeJobs}} -->
             <table class="table">
                 <thead>
                     <tr>
+                        <th>Project</th>
                         <th>id</th>
                         <th>Type</th>
                         <th>Status</th>
                         <th>Progress</th>
-                        <th>%</th>
                         <th>Created on</th>
                         <th>Last update</th>
                     </tr>
                 <thead>
                 <tbody>
                     <tr ng-repeat="job in activeJobs">
+                        <td>{{job.project }} (#{{job.project_id }})</td>
                         <td>{{job.job_id }}</td>
                         <td>
                             <i class="fa fa-circle" 
@@ -70,9 +71,6 @@
                                 ng-style="{color: states[job.state].color}" >
                                 {{job.state}}
                             </div>
-                        </td>
-                        <td>
-                            {{ job.progress }}/{{ job.progress_steps }}
                         </td>
                         <td>{{ (job.progress/job.progress_steps)*100 | number }}%</td>
                         <td>{{ job.created | moment : 'lll' }}</td>
