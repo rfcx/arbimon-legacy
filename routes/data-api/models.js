@@ -36,14 +36,16 @@ router.get('/project/:projectUrl/classifications', function(req, res, next) {
 
 
 router.get('/project/:projectUrl/classification/:cid', function(req, res, next) {
-    model.projects.classificationErrors(req.params.projectUrl, req.params.cid, function(err, rowsRecs) {
+    model.projects.classificationErrorsCount(req.params.projectUrl, req.params.cid, function(err, rowsRecs) {
         if(err) return next(err);
-
+        
         rowsRecs =  rowsRecs[0];
 
         model.projects.classificationDetail(req.params.projectUrl, req.params.cid, function(err, rows) {
             if(err) return next(err);
 
+            console.log(rows);
+            
             var i = 0;
             var data = [];
             var total = [];
@@ -558,7 +560,7 @@ router.get('/project/classification/csv/:cid', function(req, res) {
                            thisrow.scientific_name+'","'+ thisrow.songtype+'"');
                 }
                 res.send(data.join("\n"));
-/*
+                /*
                 async.eachLimit(row ,5,
                     function(thisrow,callback)
                     {
@@ -607,8 +609,6 @@ router.get('/project/classification/csv/:cid', function(req, res) {
 
 
 });
-
-
 
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
     var response_already_sent;

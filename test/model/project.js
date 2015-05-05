@@ -890,13 +890,13 @@ describe('Project', function(){
             });
         });
     });
-    describe('classificationErrors', function(){
+    describe('classificationErrorsCount', function(){
          
         it('Should return the errors of a classification given its id.', function(done){
             dbpool.pool.cache[
                 "select count(*) as count  from  `recordings_errors`  where `job_id` = 1"
             ]={value:[{count:1}]};
-            projects.classificationErrors('/project_1/', 1, function(err, results){
+            projects.classificationErrorsCount('/project_1/', 1, function(err, results){
                 should.not.exist(err);
                 results.should.deep.equal([{count:1}]);
                 done();
