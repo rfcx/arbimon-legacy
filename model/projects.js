@@ -638,16 +638,12 @@ var Projects = {
                 "           SUBSTRING(s.`scientific_name`, 2) \n"+
                 "       ) as scientific_name \n"+
                 "FROM `classification_stats`  cs , \n"+
-                "     `models` m , \n"+
-                "     `job_params_classification` jpc, \n"+
                 "     `recordings` r, \n"+
                 "     `classification_results` c, \n"+
                 "     `species` as s , \n"+
                 "     `songtypes` as st \n"+
                 "WHERE c.`job_id` = " + mysql.escape(cid) +
                 "AND c.`job_id` = cs.`job_id` \n"+
-                "AND m.`model_id` = jpc.`model_id` \n"+
-                "AND jpc.`job_id` = c.`job_id` \n"+
                 "AND c.`species_id` = s.`species_id` \n"+
                 "AND c.`songtype_id` = st.`songtype_id` \n"+
                 "AND r.`recording_id` = c.`recording_id` \n"+
