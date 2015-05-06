@@ -402,6 +402,7 @@ var Projects = {
         queryHandler(q, callback);
     },
     
+    // TODO move classification method to its own model file
     classificationName: function(cid, callback) {
         var q = "select  REPLACE(lower(c.`name`),' ','_')  as name , j.`project_id` as pid  "+
                 " from   `job_params_classification`  c , `jobs` j where c.`job_id` = j.`job_id` and c.`job_id` = "+mysql.escape(cid);
@@ -651,6 +652,27 @@ var Projects = {
                 "AND c.`songtype_id` = st.`songtype_id` \n"+
                 "AND r.`recording_id` = c.`recording_id` \n"+
                 "ORDER BY present DESC LIMIT " + parseInt(from) + "," + parseInt(total);
+        
+        queryHandler(q, callback);
+    },
+    
+    classificationVector: function(c12nId, recId, callback) {
+        var q = "SELECT CONCAT( \n"+
+                "           SUBSTRING_INDEX(m.uri, '.', 1), \n"+
+                "           '/classification_', \n"+
+                "           cr.job_id, \n"+
+                "           '_', \n"+
+                "           SUBSTRING_INDEX(r.uri, '/', -1), \n"+
+                "           '.vector' \n"+
+                "       ) as vect \n"+
+                "FROM classification_results AS cr \n"+
+                "JOIN job_params_classification AS jpc ON jpc.job_id = cr.job_id \n"+
+                "JOIN models AS m ON m.model_id = jpc.model_id \n"+
+                "JOIN recordings AS r ON r.recording_id = cr.recording_id \n"+
+                "WHERE cr.job_id = ? \n"+
+                "AND r.recording_id = ? ";
+        
+        q = mysql.format(q, [c12nId, recId, callback]);
         
         queryHandler(q, callback);
     },

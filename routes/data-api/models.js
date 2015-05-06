@@ -495,20 +495,41 @@ router.get('/project/:projectUrl/job/cancel/:jId', function(req, res) {
     });
 });
 
-router.post('/project/:projectUrl/classification/vector', function(req, res, next) {
-
-    s3.getObject({
-        Key: req.body.v,
-        Bucket: config('aws').bucketName
-    },
-    function(err, data){
-        if (err) {        
-            if(err.code == 'NoSuchKey'){
-                return res.json({ err:'vector-not-found' });
+router.get('/project/:projectUrl/classification/:cid/vector/:recId', function(req, res, next) {
+    
+    if(!req.params.cid || !req.params.recId) {
+        return res.status(400).json({ error: 'missing parameters'});
+    }
+    
+    model.projects.classificationVector(req.params.cid, req.params.recId, function(err, rows) {
+        if(err) return next(err);
+        
+        if(!rows.length) return res.status(404).json({ error: 'data not found'});
+        
+        var vectorUri = rows[0].vect;
+        
+        s3.getObject({
+            Key: vectorUri,
+            Bucket: config('aws').bucketName
+        },
+        function(err, data){
+            if(err) {
+                if(err.code == 'NoSuchKey'){
+                    return res.status(404).json({ err:'vector-not-found' });
+                }
+                else {
+                    return next(err);
+                }
             }
-        }
+            
+            async.map(String(data.Body).split(','), function(number, next) {
+                next(null, parseFloat(number));
+            }, function done(err, vector) {
+                console.log(vector.length);
+                res.json({ vector: vector });
+            });
 
-        res.json({ data: String(data.Body) });
+        });
     });
 
 });

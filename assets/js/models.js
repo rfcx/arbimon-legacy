@@ -441,6 +441,8 @@
                 var filename = pieces[pieces.length - 1];
                 fileName = filename.replace('.thumbnail.png', '.flac');
                 var vectorUri = 'project_' + $scope.project_id + '/training_vectors/job_' + $scope.data.job_id + '/' + fileName;
+                
+                // TODO this vector is not from classification should do other route to get training vector
                 a2Classi.getRecVector(vectorUri, function(data) {
                     if(!(data.err && data.err == "vector-not-found")) {
                         var vector = data.data.split(",");

@@ -320,19 +320,13 @@
 
             var loadClassifiedRec = function() {
                 a2Classi.getResultDetails($scope.id, ($scope.currentPage*$scope.maxPerPage), $scope.maxPerPage, function(dataRec) {
-
-                    a2Classi.getRecVector(dataRec[0].vect, function(vectordata) {
-                        var recVect =  vectordata.data.split(",") ;
-                        
-                        recVect.forEach(function(value) {
-                            value = parseFloat(value);
-                        });
-
-                        var maxVal = Math.max.apply(null,recVect);
-                        if (typeof $scope.th === 'number') {
+                    
+                    a2Classi.getRecVector($scope.id, dataRec[0].recording_id).success(function(data) {
+                        var maxVal = Math.max.apply(null, data.vector);
+                        if(typeof $scope.th === 'number') {
                             $scope.htresDeci = ( maxVal < $scope.th )? 'no' : 'yes';
                         }
-                        $scope.recVect = recVect;
+                        $scope.recVect = data.vector;
                         $scope.recs = dataRec;
                         $scope.minv = dataRec[0].stats.minv;
                         $scope.maxv = dataRec[0].stats.maxv;
@@ -342,7 +336,7 @@
             };
 
 
-            $scope.next= function () {
+            $scope.next = function () {
                 $scope.currentPage = $scope.currentPage + 1;
 
                 if($scope.currentPage*$scope.maxPerPage >= $scope.data[0].total) {
@@ -494,46 +488,27 @@
                 maxvect: '=',
             },
             templateUrl: template_root + 'vectorchart.html',
-            controller: function($scope, a2Classi, notify) {
+            controller: function($scope) {
                 $scope.loadingflag = true;
-                $scope.setLoader = function() {
-                    $scope.loadingflag = true;
-                };
 
                 $scope.drawVector = function() {
+                    $scope.loadingflag = true;
+                    
                     var ctx = $scope.ctx;
                     
                     if($scope.vectorData) {
                         
                         var canvasheight = 50;
-                        var i;
                         
                         ctx.width = $scope.vectorData.length;
                         ctx.height = canvasheight;
                         ctxContext = ctx.getContext('2d');
                         ctxContext.beginPath();
-
-                        //minvev = 99999999.0;
-                        //maxvev = -99999999.0;
-                        /*
-                        for(var jj = 0 ; jj < $scope.data.length; jj++)
-                        {
-                            $scope.data[jj] = parseFloat($scope.data[jj]);
-                            if(minvev >$scope.data[jj]) {
-                                minvev =$scope.data[jj];
-                            }
-                            if(maxvev<$scope.data[jj]) {
-                                maxvev =$scope.data[jj];
-                            }
-                        }
-                        */
                         
-                        i = 0;
+                        var i = 0;
                         ctxContext.moveTo(i, canvasheight * (1 - (($scope.vectorData[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
-                        //ctxContext.moveTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
                         for (i = 1; i < $scope.vectorData.length; i++) {
                             ctxContext.lineTo(i, canvasheight * (1 - (($scope.vectorData[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
-                            //ctxContext.lineTo(i,canvasheight*(1-Math.round(((parseFloat($scope.data[i]) - minve)/(maxve-minve))*100000)/100000));
                         }
                         ctxContext.strokeStyle = '#000';
                         ctxContext.stroke();
@@ -541,8 +516,7 @@
                     }
                 };
                 
-                $scope.$watch('vectorData', function(newValue, oldValue) {
-                    $scope.setLoader();
+                $scope.$watch('vectorData', function() {
                     $scope.drawVector();
                 });
             },
