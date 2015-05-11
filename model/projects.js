@@ -5,8 +5,9 @@ var async = require('async');
 var Joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;
 var AWS = require('aws-sdk');
-var config       = require('../config');
-var s3;
+
+var s3 = new AWS.S3();
+var config = require('../config');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
@@ -483,23 +484,20 @@ var Projects = {
                             }
                             else
                             {
-                                if(!s3){
-                                    s3 = new AWS.S3();
-                                }
                                 var params = {
                                     Bucket: config('aws').bucketName,
                                     Delete: { 
                                         Objects:allToDelete
                                     }
                                 };
+                                
                                 s3.deleteObjects(params, function(err, data) {
                                    if (err){
-                                       callback(err);
+                                       return callback(err);
                                    }
-                                   else
-                                   {
-                                       var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid;
-                                    //    console.log('exc quer 1');
+                                    
+                                    var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid;
+                                    
                                        queryHandler(q,function(err,row)
                                            {
                                                if (err)
@@ -537,7 +535,6 @@ var Projects = {
                                                }
                                            }
                                        );
-                                   }
                                 });
                             }
                         });

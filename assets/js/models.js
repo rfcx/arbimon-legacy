@@ -61,13 +61,15 @@
                             $scope.infopanedata = "No models found.";
                         }
                         $scope.modelsData = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                        a2Models.saveState({'data':$scope.modelsDataOrig,
-                                           'filtered': $scope.modelsData,
-                                           'f':params.filter(),
-                                           'o':params.orderBy(),
-                                           'p':params.page(),
-                                           'c':params.count(),
-                                           't':orderedData.length});
+                        a2Models.saveState({
+                            data: $scope.modelsDataOrig,
+                            filtered: $scope.modelsData,
+                            f: params.filter(),
+                            o: params.orderBy(),
+                            p: params.page(),
+                            c: params.count(),
+                            t: orderedData.length
+                        });
                     }
                 });
             };
@@ -390,111 +392,183 @@
     .controller('ModelDetailsCtrl', 
         function($scope, a2Models, $stateParams, $location, Project, a2Classi, notify) {
             $scope.project_url = Project.getUrl();
-            $scope.project_id = -1;
+            
             a2Models.modelState(true);
+            
             Project.getInfo(function(data) {
                 $scope.project_id = data.project_id;
             });
-             $scope.$on("$destroy", function() {
+            
+            $scope.$on("$destroy", function() {
                 a2Models.modelState(false);
             });
+            
             $scope.showValidationsTable = true;
             $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
             $scope.loading = true;
             $scope.recsUris = [];
-            $scope.selectedVect = null;
             $scope.selectedVectWatch = null;
             $scope.waitCallsNUmber = 0;
             $scope.waitCallsNUmberIndex = 0;
-            $scope.$watch('selectedVectWatch', function() {
-                $scope.selectedVect = $scope.selectedVectWatch;
-            });
-
+            
             $scope.allYesMax = [];
             $scope.vectorNoMax = -1;
-
             $scope.suggestedThreshold = null;
             $scope.databaseThreshold = null;
             $scope.currentThreshold = null;
             $scope.loadingValidations = true;
-            a2Models.getValidationResults($stateParams.modelId, function(vdata) {
-                if (vdata.err == 'list not found') {
-                    $scope.showModelValidations = false;
+            $scope.showModelValidations = true;
+            $scope.thres = {
+                tpos: '-',
+                fpos: '-',
+                tneg: '-',
+                fneg: '-',
+                accuracy: '-',
+                precision: '-',
+                sensitivity: '-',
+                specificity: '-',
+            };
+            $scope.messageSaved = '';
+            $scope.invalid = false;
+            $scope.currentThreshold = '-';
+            $scope.currentThresholdRounded = '-';
+            $scope.savedhtml = '';
+            $scope.recNameInVectorViewDate = '';
+            $scope.recNameInVectorViewSite = '';
+            $scope.recNameInVectorViewUser = '';
+            $scope.recNameInVectorViewModel = '';
+            $scope.recNameInVectorViewTh = '';
+            $scope.selectedUri = '';
+            $scope.selectedRecId = -1;
+            $scope.validationRows = null;
+            
+            
+            a2Models.getValidationResults($stateParams.modelId, function(data) {
+                if (data.err == 'list not found') {
+                    $scope.showModelValidations = false; console.log('line 422');
                     $scope.loadingValidations = false;
                 }
                 else if ($scope.data) {
-                    $scope.validations = vdata;
+                    $scope.validations = data;
 
                     $scope.valiDetails = $scope.validations.nofile ? false : true;
                     $scope.waitCallsNUmber = $scope.validations.length;
-                    for (var i = 0; i < $scope.validations.length; i++) {
-                        $scope.getRecVali($scope.validations[i], i);
-                    }
+                    
+                    $scope.validations.forEach(function(valiRec) {
+                        $scope.getRecVali(valiRec);
+                    });
                 }
             });
-
-
-            $scope.getRecVali = function(currRec, i) {
-
-                var pieces = currRec.url.split('/');
-                var filename = pieces[pieces.length - 1];
-                fileName = filename.replace('.thumbnail.png', '.flac');
-                var vectorUri = 'project_' + $scope.project_id + '/training_vectors/job_' + $scope.data.job_id + '/' + fileName;
+            
+            
+            a2Models.findById($stateParams.modelId, function(data) {
+                $scope.databaseThreshold = (data.threshold === null) ? '-' : data.threshold;
+                if (data && data.json) {
+                    console.log(data);
+                    $scope.data = {
+                        thresholdFromDb: parseFloat(data.threshold),
+                        job_id: data.job_id,
+                        modelmdc: data.mdc, //ok
+                        modelmtime: data.mtime, //ok
+                        modelmname: data.mname, //ok
+                        modelmtname: data.mtname, //ok
+                        modelmuser: data.muser, //ok
+                        modelmodel_id: data.model_id, //ok
+                        png: data.json.roiUrl, //ok
+                        lasttime: data.lasttime, //ok
+                        lastupdate: data.lastupdate, //ok
+                        remarks: data.remarks,
+                        songtype: data.songtype, //ok
+                        species: data.species, //ok
+                        trainingName: data.trainingSetName, //ok
+                        trainingDate: data.trainingSetdcreated, //ok
+                        trainingTime: data.trainingSettime, //ok
+                        all: data.use_in_training_present + data.use_in_validation_present + data.use_in_training_notpresent + data.use_in_validation_notpresent, //ok
+                        p: data.use_in_training_present + data.use_in_validation_present, //ok
+                        np: data.use_in_training_notpresent + data.use_in_validation_notpresent, //ok
+                        tnp: data.use_in_training_notpresent, //ok
+                        tp: data.use_in_training_present, //ok
+                        vnp: data.use_in_validation_notpresent, //ok
+                        vp: data.use_in_validation_present, //ok
+                        accuracy: Math.round(data.json.accuracy * 100) / 100, //ok
+                        oob: Math.round(data.json.forestoobscore * 100) / 100, //ok
+                        precision: Math.round(data.json.precision * 100) / 100, //ok
+                        sensitivity: data.json.sensitivity !== null ? Math.round(data.json.sensitivity * 100) / 100 : null, //ok
+                        specificity: data.json.specificity !== null ? Math.round(data.json.specificity * 100) / 100 : null, //ok
+                        tpos: data.json.tp,
+                        fpos: data.json.fp,
+                        tneg: data.json.tn,
+                        fneg: data.json.fn,
+                        maxv: data.json.maxv,
+                        maxvRounded: Math.round(data.json.maxv * 1000) / 1000,
+                        minv: data.json.minv,
+                        roicount: data.json.roicount, //ok
+                        hfreq: Math.round(data.json.roihighfreq * 100) / 100, //ok
+                        lfreq: Math.round(data.json.roilowfreq * 100) / 100, //ok
+                        rlength: Math.round(data.json.roilength * 100) / 100, //ok
+                        bw: Math.round(((parseFloat(data.json.roihighfreq) - parseFloat(data.json.roilowfreq)) * 100)) / 100,
+                        freqMax: data.json.roisamplerate / 2, //ok
+                    };
+                    
+                }
+                else $scope.invalid = true;
                 
-                // TODO this vector is not from classification should do other route to get training vector
-                a2Classi.getRecVector(vectorUri, function(data) {
-                    if(!(data.err && data.err == "vector-not-found")) {
-                        var vector = data.data.split(",");
-                        for (var jj = 0; jj < vector.length; jj++) {
-                            vector[jj] = parseFloat(vector[jj]);
-                        }
-                        var vectorLength = vector.length;
-
-                        var vmax = Math.max.apply(null, vector);
-                        $scope.validations[i].vmax = vmax;
-                        $scope.validations[i].vector = vector;
-                        if (currRec.presence == 'no') {
-                            if ($scope.vectorNoMax < vmax) {
-                                $scope.vectorNoMax = vmax;
+            });
+            
+            
+            $scope.getRecVali = function(currRec) {
+                
+                a2Models.getRecVector($scope.data.modelmodel_id, currRec.id)
+                    .success(function(data) {
+                        if(!(data.err && data.err == "vector-not-found")) {
+                            var vector = data.vector;
+                    
+                            var vmax = Math.max.apply(null, vector);
+                            currRec.vmax = vmax;
+                            currRec.vector = vector;
+                            
+                            if(currRec.presence == 'no') {
+                                if($scope.vectorNoMax < vmax) {
+                                    $scope.vectorNoMax = vmax;
+                                }
                             }
+                            else if(currRec.presence == 'yes') {
+                                $scope.allYesMax.push(vmax);
+                            }
+                    
+                            $scope.waitinFunction();
                         }
-
-                        if (currRec.presence == 'yes') {
-                            $scope.allYesMax.push(vmax);
-                        }
-
                         $scope.waitinFunction();
-                    }
-                    $scope.waitinFunction();
-                });
+                    });
             };
-
-            $scope.loadingValidations = true;
-            $scope.showModelValidations = true;
-
-
+            
+            
             $scope.waitinFunction = function() {
                 $scope.waitCallsNUmberIndex = $scope.waitCallsNUmberIndex + 1;
                 if ($scope.waitCallsNUmber == $scope.waitCallsNUmberIndex) {
                     if ($scope.allYesMax.length > 0) {
+                        
                         $scope.allYesMax = $scope.allYesMax.sort();
+                        
                         var index = 0;
                         for (var j = 0; j < $scope.allYesMax.length; j++) {
                             if ($scope.allYesMax[j] >= $scope.vectorNoMax) {
                                 index = j;
                             }
                         }
+                        
                         $scope.data.maxv = Math.max.apply(null, $scope.allYesMax);
                         $scope.data.maxvRounded = Math.round($scope.data.maxv * 1000) / 1000;
                         $scope.suggestedThreshold = Math.round($scope.allYesMax[index] * 1000000) / 1000000;
+                        
                         if (typeof $scope.suggestedThreshold === undefined || isNaN($scope.suggestedThreshold)) {
                             $scope.suggestedThreshold = Math.round($scope.allYesMax[0] * 1000000) / 1000000;
                         }
 
 
                         if (typeof $scope.suggestedThreshold === undefined || isNaN($scope.suggestedThreshold)) {
-                            $scope.showModelValidations = false;
+                            $scope.showModelValidations = false; console.log('line 492');
                         }
                         else {
                             // TODO optimize this section
@@ -523,7 +597,6 @@
                                 searchTh = searchTh - 0.001;
                                 tries = tries + 1;
                             }
-                            
                             
                             var max = sumObject[0];
                             var mindex = 0;
@@ -595,6 +668,7 @@
                                 accum = accum + thresholdObject[specificityMaxIndices[i]];
 
                             }
+                            
                             accum = accum / specificityMaxIndices.length;
                             $scope.currentThreshold = $scope.databaseThreshold != '-' ? $scope.databaseThreshold : accum;
                             $scope.suggestedThreshold = Math.round(accum * 1000000) / 1000000;
@@ -615,24 +689,12 @@
                         }
                     }
                     else {
-                        $scope.showModelValidations = false;
+                        $scope.showModelValidations = false; console.log('line 616');
                         $scope.loadingValidations = false;
                     }
                 }
             };
-
-            $scope.thres = {
-                tpos: '-',
-                fpos: '-',
-                tneg: '-',
-                fneg: '-',
-                accuracy: '-',
-                precision: '-',
-                sensitivity: '-',
-                specificity: '-',
-            };
-
-
+            
             $scope.computeStats = function() {
                 $scope.thres = {
                     tpos: '-',
@@ -666,7 +728,7 @@
                         }
                     }
                 }
-
+                
                 $scope.thres.tpos = trupositive;
                 $scope.thres.fpos = falsepositives;
                 $scope.thres.tneg = truenegatives;
@@ -683,10 +745,7 @@
                     $scope.thres.specificity = Math.round((truenegatives / (truenegatives + falsepositives)) * 100) / 100;
                 }
             };
-
-
-            $scope.messageSaved = '';
-
+            
             $scope.saveThreshold = function() {
                 $scope.messageSaved = '';
                 $scope.recalculate();
@@ -700,13 +759,11 @@
                         $scope.messageSaved = 'Error saving threshold';
                     });
             };
-
-            $scope.invalid = false;
-
+            
             $scope.recalculate = function() {
                 $scope.messageSaved = '';
                 var newval = parseFloat($scope.newthres);
-
+                
                 if (!isNaN(newval) && (newval <= 1.0) && (newval >= 0.0)) {
                     $scope.currentThreshold = newval;
                     $scope.currentThresholdRounded = Math.round(newval * 1000000) / 1000000;
@@ -719,71 +776,17 @@
                     $scope.messageSaved = 'Value should be between 0 and 1.';
                 }
             };
-
-            $scope.currentThreshold = '-';
-            $scope.currentThresholdRounded = '-';
-            a2Models.findById($stateParams.modelId, function(data) {
-                $scope.databaseThreshold = (data.threshold === null) ? '-' : data.threshold;
-                if (data && data.json) {
-                    $scope.data = {
-                        thresholdFromDb: parseFloat(data.threshold),
-                        job_id: data.job_id,
-                        modelmdc: data.mdc, //ok
-                        modelmtime: data.mtime, //ok
-                        modelmname: data.mname, //ok
-                        modelmtname: data.mtname, //ok
-                        modelmuser: data.muser, //ok
-                        modelmodel_id: data.model_id, //ok
-                        png: data.json.roiUrl, //ok
-                        lasttime: data.lasttime, //ok
-                        lastupdate: data.lastupdate, //ok
-                        remarks: data.remarks,
-                        songtype: data.songtype, //ok
-                        species: data.species, //ok
-                        trainingName: data.trainingSetName, //ok
-                        trainingDate: data.trainingSetdcreated, //ok
-                        trainingTime: data.trainingSettime, //ok
-                        all: data.use_in_training_present + data.use_in_validation_present + data.use_in_training_notpresent + data.use_in_validation_notpresent, //ok
-                        p: data.use_in_training_present + data.use_in_validation_present, //ok
-                        np: data.use_in_training_notpresent + data.use_in_validation_notpresent, //ok
-                        tnp: data.use_in_training_notpresent, //ok
-                        tp: data.use_in_training_present, //ok
-                        vnp: data.use_in_validation_notpresent, //ok
-                        vp: data.use_in_validation_present, //ok
-                        accuracy: Math.round(data.json.accuracy * 100) / 100, //ok
-                        oob: Math.round(data.json.forestoobscore * 100) / 100, //ok
-                        precision: Math.round(data.json.precision * 100) / 100, //ok
-                        sensitivity: data.json.sensitivity !== null ? Math.round(data.json.sensitivity * 100) / 100 : null, //ok
-                        specificity: data.json.specificity !== null ? Math.round(data.json.specificity * 100) / 100 : null, //ok
-                        tpos: data.json.tp,
-                        fpos: data.json.fp,
-                        tneg: data.json.tn,
-                        fneg: data.json.fn,
-                        maxv: data.json.maxv,
-                        maxvRounded: Math.round(data.json.maxv * 1000) / 1000,
-                        minv: data.json.minv,
-                        roicount: data.json.roicount, //ok
-                        hfreq: Math.round(data.json.roihighfreq * 100) / 100, //ok
-                        lfreq: Math.round(data.json.roilowfreq * 100) / 100, //ok
-                        rlength: Math.round(data.json.roilength * 100) / 100, //ok
-                        bw: Math.round(((parseFloat(data.json.roihighfreq) - parseFloat(data.json.roilowfreq)) * 100)) / 100,
-                        freqMax: data.json.roisamplerate / 2, //ok
-                    };
-                    
-                }
-                else $scope.invalid = true;
-                
-            });
-            $scope.zoomout = function()
-            {
+            
+            $scope.zoomout = function() {
                 $("#patternDivMain").css("min-width", 210);
-				$("#patternDivMain").css("height", 100);
+                $("#patternDivMain").css("height", 100);
             };
-            $scope.zoomin = function()
-            {
+            
+            $scope.zoomin = function() {
                 $("#patternDivMain").css("min-width", 420);
-				$("#patternDivMain").css("height", 150);
+                $("#patternDivMain").css("height", 150);
             };
+            
             $scope.getValidations = function() {
                 var vals = [];
                 for (var i = 0; i < $scope.validationsData.length; i++) {
@@ -798,17 +801,7 @@
                 }
                 return vals;
             };
-
-            $scope.savedhtml = '';
-            $scope.recNameInVectorViewDate = '';
-            $scope.recNameInVectorViewSite = '';
-            $scope.recNameInVectorViewUser = '';
-            $scope.recNameInVectorViewModel = '';
-            $scope.recNameInVectorViewTh = '';
-            $scope.selectedUri = '';
-            $scope.selectedRecId = -1;
-
-
+            
             $scope.recDetails = function(rec) {
                 var selected = rec;
                 $scope.recNameInVectorViewDate = rec.date;
@@ -824,41 +817,16 @@
                 $scope.selectedVectWatch = rec.vector;
                 $scope.showValidationsTable = false;
             };
-
-
+            
             $scope.closeRecValidationsDetails = function() {
                 $scope.showValidationsTable = true;
                 $scope.selectedVectWatch = null;
             };
-
+            
             $scope.gotoRec = function() {
                 var rurl = "/project/" + $scope.project_url + "/#/visualizer/rec/" + $scope.selectedRecId;
                 $location.path(rurl);
             };
-
-            $scope.fields = [
-                {
-                    name: 'Date',
-                    key: 'date'
-                }, 
-                {
-                    name: 'Site',
-                    key: 'site'
-                }, 
-                {
-                    name: 'User presence',
-                    key: 'presence'
-                }, 
-                {
-                    name: 'Model presence',
-                    key: 'model'
-                }, 
-                {
-                    name: 'Threshold presence',
-                    key: 'threshold'
-                }
-            ];
-            $scope.validationRows = null;
         }
     );
 })(angular);

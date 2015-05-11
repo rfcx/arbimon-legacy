@@ -1,5 +1,4 @@
 <div ng-show="invalid">
-    
     <h4> 
         <a class="btn btn-primary" ui-sref="analysis.models" ui-sref-active="active">
             <i class="fa fa-arrow-left"></i> 
@@ -106,7 +105,7 @@
                             <div class="yaxiscontainer" >
                                 <div id="yaxis" class="yaxisrelative">
                                     <div >{{data.hfreq}}Hz-</div>
-                                    <div class='lowfreq'>{{data.lfreq}}Hz-</div>
+                                    <div class="lowfreq">{{data.lfreq}}Hz-</div>
                                 </div>
                             </div>
                         
@@ -237,7 +236,7 @@
                             ng-model="newthres"
                             class="form-control input-sm" 
                             aria-describedby="enter new threshold" 
-                            style="width:50px; display:inline-block;"></input>
+                            style="width:50px; display:inline-block;">
                     </div>
                     <button class="btn btn-default" ng-click="recalculate()">
                         Recalculate
@@ -311,7 +310,8 @@
         </div>
     </div>
     <div class="row" ng-show="valiDetails && showModelValidations">      
-        <div ng-hide="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
+        <div class="col-sm-12 col-lg-8" 
+            ng-show="!loadingValidations && showValidationsTable">
             <h3 class="inlineh3">
                 Validations 
                 <div class="btn btn-default" 
@@ -324,17 +324,23 @@
                     </i>
                 </div>
             </h3>
-            <small><em>(Click in the recording row to show recording details)</em></small>
-            <a2-table  fields="fields" rows="validationsData" no-checkbox on-select="recDetails(row)"></a2-table>  
+            <small>(Click in the recording row to show recording details)</small>
+            <a2-table rows="validationsData" no-checkbox on-select="recDetails(row)">
+                <field title="Date"  key="date">{{ row.date }}</field>
+                <field title="Site"  key="site">{{ row.site }}</field>
+                <field title="User presence"  key="presence">{{ row.presence }}</field>
+                <field title="Model presence"  key="model">{{ row.model }}</field>
+                <field title="Threshold presence"  key="threshold">{{ row.threshold }}</field>
+            </a2-table>  
         </div>
-        <div ng-show="loadingValidations" class="col-sm-12 col-lg-8" ng-show="showValidationsTable">
+        <div ng-show="loadingValidations && showValidationsTable" class="col-sm-12 col-lg-8">
             <h3 class="inlineh3">
                 Loading data 
             </h3>
             <loader></loader>
         </div>
         <div class="col-sm-12 col-lg-6" ng-hide="showValidationsTable">
-            <div class="" ng-hide="showValidationsTable">
+            <div>
                 <h3>
                     Validation Recording Detail
                     <div class="btn-group">

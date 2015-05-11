@@ -492,28 +492,33 @@
                 $scope.loadingflag = true;
 
                 $scope.drawVector = function() {
+                    if(!$scope.vectorData) return;
+                    
                     $scope.loadingflag = true;
                     
-                    var ctx = $scope.ctx;
+                    var canvas = $scope.canvas;
+                    var vector = $scope.vectorData;
                     
-                    if($scope.vectorData) {
-                        
-                        var canvasheight = 50;
-                        
-                        ctx.width = $scope.vectorData.length;
-                        ctx.height = canvasheight;
-                        ctxContext = ctx.getContext('2d');
-                        ctxContext.beginPath();
-                        
-                        var i = 0;
-                        ctxContext.moveTo(i, canvasheight * (1 - (($scope.vectorData[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
-                        for (i = 1; i < $scope.vectorData.length; i++) {
-                            ctxContext.lineTo(i, canvasheight * (1 - (($scope.vectorData[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
-                        }
-                        ctxContext.strokeStyle = '#000';
-                        ctxContext.stroke();
-                        $scope.loadingflag = false;
+                    var height = 50;
+                    var width = $scope.width;
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx = canvas.getContext('2d');
+                    ctx.beginPath();
+                    
+                    var xStep = width/vector.length;
+                    
+                    var i = 0;
+                    ctx.moveTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                    while(i < width) {
+                        i++;
+                        ctx.lineTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
                     }
+                    
+                    ctx.strokeStyle = '#000';
+                    ctx.stroke();
+                    $scope.loadingflag = false;
                 };
                 
                 $scope.$watch('vectorData', function() {
@@ -521,8 +526,8 @@
                 });
             },
             link: function(scope, element) {
-                var ctx = element.children();
-                scope.ctx = ctx[0];
+                scope.canvas = element.children()[0]; 
+                scope.width = parseInt(element.css('width'));
             }
         };
 

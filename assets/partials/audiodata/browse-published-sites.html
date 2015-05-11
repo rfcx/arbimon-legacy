@@ -3,7 +3,7 @@
 </div>
 
 <div class="modal-body">
-    <a2-table2 rows="sites" no-checkbox selected="site">
+    <a2-table rows="sites" no-checkbox selected="site">
         <field title="Name" key="name">{{ row.name }}</field>
         <field title="Rec qty" key="rec_count">
             {{ row.rec_count }}
@@ -19,7 +19,7 @@
         </field>
         <field title="Project" key="project_name">{{ row.project_name }}</field>
         <field title="Owner" key="username">{{ row.username }}</field>
-    </a2-table2>
+    </a2-table>
 </div>
 <div class="modal-footer">
     <button class="btn btn-primary"

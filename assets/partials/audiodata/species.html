@@ -17,7 +17,7 @@
             </button>
 
         </h4>
-        <a2-table2 rows="classes" data-checked="checked" no-select>
+        <a2-table rows="classes" data-checked="checked" no-select>
             <field title="Species" key="species_name">
                 {{ row.species_name }}
             </field>
@@ -27,7 +27,7 @@
             <field title="Sound" key="songtype_name">
                 {{ row.songtype_name }}
             </field>
-        </a2-table2>
+        </a2-table>
         <div class="jumbotron" ng-show="(!classes || !classes.length > 0) && !loading">
             <h3 class="text-center">
                 This project does not have any species assigned
