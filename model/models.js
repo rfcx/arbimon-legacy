@@ -40,15 +40,12 @@ module.exports = {
         }, function(err, results) {
             if(err) return callback(err);
             
-            console.dir(results);
-            
             if(!results.rec[0].length) {
                 return callback(new Error('recorinding not exist'));
             }
             if(!results.model[0].length) {
                 return callback(new Error('model not exist'));
             }
-            
             
             var filename = path.basename(results.rec[0][0].uri);
             var vectorUri = 'project_' + results.model[0][0].project_id + 
@@ -63,26 +60,22 @@ module.exports = {
         var q = "SELECT ms.`json_stats` as json, \n"+
                 "       m.threshold , \n" +
                 "       m.model_id, \n"+
-                "       CONCAT(UCASE(LEFT(m.name, 1)), SUBSTRING(m.name, 2)) as mname, \n"+
-                "       DATE_FORMAT(m.date_created,'%h:%i %p') as mtime, \n"+
-                "       DATE_FORMAT(m.date_created,'%b %d, %Y') as mdc, \n"+
+                "       m.name, \n"+
+                "       m.date_created, \n"+
                 "       jpt.`use_in_training_present`, \n"+
                 "       jpt.`use_in_training_notpresent`, \n"+
                 "       jpt.`use_in_validation_present`, \n"+
                 "       jpt.`use_in_validation_notpresent`, \n"+
-                "       CONCAT( \n"+
-                "           CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) , ' ', \n"+
-                "           CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) \n"+
-                "       ) as muser, \n"+
-                "       mt.name as mtname, \n"+
+                "       CONCAT(u.firstname, ' ', u.lastname) as userFullname, \n"+
+                "       u.login as username, \n"+
+                "       mt.name as model_type, \n"+
                 "       jobs.`remarks`, \n"+
                 "       jobs.`job_id`, \n"+
-                "       DATE_FORMAT(jobs.`last_update`,'%h:%i %p') as lasttime, \n"+
-                "       DATE_FORMAT(jobs.`last_update`,'%b %d, %Y') as lastupdate, \n"+
+                "       jobs.`last_update`, \n"+
                 "       CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as species, \n"+
                 "       CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype, \n"+
-                "       CONCAT(UCASE(LEFT(ts.`name`, 1)), SUBSTRING(ts.`name`, 2)) as trainingSetName, \n"+
-                "       DATE_FORMAT(ts.date_created,'%h:%i %p') as trainingSettime , DATE_FORMAT(ts.date_created,'%b %d, %Y') as trainingSetdcreated, \n"+
+                "       ts.`name` as trainingSetName, \n"+
+                "       ts.date_created as trainingSetcreated, \n"+
                 "       TIMESTAMPDIFF(SECOND, jobs.`date_created`, m.`date_created` ) as joblength \n"+
                 "FROM `models` as m, \n"+
                 "     `model_types` as mt, \n"+
@@ -106,7 +99,68 @@ module.exports = {
                 "AND jpt.`training_set_id` = ts.`training_set_id`";
         
         q = mysql.format(q, [model_id]);
-        queryHandler(q, callback);
+        queryHandler(q, function(err, rows) {
+            if(err) return callback(err);
+            
+            if(!rows.length) return callback(new Error('model not found'));
+            
+            var data = rows[0];
+            data.json = JSON.parse(data.json);
+            
+            var model = {
+                id: data.model_id,
+                name: data.name,
+                createdOn: data.date_created,
+                user: {
+                    fullname: data.userFullname,
+                    username: data.username
+                },
+                type: data.model_type,
+                lastUpdate: data.last_update,
+                species: data.species,
+                songtype: data.songtype,
+                remarks: data.remarks,
+                jobId: data.job_id,
+                jobLength: data.joblength,
+                threshold: data.threshold,
+                oobScore: data.json.forestoobscore,
+                minv: data.json.minv,
+                maxv: data.json.maxv,
+                validations: {
+                    use_in_training: {
+                        present: data.use_in_training_present,
+                        notPresent: data.use_in_training_notpresent,
+                    },
+                    use_in_validation: {
+                        present: data.use_in_validation_present,
+                        notPresent: data.use_in_validation_notpresent,
+                    },
+                    stats: {
+                        accuracy: data.json.accuracy,
+                        precision: data.json.precision,
+                        sensitivity: data.json.sensitivity,
+                        specificity: data.json.specificity,
+                        tp: data.json.tp,
+                        fp: data.json.fp,
+                        tn: data.json.tn,
+                        fn: data.json.fn,
+                    }
+                },
+                trainingSet: {
+                    name: data.trainingSetName,
+                    createdOn: data.trainingSetcreated,
+                    roiCount: data.json.roicount,
+                },
+                pattern: {
+                    duration: data.json.roilength,
+                    lowfreq: data.json.roilowfreq,
+                    highfreq: data.json.roihighfreq,
+                    samplerate: data.json.roisamplerate,
+                    thumbnail: "https://"+ config('aws').bucketName + ".s3.amazonaws.com/"+ data.json.roipng,
+                }
+            };
+            callback(null, model);
+        });
     },
 
     delete: function(model_id, callback) {

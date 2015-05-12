@@ -109,7 +109,8 @@ describe('Module: a2-models-service', function() {
                 
                 callback = sinon.spy();
                 
-                a2Models.findById(1, callback);
+                a2Models.findById(1)
+                    .success(callback);
                 
                 $httpBackend.flush();
                 
@@ -120,13 +121,16 @@ describe('Module: a2-models-service', function() {
                 request.respond(500, 'data');
                 
                 callback = sinon.spy();
+                errorCallback = sinon.spy();
                 
-                a2Models.findById(1, callback);
+                a2Models.findById(1)
+                    .success(callback)
+                    .error(errorCallback);
                 
                 $httpBackend.flush();
                 
                 expect(callback.called).to.equal(false);
-                expect(notifyError.calledOnce);
+                expect(errorCallback.calledOnce);
             });
         });
         

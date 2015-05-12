@@ -127,16 +127,16 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
 });
 
 router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
-    model.models.details(req.params.mid, function(err, row) {
-        if(err) return next(err);
-        if(!row.length)
-            return res.json({ error: "invalid model id" });
-            
-        data = row[0];
-        data.json = JSON.parse(data.json);
-        data.json.roiUrl = "https://"+ config('aws').bucketName + ".s3.amazonaws.com/"+ data.json.roipng;
-
-        res.json(data);
+    model.models.details(req.params.mid, function(err, model) {
+        if(err) {
+            if(err.message == "model not found") {
+                return res.status(404).json({ error: err.message });
+            }
+            else {
+                return next(err);
+            }
+        }
+        res.json(model);
     });
 });
 
@@ -186,21 +186,20 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
         if(err) return next(err);
         
         if(!row.length) {
-            res.json({ err: "Error fetching validation information."});
+            return res.sendStatus(404);
         }
         
-        var validationUri = row[0].uri ;
+        var validationUri = row[0].uri;
         validationUri = validationUri.replace('.csv','_vals.csv');
         s3.getObject({
             Key: validationUri,
             Bucket: config('aws').bucketName
         },
         function(err, data) {
-            if (err) {
-                if(err.code == 'NoSuchKey') return res.status(404).json({ err: "list not found"});
+            if(err) {
+                if(err.code == 'NoSuchKey') return res.json({ err: "list not found"});
                 else return next(err);
             }
-
             var outData = String(data.Body);
 
             var lines = outData.split('\n');
@@ -215,28 +214,28 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                 var modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
                 var entryType = items[3] ? items[3].trim(' '):'';
                 
-                model.recordings.recordingInfoGivenUri(items[0], req.params.projectUrl, function(err,recData) {
-                    if (err) {
+                model.recordings.recordingInfoGivenUri(items[0], req.params.projectUrl, function(err, recData) {
+                    if(err) {
                         debug("Error fetching recording information: " + items[0]);
                         return callback(err);
                     }
                     
-                    if (recData.length > 0) {
-                        var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
-                        recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
+                    if(!recData.length) return callback(new Error('recData not found'));
+                    
+                    var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
+                    recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
 
-                        var rowSent = {
-                            site: recData[0].site,
-                            date: (recData[0].date),
-                            presence: prec,
-                            model: modelprec,
-                            id: recData[0].id,
-                            url: "https://"+ config('aws').bucketName + ".s3.amazonaws.com/" + recUriThumb,
-                            type: entryType
-                        };
+                    var rowSent = {
+                        site: recData[0].site,
+                        date: recData[0].date,
+                        presence: prec,
+                        model: modelprec,
+                        id: recData[0].id,
+                        url: "https://"+ config('aws').bucketName + ".s3.amazonaws.com/" + recUriThumb,
+                        type: entryType
+                    };
 
-                        callback(null, rowSent);
-                    }
+                    callback(null, rowSent);
                 });
 
             },

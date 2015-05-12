@@ -29,10 +29,8 @@ angular.module('a2-models-service', [
                 .success(callback)
                 .error(notify.serverError);
         },
-        findById: function(modelId, callback) {
-            $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId)
-                .success(callback)
-                .error(notify.serverError);
+        findById: function(modelId) {
+            return $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId);
         },
         create: function(modelData) {
             return $http.post('/api/project/' + Project.getUrl() + '/models/new', modelData);

@@ -28,7 +28,7 @@ angular.module('a2-classi-service', [
                 .success(callback)
                 .error(notify.serverError);
         },
-        getRecVector: function(classificationId, recId, callback) {
+        getRecVector: function(classificationId, recId) {
             return $http.get('/api/project/'+Project.getUrl()+'/classification/'+classificationId+'/vector/'+recId);
         },
         create: function(classificationData, callback) {

@@ -1,26 +1,19 @@
-<div ng-show="invalid">
-    <h4> 
+<div class="row">
+    <div class="col-xs-12">
         <a class="btn btn-primary" ui-sref="analysis.models" ui-sref-active="active">
             <i class="fa fa-arrow-left"></i> 
             back
         </a>
-        Model not found
-    </h4>
-</div>
-
-
-
-<div ng-show="data">   
-    <div class="row">
-        <div class="col-xs-12">
-            <a class="btn btn-primary" ui-sref="analysis.models" ui-sref-active="active">
-                <i class="fa fa-arrow-left"></i> 
-                back
-            </a>
-        </div>
     </div>
-    
-    <div class="row" >
+</div>
+<div ng-show="loading">
+    <h3><loader></loader> {{ loading }}</h3>
+</div>
+<div ng-show="notFound">
+    <h4>Model not found</h4>
+</div>
+<div ng-show="model && !loading">
+    <div class="row">
         <div class="col-xs-12" >
             <div class="model-info-column">
                 <h3>Model details</h3>  
@@ -28,35 +21,35 @@
                     <table class="table">
                         <tr>
                             <td><strong>Name:</strong></td>
-                            <td class="hidelongtext widthtd"> {{ data.modelmname }}</td>
+                            <td class="hidelongtext widthtd"> {{ model.name }}</td>
                         </tr>
                         <tr>
                             <td><strong>Type:</strong></td>
-                            <td> {{ data.modelmtname }}</td>
+                            <td> {{ model.type }}</td>
                         </tr>
                         <tr>
                             <td><strong>Creation date:</strong> </td>
-                            <td>{{ data.modelmdc }} {{ data.modelmtime }}</td>
+                            <td>{{ model.createdOn | moment: 'lll' }}</td>
                         </tr>
                         <tr>
                             <td><strong>Last updated:</strong></td>
-                            <td> {{ data.lastupdate }} {{ data.lasttime }}</td>
+                            <td> {{ model.lastUpdate | moment: 'lll' }}</td>
                         </tr>
                         <tr>
                             <td><strong>Creator:</strong></td>
-                            <td> {{ data.modelmuser }}</td>
+                            <td> {{ model.user.fullname }}</td>
                         </tr>
                         <tr>
                             <td><strong>Species:</strong></td>
-                            <td> {{ data.species }}</td>
+                            <td> {{ model.species }}</td>
                         </tr>
                         <tr>
                             <td><strong>Sound:</strong></td>
-                            <td> {{ data.songtype }}</td>
+                            <td> {{ model.songtype }}</td>
                         </tr>
                     </table>
                     <div data-ng-hide="true">
-                        {{ data.modelmodel_id }}
+                        {{ model.id }}
                     </div>
                 </div>
             </div>
@@ -66,15 +59,15 @@
                     <table class="table">
                         <tr>
                             <td><strong>Name:</strong></td>
-                            <td class="hidelongtext widthtd"> {{ data.trainingName }}</td>
+                            <td class="hidelongtext widthtd"> {{ model.trainingSet.name }}</td>
                         </tr>
                         <tr>
                             <td><strong>Creation date:</strong></td>
-                            <td><span ng-bind="data.trainingDate"></span> <span ng-bind="data.trainingTime"></span></td>
+                            <td>{{ model.trainingSet.createdOn | moment: 'lll' }}</td>
                         </tr>
-                        <tr>
+                         <tr>
                             <td><strong>Pattern ROI Count:</strong></td>
-                            <td>{{ data.roicount }}</td>
+                            <td>{{ model.trainingSet.roiCount }}</td>
                         </tr>
                         <!-- 
                         <tr>
@@ -90,63 +83,67 @@
                         -->
                         <tr>
                             <td><strong>Pattern Bandwidth:</strong></td>
-                            <td>{{ data.bw }}Hz</td>
+                            <td>{{ model.pattern.highfreq - model.pattern.lowfreq | number }}Hz</td>
                         </tr>
                     </table>
                 </div>
                 <div class="model-info-column">
                     <h4>Training set pattern:</h4>
                     <div id="zoomDiv" class="zoomDivClass">
-                            <b>Zoom</b>: <button ng-click="zoomout()" class="btn btn-default btn-xs"><i class="fa fa-search-minus" ></i></button>
-                            <button ng-click="zoomin()" class="btn btn-default btn-xs"><i class="fa fa-search-plus" ></i></button>
+                        <b>Zoom</b>: 
+                        <button ng-click="zoomout()" class="btn btn-default btn-xs">
+                            <i class="fa fa-search-minus" ></i>
+                        </button>
+                        <button ng-click="zoomin()" class="btn btn-default btn-xs">
+                            <i class="fa fa-search-plus" ></i>
+                        </button>
                     </div>
                     <div class="model-pattern">
                         <div id="patternDivMain" class="patternDiv">
                             <div class="yaxiscontainer" >
                                 <div id="yaxis" class="yaxisrelative">
-                                    <div >{{data.hfreq}}Hz-</div>
-                                    <div class="lowfreq">{{data.lfreq}}Hz-</div>
+                                    <div>{{ model.pattern.highfreq | number }}Hz-</div>
+                                    <div class="lowfreq">{{ model.pattern.lowfreq | number }}Hz-</div>
                                 </div>
                             </div>
-                        
-                        
                             <div class="patternWidth">
-                                <img id="paternImage" ng-src="{{data.png}}"  class="patternImg"/> <!-- margin-left:16px;width:100%;height:auto;min-height:0px;/> -->
+                                <img id="paternImage" ng-src="{{ model.pattern.thumbnail }}"  class="patternImg"/> <!-- margin-left:16px;width:100%;height:auto;min-height:0px;/> -->
                             </div>
-                            
                             <div class="patternWidthAxis">
                                 <div class="secs0axis">0s</div>
-                                <div class="secslaxis">{{ data.rlength }}s</div>
+                                <div class="secslaxis">{{ model.pattern.duration | number }}s</div>
                             </div>
-                            
                         </div>
-
-                    </div>    
+                    </div>
                 </div>
             </div>
         </div>
-        
         <div class="col-xs-12">
             <h3>Model validation details</h3>
             <div class="model-info-column">
                 
                 <div class="">
-                    <strong>Total validations used:</strong> {{data.all}}
+                    <strong>Total validations used:</strong> 
+                    {{ model.validations.use_in_training.present + 
+                        model.validations.use_in_training.notPresent + 
+                       model.validations.use_in_validation.present +
+                       model.validations.use_in_validation.notPresent
+                    }}
                 </div>
                 <div class="" >
                     <div class="model-info-column">  
                         <table class="table">
                             <tr>
                                 <td><strong>Present:</strong></td>
-                                <td>{{data.p}}</td>
+                                <td>{{ model.validations.use_in_training.present + model.validations.use_in_validation.present }}</td>
                             </tr>
                             <tr>
                                 <td>In fitting:</td>
-                                <td>{{ data.tp }}</td>
+                                <td>{{ model.validations.use_in_training.present }}</td>
                             </tr>
                             <tr>
                                 <td>In verification:</td>
-                                <td>{{ data.vp }}</td>
+                                <td>{{ model.validations.use_in_validation.present }}</td>
                             </tr>
                         </table>
                     </div>
@@ -154,15 +151,15 @@
                         <table class="table">
                             <tr>
                                 <td><strong>Absent:</strong></td>
-                                <td>{{data.np}}</td>
+                                <td>{{ model.validations.use_in_training.notPresent + model.validations.use_in_validation.notPresent }}</td>
                             </tr>
                             <tr>
                                 <td>In fitting:</td>
-                                <td>{{ data.tnp }}</td>
+                                <td>{{ model.validations.use_in_training.notPresent }}</td>
                             </tr>
                             <tr>
                                 <td>In verification:</td>
-                                <td>{{ data.vnp }}</td>
+                                <td>{{ model.validations.use_in_validation.notPresent }}</td>
                             </tr>
                         </table>         
                     </div>
@@ -173,19 +170,19 @@
                 <table class="table">
                     <tr>
                         <td><strong>Accuracy:</strong></td>
-                        <td>{{ data.accuracy }}</td>
+                        <td>{{ model.validations.stats.accuracy }}</td>
                     </tr>
                     <tr>
                         <td><strong>Precision:</strong></td>
-                        <td>{{ data.precision }}</td>
+                        <td>{{ model.validations.stats.precision }}</td>
                     </tr>
                     <tr ng-show="data.sensitivity != null"> 
                         <td><strong>Sensitivity:</strong></td>
-                        <td>{{ data.sensitivity }}</td>
+                        <td>{{ model.validations.stats.sensitivity }}</td>
                     </tr>
                     <tr ng-show="data.specificity != null"> 
                         <td><strong>Specificity:</strong></td>
-                        <td>{{ data.specificity }}</td>
+                        <td>{{ model.validations.stats.specificity }}</td>
                     </tr>
                 </table>
             </div>
@@ -207,13 +204,13 @@
                             </tr>
                             <tr>
                                 <td ><small><em>P</em></small></td>
-                                <td class=""> {{ data.tpos }}</td>
-                                <td class="">{{ data.fneg }}</td>                
+                                <td class=""> {{ model.validations.stats.tp }}</td>
+                                <td class="">{{ model.validations.stats.fn }}</td>
                             </tr>
                             <tr class="">
                                 <td ><small><em>A</em></small></td>
-                                <td class="">{{ data.fpos }}</td>
-                                <td class="">{{ data.tneg }}</td>                
+                                <td class="">{{ model.validations.stats.fp }}</td>
+                                <td class="">{{ model.validations.stats.tn }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -222,29 +219,28 @@
                     </div>
                 </div>
             </div>
-            
         </div>
-        <div class="col-xs-12" ng-show="currentThresholdRounded >=0.0" >
+        <div class="col-xs-12" ng-show="currentThreshold >= 0.0">
             <h3>Threshold details</h3>
             <div class="model-info-column" >
-                    <strong>Saved threshold:</strong> {{databaseThreshold}}<br>
-                    <strong>Suggested threshold:</strong> {{suggestedThreshold}}<br>
-                    <strong>Current threshold:</strong> {{currentThresholdRounded}}
-                    <div class="newthersholddiv" style="">
-                        <label>New threshold:</label>
-                        <input type="text" 
-                            ng-model="newthres"
-                            class="form-control input-sm" 
-                            aria-describedby="enter new threshold" 
-                            style="width:50px; display:inline-block;">
-                    </div>
-                    <button class="btn btn-default" ng-click="recalculate()">
-                        Recalculate
-                    </button>
-                    <button class="btn btn-default" ng-click="saveThreshold()">
-                        Save current threshold
-                    </button>
-                    <p><small>{{messageSaved}}</small></p>
+                <strong>Saved threshold:</strong> {{ model.threshold }}<br>
+                <strong>Suggested threshold:</strong> {{suggestedThreshold}}<br>
+                <strong>Current threshold:</strong> {{ currentThreshold | number }}
+                <div class="newthersholddiv" style="">
+                    <label>New threshold:</label>
+                    <input type="text" 
+                        ng-model="newthres"
+                        class="form-control input-sm" 
+                        aria-describedby="enter new threshold" 
+                        style="width:50px; display:inline-block;">
+                </div>
+                <button class="btn btn-default" ng-click="recalculate()">
+                    Recalculate
+                </button>
+                <button class="btn btn-default" ng-click="saveThreshold()">
+                    Save current threshold
+                </button>
+                <p><small>{{messageSaved}}</small></p>
             </div>
             <div class="model-info-column" >
                 <strong>Statistics</strong>
@@ -300,19 +296,19 @@
                     </div>
                 </div>
             </div>
-            
         </div>
     </div>
     <div class="row" ng-hide="showModelValidations">
         <div ng-hide="invalid">
-            <h4>The current model was computed using a previous version of the Arbimon2 App.<br>
-            The validation list feature is not available.</h4>
+            <h4>
+                <!-- The current model was computed using a previous version of the Arbimon2 App.<br> -->
+                The validation list is not available.
+            </h4>
         </div>
     </div>
-    <div class="row" ng-show="valiDetails && showModelValidations">      
-        <div class="col-sm-12 col-lg-8" 
-            ng-show="!loadingValidations && showValidationsTable">
-            <h3 class="inlineh3">
+    <div class="row" ng-show="valiDetails && showModelValidations">
+        <div class="col-sm-12 col-lg-8" ng-show="!loadingValidations && showValidationsTable">
+            <h3>
                 Validations 
                 <div class="btn btn-default" 
                     ng-csv="getValidations()" 
@@ -323,23 +319,20 @@
                         tooltip-placement="bottom">
                     </i>
                 </div>
+            <small>(Click in the row to view recording details)</small>
             </h3>
-            <small>(Click in the recording row to show recording details)</small>
-            <a2-table rows="validationsData" no-checkbox on-select="recDetails(row)">
-                <field title="Date"  key="date">{{ row.date }}</field>
+            <a2-table rows="validations" no-checkbox on-select="recDetails(row)">
+                <field title="Date"  key="date">{{ row.date | moment: 'lll' }}</field>
                 <field title="Site"  key="site">{{ row.site }}</field>
                 <field title="User presence"  key="presence">{{ row.presence }}</field>
                 <field title="Model presence"  key="model">{{ row.model }}</field>
                 <field title="Threshold presence"  key="threshold">{{ row.threshold }}</field>
             </a2-table>  
         </div>
-        <div ng-show="loadingValidations && showValidationsTable" class="col-sm-12 col-lg-8">
-            <h3 class="inlineh3">
-                Loading data 
-            </h3>
-            <loader></loader>
+        <div class="col-sm-12 col-lg-8" ng-show="loadingValidations && showValidationsTable">
+            
         </div>
-        <div class="col-sm-12 col-lg-6" ng-hide="showValidationsTable">
+        <div class="col-sm-12 col-lg-8" ng-hide="showValidationsTable">
             <div>
                 <h3>
                     Validation Recording Detail
@@ -358,38 +351,37 @@
                 </h3>
                 <div class="row">
                     <div class="col-sm-4">
-                        <p><b>Date:</b> {{recNameInVectorViewDate}}</p>
+                        <p><b>Date:</b> {{ selected.date | moment: 'lll'}}</p>
                     </div>
                     <div class="col-sm-2">
-                        <p><b>Site:</b> {{recNameInVectorViewSite}}</p>
+                        <p><b>Site:</b> {{ selected.site}}</p>
                     </div>
                     <div class="col-sm-2">
-                        <p><b>User:</b> {{recNameInVectorViewUser}}</p>
+                        <p><b>User:</b> {{ selected.presence }}</p>
                     </div>
                     <div class="col-sm-2">
-                        <p><b>Model:</b> {{recNameInVectorViewModel}}</p>
+                        <p><b>Model:</b> {{ selected.model }}</p>
                     </div>
                     <div class="col-sm-2">
-                        <p><b>Threshold:</b> {{recNameInVectorViewTh}}</p>
+                        <p><b>Threshold:</b> {{ selected.threshold }}</p>
                     </div>
                 </div>
             </div>
             <div class="axisWrapper">
                 <div class="yaxisWrapper">
-                    <div class="yAxishighvalue">{{data.maxvRounded}}</div>
+                    <div class="yAxishighvalue">{{ model.maxv | number}}</div>
                     <div class="lowaxis2">0.0</div>
                 </div>
-                <div class="vectorWrapper"><a2-vectorchart minvect="data.minv" maxvect="data.maxv" vector-data="selectedVectWatch"></a2-vectorchart></div>
+                <div class="vectorWrapper"><a2-vectorchart minvect="model.minv" maxvect="model.maxv" vector-data="selected.vector"></a2-vectorchart></div>
             </div>
             <div class="cleardiv"></div>
             <div class="axisWrapper">
                 <div class="yaxisWrapper vertical-text2">
                     Hertz
                 </div>
-                <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="{{selectedUrl}}"/></div>
+                <div class="vectorWrapper"><img class="sm-result-thumb" ng-src="{{selected.url}}"/></div>
                 <div class="seconds-div-center"><small>Seconds</small></div>
             </div>
         </div>
     </div>
-        
 </div>

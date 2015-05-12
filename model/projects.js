@@ -6,6 +6,7 @@ var Joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;
 var AWS = require('aws-sdk');
 
+
 var s3 = new AWS.S3();
 var config = require('../config');
 var dbpool = require('../utils/dbpool');
@@ -569,7 +570,7 @@ var Projects = {
     },
     
     classificationErrorsCount: function(project_url,cid, callback) {
-        var q = "SELECT count(*) as count \n"+
+        var q = "SELECT count(*) AS count \n"+
                 "FROM recordings_errors \n"+ 
                 "WHERE job_id = " + mysql.escape(cid);
 
@@ -594,7 +595,7 @@ var Projects = {
                 "      `classification_results` c, \n"+
                 "      `species` as s , \n"+
                 "      `songtypes` as st \n"+
-                "WHERE c.`job_id` = " + mysql.escape(cid) +
+                "WHERE c.`job_id` = " + mysql.escape(cid) +"\n"+
                 "AND c.`species_id` = s.`species_id` \n"+
                 "AND c.`songtype_id` = st.`songtype_id` \n"+
                 "AND jpc.`job_id` = c.`job_id` \n"+
@@ -622,14 +623,6 @@ var Projects = {
                 "           UCASE(LEFT(st.`songtype`, 1)), \n"+
                 "           SUBSTRING(st.`songtype`, 2) \n"+
                 "        ) as songtype , \n"+
-                // "       CONCAT( \n"+
-                // "           SUBSTRING_INDEX( m.`uri` , '.', 1 ), \n"+
-                // "           '/classification_', \n"+
-                // "           c.`job_id`, \n"+
-                // "           '_', \n"+
-                // "           SUBSTRING_INDEX(r.`uri` ,'/',-1 ), \n"+
-                // "           '.vector' \n"+
-                // "        ) as vect, \n"+
                 "       CONCAT( \n"+
                 "           UCASE(LEFT(s.`scientific_name`, 1)), \n"+
                 "           SUBSTRING(s.`scientific_name`, 2) \n"+
@@ -639,7 +632,7 @@ var Projects = {
                 "     `classification_results` c, \n"+
                 "     `species` as s , \n"+
                 "     `songtypes` as st \n"+
-                "WHERE c.`job_id` = " + mysql.escape(cid) +
+                "WHERE c.`job_id` = " + mysql.escape(cid) + "\n"+
                 "AND c.`job_id` = cs.`job_id` \n"+
                 "AND c.`species_id` = s.`species_id` \n"+
                 "AND c.`songtype_id` = st.`songtype_id` \n"+
@@ -707,8 +700,7 @@ var Projects = {
         queryHandler(q, callback);
     },
     
-    modelValidationUri: function(model_id, callback)
-    {
+    modelValidationUri: function(model_id, callback) {
         var q = "SELECT vs.`uri` FROM `validation_set` vs, `models` m "+
             " WHERE m.`validation_set_id` = vs.`validation_set_id` "+
             " and m.`model_id` = "+ mysql.escape(model_id);
@@ -717,7 +709,7 @@ var Projects = {
     },
 
     
-    removeUser: function(user_id, project_id, callback){
+    removeUser: function(user_id, project_id, callback) {
         if(typeof project_id !== 'number')
             return callback(new Error("invalid type for 'project_id'"));
         

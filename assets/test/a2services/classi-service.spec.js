@@ -132,13 +132,15 @@ describe('Module: a2-classi-service', function() {
         
         describe('a2Classi.getRecVector', function() {
             var request;
-            var vectorUri;
-            
+            var classificationId;
+            var recId;
+                
             beforeEach(function() {
-                vectorUri = "some-uri";
+                classificationId = 1;
+                recId = 2;
                 
                 request = $httpBackend
-                    .expectPOST('/api/project/test/classification/vector', { v: vectorUri });
+                    .expectGET('/api/project/test/classification/'+classificationId+'/vector/'+recId);
             });
             
             it('requests to the correct route and call success', function() {
@@ -146,7 +148,8 @@ describe('Module: a2-classi-service', function() {
                 
                 callback = sinon.spy();
                 
-                a2Classi.getRecVector(vectorUri, callback);
+                a2Classi.getRecVector(classificationId, recId)
+                    .success(callback);
                 
                 $httpBackend.flush();
                 
@@ -157,13 +160,16 @@ describe('Module: a2-classi-service', function() {
                 request.respond(500, 'data');
                 
                 callback = sinon.spy();
+                errorCallback = sinon.spy();
                 
-                a2Classi.getRecVector(vectorUri, callback);
+                a2Classi.getRecVector(classificationId, recId)
+                    .success(callback)
+                    .error(errorCallback);
                 
                 $httpBackend.flush();
                 
                 expect(callback.called).to.equal(false);
-                expect(notifyError.calledOnce);
+                expect(errorCallback.calledOnce);
             });
         });
         
