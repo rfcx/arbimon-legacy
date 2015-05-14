@@ -6,7 +6,9 @@ var joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;
 var AWS = require('aws-sdk');
 
-var config       = require('../config');
+
+var s3 = new AWS.S3();
+var config = require('../config');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
@@ -423,6 +425,7 @@ var Projects = {
         queryHandler(q, callback);
     },
     
+    // TODO move classification method to its own model file
     classificationName: function(cid, callback) {
         var q = "select  REPLACE(lower(c.`name`),' ','_')  as name , j.`project_id` as pid  "+
                 " from   `job_params_classification`  c , `jobs` j where c.`job_id` = j.`job_id` and c.`job_id` = "+mysql.escape(cid);
@@ -503,23 +506,20 @@ var Projects = {
                             }
                             else
                             {
-                                if(!s3){
-                                    s3 = new AWS.S3();
-                                }
                                 var params = {
                                     Bucket: config('aws').bucketName,
                                     Delete: { 
                                         Objects:allToDelete
                                     }
                                 };
+                                
                                 s3.deleteObjects(params, function(err, data) {
                                    if (err){
-                                       callback(err);
+                                       return callback(err);
                                    }
-                                   else
-                                   {
-                                       var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid;
-                                    //    console.log('exc quer 1');
+                                    
+                                    var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid;
+                                    
                                        queryHandler(q,function(err,row)
                                            {
                                                if (err)
@@ -557,7 +557,6 @@ var Projects = {
                                                }
                                            }
                                        );
-                                   }
                                 });
                             }
                         });
@@ -591,33 +590,98 @@ var Projects = {
         queryHandler(q, callback);
     },
     
-    classificationErrors: function(project_url,cid, callback) {
-        var q = "select count(*) as count "+
-                " from  `recordings_errors`  where `job_id` = "+mysql.escape(cid);
+    classificationErrorsCount: function(project_url,cid, callback) {
+        var q = "SELECT count(*) AS count \n"+
+                "FROM recordings_errors \n"+ 
+                "WHERE job_id = " + mysql.escape(cid);
 
         queryHandler(q, callback);
     },
     
     classificationDetail: function(project_url, cid, callback) {
-        var q = "select  c.`species_id` ,c.`songtype_id`,c.`present`  , "+
-                " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
-                " CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name ,"+
-                "  mm.`threshold` as th "+
-                " from  `models` mm,`job_params_classification`jpc ,`classification_results` c,`species` as s , `songtypes` as st where c.`job_id` = "+mysql.escape(cid)+
-                " and c.`species_id` = s.`species_id` and c.`songtype_id` = st.`songtype_id` and jpc.`job_id` = c.`job_id` and mm.`model_id` = jpc.`model_id`" ;
+        var q = "SELECT c.`species_id`, \n"+
+                "       c.`songtype_id`, \n"+
+                "       c.`present`, \n"+
+                "       CONCAT( \n"+
+                "           UCASE(LEFT(st.`songtype`, 1)), \n"+
+                "           SUBSTRING(st.`songtype`, 2) \n"+
+                "       ) as songtype, \n"+
+                "       CONCAT( \n"+
+                "           UCASE(LEFT(s.`scientific_name`, 1)), \n"+
+                "           SUBSTRING(s.`scientific_name`, 2) \n"+
+                "       ) as scientific_name, \n"+
+                "       mm.`threshold` as th \n"+
+                "FROM  `models` mm, \n"+
+                "      `job_params_classification`jpc, \n"+
+                "      `classification_results` c, \n"+
+                "      `species` as s , \n"+
+                "      `songtypes` as st \n"+
+                "WHERE c.`job_id` = " + mysql.escape(cid) +"\n"+
+                "AND c.`species_id` = s.`species_id` \n"+
+                "AND c.`songtype_id` = st.`songtype_id` \n"+
+                "AND jpc.`job_id` = c.`job_id` \n"+
+                "AND mm.`model_id` = jpc.`model_id`";
 
         queryHandler(q, callback);
     },
     
     classificationDetailMore: function(project_url, cid, from, total, callback) {
-        var q = "select cs.`json_stats`,  c.`species_id` ,c.`songtype_id`,c.`present` as present  , c.`recording_id`,SUBSTRING_INDEX(SUBSTRING_INDEX( r.`uri` , '.', 1 ),'/',-1 ) as recname ,CONCAT( SUBSTRING_INDEX( r.`uri` , '.', 1 ) , '.thumbnail.png') as uri,"+
-                " CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype , "+
-                " CONCAT(SUBSTRING_INDEX( m.`uri` , '.', 1 ),'/classification_',c.`job_id`,'_',SUBSTRING_INDEX(r.`uri` ,'/',-1 ),'.vector') as vect,"+
-                " CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name  "+
-                " from `classification_stats`  cs , `models` m ,`job_params_classification` jpc, `recordings` r,  `classification_results` c,`species` as s , `songtypes` as st where c.`job_id` = "+mysql.escape(cid)+
-                " and c.`job_id` = cs.`job_id` and m.`model_id` = jpc.`model_id` and jpc.`job_id` = c.`job_id` and c.`species_id` = s.`species_id` and c.`songtype_id` = st.`songtype_id` and r.`recording_id` = c.`recording_id` "+
-                " order by present desc LIMIT "+parseInt(from)+" , "+parseInt(total) ;
-                queryHandler(q, callback);
+        var q = "SELECT cs.`json_stats`, \n"+
+                "       c.`species_id`, \n"+
+                "       c.`songtype_id`, \n"+
+                "       c.`present` as present, \n"+
+                "       c.`recording_id`, \n"+
+                "       SUBSTRING_INDEX( \n"+
+                "           SUBSTRING_INDEX( r.`uri` , '.', 1 ), \n"+
+                "           '/', \n"+
+                "           -1  \n"+
+                "        ) as recname, \n"+
+                "       CONCAT( \n"+
+                "           SUBSTRING_INDEX( r.`uri` , '.', 1 ), \n"+
+                "           '.thumbnail.png' \n"+
+                "       ) as uri, \n"+
+                "       CONCAT( \n"+
+                "           UCASE(LEFT(st.`songtype`, 1)), \n"+
+                "           SUBSTRING(st.`songtype`, 2) \n"+
+                "        ) as songtype , \n"+
+                "       CONCAT( \n"+
+                "           UCASE(LEFT(s.`scientific_name`, 1)), \n"+
+                "           SUBSTRING(s.`scientific_name`, 2) \n"+
+                "       ) as scientific_name \n"+
+                "FROM `classification_stats`  cs , \n"+
+                "     `recordings` r, \n"+
+                "     `classification_results` c, \n"+
+                "     `species` as s , \n"+
+                "     `songtypes` as st \n"+
+                "WHERE c.`job_id` = " + mysql.escape(cid) + "\n"+
+                "AND c.`job_id` = cs.`job_id` \n"+
+                "AND c.`species_id` = s.`species_id` \n"+
+                "AND c.`songtype_id` = st.`songtype_id` \n"+
+                "AND r.`recording_id` = c.`recording_id` \n"+
+                "ORDER BY present DESC LIMIT " + parseInt(from) + "," + parseInt(total);
+        
+        queryHandler(q, callback);
+    },
+    
+    classificationVector: function(c12nId, recId, callback) {
+        var q = "SELECT CONCAT( \n"+
+                "           SUBSTRING_INDEX(m.uri, '.', 1), \n"+
+                "           '/classification_', \n"+
+                "           cr.job_id, \n"+
+                "           '_', \n"+
+                "           SUBSTRING_INDEX(r.uri, '/', -1), \n"+
+                "           '.vector' \n"+
+                "       ) as vect \n"+
+                "FROM classification_results AS cr \n"+
+                "JOIN job_params_classification AS jpc ON jpc.job_id = cr.job_id \n"+
+                "JOIN models AS m ON m.model_id = jpc.model_id \n"+
+                "JOIN recordings AS r ON r.recording_id = cr.recording_id \n"+
+                "WHERE cr.job_id = ? \n"+
+                "AND r.recording_id = ? ";
+        
+        q = mysql.format(q, [c12nId, recId, callback]);
+        
+        queryHandler(q, callback);
     },
    
     trainingSets: function(project_url, callback) {
@@ -665,7 +729,7 @@ var Projects = {
         queryHandler(q, callback);      
     },
 
-    removeUser: function(user_id, project_id, callback){
+    removeUser: function(user_id, project_id, callback) {
         if(typeof project_id !== 'number')
             return callback(new Error("invalid type for 'project_id'"));
         

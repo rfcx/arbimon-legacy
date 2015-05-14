@@ -120,6 +120,16 @@ var Recordings = {
         }
         return undefined;
     },
+    
+    findById: function(recId, callback) {
+        var q = "SELECT * \n"+
+                "FROM recordings \n"+
+                "WHERE recording_id = ?";
+        
+        q = mysql.format(q, [recId]);
+        queryHandler(q, callback);
+    },
+    
     /** Finds recordings matching the given url and project id.
      * @param {String} recording_url url query selecting the set of recordings
      * @param {Integer} project_id id of the project associated to the recordings

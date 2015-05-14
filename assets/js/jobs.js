@@ -231,7 +231,7 @@
                 modalInstance.result.then(function(ok) {
                     fn(vl);
                 });
-        }
+        };
         
         $scope.hide = function(job) {
 

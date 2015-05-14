@@ -41,7 +41,7 @@
 </div>
 <div class="row">
     <div class="col-md-7" ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
-        <a2-table2 rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
+        <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
             <field title="Name" key="name">
                 <!-- <i ng-show="row.published && !row.imported" class="fa fa-globe"></i> -->
                 <!-- <i ng-show="row.imported" class="fa fa-users"></i> -->
@@ -66,7 +66,7 @@
             <field title="Altitude" key="alt">
                 {{ row.alt | number:2 }}
             </field>
-        </a2-table2>
+        </a2-table>
         <div class="jumbotron" ng-show="(!sites || !sites.length > 0) && !loading">
             <h3 class="text-center">
                 This project does not have any <i class="fa fa-map-marker"></i> sites

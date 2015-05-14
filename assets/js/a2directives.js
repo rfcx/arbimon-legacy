@@ -114,56 +114,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
         }
     };
 })
-.directive('a2Table', function($filter) {
-    return {
-        restrict: 'E',
-        scope: {
-            fields: '=',
-            rows: '=',
-            selected: '=?',
-            onSelect: '&',
-            extSort: '&',
-            checked: '=?',
-            search: '=?',
-            // noCheckbox: '@',    // disable row checkboxes
-            // noSelect: '@',      // disable row selection
-            dateFormat: '@',    // moment date format, default: 'lll'
-            numberDecimals: '@' // decimal spaces 
-        },
-        controller: 'a2TableCtrl',
-        templateUrl: '/partials/directives/table.html',
-        link: function(scope, element, attrs) {
-            
-            if(attrs.noCheckbox !== undefined) {
-                scope.noCheck = true;
-            }
-            
-            if(attrs.noSelect !== undefined) {
-                scope.noSelect = true;
-            }
-            
-            if(attrs.search) {
-                scope.$watch('search', function(value) {
-                    //~ console.log(value);
-                    scope.query = scope.search;
-                    scope.updateChecked();
-                });
-            }
-            
-            if(attrs.defaultSort) { 
-                scope.sortKey = attrs.defaultSort;
-            }
-            
-            if(attrs.checked) {
-                scope.$watch('rows', updateChecked, true);
-            }
-        }
-    };
-})
-/**
-    this version of a2Table uses html to define fields
-*/
-.directive('a2Table2', function($window, $filter, $templateCache, $compile) {
+.directive('a2Table', function($window, $filter, $templateCache, $compile) {
     var $ = $window.$;
     
     return {

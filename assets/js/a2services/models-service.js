@@ -7,20 +7,16 @@ angular.module('a2-models-service', [
     var openedModel = false;
     
     return {
-        modelState : function(s)
-        {
+        modelState : function(s) {
             openedModel = s;
         },
-        isModelOpen : function()
-        {
+        isModelOpen : function() {
             return openedModel;
         },
-        saveState : function(data)
-        {
+        saveState : function(data) {
             saveData = data;
         },
-        getState : function()
-        {
+        getState : function() {
             return saveData;
         },
         list: function(callback) {
@@ -33,10 +29,8 @@ angular.module('a2-models-service', [
                 .success(callback)
                 .error(notify.serverError);
         },
-        findById: function(modelId, callback) {
-            $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId)
-                .success(callback)
-                .error(notify.serverError);
+        findById: function(modelId) {
+            return $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId);
         },
         create: function(modelData) {
             return $http.post('/api/project/' + Project.getUrl() + '/models/new', modelData);
@@ -50,6 +44,9 @@ angular.module('a2-models-service', [
             $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId + '/validation-list/')
                 .success(callback)
                 .error(notify.serverError);
+        },
+        getRecVector: function(modelId, recId, callback) {
+            return $http.get( '/api/project/' + Project.getUrl() + '/models/' + modelId + '/training-vector/' + recId);
         },
         setThreshold: function(modelId, thresholdValue) {
             var data = {
