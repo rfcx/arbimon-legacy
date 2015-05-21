@@ -15,7 +15,7 @@
                     <a>No Playlists in Project</a>
                 </li>
                 <li ng-hide="browser.$type.loading.playlists" ng-repeat="playlist in browser.$type.playlists" ng-class="{active: browser.$type.playlist == playlist}">
-                    <a ng-click="browser.$type.playlist = playlist | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist'">{{playlist.name}}</a>
+                    <a ng-click="browser.$type.set_playlist(playlist) | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist'">{{playlist.name}}</a>
                     <span class="badge">{{playlist.count}}</span>
                 </li>
             </ul>
