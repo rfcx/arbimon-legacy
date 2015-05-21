@@ -34,37 +34,29 @@ angular.module('visualizer', [
  */
 .config(function($stateProvider, $urlRouterProvider) {
     
-    $urlRouterProvider
-    .rule(function ($injector, $location) {
-        var path = $location.path();
-        var m =/visualizer\/?(.*)/.exec(path);
-        if(m) {
-            var params = { 
-                location:m[1] 
-            };
-            $injector.invoke(function($state){ 
-                $state.go('visualizer', params, {location:false}); 
-            });
-            return m[0];
-        }
-    });
-    
     $stateProvider.state('visualizer', {
         url: '/visualizer',
-        params : {
-            location:''
-        },
-        reloadOnSearch : false,
         views: {
             'visualizer': {
-                params : {
-                    location:''
-                },
-                reloadOnSearch : false,
-                template: '<a2-persistent name="visualizer"><a2-visualizer></a2-visualizer></a2-persistent>'
+                controller : 'VisualizerCtrl',
+                templateUrl: '/partials/visualizer/main.html'
             }
         },
-    });
+        deepStateRedirect: true,
+        sticky: true,
+    })
+    .state('visualizer.view', {
+        url: '/:type/:idA/:idB',
+        params:{type:'', idA:{value:'', squash:true}, idB:{value:'', squash:true}},
+        controller: function($state, $scope){
+            var p = $state.params, l = p.type + (p.idA ? ('/' + p.idA + (p.idB ? '/' + p.idB : '')) : '');
+            console.log(".state('visualizer.rec', { controller: function($state, $scope){ $state.params: ", $state.params);
+            $scope.location.whenBrowserIsAvailable(function(){
+                $scope.$parent.$broadcast('set-browser-location', [l]);
+            });
+        }
+    })
+    ;
 })
 .directive('a2Visualizer', function(){
     return { 
@@ -97,7 +89,7 @@ angular.module('visualizer', [
             if(dont_sync){
                 this.__expected = location;
             }
-            $location.path(this.prefix + location);
+            // $location.path(this.prefix + location);
         },
         path_changed : function(path){
             if(path === undefined){
@@ -106,6 +98,22 @@ angular.module('visualizer', [
             path = '' + path;
             if(path.indexOf(this.prefix) === 0 ){
                 this.current = path.substr(this.prefix.length);
+            }
+        },
+        whenBrowserIsAvailable: function(callback){
+            if(this.browserAvailable){
+                callback();
+            } else {
+                (this.__onBrowserAvailable__ || (this.__onBrowserAvailable__=[])).push(callback);
+            }
+        },
+        notifyBrowserAvailable: function(){
+            this.browserAvailable = true;
+            if(this.__onBrowserAvailable__){
+                this.__onBrowserAvailable__.forEach(function(callback){
+                    callback();
+                });
+                delete this.__onBrowserAvailable__;
             }
         }
     };
@@ -128,7 +136,6 @@ angular.module('visualizer', [
 
     layers.add(
         'base-image-layer',
-        'browser-layer',
         'recording-layer',
         'soundscape-info-layer',
         'soundscape-regions-layer',
@@ -143,12 +150,6 @@ angular.module('visualizer', [
     var location = new a2VisualizerLocationManager($scope, ($state.current.url || '/visualizer') + '/');
     $scope.location = location;
     
-    $scope.$on('$locationChangeSuccess', function(){
-        location.path_changed();
-    });
-    $scope.$watch('location.current', function(){
-        location.sync();
-    });
     $scope.set_location = location.set.bind(location);
 
     
@@ -189,11 +190,8 @@ angular.module('visualizer', [
         }
     };
     $scope.audio_player = new a2AudioPlayer($scope);
-    $scope.$on('a2-persisted', $scope.location.update_path.bind($scope.location));
     $scope.$on('browser-available', function(){
-        if($state.params && $state.params.location) {
-            $scope.location.current = $state.params.location;
-        }
+        $scope.location.notifyBrowserAvailable();
     });
     $rootScope.$on('notify-visobj-updated', function(){
         var args = Array.prototype.slice.call(arguments, 1);
