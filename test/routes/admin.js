@@ -40,13 +40,14 @@ var admin_router = router_expect(admin, {
     session:{user:{id:9393, isSuper:1}}
 });
 
-
+// TODO write unit test for new routes
 describe('admin.js', function(){
     afterEach(function(){
         mock.model.jobs={};
         delete mock.request.delegate;
         delete mock.request.get;
     });
+    
     describe('use access restriction middleware', function(){
         it('Should allow superusers in.', function(done){
             admin_router.when('/some_page', { next: function(req, res, err){
@@ -62,6 +63,7 @@ describe('admin.js', function(){
             }});
         });
     });
+    
     describe('GET /', function() {
         it('Should render the admins page.', function(done){
             admin_router.when('/', { render: function(req, res, page){
@@ -70,6 +72,7 @@ describe('admin.js', function(){
             }});
         });
     });
+    
     describe('GET /job-queue', function() {
         it('Should respond json with the jobqueue server\'s status.', function(done){
             mock.request.get = function(url){
@@ -87,6 +90,7 @@ describe('admin.js', function(){
                 done();
             }});
         });
+        
         it('Should respond error message if jobqueue server\'s status cannot be obtained.', function(done){
             mock.request.get = function(url){
                 var emiter = new events.EventEmitter();
@@ -104,21 +108,5 @@ describe('admin.js', function(){
             }});
         });
     });
-    describe('GET /active-jobs', function() {
-        it('Should respond with list of active jobs.', function(done){
-            mock.model.jobs.activeJobs = function(cb){ setImmediate(cb, null, ["job1","job2"]);};
-            admin_router.when('/active-jobs', { json: function(req, res, obj){
-                obj.should.deep.equal(["job1", "job2"]);
-                done();
-            }});
-        });
-        it('Should fail if fetching list of active jobs failed.', function(done){
-            mock.model.jobs.activeJobs = function(cb){ setImmediate(cb, new Error("I am error"));};
-            admin_router.when('/active-jobs', { next: function(req, res, err){
-                should.exist(err);
-                err.message.should.equal("I am error");
-                done();
-            }});
-        });
-    });
+
 });

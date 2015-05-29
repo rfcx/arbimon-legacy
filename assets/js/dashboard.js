@@ -25,7 +25,7 @@ angular.module('dashboard',[
         });
     })
 .controller('SummaryCtrl', function($scope, Project, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
-        $scope.loading = 8;
+        $scope.loading = 9;
         var infowindow_scope = $scope.$new();
         var done = function() {
             if($scope.loading > 0) --$scope.loading;
@@ -94,6 +94,7 @@ angular.module('dashboard',[
                     var el = $compile(layer_tmp)(infowindow_scope)[0];
                     infowindow.setContent(el);
                 });
+                
                 angular.forEach($scope.sites, function(site){
                     var position = new google.maps.LatLng(site.lat, site.lon);
                     
@@ -118,8 +119,13 @@ angular.module('dashboard',[
             
         });
 
-        Project.getRecTotalQty(function(count) {
-            $scope.recsQty = count;
+        Project.getUsage().success(function(data) {
+            $scope.recMins = data.min_usage;
+            done();
+        });
+        
+        Project.getRecTotalQty(function(data) {
+            $scope.recsQty = data;
             done();
         });
     })

@@ -58,8 +58,8 @@ var getNextRec = function(callback) {
     });
 };
 
-var updateRecInfo = function(info, callback) {
-    // console.log('updateInfo:', info);
+var updateRecInfo = function(callback) {
+    // console.log('updateInfo:', currentRec);
     var q = 'UPDATE recordings \n'+
             'SET `sample_rate` = ?, '+
             '`duration` = ?, '+
@@ -71,13 +71,13 @@ var updateRecInfo = function(info, callback) {
             'WHERE recording_id = ?';
             
     q = mysql.format(q, [
-        info.sample_rate, 
-        info.duration, 
-        info.samples, 
-        info.file_size, 
-        info.bit_rate, 
-        info.precision, 
-        info.sample_encoding,
+        currentRec.info.sample_rate, 
+        currentRec.info.duration, 
+        currentRec.info.samples, 
+        currentRec.info.file_size, 
+        currentRec.info.bit_rate, 
+        currentRec.info.precision, 
+        currentRec.info.sample_encoding,
         currentRec.id
     ]);
     // console.log(q);
@@ -102,9 +102,23 @@ var loop = function(next) {
         function(data, callback) {
             currentRec.path = path.join(os.tmpdir(), path.basename(currentRec.uri));
             
-            fs.writeFileSync(currentRec.path, data.Body);
-            
-            audioTools.info(currentRec.path, callback);
+            fs.writeFile(currentRec.path, data.Body, callback);
+        },
+        function(callback) {
+            audioTools.info(currentRec.path, function(err, info) {
+                if(err) return callback(err);
+                
+                currentRec.info = info;
+                callback();
+            });
+        },
+        function(callback) {
+            fs.stat(currentRec.path, function(err, stat) {
+                if(err) return callback(err);
+                
+                currentRec.info.file_size = stat.size;
+                callback();
+            });
         },
         updateRecInfo,
         function(callback) {

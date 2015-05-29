@@ -66,7 +66,18 @@ var Projects = {
         q = sprintf(q, mysql.escape(project_id));
         return queryHandler(q , callback);
     },
-
+    
+    /**
+     * creates a project and add the creator to the project as owner
+     * @param {Object} project 
+     * @param {String} project.name
+     * @param {String} project.url
+     * @param {String} project.description
+     * @param {Number} project.owner_id - creator id
+     * @param {Number} project.project_type_id
+     * @param {Boolean} project.is_private 
+     * @param {Function} callback(err, projectId)
+    */
     create: function(project, callback) {
         var values = [];
 
@@ -317,7 +328,7 @@ var Projects = {
     },
 
     removeClasses: function(project_classes, callback) {
-        var schema = Joi.array().min(1).items(Joi.number());
+        var schema = joi.array().min(1).items(joi.number());
 
         joi.validate(project_classes, schema, function(err, value) {
             if(err) return callback(err);
@@ -433,138 +444,73 @@ var Projects = {
         queryHandler(q, callback);
     },
     
-    classificationDelete: function(cid, callback) {
-        var modUri = '';
-        var q = "SELECT `uri` FROM `models` WHERE `model_id` = "+
-            "(SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = "+cid+")";
-        queryHandler(q,
-            function(err,data)
-            {
-                if(err) return callback(err);
-                
+    classificationDelete: function(classificationId, callback) {
+        
+        var cid = mysql.escape(classificationId);
+        var modUri;
+        var q;
+        var allToDelete;
+        
+        async.waterfall([
+            function(cb) {
+                q = "SELECT `uri` FROM `models` WHERE `model_id` = "+
+                    "(SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = "+cid+")";
+                queryHandler(q, cb);
+            },
+            function(data, fields, cb) {
                 if(!data.length) return callback(new Error('Classification not found'));
                 
                 modUri = data[0].uri.replace('.mod','');
                 q = "SELECT `uri` FROM `recordings` WHERE `recording_id` in "+
-                "(SELECT `recording_id` FROM `classification_results` WHERE `job_id` = "+cid+") ";
-                queryHandler(q,
-                    function(err,data)
-                    {
-                        if(err) return callback(err);
-                        var allToDelete = [];
-                        async.eachLimit(data,5,
-                        function (elem,callb)
-                        {
-                            var uri = elem.uri.split("/");
-                            uri = uri[uri.length-1];
-                            var cido = parseInt(cid.replace("'",""));
-                            allToDelete.push({Key:modUri+'/classification_'+cido+'_'+uri+'.vector'});
-                            callb();
-                        },
-                        function(){                            
-                            if (allToDelete.length===0)
-                            {
-                               var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid;
-                            //    console.log('exc quer 1');
-                               queryHandler(q,function(err,row)
-                                   {
-                                       if (err)
-                                       {
-                                           callback(err);
-                                       }
-                                       else
-                                       {    
-                                           var q = "DELETE FROM `classification_stats` WHERE `job_id` = "+cid ;
-                                        //    console.log('exc quer 2');
-                                           queryHandler(q,
-                                                function(err,row)
-                                                {
-                                                    if (err)
-                                                    {
-                                                        callback(err);
-                                                    }
-                                                    else
-                                                    {    
-                                                        var q = "DELETE FROM `job_params_classification` WHERE `job_id` ="+cid;
-                                                        // console.log('exc quer 3');
-                                                        queryHandler(q,            
-                                                            function(err,data)
-                                                            {
-                                                                if (err){
-                                                                    callback(err);
-                                                                } else {
-                                                                    callback(null,{data:"Classification deleted succesfully"});
-                                                                }
-                                                            }
-                                                        );
-                                                    }
-                                                }
-                                            );
-                                       }
-                                   }
-                               );
-                            }
-                            else
-                            {
-                                var params = {
-                                    Bucket: config('aws').bucketName,
-                                    Delete: { 
-                                        Objects:allToDelete
-                                    }
-                                };
-                                
-                                s3.deleteObjects(params, function(err, data) {
-                                   if (err){
-                                       return callback(err);
-                                   }
-                                    
-                                    var q = "DELETE FROM `classification_results` WHERE `job_id` ="+cid;
-                                    
-                                       queryHandler(q,function(err,row)
-                                           {
-                                               if (err)
-                                               {
-                                                   callback(err);
-                                               }
-                                               else
-                                               {    
-                                                   var q = "DELETE FROM `classification_stats` WHERE `job_id` = "+cid ;
-                                                //    console.log('exc quer 2');
-                                                   queryHandler(q,
-                                                        function(err,row)
-                                                        {
-                                                            if (err)
-                                                            {
-                                                                callback(err);
-                                                            }
-                                                            else
-                                                            {    
-                                                                var q = "DELETE FROM `job_params_classification` WHERE `job_id` ="+cid;
-                                                                // console.log('exc quer 3');
-                                                                queryHandler(q,            
-                                                                    function(err,data)
-                                                                    {
-                                                                        if (err){
-                                                                            callback(err);
-                                                                        } else {
-                                                                            callback(null,{data:"Classification deleted succesfully"});
-                                                                        }
-                                                                    }
-                                                                );
-                                                            }
-                                                        }
-                                                    );
-                                               }
-                                           }
-                                       );
-                                });
-                            }
-                        });
-                            
-                    }
-                ); 
+                "(SELECT `recording_id` FROM `classification_results` WHERE `job_id` = "+cid+")";
+                queryHandler(q, cb);
+            },
+            function(data, fields, cb) {
+                allToDelete = [];
+                async.each(data, function (elem, next) {
+                    var uri = elem.uri.split("/");
+                    uri = uri[uri.length-1];
+                    allToDelete.push({Key:modUri+'/classification_'+cid+'_'+uri+'.vector'});
+                    next();
+                }, cb);
+            },
+            function(cb) {
+                if(allToDelete.length === 0) {
+                    cb();
+                }
+                else {
+                    var params = {
+                        Bucket: config('aws').bucketName,
+                        Delete: { 
+                            Objects: allToDelete
+                        }
+                    };
+                    
+                    s3.deleteObjects(params, function() {
+                        cb();
+                    });
+                }
+            },
+            function(cb) {
+                var q = "DELETE FROM `classification_results` WHERE `job_id` = "+cid;
+                // console.log('exc quer 1');
+                queryHandler(q, cb);
+            },
+            function(result, fields, cb) {
+                q = "DELETE FROM `classification_stats` WHERE `job_id` = "+cid ;
+                // console.log('exc quer 2');
+                queryHandler(q, cb);
+            },
+            function(result, fields, cb) {
+                q = "DELETE FROM `job_params_classification` WHERE `job_id` = "+cid;
+                // console.log('exc quer 3');
+                queryHandler(q, cb);
             }
-        );
+        ], function(err) {
+            if(err) return callback(err);
+            
+            callback(null, { data:"Classification deleted succesfully" });
+        });
     },
     
     classificationCsvData: function(cid, callback) {
@@ -755,19 +701,39 @@ var Projects = {
     totalRecordings: function(project_id, callback) {
         var q = "SELECT count(*) as count \n"+
                 "FROM ( \n"+
-                "        (SELECT upload_id as id \n"+
-                "        FROM uploads_processing  \n"+
-                "        WHERE project_id = %1$s) \n"+
-                "        UNION \n"+
-                "        (SELECT recording_id as id \n"+
-                "        FROM recordings AS r \n"+
-                "        JOIN sites AS s ON s.site_id = r.site_id \n"+
-                "        WHERE s.project_id = %1$s) \n"+
-                "    ) as t";
+                "    (SELECT upload_id as id \n"+
+                "    FROM uploads_processing  \n"+
+                "    WHERE project_id = %1$s) \n"+
+                "    UNION \n"+
+                "    (SELECT recording_id as id \n"+
+                "    FROM recordings AS r \n"+
+                "    JOIN sites AS s ON s.site_id = r.site_id \n"+
+                "    WHERE s.project_id = %1$s) \n"+
+                ") as t";
         
         q = sprintf(q, mysql.escape(project_id));
         queryHandler(q, callback);
-    }
+    },
+    
+    // this includes recordings processing
+    getStorageUsage: function(project_id, callback) {
+        var q = "SELECT (sum(t.duration)/60) as min_usage  \n"+
+                "FROM ( \n"+
+                "    (SELECT u.duration \n"+
+                "    FROM uploads_processing as u \n"+
+                "    WHERE project_id = ?) \n"+
+                "    UNION ALL \n"+
+                "    (SELECT r.duration \n"+
+                "    FROM recordings AS r \n"+
+                "    JOIN sites AS s ON s.site_id = r.site_id \n"+
+                "    WHERE s.project_id = ?) \n"+
+                ") as t;";
+        
+        q = mysql.format(q, [project_id, project_id]);
+        queryHandler(q, callback);
+    },
+    
+    
 };
 
 

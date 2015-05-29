@@ -24,17 +24,20 @@ angular.module('a2-project-service', [])
                     callback(err);
                 });
             },
+            getUsage: function() {
+                return $http.get('/api/project/'+url+'/usage');
+            },
             getSites: function(callback) {
                 $http.get('/api/project/'+url+'/sites')
-                .success(function(data) {
-                    callback(data);
-                });
+                    .success(function(data) {
+                        callback(data);
+                    });
             },
             getClasses: function(callback) {
                 $http.get('/api/project/'+url+'/classes')
-                .success(function(data) {
-                    callback(data);
-                });
+                    .success(function(data) {
+                        callback(data);
+                    });
             },
             // TODO should rename getRecs to findRecs
             getRecs: function(query, callback) { 

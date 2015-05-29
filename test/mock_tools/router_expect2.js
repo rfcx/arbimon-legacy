@@ -55,7 +55,7 @@ MockResponse.prototype.verify = function() {
 
 
 /**
- * @class mock_tools/router_expect
+ * @class mock_tools/router_expect2
  * @description expressjs router expectation lib
  * @param router {Object} expressjs router
  * @param defaults {Object} default request
@@ -79,20 +79,20 @@ var router_expect = function(router, defaults){
 
 router_expect.prototype = {
     /**
-     * @method mock_tools/router_expect#when
-     * @param url {Object} request object
-     * @param expectations {Object} response expectations
-     * @param [scope] {Object} object which request and reponse object are assigned to
+     * @method mock_tools/router_expect2#whenExpect
+     * @param {Object}   req - request object or url
+     * @param {Object}   expectedResponse - response expectations
+     * @param {Function} done - callback
      */
-    whenExpect: function(url, expectations, done){
+    whenExpect: function(req, expectedResponse, done){
         var request = lodash.cloneDeep(this.defaults);
-        if(typeof url == 'string'){
-            request.url = url;
+        if(typeof req == 'string'){
+            request.url = req;
         } 
         else {
-            lodash.merge(request, url);
+            lodash.merge(request, req);
         }
-        var response = new MockResponse(expectations, done);
+        var response = new MockResponse(expectedResponse, done);
         this.router.handle(request, response, response.next.bind(response));
     }
 };

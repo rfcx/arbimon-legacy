@@ -4,418 +4,143 @@
 "use strict";
 
 
-var chai = require('chai'), should = chai.should(), expect = chai.expect;
+var chai = require('chai'), 
+    should = chai.should(), 
+    expect = chai.expect;
 var sinon = require('sinon');
-var pre_wire= require('../mock_tools/pre_wire');
-var mock_aws = require('../mock_tools/mock_aws');
-// var dd=console.log;
+var rewire= require('rewire');
 
-var mock_pipe = function(){};
-mock_pipe.prototype = {
-    pipe:function(){}, 
-    resume:function(){}
-};
-
-var event_sink = function(){
-    this.listeners={};
-};
-
-event_sink.prototype={
-    on: function(event, cb){
-        (this.listeners[event] || (this.listeners[event]=[])).push(cb);
-    },
-    send: function(){
-        var args = Array.prototype.slice.call(arguments);
-        var event = args[0];
-        (this.listeners[event] || []).forEach(function (cb){
-            args[0] = cb;
-            setImmediate.apply(null, args);
-        });
-    }
-};
-
-var make_result_delegate = function(name, async, err){
-    if(!err){
-        err = new Error(name + " has no result!");
-    }
-    var fn = async ? function(){
-        var args = Array.prototype.slice.call(arguments);
-        var cb=args.pop();
-        if(!fn.result){
-            cb(err);
-        } else {
-            cb.apply(null, fn.result);
-        }
-    } : function(){
-        if(!fn.result){
-            throw err;
-        } else {
-            return fn.result;
-        }
-    };    
-    return fn;
-};
-
-var uploads = pre_wire('../../utils/upload-queue.js', {
-    'aws-sdk' : mock_aws
-});
-
-var mock_config = {
-    aws: {
-        bucketName: 'kfc_bucket'
-    }
-};
+var robTheBuilder = require('../mock_tools/rob-the-builder');
+var uploadQueue = rewire('../../utils/upload-queue');
 
 var mock = {
-    config: function(k){return mock_config[k];},
-    fs: {
-        unlink:  make_result_delegate('fs.unlink', true),
-        createWriteStream: function(){return {info:'this is a write stream'};},
-        createReadStream: function(){return {info:'this is a read stream'};}
-    },
-    tmpFileCache: {
-        key2File:function(key){return '~/file_key/' + key;}
-    },
-    audioTools: {
-        info: make_result_delegate('audioTools.info', true, 1),
-        spectrogram: make_result_delegate('audioTools.spectrogram', true, 1),
-        sox: make_result_delegate('audioTools.sox', true, 1),
-        splitter: make_result_delegate('audioTools.splitter', true),
-    },
-    formatParse: make_result_delegate('formatParse'),
     model:{
         uploads : {},
-        sites : {},
-        projects : {},
-        recordings : {}
     }
 };
 
-uploads.__set__(mock);
-
-var _uploadQueue = uploads.__get__('uploadQueue');
-var processUpload = uploads.__get__('processUpload');
-
+uploadQueue.__set__(mock);
 
 describe("Module: utils/upload-queue", function() {
-    var console_log, console_error;
+    var fileUpload;
     
-    before(function(){
-        console_log = console.log;
-        console_error = console.error;
-    });
-    
-    beforeEach(function(){
-        delete mock_aws.S3.buckets.kfc_bucket;
-        delete mock.fs.unlink.result;
-        delete mock.audioTools.info.result;
-        delete mock.audioTools.spectrogram.result;
-        delete mock.audioTools.sox.result;
-        delete mock.audioTools.splitter.result;
-        delete mock.formatParse.result;
-        console.log = function(){};
-        console.error = function(){};
-        mock.model.uploads = {
-            insertRecToList : function(obj, cb){setImmediate(cb, null, {insertId:1}, {fields:1});},
-            removeFromList : function(id, cb){setImmediate(cb, null, {affectedRows:1}, {fields:1});}
-        };
-        mock.model.sites = {
-            findById : function(id, cb){ setImmediate(cb, null, [
-                {}
-            ]);}
-        };
-        mock.model.projects = {
-            findById : function(id, cb){ 
-                cb(null, [{project_id:1, recording_limit:100}], {});
+    beforeEach(function() {
+        fileUpload = {
+            metadata: {
+                recorder: 'recorder',
+                mic: 'mic',
+                sver: 'v1.0.0',
             },
-            totalRecordings : function(id, cb){ setImmediate(cb, null, [{count:0}], {});},
-        };
-        mock.model.recordings = {
-            insert : function(obj, cb){ setImmediate(cb, null, {insertId:1}, {});},
-            exists : function(obj, cb){ setImmediate(cb, null, false);}
+            info: {
+                channels: 1,
+                duration: 60
+            },
+            FFI: {
+                filename: 'default-2014-07-14_08-30',
+                datetime: new Date(),
+                filetype: '.wav',
+            },
+            name: 'default-2014-07-14_08-30.wav',
+            path: 'some/path/file.wav',
+            projectId: 100,
+            siteId: 20,
+            userId: 101
         };
     });
     
-    afterEach(function(){
-        if(_uploadQueue.push.restore){
-            _uploadQueue.push.restore();
-        }
-        // console.log = function(){};
-        if(console.log.restore){
-            console.log.restore();
-        }
-        if(console.error.restore){
-            console.error.restore();
-        }
+    describe('uploadQueue.enqueue', function() {
+        var restoreUploadQueue;
+        var _uploadQueue;
+        var enqueue;
+        
+        before(function() {
+            enqueue = uploadQueue.enqueue;
+        });
+        
+        beforeEach(function() {
+            _uploadQueue = [];
+            restoreUploadQueue = uploadQueue.__set__("queue", _uploadQueue);
+            mock.model.uploads.insertRecToList = sinon.stub();
+        });
+        
+        afterEach(function() {
+            restoreUploadQueue();
+            delete mock.model.uploads.insertRecToList;
+        });
+        
+        it('should add upload to uploads_processing and push in _uploadQueue', function(done) {
+            mock.model.uploads.insertRecToList.onFirstCall()
+                .callsArgWith(1, null, { insertId: 1 }, {});
+            
+            enqueue(fileUpload, function(err) {
+                expect(err).to.not.exist;
+                
+                expect(mock.model.uploads.insertRecToList.calledOnce).to.equal(true);
+                mock.model.uploads.insertRecToList.firstCall.args[0]
+                    .should.deep.equal({
+                        filename: fileUpload.name, 
+                        project_id: fileUpload.projectId,
+                        site_id: fileUpload.siteId,
+                        user_id: fileUpload.userId,
+                        state: 'waiting',
+                        duration: fileUpload.info.duration
+                    });
+                
+                expect(_uploadQueue).to.deep.equal([fileUpload]);
+                
+                done();
+            });
+        });
+        
+        it('should throw err if insertRecToList fails', function(done) {
+            mock.model.uploads.insertRecToList.onFirstCall()
+                .callsArgWith(1, new Error('err'));
+            
+            enqueue(fileUpload, function(err) {
+                expect(err).to.exist;
+                expect(err.message).to.have.string('err');
+                
+                expect(mock.model.uploads.insertRecToList.calledOnce).to.equal(true);
+                
+                expect(_uploadQueue).to.deep.equal([]);
+                
+                done();
+            });
+        });
+    });
+
+    describe('worker', function() {
+        var worker;
+        var UploaderMock;
+        var restoreUploader;
+        
+        before(function() {
+            worker = uploadQueue.__get__('worker');
+            
+            UploaderMock = robTheBuilder({
+                process: sinon.stub()
+            });
+            
+            restoreUploader = uploadQueue.__set__('Uploader', UploaderMock);
+        });
+        
+        after(function() {
+            restoreUploader();
+        });
+        
+        it('should create an instance of Uploader and run uploader.process()', function(done) {
+            
+            worker(fileUpload, function() {});
+            
+            expect(UploaderMock.instances.length).to.equal(1);
+            
+            var instance = UploaderMock.instances[0].obj;
+            
+            expect(instance.process.callCount).to.equal(1);
+            expect(instance.process.firstCall.args[0]).to.deep.equal(fileUpload);
+            
+            done();
+        });
     });
     
-    after(function(){
-        console.log = console_log;
-        console.error = console_error;
-    });
-        
-    describe("(inner) processUpload()", function() {
-
-        it('Should call done with error if updating audio info of uploaded file fails.', function(done) {
-            mock_aws.S3.buckets.kfc_bucket = {};
-            mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [1];
-            mock.audioTools.sox.result = [0, 'stdout', 'stderr'];
-            mock.audioTools.spectrogram.result = [0, {
-                info: "this is a spectrogram"
-            }];
-            mock.formatParse.result = {
-                datetime: new Date(),
-                filename: 'recordingfile.wav',
-                filetype: '.wav'
-            };
-            
-            processUpload({
-                projectId: 1,
-                siteId: 2,
-                userId: 9393,
-                info: {
-                    duration: 60,
-                    channels: 2,
-                    sample_rate: 44100,
-                    precision: 16,
-                    samples: 2646000,
-                    file_size: 1024,
-                    bit_rate: 1,
-                    sample_encoding: 'PCM'
-                },
-                name: 'recordingfile.wav',
-                FFI: {
-                    datetime: new Date(),
-                    filename: 'recordingfile.wav',
-                    filetype: '.wav'
-                },
-                metadata: {},
-                path: 'recilfepath.wav'
-            }, function(err) {
-                expect(err).to.be.instanceof(Error);
-                expect(err.message).to.equal('error getting audio file info');
-                done();
-            });
-        });
-        
-        it('Should call done with error if generating spectrogram fails.', function(done) {
-            mock_aws.S3.buckets.kfc_bucket = {};
-            mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [0, {
-                duration: 60,
-                channels: 2,
-                sample_rate: 44100,
-                precision: 16,
-                samples: 2646000,
-                file_size: 1024,
-                bit_rate: 1,
-                sample_encoding: 'PCM'
-            }];
-            mock.audioTools.sox.result = [0, 'stdout', 'stderr'];
-            mock.audioTools.spectrogram.result = [1, {
-                info: "this is a spectrogram"
-            }];
-            mock.formatParse.result = {
-                datetime: new Date(),
-                filename: 'recordingfile.wav',
-                filetype: '.wav'
-            };
-            
-            processUpload({
-                projectId: 1,
-                siteId: 2,
-                userId: 9393,
-                info: {
-                    duration: 60,
-                    channels: 2,
-                    sample_rate: 44100,
-                    precision: 16,
-                    samples: 2646000,
-                    file_size: 1024,
-                    bit_rate: 1,
-                    sample_encoding: 'PCM'
-                },
-                name: 'recordingfile.wav',
-                FFI: {
-                    datetime: new Date(),
-                    filename: 'recordingfile.wav',
-                    filetype: '.wav'
-                },
-                metadata: {},
-                path: 'recilfepath.wav'
-            }, function(err) {
-                expect(err).to.be.instanceof(Error);
-                expect(err.message).to.equal('error generating spectrogram: \nundefined');
-                done();
-            });
-        });
-        
-        it('Should call done with error if uploading flac to bucket fails.', function(done) {
-            // mock_aws.S3.buckets.kfc_bucket = {};
-            mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [0, {
-                duration: 60,
-                channels: 2,
-                sample_rate: 44100,
-                precision: 16,
-                samples: 2646000,
-                file_size: 1024,
-                bit_rate: 1,
-                sample_encoding: 'PCM'
-            }];
-            mock.audioTools.sox.result = [0, 'stdout', 'stderr'];
-            mock.audioTools.spectrogram.result = [0, {
-                info: "this is a spectrogram"
-            }];
-            mock.formatParse.result = {
-                datetime: new Date(),
-                filename: 'recordingfile.wav',
-                filetype: '.wav'
-            };
-            
-            processUpload({
-                projectId: 1,
-                siteId: 2,
-                userId: 9393,
-                info: {
-                    duration: 60,
-                    channels: 2,
-                    sample_rate: 44100,
-                    precision: 16,
-                    samples: 2646000,
-                    file_size: 1024,
-                    bit_rate: 1,
-                    sample_encoding: 'PCM'
-                },
-                name: 'recordingfile.wav',
-                FFI: {
-                    datetime: new Date(),
-                    filename: 'recordingfile.wav',
-                    filetype: '.wav'
-                },
-                metadata: {},
-                path: 'recilfepath.wav'
-            }, function(err) {
-                expect(err).to.be.instanceof(Error);
-                expect(err.message).to.equal('bucket kfc_bucket not in cache.');
-                done();
-            });
-        });
-        
-        it('Should call done with error if fails while removing from upload list.', function(done) {
-            mock_aws.S3.buckets.kfc_bucket = {};
-            mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [0, {
-                duration: 60,
-                channels: 2,
-                sample_rate: 44100,
-                precision: 16,
-                samples: 2646000,
-                file_size: 1024,
-                bit_rate: 1,
-                sample_encoding: 'PCM'
-            }];
-            mock.audioTools.sox.result = [0, 'stdout', 'stderr'];
-            mock.audioTools.spectrogram.result = [0, {
-                info: "this is a spectrogram"
-            }];
-            mock.formatParse.result = {
-                datetime: new Date(),
-                filename: 'recordingfile.wav',
-                filetype: '.wav'
-            };
-            
-            var emsg = 'I am error';
-            mock.model.uploads.removeFromList = function(id, cb) {
-                setImmediate(cb, new Error(emsg));
-            };
-
-            sinon.stub(console, 'error', function() {
-                arguments[0].message.should.equal(emsg);
-                done();
-            });
-            
-            processUpload({
-                projectId: 1,
-                siteId: 2,
-                userId: 9393,
-                info: {
-                    duration: 60,
-                    channels: 2,
-                    sample_rate: 44100,
-                    precision: 16,
-                    samples: 2646000,
-                    file_size: 1024,
-                    bit_rate: 1,
-                    sample_encoding: 'PCM'
-                },
-                name: 'recordingfile.wav',
-                FFI: {
-                    datetime: new Date(),
-                    filename: 'recordingfile.wav',
-                    filetype: '.wav'
-                },
-                metadata: {},
-                path: 'recilfepath.wav'
-            }, function(err) {
-                expect(err).to.be.undefined;
-            });
-        });
-        
-        it('Should call done with error if fails to add recording to upload list.', function(done) {
-            mock_aws.S3.buckets.kfc_bucket = {};
-            mock.fs.unlink.result = [];
-            mock.audioTools.info.result = [0, {
-                duration: 60,
-                channels: 2,
-                sample_rate: 44100,
-                precision: 16,
-                samples: 2646000,
-                file_size: 1024,
-                bit_rate: 1,
-                sample_encoding: 'PCM'
-            }];
-            mock.audioTools.sox.result = [0, 'stdout', 'stderr'];
-            mock.audioTools.spectrogram.result = [0, {
-                info: "this is a spectrogram"
-            }];
-            mock.formatParse.result = {
-                datetime: new Date(),
-                filename: 'recordingfile.wav',
-                filetype: '.wav'
-            };
-            mock.model.uploads.insertRecToList = function(obj, cb) {
-                setImmediate(cb, new Error("I am error"));
-            };
-
-            sinon.stub(console, 'error', function() {
-                arguments[0].message.should.equal('I am error');
-                done();
-            });
-            processUpload({
-                projectId: 1,
-                siteId: 2,
-                userId: 9393,
-                info: {
-                    duration: 60,
-                    channels: 2,
-                    sample_rate: 44100,
-                    precision: 16,
-                    samples: 2646000,
-                    file_size: 1024,
-                    bit_rate: 1,
-                    sample_encoding: 'PCM'
-                },
-                name: 'recordingfile.wav',
-                FFI: {
-                    datetime: new Date(),
-                    filename: 'recordingfile.wav',
-                    filetype: '.wav'
-                },
-                metadata: {},
-                path: 'recilfepath.wav'
-            }, function() {});
-        });
-    });
 });

@@ -166,7 +166,7 @@ describe('Module: a2-training-sets-service', function() {
             });
         });
         
-        describe('a2TrainingSets.removeRoi', function() {
+        describe.skip('a2TrainingSets.removeRoi', function() {
             it('requests to the correct route', function() {
                 
                 $httpBackend

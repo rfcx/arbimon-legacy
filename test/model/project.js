@@ -90,15 +90,14 @@ var project = {
     project_type_id: 1,
     is_private: 1
 };
-var insertproject = {
-    id: 1,
-    url: 'project/url',
-    name: 'project',
-    description: 'description',
-    owner_id: 9393,
-    project_type_id: 1,
-    is_private: 1
-};
+// var insertproject = {
+//     url: 'project-url',
+//     name: 'project',
+//     description: 'description',
+//     owner_id: 9393,
+//     project_type_id: 1,
+//     is_private: 1
+// };
 var news = {
     user_id: 9393,
     project_id: 1,
@@ -144,9 +143,9 @@ describe('Project', function(){
          
         it('Should return a project given its url.', function(done){
             dbpool.pool.cache[
-                "SELECT * FROM projects WHERE url = 'project/url'"
+                "SELECT * FROM projects WHERE url = 'project-url'"
             ]={value:[project]};
-            projects.findByUrl('project/url', function(err, results){
+            projects.findByUrl('project-url', function(err, results){
                 should.not.exist(err);
                 results.should.deep.equal([project]);
                 done();
@@ -202,41 +201,56 @@ describe('Project', function(){
             });
         });
     });
-    describe('insert', function(){
-         
+    
+    describe('create', function(){
+        var pdata;
+        
+        beforeEach(function() {
+            pdata = {
+                url: 'project-url', 
+                name: 'project', 
+                description: 'description', 
+                owner_id: 9393, 
+                project_type_id: 1, 
+                is_private: true
+            };
+        });
         
         it('Should insert a project given the data', function(done){
             dbpool.pool.cache[
                 "INSERT INTO projects \n" +
-                "SET `url` = 'project/url', `name` = 'project', `description` = 'description', `owner_id` = 9393, `project_type_id` = 1, `is_private` = 1"
-            ]={value:{insertId:101}};
-            projects.insert(insertproject, function(err, results){
+                "SET `url` = 'project-url', `name` = 'project', `description` = 'description', `owner_id` = 9393, `project_type_id` = 1, `is_private` = true"
+            ]={ value:{ insertId: 101 } };
+            
+            dbpool.pool.cache[
+                'INSERT INTO user_project_role \n'+
+                'SET user_id = 9393, role_id = 4, project_id = 101'
+            ]={ value:{ insertId: 102 } };
+            
+            projects.create(pdata, function(err, projectId){
                 should.not.exist(err);
-                results.should.deep.equal({insertId:101});
+                projectId.should.deep.equal(101);
                 done();
             });
         });
         
-        var pdata = {
-            url:'project/url', 
-            name:'project', 
-            description:'description', 
-            owner_id:9393, 
-            project_type_id:1, 
-            is_private:1
-        };
         
-        Object.keys(pdata).forEach(function(key){
-            var obj={};
-            for(var k in pdata){
-                if(k != key){
-                    obj[k] = pdata[k];
-                }
-            }
+        var requiredKeys = [
+            'url', 
+            'name', 
+            'description', 
+            'owner_id', 
+            'project_type_id', 
+            'is_private'
+        ];
+        
+        requiredKeys.forEach(function(key){
             it('Should fail if '+key+' is not given', function(done){
-                projects.insert(obj, function(err, results){
+                delete pdata[key];
+                
+                projects.create(pdata, function(err, results){
                     should.exist(err);
-                    err.message.should.equal("required field '"+key+"' missing");
+                    err.message.should.have.string(key);
                     should.not.exist(results);
                     done();
                 });
@@ -540,8 +554,7 @@ describe('Project', function(){
             });
         });
     });
-    
-    
+
     describe('removeClasses', function(){
          
         it('Should remove an array of (class, project) identifiers.', function(done){
@@ -702,34 +715,43 @@ describe('Project', function(){
     });
     
     describe('classificationDelete', function(){
+        var queries;
+        
         
         beforeEach(function(){
+            queries = {
+                getModelUri: "SELECT `uri` FROM `models` WHERE `model_id` = "+
+                    "(SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = 1)",
+                getRecs: "SELECT `uri` FROM `recordings` WHERE `recording_id` in "+
+                    "(SELECT `recording_id` FROM `classification_results` WHERE `job_id` = 1)",
+                deleteResults: "DELETE FROM `classification_results` WHERE `job_id` = 1",
+                deleteStats: "DELETE FROM `classification_stats` WHERE `job_id` = 1",
+                deleteClassiParams: "DELETE FROM `job_params_classification` WHERE `job_id` = 1"
+            };
             mock_mysql.pool.cache = {};
             delete mock_aws.S3.buckets.kfc_bucket;
         });
         
         it('Should remove a classification given its id.', function(done){
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `models` WHERE `model_id` = (SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = '1')"
-            ]={value:[{uri:'project_1/models/model_1.mod'}]};
+            dbpool.pool.cache[queries.getModelUri] = {
+                value:[{ uri:'project_1/models/model_1.mod' }]
+            };
             
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `recordings` WHERE `recording_id` in (SELECT `recording_id` FROM `classification_results` WHERE `job_id` = '1') "
-            ]={value:[]};
+            dbpool.pool.cache[queries.getRecs] = { value:[] };
             
-            dbpool.pool.cache[
-                "DELETE FROM `classification_results` WHERE `job_id` ='1'"
-            ]={value:{affectedRows:1}};
+            dbpool.pool.cache[queries.deleteResults] = {
+                value:{affectedRows:1}
+            };
             
-            dbpool.pool.cache[
-                "DELETE FROM `classification_stats` WHERE `job_id` = '1'"
-            ]={value:{affectedRows:1}};
+            dbpool.pool.cache[queries.deleteStats] = {
+                value:{affectedRows:1}
+            };
             
-            dbpool.pool.cache[
-                "DELETE FROM `job_params_classification` WHERE `job_id` ='1'"
-            ]={value:{affectedRows:1}};            
+            dbpool.pool.cache[queries.deleteClassiParams] = {
+                value:{affectedRows:1}
+            };
             
-            projects.classificationDelete("'1'", function(err, results){
+            projects.classificationDelete(1, function(err, results){
                 should.not.exist(err);
                 results.should.deep.equal({data:"Classification deleted succesfully"});
                 done();
@@ -737,63 +759,69 @@ describe('Project', function(){
         });
         
         it('Should fail if model query fails', function(done){
-            projects.classificationDelete("'1'", function(err, results){
+            projects.classificationDelete(1, function(err, results){
                 should.exist(err);
                 done();
             });
         });
         
         it('Should fail if recordings query fails', function(done){
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `models` WHERE `model_id` = (SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = '1')"
-            ]={value:[{uri:'project_1/models/model_1.mod'}]};
-            projects.classificationDelete("'1'", function(err, results){
+            dbpool.pool.cache[queries.getModelUri]={
+                value:[{uri:'project_1/models/model_1.mod'}]
+            };
+            
+            projects.classificationDelete(1, function(err, results){
                 should.exist(err);
                 done();
             });
         });
         
         it('Should fail if delete classification_results query fails', function(done){
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `models` WHERE `model_id` = (SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = '1')"
-            ]={value:[{uri:'project_1/models/model_1.mod'}]};
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `recordings` WHERE `recording_id` in (SELECT `recording_id` FROM `classification_results` WHERE `job_id` = '1') "
-            ]={value:[]};
-            projects.classificationDelete("'1'", function(err, results){
+            dbpool.pool.cache[queries.getModelUri]={
+                value:[{uri:'project_1/models/model_1.mod'}]
+            };
+            
+            dbpool.pool.cache[queries.getRecs] = { value:[] };
+            
+            projects.classificationDelete(1, function(err, results){
                 should.exist(err);
                 done();
             });
         });
+        
         it('Should fail if delete classification_stats query fails', function(done){
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `models` WHERE `model_id` = (SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = '1')"
-            ]={value:[{uri:'project_1/models/model_1.mod'}]};
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `recordings` WHERE `recording_id` in (SELECT `recording_id` FROM `classification_results` WHERE `job_id` = '1') "
-            ]={value:[]};
-            dbpool.pool.cache[
-                "DELETE FROM `classification_results` WHERE `job_id` ='1'"
-            ]={value:{affectedRows:1}};
-            projects.classificationDelete("'1'", function(err, results){
+            dbpool.pool.cache[queries.getModelUri]={
+                value:[{uri:'project_1/models/model_1.mod'}]
+            };
+            
+            dbpool.pool.cache[queries.getRecs] = { value:[] };
+            
+            dbpool.pool.cache[queries.deleteResults] = {
+                value:{affectedRows:1}
+            };
+            
+            projects.classificationDelete(1, function(err, results){
                 should.exist(err);
                 done();
             });
         });
+        
         it('Should fail if delete job_params_classification query fails', function(done){
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `models` WHERE `model_id` = (SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = '1')"
-            ]={value:[{uri:'project_1/models/model_1.mod'}]};
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `recordings` WHERE `recording_id` in (SELECT `recording_id` FROM `classification_results` WHERE `job_id` = '1') "
-            ]={value:[]};
-            dbpool.pool.cache[
-                "DELETE FROM `classification_results` WHERE `job_id` ='1'"
-            ]={value:{affectedRows:1}};
-            dbpool.pool.cache[
-                "DELETE FROM `classification_stats` WHERE `job_id` = '1'"
-            ]={value:{affectedRows:1}};
-            projects.classificationDelete("'1'", function(err, results){
+            dbpool.pool.cache[queries.getModelUri] = {
+                value:[{ uri:'project_1/models/model_1.mod' }]
+            };
+            
+            dbpool.pool.cache[queries.getRecs] = { value:[] };
+            
+            dbpool.pool.cache[queries.deleteResults] = {
+                value:{affectedRows:1}
+            };
+            
+            dbpool.pool.cache[queries.deleteStats] = {
+                value:{affectedRows:1}
+            };
+            
+            projects.classificationDelete(1, function(err, results){
                 should.exist(err);
                 done();
             });
@@ -804,27 +832,27 @@ describe('Project', function(){
                 'project_1/models/model_1/classification_1_site_1-1-1-1-1-1.wav.vector' : {}
             };
             
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `models` WHERE `model_id` = (SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = '1')"
-            ]={value:[{uri:'project_1/models/model_1.mod'}]};
+            dbpool.pool.cache[queries.getModelUri] = {
+                value:[{ uri:'project_1/models/model_1.mod' }]
+            };
             
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `recordings` WHERE `recording_id` in (SELECT `recording_id` FROM `classification_results` WHERE `job_id` = '1') "
-            ]={value:[{uri:'project_1/recordings/site_1/site_1-1-1-1-1-1.wav'}]};            
+            dbpool.pool.cache[queries.getRecs] = { 
+                value:[{uri:'project_1/recordings/site_1/site_1-1-1-1-1-1.wav'}]
+            };
             
-            dbpool.pool.cache[
-                "DELETE FROM `classification_results` WHERE `job_id` ='1'"
-            ]={value:{affectedRows:1}};
+            dbpool.pool.cache[queries.deleteResults] = {
+                value:{affectedRows:1}
+            };
             
-            dbpool.pool.cache[
-                "DELETE FROM `classification_stats` WHERE `job_id` = '1'"
-            ]={value:{affectedRows:1}};
+            dbpool.pool.cache[queries.deleteStats] = {
+                value:{affectedRows:1}
+            };
             
-            dbpool.pool.cache[
-                "DELETE FROM `job_params_classification` WHERE `job_id` ='1'"
-            ]={value:{affectedRows:1}};            
+            dbpool.pool.cache[queries.deleteClassiParams] = {
+                value:{affectedRows:1}
+            };
             
-            projects.classificationDelete("'1'", function(err, results){
+            projects.classificationDelete(1, function(err, results){
                 should.not.exist(err);
                 results.should.deep.equal({data:'Classification deleted succesfully'});
                 done();
@@ -832,67 +860,15 @@ describe('Project', function(){
         });
         
         it('Should fail if bucket operations fail', function(done){
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `models` WHERE `model_id` = (SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = '1')"
-            ]={value:[{uri:'project_1/models/model_1.mod'}]};
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `recordings` WHERE `recording_id` in (SELECT `recording_id` FROM `classification_results` WHERE `job_id` = '1') "
-            ]={value:[{uri:'project_1/recordings/site_1/site_1-1-1-1-1-1.wav'}]};            
-            projects.classificationDelete("'1'", function(err, results){
-                should.exist(err);
-                done();
-            });
-        });
-        it('Should fail if delete classification_results query fails (with recordings path)', function(done){
-            mock_aws.S3.buckets.kfc_bucket = {
-                'project_1/models/model_1/classification_1_site_1-1-1-1-1-1.wav.vector' : {}
+            dbpool.pool.cache[queries.getModelUri] = {
+                value:[{ uri:'project_1/models/model_1.mod' }]
             };
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `models` WHERE `model_id` = (SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = '1')"
-            ]={value:[{uri:'project_1/models/model_1.mod'}]};
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `recordings` WHERE `recording_id` in (SELECT `recording_id` FROM `classification_results` WHERE `job_id` = '1') "
-            ]={value:[{uri:'project_1/recordings/site_1/site_1-1-1-1-1-1.wav'}]};            
-            projects.classificationDelete("'1'", function(err, results){
-                should.exist(err);
-                done();
-            });
-        });
-        it('Should fail if delete classification_stats query fails (with recordings path)', function(done){
-            mock_aws.S3.buckets.kfc_bucket = {
-                'project_1/models/model_1/classification_1_site_1-1-1-1-1-1.wav.vector' : {}
+            
+            dbpool.pool.cache[queries.getRecs] = { 
+                value:[{uri:'project_1/recordings/site_1/site_1-1-1-1-1-1.wav'}]
             };
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `models` WHERE `model_id` = (SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = '1')"
-            ]={value:[{uri:'project_1/models/model_1.mod'}]};
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `recordings` WHERE `recording_id` in (SELECT `recording_id` FROM `classification_results` WHERE `job_id` = '1') "
-            ]={value:[{uri:'project_1/recordings/site_1/site_1-1-1-1-1-1.wav'}]};
-            dbpool.pool.cache[
-                "DELETE FROM `classification_results` WHERE `job_id` ='1'"
-            ]={value:{affectedRows:1}};
-            projects.classificationDelete("'1'", function(err, results){
-                should.exist(err);
-                done();
-            });
-        });
-        it('Should fail if delete job_params_classification query fails (with recordings path)', function(done){
-            mock_aws.S3.buckets.kfc_bucket = {
-                'project_1/models/model_1/classification_1_site_1-1-1-1-1-1.wav.vector' : {}
-            };
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `models` WHERE `model_id` = (SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = '1')"
-            ]={value:[{uri:'project_1/models/model_1.mod'}]};
-            dbpool.pool.cache[
-                "SELECT `uri` FROM `recordings` WHERE `recording_id` in (SELECT `recording_id` FROM `classification_results` WHERE `job_id` = '1') "
-            ]={value:[{uri:'project_1/recordings/site_1/site_1-1-1-1-1-1.wav'}]};
-            dbpool.pool.cache[
-                "DELETE FROM `classification_results` WHERE `job_id` ='1'"
-            ]={value:{affectedRows:1}};
-            dbpool.pool.cache[
-                "DELETE FROM `classification_stats` WHERE `job_id` = '1'"
-            ]={value:{affectedRows:1}};
-            projects.classificationDelete("'1'", function(err, results){
+            
+            projects.classificationDelete(1, function(err, results){
                 should.exist(err);
                 done();
             });
@@ -1022,7 +998,10 @@ describe('Project', function(){
          
         it('Should return the validation set info associated to a project given its url.', function(done){
             dbpool.pool.cache[
-                "SELECT `validation_set_id` , ts.`name`  FROM `validation_set` ts, `projects` p  where ts.`project_id` = p.`project_id` and p.`url` = '/project_1/'"
+                "SELECT `validation_set_id` , ts.`name` \n" +
+                "FROM `validation_set` ts, `projects` p \n" +
+                "WHERE ts.`project_id` = p.`project_id` \n" +
+                "AND p.`url` = '/project_1/'"
             ]={value:[{count:1}]};
             projects.validationSets('/project_1/', function(err, results){
                 should.not.exist(err);
@@ -1063,7 +1042,9 @@ describe('Project', function(){
          
         it('Should return validation uri of a model given its id.', function(done){
             dbpool.pool.cache[
-                "SELECT vs.`uri` FROM `validation_set` vs, `models` m  WHERE m.`validation_set_id` = vs.`validation_set_id`  and m.`model_id` = 1"
+                "SELECT vs.`uri` FROM `validation_set` vs, `models` m \n"+
+                "WHERE m.`validation_set_id` = vs.`validation_set_id` \n"+
+                "AND m.`model_id` = 1"
             ]={value:[{count:1}]};
             projects.modelValidationUri(1, function(err, results){
                 should.not.exist(err);
@@ -1118,15 +1099,15 @@ describe('Project', function(){
             dbpool.pool.cache[
                 "SELECT count(*) as count \n" +
                 "FROM ( \n" +
-                "        (SELECT upload_id as id \n" +
-                "        FROM uploads_processing  \n" +
-                "        WHERE project_id = 1) \n" +
-                "        UNION \n" +
-                "        (SELECT recording_id as id \n" +
-                "        FROM recordings AS r \n" +
-                "        JOIN sites AS s ON s.site_id = r.site_id \n" +
-                "        WHERE s.project_id = 1) \n" +
-                "    ) as t"
+                "    (SELECT upload_id as id \n" +
+                "    FROM uploads_processing  \n" +
+                "    WHERE project_id = 1) \n" +
+                "    UNION \n" +
+                "    (SELECT recording_id as id \n" +
+                "    FROM recordings AS r \n" +
+                "    JOIN sites AS s ON s.site_id = r.site_id \n" +
+                "    WHERE s.project_id = 1) \n" +
+                ") as t"
             ]={value:[{count:1}]};
             projects.totalRecordings(1, function(err, results){
                 should.not.exist(err);

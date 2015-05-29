@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.41, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.24, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: arbimon2
 -- ------------------------------------------------------
--- Server version	5.5.41-0ubuntu0.14.04.1
+-- Server version	5.6.24-0ubuntu2
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -20,10 +20,10 @@
 --
 
 /*!40000 ALTER TABLE `job_types` DISABLE KEYS */;
-INSERT INTO `job_types` VALUES (1,'Model Training','training','Fitting of a model using training data. Model results are then validated using a validation data set.',1,'PatternMatching/training.py');
-INSERT INTO `job_types` VALUES (2,'Model Classification','classification','Classification of project data using a specified model and parameters.',1,'PatternMatching/classification.py');
-INSERT INTO `job_types` VALUES (3,'Upload Processing','audioprocess','Uploaded recordings to server are converted to flac and save',0,'');
-INSERT INTO `job_types` VALUES (4,'Soundscape from Peaks','peak-soundscape','The creation of a peak soundscape using a playlist, an aggregation function and a thershold or peak limiting value.',1,'Soundscapes/playlist2soundscape.py');
+INSERT INTO `job_types` VALUES (1,'Model training','training','Fitting of a model using training data. Model results are then validated using a validation data set.',1,'PatternMatching/train.py');
+INSERT INTO `job_types` VALUES (2,'Model classification','classification','Classification of project data using a specified model and parameters.',1,'PatternMatching/classify.py');
+INSERT INTO `job_types` VALUES (3,'Upload processing','audioprocess','Uploaded recordings to server are converted to flac and save',0,'');
+INSERT INTO `job_types` VALUES (4,'Soundscape analysis','peak-soundscape','The creation of a peak soundscape using a playlist, an aggregation function and a thershold or peak limiting value.',1,'Soundscapes/playlist2soundscape.py');
 /*!40000 ALTER TABLE `job_types` ENABLE KEYS */;
 
 --
@@ -31,7 +31,9 @@ INSERT INTO `job_types` VALUES (4,'Soundscape from Peaks','peak-soundscape','The
 --
 
 /*!40000 ALTER TABLE `model_types` DISABLE KEYS */;
-INSERT INTO `model_types` VALUES (1,'Pattern Matching','Pattern Matching using ROIs',1);
+INSERT INTO `model_types` VALUES (1,'Pattern Matching (slow)','Pattern Matching using ROIs. Matrix comparisons computed using SSIM (Structural similarity index).',1,1,0);
+INSERT INTO `model_types` VALUES (2,'Pattern Matching (fast)','Pattern Matching using ROIs. Matrix comparisons computed using matrix norms.',1,0,0);
+INSERT INTO `model_types` VALUES (3,'Search and Match','Pattern Matching using ROIs. Search interesting areas and compute matrix comparisons using SSIM (Structural similarity index).',1,0,1);
 /*!40000 ALTER TABLE `model_types` ENABLE KEYS */;
 
 --
@@ -194,7 +196,7 @@ INSERT INTO `soundscape_aggregation_types` VALUES (6,'year','Year by year','[\"2
 --
 
 /*!40000 ALTER TABLE `training_set_types` DISABLE KEYS */;
-INSERT INTO `training_set_types` VALUES (1,'ROI set','roi_set','A set of regions of interest in different recordings in the project');
+INSERT INTO `training_set_types` VALUES (1,'ROI set','roi_set','Regions of interest (ROI) used to create a pattern matching model');
 /*!40000 ALTER TABLE `training_set_types` ENABLE KEYS */;
 
 --
@@ -215,4 +217,4 @@ INSERT INTO `user_account_support_type` VALUES (2,'password_recovery','Allows a 
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-03-19 14:21:30
+-- Dump completed on 2015-05-29 16:45:42

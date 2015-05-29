@@ -67,7 +67,10 @@ router.post('/create', function(req, res, next) {
             results.error = true;
             return res.json(results);
         }
-
+        
+        //type cast is_private
+        project.is_private = Boolean(project.is_private);
+        
         // no error create new project
         model.projects.create(project, function(err, projectId) {
             if(err) return next(err);
@@ -352,6 +355,14 @@ router.get('/:projectUrl/validations/count', function(req, res, next) {
         if(err) return next(err);
         
         res.json({ count: result[0].count });
+    });
+});
+
+router.get('/:projectUrl/usage', function(req, res, next) {
+    model.projects.getStorageUsage(req.project.project_id, function(err, result) {
+        if(err) return next(err);
+        
+        res.json({ min_usage: result[0].min_usage });
     });
 });
 

@@ -16,24 +16,33 @@ module.exports = {
             project_id: Joi.number().required(),
             site_id: Joi.number().required(),
             user_id: Joi.string().required(),
+            state: Joi.string().required(),
+            duration: Joi.number().required(),
         };
         
         Joi.validate(uploadData, schema, function(err, upload) {
             
             var q = "INSERT INTO uploads_processing \n"+
-                    "SET filename = %(filename)s, \n"+
-                    "site_id = %(site_id)s, \n"+
-                    "user_id = %(user_id)s, \n"+
-                    "project_id = %(project_id)s";
+                    "SET ?";
                     
-            q = sprintf(q, {
-                filename: mysql.escape(upload.filename),
-                project_id: mysql.escape(upload.project_id),
-                site_id: mysql.escape(upload.site_id),
-                user_id: mysql.escape(upload.user_id),
+            q = mysql.format(q, {
+                filename: upload.filename, 
+                site_id: upload.site_id, 
+                user_id: upload.user_id,
+                project_id: upload.project_id, 
+                state: upload.state,
+                duration: upload.duration
             });
             queryHandler(q, callback);
         });
+    },
+    
+    updateState: function(uploadId, newState, callback) {
+        var q = "UPDATE uploads_processing \n"+
+                "SET state = ? \n"+
+                "WHERE upload_id = ?";
+        q = mysql.format(q, [uploadId, newState]);
+        queryHandler(q, callback);
     },
     
     removeFromList: function(upload_id, callback) {

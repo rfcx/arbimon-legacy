@@ -1,9 +1,11 @@
 // dependencies
+var util  = require('util');
+var path   = require('path');
+
 var debug = require('debug')('arbimon2:model:recordings');
 var async = require('async');
 var AWS   = require('aws-sdk');
 var mysql = require('mysql');
-var util  = require('util');
 var joi   = require('joi');
 var _     = require('lodash');
 var sprintf = require("sprintf-js").sprintf;
@@ -538,9 +540,10 @@ var Recordings = {
             precision:       joi.number(),
             duration:        joi.number(),
             samples:         joi.number(),
-            file_size:       joi.string(),
+            file_size:       joi.number(),
             bit_rate:        joi.string(),
-            sample_encoding: joi.string()
+            sample_encoding: joi.string(),
+            upload_time:     joi.date()
         };
         
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
@@ -581,9 +584,10 @@ var Recordings = {
             precision:       joi.number(),
             duration:        joi.number(),
             samples:         joi.number(),
-            file_size:       joi.string(),
+            file_size:       joi.number(),
             bit_rate:        joi.string(),
-            sample_encoding: joi.string()
+            sample_encoding: joi.string(),
+            upload_time:     joi.date()
         };
         
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
@@ -770,13 +774,13 @@ var Recordings = {
         
         var sqlFilterImported = 
             "SELECT r.recording_id AS id, \n"+
-            "    r.uri \n"+
+            "       r.uri \n"+
             "FROM recordings AS r  \n"+
             "JOIN sites AS s ON s.site_id = r.site_id  \n"+
-            "WHERE r.recording_id IN (%s) \n"+
-            "AND s.project_id = %s";
+            "WHERE r.recording_id IN (?) \n"+
+            "AND s.project_id = ?";
         
-        q = util.format(sqlFilterImported, mysql.escape(recIds), mysql.escape(project_id));
+        q = mysql.format(sqlFilterImported, [recIds, project_id]);
         
         queryHandler(q, function(err, rows) {
             
@@ -787,52 +791,65 @@ var Recordings = {
                 });
             }
             
-            var recIds = rows.map(function(rec) {
-                return rec.id;
-            });
+            var deleted = [];
             
-            var recKeys = rows.map(function(rec) {
-                return { Key: rec.uri };
-            });
-            
-            
-            async.series([
-                function(cb) {
+            async.eachSeries(rows, 
+                function loop(rec, next) {
+                    var ext = path.extname(rec.uri);
+                    var thumbnailUri = rec.uri.replace(ext, '.thumbnail.png');
+                    
                     var params = {
                         Bucket: config('aws').bucketName,
                         Delete: {
-                            Objects: recKeys,
+                            Objects: [
+                                { Key: rec.uri },
+                                { Key: thumbnailUri }
+                            ],
                         }
                     };
                     
-                    s3.deleteObjects(params, cb);
-                },
-                function(cb) {
-                    var sqlDelete = 
-                        "DELETE FROM recordings \n"+
-                        "WHERE recording_id IN (%s)";
+                    debug(params);
+                    
+                    s3.deleteObjects(params, function(err, data) {
+                        if(err && err.code != 'NoSuchKey') {
+                            return next(err);
+                        }
+                        
+                        debug(data);
+                        
+                        var sqlDelete = "DELETE FROM recordings \n"+
+                                        "WHERE recording_id = ?";
+                        
+                        q = mysql.format(sqlDelete, [rec.id]);
+                        queryHandler(q, function(err, results) {
+                            if(err) next(err);
                             
-                    q = util.format(sqlDelete, mysql.escape(recIds));
-                    queryHandler(q, cb);
+                            deleted.push(rec.id);
+                            next();
+                        });
+                    });
+                }, 
+                function done(err) {
+                    if(err) {
+                        if(!deleted.length) return callback(err);
+                        
+                        return callback(err, { 
+                            deleted: deleted, 
+                            msg: 'some recordings where deleted but an error ocurred'
+                        });
+                    }
+                    
+                    debug('recordings deleted:', deleted);
+                    
+                    var s = deleted.length > 1 ? 's' : '';
+                    
+                    callback(null, { 
+                        deleted: deleted, 
+                        msg: 'recording'+s+' deleted successfully' 
+                    });
                 }
-            ],
-            
-            function(err, results) {
-                if(err) return callback(err);
-                
-                debug('delete recordings result:', results);
-                
-                var s = recIds.length > 1 ? 's' : '';
-                
-                callback(null, { 
-                    deleted: recIds, 
-                    msg: 'recording'+s+' deleted successfully' 
-                });
-            });
+            );
         });
-        
-        
-        
     }
 };
 
