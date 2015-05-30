@@ -28,7 +28,7 @@ router.get('/project/:projectUrl/models', function(req, res, next) {
 
 router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 
-    model.models.types( function(err, row1) {
+    model.models.types(function(err, row1) {
         if(err) return next(err);
         
         model.projects.trainingSets( req.params.projectUrl, function(err, row2) {
@@ -46,6 +46,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
     var job_id, params;
 
     async.waterfall([
+        
         function find_project_by_url(next){
             model.projects.findByUrl(req.params.projectUrl, next);
         },
@@ -73,21 +74,26 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             useNotPresentValidation  = mysql.escape(req.body.vn);
             user_id = req.session.user.id;
             params = {
-                name       : name                   ,
-                train      : train_id               ,
-                classifier : classifier_id          ,
-                user       : user_id                ,
-                project    : project_id             ,
-                upt        : usePresentTraining     ,
-                unt        : useNotPresentTraining  ,
-                upv        : usePresentValidation   ,
-                unv        : useNotPresentValidation
+                name: name,
+                train: train_id,
+                classifier: classifier_id,
+                user: user_id,
+                project: project_id,
+                upt: usePresentTraining,
+                unt: useNotPresentTraining,
+                upv: usePresentValidation,
+                unv: useNotPresentValidation,
             };
 
             next();
         },
         function check_md_exists(next){
-            model.jobs.modelNameExists({name:name,classifier:classifier_id,user:user_id,pid:project_id}, next);
+            model.jobs.modelNameExists({
+                name: name,
+                classifier: classifier_id,
+                user: user_id,
+                pid: project_id
+            }, next);
         },
         function abort_if_already_exists(row) {
             var next = arguments[arguments.length-1];
@@ -115,6 +121,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
     ], function(err, data){
         if(err){
             if(!response_already_sent){
+                console.error(err.stack);
                 res.json({ err:"Could not create training job"});
             }
             return;
@@ -122,8 +129,6 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             res.json({ ok:"job created trainingJob:"+job_id});
         }
     });
-
-
 });
 
 router.get('/project/:projectUrl/models/:mid', function(req, res, next) {

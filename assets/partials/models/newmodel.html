@@ -3,6 +3,9 @@
         <h3 class="modal-title">Create a new model</h3>
     </div>
     <div class="modal-body">
+        <p ng-show="!jobEnabled" class="text-danger">
+            Model training is disable at the moment, please try again later
+        </p> 
         <div class="form-group">
             <label for="modelName">Model name:</label>
             <input name="modelName" ng-model="data.name" type="text" class="form-control" placeholder="Enter model name" />
@@ -50,10 +53,6 @@
                     <div class="col-xs-12">
                         <b>for:</b> {{data.training.scientific_name}} ({{data.training.songtype}})
                     </div>
-                    <!-- <div class="col-sm-4 inline">
-                        <em>
-                            <strong>Total validations:</strong> {{data.totalValidations}}</em>
-                    </div> -->
                 </div>
                 <div class="row top-buffer">
                     <div class="col-xs-12">
@@ -84,71 +83,14 @@
                                         <input size="10" type="text" name="usePresentValidation" ng-model="data.useNotPresentValidation" disabled/>
                                     </td>
                                 </tr>
-                                <!-- <tr>
-                                    
-                                    <td>{{data.presentValidations}}</td>
-                                    <td>{{data.absentsValidations}}</td>
-                                </tr> -->
                         </table>
                     </div>
                 </div>
-                <!-- <div class="row top-buffer">
-                    <div class="col-sm-6 inline">
-                        <em>
-                            <strong>Present validations:</strong> {{data.presentValidations}}</em>
-                        <table>
-                            <tr>
-                                <td>Use in fitting:</td>
-                                <td>
-                                    <input size="10" type="text" name="usePresentTraining" ng-model="data.usePresentTraining" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Use in verification:</td>
-                                <td>
-                                    <input size="10" type="text" name="usePresentValidation" ng-model="data.usePresentValidation" disabled/>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-sm-6 inline">
-                        <em>
-                            <strong>Not present validations:</strong> {{data.absentsValidations}}</em>
-                        <table> -->
-                            <!--<tr><td><strong>Usage In Validation:</strong></td></tr>-->
-                            <!-- <tr>
-                                <td>Use in fitting:</td>
-                                <td>
-                                    <input size="10" type="text" name="useNotPresentTraining" ng-model="data.useNotPresentTraining" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Use in verification:</td>
-                                <td>
-                                    <input size="10" type="text" name="useNotPresentValidation" ng-model="data.useNotPresentValidation" disabled/>
-                                </td>
-                            </tr>
-                        </table>
-                    </div> -->
-                    <!--<div class="col-sm-4 inline"<em><strong>Total Validations:</strong> {{data.totalValidations}}</em></div>-->
-                <!-- </div> -->
         </div>
-        <!--
-      <div class="form-group">
-        <label for="validationSet">Validation Set:</label>
-        <span ng-hide="validations.length" value="-1" class="red">Need to create validation sets first</span>  
-        <ui-select ng-model="data.validation" theme="selectize" ng-disabled="disabled">
-        <ui-select-match placeholder="Select or search a validation set in the list...">{{$select.selected.name}}</ui-select-match>
-            <ui-select-choices repeat="vali in validations | filter: $select.search" value="vali.validation_set_id">
-              {{vali.name}}
-            </ui-select-choices>
-        </ui-select>
-      </div>
-  -->
 
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Newmodel':'ok new model'" ng-disabled="buttonEnable()">
+        <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Newmodel':'ok new model'" ng-disabled="disableCreateButton()">
             <i class="fa fa-cogs"></i> Create
         </button>
         <button class="btn btn-default" ng-click="cancel() | trackEvent:'Analysis-Newmodel':'cancel'">
