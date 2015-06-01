@@ -95,9 +95,9 @@ var Jobs = {
         async.waterfall([
             function(next) {
                 var q = "SELECT enabled FROM job_types WHERE job_type_id = ?";
-                mysql.format(q, [job_type.type_id]);
+                q = mysql.format(q, [job_type.type_id]);
                 queryHandler(q, function(err, rows) {
-                    if(err) next(err);
+                    if(err) return next(err);
                     
                     if(!rows.length) {
                         return next(new Error('Job type not found on DB'));
