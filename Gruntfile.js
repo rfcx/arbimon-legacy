@@ -34,6 +34,7 @@ module.exports = function(grunt) {
                         collapseWhitespace: true,
                         conservativeCollapse: true,
                         removeAttributeQuotes: true,
+                        keepClosingSlash: true
                     }
                 },
                 src: ['assets/partials/**/*.html'],

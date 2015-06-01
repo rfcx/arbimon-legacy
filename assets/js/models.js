@@ -266,7 +266,7 @@
                 if(!training.length)
                     return console.error('training job info not found');
                 
-                $scope.jobEnabled = training[0].enabled;
+                $scope.jobDisabled = !training[0].enabled;
             });
             
             $scope.$watch('data.usePresentTraining', function() {
@@ -321,7 +321,7 @@
                     $scope.data.useNotPresentValidation > 0 &&
                     typeof $scope.data.training !== 'string' &&
                     typeof $scope.data.classifier !== 'string' &&
-                    $scope.jobEnabled
+                    !$scope.jobDisabled
                 );
                     
             };
