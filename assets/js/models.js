@@ -304,7 +304,21 @@
                     $scope.totalNotPresentValidation = $scope.data.useNotPresentValidation;
 
             });
+ 
+             $scope.$watch('data.usePresentValidation', function() {
+                if ($scope.data.usePresentValidation > $scope.totalPresentValidation) {
+                   $scope.data.usePresentValidation = $scope.totalPresentValidation
+                }
 
+            });
+             
+            $scope.$watch('data.useNotPresentValidation', function() {
+                if ($scope.data.useNotPresentValidation > $scope.totalNotPresentValidation) {
+                   $scope.data.useNotPresentValidation = $scope.totalNotPresentValidation
+                }
+
+            });
+            
             $scope.$watch('data.training', function() {
                 if($scope.data.training !== '') {
                     Project.validationBySpeciesSong(
