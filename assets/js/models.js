@@ -269,6 +269,8 @@
                 $scope.jobDisabled = !training[0].enabled;
             });
             
+            $scope.totalPresentValidation = 0;
+            
             $scope.$watch('data.usePresentTraining', function() {
                 var val = $scope.data.presentValidations - $scope.data.usePresentTraining;
 
@@ -282,8 +284,12 @@
                 if ($scope.data.usePresentTraining > $scope.data.presentValidations) {
                     $scope.data.usePresentTraining = $scope.data.presentValidations;
                 }
+                
+                $scope.totalPresentValidation = $scope.data.usePresentValidation;
             });
-
+            
+            $scope.totalNotPresentValidation = 0;
+            
             $scope.$watch('data.useNotPresentTraining', function() {
                     var val = $scope.data.absentsValidations - $scope.data.useNotPresentTraining;
                     if (val > -1) {
@@ -294,6 +300,8 @@
 
                     if ($scope.data.useNotPresentTraining > $scope.data.absentsValidations)
                         $scope.data.useNotPresentTraining = $scope.data.absentsValidations;
+                        
+                    $scope.totalNotPresentValidation = $scope.data.useNotPresentValidation;
 
             });
 
@@ -315,6 +323,8 @@
                 return !(
                     $scope.trainings.length &&
                     $scope.data.name.length &&
+                    $scope.totalNotPresentValidation > 0 &&
+                    $scope.totalPresentValidation > 0 &&
                     $scope.data.usePresentTraining > 0 &&
                     $scope.data.useNotPresentTraining > 0 &&
                     $scope.data.usePresentValidation > 0 &&
