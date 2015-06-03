@@ -478,29 +478,36 @@
                 if(index >= $scope.validations.length) return $scope.waitinFunction();
                 
                 var currRec = $scope.validations[index];
-                
-                currRec.date = $window.moment(currRec.date, 'MM-DD-YYYY HH:mm');
-                
-                a2Models.getRecVector($scope.model.id, currRec.id)
-                    .success(function(data) {
-                        if(!(data.err && data.err == "vector-not-found")) {
-                            var vector = data.vector;
+               
+                if (currRec == false) {
+                    $scope.validations.splice(index, 1);
+                    getVectors(index);       
+                }
+                else
+                {
+                    currRec.date = $window.moment(currRec.date, 'MM-DD-YYYY HH:mm');
                     
-                            var vmax = Math.max.apply(null, vector);
-                            currRec.vmax = vmax;
-                            currRec.vector = vector;
-                            
-                            if(currRec.presence == 'no') {
-                                if($scope.vectorNoMax < vmax) {
-                                    $scope.vectorNoMax = vmax;
+                    a2Models.getRecVector($scope.model.id, currRec.id)
+                        .success(function(data) {
+                            if(!(data.err && data.err == "vector-not-found")) {
+                                var vector = data.vector;
+                        
+                                var vmax = Math.max.apply(null, vector);
+                                currRec.vmax = vmax;
+                                currRec.vector = vector;
+                                
+                                if(currRec.presence == 'no') {
+                                    if($scope.vectorNoMax < vmax) {
+                                        $scope.vectorNoMax = vmax;
+                                    }
+                                }
+                                else if(currRec.presence == 'yes') {
+                                    $scope.allYesMax.push(vmax);
                                 }
                             }
-                            else if(currRec.presence == 'yes') {
-                                $scope.allYesMax.push(vmax);
-                            }
-                        }
-                        getVectors(++index);
-                    });
+                            getVectors(++index);
+                        });
+                }
             };
             
             

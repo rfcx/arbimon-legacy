@@ -222,10 +222,10 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                 model.recordings.recordingInfoGivenUri(items[0], req.params.projectUrl, function(err, recData) {
                     if(err) {
                         debug("Error fetching recording information: " + items[0]);
-                        return callback(err);
+                        return callback('im error');
                     }
                     
-                    if(!recData.length) return callback(new Error('recData not found'));
+                    if(!recData.length) return callback(null,false);
                     
                     var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
                     recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
@@ -239,12 +239,12 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                         url: "https://"+ config('aws').bucketName + ".s3.amazonaws.com/" + recUriThumb,
                         type: entryType
                     };
-
+                    
                     callback(null, rowSent);
                 });
 
             },
-            function(err, results) { 
+            function(err, results) {
                 if(err) {
                     return res.json({ err: "Error fetching recording information"});
                 }
@@ -258,14 +258,13 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
 });
 
 router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', function(req, res, next) {
-    if(!req.params.modelId || !req.params.recId) {
+    if(!req.params.modelId || !req.params.recId || req.params.recId == undefined || req.params.recId == "undefined") {
         return res.status(400).json({ error: 'missing parameters'});
     }
     
     model.models.getTrainingVector(req.params.modelId, req.params.recId, function(err, result) {
         if(err) return next(err);
         
-        console.log('vectorUri', result);
         var vectorUri = result;
         
         s3.getObject({
@@ -285,7 +284,6 @@ router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', functi
             async.map(String(data.Body).split(','), function(number, next) {
                 next(null, parseFloat(number));
             }, function done(err, vector) {
-                console.log(vector.length);
                 res.json({ vector: vector });
             });
 
@@ -314,7 +312,6 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
         model.projects.classificationDetail(req.params.projectUrl, req.params.cid, function(err, rows) {
             if(err) return next(err);
 
-            console.log(rows);
             
             var i = 0;
             var data = [];
@@ -509,7 +506,6 @@ router.get('/project/:projectUrl/classification/:cid/vector/:recId', function(re
             async.map(String(data.Body).split(','), function(number, next) {
                 next(null, parseFloat(number));
             }, function done(err, vector) {
-                console.log(vector.length);
                 res.json({ vector: vector });
             });
 
