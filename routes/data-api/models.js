@@ -222,7 +222,7 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                 model.recordings.recordingInfoGivenUri(items[0], req.params.projectUrl, function(err, recData) {
                     if(err) {
                         debug("Error fetching recording information: " + items[0]);
-                        return callback('im error');
+                        return callback(null,false);
                     }
                     
                     if(!recData.length) return callback(null,false);
