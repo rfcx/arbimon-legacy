@@ -28,7 +28,7 @@ router.get('/project/:projectUrl/models', function(req, res, next) {
 
 router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 
-    model.models.types( function(err, row1) {
+    model.models.types(function(err, row1) {
         if(err) return next(err);
         
         model.projects.trainingSets( req.params.projectUrl, function(err, row2) {
@@ -46,6 +46,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
     var job_id, params;
 
     async.waterfall([
+        
         function find_project_by_url(next){
             model.projects.findByUrl(req.params.projectUrl, next);
         },
@@ -73,21 +74,26 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             useNotPresentValidation  = mysql.escape(req.body.vn);
             user_id = req.session.user.id;
             params = {
-                name       : name                   ,
-                train      : train_id               ,
-                classifier : classifier_id          ,
-                user       : user_id                ,
-                project    : project_id             ,
-                upt        : usePresentTraining     ,
-                unt        : useNotPresentTraining  ,
-                upv        : usePresentValidation   ,
-                unv        : useNotPresentValidation
+                name: name,
+                train: train_id,
+                classifier: classifier_id,
+                user: user_id,
+                project: project_id,
+                upt: usePresentTraining,
+                unt: useNotPresentTraining,
+                upv: usePresentValidation,
+                unv: useNotPresentValidation,
             };
 
             next();
         },
         function check_md_exists(next){
-            model.jobs.modelNameExists({name:name,classifier:classifier_id,user:user_id,pid:project_id}, next);
+            model.jobs.modelNameExists({
+                name: name,
+                classifier: classifier_id,
+                user: user_id,
+                pid: project_id
+            }, next);
         },
         function abort_if_already_exists(row) {
             var next = arguments[arguments.length-1];
@@ -115,6 +121,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
     ], function(err, data){
         if(err){
             if(!response_already_sent){
+                console.error(err.stack);
                 res.json({ err:"Could not create training job"});
             }
             return;
@@ -122,8 +129,6 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
             res.json({ ok:"job created trainingJob:"+job_id});
         }
     });
-
-
 });
 
 router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
@@ -217,10 +222,10 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                 model.recordings.recordingInfoGivenUri(items[0], req.params.projectUrl, function(err, recData) {
                     if(err) {
                         debug("Error fetching recording information: " + items[0]);
-                        return callback(err);
+                        return callback(null,false);
                     }
                     
-                    if(!recData.length) return callback(new Error('recData not found'));
+                    if(!recData.length) return callback(null,false);
                     
                     var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
                     recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
@@ -234,12 +239,12 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                         url: "https://"+ config('aws').bucketName + ".s3.amazonaws.com/" + recUriThumb,
                         type: entryType
                     };
-
+                    
                     callback(null, rowSent);
                 });
 
             },
-            function(err, results) { 
+            function(err, results) {
                 if(err) {
                     return res.json({ err: "Error fetching recording information"});
                 }
@@ -253,14 +258,13 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
 });
 
 router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', function(req, res, next) {
-    if(!req.params.modelId || !req.params.recId) {
+    if(!req.params.modelId || !req.params.recId || req.params.recId == undefined || req.params.recId == "undefined") {
         return res.status(400).json({ error: 'missing parameters'});
     }
     
     model.models.getTrainingVector(req.params.modelId, req.params.recId, function(err, result) {
         if(err) return next(err);
         
-        console.log('vectorUri', result);
         var vectorUri = result;
         
         s3.getObject({
@@ -280,7 +284,6 @@ router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', functi
             async.map(String(data.Body).split(','), function(number, next) {
                 next(null, parseFloat(number));
             }, function done(err, vector) {
-                console.log(vector.length);
                 res.json({ vector: vector });
             });
 
@@ -309,7 +312,6 @@ router.get('/project/:projectUrl/classification/:cid', function(req, res, next) 
         model.projects.classificationDetail(req.params.projectUrl, req.params.cid, function(err, rows) {
             if(err) return next(err);
 
-            console.log(rows);
             
             var i = 0;
             var data = [];
@@ -511,7 +513,6 @@ router.get('/project/:projectUrl/classification/:cid/vector/:recId', function(re
             async.map(String(data.Body).split(','), function(number, next) {
                 next(null, parseFloat(number));
             }, function done(err, vector) {
-                console.log(vector.length);
                 res.json({ vector: vector });
             });
 

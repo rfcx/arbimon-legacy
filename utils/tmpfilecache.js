@@ -75,8 +75,9 @@ var cache = {
         var root = path.resolve(config("tmpfilecache").path);
         
         fs.readdir(root, function(err, files){
+            if(err) return console.error(err.stack);
             async.each(files, function(subfile, next){
-                if (subfile == '.gitignore') {
+                if (subfile == '.placeholder') {
                     next();
                     return;
                 }

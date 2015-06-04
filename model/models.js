@@ -192,17 +192,14 @@ module.exports = {
                     }
                 };
                 s3.deleteObjects(params, function(err, data) {
-                    if (err)
-                    {
+                    if(err) {
                         callback();
                     }
-                    else
-                    {
-                        var q = "update `models` set `deleted` = 1 where model_id = "+model_id;
-   
-                        queryHandler(q, callback);                             
+                    else {
+                        var q = "UPDATE `models` SET deleted = 1 WHERE model_id = "+model_id;
+                        queryHandler(q, callback);
                     }
-                });                 
+                });
          
             }
         );
@@ -211,7 +208,8 @@ module.exports = {
     },
 
     types: function(callback) {
-        var q = "SELECT `model_type_id`, `name` , `description` FROM `model_types` ";
+        var q = "SELECT model_type_id, name , description, enabled \n"+
+                "FROM model_types";
 
         queryHandler(q, callback);
     },

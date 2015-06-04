@@ -12,6 +12,11 @@ var sqlutil = require('../utils/sqlutil');
 var arrays_util  = require('../utils/arrays');
 var queryHandler = dbpool.queryHandler;
 
+
+// TODO 
+// define jobs as module that are require, and user db identifier field to 
+// find the job parmas table as job_params_identifier, this way jobs can be 
+// more plugable
 var Jobs = {
     job_types : {
         training_job : {
@@ -74,17 +79,6 @@ var Jobs = {
                 }
             }
         },
-        test_job: {
-            type_id : 5,
-            new: function(params, db, callback) {
-                callback();
-            },
-            sql : {
-                report : {
-                    projections : ['"" as name'],
-                }
-            }
-        }        
     },
 
     newJob: function(params, type, callback) {
@@ -99,6 +93,22 @@ var Jobs = {
         var tx = new sqlutil.transaction();
 
         async.waterfall([
+            function(next) {
+                var q = "SELECT enabled FROM job_types WHERE job_type_id = ?";
+                q = mysql.format(q, [job_type.type_id]);
+                queryHandler(q, function(err, rows) {
+                    if(err) return next(err);
+                    
+                    if(!rows.length) {
+                        return next(new Error('Job type not found on DB'));
+                    }
+                    
+                    if(!rows[0].enabled) {
+                        return next(new Error('Job type not enable'));
+                    }
+                    next();
+                });
+            },
             dbpool.getConnection,
             function start_transaction(connection, next){
                 tx.connection = db = connection;

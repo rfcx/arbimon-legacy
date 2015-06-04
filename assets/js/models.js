@@ -81,7 +81,7 @@
                     $scope.showInfo = false;
                     $scope.loading = false;
 
-                    if (data.length > 0) {
+                    if(data.length > 0) {
                         if (!$scope.tableParams) {
                             initTable(1,10,"+mname",{},data.length);
                         }
@@ -95,14 +95,11 @@
                 });
             };
             
-            
             var stateData = a2Models.getState();
-            if (stateData === null)
-            {
+            if (stateData === null) {
                 $scope.loadModels();
             }
-            else
-            {
+            else {
                 if (stateData.data.length > 0) {
                     $scope.modelsData = stateData.filtered;
                     $scope.modelsDataOrig = stateData.data;
@@ -209,7 +206,11 @@
                                 return $scope.projectData;
                             },
                             types: function() {
-                                return data.types;
+                                var typesEnable = data.types.filter(function(type) { 
+                                    return type.enabled; 
+                                });
+                                
+                                return typesEnable;
                             },
                             trainings: function() {
                                 return data.trainings;
@@ -223,29 +224,22 @@
                         $scope.loading = false;
                     });
 
-                    modalInstance.result.then(
-                        function(result) {
-                            data = result;
-                            if (data.ok) {
-                                JobsData.updateJobs();
-                                notify.log("Your new model training is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
-                            }
-
-                            if (data.error) {
-                                notify.error("Error: "+data.error);
-                            }
-
-                            if (data.url) {
-                                $location.path(data.url);
-                            }
+                    modalInstance.result.then(function(result) {
+                        if (result.ok) {
+                            JobsData.updateJobs();
+                            notify.log("Your new model training is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
                         }
-                    );
+
+                        if (result.error) {
+                            notify.error("Error "+result.error);
+                        }
+                    });
                 });
             };
         }
     )
     .controller('NewModelInstanceCtrl', 
-        function($scope, $modalInstance, a2Models, Project, projectData, types, trainings, notify) {
+        function($scope, $modalInstance, a2Models, Project, projectData, types, trainings, notify, $http) {
             $scope.types = types;
             $scope.projectData = projectData;
             $scope.trainings = trainings;
@@ -262,7 +256,21 @@
                 usePresentValidation: -1,
                 useNotPresentValidation: -1
             };
-
+            
+            
+            $http.get('/api/job/types').success(function(jobTypes) {
+                var training = jobTypes.filter(function(type) {
+                    return type.name === "Model training";
+                });
+                
+                if(!training.length)
+                    return console.error('training job info not found');
+                
+                $scope.jobDisabled = !training[0].enabled;
+            });
+            
+            $scope.totalPresentValidation = 0;
+            
             $scope.$watch('data.usePresentTraining', function() {
                 var val = $scope.data.presentValidations - $scope.data.usePresentTraining;
 
@@ -276,8 +284,12 @@
                 if ($scope.data.usePresentTraining > $scope.data.presentValidations) {
                     $scope.data.usePresentTraining = $scope.data.presentValidations;
                 }
+                
+                $scope.totalPresentValidation = $scope.data.usePresentValidation;
             });
-
+            
+            $scope.totalNotPresentValidation = 0;
+            
             $scope.$watch('data.useNotPresentTraining', function() {
                     var val = $scope.data.absentsValidations - $scope.data.useNotPresentTraining;
                     if (val > -1) {
@@ -288,9 +300,25 @@
 
                     if ($scope.data.useNotPresentTraining > $scope.data.absentsValidations)
                         $scope.data.useNotPresentTraining = $scope.data.absentsValidations;
+                        
+                    $scope.totalNotPresentValidation = $scope.data.useNotPresentValidation;
 
             });
+ 
+             $scope.$watch('data.usePresentValidation', function() {
+                if ($scope.data.usePresentValidation > $scope.totalPresentValidation) {
+                   $scope.data.usePresentValidation = $scope.totalPresentValidation
+                }
 
+            });
+             
+            $scope.$watch('data.useNotPresentValidation', function() {
+                if ($scope.data.useNotPresentValidation > $scope.totalNotPresentValidation) {
+                   $scope.data.useNotPresentValidation = $scope.totalNotPresentValidation
+                }
+
+            });
+            
             $scope.$watch('data.training', function() {
                 if($scope.data.training !== '') {
                     Project.validationBySpeciesSong(
@@ -305,15 +333,21 @@
                 }
             });
 
-            $scope.buttonEnable = function() {
-                return !($scope.trainings.length &&
+            $scope.disableCreateButton = function() {
+                return !(
+                    $scope.trainings.length &&
                     $scope.data.name.length &&
+                    $scope.totalNotPresentValidation > 0 &&
+                    $scope.totalPresentValidation > 0 &&
                     $scope.data.usePresentTraining > 0 &&
                     $scope.data.useNotPresentTraining > 0 &&
                     $scope.data.usePresentValidation > 0 &&
                     $scope.data.useNotPresentValidation > 0 &&
                     typeof $scope.data.training !== 'string' &&
-                    typeof $scope.data.classifier !== 'string');
+                    typeof $scope.data.classifier !== 'string' &&
+                    !$scope.jobDisabled
+                );
+                    
             };
 
             $scope.ok = function() {
@@ -444,29 +478,36 @@
                 if(index >= $scope.validations.length) return $scope.waitinFunction();
                 
                 var currRec = $scope.validations[index];
-                
-                currRec.date = $window.moment(currRec.date, 'MM-DD-YYYY HH:mm');
-                
-                a2Models.getRecVector($scope.model.id, currRec.id)
-                    .success(function(data) {
-                        if(!(data.err && data.err == "vector-not-found")) {
-                            var vector = data.vector;
+               
+                if (currRec == false) {
+                    $scope.validations.splice(index, 1);
+                    getVectors(index);       
+                }
+                else
+                {
+                    currRec.date = $window.moment(currRec.date, 'MM-DD-YYYY HH:mm');
                     
-                            var vmax = Math.max.apply(null, vector);
-                            currRec.vmax = vmax;
-                            currRec.vector = vector;
-                            
-                            if(currRec.presence == 'no') {
-                                if($scope.vectorNoMax < vmax) {
-                                    $scope.vectorNoMax = vmax;
+                    a2Models.getRecVector($scope.model.id, currRec.id)
+                        .success(function(data) {
+                            if(!(data.err && data.err == "vector-not-found")) {
+                                var vector = data.vector;
+                        
+                                var vmax = Math.max.apply(null, vector);
+                                currRec.vmax = vmax;
+                                currRec.vector = vector;
+                                
+                                if(currRec.presence == 'no') {
+                                    if($scope.vectorNoMax < vmax) {
+                                        $scope.vectorNoMax = vmax;
+                                    }
+                                }
+                                else if(currRec.presence == 'yes') {
+                                    $scope.allYesMax.push(vmax);
                                 }
                             }
-                            else if(currRec.presence == 'yes') {
-                                $scope.allYesMax.push(vmax);
-                            }
-                        }
-                        getVectors(++index);
-                    });
+                            getVectors(++index);
+                        });
+                }
             };
             
             
