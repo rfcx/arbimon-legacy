@@ -704,20 +704,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             var img = $('<img>').load(function(){
                     $element.removeClass('loading');
                 }).appendTo($element);
-
-            $attr.$observe('a2Src', function(new_src){
-                if(!new_src){
-                    img.attr('src', '');
-                    return;
-                }
-                $element.addClass('loading');
-                var image = new Image();
-                image.onload = function () {
-                    img.attr('src', this.src);
-                };
-                image.src = new_src;
-                
-            });
             
             $attr.$observe('a2Src', function(new_src){
                 if(!new_src){
