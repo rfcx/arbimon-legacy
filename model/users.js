@@ -259,6 +259,14 @@ var Users = {
         
         queryHandler(q, callback);
     },
+    
+    countCreatedToday: function(callback) {
+        var q = 'SELECT count(*) AS count \n'+
+                'FROM `users` \n'+
+                'WHERE DATE(created_on) = DATE(NOW())';
+        
+        queryHandler(q, callback);
+    },
 };
 
 module.exports = Users;

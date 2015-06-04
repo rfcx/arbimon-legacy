@@ -7,24 +7,41 @@ angular.module('admin', [
     'ui.select',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.otherwise("/projects");
+    $urlRouterProvider.otherwise("/dashboard");
     
     $stateProvider
-        .state('projects', {
-            url: '/projects',
-            controller:'AdminProjectsCtrl',
-            templateUrl: '/partials/admin/projects.html'
+        .state('dashboard', {
+            url: '/dashboard',
+            controller:'AdminDashboardCtrl',
+            templateUrl: '/partials/admin/dashboard.html'
         })
-        .state('users', {
-            url: '/users',
-            controller:'AdminUsersCtrl',
-            templateUrl: '/partials/admin/users.html'
-        })
+        // TODO complete projects and users sections
+        // .state('projects', {
+        //     url: '/projects',
+        //     controller:'AdminProjectsCtrl',
+        //     templateUrl: '/partials/admin/projects.html'
+        // })
+        // .state('users', {
+        //     url: '/users',
+        //     controller:'AdminUsersCtrl',
+        //     templateUrl: '/partials/admin/users.html'
+        // })
         .state('jobs', {
             url: '/jobs',
             controller:'AdminJobsCtrl',
             templateUrl: '/partials/admin/jobs.html'
         });
+})
+.controller('AdminDashboardCtrl', function($scope, $http) {
+    
+    $http.get('/admin/dashboard-stats')
+        .success(function(data) {
+            $scope.newUsers = data.newUsers;
+            $scope.newProjects = data.newProjects;
+            $scope.Jobs = data.jobsStatus;
+        });
+    
+    
 })
 .controller('AdminJobsCtrl', function($scope, $http, $interval) {
     
@@ -36,7 +53,6 @@ angular.module('admin', [
     };
     
     $scope.findJobs = function() {
-        console.log('findJobs');
         var query = {};
         var getTags = /(\w+):["'](.+)["']|(\w+):([\w\-]+)/g;
         
@@ -62,8 +78,6 @@ angular.module('admin', [
         if($scope.params.types) {
             query.types = $scope.params.types.map(function(t) { return t.id; });
         } 
-        
-        console.table(query);
         
         $http.get('/admin/jobs', {
                 params: query
@@ -161,59 +175,58 @@ angular.module('admin', [
     //     // $interval.cancel($scope.jobsLoop);
     // });
 })
-.controller('AdminProjectsCtrl', function($scope, $http, notify) {
-    $scope.loadProject = function() {
-        $http.get('/admin/projects')
-            .success(function(data) {
-                $scope.projects = data;
-            });
-    };
-        
-    $scope.getProjectInfo = function(project) {
-        $http.get('/api/project/'+project.url+'/info')
-            .success(function(data) {
-                
-                data.is_enabled = !!data.is_enabled;
-                $scope.currentProject = data;
-                
-            });
-            
-        $http.get('/api/project/'+project.url+'/sites')
-            .success(function(data) {
-                $scope.sites = data;
-            });
-            
-        $http.get('/api/project/'+project.url+'/recordings/count')
-            .success(function(data) {
-                $scope.recCount = data.count;
-            });
-        
-    };
-    
-    $scope.updateProject = function() {
-        $http.put('/admin/projects/' + $scope.currentProject.project_id, 
-            {
-                project: $scope.currentProject
-            })
-            .success(function(data) {
-                $scope.loadProject();
-                notify.log('project updated');
-            })
-            .error(function(data) {
-                notify.error(data);
-            });
-    };
-    
-    $scope.closeProjectInfo = function() {
-        $scope.currentProject = null;
-    };
-    
-    $scope.loadProject();
-})
-.controller('AdminUsersCtrl', function($scope, $http) {
-    $http.get('/admin/users')
-        .success(function(data) {
-            $scope.users = data;
-        });
-})
+// .controller('AdminProjectsCtrl', function($scope, $http, notify) {
+//     $scope.loadProject = function() {
+//         $http.get('/admin/projects')
+//             .success(function(data) {
+//                 $scope.projects = data;
+//             });
+//     };
+//         
+//     $scope.getProjectInfo = function(project) {
+//         $http.get('/api/project/'+project.url+'/info')
+//             .success(function(data) {
+//                 
+//                 data.is_enabled = !!data.is_enabled;
+//                 $scope.currentProject = data;
+//                 
+//             });
+//             
+//         $http.get('/api/project/'+project.url+'/sites')
+//             .success(function(data) {
+//                 $scope.sites = data;
+//             });
+//             
+//         $http.get('/api/project/'+project.url+'/recordings/count')
+//             .success(function(data) {
+//                 $scope.recCount = data.count;
+//             });
+//         
+//     };
+//     
+//     $scope.updateProject = function() {
+//         $http.put('/admin/projects/' + $scope.currentProject.project_id, {
+//                 project: $scope.currentProject
+//             })
+//             .success(function(data) {
+//                 $scope.loadProject();
+//                 notify.log('project updated');
+//             })
+//             .error(function(data) {
+//                 notify.error(data);
+//             });
+//     };
+//     
+//     $scope.closeProjectInfo = function() {
+//         $scope.currentProject = null;
+//     };
+//     
+//     $scope.loadProject();
+// })
+// .controller('AdminUsersCtrl', function($scope, $http) {
+//     $http.get('/admin/users')
+//         .success(function(data) {
+//             $scope.users = data;
+//         });
+// })
 ;

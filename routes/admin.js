@@ -22,6 +22,26 @@ router.get('/', function(req, res) {
 });
 
 
+router.get('/dashboard-stats', function(req, res, next) {
+    async.series([
+        model.jobs.status,
+        model.news.countProjectsCreatedToday,
+        model.users.countCreatedToday,
+    ], 
+    function(err, results) {
+        if(err) return next(err);
+        
+        
+        var stats = {
+            jobsStatus: results[0],
+            newProjects: results[1][0][0].count,
+            newUsers: results[2][0][0].count,
+        };
+        
+        res.json(stats);
+    });
+});
+
 router.get('/job-queue', function(req, res, next) {
     request.get(config('hosts').jobqueue + '/stats')
         .on('error', function(err) {
@@ -38,32 +58,32 @@ router.get('/jobs', function(req, res, next) {
     });
 });
 
-router.get('/projects', function(req, res, next) {
-    model.projects.listAll(function(err, rows) {
-        if(err) return next(err);
-        
-        res.json(rows);
-    });
-});
+// router.get('/projects', function(req, res, next) {
+//     model.projects.listAll(function(err, rows) {
+//         if(err) return next(err);
+//         
+//         res.json(rows);
+//     });
+// });
+// 
+// router.put('/projects/:projectId', function(req, res, next) {
+//     var project = req.body.project;
+//     
+//     project.project_id = req.params.projectId;
+//     
+//     model.projects.update(project, function(err, rows) {
+//         if(err) return next(err);
+//         
+//         res.json(rows);
+//     });
+// });
 
-router.put('/projects/:projectId', function(req, res, next) {
-    var project = req.body.project;
-    
-    project.project_id = req.params.projectId;
-    
-    model.projects.update(project, function(err, rows) {
-        if(err) return next(err);
-        
-        res.json(rows);
-    });
-});
-
-router.get('/users', function(req, res, next) {
-    model.users.list(function(err, rows) {
-        if(err) return next(err);
-        
-        res.json(rows);
-    });
-});
+// router.get('/users', function(req, res, next) {
+//     model.users.list(function(err, rows) {
+//         if(err) return next(err);
+//         
+//         res.json(rows);
+//     });
+// });
 
 module.exports = router;

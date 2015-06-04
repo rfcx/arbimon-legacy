@@ -61,7 +61,15 @@ var Species = {
         
         q = util.format(q, mysql.escape(page*10));
         queryHandler(q, callback);
-    }
+    },
+    
+    countProjectsCreatedToday: function(callback) {
+        var q = 'SELECT COUNT(*) AS count  \n'+
+                'FROM `project_news`  \n'+
+                'WHERE news_type_id = 1 \n'+
+                'AND DATE(timestamp) = DATE(NOW())';
+        queryHandler(q, callback); 
+    },
 };
 
 module.exports = Species;

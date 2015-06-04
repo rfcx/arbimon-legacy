@@ -2,7 +2,35 @@
     <div class="col-sm-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                Jobs
+                Job queue status
+            </div>
+            <div class="panel-body">
+                <p ng-show="jobsStatus.error"> {{ jobsStatus.error }}</p>
+            </div>
+            <table class="table" ng-show="!jobsStatus.error">
+                <tbody>
+                    <tr>
+                        <td> Queue ID: {{ jobsStatus.queue }}</td>
+                        <td> Iteration: {{ jobsStatus.iteration }}</td>
+                        <td> Last updated: {{ jobsStatus.last_updated }}</td>
+                        <td> State: {{ jobsStatus.state }}</td>
+                    </tr>
+                    <tr>
+                        <td> Options: {{ jobsStatus.options }}</td>
+                        <td> Waiting: {{ jobsStatus.waiting }}</td>
+                        <td> Last enqueued: {{ jobsStatus.last_enqueued }}</td>
+                        <td> Max concurrent: {{ jobsStatus.max_concurrent }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Job List
             </div>
             <div class="panel-body">
                 <form ng-submit="findJobs()">
@@ -38,10 +66,22 @@
                                     <i class="fa fa-times"></i>
                                 </button>
                             </div>
+                            <a tooltip-append-to-body
+                                tooltip-html-unsafe="
+                                    is:visible<br>
+                                    is:hidden<br>
+                                    is:completed<br>
+
+                                    job_id:[some job id]<br>
+                                    project_id:[some project id]<br>
+                                    user_id:[some user id]<br>
+                                    project:'some project name'<br>
+                                    user:'some username'<br>">
+                                help <i class="fa fa-info-circle"></i>
+                            </a>
                         </div>
                 </form>
             </div>
-            <!-- {{activeJobs}} -->
             <table class="table">
                 <thead>
                     <tr>
@@ -53,14 +93,14 @@
                         <th>Created on</th>
                         <th>Last update</th>
                     </tr>
-                <thead>
+                </thead>
                 <tbody>
                     <tr ng-repeat="job in activeJobs">
                         <td>{{job.project }} (#{{job.project_id }})</td>
                         <td>{{job.job_id }}</td>
                         <td>
                             <i class="fa fa-circle" 
-                                ng-style="{color : colors[job.type]}"
+                                ng-style="{color: colors[job.type]}"
                                 tooltip="{{job.type}}" 
                                 tooltip-append-to-body="true">
                             </i>
@@ -69,10 +109,14 @@
                         <td>
                             <div ng-hide="job.state == 'processing' && job.percentage" 
                                 ng-style="{color: states[job.state].color}" >
-                                {{job.state}}
+                                {{ job.state }}
                             </div>
                         </td>
-                        <td>{{ (job.progress/job.progress_steps)*100 | number }}%</td>
+                        <td>
+                            <span ng-show="job.progress_steps">
+                                {{ (job.progress/job.progress_steps)*100 | number }}%
+                            </span>
+                        </td>
                         <td>{{ job.created | moment : 'lll' }}</td>
                         <td>{{ job.last_update | moment : 'lll' }}</td>
                     </tr>
@@ -80,14 +124,4 @@
             </table>
         </div>
     </div>
-    <!-- <div class="col-sm-5">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                JobsQueue
-            </div>
-            <ul class="list-group">
-                <li class="list-group-item" ng-repeat="(param, val) in jobsStatus">{{tr[param] || param}}: {{ val }}</li>
-            </ul>
-        </div>
-    </div> -->
 </div>

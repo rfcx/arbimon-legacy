@@ -1,3 +1,6 @@
+/* jshint node:true */
+"use strict";
+
 var util = require('util');
 var mysql = require('mysql');
 var async = require('async');
@@ -138,7 +141,9 @@ var Jobs = {
     
     
     getJobTypes: function(callback){
-        queryHandler("SELECT job_type_id as id, name, description FROM job_types WHERE `enabled`=1", callback);
+        var q = "SELECT job_type_id as id, name, description, enabled \n"+
+                "FROM job_types";
+        queryHandler(q, callback);
     },
     
     hide: function(jId, callback) {
@@ -305,10 +310,17 @@ var Jobs = {
             where.push('u.login IN ('+ mysql.escape(query.user)+')');
         }
         
+        if(query.job_id) {
+            where.push('j.job_id IN ('+ mysql.escape(query.job_id)+')');
+        }
+        
         
         if(where.length) {
-            q += "WHERE " + where.join(' \nAND ');
+            q += 'WHERE ' + where.join(' \nAND ');
         }
+        
+        q += '\n ORDER BY j.job_id DESC \n'+
+             'LIMIT 0, 100';
         
         queryHandler(q, callback);
         
@@ -331,6 +343,54 @@ var Jobs = {
             }
         }
         return null;
+    },
+    
+    status: function(callback) {
+        Jobs.getJobTypes(function(err, rows) {
+            if(err) return callback(err);
+            
+            async.map(rows, function(jobType, next) {
+                var getLast5Jobs = 
+                    'SELECT state \n'+
+                    'FROM `jobs` \n'+
+                    'WHERE job_type_id = ? \n'+
+                    'AND completed = 1 \n'+
+                    'ORDER BY job_id DESC \n'+
+                    'LIMIT 0, 5';
+                
+                getLast5Jobs = mysql.format(getLast5Jobs, [jobType.id]);
+                queryHandler(getLast5Jobs, function(err, rows) {
+                    if(err) return next(err);
+                    
+                    var result = {};
+                    var status;
+                    
+                    rows.forEach(function(job) {
+                        if(!result[job.state])
+                            result[job.state] = 0;
+                        
+                        result[job.state]++;
+                    });
+                    
+                    if(result.completed >= 5) {
+                        status = 'ok';
+                    }
+                    else if(result.completed >= 2) {
+                        status = 'warning';
+                    }
+                    else {
+                        status = 'red_alert';
+                    }
+                    
+                    next(null, {
+                        name: jobType.name,
+                        status: status,
+                        enabled: jobType.enabled
+                    });
+                });
+            }, callback);
+        });
+        
     },
     
     // __compute_per_type_data: function(job, callback){

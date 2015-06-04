@@ -717,7 +717,7 @@ var Projects = {
     
     // this includes recordings processing
     getStorageUsage: function(project_id, callback) {
-        var q = "SELECT (sum(t.duration)/60) as min_usage  \n"+
+        var q = "SELECT COALESCE(sum(t.duration)/60, 0) as min_usage  \n"+
                 "FROM ( \n"+
                 "    (SELECT u.duration \n"+
                 "    FROM uploads_processing as u \n"+
@@ -732,8 +732,6 @@ var Projects = {
         q = mysql.format(q, [project_id, project_id]);
         queryHandler(q, callback);
     },
-    
-    
 };
 
 
