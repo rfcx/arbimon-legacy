@@ -3,36 +3,47 @@
         <div class="col-sm-12 btn-toolbar">
             <div class="btn-group" ng-repeat="type_group in browser.types">
                 <button ng-repeat="type in type_group" class="btn btn-default"
-                    ng-class="browser.type == type ? 'active' : ''" ng-click="browser.type = type | trackEvent:'Visualizer-Main':'setting browser type'"
-                    tooltip="{{type.tooltip}}" tooltip-append-to-body="true" tooltip-placement="bottom-left"
-                ><i ng-class="type.icon"></i></button>
+                    ng-class="browser.type == type ? 'active' : ''" 
+                    ng-click="browser.type = type | trackEvent:'Visualizer-Main':'setting browser type'"
+                    tooltip="{{type.tooltip}}" 
+                    tooltip-append-to-body="true" 
+                    tooltip-placement="bottom-left">
+                    <i ng-class="type.icon"></i>
+                </button>
             </div>
         </div>
     </div>
-    <div ng-include class="margin-xs" src="browser.type ? browser.type.template : ''"></div>
+    <div ng-include 
+        class="margin-xs" 
+        src="browser.type ? browser.type.template : ''">
+    </div>
     <div class="row">
         <div class="col-sm-12">
-            <div class="nav nav-pills nav-stacked visobj-list" role="menu" aria-labelledby="dLabel">
+            <div class="nav nav-pills nav-stacked visobj-list" role="menu">
                 <div class="visobj-list-item" ng-show="browser.loading.times">
-                    <i class="fa fa-spinner fa-spin"></i> Loading {{browser.type.vobject_type | plural}}
+                    <i class="fa fa-spinner fa-spin"></i> 
+                    Loading {{browser.type.vobject_type | plural}}
                 </div>
+                
                 <div class="visobj-list-item" ng-show="!browser.loading.times && !browser.lovo.list.length ">
                     (No {{browser.type.vobject_type | plural}} in list)
                 </div>
+                
                 <div class="visobj-list-item"
                     ng-hide="browser.loading.times"
                     ng-repeat="visobj in browser.lovo.list"
                     data-index="{{$index}}"
                     ng-class=" (browser.visobj.id == visobj.id ? 'active ' : ' ') + 'visobj-'+browser.lovo.object_type"
                     ng-click="browser.visobj = visobj | trackEvent:'Visualizer-Main':'setting visobj'">
+                    
                     <div class="clearfix">
-                            {{visobj.caption || visobj.name}}
-                            <span ng-show="visobj.caption2" class="pull-right">{{visobj.caption2}}</span>
+                        {{ visobj.caption || visobj.name }}
+                        <span ng-show="visobj.caption2" class="pull-right">{{visobj.caption2}}</span>
                     </div>
                     <div class="thumbnail-viewer">
                         <img ng-src="{{visobj.thumbnail | a2UpdatedUrl}}"
-                            ng-class="'visobj-'+browser.lovo.object_type"
-                        >
+                            ng-class="'visobj-'+browser.lovo.object_type">
+                        
                     </div>
                 </div>
             </div>

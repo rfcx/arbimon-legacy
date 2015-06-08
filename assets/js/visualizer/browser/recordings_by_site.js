@@ -234,7 +234,7 @@ angular.module('a2browser_recordings_by_site', [])
     });
     $scope.$watch('browser.$type.date', function(newValue, oldValue){
         if(!self.active){ return; }
-        $(document).find('.dropdown.open').removeClass('open');
+        // $(document).find('.dropdown.open').removeClass('open');
         var site = self.site;
         var date = self.date;
         if (site && date) {

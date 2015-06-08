@@ -1,7 +1,7 @@
 <nav class="navbar navbar-default" role="navigation">
     <div class="container">
         <div class="navbar-header">
-            <button data-target="#navbar-collapse" data-toggle="collapse" type="button" class="navbar-toggle collapsed">
+            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
@@ -11,7 +11,7 @@
                 <img src="/images/logo.svg">
             </a>
         </div>
-        <div class="collapse navbar-collapse" id="navbar-collapse">
+        <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
             <% if(user.isSuper) { %>
                 <ul class="nav navbar-nav">
                     <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>

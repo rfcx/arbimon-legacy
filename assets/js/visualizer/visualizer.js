@@ -1,5 +1,5 @@
-$(document)
-  .on('click.bs.dropdown.data-api', '.dropdown .dropdown-form', function (e) { e.stopPropagation(); });
+// $(document)
+//   .on('click.bs.dropdown.data-api', '.dropdown .dropdown-form', function (e) { e.stopPropagation(); });
 
 /**
  * @ngdoc overview
@@ -24,7 +24,8 @@ angular.module('visualizer', [
     'visualizer-services',
     'a2-visualizer-spectrogram-Layout',
     'a2-visualizer-spectrogram-click2zoom',
-    'a2-url-update-service'
+    'a2-url-update-service',
+    'ui.bootstrap'
 ])
 /**
  * @ngdoc service
