@@ -78,7 +78,7 @@ module.exports = function(grunt) {
             bootstrap: {
                 expand: true,
                 cwd: 'bower_components/bootstrap/dist/',
-                src: ['fonts/*', 'js/*'],
+                src: ['**'],
                 dest: 'public/assets/bootstrap/',
             },
             jquery: {
@@ -102,7 +102,7 @@ module.exports = function(grunt) {
             d3: {
                 expand: true,
                 flatten: true,
-                src: 'bower_components/d3/*.js',
+                src: 'bower_components/d3/d3.min.js',
                 dest: 'public/assets/d3/'
             },
             ngTable: {
@@ -114,7 +114,7 @@ module.exports = function(grunt) {
             angular: {
                 expand: true,
                 flatten: true,
-                src: 'bower_components/angular/*',
+                src: 'bower_components/angular/angular.min.js',
                 dest: 'public/assets/angular/'
             },
             angularAudio: {
@@ -132,13 +132,13 @@ module.exports = function(grunt) {
             angularBootstrap: {
                 expand: true,
                 flatten: true,
-                src: 'bower_components/angular-bootstrap/*',
+                src: 'bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js',
                 dest: 'public/assets/angular-bootstrap/'
             },
             angularUiRouter: {
                 expand: true,
                 flatten: true,
-                src: 'bower_components/angular-ui-router/release/*',
+                src: 'bower_components/angular-ui-router/release/angular-ui-router.min.js',
                 dest: 'public/assets/angular-ui-router/'
             },
             angularUiRouterExtras: {
@@ -148,16 +148,17 @@ module.exports = function(grunt) {
                 dest: 'public/assets/ui-router-extras/'
             },
             angularUiSelect: {
-                expand: true,
-                flatten: true,
-                src: 'bower_components/angular-ui-select/dist/select.min*',
-                dest: 'public/assets/angular-ui-select/'
-            },
-            angularUiSelectSelectizeTheme: {
-                expand: true,
-                flatten: true,
-                src: 'bower_components/selectize/dist/css/selectize.default.css',
-                dest: 'public/assets/angular-ui-select/'
+                files: [{
+                    expand: true,
+                    flatten: true,
+                    src: 'bower_components/angular-ui-select/dist/select.min*',
+                    dest: 'public/assets/angular-ui-select/'
+                }, {
+                    expand: true,
+                    flatten: true,
+                    src: 'bower_components/selectize/dist/css/selectize.default.css',
+                    dest: 'public/assets/angular-ui-select/'
+                }]
             },
             angularRangeSlider: {
                 expand: true,
@@ -179,7 +180,6 @@ module.exports = function(grunt) {
             },
             humanejs: {
                 expand: true,
-                flatten: true,
                 cwd: 'bower_components/humane-js/',
                 src: ['humane.min.js'],
                 dest: 'public/assets/humane-js/'
@@ -207,7 +207,13 @@ module.exports = function(grunt) {
                flatten: true,
                src: 'bower_components/zxcvbn/zxcvbn.js',
                dest: 'public/assets/zxcvbn/'
-            }
+           },
+           leaflet: {
+               expand: true,
+               cwd: 'bower_components/leaflet/dist/',
+               src: ['**'],
+               dest: 'public/assets/leaflet/'
+           },
         },
         
         ngAnnotate: {

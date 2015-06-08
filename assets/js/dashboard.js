@@ -26,17 +26,14 @@ angular.module('dashboard',[
     })
 .controller('SummaryCtrl', function($scope, Project, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
         $scope.loading = 9;
-        var infowindow_scope = $scope.$new();
+        
         var done = function() {
             if($scope.loading > 0) --$scope.loading;
         };
         
         var google = $window.google;
         
-        var mapOptions = {
-            center: { lat: 10, lng: -20 },
-            zoom: 1
-        };
+        
         
         Project.getInfo(function(info){
             $scope.project = info;
@@ -81,39 +78,33 @@ angular.module('dashboard',[
             done();
             
             $timeout(function() {
+                var map = $scope.map = $window.L.map('summary-map', { zoomControl: false }).setView([10, -20], 1);
+                L.control.zoom({ position: 'topright'}).addTo($scope.map);
                 
-                var map = $scope.map = new google.maps.Map($window.document.getElementById('summary-map'), mapOptions);
+                $window.L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
                 
                 if(!$scope.sites.length){
                     return;
                 }
-                var bounds = new google.maps.LatLngBounds();
+                
+                var bounds = [];
+                angular.forEach($scope.sites, function(site){
+                    bounds.push([site.lat, site.lon]);
                     
-                var infowindow = new google.maps.InfoWindow();
-                $templateFetch('/partials/dashboard/site-info-window.html', function(layer_tmp){
-                    var el = $compile(layer_tmp)(infowindow_scope)[0];
-                    infowindow.setContent(el);
+                    var infowindow_scope = $scope.$new();
+                    infowindow_scope.site = site;
+                    $templateFetch('/partials/dashboard/site-info-window.html', function(layer_tmp){
+                        
+                        var content = $compile(layer_tmp)(infowindow_scope)[0];
+                        
+                        $window.L.marker([site.lat, site.lon]).addTo(map)
+                            .bindPopup(content);
+                    });
                 });
                 
-                angular.forEach($scope.sites, function(site){
-                    var position = new google.maps.LatLng(site.lat, site.lon);
-                    
-                    var marker = new google.maps.Marker({
-                        position: position,
-                        title: site.name
-                    });
-                    google.maps.event.addListener(marker, 'click', function() {
-                        infowindow_scope.site = site;
-                        infowindow_scope.$apply();
-                        infowindow.open(map,marker);
-                    });
-                    
-                    bounds.extend(position);
-            
-                    marker.setMap($scope.map);
-                    
-                    $scope.map.fitBounds(bounds);
-                });
+                $scope.map.fitBounds(bounds);
                 
             }, 100);
             

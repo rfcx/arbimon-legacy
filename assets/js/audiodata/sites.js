@@ -5,7 +5,7 @@ angular.module('audiodata.sites', [
     'humane',
     'a2-qr-js'
 ])
-.controller('SitesCtrl', function($scope, Project, $http, $modal, notify, a2Sites) {
+.controller('SitesCtrl', function($scope, Project, $http, $modal, notify, a2Sites, $window) {
     $scope.loading = true;
     
     Project.getInfo(function(info){
@@ -19,16 +19,36 @@ angular.module('audiodata.sites', [
     
     $scope.editing = false;
     
-    var mapOptions = {
-        center: { lat: 18.3, lng: -66.5},
-        zoom: 8
-    };
+    $scope.map = $window.L.map('map-site', { zoomControl: false }).setView([10, -20], 1);
+    L.control.zoom({ position: 'topright'}).addTo($scope.map);
     
-    $scope.map = new google.maps.Map(document.getElementById('map-site'), mapOptions);
+    $window.L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo($scope.map);
+    
+    
+    var moveMarker = function(e) {
+        console.log(e.latlng);
+        
+        if(!$scope.marker) {
+            console.log('no marker');
+            $scope.marker = $window.L.marker(e.latlng).addTo($scope.map);
+        }
+        else {
+            console.log('marker');
+            $scope.marker.setLatLng(e.latlng);
+        }
+        
+        $scope.$apply(function () {
+            $scope.temp.lat = e.latlng.lat;
+            $scope.temp.lon = e.latlng.lng;
+        });
+    };
     
     $scope.close = function() {
         $scope.creating = false;
         $scope.editing = false;
+        $scope.map.removeEventListener('click', moveMarker);
     };
     
     $scope.save = function() {
@@ -120,27 +140,15 @@ angular.module('audiodata.sites', [
     $scope.create = function() {
         $scope.temp = {};
         
-        if(!$scope.marker) {
-            $scope.marker = new google.maps.Marker({
-                position: $scope.map.getCenter(),
-                title: 'New Site Location'
-            });
-            $scope.marker.setMap($scope.map);
-        }
-        else {
-            $scope.marker.setPosition($scope.map.getCenter());
+        if($scope.marker) {
+            $scope.map.removeLayer($scope.marker);
+            $scope.map.setView([10, -20], 1);
+            delete $scope.marker;
         }
         
-        $scope.marker.setDraggable(true);
+        
+        $scope.map.on('click', moveMarker);
         $scope.creating = true;
-        
-        google.maps.event.addListener($scope.marker, 'dragend', function(position) {
-            //~ console.log(position);
-            $scope.$apply(function () {
-                $scope.temp.lat = position.latLng.lat();
-                $scope.temp.lon = position.latLng.lng();
-            });
-        });
     };
 
     $scope.edit = function() {
@@ -151,16 +159,7 @@ angular.module('audiodata.sites', [
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
         
-        $scope.marker.setDraggable(true);
-        
-        google.maps.event.addListener($scope.marker, 'dragend', function(position) {
-            //~ console.log(position);
-            $scope.$apply(function () {
-                $scope.temp.lat = position.latLng.lat();
-                $scope.temp.lon = position.latLng.lng();
-            });
-        });
-        
+        $scope.map.on('click', moveMarker);
         $scope.editing = true;
     };
 
@@ -178,29 +177,25 @@ angular.module('audiodata.sites', [
     };
     
     $scope.sel = function(site) {
-        //~ console.log('sel');
-        
-        $scope.editing = false;
-        $scope.creating = false;
+        $scope.close();
         
         $scope.selected = site;
         
-        var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
         
         if(!$scope.marker) {
-            $scope.marker = new google.maps.Marker({
-                position: position,
-                title: $scope.selected.name
-            });
-            $scope.marker.setMap($scope.map);
+            $scope.marker = new $window.L.marker(site)
+                .bindPopup(site.name)
+                .addTo($scope.map);
         }
         else {
-            $scope.marker.setDraggable(false);
-            $scope.marker.setPosition(position);
-            $scope.marker.setTitle($scope.selected.name);
+            $scope.marker.setLatLng(site);
+            $scope.marker.closePopup()
+                .unbindPopup()
+                .bindPopup(site.name);
         }
         
-        $scope.map.panTo(position);
+        $scope.map.setView(site, 10, { animate:true });
+        
         //~ console.log($scope.selected);
     };
     

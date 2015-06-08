@@ -139,7 +139,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             
             for(var i = 0; i < detaEle[0].children.length; i++) {
                 var child = $(detaEle[0].children[i]);
-                // console.log(child);
                 
                 fields.push({
                     title: child.attr('title'),
@@ -148,8 +147,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 });
             }
             
-            // console.log(fields);
-            // console.log($templateCache.get('/partials/directives/table.html'));
             
             return function(scope, element, attrs) {
                 scope.fields = fields;
@@ -164,7 +161,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 
                 if(attrs.search) {
                     scope.$watch('search', function(value) {
-                        console.log(value);
                         scope.query = scope.search;
                         scope.updateChecked();
                     });
@@ -217,8 +213,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
     $scope.check = function($event, $index) {
         
         if($scope.lastChecked && $event.shiftKey) {
-            console.log('shift!');
-            
             if($scope.lastChecked) {
                 var rows;
                 if($scope.lastChecked > $index) {
@@ -576,7 +570,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                     .attr('transform', 'translate(0,'+ headerHeight +')')
                     .selectAll('g')
                     .data(function(d) { 
-                        // console.log(d);
                         return d3.time.months(new Date(d, 0, 1), new Date(d+1, 0, 1));
                     });
                 
@@ -614,7 +607,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 days.attr('transform', function() { return 'translate(0,24)'; })
                     .classed('hover', true)
                     .classed('day-disabled cal-oor', function(d) {
-                        // console.log(d ,scope.minDate, (d < scope.minDate) );
                         return (scope.minDate ? (d < scope.minDate) : false) ||
                                (scope.maxDate ? (scope.maxDate < d) : false);
                     })

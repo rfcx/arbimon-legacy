@@ -1,16 +1,23 @@
-<div class="ui-select-match" ng-hide="$select.open" ng-disabled="$select.disabled" ng-class="{'btn-default-focus':$select.focus}">
-  <span tabindex="-1"
-      class="btn btn-default form-control ui-select-toggle"
-      aria-label="{{ $select.baseTitle }} activate"
-      ng-disabled="$select.disabled" 
-      ng-click="$select.activate()"
-      style="outline: 0;">
-    <span ng-show="$select.isEmpty()" class="ui-select-placeholder text-muted">{{$select.placeholder}}</span>
-    <span ng-hide="$select.isEmpty()" class="ui-select-match-text pull-left" ng-class="{'ui-select-allow-clear': $select.allowClear && !$select.isEmpty()}" ng-transclude=""></span>
-    <i class="caret pull-right" ng-click="$select.toggle($event)"></i>
-    <a ng-show="$select.allowClear && !$select.isEmpty()" aria-label="{{ $select.baseTitle }} clear" style="margin-right: 10px" 
-      ng-click="$select.clear($event)" class="btn btn-xs btn-link pull-right">
-      <i class="glyphicon glyphicon-remove" aria-hidden="true"></i>
-    </a>
-  </span>
+<div class="ui-select-match" ng-class="{'btn-default-focus':$select.focus}"
+    ng-disabled="$select.disabled" ng-hide="$select.open">
+    <span aria-label="{{ $select.baseTitle }} activate"
+        class="btn btn-default form-control ui-select-toggle" 
+        ng-click="$select.activate()" 
+        ng-disabled="$select.disabled"
+        style="outline: 0;" tabindex="-1">
+        <span class="ui-select-placeholder text-muted" ng-show="$select.isEmpty()">
+            {{$select.placeholder}}
+        </span>
+        <span class="ui-select-match-text pull-left"
+            ng-class="{'ui-select-allow-clear': $select.allowClear && !$select.isEmpty()}" 
+            ng-hide="$select.isEmpty()" 
+            ng-transclude="">
+        </span>
+        <i class="caret pull-right" ng-click="$select.toggle($event)"></i>
+        <a aria-label="{{ $select.baseTitle }} clear"
+            class="btn btn-xs btn-link pull-right" ng-click="$select.clear($event)"
+            ng-show="$select.allowClear && !$select.isEmpty()" style="margin-right: 10px">
+            <i aria-hidden="true" class="glyphicon glyphicon-remove"></i>
+        </a>
+    </span>
 </div>
