@@ -109,33 +109,33 @@ angular.module('audiodata.sites', [
     };
     
     
-    $scope.browseShared = function() {
-        var modalInstance = $modal.open({
-            templateUrl: '/partials/audiodata/browse-published-sites.html',
-            controller: 'PublishedSitesBrowserCtrl',
-            size: 'lg',
-            resolve: {
-                project: function() {
-                    var p = angular.copy($scope.project);
-                    p.sites = $scope.sites;
-                    return p;
-                }
-            }
-        });
-        
-        modalInstance.result.then(function(data) {
-            Project.getSites(function(sites) {
-                $scope.sites = sites;
-                $scope.loading = false;
-            });
-            notify.log(data.msg);
-        })
-        .catch(function(reason) {
-            if(reason) {
-                notify.error(reason);
-            }
-        });
-    };
+    // $scope.browseShared = function() {
+    //     var modalInstance = $modal.open({
+    //         templateUrl: '/partials/audiodata/browse-published-sites.html',
+    //         controller: 'PublishedSitesBrowserCtrl',
+    //         size: 'lg',
+    //         resolve: {
+    //             project: function() {
+    //                 var p = angular.copy($scope.project);
+    //                 p.sites = $scope.sites;
+    //                 return p;
+    //             }
+    //         }
+    //     });
+    //     
+    //     modalInstance.result.then(function(data) {
+    //         Project.getSites(function(sites) {
+    //             $scope.sites = sites;
+    //             $scope.loading = false;
+    //         });
+    //         notify.log(data.msg);
+    //     })
+    //     .catch(function(reason) {
+    //         if(reason) {
+    //             notify.error(reason);
+    //         }
+    //     });
+    // };
     
     $scope.create = function() {
         $scope.temp = {};
@@ -200,56 +200,57 @@ angular.module('audiodata.sites', [
     };
     
 })
-.controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {
-        var geocoder = new $window.google.maps.Geocoder();
-        
-        a2Sites.listPublished(function(sites) {
-            
-            sites.forEach(function(site) {
-                geocoder.geocode({ 
-                        location: { 
-                            lat: site.lat, 
-                            lng: site.lon 
-                        } 
-                }, function(result, status) {
-                    
-                    if(result.length){
-                        site.location = result[1].formatted_address;
-                    }
-                    else {
-                        site.location = 'unknown';
-                    }
-                    
-                    $scope.$apply();
-                });
-                
-            });
-            
-            $scope.sites = sites;
-        });
-        
-        
-        $scope.addSite = function(site) {
-            
-            if(site.project_id === project.project_id) {
-                $modalInstance.dismiss("site is owned by this project");
-                return;
-            }
-            
-            var result = project.sites.filter(function(value) {
-                return value.id === site.id;
-            });
-            
-            if(result.length > 0) {
-                $modalInstance.dismiss("site is already on this project");
-                return;
-            }
-            
-            a2Sites.import(site, function(data) {
-                $modalInstance.close(data);
-            });
-        };
-    })
+// TODO remove properly published
+// .controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {
+//     var geocoder = new $window.google.maps.Geocoder();
+//     
+//     a2Sites.listPublished(function(sites) {
+//         
+//         sites.forEach(function(site) {
+//             geocoder.geocode({ 
+//                     location: { 
+//                         lat: site.lat, 
+//                         lng: site.lon 
+//                     } 
+//             }, function(result, status) {
+//                 
+//                 if(result.length){
+//                     site.location = result[1].formatted_address;
+//                 }
+//                 else {
+//                     site.location = 'unknown';
+//                 }
+//                 
+//                 $scope.$apply();
+//             });
+//             
+//         });
+//         
+//         $scope.sites = sites;
+//     });
+//     
+//     
+//     $scope.addSite = function(site) {
+//         
+//         if(site.project_id === project.project_id) {
+//             $modalInstance.dismiss("site is owned by this project");
+//             return;
+//         }
+//         
+//         var result = project.sites.filter(function(value) {
+//             return value.id === site.id;
+//         });
+//         
+//         if(result.length > 0) {
+//             $modalInstance.dismiss("site is already on this project");
+//             return;
+//         }
+//         
+//         a2Sites.import(site, function(data) {
+//             $modalInstance.close(data);
+//         });
+//     };
+// })
 .controller('SitesTokenGenaratorCtrl', function($scope, a2Sites, $modal, notify){
         $scope.site = $scope.selected;
         $scope.loading = {};
