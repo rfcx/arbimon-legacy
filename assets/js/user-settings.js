@@ -1,8 +1,14 @@
-angular.module('settings', ['templates-arbimon2', 'ui.bootstrap', 'humane', 'angularytics', 'a2forms']).
-config(function(AngularyticsProvider) {
+angular.module('a2.user-settings', [
+    'templates-arbimon2', 
+    'a2.forms',
+    'ui.bootstrap', 
+    'humane', 
+    'angularytics', 
+])
+.config(function(AngularyticsProvider) {
     AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);
-}).
-run(function(Angularytics) {
+})
+.run(function(Angularytics) {
     Angularytics.init();
 })
 .controller('UserSettingsCtrl', function($scope, $modal, $http, notify){

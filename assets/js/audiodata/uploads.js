@@ -1,6 +1,6 @@
-angular.module('audiodata.uploads', [
-    'a2services', 
-    'a2directives', 
+angular.module('a2.audiodata.uploads', [
+    'a2.services', 
+    'a2.directives', 
     'ui.bootstrap', 
     'angularFileUpload',
     'humane'

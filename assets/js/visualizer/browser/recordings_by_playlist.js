@@ -1,4 +1,4 @@
-angular.module('a2browser_recordings_by_playlist', ['a2Classy'])
+angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
 .service('a2PlaylistLOVO', function($q, makeClass, a2Playlists, a2Pager){
     return makeClass({
         static: {

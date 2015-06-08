@@ -1,4 +1,4 @@
-angular.module('a2forms',['templates-arbimon2'])
+angular.module('a2.forms',['templates-arbimon2'])
 .run(function($window) {
     
     // load zxcvbn 

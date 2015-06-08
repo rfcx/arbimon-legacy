@@ -1,12 +1,12 @@
-angular.module('audiodata', [
+angular.module('a2.audiodata', [
     'ui.router', 
     'ct.ui.router.extras',
-    'audiodata.sites',
-    'audiodata.species',
-    'audiodata.uploads',
-    'audiodata.recordings',
-    'audiodata.training-sets',
-    'audiodata.playlists'
+    'a2.audiodata.sites',
+    'a2.audiodata.species',
+    'a2.audiodata.uploads',
+    'a2.audiodata.recordings',
+    'a2.audiodata.training-sets',
+    'a2.audiodata.playlists'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.when("/audiodata", "/audiodata/sites");

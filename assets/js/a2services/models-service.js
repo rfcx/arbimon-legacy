@@ -1,5 +1,5 @@
-angular.module('a2-models-service', [
-    'a2-project-service',
+angular.module('a2.srv.models', [
+    'a2.srv.project',
     'humane'
 ])
 .factory('a2Models', function($http, Project, notify) {

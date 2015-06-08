@@ -1,6 +1,6 @@
-angular.module('audiodata.species', [
-    'a2services', 
-    'a2directives', 
+angular.module('a2.audiodata.species', [
+    'a2.services', 
+    'a2.directives', 
     'ui.bootstrap',
     'humane'
 ])

@@ -1,4 +1,4 @@
-angular.module('a2SoundscapeRegionTags', ['a2Infotags'])
+angular.module('a2.soundscapeRegionTags', ['a2.infotags'])
 .directive('a2SoundscapeRegionTag', function($injector){
     var clsprefix = 'label-';
     var resolve_tag = function(scope, element, tag){

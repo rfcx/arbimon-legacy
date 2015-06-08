@@ -1,4 +1,4 @@
-angular.module('a2browser_soundscapes', [])
+angular.module('a2.browser_soundscapes', [])
 .controller('a2BrowserSoundscapesController', function($scope, a2Browser, a2Soundscapes, a2ArrayLOVO, $timeout, $q){
     var self = this;
     this.soundscapes = [];

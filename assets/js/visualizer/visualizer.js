@@ -7,15 +7,15 @@
  * @description
  * This is the main visualizer module.
  */
-angular.module('visualizer', [
+angular.module('a2.visualizer', [
     'ui.router', 
     'ct.ui.router.extras', 
     'ngAudio', 
-    'a2services', 
-    'a2utils', 
-    'a2visobjects', 
-    'a2visobjectsbrowser', 
-    'a2SpeciesValidator', 
+    'a2.services', 
+    'a2.utils', 
+    'a2.visobjects', 
+    'a2.visobjectsbrowser', 
+    'a2.speciesValidator', 
     'visualizer-layers', 
     'visualizer-spectrogram', 
     'visualizer-training-sets', 
@@ -24,7 +24,7 @@ angular.module('visualizer', [
     'visualizer-services',
     'a2-visualizer-spectrogram-Layout',
     'a2-visualizer-spectrogram-click2zoom',
-    'a2-url-update-service',
+    'a2.url-update-service',
     'ui.bootstrap'
 ])
 /**
@@ -268,7 +268,7 @@ angular.module('visualizer', [
  * @description
  * This module stores the layout manager for the spectrogram.
  */
-angular.module('a2-visualizer-spectrogram-Layout',['a2Classy'])
+angular.module('a2-visualizer-spectrogram-Layout',['a2.classy'])
 /**
  * @ngdoc service
  * @name a2-visualizer-spectrogram-Layout.factory:VisualizerLayout

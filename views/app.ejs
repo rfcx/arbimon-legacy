@@ -54,24 +54,19 @@
                         </a>
                     </li>
                 </ul>
+                <ul class="nav navbar-nav hide-tooltip-lg">
+                    <li ui-sref-active="active">
+                        <a ui-sref="settings" tooltip="Settings" tooltip-placement="bottom">
+                            <i class="fa fa-wrench"></i> 
+                            <span class="visible-lg-inline visible-xs-inline">Settings</span> 
+                        </a>
+                    </li>
+                </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li class="dropdown" dropdown>
+                    <li>
                         <a class="dropdown-toggle" dropdown-toggle>
                             <i class="fa fa-sitemap"></i> <%=  project.name  %>
-                            <i class="fa fa-caret-down"></i>
                         </a>
-                        <ul class="dropdown-menu" role="menu">
-                            <li>
-                                <a ui-sref="settings" ui-sref-active="active">
-                                    <i class="fa fa-wrench"></i> Settings
-                                </a>
-                            </li>
-                            <li>
-                                <a ui-sref="users" ui-sref-active="active">
-                                    <i class="fa fa-users"></i> Users
-                                </a>
-                            </li>
-                        </ul>
                     </li>
                     <li class="dropdown" dropdown>
                         <a class="dropdown-toggle" dropdown-toggle>

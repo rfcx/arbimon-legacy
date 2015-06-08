@@ -1,6 +1,6 @@
-angular.module('audiodata.training-sets', [
-    'a2services', 
-    'a2directives', 
+angular.module('a2.audiodata.training-sets', [
+    'a2.services', 
+    'a2.directives', 
     'ui.bootstrap',
     'visualizer-training-sets',
     'humane'

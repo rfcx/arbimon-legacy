@@ -1,4 +1,11 @@
-angular.module('home', ['templates-arbimon2', 'ui.bootstrap', 'a2utils', 'humane','angularytics', 'a2forms'])
+angular.module('a2.home', [
+    'templates-arbimon2', 
+    'ui.bootstrap', 
+    'a2.utils', 
+    'a2.forms',
+    'humane',
+    'angularytics', 
+])
 .config(function(AngularyticsProvider) {
         AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
 })

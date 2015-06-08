@@ -5,8 +5,8 @@ angular.module('visualizer-soundscapes', [
 
 angular.module('visualizer-soundscape-regions', [
     'visualizer-services', 
-    'a2utils', 
-    'a2SoundscapeRegionTags'
+    'a2.utils', 
+    'a2.soundscapeRegionTags'
 ])
 .controller('a2VisualizerSoundscapeRegionsLayerController', function($scope, $modal, $location, a2Soundscapes, a22PointBBoxEditor){
     var self = this;
@@ -249,10 +249,10 @@ angular.module('visualizer-soundscape-regions', [
 
 angular.module('visualizer-soundscape-info', [
     'visualizer-services', 
-    'a2utils', 
-    'a2SoundscapeRegionTags',
-    'a2-url-update-service',
-    'a2directives'
+    'a2.utils', 
+    'a2.soundscapeRegionTags',
+    'a2.url-update-service',
+    'a2.directives'
 ])
 .controller('a2VisualizerSoundscapeInfoLayerController', function($scope, $modal, $location, a2Soundscapes){
     var self = this;

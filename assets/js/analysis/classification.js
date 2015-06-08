@@ -1,7 +1,7 @@
 (function(angular) {
-    var classification = angular.module('classification', [
+    var classification = angular.module('a2.analysis.classification', [
         'ui.bootstrap' , 
-        'a2services', 
+        'a2.services', 
         'humane'
     ]);
     var template_root = '/partials/classification/';

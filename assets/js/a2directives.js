@@ -1,4 +1,4 @@
-angular.module('a2directives', ['a2services', 'templates-arbimon2'])
+angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
 .run(function($window) {
     var $ = $window.$;
     

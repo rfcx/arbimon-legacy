@@ -1,9 +1,9 @@
-angular.module('audiodata.sites', [
-    'a2services', 
-    'a2directives', 
+angular.module('a2.audiodata.sites', [
+    'a2.services', 
+    'a2.directives', 
     'ui.bootstrap',
     'humane',
-    'a2-qr-js'
+    'a2.qr-js'
 ])
 .controller('SitesCtrl', function($scope, Project, $http, $modal, notify, a2Sites, $window) {
     $scope.loading = true;

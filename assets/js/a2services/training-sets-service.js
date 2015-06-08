@@ -1,4 +1,4 @@
-angular.module('a2-training-sets-service', ['a2-project-service'])
+angular.module('a2.srv.training-sets', ['a2.srv.project'])
 .factory('a2TrainingSets', function(Project, $http) {
     return {
         getList: function(callback) {

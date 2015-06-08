@@ -1,15 +1,16 @@
-var arbimon2 = angular.module('arbimon2', [
+var a2 = angular.module('arbimon2', [
     'templates-arbimon2',
-    'dashboard', 
-    'audiodata',
-    'visualizer', 
-    'analysis',
-    'jobs',
+    'a2.dashboard', 
+    'a2.audiodata',
+    'a2.visualizer', 
+    'a2.analysis',
+    'a2.jobs',
+    'a2.settings',
     'angularytics',
     'ui.router', 
     'ct.ui.router.extras'
 ])
-.run(function($rootScope, Angularytics){
+.run(function($rootScope, Angularytics) {
     $rootScope.Math = Math; // export math library to angular :-)
     Angularytics.init();
 })

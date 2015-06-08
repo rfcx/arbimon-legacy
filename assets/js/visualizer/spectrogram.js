@@ -1,5 +1,5 @@
 
-angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
+angular.module('visualizer-spectrogram', ['visualizer-services', 'a2.utils'])
 .service('a2AffixCompute', function(){
     return function($viewport, $el, layout){
         var v;

@@ -1,6 +1,6 @@
 
 
-angular.module('visualizer-training-sets', ['visualizer-services', 'a2utils'])
+angular.module('visualizer-training-sets', ['visualizer-services', 'a2.utils'])
 .controller('a2VisualizerTrainingSetLayerController', function($scope, $modal, $controller, $timeout, a2TrainingSets){
     var self=this;
     self.tset      = null;

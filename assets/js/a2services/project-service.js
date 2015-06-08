@@ -1,4 +1,4 @@
-angular.module('a2-project-service', [])
+angular.module('a2.srv.project', [])
 .factory('Project', function($location, $http) {
         
         var nameRe = /\/?project\/([\w\_\-]+)/;

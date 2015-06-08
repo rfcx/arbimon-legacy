@@ -1,7 +1,7 @@
 (function(angular) {
-    var soundscapes = angular.module('soundscapes', [
+    var soundscapes = angular.module('a2.analysis.soundscapes', [
+        'a2.services' , 
         'ui.bootstrap' , 
-        'a2services' , 
         'ui-rangeSlider', 
         'ngCsv'
     ]);

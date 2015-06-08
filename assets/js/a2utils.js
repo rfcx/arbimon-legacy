@@ -1,4 +1,4 @@
-angular.module('a2utils', [])
+angular.module('a2.utils', [])
 .factory('$templateFetch', function($http, $templateCache){
     return function $templateFetch(templateUrl, linker){
         var template = $templateCache.get(templateUrl);
@@ -127,7 +127,9 @@ angular.module('a2utils', [])
 })
 ;
 
-angular.module('a2-url-update-service', [])
+
+// TODO break to multiple files
+angular.module('a2.url-update-service', [])
 .factory('a2UrlUpdate', function(){
     return {
         cache:{},
@@ -175,7 +177,8 @@ angular.module('a2-url-update-service', [])
 ;
 
 
-angular.module('a2Infotags', ['a2-species-service'])
+// TODO break to multiple files
+angular.module('a2.infotags', ['a2.services'])
 .directive('a2Species', function (Species, $timeout) {
     return {
         restrict : 'E',
@@ -197,7 +200,7 @@ angular.module('a2Infotags', ['a2-species-service'])
         }
     };
 })
-.directive('a2Songtype', function (Songtypes, $timeout) {
+.directive('a2.songtype', function (Songtypes, $timeout) {
     return {
         restrict : 'E',
         scope : {
@@ -220,7 +223,8 @@ angular.module('a2Infotags', ['a2-species-service'])
 });
 
 
-angular.module('a2Classy', [])
+// TODO break to multiple files
+angular.module('a2.classy', [])
 .factory('makeClass', function($inheritFrom){
     var slice=Array.prototype.slice;
     return function makeClass(classdef){

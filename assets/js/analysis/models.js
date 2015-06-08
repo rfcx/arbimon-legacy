@@ -1,12 +1,12 @@
 (function(angular) {
-    var models = angular.module('models', [
-        'ngTable',
+    var models = angular.module('a2.analysis.models', [
+        'a2.services',
+        'a2.utils',
         'ui.bootstrap',
-        'a2services',
         'ui.select',
         'ngSanitize',
+        'ngTable',
         'ngCsv',
-        'a2utils',
         'humane'
     ]);
     var template_root = '/partials/models/';

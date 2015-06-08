@@ -1,4 +1,4 @@
-angular.module('a2-species-service', [])
+angular.module('a2.srv.species', [])
 .factory('Species',function($http){
     var species;
 

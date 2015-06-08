@@ -1,4 +1,4 @@
-angular.module('a2browser_recordings_by_site', [])
+angular.module('a2.browser_recordings_by_site', [])
 .factory('rbDateAvailabilityCache', function ($cacheFactory) {
     return $cacheFactory('recordingsBrowserDateAvailabilityCache');
 })

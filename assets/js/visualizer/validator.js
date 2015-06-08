@@ -1,4 +1,4 @@
-angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
+angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
 .directive('a2SpeciesValidator', function (Project) {
     var project = Project;
     return {

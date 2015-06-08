@@ -1,7 +1,7 @@
-angular.module('admin', [
+angular.module('a2.admin', [
     'ui.router', 
     'ui.bootstrap', 
-    'a2utils',
+    'a2.utils',
     'templates-arbimon2',
     'humane',
     'ui.select',
