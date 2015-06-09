@@ -502,20 +502,34 @@
                     var height = 50;
                     var width = $scope.width;
                     
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx = canvas.getContext('2d');
-                    ctx.beginPath();
-                    
-                    var xStep = width/vector.length;
-                    
-                    var i = 0;
-                    ctx.moveTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
-                    while(i < width) {
-                        i++;
-                        ctx.lineTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                    if (width>=vector.length) {
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx = canvas.getContext('2d');
+                        ctx.beginPath();
+                        
+                        var xStep = width/vector.length;
+                        
+                        var i = 0;
+                        ctx.moveTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                        while(i < width) {
+                            i++;
+                            ctx.lineTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                        }
+                    }else{
+                        canvas.width = vector.length;
+                        canvas.height = height;
+                        ctx = canvas.getContext('2d');
+                        ctx.beginPath();
+                        var xStep = 1;
+
+                        var i = 0;
+                        ctx.moveTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                        while(i < vector.length) {
+                            i++;
+                            ctx.lineTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                        }
                     }
-                    
                     ctx.strokeStyle = '#000';
                     ctx.stroke();
                     $scope.loadingflag = false;
