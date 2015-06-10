@@ -764,6 +764,7 @@
             
             $scope.recDetails = function(rec) {
                 $scope.selected = rec;
+                $scope.selectedRecId = rec.id
                 $scope.showValidationsTable = false;
             };
             
@@ -777,6 +778,17 @@
                     "/#/visualizer/rec/" + $scope.selectedRecId;
                 $location.path(rurl);
             };
+            
+            $scope.gotoRecPopup = function() {
+                console.log($scope.selectedRecId);
+                
+                var w = window.open();
+                w.document.write( '<div style="width:100%;height:100%;"><img style="height:100%;max-width: 100%;" src="'+"/api/project/smithsonian_peru/recordings/image/"+$scope.selectedRecId+'"></img></div>' );
+                w.document.close(); //finish "loading" the page
+
+                //window.open("/api/project/smithsonian_peru/recordings/image/"+$scope.selectedRecId);
+            };
+            
         }
     );
 })(angular);
