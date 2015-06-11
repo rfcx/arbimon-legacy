@@ -30,4 +30,5 @@ coverage
 angular-depends
 
 #temp file cache
-tmpfilecache/*
+tmpfilecache/**
+!tmpfilecache/.placeholder
