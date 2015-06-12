@@ -220,12 +220,9 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                 var entryType = items[3] ? items[3].trim(' '):'';
                 
                 model.recordings.recordingInfoGivenUri(items[0], req.params.projectUrl, function(err, recData) {
-                    if(err) {
-                        debug("Error fetching recording information: " + items[0]);
-                        return callback(null,false);
-                    }
+                    if(err) return callback(err);
                     
-                    if(!recData.length) return callback(null,false);
+                    if(!recData.length) return callback(null, false);
                     
                     var recUriThumb = recData[0].uri.replace('.wav','.thumbnail.png');
                     recUriThumb = recUriThumb.replace('.flac','.thumbnail.png');
@@ -245,11 +242,14 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
 
             },
             function(err, results) {
-                if(err) {
-                    return res.json({ err: "Error fetching recording information"});
-                }
-                debug('sendData2:', results);
-                res.json(results);
+                if(err) return next(err);
+                
+                var vals = results.filter(function(vali) {
+                    return !!vali;
+                });
+                
+                debug('model validations:', vals);
+                res.json({ validations: vals });
             });
 
         });
@@ -258,7 +258,7 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
 });
 
 router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', function(req, res, next) {
-    if(!req.params.modelId || !req.params.recId || req.params.recId == undefined || req.params.recId == "undefined") {
+    if(!req.params.modelId || !req.params.recId) {
         return res.status(400).json({ error: 'missing parameters'});
     }
     
