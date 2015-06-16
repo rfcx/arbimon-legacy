@@ -3,22 +3,19 @@
         <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
         Training Sets
     </h5>
-    <div class="btn-group" ng-show="layer.is_open">
-        <div class="btn-group">
-            <div class="dropdown">
-                <button class="btn btn-sm btn-block btn-default" role="button" dropdown>
-                    <span class="fa fa-cubes" ></span>
-                    {{ layer.training_data.tset.name || "[No Training Set Selected]"}}
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu dropdown-height-7" role="menu" aria-labelledby="dLabel">
-                    <li ng-repeat="tset in layer.training_data.tset_list">
-                        <a ng-click="layer.training_data.tset = tset | trackEvent:'Visualizer-Training-Data':'select training set from list'">{{tset.name}}</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <button class="btn btn-sm btn-default" tooltip="Make New Training Set" tooltip-placement="right" ng-click="layer.training_data.add_new_tset() | trackEvent:'Visualizer-Training-Data':'add new training set'">
+    <div class="" ng-show="layer.is_open">
+        
+        <ui-select class="inline-block" ng-model="layer.training_data.tset" theme="bootstrap" style="width:280px">
+            <ui-select-match placeholder="Select a training set">{{ $select.selected.name }}</ui-select-match>
+            <ui-select-choices repeat="tset in layer.training_data.tset_list | filter:$select.search">
+                {{ tset.name }}
+            </ui-select-choices>
+        </ui-select>
+        <button class="btn btn-sm btn-default inline-block" 
+            tooltip="Create a new training set" 
+            tooltip-placement="right" 
+            tooltip-append-to-body="true" 
+            ng-click="layer.training_data.add_new_tset() | trackEvent:'Visualizer-Training-Data':'add new training set'">
             <i class="fa fa-plus"></i>
         </button>
     </div>

@@ -33,7 +33,7 @@
                 No training sets found. <a ng-click="add_new_tset() | trackEvent:'Audiodata-Training Sets':'add_new_tset'"  ng-show="(!sets || !sets.length > 0) && !loading" >Create a training set.</a>
             </h3>
         </div>
-        <loader ng-hide="!loading"></loader>
+        <loader ng-show="loading"></loader>
     </div>
     <div class="col-md-6">
         <div ng-show="norois">Training set <b>{{selectedName}}</b> is empty. <a ui-sref="visualizer" href="#/visualizer">Go to Visualizer to add data.</a></div>
@@ -42,7 +42,7 @@
                 <loader></loader>
             </div>
         </div>
-        <div class="panel panel-default" ng-show="rois.length && showSetDetails" >
+        <div class="panel panel-default" ng-show="rois.length && showSetDetails && !loaderDisplay" >
             <div class="panel-body">
                 <div class="row">
                     <div class="col-sm-6" >
@@ -61,7 +61,10 @@
                                 <strong>ROI Count :</strong>  {{rois.length}}
                             </div>
                             <div class="col-sm-1">
-                                <button ng-click="closeSetDetails()" class="btn btn-default btn-xs">X</button>
+                                <button ng-click="closeSetDetails()" 
+                                    class="btn btn-default">
+                                    <i class="fa fa-times"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -74,16 +77,33 @@
                        <strong>Sound:</strong>  {{songtype}}
                     </div>
                 </div>
-                <div class="bordeder-empy-div"></div>
+                <hr>
                 
                 <div ng-hide="detailedView">
                     <div class="row">
                         <div class="col-sm-12">
                             <ul class="pager">
-                                <li><a ng-click="prevPage() | trackEvent:'Audiodata-Training Sets':'prevPaget'">Previous</a></li>
-                                <li><a tooltip="Pages">{{currentPage+1}} of {{totalpages}}</a></li>
-                                <li><a ng-click="nextPage() | trackEvent:'Audiodata-Training Sets':'nextPage'">Next</a></li>
-                                <li><a ng-click="toggleView() | trackEvent:'Audiodata-Training Sets':'toggleView'" tooltip="Detailed View"><i class="fa fa-search-plus"></i></a></li>
+                                <li>
+                                    <a ng-click="prevPage() | trackEvent:'Audiodata-Training Sets':'prevPage'">
+                                        Previous
+                                    </a>
+                                </li>
+                                <li>
+                                    <a tooltip="Pages">
+                                        {{currentPage+1}} of {{totalpages}}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a ng-click="nextPage() | trackEvent:'Audiodata-Training Sets':'nextPage'">
+                                        Next
+                                    </a>
+                                </li>
+                                <li>
+                                    <a ng-click="toggleView() | trackEvent:'Audiodata-Training Sets':'toggleView'" 
+                                        tooltip="Detailed View">
+                                        <i class="fa fa-search-plus"></i>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -93,17 +113,22 @@
                                 <div class="roi-div-inline-remove">
                                     <button ng-click="removeRoi(roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'"
                                         class="roi-delete"
-                                        tooltip-placement="right" 
-                                        tooltip="Remove ROI from Training Set">
+                                        tooltip-placement="left" 
+                                        tooltip-append-to-body="true"
+                                        tooltip="Delete ROI">
                                         <i class="fa fa-times"></i>
                                     </button>
                                 </div>
                                 <div class="roi-div-inline-vis">
                                     <a ng-href="/project/{{projecturl}}/#/visualizer/rec/{{roi.recording}}">
-                                        <i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i>
+                                        <i tooltip-placement="left" 
+                                            tooltip-append-to-body="true"
+                                            tooltip="View in Visualizer" 
+                                            class="fa fa-cubes">
+                                        </i>
                                     </a>
                                 </div>
-                                <a2-training-set-data-image training-set="selectedSet" datum="roi" class="roi-div-inline-img" ></a2-training-set-data-image>
+                                <img ng-src="{{ currentUri }}" class="roi-div-inline-img"/>
                             </div>
                         </div>
                     </div>
@@ -129,13 +154,13 @@
                                     <div class="col-sm-5" >{{currentlow}}-{{currenthigh}}Hz</div>
                                     <div class="col-sm-1" >
                                         <a ng-href="{{currentUrl}}">
-                                            <i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i>
+                                            <i tooltip="View in Visualizer" class="fa fa-cubes"></i>
                                         </a>
                                     </div>
                                     <div class="col-sm-1" class="roi-div-inline-remove-detail" >
                                         <button class="roi-delete"
                                             ng-click="removeRoi(currentId) | trackEvent:'Audiodata-Training Sets':'removeRoi'" 
-                                            tooltip="Remove ROI from Training Set">
+                                            tooltip="Delete ROI">
                                             <i class="fa fa-times"></i>
                                         </button>
                                     </div>

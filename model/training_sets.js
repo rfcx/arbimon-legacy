@@ -45,8 +45,10 @@ var TrainingSets = {
         if (query) {
             if (query.id) {
                 constraints.push('TS.training_set_id = ' + mysql.escape(query.id));
-            } else if (query.project) {
+            } 
+            else if (query.project) {
                 constraints.push('TS.project_id = ' + mysql.escape(query.project));
+                
                 if (query.name) {
                     constraints.push('TS.name = ' + mysql.escape(query.name));
                 }
@@ -56,16 +58,21 @@ var TrainingSets = {
         if(constraints.length === 0){
             callback(new Error("TrainingSets.find called with invalid query."));
         }
-
-        return dbpool.queryHandler(
-            "SELECT TS.training_set_id as id, TS.name, TS.date_created, TST.identifier as type, \n" +
-            "    TSRS.species_id as TT_roi_set_TT_species, TSRS.songtype_id as TT_roi_set_TT_songtype, TS.project_id as project \n" +
-            "FROM training_sets TS \n" +
-            "JOIN training_set_types TST ON TS.training_set_type_id = TST.training_set_type_id \n" +
-            "LEFT JOIN training_sets_roi_set TSRS ON TS.training_set_id = TSRS.training_set_id \n" +
-            "WHERE " + constraints.join(" \n" +
-            "  AND "
-        ), function(err, data, fields){
+        
+        var q = "SELECT TS.training_set_id as id, \n"+
+                "       TS.name, \n"+
+                "       TS.date_created, \n"+
+                "       TST.identifier as type, \n" +
+                "       TSRS.species_id as TT_roi_set_TT_species, \n"+
+                "       TSRS.songtype_id as TT_roi_set_TT_songtype, \n"+
+                "       TS.project_id as project \n" +
+                "FROM training_sets TS \n" +
+                "JOIN training_set_types TST ON TS.training_set_type_id = TST.training_set_type_id \n" +
+                "LEFT JOIN training_sets_roi_set TSRS ON TS.training_set_id = TSRS.training_set_id \n" +
+                "WHERE " + constraints.join(" \nAND ");
+                
+                
+        return dbpool.queryHandler(q, function(err, data, fields){
             if(!err && data){
                 var ttfields=[];
                 fields.forEach(function(fielddef){

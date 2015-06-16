@@ -731,7 +731,7 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
                     var urikey = [$scope.trainingSet.id, $scope.datum.id].join('-');
                     if($scope.resolving != urikey){
                         $scope.resolving = urikey;
-                        a2TrainingSets.getDataImage($scope.trainingSet.name, $scope.datum.id, function(datum2){
+                        a2TrainingSets.getDataImage($scope.trainingSet.id, $scope.datum.id, function(datum2){
                             $scope.resolving = false;
                             if($scope.datum.id == datum2.id){
                                 $scope.datum.uri = datum2.uri;

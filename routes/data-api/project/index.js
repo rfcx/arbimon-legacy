@@ -1,3 +1,5 @@
+/* jshint node:true */
+
 var debug = require('debug')('arbimon2:route');
 var express = require('express');
 var router = express.Router();

@@ -31,7 +31,7 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2.utils'])
     };
 
     var fetchTsetData = function(){
-        var tset = self.tset && self.tset.name;
+        var tset = self.tset && self.tset.id;
         var tset_type = self.tset && self.tset.type;
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
         if(tset && rec) {
@@ -44,7 +44,7 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2.utils'])
         }
     };
 
-    $scope.$watch(function(){return self.tset;}, fetchTsetData);
+    $scope.$watch(function(){ return self.tset; }, fetchTsetData);
     $scope.$watch('visobject', fetchTsetData);
 })
 .directive('a2VisualizerSpectrogramTrainingSetData', function(training_set_types, $compile, $controller, $templateFetch){

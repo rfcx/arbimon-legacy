@@ -4,10 +4,10 @@ angular.module('visualizer-training-sets-roi_set', ['visualizer-services'])
     var self=this;
     self.type='roi_set';
     self.typedef  = training_set_types.roi_set;
-    self.fetchData = function(tset, rec){
-        self.tset = tset;
+    self.fetchData = function(tsetId, rec){
+        self.tsetId = tsetId;
         self.recording = rec;
-        a2TrainingSets.getData(tset, rec, function(data){
+        a2TrainingSets.getData(tsetId, rec, function(data){
             $timeout(function(){
                 self.rois = data;
             });
@@ -33,7 +33,7 @@ angular.module('visualizer-training-sets-roi_set', ['visualizer-services'])
             this.super.add_point.call(this, point.sec, point.hz, min_eps);
         },
         submit: function(){ 
-            a2TrainingSets.addData(self.tset, {
+            a2TrainingSets.addData(self.tsetId, {
                 recording : self.recording,
                 roi : this.roi
             }, (function(new_tset_data){
