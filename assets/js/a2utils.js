@@ -174,6 +174,47 @@ angular.module('a2.url-update-service', [])
         return a2UrlUpdate.get(url);
     };
 })
+.service('EventlistManager', function(){
+    var EventlistManager = function(){
+        this.events={};
+    };
+    EventlistManager.prototype.get_event_def = function(event){
+        if(!this.events[event]){
+            this.events[event]={};
+        }
+        return this.events[event];
+    };
+    EventlistManager.prototype.send = function(/* ...args */){
+        var args = Array.prototype.slice.call(arguments);
+        var event = args.shift();
+        if(typeof event == 'string'){
+            event = {event:event};
+        }
+        var eventdef = this.get_event_def(event.event);
+        if(event.oneTime){
+            eventdef.oneTime=true;
+        }
+        var context = event.context;
+        var listeners = eventdef.listeners;
+        eventdef.fired = true;
+        if(listeners){
+            listeners.forEach(function(l){ l.apply(context, args); });
+        }
+    };
+    EventlistManager.prototype.on = function(event, fn){
+        var eventdef = this.get_event_def(event);
+        if(eventdef.fired && eventdef.oneTime){
+            fn.apply();
+        } else {
+            if(!eventdef.listeners){
+                eventdef.listeners = [];
+            }
+            eventdef.listeners.push(fn);
+        }
+    };
+    
+    return EventlistManager;    
+})
 ;
 
 

@@ -16,14 +16,16 @@
                 <li ng-hide="browser.$type.loading.sites" 
                     ng-repeat="site in browser.$type.sites" 
                     ng-class="{active: browser.$type.site == site}">
-                    <a ng-click="browser.$type.site = site | trackEvent:'Visualizer-Recordings-By-Site':'open site'">{{ site.name }}</a>
+                    <a ng-click="browser.$type.set_site(site) | trackEvent:'Visualizer-Recordings-By-Site':'open site'">
+                        {{ site.name }}
+                    </a>
                     <span class="badge">{{site.rec_count}}</span>
                 </li>
             </ul>
         </div>
     </div>
     <div class="col-sm-5">
-        <div class="dropdown" dropdown dropdown-append-to-body>
+        <div class="dropdown" dropdown dropdown-append-to-body="true">
             <button class="btn btn-block btn-default" dropdown-toggle>
                 <span class="fa" ng-class="{'fa-calendar' : !browser.$type.loading.dates, 'fa-spinner fa-spin': browser.$type.loading.dates}"></span>
                 {{ browser.$type.date || "Select a date" | date : 'mediumDate' }}
@@ -37,9 +39,11 @@
                     max-date="browser.$type.dates.max_date"
                     min-date="browser.$type.dates.min_date"
                     year="browser.$type.dates.display_year"
+                    on-year-changed="browser.$type.set_dates_display_year(year)"
+                    on-date-changed="browser.$type.set_date(date)"
                     disable-empty="true"
-                    date-count="browser.$type.dates.date_counts">
-                </yearpick>
+                    date-count="browser.$type.dates.date_counts"
+                ></yearpick>
             </div>
         </div>
     </div>

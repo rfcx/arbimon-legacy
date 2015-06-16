@@ -401,6 +401,8 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
             year         : '=?',
             dateCount    : '=?',
             mode         : '@',
+            onYearChanged: '&?',
+            onDateChanged: '&?',
             disableEmpty : '&'
         },
         link: function(scope, element, attrs) {
@@ -437,9 +439,23 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
             };
             var monthName = d3.time.format('%B');
             var dateFormat = d3.time.format("%Y-%m-%d");
+            function set_year(year){
+                var old_year = scope.year;
+                scope.year = year;
+                if(scope.onYearChanged && old_year != year){
+                    $timeout(function(){scope.onYearChanged({year:year});});
+                }
+            }
+            function set_date(date){
+                var old_date = scope.ngModel;
+                scope.ngModel = date;
+                if(scope.onDateChanged && old_date != date){
+                    $timeout(function(){scope.onDateChanged({date:date});});
+                }
+            }
             
             if(!scope.year){
-                scope.year = (new Date()).getFullYear();
+                set_year((new Date()).getFullYear());
             }
             var cubesize = 19;
             var width = 600;
@@ -616,7 +632,7 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
                     .on('click', function(d){
                         scope.$apply(function() {
                             d3.event.preventDefault();
-                            scope.ngModel = d;
+                            set_date(d);
                             if(is_a_popup) popup.css('display', 'none');
                         });
                     });
@@ -647,28 +663,28 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
             
             scope.$watch('maxDate', function(){
                 if(scope.maxDate && scope.year > scope.maxDate.getFullYear()){
-                    scope.year = scope.maxDate.getFullYear();
+                    set_year(scope.maxDate.getFullYear());
                 }
                 draw();
             });
             
             scope.$watch('minDate', function(){
                 if(scope.minDate && scope.year < scope.minDate.getFullYear()){
-                    scope.year = scope.minDate.getFullYear();
+                    set_year(scope.minDate.getFullYear());
                 }
                 draw();
             });
             
             scope.$watch('year', function(){
                 if(!scope.year){
-                    scope.year = new Date().getFullYear();
+                    set_year(new Date().getFullYear());
                 }
                 draw();
             });
             
             scope.$watch('ngModel', function(){
                 if(scope.ngModel){
-                    scope.year = scope.ngModel.getFullYear();
+                    set_year(scope.ngModel.getFullYear());
                     days.classed('selected', function(d){
                         return scope.ngModel && (dateFormat(d) == dateFormat(scope.ngModel));
                     });
