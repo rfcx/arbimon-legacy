@@ -40,14 +40,14 @@ angular.module('a2.audiodata.recordings', [
     };
     var searchRecs = function(output) {
         var params = readFilters();
+        params.output = output || 'list';
         params.limit = $scope.limitPerPage;
-        params.offset = ($scope.currentPage-1) * $scope.limitPerPage;
+        params.offset = (params.output == 'list') ? ($scope.currentPage-1) * $scope.limitPerPage : 0;
         params.sortBy = $scope.sortKey;
         params.sortRev = $scope.reverse;
-        params.output = output;
         
         Project.getRecs(params, function(data) {
-            if(!output || output === 'list') {
+            if(params.output == 'list') {
                 $scope.recs = data;
             
                 $scope.recs.forEach(function(rec) {
@@ -55,10 +55,10 @@ angular.module('a2.audiodata.recordings', [
                 });
                 $scope.loading = false;
             }
-            else if(output === 'count'){
+            else if(params.output == 'count'){
                 $scope.totalRecs = data[0].count;
             }
-            else if(output === 'date_range') {
+            else if(params.output == 'date_range') {
                 $scope.minDate = new Date(data[0].min_date);
                 $scope.maxDate = new Date(data[0].max_date);
                 $scope.years = d3.range($scope.minDate.getFullYear(), ($scope.maxDate.getFullYear() + 1) );
@@ -71,13 +71,17 @@ angular.module('a2.audiodata.recordings', [
         searchRecs();
     };
     $scope.applyFilters = function() {
-        $scope.currentPage  = 1;
+        $scope.currentPage = 1;
         searchRecs('count');
         searchRecs();
     };
     $scope.resetFilters = function() {
-        $scope.currentPage  = 1;
+        $scope.currentPage = 1;
         $scope.params = {};
+        searchRecs('count');
+        searchRecs();
+    };
+    $scope.reloadList = function() {
         searchRecs('count');
         searchRecs();
     };
@@ -116,29 +120,25 @@ angular.module('a2.audiodata.recordings', [
             recCount[recs[i].site] = recCount[recs[i].site] + 1 || 1;
         }
         
-        var sites = Object.keys(recCount)
-            .map(function(site) {
-                var s = recCount[site] > 1 ? 's' : '';
-                
-                return recCount[site] + ' recording'+s+ ' from "' + site + '"';
-            });
+        var sites = Object.keys(recCount).map(function(site) {
+            var s = recCount[site] > 1 ? 's' : '';
+            
+            return recCount[site] + ' recording'+s+' from "' + site + '"';
+        });
         
         
         var msg = ["You are about to delete: "];
         msg = msg.concat(sites);
         msg.push("Are you sure??");
         
-        // console.log(msg);
-        
-        $scope.popup = {
-            messages: msg,
-            btnOk: "Yes",
-            btnCancel: "No, cancel",
-        };
-        
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',
-            scope: $scope
+            controller: function() {
+                this.messages = msg;
+                this.btnOk =  "Yes";
+                this.btnCancel =  "No, cancel";
+            },
+            controllerAs: 'popup'
         });
         
         modalInstance.result.then(function() {
