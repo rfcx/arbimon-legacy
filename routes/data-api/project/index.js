@@ -15,6 +15,7 @@ var recording_routes = require('./recordings');
 var training_set_routes = require('./training_sets');
 var playlist_routes = require('./playlists');
 var soundscape_routes = require('./soundscapes');
+var jobsRoutes = require('./jobs');
 
 
 router.post('/create', function(req, res, next) {
@@ -399,6 +400,7 @@ router.use('/:projectUrl/recordings', recording_routes);
 router.use('/:projectUrl/training-sets', training_set_routes);
 router.use('/:projectUrl/playlists', playlist_routes);
 router.use('/:projectUrl/soundscapes', soundscape_routes);
+router.use('/:projectUrl/jobs', jobsRoutes);
 
 
 module.exports = router;

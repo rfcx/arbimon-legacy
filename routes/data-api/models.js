@@ -630,49 +630,6 @@ router.get('/project/:projectUrl/validations/:species/:songtype', function(req, 
     });
 });
 
-// ---------------------- jobs routes -----------------------------------------
-
-router.get('/project/:projectUrl/progress', function(req, res, next) {
-    model.jobs.activeJobs({url:req.params.projectUrl}, function(err, row) {
-        if(err) return next(err);
-
-        res.json(row);
-    });
-});
-
-router.get('/job/types', function(req, res, next) {
-    model.jobs.getJobTypes(function(err, types) {
-        if(err){ next(err); return; }
-        res.json(types);
-    });
-});
-
-router.get('/project/:projectUrl/job/hide/:jId', function(req, res) {
-
-    model.jobs.hide(req.params.jId, function(err, rows) {
-        if(err) res.json('{ "err" : "Error removing job"}');
-
-        model.jobs.activeJobs(req.params.projectUrl, function(err, row) {
-            if(err) return next(err);
-
-            res.json(row);
-        });
-    });
-});
-
-router.get('/project/:projectUrl/job/cancel/:jId', function(req, res) {
-
-    model.jobs.cancel(req.params.jId, function(err, rows) {
-        if(err) res.json('{ "err" : "Error removing job"}');
-
-        model.jobs.activeJobs(req.params.projectUrl, function(err, row) {
-            if(err) return next(err);
-
-            res.json(row);
-        });
-    });
-});
-
 // --------------------- soundscapes routes
 
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {

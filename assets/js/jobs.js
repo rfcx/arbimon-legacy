@@ -1,4 +1,7 @@
-angular.module('a2.jobs', ['a2.services'])
+angular.module('a2.jobs', [
+    'a2.services',
+    'a2.permissions',
+])
 .config(function($stateProvider) {
     $stateProvider.state('jobs', {
         url: '/jobs',
@@ -14,7 +17,7 @@ angular.module('a2.jobs', ['a2.services'])
         $scope.jobslength = JobsData.getjobLength();
     });
 })
-.controller('StatusBarNavController', function($scope, $http, $modal, Project, JobsData, notify) {
+.controller('StatusBarNavController', function($scope, $http, $modal, Project, JobsData, notify, a2UserPermit) {
     $scope.show = {};
     $scope.showClassifications = true;
     $scope.showTrainings = true;
@@ -37,53 +40,47 @@ angular.module('a2.jobs', ['a2.services'])
         $scope.showInfo = false;
     };
     
-    $scope.cancel = function(job)
-    {
-        var jobId = job.job_id;
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-        if (job.percentage < 100) {
-            checkJob('Cancel','cancel',cancelJob,jobId);
-        }
-        else {
-            cancelJob(jobId);
-        }
-    };
+    // $scope.cancel = function(job) {
+    //     var jobId = job.job_id;
+    //     $scope.infoInfo = "Loading...";
+    //     $scope.showInfo = true;
+    //     if (job.percentage < 100) {
+    //         confirm('Cancel','cancel',cancelJob,jobId);
+    //     }
+    //     else {
+    //         cancelJob(jobId);
+    //     }
+    // };
     
-    var cancelJob = function(jobId)
-    {
-        $http.get('/api/project/' + Project.getUrl() + '/job/cancel/' + jobId)
-            .success(
-                function(data) {
-                    if (data.err) {
-                        notify.serverError();
-                    }
-                    else {
-                        JobsData.updateJobs();
-                        notify.log("Job canceled successfully");
-                    }
-                }
-            )
-            .error(function() {
-                notify.serverError();
-            });
-    };
+    // var cancelJob = function(jobId) {
+    //     $http.get('/api/project/' + Project.getUrl() + '/jobs/cancel/' + jobId)
+    //         .success(function(data) {
+    //             if (data.err) {
+    //                 notify.serverError();
+    //             }
+    //             else {
+    //                 JobsData.updateJobs();
+    //                 notify.log("Job canceled successfully");
+    //             }
+    //         })
+    //         .error(function() {
+    //             notify.serverError();
+    //         });
+    // };
     
     var hideJob = function(jobId) {
-        $http.get('/api/project/' + Project.getUrl() + '/job/hide/' + jobId)
-            .success(
-                function(data) {
-                    if (data.err) {
-                        notify.serverError();
-                    }
-                    else {
-                        JobsData.updateJobs();
-                        notify.log("Job hidden successfully");
-                    }
+        $http.get('/api/project/' + Project.getUrl() + '/jobs/hide/' + jobId)
+            .success(function(data) {
+                    JobsData.updateJobs();
+                    notify.log("Job hidden successfully");
+            })
+            .error(function(data) {
+                if(data.error) {
+                    notify.error(error);
                 }
-            )
-            .error(function() {
-                notify.serverError();
+                else {
+                    notify.serverError();
+                }
             });
     };
 
@@ -124,18 +121,16 @@ angular.module('a2.jobs', ['a2.services'])
         JobsData.cancelTimer();
     });
 
-    var checkJob = function(titlen,buttonn,fn,vl)
-    {
-            $scope.popup = {
-                title: titlen+"running job",
-                messages: ["This job has not finished yet. Are you sure?"],
-                btnOk: "Yes, "+buttonn+" it",
-                btnCancel: "No"
-            };
-
+    var confirm = function(titlen, action, cb, vl) {
             var modalInstance = $modal.open({
                 templateUrl: '/partials/pop-up.html',
-                scope: $scope
+                controller: function() {
+                    this.title = titlen+"running job";
+                    this.messages = ["This job has not finished yet. Are you sure?"];
+                    this.btnOk = "Yes, "+action+" it";
+                    this.btnCancel = "No";
+                },
+                controllerAs: "popup"
             });
 
             modalInstance.opened.then(function() {
@@ -144,20 +139,22 @@ angular.module('a2.jobs', ['a2.services'])
             });
 
             modalInstance.result.then(function(ok) {
-                fn(vl);
+                cb(vl);
             });
     };
     
     $scope.hide = function(job) {
+        if(!a2UserPermit.can('manage project jobs')) {
+            notify.log("You do not have permission to hide jobs");
+            return;
+        }
 
         var jobId = job.job_id;
 
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         if (job.percentage < 100) {
-
-            checkJob('Hide','hide',hideJob,jobId);
-
+            confirm('Hide', 'hide', hideJob, jobId);
         }
         else {
             hideJob(jobId);
@@ -174,7 +171,7 @@ angular.module('a2.jobs', ['a2.services'])
     
     
     // TODO update the way loop is created
-    $http.get('/api/project/' + url + '/progress').success(function(data) {
+    $http.get('/api/project/' + url + '/jobs/progress').success(function(data) {
         jobs = data;
         jobslength = jobs.length;
     });
@@ -190,13 +187,14 @@ angular.module('a2.jobs', ['a2.services'])
             return jobs;
         },
         getJobTypes: function() {
-            return $http.get('/api/job/types');
+            return $http.get('/api/project/' + url + '/jobs/types');
         },
         updateJobs: function() {
-            $http.get('/api/project/' + url + '/progress').success(function(data) {
-                jobs = data;
-                jobslength = jobs.length;
-            });
+            $http.get('/api/project/' + url + '/jobs/progress')
+                .success(function(data) {
+                    jobs = data;
+                    jobslength = jobs.length;
+                });
         },
         startTimer: function() {
             $interval.cancel(intervalPromise);
@@ -218,7 +216,7 @@ angular.module('a2.jobs', ['a2.services'])
                         $interval.cancel(intervalPromise);
                     }
                     else {
-                        $http.get('/api/project/' + url + '/progress')
+                        $http.get('/api/project/' + url + '/jobs/progress')
                             .success(function(data) {
                                 jobs = data;
                                 jobslength = jobs.length;
