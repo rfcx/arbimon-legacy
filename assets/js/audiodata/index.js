@@ -10,7 +10,7 @@ angular.module('a2.audiodata', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.when("/audiodata", "/audiodata/sites");
-
+    
     $stateProvider.state('audiodata', {
         url: '/audiodata',
         views: {

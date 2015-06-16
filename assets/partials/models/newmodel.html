@@ -13,7 +13,7 @@
         </div>
         <div class="form-group">
             <label for="classifier">Classifier:</label>
-            <ui-select ng-model="data.classifier" theme="bootstrap" ng-disabled="disabled">
+            <ui-select ng-model="data.classifier" theme="/partials/a2-ui-select" ng-disabled="disabled">
                 <ui-select-match placeholder="Select a classifier">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="type in types | filter: $select.search" value="type.model_type_id">
                     <strong>{{type.name}}</strong>

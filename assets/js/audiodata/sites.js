@@ -5,7 +5,7 @@ angular.module('a2.audiodata.sites', [
     'humane',
     'a2.qr-js'
 ])
-.controller('SitesCtrl', function($scope, Project, $http, $modal, notify, a2Sites, $window) {
+.controller('SitesCtrl', function($scope, Project, $modal, notify, a2Sites, $window, a2UserPermit) {
     $scope.loading = true;
     
     Project.getInfo(function(info){
@@ -25,7 +25,6 @@ angular.module('a2.audiodata.sites', [
     $window.L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
     }).addTo($scope.map);
-    
     
     var moveMarker = function(e) {
         console.log(e.latlng);
@@ -75,11 +74,14 @@ angular.module('a2.audiodata.sites', [
         });
     };
     
-    
-    
     $scope.del = function() {
         if(!$scope.selected)
             return;
+        
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to remove sites");
+            return;
+        }
         
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',
@@ -107,7 +109,6 @@ angular.module('a2.audiodata.sites', [
             });
         });
     };
-    
     
     // $scope.browseShared = function() {
     //     var modalInstance = $modal.open({
@@ -138,6 +139,12 @@ angular.module('a2.audiodata.sites', [
     // };
     
     $scope.create = function() {
+        
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to add sites");
+            return;
+        }
+        
         $scope.temp = {};
         
         if($scope.marker) {
@@ -152,10 +159,13 @@ angular.module('a2.audiodata.sites', [
     };
 
     $scope.edit = function() {
+        if(!$scope.selected) return;
         
-        if(!$scope.selected)
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to edit sites");
             return;
-            
+        }
+        
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
         
@@ -167,7 +177,11 @@ angular.module('a2.audiodata.sites', [
         
         if(!$scope.selected || $scope.selected.imported)
             return;
-            
+        
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to edit sites");
+            return;
+        }
         
         var modalInstance = $modal.open({
             templateUrl: '/partials/audiodata/site-tokens-popup.html',

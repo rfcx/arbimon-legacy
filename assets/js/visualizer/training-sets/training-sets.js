@@ -1,7 +1,9 @@
-
-
-angular.module('visualizer-training-sets', ['visualizer-services', 'a2.utils'])
-.controller('a2VisualizerTrainingSetLayerController', function($scope, $modal, $controller, $timeout, a2TrainingSets){
+angular.module('visualizer-training-sets', [
+    'visualizer-services', 
+    'a2.utils'
+])
+.controller('a2VisualizerTrainingSetLayerController', 
+function($scope, $modal, $controller, $timeout, a2TrainingSets, a2UserPermit, notify) {
     var self=this;
     self.tset      = null;
     self.tset_type = null;
@@ -17,6 +19,11 @@ angular.module('visualizer-training-sets', ['visualizer-services', 'a2.utils'])
 
 
     self.add_new_tset = function(){
+        if(!a2UserPermit.can('manage training sets')) {
+            notify.log('You do not have permission to create training sets');
+            return;
+        }
+        
         $modal.open({
             templateUrl : '/partials/visualizer/modal/add_tset.html',
             controller  : 'a2VisualizerAddTrainingSetModalController'

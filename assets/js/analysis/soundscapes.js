@@ -1,6 +1,7 @@
 (function(angular) {
     var soundscapes = angular.module('a2.analysis.soundscapes', [
-        'a2.services' , 
+        'a2.services', 
+        'a2.permissions',
         'ui.bootstrap' , 
         'ui-rangeSlider', 
         'ngCsv'
@@ -8,253 +9,280 @@
     
     var template_root = '/partials/soundscapes/';
     
-    soundscapes.controller('SoundscapesCtrl' , function ($window, $scope, $modal, $filter, Project, JobsData, 
-            ngTableParams, a2Playlists, $location, a2Soundscapes, notify) 
-        {
-            var $=$window.$;
-            $scope.successInfo = "";
-            $scope.showSuccess = false;
-            $scope.errorInfo = "";
-            $scope.showError = false;
-            $scope.infoInfo = "Loading...";
-            $scope.showInfo = true;
-            $scope.loading = true;
+    soundscapes.controller('SoundscapesCtrl', 
+    function(
+        $window, 
+        $scope, 
+        $modal, 
+        $filter, 
+        Project, 
+        JobsData, 
+        ngTableParams, 
+        a2Playlists, 
+        $location, 
+        a2Soundscapes, 
+        notify, 
+        a2UserPermit
+    ) {
+        var $=$window.$;
+        $scope.successInfo = "";
+        $scope.showSuccess = false;
+        $scope.errorInfo = "";
+        $scope.showError = false;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+        $scope.loading = true;
 
-            $scope.infopanedata = '';
-            
-            Project.getInfo(function(data){
-                $scope.projectData = data;
-                $scope.pid = data.project_id;
-                $scope.url = data.url;
-            });
-            
-            a2Playlists.getList(function(data) {
-                    $scope.playlists = data;
-            });
-            
-            
-            var initTable = function(p,c,s,f,t) {
-                var sortBy = {};
-                var acsDesc = 'desc';
-                if (s[0]=='+') {
-                    acsDesc = 'asc';
-                }
-                sortBy[s.substring(1)] = acsDesc;
-                $scope.tableParams = new ngTableParams(
-                    {
-                        page: p,
-                        count: c,
-                        sorting: sortBy,
-                        filter:f
-                    }, 
-                    {
-                        total: t,
-                        getData: function ($defer, params) 
-                        {
-                            $scope.infopanedata = "";
-                            var filteredData = params.filter() ?
-                            $filter('filter')($scope.soundscapesOriginal , params.filter()) :
-                            $scope.soundscapesOriginal  ;
-                            
-                            var orderedData = params.sorting() ?
-                            $filter('orderBy')(filteredData, params.orderBy()) :
-                            $scope.soundscapesOriginal ;
-                            params.total(orderedData.length);
-                            $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-                            if(orderedData.length < 1)
-                            {
-                                $scope.infopanedata = "No classifications found.";
-                            }
-                            $scope.soundscapesData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                            a2Soundscapes.saveState({'data':$scope.soundscapesOriginal,
-                                        'filtered': $scope.soundscapesData,
-                                        'f':params.filter(),
-                                        'o':params.orderBy(),
-                                        'p':params.page(),
-                                        'c':params.count(),
-                                        't':orderedData.length});
-                        }
-                    }
-                );
-            };
-            
-            
-            $scope.loadSoundscapes = function() {
-                a2Soundscapes.getList2(function(data) {
-                    $scope.soundscapesOriginal = data;
-                    $scope.soundscapesData = data;
-                    $scope.infoInfo = "";
-                    $scope.showInfo = false;
-                    $scope.loading = false;
-
-                    $scope.infopanedata = "";
-                    
-                    if(data.length > 0) {
-                        if(!$scope.tableParams) {
-                            initTable(1,10,"+name",{},data.length);
-                        }
-                        else {
-                            $scope.tableParams.reload();
-                        }
-                    }
-                    else {
-                        $scope.infopanedata = "No soundscapes found.";
-                    }
-                });
-            };
-            var stateData = a2Soundscapes.getState();
-            
-            if (stateData === null)
-            {
-                $scope.loadSoundscapes();
+        $scope.infopanedata = '';
+        
+        Project.getInfo(function(data){
+            $scope.projectData = data;
+            $scope.pid = data.project_id;
+            $scope.url = data.url;
+        });
+        
+        a2Playlists.getList(function(data) {
+                $scope.playlists = data;
+        });
+        
+        
+        var initTable = function(p,c,s,f,t) {
+            var sortBy = {};
+            var acsDesc = 'desc';
+            if (s[0]=='+') {
+                acsDesc = 'asc';
             }
-            else
-            {
-                if (stateData.data.length > 0) {
-                    $scope.soundscapesData = stateData.filtered;
-                    $scope.soundscapesOriginal = stateData.data;
-                    initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
+            sortBy[s.substring(1)] = acsDesc;
+            $scope.tableParams = new ngTableParams(
+                {
+                    page: p,
+                    count: c,
+                    sorting: sortBy,
+                    filter:f
+                }, 
+                {
+                    total: t,
+                    getData: function ($defer, params) 
+                    {
+                        $scope.infopanedata = "";
+                        var filteredData = params.filter() ?
+                        $filter('filter')($scope.soundscapesOriginal , params.filter()) :
+                        $scope.soundscapesOriginal  ;
+                        
+                        var orderedData = params.sorting() ?
+                        $filter('orderBy')(filteredData, params.orderBy()) :
+                        $scope.soundscapesOriginal ;
+                        params.total(orderedData.length);
+                        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+                        if(orderedData.length < 1)
+                        {
+                            $scope.infopanedata = "No classifications found.";
+                        }
+                        $scope.soundscapesData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+                        a2Soundscapes.saveState({'data':$scope.soundscapesOriginal,
+                                    'filtered': $scope.soundscapesData,
+                                    'f':params.filter(),
+                                    'o':params.orderBy(),
+                                    'p':params.page(),
+                                    'c':params.count(),
+                                    't':orderedData.length});
+                    }
                 }
-                else {
-                    $scope.infopanedata = "No models found.";
-                }            
+            );
+        };
+        
+        
+        $scope.loadSoundscapes = function() {
+            a2Soundscapes.getList2(function(data) {
+                $scope.soundscapesOriginal = data;
+                $scope.soundscapesData = data;
                 $scope.infoInfo = "";
                 $scope.showInfo = false;
                 $scope.loading = false;
-            }         
-            $scope.deleteSoundscape = function (id, name) {
-                
-                $scope.infoInfo = "Loading...";
-                $scope.showInfo = true;
-                $scope.loading = true;
-                var modalInstance = $modal.open({
-                    templateUrl: template_root + 'deletesoundscape.html',
-                    controller: 'DeleteSoundscapeInstanceCtrl',
-                    resolve: {
-                        name: function() {
-                            return name;
-                        },
-                        id: function() {
-                            return id;
-                        },
-                        projectData: function() {
-                            return $scope.projectData;
-                        }
-                    }
-                });
 
-                modalInstance.opened.then(function() {
-                    $scope.infoInfo = "";
-                    $scope.showInfo = false;
-                    $scope.loading = false;
-                });
+                $scope.infopanedata = "";
+                
+                if(data.length > 0) {
+                    if(!$scope.tableParams) {
+                        initTable(1,10,"+name",{},data.length);
+                    }
+                    else {
+                        $scope.tableParams.reload();
+                    }
+                }
+                else {
+                    $scope.infopanedata = "No soundscapes found.";
+                }
+            });
+        };
+        var stateData = a2Soundscapes.getState();
+        
+        if (stateData === null)
+        {
+            $scope.loadSoundscapes();
+        }
+        else
+        {
+            if (stateData.data.length > 0) {
+                $scope.soundscapesData = stateData.filtered;
+                $scope.soundscapesOriginal = stateData.data;
+                initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
+            }
+            else {
+                $scope.infopanedata = "No models found.";
+            }            
+            $scope.infoInfo = "";
+            $scope.showInfo = false;
+            $scope.loading = false;
+        }
+        
+        $scope.deleteSoundscape = function (id, name) {
+            if(!a2UserPermit.can('manage soundscapes')) {
+                notify.log('You do not have permission to delete soundscapes');
+                return;
+            }
+            
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            $scope.loading = true;
+            var modalInstance = $modal.open({
+                templateUrl: template_root + 'deletesoundscape.html',
+                controller: 'DeleteSoundscapeInstanceCtrl',
+                resolve: {
+                    name: function() {
+                        return name;
+                    },
+                    id: function() {
+                        return id;
+                    },
+                    projectData: function() {
+                        return $scope.projectData;
+                    }
+                }
+            });
 
-                modalInstance.result.then(function(ret) {
-                        if (ret.error) {
-                            notify.error("Error: "+ret.error);
-                        }
-                        else {
-                            var index = -1;
-                            var modArr = angular.copy($scope.soundscapesOriginal);
-                            for (var i = 0; i < modArr.length; i++) {
-                                if (modArr[i].soundscape_id === id) {
-                                    index = i;
-                                    break;
-                                }
-                            }
-                            if (index > -1) {
-                                $scope.soundscapesOriginal.splice(index, 1);
-                                $scope.tableParams.reload();
-                                
-                                notify.log("Soundscape deleted successfully");
-                            }
-                        }
-                });
-            };
-            
-            
-            $scope.createNewSoundscape = function () {
-                $scope.infoInfo = "Loading...";
-                $scope.showInfo = true;
-                $scope.loading = true;
-                var modalInstance = $modal.open({
-                    templateUrl: template_root + 'createnewsoundscape.html',
-                    controller: 'CreateNewSoundscapeInstanceCtrl',
-                    resolve: {
-                        playlists:function()
-                        {
-                            return $scope.playlists;
-                        },
-                        projectData:function()
-                        {
-                            return $scope.projectData;
-                        }
-                    }
-                });
-                
-                modalInstance.opened.then(function() {
-                    $scope.infoInfo = "";
-                    $scope.showInfo = false;
-                    $scope.loading = false;
-                });
-                
+            modalInstance.opened.then(function() {
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+            });
 
-                modalInstance.result.then(function(result) {
-                    data = result;
-                    if (data.ok) {
-                        JobsData.updateJobs();
-                        notify.log("Your new soundscape is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+            modalInstance.result.then(function(ret) {
+                    if (ret.error) {
+                        notify.error("Error: "+ret.error);
                     }
-                    
-                    if (data.err) {
-                        notify.error(data.err);
-                    }
-                    
-                    if (data.url) {
-                        $location.path(data.url);
-                    }
-                });
-            };
-            
-            
-            $scope.showDetails = function(soundscapeId) {
-                
-                a2Soundscapes.get(soundscapeId, function(soundscape) {
-                    
-                    a2Playlists.getInfo(soundscape.playlist_id, function(plist) {
-                        
-                        var modalInstance = $modal.open({
-                            controller: 'SoundscapesDetailsCtrl',
-                            templateUrl: '/partials/soundscapes/details.html',
-                            resolve: {
-                                soundscape: function() {
-                                    return soundscape;
-                                },
-                                playlist: function() {
-                                    return plist;
-                                }
+                    else {
+                        var index = -1;
+                        var modArr = angular.copy($scope.soundscapesOriginal);
+                        for (var i = 0; i < modArr.length; i++) {
+                            if (modArr[i].soundscape_id === id) {
+                                index = i;
+                                break;
                             }
-                        });
-                        
+                        }
+                        if (index > -1) {
+                            $scope.soundscapesOriginal.splice(index, 1);
+                            $scope.tableParams.reload();
+                            
+                            notify.log("Soundscape deleted successfully");
+                        }
+                    }
+            });
+        };
+        
+        
+        $scope.createNewSoundscape = function () {
+            if(!a2UserPermit.can('manage soundscapes')) {
+                notify.log('You do not have permission to create soundscapes');
+                return;
+            }
+            
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            $scope.loading = true;
+            var modalInstance = $modal.open({
+                templateUrl: template_root + 'createnewsoundscape.html',
+                controller: 'CreateNewSoundscapeInstanceCtrl',
+                resolve: {
+                    playlists:function()
+                    {
+                        return $scope.playlists;
+                    },
+                    projectData:function()
+                    {
+                        return $scope.projectData;
+                    }
+                }
+            });
+            
+            modalInstance.opened.then(function() {
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+            });
+            
+
+            modalInstance.result.then(function(result) {
+                data = result;
+                if (data.ok) {
+                    JobsData.updateJobs();
+                    notify.log("Your new soundscape is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+                }
+                
+                if (data.err) {
+                    notify.error(data.err);
+                }
+                
+                if (data.url) {
+                    $location.path(data.url);
+                }
+            });
+        };
+        
+        
+        $scope.showDetails = function(soundscapeId) {
+            
+            a2Soundscapes.get(soundscapeId, function(soundscape) {
+                
+                a2Playlists.getInfo(soundscape.playlist_id, function(plist) {
+                    
+                    var modalInstance = $modal.open({
+                        controller: 'SoundscapesDetailsCtrl',
+                        templateUrl: '/partials/soundscapes/details.html',
+                        resolve: {
+                            soundscape: function() {
+                                return soundscape;
+                            },
+                            playlist: function() {
+                                return plist;
+                            }
+                        }
                     });
                     
                 });
                 
-            };
-
-
-            $scope.exportSoundscape = function(soundscape_id) {
-                a2Soundscapes.getExportUrl(soundscape_id).then(function(export_url){
-                    var a = $('<a></a>').attr('target', '_blank').attr('href', export_url).appendTo('body');
-                    $window.setTimeout(function(){
-                        a[0].click();
-                        a.remove();
-                    }, 0);
-                });
-                
-            };
+            });
             
-        })
+        };
+
+
+        $scope.exportSoundscape = function(soundscape_id) {
+            if(!a2UserPermit.can('manage soundscapes')) {
+                notify.log('You do not have permission to export soundscapes data');
+                return;
+            }
+            
+            a2Soundscapes.getExportUrl(soundscape_id).then(function(export_url){
+                var a = $('<a></a>').attr('target', '_blank').attr('href', export_url).appendTo('body');
+                $window.setTimeout(function(){
+                    a[0].click();
+                    a.remove();
+                }, 0);
+            });
+            
+        };
+        
+    })
     .controller('DeleteSoundscapeInstanceCtrl',function($scope, $modalInstance, a2Soundscapes, name, id, projectData) {
             $scope.name = name;
             $scope.id = id;
@@ -586,7 +614,7 @@
                         if (peaks[i].y >= $scope.threshold && peaks[i].d > $scope.banwidthValue)
                         {
                         
-                            $scope.peakText = vis.append("text")     
+                            $scope.peakText = vis.append("text")
                             .attr("x", WIDTH*(peaks[i].x/lineData.length) )
                             .attr("y",  50*(1-peaks[i].y) + 10 ).attr('font-size','11px')
                             .style("text-anchor", "middle").attr('class','peakText')
@@ -640,7 +668,8 @@
             }
         };
     })
-    .controller('SoundscapesDetailsCtrl', function($scope, soundscape, playlist, a2Soundscapes) {
+    .controller('SoundscapesDetailsCtrl', function($scope, soundscape, playlist, a2Soundscapes, a2UserPermit) {
+            $scope.showDownload = a2UserPermit.can('manage soundscapes');
             
             var data2xy = function(offset) {
                 offset = offset || 0;

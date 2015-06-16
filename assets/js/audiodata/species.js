@@ -4,7 +4,7 @@ angular.module('a2.audiodata.species', [
     'ui.bootstrap',
     'humane'
 ])
-.controller('SpeciesCtrl', function($scope, Project, $modal, notify) {
+.controller('SpeciesCtrl', function($scope, Project, $modal, notify, a2UserPermit) {
     $scope.loading = true;
     $scope.selected = {};
     
@@ -19,6 +19,11 @@ angular.module('a2.audiodata.species', [
     
     
     $scope.add = function() {
+        
+        if(!a2UserPermit.can("manage project species")) {
+            notify.log("You do not have permission to add species");
+            return;
+        }
         
         var modalInstance = $modal.open({
             templateUrl: '/partials/audiodata/select-species.html',
@@ -54,7 +59,12 @@ angular.module('a2.audiodata.species', [
     $scope.del = function() {
         if(!$scope.checked || !$scope.checked.length)
             return;
-            
+        
+        if(!a2UserPermit.can("manage project species")) {
+            notify.log("You do not have permission to remove species");
+            return;
+        }
+        
         var speciesClasses = $scope.checked.map(function(row) {
             return '"'+row.species_name +' | ' + row.songtype_name+'"';
         });

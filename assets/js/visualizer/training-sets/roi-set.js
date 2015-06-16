@@ -1,6 +1,10 @@
-
-angular.module('visualizer-training-sets-roi_set', ['visualizer-services'])
-.controller('a2VisualizerTrainingSetLayerRoiSetDataController', function($timeout, a2TrainingSets, training_set_types, a22PointBBoxEditor){
+angular.module('visualizer-training-sets-roi_set', [
+    'visualizer-services',
+    'a2.permissions',
+    'humane'
+])
+.controller('a2VisualizerTrainingSetLayerRoiSetDataController', 
+function($timeout, a2TrainingSets, training_set_types, a22PointBBoxEditor, a2UserPermit, notify) {
     var self=this;
     self.type='roi_set';
     self.typedef  = training_set_types.roi_set;
@@ -33,6 +37,11 @@ angular.module('visualizer-training-sets-roi_set', ['visualizer-services'])
             this.super.add_point.call(this, point.sec, point.hz, min_eps);
         },
         submit: function(){ 
+            if(!a2UserPermit.can('manage training sets')) {
+                notify.log('You do not have permission to add ROIs to training set');
+                return;
+            }
+            
             a2TrainingSets.addData(self.tsetId, {
                 recording : self.recording,
                 roi : this.roi

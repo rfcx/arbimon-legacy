@@ -10,23 +10,30 @@ angular.module('a2.settings',[
 .config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.when("/settings", "/settings/details");
     
+    var accessCheck = function(a2UserPermit) {
+        return a2UserPermit.can("manage project settings");
+    };
+    
     $stateProvider.state('settings', {
         url: '/settings',
-        templateUrl: '/partials/settings/index.html'
+        templateUrl: '/partials/settings/index.html',
+        allowAccess: accessCheck
     })
     .state('settings.details', {
         url: '/details',
         controller:'SettingsDetailsCtrl',
-        templateUrl: '/partials/settings/details.html'
+        templateUrl: '/partials/settings/details.html',
+        allowAccess: accessCheck
     })
-    .state('settings.plan', {
-        url: '/plan',
-        templateUrl: '/partials/settings/plan.html'
-    })
+    // .state('settings.plan', {
+    //     url: '/plan',
+    //     templateUrl: '/partials/settings/plan.html'
+    // })
     .state('settings.users', {
         url: '/users',
         controller:'SettingsUsersCtrl',
-        templateUrl: '/partials/settings/users.html'
+        templateUrl: '/partials/settings/users.html',
+        allowAccess: accessCheck
     });
 })
 .controller('SettingsDetailsCtrl', function($scope, Project, notify, $window, $timeout) {

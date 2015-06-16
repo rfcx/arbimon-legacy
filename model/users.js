@@ -15,6 +15,7 @@ var Users = {
         q = util.format(q, mysql.escape(username));
         queryHandler(q, callback);
     },
+    
     findByEmail: function(email, callback) {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
@@ -22,6 +23,7 @@ var Users = {
         q = util.format(q, mysql.escape(email));
         queryHandler(q, callback);
     },
+    
     findById: function(user_id, callback) {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
@@ -29,6 +31,7 @@ var Users = {
         q = util.format(q, mysql.escape(user_id));
         queryHandler(q, callback);
     },
+    
     loginTry: function(ip, user, msg, callback) {
         
         var q = 'INSERT INTO invalid_logins(`ip`, `user`, `reason`) \n'+
@@ -39,6 +42,7 @@ var Users = {
                 
         queryHandler(q, callback);
     },
+    
     invalidLogins: function(ip, callback) {
         var q = 'SELECT COUNT(ip) as tries \n'+
                 'FROM invalid_logins \n'+
@@ -47,6 +51,7 @@ var Users = {
         q = util.format(q, mysql.escape(ip));
         queryHandler(q, callback);
     },
+    
     removeLoginTries: function(ip, callback) {
         var q = 'DELETE ' +
                 'FROM `invalid_logins` ' +
@@ -54,6 +59,7 @@ var Users = {
         q = util.format(q, mysql.escape(ip));
         queryHandler(q, callback);
     },
+    
     search: function(query, callback) {
         query = mysql.escape('%'+query+'%');
         

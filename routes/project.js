@@ -7,7 +7,7 @@ var router = express.Router();
 router.get('/:projecturl?/', function(req, res, next) {
     var project_url = req.params.projecturl;
 
-    debug('project_url', project_url);
+    debug('project_url:', project_url);
     
     model.projects.findByUrl(project_url, function(err, rows) {
             if(err) return next(err);
@@ -23,7 +23,7 @@ router.get('/:projecturl?/', function(req, res, next) {
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
 
                 if(project.is_private && !rows.length && req.session.user.isSuper === 0)
-                    return res.redirect('/home');
+                    return next();
 
                 if(!req.session.user.permissions)
                     req.session.user.permissions = {};

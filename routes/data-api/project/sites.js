@@ -44,17 +44,21 @@ router.post('/create', function(req, res, next) {
     });
 });
 
-router.post('/import', function(req, res, next) { 
-    var project = req.project;
-    var site = req.body.site;
-    
-    model.sites.importSiteToProject(site.id, project.project_id, function(err, rows) {
-        if(err) return next(err);
-        
-        debug(rows);
-        res.json({ msg: "site imported", success: true });
-    });
-});
+// router.post('/import', function(req, res, next) { 
+//     var project = req.project;
+//     var site = req.body.site;
+//     
+//     if(!req.haveAccess(project.project_id, "manage project sites")) {
+//         return res.json({ error: "you dont have permission to 'manage project sites'" });
+//     }
+//     
+//     model.sites.importSiteToProject(site.id, project.project_id, function(err, rows) {
+//         if(err) return next(err);
+//         
+//         debug(rows);
+//         res.json({ msg: "site imported", success: true });
+//     });
+// });
 
 router.post('/update', function(req, res, next) {
     var project = req.project;
@@ -150,9 +154,11 @@ router.post('/generate-token', function(req, res, next){
 router.post('/revoke-token', function(req, res, next){
     if(!req.haveAccess(req.project.project_id, "manage project sites")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
-    } else if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
-        return res.json({ error: "you dont have permission to 'manage project sites'" });
-    } else {
+    } 
+    else if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
+        return res.json({ error: "you dont have permission to 'manage project recordings'" });
+    } 
+    else {
         var siteid = req.body.site;
         async.waterfall([
             function(next){

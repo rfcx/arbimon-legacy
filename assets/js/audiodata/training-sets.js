@@ -41,7 +41,7 @@ angular.module('a2.audiodata.training-sets', [
         };
     }
 )
-.controller('TrainingSetsCtrl', function($scope, a2TrainingSets, Project, $modal, a2TrainingSetHistory) {
+.controller('TrainingSetsCtrl', function($scope, a2TrainingSets, Project, $modal, a2TrainingSetHistory, a2UserPermit, notify) {
     
     $scope.loading = true;
     $scope.rois = [];
@@ -141,6 +141,11 @@ angular.module('a2.audiodata.training-sets', [
     };
     
     $scope.removeRoi = function(id) {
+        if(!a2UserPermit.can('manage training sets')) {
+            notify.log('You do not have permission to edit training sets');
+            return;
+        }
+        
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',
             controller: function() {
@@ -206,7 +211,12 @@ angular.module('a2.audiodata.training-sets', [
        $scope.showSetDetails = false;
     };
     
-    $scope.add_new_tset = function(){
+    $scope.add_new_tset = function() {
+        if(!a2UserPermit.can('manage training sets')) {
+            notify.log('You do not have permission to create training sets');
+            return;
+        }
+        
         $modal.open({
             templateUrl : '/partials/visualizer/modal/add_tset.html',
             controller  : 'a2VisualizerAddTrainingSetModalController'

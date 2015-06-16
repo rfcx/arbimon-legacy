@@ -4,7 +4,7 @@ angular.module('a2.audiodata.recordings', [
     'ui.bootstrap',
     'humane'
 ])
-.controller('RecsCtrl', function($scope, Project, $http, $modal, notify) {
+.controller('RecsCtrl', function($scope, Project, $http, $modal, notify, a2UserPermit) {
     $scope.loading = true;
     
     
@@ -90,6 +90,11 @@ angular.module('a2.audiodata.recordings', [
         
         if($.isEmptyObject(listParams))
             return;
+            
+        if(!a2UserPermit.can('manage playlists')) {
+            notify.log('You do not have permission to create playlists');
+            return;
+        }
         
         var modalInstance = $modal.open({
             controller: 'SavePlaylistModalInstanceCtrl',
@@ -106,7 +111,11 @@ angular.module('a2.audiodata.recordings', [
         });
     };
     $scope.del = function() {
-            
+        if(!a2UserPermit.can('manage project recordings')) {
+            notify.log('You do not have permission to delete recordings');
+            return;
+        }
+        
         var recs = $scope.checked.filter(function(rec){ 
                 return !rec.imported; 
             });

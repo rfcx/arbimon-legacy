@@ -277,6 +277,10 @@ router.get('/:projectUrl/roles', function(req, res, next) {
 });
 
 router.get('/:projectUrl/users', function(req, res, next) {
+    if(!req.haveAccess(req.body.project_id, "manage project settings")) {
+        return res.json({ error: "you don't have permission to manage project settings and users" });
+    }
+    
     model.projects.getUsers(req.project.project_id, function(err, rows){
         if(err) return next(err);
         
@@ -350,6 +354,29 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
         debug("remove user:", result);
         res.json({ success: true });
     });
+});
+
+router.get('/:projectUrl/user-permissions', function(req, res, next) {
+    model.users.getPermissions(
+        req.session.user.id, 
+        req.project.project_id, 
+        function(err, rows) {
+            if(err) return next(err);
+            
+            if(!rows.length && req.project.is_private && !req.session.user.isSuper) {
+                return res.json({ authorized: false });
+            }
+            
+            var result = { 
+                authorized: true,
+                public: !req.project.is_private,
+                super: req.session.user.isSuper,
+                permissions: rows.map(function(perm) { return perm.name; }),
+            };
+            
+            res.json(result);
+        }
+    );
 });
 
 router.get('/:projectUrl/validations/count', function(req, res, next) {

@@ -112,10 +112,21 @@ angular.module('a2.visualizer', [
     };
     return locman;
 })
-.controller('VisualizerCtrl', function (a2VisualizerLayers, $location, $state, $scope, $timeout, itemSelection, Project, $controller, 
+.controller('VisualizerCtrl', function (
+    a2VisualizerLayers, 
+    $location, $state, 
+    $scope, 
+    $timeout, 
+    itemSelection, 
+    Project, 
+    $controller, 
     a2SpectrogramClick2Zoom,
     $rootScope,
-    VisualizerObjectTypes, VisualizerLayout, a2AudioPlayer, a2VisualizerLocationManager) {
+    VisualizerObjectTypes, 
+    VisualizerLayout, 
+    a2AudioPlayer, 
+    a2VisualizerLocationManager
+) {
     var layers = new a2VisualizerLayers($scope);
     var layer_types = layers.types;
     
@@ -176,7 +187,7 @@ angular.module('a2.visualizer', [
             $scope.visobject_location = location;
             $scope.location.set(location, true);
             var typedef = VisualizerObjectTypes[type];
-            $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);            
+            $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);
             typedef.load(visobject, $scope).then(function (visobject){
                 
                 console.log('VisObject loaded : ', visobject);

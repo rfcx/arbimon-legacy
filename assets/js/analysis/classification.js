@@ -2,13 +2,14 @@
     var classification = angular.module('a2.analysis.classification', [
         'ui.bootstrap' , 
         'a2.services', 
+        'a2.permissions', 
         'humane'
     ]);
     var template_root = '/partials/classification/';
 
     classification.controller('ClassificationCtrl' , 
         function ($scope, $modal, $filter, Project, ngTableParams, 
-                    JobsData, a2Playlists, notify, $q, a2Classi) {
+                    JobsData, a2Playlists, notify, $q, a2Classi, a2UserPermit) {
             $scope.loading = true;
             $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
@@ -100,12 +101,11 @@
             };
             
             var stateData = a2Classi.getState();
-            if (stateData === null)
-            {
+            
+            if (stateData === null) {
                 $scope.loadClassifications();
             }
-            else
-            {
+            else {
                 if (stateData.data.length > 0) {
                     $scope.classificationsData = stateData.filtered;
                     $scope.classificationsOriginal = stateData.data;
@@ -120,7 +120,6 @@
             }
 
             $scope.showClassificationDetails = function (classi_id) {
-
                 $scope.infoInfo = "Loading...";
                 $scope.showInfo = true;
                 $scope.loading = true;
@@ -173,6 +172,11 @@
             };
 
             $scope.createNewClassification = function () {
+                if(!a2UserPermit.can('manage models and classification')) {
+                    notify.log('You do not have permission to create classifications');
+                    return;
+                }
+                
                 $scope.loading = true;
                 $scope.infoInfo = "Loading...";
                 $scope.showInfo = true;
@@ -233,6 +237,11 @@
 
 
             $scope.deleteClassification = function(id,name) {
+                if(!a2UserPermit.can('manage models and classification')) {
+                    notify.log('You do not have permission to delete classifications');
+                    return;
+                }
+                
                 $scope.infoInfo = "Loading...";
                 $scope.showInfo = true;
                 $scope.loading = true;
@@ -301,7 +310,7 @@
         }
     )
     .controller('ClassiDetailsInstanceCtrl', 
-        function ($scope, $modalInstance, a2Classi, notify, data, url, id, pid, th) {
+        function ($scope, $modalInstance, a2Classi, notify, a2UserPermit, data, url, id, pid, th) {
             $scope.th = th;
             $scope.data = data.data;
             $scope.pid = pid;
@@ -312,6 +321,9 @@
             $scope.currentPage = 0;
             $scope.maxPerPage = 1;
             $scope.totalRecs = Math.ceil($scope.data[0].total/$scope.maxPerPage);
+            
+            
+            $scope.showDownload = a2UserPermit.can('manage models and classification');
 
 
             $scope.ok = function () {
@@ -361,7 +373,7 @@
             };
 
 
-            $scope.gotoc = function (where) {
+            $scope.gotoc = function(where) {
                 if (where == 'first') {
                     $scope.currentPage = 0;
                 }
@@ -375,7 +387,7 @@
 
 
 
-            $scope.more= function () {
+            $scope.more = function() {
                 $scope.showMore = true;
                 if ($scope.recs.length <1)
                 {
@@ -388,7 +400,8 @@
             };
 
     })
-    .controller('CreateNewClassificationInstanceCtrl', function($scope, $modalInstance, a2Classi, data, projectData, playlists) {
+    .controller('CreateNewClassificationInstanceCtrl', 
+    function($scope, $modalInstance, a2Classi, data, projectData, playlists) {
         $scope.data = data;
         $scope.projectData = projectData;
         $scope.recselected = '';
