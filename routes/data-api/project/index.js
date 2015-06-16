@@ -191,18 +191,18 @@ router.get('/:projectUrl/classes', function(req, res, next) {
 
 router.post('/:projectUrl/class/add', function(req, res, next) {
 
-    if(!req.body.project_id || !req.body.species || !req.body.project_id) {
-        return res.json({ error: "missing parameters"});
+    if(!req.body.species || !req.body.songtype) {
+        return res.status(400).json({ error: "missing parameters"});
     }
 
-    if(!req.haveAccess(req.body.project_id, "manage project species")) {
-        return res.json({ error: "you dont have permission to 'manage project species'" });
+    if(!req.haveAccess(req.project.project_id, "manage project species")) {
+        return res.status(401).json({ error: "you dont have permission to 'manage project species'" });
     }
 
     projectClass = {
         songtype: req.body.songtype,
         species: req.body.species,
-        project_id: req.body.project_id
+        project_id: req.project.project_id
     };
 
     model.projects.insertClass(projectClass, function(err, result){
@@ -215,7 +215,7 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
         model.projects.insertNews({
             news_type_id: 5, // class added
             user_id: req.session.user.id,
-            project_id: req.body.project_id,
+            project_id: req.project.project_id,
             data: JSON.stringify({ species: projectClass.species, song: projectClass.songtype })
         });
         
@@ -225,18 +225,18 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
 });
 
 router.post('/:projectUrl/class/del', function(req, res, next){
-    if(!req.body.project_id || !req.body.project_classes) {
-        return res.json({ error: "missing parameters"});
+    if(!req.body.project_classes) {
+        return res.status(400).json({ error: "missing parameters"});
     }
 
-    if(!req.haveAccess(req.body.project_id, "manage project species")) {
-        return res.json({ error: "you dont have permission to 'manage project species'" });
+    if(!req.haveAccess(req.project.project_id, "manage project species")) {
+        return res.status(401).json({ error: "you dont have permission to 'manage project species'" });
     }
     
     
     async.waterfall([
         function(callback) {
-            model.projects.getProjectClasses(req.body.project_id, function(err, classes) {
+            model.projects.getProjectClasses(req.project.project_id, function(err, classes) {
                 if(err) return next(err);
                 
                 callback(null, classes);
@@ -257,12 +257,12 @@ router.post('/:projectUrl/class/del', function(req, res, next){
                 model.projects.insertNews({
                     news_type_id: 6, // class removed
                     user_id: req.session.user.id,
-                    project_id: req.body.project_id,
+                    project_id: req.project.project_id,
                     data: JSON.stringify({ classes: classesDeleted })
                 });
                 
                 debug("class removed:", result);
-                res.json({ success: true });
+                res.json({ success: true, deleted: classesDeleted });
             });
         }
     ]);

@@ -28,29 +28,30 @@ angular.module('a2.audiodata.species', [
         
         modalInstance.result.then(function(selected) {
             
-            Project.addClass({
+            var cls = {
                 species: selected.species.scientific_name,
-                songtype: selected.song.name,
-                project_id: $scope.project.project_id
-            },
-            function(err, result){
-                if(err) return console.error(err);
-                
-                if(result.error) {
-                    return notify.error(result.error);
-                }
-                
-                notify.log(selected.species.scientific_name + ' ' + selected.song.name +" added to project");
-                
-                Project.getClasses(function(classes){
-                    $scope.classes = classes;
+                songtype: selected.song.name
+            };
+            
+            Project.addClass(cls)
+                .success(function(result){
+                    notify.log(selected.species.scientific_name + ' ' + selected.song.name +" added to project");
+                    
+                    Project.getClasses(function(classes){
+                        $scope.classes = classes;
+                    });
+                })
+                .error(function(data, status) {
+                    if(status < 500)
+                        notify.error(data.error);
+                    else
+                        notify.serverError();
                 });
-            });
             
         });
     };
     
-    $scope.del = function(){
+    $scope.del = function() {
         if(!$scope.checked || !$scope.checked.length)
             return;
             
@@ -77,20 +78,22 @@ angular.module('a2.audiodata.species', [
                 return row.id;
             });
             
-            Project.removeClasses({
-                project_id: $scope.project.project_id,
+            var params = {
                 project_classes: classesIds
-            },
-            function(err, result) {
-                if(err) {
-                    notify.serverError();
-                }
-                
-                console.log(result);
-                Project.getClasses(function(classes){
-                    $scope.classes = classes;
+            };
+            
+            Project.removeClasses(params)
+                .success(function(result) {
+                    Project.getClasses(function(classes){
+                        $scope.classes = classes;
+                    });
+                })
+                .error(function(data, status) {
+                    if(status < 500)
+                        notify.error(data.error);
+                    else
+                        notify.serverError();
                 });
-            });
         });
             
     };

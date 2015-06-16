@@ -114,22 +114,10 @@ angular.module('a2.srv.project', [])
                     });
             },
             addClass: function(projectClass, callback) {
-                $http.post('/api/project/'+url+'/class/add', projectClass)
-                    .success(function(data){
-                        callback(null, data);
-                    })
-                    .error(function(err){
-                        callback(err);
-                    });
+                return $http.post('/api/project/'+url+'/class/add', projectClass);
             },
             removeClasses: function(projectClasses, callback) {
-                $http.post('/api/project/'+url+'/class/del', projectClasses)
-                    .success(function(data){
-                        callback(null, data);
-                    })
-                    .error(function(err){
-                        callback(err);
-                    });
+                return $http.post('/api/project/'+url+'/class/del', projectClasses);
             },
             getUsers: function(callback) {
                 $http.get('/api/project/'+url+'/users')
