@@ -36,7 +36,7 @@ angular.module('a2.srv.classi', [
                 .success(callback)
                 .error(notify.serverError);
         },
-        delete: function(classificationId) {
+        delete: function(classificationId, callback) {
             $http.get('/api/project/' + Project.getUrl() + '/classification/' + classificationId + '/delete')
                 .success(callback)
                 .error(notify.serverError);

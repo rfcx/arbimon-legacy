@@ -391,7 +391,6 @@
 
         }
     )
-    // TODO use popup.html
     .controller('NewClassificationInstanceCtrl', function($scope, $modalInstance, model_name, model_id) {
         $scope.model_name = model_name;
         $scope.model_id = model_id;
@@ -409,11 +408,11 @@
             
             
             var loadingMsgs = [
-                'Searching Model',
+                '',
                 'Loading validations',
                 'Loading vectors'
             ];
-            $scope.loading = loadingMsgs[0];
+            $scope.loading = true;
             $scope.showValidationsTable = true;
             $scope.allYesMax = [];
             $scope.vectorNoMax = -1;
@@ -434,7 +433,7 @@
             a2Models.findById($stateParams.modelId)
                 .success(function(model) {
                     $scope.model = model;
-                    $scope.loading = loadingMsgs[1];
+                    $scope.loading = null;
                 })
                 .error(function(data, status) {
                     if(status == 404) {
@@ -443,22 +442,18 @@
                     else {
                         notify.serverError();
                     }
-                    $scope.loading = null;
                 });
             
             a2Models.getValidationResults($stateParams.modelId, function(data) {
-                if (data.err) {
+                if(data.err || !data.validations.length) {
                     $scope.showModelValidations = false;
                     $scope.loadingValidations = false;
-                    $scope.loading = null;
                     return;
                 }
                 
-                $scope.validations = data;
-
-                $scope.valiDetails = $scope.validations.nofile ? false : true;
+                $scope.validations = data.validations;
+                
                 getVectors(0);
-                $scope.loading = loadingMsgs[2];
             });
             
             /*
@@ -469,35 +464,28 @@
                 
                 var currRec = $scope.validations[index];
                
-                if (currRec === false) {
-                    $scope.validations.splice(index, 1);
-                    getVectors(index);       
-                }
-                else
-                {
-                    currRec.date = $window.moment(currRec.date, 'MM-DD-YYYY HH:mm');
+                currRec.date = $window.moment(currRec.date, 'MM-DD-YYYY HH:mm');
+                
+                a2Models.getRecVector($scope.model.id, currRec.id)
+                    .success(function(data) {
+                        if(!(data.err && data.err == "vector-not-found")) {
+                            var vector = data.vector;
                     
-                    a2Models.getRecVector($scope.model.id, currRec.id)
-                        .success(function(data) {
-                            if(!(data.err && data.err == "vector-not-found")) {
-                                var vector = data.vector;
-                        
-                                var vmax = Math.max.apply(null, vector);
-                                currRec.vmax = vmax;
-                                currRec.vector = vector;
-                                
-                                if(currRec.presence == 'no') {
-                                    if($scope.vectorNoMax < vmax) {
-                                        $scope.vectorNoMax = vmax;
-                                    }
-                                }
-                                else if(currRec.presence == 'yes') {
-                                    $scope.allYesMax.push(vmax);
+                            var vmax = Math.max.apply(null, vector);
+                            currRec.vmax = vmax;
+                            currRec.vector = vector;
+                            
+                            if(currRec.presence == 'no') {
+                                if($scope.vectorNoMax < vmax) {
+                                    $scope.vectorNoMax = vmax;
                                 }
                             }
-                            getVectors(++index);
-                        });
-                }
+                            else if(currRec.presence == 'yes') {
+                                $scope.allYesMax.push(vmax);
+                            }
+                        }
+                        getVectors(++index);
+                    });
             };
             
             
@@ -727,6 +715,7 @@
                 }
             };
             
+            // TODO use ng-style
             $scope.zoomout = function() {
                 $("#patternDivMain").css("min-width", 210);
                 $("#patternDivMain").css("height", 100);
@@ -764,7 +753,7 @@
             
             $scope.gotoRec = function() {
                 var rurl = "/project/" + Project.getUrl() + 
-                    "/#/visualizer/rec/" + $scope.selectedRecId;
+                    "/#/visualizer/rec/" + $scope.selected.id;
                 $location.path(rurl);
             };
         }

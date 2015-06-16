@@ -7,7 +7,7 @@
     </div>
 </div>
 <div ng-show="loading">
-    <h3><loader></loader> {{ loading }}</h3>
+    <h3><loader></loader> Searching model</h3>
 </div>
 <div ng-show="notFound">
     <h4>Model not found</h4>
@@ -298,15 +298,16 @@
             </div>
         </div>
     </div>
-    <div class="row" ng-hide="showModelValidations">
-        <div ng-hide="invalid">
+    
+    <div class="row" ng-show="showModelValidations">
+        <div class="col-sm-12 col-lg-8" ng-hide="showModelValidations">
             <h4>
-                <!-- The current model was computed using a previous version of the Arbimon2 App.<br> -->
                 The validation list is not available.
             </h4>
         </div>
-    </div>
-    <div class="row" ng-show="valiDetails && showModelValidations">
+        <div class="col-sm-12 col-lg-8" ng-show="loadingValidations">
+            <h3><loader></loader>Loading validations</h3>
+        </div>
         <div class="col-sm-12 col-lg-8" ng-show="!loadingValidations && showValidationsTable">
             <h3>
                 Validations 
@@ -328,9 +329,6 @@
                 <field title="Model presence"  key="model">{{ row.model }}</field>
                 <field title="Threshold presence"  key="threshold">{{ row.threshold }}</field>
             </a2-table>  
-        </div>
-        <div class="col-sm-12 col-lg-8" ng-show="loadingValidations && showValidationsTable">
-            
         </div>
         <div class="col-sm-12 col-lg-8" ng-hide="showValidationsTable">
             <div>

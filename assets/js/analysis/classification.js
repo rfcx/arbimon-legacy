@@ -25,7 +25,6 @@
                 $scope.loading = false;
             };
 
-
             Project.getInfo(function(data) {
                 $scope.projectData = data;
                 $scope.url = data.url;
@@ -245,6 +244,7 @@
                 $scope.infoInfo = "Loading...";
                 $scope.showInfo = true;
                 $scope.loading = true;
+                
                 var modalInstance = $modal.open({
                     templateUrl: template_root + 'deleteclassification.html',
                     controller: 'DeleteClassificationInstanceCtrl',
@@ -297,6 +297,7 @@
             $scope.deletingloader = false;
             $scope.projectData = projectData;
             var url = $scope.projectData.url;
+            
             $scope.ok = function() {
                 $scope.deletingloader = true;
                 a2Classi.delete(id, function(data) {
@@ -515,16 +516,26 @@
                     var height = 50;
                     var width = $scope.width;
                     
-                    canvas.width = width;
+                    var xStep;
+                    
+                    if (width>=vector.length) {
+                        canvas.width = width;
+                        xStep = width/vector.length;
+                        
+                    }
+                    else {
+                        canvas.width = vector.length;
+                        xStep = 1;
+                    }
+                    
                     canvas.height = height;
                     ctx = canvas.getContext('2d');
                     ctx.beginPath();
                     
-                    var xStep = width/vector.length;
                     
                     var i = 0;
                     ctx.moveTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
-                    while(i < width) {
+                    while(i < vector.length) {
                         i++;
                         ctx.lineTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
                     }
