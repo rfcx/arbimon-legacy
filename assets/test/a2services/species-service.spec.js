@@ -1,6 +1,13 @@
-describe('Module: a2-species-service', function() {
+/* jshint mocha:true */
+/* global module:true */
+/* global inject:true */
+/* global sinon:true */
+
+describe('Module: a2.srv.species', function() {
+    "use strict";
+    
     beforeEach(function() { 
-        module('a2-species-service');
+        module('a2.srv.species');
     });
         
     describe('Species', function() { 
@@ -80,7 +87,7 @@ describe('Module: a2-species-service', function() {
     
     describe('Songtypes', function() { 
         var $httpBackend;
-        var a2Soundscapes;
+        var Songtypes;
         var songList;
         
         beforeEach(inject(function($injector, _Songtypes_) {

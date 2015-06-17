@@ -7,15 +7,14 @@ Bio-Acoustic Analyzer
  
  - All dependencies  in one line
    ```
-   sudo add-apt-repository ppa:chris-lea/node.js
-   sudo apt-get update
+   curl -sL https://deb.nodesource.com/setup_0.10 | sudo bash -
    sudo apt-get install -y python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev python-virtualenv
    ```
    
    
- - Install all python dependencies, create python virtual enviroment and build
+ - Install all python dependencies, create python virtual environment and build
     ```
-    npm run-script setup    
+    npm run-script setup
     ```
     
     
@@ -23,18 +22,13 @@ Bio-Acoustic Analyzer
     ```
     npm start
     ```
-    
-
----
-
 
 ### System dependencies:
 
  - nodejs
    ```
-   sudo add-apt-repository ppa:chris-lea/node.js
-   sudo apt-get update
-   sudo apt-get install nodejs
+   curl -sL https://deb.nodesource.com/setup_0.10 | sudo bash -
+   sudo apt-get install -y nodejs
    ```
    
    
@@ -56,7 +50,7 @@ Bio-Acoustic Analyzer
    ```
    
    
- - image magick - image manipulation tool
+ - imagemagick - image manipulation tool
    ```
    sudo apt-get install imagemagick
    ```
@@ -111,8 +105,12 @@ run
 
 run and watch
 
-`grunt server` everything a file changes the project will rebuild
+`grunt server` everytime a file changes the project will rebuild
 
-clean packages and builds (node_modules, bower_components, public/assets)
+remove packages and builds (node_modules, bower_components, public/assets)
 
 `grunt clean` 
+
+to run unit tests 
+
+`grunt test`

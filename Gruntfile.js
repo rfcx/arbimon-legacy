@@ -397,6 +397,7 @@ module.exports = function(grunt) {
     grunt.registerTask('angular-depends', ['angular_architecture_graph']);
     grunt.registerTask('test-frontend', ['jshint:frontEnd', 'html2js:dev', 'karma:unit']);
     grunt.registerTask('test-backend', ['jshint:backEnd', 'mocha_istanbul']);
+    grunt.registerTask('test', ['jshint', 'html2js:dev', 'karma:unit', 'mocha_istanbul']);
     grunt.registerTask('build', ['copy', 'less', 'html2js:dev', 'ngAnnotate:main']);
     grunt.registerTask('prod', ['copy', 'less', 'html2js:prod', 'ngAnnotate:main', 'uglify']);
     grunt.registerTask('server', ['express:dev', 'watch']);

@@ -31,7 +31,7 @@ angular.module('a2.srv.species', [])
         }
     };
 })
-.factory('Songtypes',function($http){
+.factory('Songtypes', function($http){
     var songs;
     
     var searchId = function(id, callback) {

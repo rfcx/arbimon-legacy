@@ -140,7 +140,7 @@ angular.module('a2.audiodata.training-sets', [
         }
     };
     
-    $scope.removeRoi = function(id) {
+    $scope.removeRoi = function(roiId) {
         if(!a2UserPermit.can('manage training sets')) {
             notify.log('You do not have permission to edit training sets');
             return;
@@ -159,11 +159,11 @@ angular.module('a2.audiodata.training-sets', [
         });
         
         modalInstance.result.then(function() {
-            a2TrainingSets.removeRoi(id, $scope.selectedSet.id, function(data){
+            a2TrainingSets.removeRoi($scope.selectedSet.id, roiId, function(data){
                 if(data.affectedRows) {
                     for(var i = 0 ; i < $scope.rois.length ; i++)
                     {
-                        if ($scope.rois[i].id == id){
+                        if ($scope.rois[i].id == roiId){
                             $scope.rois.splice(i,1);
                             break;
                         }

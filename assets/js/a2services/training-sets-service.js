@@ -68,7 +68,7 @@ angular.module('a2.srv.training-sets', ['a2.srv.project'])
                     callback(data);
                 });
         },
-        removeRoi: function(roiId, trainingSetId, callback) {
+        removeRoi: function(trainingSetId, roiId, callback) {
             var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/'+trainingSetId+'/remove-roi/'+roiId)
                 .success(function(data) {
