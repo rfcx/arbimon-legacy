@@ -100,20 +100,11 @@ var Projects = {
         }
         
         project = result.value;
-        
-        for(var i in project) {
-            if(i !== 'id') {
-                values.push(util.format('%s = %s', 
-                    mysql.escapeId(i), 
-                    mysql.escape(project[i])
-                ));
-            }
-        }
 
         var q = 'INSERT INTO projects \n'+
-                'SET %s';
+                'SET ?';
 
-        q = util.format(q, values.join(", "));
+        q = mysql.format(q, project);
 
         queryHandler(q, function(err, result) {
             if(err) return callback(err);

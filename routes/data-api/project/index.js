@@ -278,7 +278,7 @@ router.get('/:projectUrl/roles', function(req, res, next) {
 });
 
 router.get('/:projectUrl/users', function(req, res, next) {
-    if(!req.haveAccess(req.body.project_id, "manage project settings")) {
+    if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
     
@@ -296,16 +296,16 @@ router.get('/:projectUrl/users', function(req, res, next) {
 });
 
 router.post('/:projectUrl/user/add', function(req, res, next) {
-    if(!req.body.project_id || !req.body.user_id) {
+    if(!req.body.user_id) {
         return res.json({ error: "missing parameters"});
     }
     
-    if(!req.haveAccess(req.body.project_id, "manage project settings")) {
+    if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
     
     model.projects.addUser({
-        project_id: req.body.project_id,
+        project_id: req.project.project_id,
         user_id: req.body.user_id,
         role_id: 2 // default to normal user
     },
@@ -319,16 +319,16 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
 
 router.post('/:projectUrl/user/role', function(req, res, next) {
     
-    if(!req.body.project_id || !req.body.user_id || !req.body.role_id) {
+    if(!req.body.user_id || !req.body.role_id) {
         return res.json({ error: "missing parameters"});
     }
     
-    if(!req.haveAccess(req.body.project_id, "manage project settings")) {
+    if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
     
     model.projects.changeUserRole({
-        project_id: req.body.project_id,
+        project_id: req.project.project_id,
         user_id: req.body.user_id,
         role_id: req.body.role_id
     },
@@ -341,15 +341,15 @@ router.post('/:projectUrl/user/role', function(req, res, next) {
 });
 
 router.post('/:projectUrl/user/del', function(req, res, next) {
-    if(!req.body.project_id || !req.body.user_id) {
+    if(!req.body.user_id) {
         return res.json({ error: "missing parameters"});
     }
     
-    if(!req.haveAccess(req.body.project_id, "manage project settings")) {
+    if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
     
-    model.projects.removeUser(req.body.user_id, req.body.project_id, function(err, result){
+    model.projects.removeUser(req.body.user_id, req.project.project_id, function(err, result){
         if(err) return next(err);
         
         debug("remove user:", result);

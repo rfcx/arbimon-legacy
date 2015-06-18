@@ -42,8 +42,8 @@ router.use(function(req, res, next) {
             return true;
         
         var projectPerms = req.session.user.permissions[project_id];
-        
-        debug("project permission:", projectPerms);
+        console.log(project_id);
+        debug("user permissions:", req.session.user.permissions);
         
         if(!projectPerms)
             return false;
