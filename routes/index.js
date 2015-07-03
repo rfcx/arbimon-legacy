@@ -20,6 +20,10 @@ router.get('/support', function(req, res) {
     res.render('support');
 });
 
+router.get('/classifiers', function(req, res) {
+    res.render('classifiers');
+});
+
 router.get('/alive', function(req, res) { // for health checks
     res.sendStatus(200);
 });
