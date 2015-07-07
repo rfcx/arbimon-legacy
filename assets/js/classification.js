@@ -531,7 +531,7 @@
 
                     
                     
-                    if ($scope.minvect>0.09) {
+                    if ($scope.minvect<-0.09) {
                         //code
                         ctx.beginPath();
                         var i = 0;
