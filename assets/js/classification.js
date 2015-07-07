@@ -529,18 +529,21 @@
                     ctx.strokeStyle = '#000';
                     ctx.stroke();
 
-                    ctx.beginPath();
                     
-                    var i = 0;
-                    ctx.moveTo(i*xStep, height * (1 - ((0 - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
-                    while(i < vector.length) {
-                        i++;
-                        ctx.lineTo(i*xStep, height * (1 - ((0 - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                    
+                    if ($scope.minvect>0.09) {
+                        //code
+                        ctx.beginPath();
+                        var i = 0;
+                        ctx.moveTo(i*xStep, height * (1 - ((0 - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                        while(i < vector.length) {
+                            i++;
+                            ctx.lineTo(i*xStep, height * (1 - ((0 - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                        }
+                        
+                        ctx.strokeStyle = '#aa0000';
+                        ctx.stroke();
                     }
-                    
-                    ctx.strokeStyle = '#aa0000';
-                    ctx.stroke();
-                    
                     
                     $scope.loadingflag = false;
                 };
