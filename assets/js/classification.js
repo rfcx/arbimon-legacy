@@ -519,7 +519,6 @@
                     ctx = canvas.getContext('2d');
                     ctx.beginPath();
                     
-                    
                     var i = 0;
                     ctx.moveTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
                     while(i < vector.length) {
@@ -529,6 +528,7 @@
                     
                     ctx.strokeStyle = '#000';
                     ctx.stroke();
+                    
                     $scope.loadingflag = false;
                 };
                 

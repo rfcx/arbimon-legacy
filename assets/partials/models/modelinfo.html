@@ -368,7 +368,7 @@
             <div class="axisWrapper">
                 <div class="yaxisWrapper">
                     <div class="yAxishighvalue">{{ model.maxv | number}}</div>
-                    <div class="lowaxis2">0.0</div>
+                    <div class="lowaxis2">{{ model.minv | number}}</div>
                 </div>
                 <div class="vectorWrapper"><a2-vectorchart minvect="model.minv" maxvect="model.maxv" vector-data="selected.vector"></a2-vectorchart></div>
             </div>

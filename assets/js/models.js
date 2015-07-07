@@ -425,6 +425,8 @@
             $scope.loading = true
             $scope.showValidationsTable = true;
             $scope.allYesMax = [];
+            $scope.allMax = [];
+            $scope.allMin = [];
             $scope.vectorNoMax = -1;
             $scope.loadingValidations = true;
             $scope.showModelValidations = true;
@@ -482,9 +484,11 @@
                             var vector = data.vector;
                     
                             var vmax = Math.max.apply(null, vector);
+                            var vmin = Math.min.apply(null, vector);
                             currRec.vmax = vmax;
                             currRec.vector = vector;
-                            
+                            $scope.allMax.push(vmax);
+                            $scope.allMin.push(vmin);
                             if(currRec.presence == 'no') {
                                 if($scope.vectorNoMax < vmax) {
                                     $scope.vectorNoMax = vmax;
@@ -516,7 +520,9 @@
                 }
                 
                 // NOTE this value is received from the server and overwritten here, maybe this value can be saved
-                $scope.model.maxv = Math.max.apply(null, $scope.allYesMax);
+                $scope.model.maxv = Math.max.apply(null, $scope.allMax);
+                $scope.model.minv = Math.min.apply(null, $scope.allMin);
+
                 $scope.suggestedThreshold = Math.round($scope.allYesMax[index] * 1000000) / 1000000;
                 
                 if (typeof $scope.suggestedThreshold === undefined || isNaN($scope.suggestedThreshold)) {
