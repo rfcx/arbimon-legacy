@@ -81,12 +81,11 @@ router.get('/info', function(req, res) {
     });
 });
 
-router.get('/search/:query', function(req, res, next) {
-    var query = req.param('query');
+router.get('/search/:query?', function(req, res, next) {
+    var query = req.params.query;
     
     if(!query){
-        res.json({ error: "empty query" });
-        return;
+        return res.json({ error: "empty query" });
     }
     
     model.users.search(query, function(err, rows){

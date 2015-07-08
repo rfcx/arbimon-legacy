@@ -31,6 +31,11 @@
                     </h3>
                 </div>
             </div>
+			<div class="row">
+				<div class="col-md-12" ng-show="results.length < 1">
+					<h3>No projects found. <a ng-click="createProject() | trackEvent:'Home':'createProject'">Create a project</a></h3>
+				</div>
+			</div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="list-group">

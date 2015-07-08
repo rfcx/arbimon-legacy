@@ -1,4 +1,11 @@
+/* jshint mocha:true */
+/* global module:true */
+/* global inject:true */
+/* global sinon:true */
+
 describe('Module: a2-classi-service', function() {
+    "use strict";
+    
     beforeEach(function() { 
         module('a2-classi-service');
         module('a2-project-service');
@@ -9,11 +16,13 @@ describe('Module: a2-classi-service', function() {
         var $httpBackend;
         var notifyError;
         var a2Classi;
+        var callback;
         
         beforeEach(inject(function($injector, notify, _a2Classi_) {
             $httpBackend = $injector.get('$httpBackend');
             a2Classi = _a2Classi_;
             notifyError = sinon.spy(notify, 'serverError');
+            callback = sinon.spy();
         }));
         
         afterEach(function() {
@@ -39,7 +48,7 @@ describe('Module: a2-classi-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
+                
                 
                 a2Classi.list(callback);
                 
@@ -50,8 +59,6 @@ describe('Module: a2-classi-service', function() {
             
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
-                
-                callback = sinon.spy();
                 
                 a2Classi.list(callback);
                 
@@ -73,8 +80,6 @@ describe('Module: a2-classi-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Classi.getDetails(1, callback);
                 
                 $httpBackend.flush();
@@ -84,8 +89,6 @@ describe('Module: a2-classi-service', function() {
             
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
-                
-                callback = sinon.spy();
                 
                 a2Classi.getDetails(1, callback);
                 
@@ -107,8 +110,6 @@ describe('Module: a2-classi-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Classi.getResultDetails(1, 2, 3, callback);
                 
                 $httpBackend.flush();
@@ -118,8 +119,6 @@ describe('Module: a2-classi-service', function() {
             
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
-                
-                callback = sinon.spy();
                 
                 a2Classi.getResultDetails(1, 2, 3, callback);
                 
@@ -132,21 +131,22 @@ describe('Module: a2-classi-service', function() {
         
         describe('a2Classi.getRecVector', function() {
             var request;
-            var vectorUri;
-            
+            var classificationId;
+            var recId;
+                
             beforeEach(function() {
-                vectorUri = "some-uri";
+                classificationId = 1;
+                recId = 2;
                 
                 request = $httpBackend
-                    .expectPOST('/api/project/test/classification/vector', { v: vectorUri });
+                    .expectGET('/api/project/test/classification/'+classificationId+'/vector/'+recId);
             });
             
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
-                a2Classi.getRecVector(vectorUri, callback);
+                a2Classi.getRecVector(classificationId, recId)
+                    .success(callback);
                 
                 $httpBackend.flush();
                 
@@ -156,14 +156,16 @@ describe('Module: a2-classi-service', function() {
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
                 
-                callback = sinon.spy();
+                errorCallback = sinon.spy();
                 
-                a2Classi.getRecVector(vectorUri, callback);
+                a2Classi.getRecVector(classificationId, recId)
+                    .success(callback)
+                    .error(errorCallback);
                 
                 $httpBackend.flush();
                 
                 expect(callback.called).to.equal(false);
-                expect(notifyError.calledOnce);
+                expect(errorCallback.calledOnce);
             });
         });
         
@@ -184,8 +186,6 @@ describe('Module: a2-classi-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Classi.create(classiData, callback);
                 
                 $httpBackend.flush();
@@ -195,8 +195,6 @@ describe('Module: a2-classi-service', function() {
             
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
-                
-                callback = sinon.spy();
                 
                 a2Classi.create(classiData, callback);
                 
@@ -218,8 +216,6 @@ describe('Module: a2-classi-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Classi.delete(1, callback);
                 
                 $httpBackend.flush();
@@ -230,14 +226,12 @@ describe('Module: a2-classi-service', function() {
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Classi.delete(1, callback);
                 
                 $httpBackend.flush();
                 
                 expect(callback.called).to.equal(false);
-                expect(notifyError.calledOnce);
+                expect(notifyError.calledOnce).to.equal(true);
             });
         });
     });

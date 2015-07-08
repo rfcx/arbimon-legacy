@@ -7,8 +7,8 @@ var model = require('../../../model');
 
 
 router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
-    var site_id = req.param('siteid');
-    var filename = req.param('filename');
+    var site_id = req.params.siteid;
+    var filename = req.params.filename;
     
     model.recordings.exists(
         {
@@ -57,6 +57,66 @@ router.get('/search', function(req, res, next) {
 });
 
 
+router.get('/count', function(req, res, next) {
+    model.projects.totalRecordings(req.project.project_id, function(err, rows) {
+        if(err) return next(err);
+            
+        res.json({ count: rows[0].count });
+    });
+});
+
+
+router.get('/:recUrl?', function(req, res, next) {
+    var recordingUrl = req.params.recUrl;
+    
+    model.recordings.findByUrlMatch(
+        recordingUrl, 
+        req.project.project_id, 
+        {
+            order: true,
+            compute: req.query && req.query.show
+        }, 
+        function(err, rows) {
+            if (err) return next(err);
+
+            res.json(rows);
+            return null;
+        }
+    );
+});
+
+
+router.get('/count/:recUrl?', function(req, res, next) {
+    var recordingUrl = req.params.recUrl;
+    
+    model.recordings.findByUrlMatch(recordingUrl, req.project.project_id, { count_only:true }, function(err, count) {
+        if(err) return next(err);
+            
+        res.json(count);
+        return null;
+    });
+});
+
+router.get('/available/:recUrl?', function(req, res, next) {
+    var recordingUrl = req.params.recUrl;
+    model.recordings.findByUrlMatch(
+        recordingUrl, 
+        req.project.project_id, 
+        { 
+            count_only:true, 
+            group_by:'next', 
+            collapse_single_leaves:true
+        }, 
+        function(err, count) {
+            if(err) return next(err);
+                
+            res.json(count);
+            return null;
+        }
+    );
+});
+
+
 router.param('oneRecUrl', function(req, res, next, recording_url){
     model.recordings.findByUrlMatch(recording_url, req.project.project_id, {limit:1}, function(err, recordings) {
         if(err){
@@ -70,41 +130,10 @@ router.param('oneRecUrl', function(req, res, next, recording_url){
     });
 });
 
-
-
-router.get('/count', function(req, res, next) {
-    var recording_url = req.param('recUrl');
-    
-    model.projects.totalRecordings(req.project.project_id, function(err, rows) {
-        if(err) return next(err);
-            
-        res.json({ count: rows[0].count });
-    });
-});
-
-router.get('/count/:recUrl?', function(req, res, next) {
-    var recording_url = req.param('recUrl');
-    model.recordings.findByUrlMatch(recording_url, req.project.project_id, {count_only:true}, function(err, count) {
-        if(err) return next(err);
-            
-        res.json(count);
-        return null;
-    });
-});
-
-router.get('/available/:recUrl?', function(req, res, next) {
-    var recording_url = req.param('recUrl');
-    model.recordings.findByUrlMatch(recording_url, req.project.project_id, {count_only:true, group_by:'next', collapse_single_leaves:true}, function(err, count) {
-        if(err) return next(err);
-            
-        res.json(count);
-        return null;
-    });
-});
-
 router.get('/tiles/:oneRecUrl/:i/:j', function(req, res, next) {
-    var i = req.param('i') | 0;
-    var j = req.param('j') | 0;
+    var i = req.params.i | 0;
+    var j = req.params.j | 0;
+    
     model.recordings.fetchOneSpectrogramTile(req.recording, i, j, function(err, file){
         if(err || !file){ next(err); return; }
         res.sendFile(file.path);
@@ -113,8 +142,9 @@ router.get('/tiles/:oneRecUrl/:i/:j', function(req, res, next) {
 
 
 router.get('/:get/:oneRecUrl?', function(req, res, next) {
-    var get       = req.param('get');
+    var get       = req.params.get;
     var recording = req.recording;
+    
     var and_return = {
         recording : function(err, recordings){
             if(err){ next(err); return; }
@@ -125,6 +155,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
             res.sendFile(file.path);
         },
     };
+    
     switch(get){
         case 'info'  :
             var url_comps = /(.*)\/([^/]+)\/([^/]+)/.exec(req.originalUrl);
@@ -168,15 +199,6 @@ router.post('/validate/:oneRecUrl?', function(req, res, next) {
     });
 });
 
-router.get('/:recUrl?', function(req, res, next) {
-    var recording_url = req.param('recUrl');
-    model.recordings.findByUrlMatch(recording_url, req.project.project_id, {order:true, compute:req.query && req.query.show}, function(err, rows) {
-        if(err) return next(err);
-        
-        res.json(rows);
-        return null;
-    });
-});
 
 
 router.post('/delete', function(req, res, next) {

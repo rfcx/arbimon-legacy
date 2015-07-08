@@ -34,6 +34,7 @@ module.exports = function(grunt) {
                         collapseWhitespace: true,
                         conservativeCollapse: true,
                         removeAttributeQuotes: true,
+                        keepClosingSlash: true
                     }
                 },
                 src: ['assets/partials/**/*.html'],
@@ -338,7 +339,8 @@ module.exports = function(grunt) {
         
         clean: {
             assets: ['public/assets/*'],
-            packages: ['bower_components', 'node_modules']
+            bower: ['bower_components'],
+            npm: ['node_modules'],
         },
         
         karma: {

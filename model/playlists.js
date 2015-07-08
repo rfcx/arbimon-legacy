@@ -293,7 +293,7 @@ var Playlists = {
     },
     
     addRecs: function(playlist_id, rec_ids, callback) {
-        var schema =  Joi.array().includes(Joi.number());
+        var schema =  Joi.array().items(Joi.number());
         
         Joi.validate(rec_ids, schema, function(err, recs) {
             if(err)  return callback(err);
@@ -326,7 +326,7 @@ var Playlists = {
     },
     
     remove: function(playlist_ids, callback) {
-        var schema = Joi.array().includes(Joi.number());
+        var schema = Joi.array().items(Joi.number());
         
         Joi.validate(playlist_ids, schema, function(err, ids) {
             var q = "DELETE FROM playlists \n"+

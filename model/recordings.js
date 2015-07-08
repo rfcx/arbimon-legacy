@@ -120,6 +120,16 @@ var Recordings = {
         }
         return undefined;
     },
+    
+    findById: function(recId, callback) {
+        var q = "SELECT * \n"+
+                "FROM recordings \n"+
+                "WHERE recording_id = ?";
+        
+        q = mysql.format(q, [recId]);
+        queryHandler(q, callback);
+    },
+    
     /** Finds recordings matching the given url and project id.
      * @param {String} recording_url url query selecting the set of recordings
      * @param {Integer} project_id id of the project associated to the recordings
@@ -653,11 +663,11 @@ var Recordings = {
                 from: joi.date(),
                 to: joi.date()
             }).and('from', 'to'),
-            sites:  [joi.string(), joi.array().includes(joi.string())],
-            years:  [joi.number(), joi.array().includes(joi.number())],
-            months: [joi.number(), joi.array().includes(joi.number())],
-            days:   [joi.number(), joi.array().includes(joi.number())],
-            hours:  [joi.number(), joi.array().includes(joi.number())],
+            sites:  [joi.string(), joi.array().items(joi.string())],
+            years:  [joi.number(), joi.array().items(joi.number())],
+            months: [joi.number(), joi.array().items(joi.number())],
+            days:   [joi.number(), joi.array().items(joi.number())],
+            hours:  [joi.number(), joi.array().items(joi.number())],
             limit:  joi.number(),
             offset: joi.number(),
             sortBy: joi.string(),

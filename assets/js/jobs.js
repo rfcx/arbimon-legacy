@@ -22,21 +22,7 @@
                     return jobs;
                 },
                 getJobTypes: function() {
-                    var d = $q.defer();
-                    if (job_types) {
-                        d.resolve(job_types);
-                    }
-                    else {
-                        $http.get('/api/job/types')
-                            .success(function(_job_types) {
-                                job_types = _job_types;
-                                d.resolve(job_types);
-                            })
-                            .error(function() {
-                                d.reject("Could not retrieve job types.");
-                            });
-                    }
-                    return d.promise;
+                    return $http.get('/api/job/types');
                 },
                 updateJobs: function() {
                     $http.get('/api/project/' + url + '/progress').success(function(data) {
@@ -177,10 +163,14 @@
         };
 
 
-        JobsData.getJobTypes().then(function(job_types) {
+        JobsData.getJobTypes().success(function(data) {
             // TODO use CSS classes instead of hard coded colors
-            var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528']; 
-
+            var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528'];
+            
+            var job_types = data.filter(function(type) {
+                return type.enabled;
+            });
+            
             $scope.job_types = {};
             $scope.job_types.types = job_types;
             $scope.job_types.show = {};
@@ -232,7 +222,7 @@
                 modalInstance.result.then(function(ok) {
                     fn(vl);
                 });
-        }
+        };
         
         $scope.hide = function(job) {
 

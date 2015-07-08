@@ -28,17 +28,15 @@ angular.module('a2-classi-service', [
                 .success(callback)
                 .error(notify.serverError);
         },
-        getRecVector: function(vectorUri, callback) {
-            $http.post('/api/project/'+Project.getUrl()+'/classification/vector', { v: vectorUri })
-                .success(callback)
-                .error(notify.serverError);
+        getRecVector: function(classificationId, recId) {
+            return $http.get('/api/project/'+Project.getUrl()+'/classification/'+classificationId+'/vector/'+recId);
         },
         create: function(classificationData, callback) {
             $http.post('/api/project/'+Project.getUrl()+'/classification/new', classificationData)
                 .success(callback)
                 .error(notify.serverError);
         },
-        delete: function(classificationId) {
+        delete: function(classificationId, callback) {
             $http.get('/api/project/' + Project.getUrl() + '/classification/' + classificationId + '/delete')
                 .success(callback)
                 .error(notify.serverError);

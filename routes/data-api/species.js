@@ -2,8 +2,9 @@ var express = require('express');
 var router = express.Router();
 var model = require('../../model');
 
+
 router.get('/list/:limit', function(req, res, next) {
-    var limit = Number(req.param('limit'));
+    var limit = Number(req.params.limit);
 
     model.species.list(limit, function(err, rows) {
         if(err){
