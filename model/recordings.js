@@ -636,24 +636,15 @@ var Recordings = {
         Recordings.fetchSpectrogramTiles(recording, callback);
     },    
     
-    recordingInfoGivenUri : function(uri, project_uri, callback){
+    recordingInfoGivenUri : function(uri, callback){
         var q = "SELECT r.`recording_id` AS id, \n " +
                 "       date_format(r.`datetime`,'%m-%d-%Y %H:%i') as date, \n"+
                 "       s.`name` site, \n"+
-                "       r.`uri` " +
-                "FROM `recordings` r,`sites` s  "+
-                "WHERE r.`uri` = " + mysql.escape(uri) +
-                "AND s.`site_id` = r.`site_id` "+
-                "AND r.`site_id` IN ( \n"+
-                "       SELECT s.`site_id` \n"+
-                "       FROM `sites` s \n"+
-                "       WHERE s.`project_id` = ( \n"+
-                "           SELECT p.`project_id` \n"+
-                "           FROM `projects` p \n"+
-                "           WHERE p.`url` = "+mysql.escape(project_uri)+ " \n"+
-                "       )\n"+
-                ")";
-        queryHandler(q, callback);        
+                "       r.`uri` \n" +
+                "FROM `recordings` r\n"+
+                "JOIN `sites` s ON s.`site_id` = r.`site_id`\n"+
+                "WHERE r.`uri` = " + mysql.escape(uri);
+        queryHandler(q, callback);
     },
     
     findProjectRecordings: function(params, callback) {
