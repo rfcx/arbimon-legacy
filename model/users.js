@@ -1,6 +1,10 @@
+/* jshint node:true */
+"use strict";
+
+
 var util = require('util');
 var mysql = require('mysql');
-var Joi = require('joi');
+var joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;
 
 var dbpool = require('../utils/dbpool');
@@ -165,12 +169,25 @@ var Users = {
         queryHandler(q, callback);
     },
     
-    ownedProjectsQty: function(user_id, callback) {
-        var q = "SELECT COUNT(p.project_id) as count \n"+
-                "FROM projects as p \n"+
-                "WHERE p.owner_id = %s";
+    findOwnedProjects: function(user_id, query, callback) {
+        if(typeof query == 'function') {
+            callback = query;
+            query = null;
+        }
         
-        q = util.format(q, mysql.escape(user_id));
+        var q = "SELECT p.* \n"+
+                "FROM projects as p \n"+
+                "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
+                "WHERE upr.user_id = ? \n";
+        var values = [user_id];
+        
+        if(query) {
+            if(query.free) {
+                q += "AND p.tier = 'free'";
+            }
+        }
+        
+        q = mysql.format(q, values);
         queryHandler(q, callback);
     },
     
@@ -265,7 +282,6 @@ var Users = {
                 'email, \n' +
                 'last_login, \n' +
                 'is_super, \n' +
-                'project_limit, \n' +
                 'created_on, \n' +
                 'disabled_until \n' +
                 'FROM users';
@@ -280,6 +296,18 @@ var Users = {
         
         queryHandler(q, callback);
     },
+    
+    getAddress: function(userId, callback) {
+        var q = "SELECT * FROM addresses WHERE user_id = ?";
+        
+        queryHandler(mysql.format(q, [userId]), callback);
+    },
+    
+    updateAddress: function(userAddressData, callback) {
+        var q = "REPLACE INTO addresses SET ?";
+        
+        queryHandler(mysql.format(q, userAddressData), callback);
+    }
 };
 
 module.exports = Users;

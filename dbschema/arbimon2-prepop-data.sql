@@ -22,7 +22,6 @@
 /*!40000 ALTER TABLE `job_types` DISABLE KEYS */;
 INSERT INTO `job_types` VALUES (1,'Model training','training','Fitting of a model using training data. Model results are then validated using a validation data set.',1,'PatternMatching/train.py');
 INSERT INTO `job_types` VALUES (2,'Model classification','classification','Classification of project data using a specified model and parameters.',1,'PatternMatching/classify.py');
-INSERT INTO `job_types` VALUES (3,'Upload processing','audioprocess','Uploaded recordings to server are converted to flac and save',0,'');
 INSERT INTO `job_types` VALUES (4,'Soundscape analysis','peak-soundscape','The creation of a peak soundscape using a playlist, an aggregation function and a thershold or peak limiting value.',1,'Soundscapes/playlist2soundscape.py');
 /*!40000 ALTER TABLE `job_types` ENABLE KEYS */;
 
@@ -31,9 +30,9 @@ INSERT INTO `job_types` VALUES (4,'Soundscape analysis','peak-soundscape','The c
 --
 
 /*!40000 ALTER TABLE `model_types` DISABLE KEYS */;
-INSERT INTO `model_types` VALUES (1,'Pattern Matching (slow)','Pattern Matching using ROIs. Matrix comparisons computed using SSIM (Structural similarity index).',1,1,0);
-INSERT INTO `model_types` VALUES (2,'Pattern Matching (fast)','Pattern Matching using ROIs. Matrix comparisons computed using matrix norms.',1,0,0);
-INSERT INTO `model_types` VALUES (3,'Search and Match','Pattern Matching using ROIs. Search interesting areas and compute matrix comparisons using SSIM (Structural similarity index).',1,0,1);
+INSERT INTO `model_types` VALUES (1,'Pattern Matching (slow)','Pattern Matching using ROIs. Matrix comparisons computed using SSIM (Structural similarity index).',1,1,0,1);
+INSERT INTO `model_types` VALUES (2,'Pattern Matching (fast)','Pattern Matching using ROIs. Matrix comparisons computed using matrix norms.',1,0,0,1);
+INSERT INTO `model_types` VALUES (3,'Search and Match','Pattern Matching using ROIs. Search interesting areas and compute matrix comparisons using SSIM (Structural similarity index).',1,0,1,1);
 /*!40000 ALTER TABLE `model_types` ENABLE KEYS */;
 
 --
@@ -90,7 +89,8 @@ INSERT INTO `project_news_types` VALUES (11,'soundscape created','user created s
 --
 
 /*!40000 ALTER TABLE `project_types` DISABLE KEYS */;
-INSERT INTO `project_types` VALUES (1,'testType','testing type');
+INSERT INTO `project_types` VALUES (1,'free','free project ');
+INSERT INTO `project_types` VALUES (2,'paid','paid project');
 /*!40000 ALTER TABLE `project_types` ENABLE KEYS */;
 
 --
@@ -102,7 +102,7 @@ INSERT INTO `roles` VALUES (1,'Admin','Project Administrator - can do anything b
 INSERT INTO `roles` VALUES (2,'User','Normal user - can do anything except manage settings, billing or delete the project','',4);
 INSERT INTO `roles` VALUES (3,'Guest ','Guest user - can only view the project','',6);
 INSERT INTO `roles` VALUES (4,'Owner','Project Owner - can do anything on the project','',1);
-INSERT INTO `roles` VALUES (5,'Data Entry','Data Entry user - can manage project data but can not view or edit settings nor make models and classification','',5);
+INSERT INTO `roles` VALUES (5,'Data Entry','Data Entry user - can manage project data but can only view the analysis section','',5);
 INSERT INTO `roles` VALUES (6,'Expert','Expert User - can do anything a user can do plus can invalidate species from recordings','',3);
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
 
@@ -217,4 +217,4 @@ INSERT INTO `user_account_support_type` VALUES (2,'password_recovery','Allows a 
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-05-29 16:45:42
+-- Dump completed on 2015-07-16 14:58:34

@@ -3,6 +3,7 @@ angular.module('a2.home', [
     'ui.bootstrap', 
     'a2.utils', 
     'a2.forms',
+    'a2.orders',
     'humane',
     'angularytics', 
 ])
@@ -12,7 +13,7 @@ angular.module('a2.home', [
 .run(function(Angularytics) {
     Angularytics.init();
 })
-.controller('HomeCtrl', function($scope, $http, $modal, notify) {
+.controller('HomeCtrl', function($scope, $http, $modal, notify, a2order) {
     
     $scope.currentPage = 1;
     
@@ -30,10 +31,10 @@ angular.module('a2.home', [
     
     $scope.loadNewsPage = function() {
         $http.get('api/user/feed/'+ nextNewsPage)
-        .success(function(data) {
-            $scope.newsFeed = $scope.newsFeed.concat(data);
-            nextNewsPage++;
-        });
+            .success(function(data) {
+                $scope.newsFeed = $scope.newsFeed.concat(data);
+                nextNewsPage++;
+            });
     };
     
     $scope.loadNewsPage();
@@ -43,10 +44,7 @@ angular.module('a2.home', [
     };
         
     $scope.createProject = function() {
-        var modalInstance = $modal.open({
-            templateUrl: '/partials/home/create-project.html',
-            controller: 'CreateProjectCtrl'
-        });
+        var modalInstance = a2order.createProject({});
         
         modalInstance.result.then(function(message) {
             notify.log(message);
@@ -54,35 +52,5 @@ angular.module('a2.home', [
         });
     };
 })
-.controller('CreateProjectCtrl', function($scope, $http, $modalInstance, notify) {
-        $scope.create = function() {
-            if(!$scope.isValid) return;
-            
-            console.log('create');
-            
-            $http.post('/api/project/create', { project: $scope.project })
-            .success(function(data) {
-                if(!data.error)
-                    $modalInstance.close(data.message);
-                    
-                if(data.projectLimit) {
-                    $modalInstance.dismiss();
-                    notify.error('You have reached project limit, '+
-                                'could not create new project. '+
-                                'Contact us if you want to change the project limit');
-                }
-                
-                if(data.nameExists) {
-                    notify.error('Name <b>'+$scope.project.name+'</b> not available');
-                }
-                if(data.urlExists) {
-                    notify.error('URL <b>'+$scope.project.url+'</b> taken choose another one');
-                }
-                
-            })
-            .error(function(err) {
-                notify.serverError();
-            });
-        };
-    })
+
 ;

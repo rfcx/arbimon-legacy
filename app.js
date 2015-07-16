@@ -10,6 +10,7 @@ var SessionStore = require('express-mysql-session');
 var busboy = require('connect-busboy');
 var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
+var paypal = require('paypal-rest-sdk');
 
 
 var config = require('./config');
@@ -23,7 +24,7 @@ var tmpfilecache = require('./utils/tmpfilecache');
 var model = require('./model');
 
 tmpfilecache.cleanup();
-
+paypal.configure(config('paypal'));
 var app = express();
 
 
@@ -44,12 +45,22 @@ app.use(favicon(__dirname + '/public/images/favicon.ico'));
 
 logger.token('tag', function(req, res){ return 'arbimon2:request'; });
 
-if (app.get('env') === 'production') {
+if(app.get('env') === 'production') {
     app.use(logger(':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"'));
 }
 else {
     app.use(logger('dev'));
 }
+
+app.use(function(req, res, next) {
+    if(req.app.get('env') === 'production') {
+        req.appHost = req.protocol +"://" + req.hostname;
+    }
+    else {
+        req.appHost = req.protocol +"://" + req.hostname + ':' + req.app.get('app-port');
+    }
+    next();
+});
 
 app.use(jwt({ 
     secret: config('tokens').secret,

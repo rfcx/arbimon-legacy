@@ -214,7 +214,6 @@ router.post('/login', function(req, res, next) {
                 lastname: user.lastname,
                 isSuper: user.is_super,
                 imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure),
-                projectLimit: user.project_limit
             };
             
             response.success = true;

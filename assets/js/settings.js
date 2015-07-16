@@ -25,10 +25,6 @@ angular.module('a2.settings',[
         templateUrl: '/partials/settings/details.html',
         allowAccess: accessCheck
     })
-    // .state('settings.plan', {
-    //     url: '/plan',
-    //     templateUrl: '/partials/settings/plan.html'
-    // })
     .state('settings.users', {
         url: '/users',
         controller:'SettingsUsersCtrl',
@@ -166,8 +162,7 @@ angular.module('a2.settings',[
                 user_id: $scope.users[$index].id
             },
             function(err, result){
-                if(err)
-                {
+                if(err) {
                     notify.serverError();
                 }
                 

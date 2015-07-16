@@ -1,6 +1,8 @@
+/* jshint node:true */
+"use strict";
+
 var express = require('express');
 var router = express.Router();
-
 
 var project = require('./project');
 var dataApi = require('./data-api');
@@ -40,6 +42,10 @@ router.get('/', function(req, res) {
     res.redirect('/home');
 });
 
+router.get('/process-order/:orderId', function(req, res, next) {
+    // render view to show progress
+    res.render('processing-order');
+});
 
 router.get('/home', function(req, res) {
     res.render('home', { title: "Home", user: req.session.user });

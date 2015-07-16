@@ -13,8 +13,7 @@ var arrays_util  = require('../utils/arrays');
 var queryHandler = dbpool.queryHandler;
 
 
-// TODO 
-// define jobs as module that are require, and user db identifier field to 
+// TODO define jobs as module that are require, and user db identifier field to 
 // find the job parmas table as job_params_identifier, this way jobs can be 
 // more plugable
 var Jobs = {

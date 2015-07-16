@@ -1,0 +1,23 @@
+<form name="projectForm" 
+    role="form" 
+    ng-submit="create() | trackEvent:'Home-Create-Project':'ok'">
+
+    <div class="modal-header">
+        <h2>Create project</h2>
+    </div>
+
+    <div class="modal-body">
+        <project-form ng-model="project" valid="isValid"></project-form>
+        <select-plan project="project" recorder-qty="recorderQty"></select-plan>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="submit" >
+            <span ng-if="!recorderQty || project.tier == 'free'">Review order</span>
+            <span ng-if="recorderQty && project.tier != 'free'">Enter shipping info</span>
+        </button>
+        <button class="btn btn-default" type="button" 
+            ng-click="$dismiss() | trackEvent:'Home-Create-Project':'close'">
+            Close
+        </button>
+    </div>
+</form>

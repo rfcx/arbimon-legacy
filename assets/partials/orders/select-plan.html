@@ -1,0 +1,60 @@
+<div>
+    <h4 style="padding-top: 10px;">
+        Project tier:
+        <div class="btn-group">
+            <button type="button" 
+                class="btn btn-success btn-sm" 
+                ng-model="project.tier" 
+                ng-click="project.plan = freePlan"
+                btn-radio="'free'">
+                Free
+            </button>
+            <button type="button" 
+                class="btn btn-success btn-sm"
+                ng-model="project.tier" 
+                ng-click="project.plan = paidPlan"
+                btn-radio="'paid'">
+                Paid
+            </button>
+        </div>
+    </h4>
+</div>
+<div class="panel panel-default" ng-show="project.tier && project.plan">
+    <div class="panel-body">
+        <div ng-show="project.tier == 'paid'">
+            <b>Plan Capacity:</b>
+            <div class="capacity-slider">
+                <svg height="25" width="200">
+                    <polygon points="0,25 200, 0 200,200" style="stroke:transparent; fill:#ccc; stroke-width:1" />
+                    Sorry, your browser does not support inline SVG.
+                </svg>
+                <input type="range" 
+                    ng-model="planMinutes" 
+                    step="5000" 
+                    min="10000" 
+                    max="150000" 
+                    style="width:200px; display:inline-block">
+            </div>
+        </div>
+        <div>
+            <p><b>Storage capacity:</b> {{ project.plan.storage | number }} minutes of audio</p>
+            <p><b>Processing capacity:</b> {{ project.plan.processing | number }} minutes of audio</p>
+            <p>
+                <b>Cost:</b> 
+                <span ng-if="project.tier == 'paid'">${{ project.plan.cost | number }}/year</span>
+                <span ng-if="project.tier == 'free'"> FREE!</span>
+            </p>
+        </div>
+    </div>
+    <div class="panel-body" ng-show="project.tier == 'paid'">
+        Arbimon Recorder
+        <i class="fa fa-info-circle" 
+            tooltip="you can buy one recorder for every 10,000 minutes on your plan"
+            tooltip-append-to-body="true">
+        </i>
+        (+$125)
+        <select ng-model="recorderQty">
+            <option ng-repeat="i in recorderOptions track by $index">{{$index}}</option>
+        </select>
+    </div>
+</div>

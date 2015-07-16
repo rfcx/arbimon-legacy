@@ -1,3 +1,6 @@
+/* jshint node:true */
+"use strict";
+
 var debug = require('debug')('arbimon2:model:projects');
 var util = require('util');
 var mysql = require('mysql');
@@ -26,19 +29,34 @@ var Projects = {
     },
     
     findById: function (project_id, callback) {
-        var query = "SELECT * FROM projects WHERE project_id = " + mysql.escape(project_id);
+        var query = "SELECT p.*, \n"+
+                    "   pp.storage AS storage_limit, \n"+
+                    "   pp.processing AS processing_limit \n"+
+                    "FROM projects AS p \n"+
+                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+                    "WHERE p.project_id = " + mysql.escape(project_id);
 
         return queryHandler(query , callback);
     },
     
     findByUrl: function (project_url, callback) {
-        var query = "SELECT * FROM projects WHERE url = " + mysql.escape(project_url);
+        var query = "SELECT p.*, \n"+
+                    "   pp.storage AS storage_limit, \n"+
+                    "   pp.processing AS processing_limit \n"+
+                    "FROM projects AS p \n"+
+                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+                    "WHERE p.url = " + mysql.escape(project_url);
 
         return queryHandler(query , callback);
     },
 
     findByName: function (project_name, callback) {
-        var query = "SELECT * FROM projects WHERE name = " + mysql.escape(project_name);
+        var query = "SELECT p.*, \n"+
+                    "   pp.storage AS storage_limit, \n"+
+                    "   pp.processing AS processing_limit \n"+
+                    "FROM projects AS p \n"+
+                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+                    "WHERE p.name = " + mysql.escape(project_name);
 
         return queryHandler(query , callback);
     },
@@ -68,7 +86,8 @@ var Projects = {
     },
     
     /**
-     * creates a project and add the creator to the project as owner
+     * creates a project and its plan, and adds the creator to the project as 
+     * owner on user_project_role
      * @param {Object} project 
      * @param {String} project.name
      * @param {String} project.url
@@ -78,17 +97,20 @@ var Projects = {
      * @param {Boolean} project.is_private 
      * @param {Function} callback(err, projectId)
     */
-    create: function(project, callback) {
-        var values = [];
-
-        var schema = {
+    create: function(project, owner_id, callback) {
+        var schema = joi.object().keys({
             name: joi.string(),
             url: joi.string(),
             description: joi.string(),
-            owner_id: joi.number(),
+            tier: joi.string(),
             project_type_id: joi.number(),
-            is_private: joi.boolean()
-        };
+            is_private: joi.boolean(),
+            plan: joi.object().keys({
+                storage: joi.number(),
+                processing: joi.number(),
+                due_date: joi.date().optional(),
+            })
+        });
         
         var result = joi.validate(project, schema, {
             stripUnknown: true,
@@ -100,25 +122,66 @@ var Projects = {
         }
         
         project = result.value;
+        var plan = project.plan;
+        delete project.plan;
+        
+        project.storage_usage = 0;
+        project.processing_usage = 0;
 
         var q = 'INSERT INTO projects \n'+
                 'SET ?';
-
-        q = mysql.format(q, project);
-
-        queryHandler(q, function(err, result) {
-            if(err) return callback(err);
-
-            var projectId = result.insertId;
-
-            Projects.addUser({
-                user_id: project.owner_id,
-                project_id: projectId,
-                role_id: 4 // owner role id
-            }, function(err) {
+        
+        var q2 = 'INSERT INTO user_project_role \n'+
+                 'SET ?';
+        
+        var createPlan = 'INSERT INTO project_plans \n'+
+                         'SET ?';
+                         
+        var updatePlan = 'UPDATE projects SET current_plan = ? WHERE project_id = ?';
+        
+        dbpool.getConnection(function(err, db) {
+            db.beginTransaction(function(err){
                 if(err) return callback(err);
                 
-                callback(null, projectId);
+                var projectId;
+                
+                async.waterfall([
+                    function insertProject(cb) {
+                        db.query(q, project, cb);
+                    },
+                    function insertOwner(result, fields, cb) {
+                        projectId = result.insertId;
+                        
+                        var values = {
+                            user_id: owner_id,
+                            project_id: projectId,
+                            role_id: 4 // owner role id
+                        };
+                        
+                        db.query(q2, values, cb);
+                    },
+                    function insertPlan(result, fields, cb) {
+                        plan.project_id = projectId;
+                        
+                        db.query(createPlan, plan, cb);
+                    },
+                    function updateCurrentPlan(result, fields, cb) {
+                        db.query(updatePlan, [result.insertId, projectId], cb);
+                    },
+                    function commit(result, fields, cb) {
+                        db.commit(cb);
+                    }
+                ], 
+                function(err) {
+                    if(err) {
+                        db.rollback(function() {
+                            callback(err);
+                        });
+                        return;
+                    }
+                    
+                    callback(null, projectId);
+                });
             });
         });
     },
@@ -130,32 +193,25 @@ var Projects = {
             name: joi.string(),
             url: joi.string(),
             description: joi.string(),
-            owner_id: joi.number(),
             project_type_id: joi.number(),
             is_private: [joi.number().valid(0,1), joi.boolean()],
             is_enabled: [joi.number().valid(0,1), joi.boolean()],
-            recording_limit: joi.number()
+            current_plan: joi.number(),
+            storage_usage: joi.number(),
+            processing_usage: joi.number(),
         };
         
         joi.validate(project, schema, function(err, projectInfo){
             if(err) return callback(err);
             
-            var values = [];
-            
-            for( var i in projectInfo) {
-                if(i !== 'project_id' && i !== 'recording_limit') {
-                    values.push(util.format('%s = %s', 
-                        mysql.escapeId(i), 
-                        mysql.escape(projectInfo[i])
-                    ));
-                }
-            }
+            var projectId = projectInfo.project_id;
+            delete projectInfo.project_id;
             
             var q = 'UPDATE projects \n'+
-                    'SET %s \n'+
-                    'WHERE project_id = %s';
+                    'SET ? \n'+
+                    'WHERE project_id = ';
 
-            q = util.format(q, values.join(", "), projectInfo.project_id);
+            q = mysql.format(q, [projectInfo, projectId]);
             queryHandler(q, callback);
         });
     },
@@ -199,8 +255,7 @@ var Projects = {
                     return callback(null, result);
                 } else {
                     if(err) {
-                        // throw err; // note[gio]: this could possibly kill the thread, do we want this?
-                        return console.error(err);
+                        return console.error(err.stack);
                     }
                 }
             });

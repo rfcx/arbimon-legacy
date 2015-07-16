@@ -192,7 +192,7 @@ angular.module('a2.srv.project', [])
             validationBySpeciesSong: function(speciesId, songtypeId, callback) {
                 $http.get( '/api/project/' + url + '/validations/' + speciesId + "/" + songtypeId)
                     .success(callback);
-            }
+            }, 
         };
     })
 ;

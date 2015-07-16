@@ -1,0 +1,22 @@
+<form name="projectForm" 
+    role="form">
+
+    <div class="modal-header">
+        <h2>Change plan</h2>
+    </div>
+
+    <div class="modal-body">
+        
+        <select-plan project="project" recorder-qty="recorderQty"></select-plan>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="submit">
+            <span ng-if="!recorderQty || project.tier == 'free'">Review order</span>
+            <span ng-if="recorderQty && project.tier != 'free'">Enter shipping info</span>
+        </button>
+        <button class="btn btn-default" type="button" 
+            ng-click="$dismiss()">
+            Close
+        </button>
+    </div>
+</form>

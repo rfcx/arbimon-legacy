@@ -1,11 +1,15 @@
 /* jshint node:true */
+"use strict";
 
 var debug = require('debug')('arbimon2:route');
 var express = require('express');
 var router = express.Router();
 var async = require('async');
+var joi = require('joi');
 var util = require('util');
 var gravatar = require('gravatar');
+var paypal = require('paypal-rest-sdk');
+var uuid = require('node-uuid');
 
 var model = require('../../../model');
 
@@ -17,81 +21,6 @@ var playlist_routes = require('./playlists');
 var soundscape_routes = require('./soundscapes');
 var jobsRoutes = require('./jobs');
 
-
-router.post('/create', function(req, res, next) {
-    var project = req.body.project;
-    project.owner_id = req.session.user.id;
-    project.project_type_id = 1;
-
-    async.parallel({   // check if there any conflict
-        exceedsProjectLimit: function(callback) {
-            model.users.ownedProjectsQty(req.session.user.id, function(err, rows) {
-                if(err) return callback(err);
-
-                if(rows[0].count < req.session.user.projectLimit)
-                    callback(null, false);
-                else
-                    callback(null, true);
-            });
-        },
-        nameExists: function(callback) {
-            model.projects.findByName(project.name, function(err, rows) {
-                if(err) return callback(err);
-
-                if(!rows.length)
-                    callback(null, false);
-                else
-                    callback(null, true);
-            });
-        },
-        urlExists: function(callback) {
-            model.projects.findByUrl(project.url, function(err, rows) {
-                if(err) return callback(err);
-
-                if(!rows.length)
-                    callback(null, false);
-                else
-                    callback(null, true);
-            });
-        }
-    },
-    function(err, results) {
-        if(err) return next(err);
-
-        if(results.exceedsProjectLimit && !req.session.user.isSuper) {
-            return res.json({ 
-                error: true,
-                projectLimit: true
-            });
-        }
-        
-        if(results.nameExists || results.urlExists) {
-            // respond with error
-            results.error = true;
-            return res.json(results);
-        }
-        
-        //type cast is_private
-        project.is_private = Boolean(project.is_private);
-        
-        // no error create new project
-        model.projects.create(project, function(err, projectId) {
-            if(err) return next(err);
-
-            var project_id = projectId;
-
-            model.projects.insertNews({
-                news_type_id: 1, // project created
-                user_id: project.owner_id,
-                project_id: project_id,
-                data: JSON.stringify({})
-            });
-            res.json({ 
-                message: util.format("Project '%s' successfully created!", project.name) 
-            });
-        });
-    });
-});
 
 router.param('projectUrl', function(req, res, next, project_url){
     model.projects.findByUrl(project_url, function(err, rows) {
@@ -120,7 +49,7 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
     }
     
     if(!req.body.project) {
-        return res.json({ error: "missing parameters" });
+        return res.status(400).json({ error: "missing parameters" });
     }
     
     // make sure project requested is the one updated
@@ -200,7 +129,7 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
         return res.status(401).json({ error: "you dont have permission to 'manage project species'" });
     }
 
-    projectClass = {
+    var projectClass = {
         songtype: req.body.songtype,
         species: req.body.species,
         project_id: req.project.project_id
@@ -286,7 +215,7 @@ router.get('/:projectUrl/users', function(req, res, next) {
         if(err) return next(err);
         
         var users = rows.map(function(row){
-            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, https=req.secure);
+            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, req.secure == 'https');
             
             return row;
         });

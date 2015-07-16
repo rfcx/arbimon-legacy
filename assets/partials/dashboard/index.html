@@ -78,9 +78,9 @@
                                     </li>  
                                     <li class="list-group-item">Sites: {{ sites.length }}</li>
                                     <li class="list-group-item">Recordings: {{ recsQty }}</li>
-                                    <li class="list-group-item" ng-class="{ 'list-group-item-warning': (recMins/project.recording_limit > 0.8) }">
-                                        Storage usage: {{ (recMins/project.recording_limit*100) | number: 0 }}% 
-                                        ({{ recMins | number }} / {{ project.recording_limit | number }} minutes)
+                                    <li class="list-group-item" ng-class="{ 'list-group-item-warning': (recMins/project.storage_limit > 0.8) }">
+                                        Storage usage: {{ (recMins/project.storage_limit*100) | number: 0 }}% 
+                                        ({{ recMins | number }} / {{ project.storage_limit | number }} minutes)
                                     </li>
                                     <li class="list-group-item">
                                         Species:

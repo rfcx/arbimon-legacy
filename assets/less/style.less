@@ -31,7 +31,7 @@
 @import "a2-components/visualizer.less";
 @import "a2-components/dashboard.less";
 @import "a2-components/audiodata.less";
-@import "a2-components/calendar.less";
+@import "a2-components/yearpick.less";
 @import "a2-components/line-chart.less";
 @import "a2-components/loader.less";
 @import "a2-components/analysis.less";
@@ -126,8 +126,10 @@ header nav ul.nav > li a > img {
     padding-bottom: @banner-padding;
 }
 
+// adds transparent white background to div
 .registration {
-    background-color: #fff;
+    margin-top: 20px;
+    background-color: #dfdfdf;
     background-color: rgba(255, 255, 255, 0.62);
     border-radius: 10px;
 }
@@ -738,5 +740,45 @@ textarea.fixed-width {
         text-align: center;
         margin-top: -29px;
         line-height: 137%;
+    }
+}
+
+
+
+
+.capacity-slider {
+    position: relative;
+    height: 50px;
+    width: 210px;
+    display: inline-block;
+    vertical-align: middle;
+    input[type=range] {
+        -webkit-appearance: none;
+        position: absolute;
+        z-index: 2;
+        right: 5;
+        bottom: 18px;
+        background-color: transparent;
+        
+        &:focus {
+            outline: none;
+        }
+        
+        .slider-track(@rules) {
+            &::-moz-range-track { @rules(); }
+            &::-ms-track { @rules(); }
+            &::-webkit-slider-runnable-track { @rules(); }
+        }
+        
+        .slider-track({
+            background-color: transparent;
+            cursor: pointer;
+        })
+    }
+    svg {
+        position: absolute;
+        bottom: 25px;
+        right: 10px;
+        z-index: 0;
     }
 }

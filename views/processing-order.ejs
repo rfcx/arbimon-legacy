@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html ng-app="a2.orders">
+
+<head>
+    <% include head %>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ARBIMON II</title>
+</head>
+
+<body ng-controller="ProcessOrderCtrl">
+    <div class="login-top">
+        <div class="container">
+            <a href="/"><img src="/images/logo.svg"></a>
+        </div>
+    </div>
+    <div class="banner">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 col-md-8 col-md-offset-2">
+                    <div class="panel registration">
+                        <div class="panel-body">
+                            <h3 style="margin:0;" ng-show="processing">
+                                <loader></loader>
+                                Processing your order
+                            </h3>
+                            <h3 ng-hide="success">
+                                <span ng-show="notFound">
+                                    Order not found
+                                </span>
+                                <span ng-show="needApproval">
+                                    Paypal payment needs approval, 
+                                    <a ng-href="{{approvalLink}}">
+                                        Go to Paypal
+                                    </a>
+                                </span>
+                                <span ng-show="alreadyProcessed">
+                                    This order was processed, if you have any problem contact us
+                                </span>
+                                <span ng-show="errorOcurred">
+                                    An error occurred, please contact us before trying to repeat the order
+                                </span>
+                            </h3>
+                            <div ng-show="success">
+                                <h3>Order successfully processed</h3>
+                                <p>
+                                    <span ng-if="action == 'create-project'">
+                                        Your new project has been created and is ready to use.
+                                    </span>
+                                    <span ng-if="action == 'update-project'">
+                                        Your project plan has been updated.
+                                    </span>
+                                    For status update on items ordered check your paypal account, you can also contact us.
+                                </p>
+                                <a href="/home" class="btn btn-success">Go to Home</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% include footer %>
+</body>
+
+</html>

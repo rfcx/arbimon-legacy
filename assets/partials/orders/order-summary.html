@@ -1,0 +1,101 @@
+<div class="modal-header">
+    <h2>Order Summary</h2>
+</div>
+<div class="modal-body">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        Items
+                        <button type="button" 
+                            class="btn btn-default"
+                            ng-click="changeItems()">
+                                Change items
+                        </button>
+                    </h4>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <b>name:</b> Plan for project '{{ project.name }}'<br>
+                        <b>description:</b> includes storage for {{ plan.storage | number }} 
+                        minutes of audio and capacity to process 
+                        {{ plan.processing | number }} minutes of audio<br>
+                        <b>unit price:</b> {{ plan.cost | number : 2 }}<br>
+                        <b>quantity:</b> 1<br>
+                        <p class="text-right">
+                            <b>amount:</b> ${{ plan.cost | number : 2 }}
+                        </p>
+                    </li>
+                    <li class="list-group-item" ng-show="recorderQty">
+                        <b>name:</b> Arbimon recorder<br>
+                        <b>description:</b> includes an android device,
+                        waterproof case(IP67), microphone, etc<br>
+                        <b>unit price:</b> $125<br>
+                        <b>quantity:</b> {{ recorderQty }}<br>
+                        <p class="text-right">
+                            <b>amount:</b> ${{ recorderQty * 125 | number : 2 }}
+                        </p>
+                    </li>
+                </ul>
+                <table class="table text-right">
+                    <tr>
+                        <td><b>subtotal:</b></td><td> ${{ (plan.cost + (recorderQty * 125)) | number : 2 }}</td>
+                    </tr>
+                    <tr>
+                        <td><b>shipping & handling:</b></td><td>${{ shipping }}</td>
+                    </tr>
+                    <tr>
+                        <td><b>total:</b></td><td><b>${{ (plan.cost + (recorderQty * 125) + shipping ) | number : 2 }}</b></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="col-sm-12" ng-show="address">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Shipping address 
+                    <button type="button" 
+                        class="btn btn-default"
+                        ng-click="editAddress()">
+                            edit
+                    </button>
+                </div>
+                <div class="panel-body">
+                    <address>
+                        <strong>{{ address.name }}</strong><br>
+                        {{ address.line1 }}<br>
+                        <span ng-if="address.line2">
+                            {{ address.line2 }}<br>
+                        </span>
+                        {{ address.city }} 
+                        {{ address.state }} <br>
+                        {{ address.postal_code }} 
+                        {{ address.country_code }}<br>
+                        <abbr title="telephone">Tel:</abbr> {{ address.telephone }}
+                    </address>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" ng-if="project.tier == 'paid'">
+        <div class="col-sm-12 text-right">
+            All online payments are done through
+            <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_logo_h_100x26.png" alt="PayPal" />
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <loader class="loader" ng-if="waiting"></loader>
+    <button class="btn btn-primary"
+        ng-click="submit()"
+        ng-disabled="waiting">
+            <span ng-if="project.tier == 'paid'">Confirm & Pay</span>
+            <span ng-if="project.tier == 'free'">Confirm</span>
+    </button>
+    <button class="btn btn-default" 
+        type="button" 
+        ng-click="$dismiss()">
+            Close
+    </button>
+</div>
