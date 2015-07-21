@@ -1,6 +1,6 @@
 var util = require('util');
 var mysql = require('mysql');
-var Joi = require('joi');
+var joi = require('joi');
 var jsonwebtoken = require('jsonwebtoken');
 var config = require('../config');
 
@@ -17,20 +17,25 @@ var Sites = {
     insert: function(site, callback) {
         var values = [];
         
-        var requiredValues = [
-            "project_id",
-            "name",
-            "lat",
-            "lon",
-            "alt"
-        ];
+        var schema = {
+            project_id: joi.number(),
+            name: joi.string(),
+            lat: joi.number(),
+            lon: joi.number(),
+            alt: joi.number(),
+            site_type_id: joi.number().optional().default(2), // default mobile recorder
+        };
         
-        site.site_type_id = 2; // mobile recorder
+        var result = joi.validate(site, schema, {
+            stripUnknown: true,
+            presence: 'required',
+        });
         
-        for(var i in requiredValues) {
-            if(typeof site[requiredValues[i]] === "undefined")
-                return callback(new Error("required field '"+ requiredValues[i] + "' missing"));
+        if(result.error) {
+            return callback(result.error);
         }
+        
+        site = result.value;
         
         for(var j in site) {
             if(j !== 'id') {
@@ -43,7 +48,7 @@ var Sites = {
         
         var q = 'INSERT INTO sites \n'+
                 'SET %s';
-                
+        
         q = util.format(q, values.join(", "));
         queryHandler(q, callback);
     },

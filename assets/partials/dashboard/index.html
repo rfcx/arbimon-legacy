@@ -45,7 +45,7 @@
                                                 </li>
                                                 
                                                 <li class="project-progress-level1"
-                                                    ng-class="{ full: recsQty }"
+                                                    ng-class="{ full: recMins }"
                                                     tooltip="Upload recordings">
                                                 </li>
                                                 
@@ -77,11 +77,10 @@
                                         </div>
                                     </li>  
                                     <li class="list-group-item">Sites: {{ sites.length }}</li>
-                                    <li class="list-group-item" ng-class="{ 'list-group-item-warning': recsQty >= project.recording_limit }">
-                                        Recordings: {{ recsQty }} / {{ project.recording_limit }}
-                                        <em class="text-warning pull-right" ng-show="recsQty >= project.recording_limit">
-                                            Recordings limit has been reached
-                                        </em>
+                                    <li class="list-group-item">Recordings: {{ recsQty }}</li>
+                                    <li class="list-group-item" ng-class="{ 'list-group-item-warning': (recMins/project.recording_limit > 0.8) }">
+                                        Storage usage: {{ (recMins/project.recording_limit*100) | number: 0 }}% 
+                                        ({{ recMins | number }} / {{ project.recording_limit | number }} minutes)
                                     </li>
                                     <li class="list-group-item">
                                         Species:

@@ -1,0 +1,78 @@
+<div class="row" style="margin-top:10px;">
+    <div class="col-sm-4">
+            
+        <div class="list-group">
+            <div class="list-group-item">
+                <input class="form-control" 
+                    type="search" 
+                    placeholder="Projects" 
+                    ng-model="search">
+            </div>
+            <a class="list-group-item" 
+                ng-repeat="p in projects | filter: search | orderBy: 'name'" 
+                ng-click="getProjectInfo(p)"> 
+                {{ p.name }} 
+                <i class="fa" ng-class="p.is_private ? 'fa-lock' :'fa-globe'"></i>
+                <small ng-hide="p.is_enabled"><i>disabled</i></small>
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-8">
+        <div ng-show="currentProject">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4>
+                        {{ currentProject.name }} 
+                        <i class="fa" ng-class="currentProject.is_private ? 'fa-lock' :'fa-globe'"></i>
+                    </h4>
+                </div>
+                <table class="table" style="border-bottom: 1px solid #ddd !important;">
+                    <tr>
+                        <td width="130px"><b>Project ID</b></td>
+                        <td>{{ currentProject.project_id }}</td>
+                    </tr>
+                    <tr>
+                        <td><b>URL</b></td>
+                        <td>{{ currentProject.url }}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Description</b></td>
+                        <td>{{ currentProject.description }}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Site count</b></td>
+                        <td>{{ sites.length }}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Rec count</b></td>
+                        <td>{{ recCount }}</td>
+                    </tr>
+                </table>
+                <div class="panel-body">
+                    <form>
+                        <label>
+                            Enable:
+                        </label>
+                        <input type="checkbox" 
+                            ng-model="currentProject.is_enabled">
+                        <div class="form-group">
+                            <label>Rec limit:</label>
+                            <input type="number" 
+                                class="form-control" 
+                                style="display:inline; width:auto;"
+                                ng-model="currentProject.recording_limit">
+                        </div>
+                        <button class="btn btn-primary"
+                            ng-click="updateProject()">
+                            <i class="fa fa-floppy-o"></i> Save
+                        </button>
+                        <button class="btn btn-default"
+                            ng-click="closeProjectInfo()">
+                            <i class="fa fa-times"></i> Close
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

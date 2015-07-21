@@ -14,9 +14,9 @@ var arbimon2 = angular.module('arbimon2', [
     Angularytics.init();
 })
 .config(function($urlRouterProvider, AngularyticsProvider) {
-        AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
-        $urlRouterProvider.otherwise("/dashboard");
-    })
+    AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
+    $urlRouterProvider.otherwise("/dashboard");
+})
 .controller('MainCtrl', function($scope, $state){
     $scope.$state = $state;
 });

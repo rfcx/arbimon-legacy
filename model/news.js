@@ -44,7 +44,32 @@ var Species = {
             q = util.format(q, mysql.escape(project_ids), mysql.escape(page*10));
         	queryHandler(q, callback);
         });
-    }
+    },
+    
+    list: function(page, callback) {
+        var q = "SELECT n.data, \n"+
+                "       u.login AS username, \n"+
+                "       u.email, \n"+
+                "       n.timestamp, \n"+
+                "       p.name AS project, \n"+
+                "       n.news_type_id AS type\n"+
+                "FROM project_news AS n \n"+
+                "JOIN users AS u ON u.user_id = n.user_id \n"+
+                "JOIN projects AS p ON n.project_id = p.project_id \n"+
+                "ORDER BY n.timestamp DESC \n"+
+                "LIMIT %s, 10";
+        
+        q = util.format(q, mysql.escape(page*10));
+        queryHandler(q, callback);
+    },
+    
+    countProjectsCreatedToday: function(callback) {
+        var q = 'SELECT COUNT(*) AS count  \n'+
+                'FROM `project_news`  \n'+
+                'WHERE news_type_id = 1 \n'+
+                'AND DATE(timestamp) = DATE(NOW())';
+        queryHandler(q, callback); 
+    },
 };
 
 module.exports = Species;

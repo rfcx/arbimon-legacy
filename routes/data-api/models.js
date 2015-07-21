@@ -379,29 +379,31 @@ router.get('/project/:projectUrl/classification/:classiId/more/:from/:total', fu
 });
 
 router.get('/project/:projectUrl/classification/:cid/delete', function(req, res) {
-    model.projects.findByUrl(req.params.projectUrl,
-        function(err, rows)
-        {
-            if(err){ res.json({ err:"Could not delete classification"});  }
-
-            if(!rows.length)
-            {
-                res.status(404).json({ err: "project not found"});
-                return;
-            }
-            var project_id = rows[0].project_id;
-
-            if(!req.haveAccess(project_id, "manage models and classification"))
-                return res.json({ err: "You dont have permission to 'manage models and classification'" });
-
-            model.projects.classificationDelete(mysql.escape(req.params.cid),
-                function (err,data)
-                {
-                    res.json(data);
-                }
-            );
+    if (!req.haveAccess(project_id, "manage models and classification")) {
+        return res.json({
+            err: "You dont have permission to 'manage models and classification'"
+        });
+    }
+    
+    model.projects.findByUrl(req.params.projectUrl, function(err, rows) {
+        if (err) {
+            res.json({
+                err: "Could not delete classification"
+            });
         }
-    );
+
+        if (!rows.length) {
+            res.status(404).json({
+                err: "project not found"
+            });
+            return;
+        }
+        var project_id = rows[0].project_id;
+
+        model.projects.classificationDelete(req.params.cid, function(err, data) {
+            res.json(data);
+        });
+    });
 });
 
 router.post('/project/:projectUrl/classification/new', function(req, res, next) {
@@ -439,7 +441,12 @@ router.post('/project/:projectUrl/classification/new', function(req, res, next) 
             next();
         },
         function check_sc_exists(next){
-            model.jobs.classificationNameExists({name:params.name,classifier:params.classifier,user:params.user,pid:params.project}, next);
+            model.jobs.classificationNameExists({
+                name: params.name,
+                classifier: params.classifier,
+                user: params.user,
+                pid: params.project
+            }, next);
         },
         function abort_if_already_exists(row) {
             var next = arguments[arguments.length -1];
@@ -523,6 +530,7 @@ router.get('/project/classification/csv/:cid', function(req, res) {
         var pid = row[0].pid;
  
         if(!req.haveAccess(pid, "manage models and classification")) {
+            // TODO use std error message json, presentation is a frontend task
             return res.send('<html><body><a href="/home" class="navbar-brand">'+
                             '<img src="/images/logo.svg"></a>'+
                             '<hr><div style="font-size:14px;font-family:Helvetica,Arial,sans-serif;">Error: Cannot download CSV file. You dont have permission to \'manage models and classifications\'</div></body>');

@@ -273,9 +273,11 @@ describe('audioTools', function(){
             mock_childProcess.running=[];
             sinon.spy(mock_childProcess, 'exec');
         });
+        
         afterEach(function(){
             mock_childProcess.exec.restore();
         });
+        
         it('should generate proper sox command to split audio with 150 secs', function(done) {            
             var outputList = [
                 './audiofile.p1.wav',
@@ -293,6 +295,7 @@ describe('audioTools', function(){
             mock_childProcess.running[0].send('close', 0);
             
         });
+        
         it('should not split audio with duration less than 120 secs', function(done) {
             audioTools.splitter('audiofile.wav', 119, function(err, files) {
                 mock_childProcess.exec.callCount.should.equal(0);

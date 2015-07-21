@@ -9,7 +9,7 @@ var model = require('../../model');
 var sha256 = require('../../utils/sha256');
 
 router.get('/projectlist', function(req, res, next) {
-    
+    // super user list all projects
     if(req.session.user.isSuper === 1) {
         model.projects.listAll(function(err, rows) {
             if(err) return next(err);
@@ -28,7 +28,7 @@ router.get('/projectlist', function(req, res, next) {
 
 router.get('/feed/:page', function(req, res, next) {
     
-    var page = req.params.page;
+    var page = req.params.page || 0;
     
     async.parallel({
         formats: function(callback) {
@@ -45,26 +45,37 @@ router.get('/feed/:page', function(req, res, next) {
             });
         },
         news: function(callback) {
-            model.news.userFeed(req.session.user.id, page, function(err, rows) {
-                if(err) return callback(err);
-                
-                callback(null, rows);
-            });
+            if(req.session.user.isSuper === 1) {
+                // super user can see news from all projects
+                model.news.list(page, function(err, rows) {
+                    if(err) return callback(err);
+                    
+                    callback(null, rows);
+                });
+            }
+            else {
+                model.news.userFeed(req.session.user.id, page, function(err, rows) {
+                    if(err) return callback(err);
+                    
+                    callback(null, rows);
+                });
+            }
         }
     },
     function(err, results) {
         if(err) return next(err);
         
-        var feed = results.news.map(function(row){
-            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 30 }, https=req.secure);
-            
+        var feed = results.news.map(function(row) {
             var data = JSON.parse(row.data);
             
             data.project = row.project;
             
-            row.message = sprintf(results.formats[row.type], data);
-            
-            return row;
+            return {
+                message: sprintf(results.formats[row.type], data),
+                username: row.username,
+                timestamp: row.timestamp,
+                imageUrl: gravatar.url(row.email, { d: 'monsterid', s: 30 }, https=req.secure)
+            };
         });
         
         res.json(feed);
@@ -73,6 +84,7 @@ router.get('/feed/:page', function(req, res, next) {
 
 router.get('/info', function(req, res) {
     var user = req.session.user;
+    
     res.json({
         username: user.username,
         email: user.email,

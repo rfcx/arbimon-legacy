@@ -1,9 +1,11 @@
 // dependencies
+var util  = require('util');
+var path   = require('path');
+
 var debug = require('debug')('arbimon2:model:recordings');
 var async = require('async');
 var AWS   = require('aws-sdk');
 var mysql = require('mysql');
-var util  = require('util');
 var joi   = require('joi');
 var _     = require('lodash');
 var sprintf = require("sprintf-js").sprintf;
@@ -41,13 +43,13 @@ var fileExtPattern = /\.(wav|flac)$/;
 // exports
 var Recordings = {
     QUERY_FIELDS : {
-        id     : {subject: 'R.recording_id'    , project:  true},
-        site   : {subject: 'S.name'            , project: false, level:1, next: 'year'                },
-        year   : {subject: 'YEAR(R.datetime)'  , project: true , level:2, next: 'month' , prev:'site' },
-        month  : {subject: 'MONTH(R.datetime)' , project: true , level:3, next: 'day'   , prev:'year' },
-        day    : {subject: 'DAY(R.datetime)'   , project: true , level:4, next: 'hour'  , prev:'month'},
-        hour   : {subject: 'HOUR(R.datetime)'  , project: true , level:5, next: 'minute', prev:'day'  },
-        minute : {subject: 'MINUTE(R.datetime)', project: true , level:6                , prev:'hour' }
+        id     : { subject: 'R.recording_id',     project:  true },
+        site   : { subject: 'S.name',             project: false, level:1, next: 'year'                },
+        year   : { subject: 'YEAR(R.datetime)',   project: true,  level:2, next: 'month' , prev:'site' },
+        month  : { subject: 'MONTH(R.datetime)',  project: true,  level:3, next: 'day'   , prev:'year' },
+        day    : { subject: 'DAY(R.datetime)',    project: true,  level:4, next: 'hour'  , prev:'month'},
+        hour   : { subject: 'HOUR(R.datetime)',   project: true,  level:5, next: 'minute', prev:'day'  },
+        minute : { subject: 'MINUTE(R.datetime)', project: true,  level:6,                 prev:'hour' }
     },
     parseUrl: function(recording_url){
         var rec_match;
@@ -59,9 +61,9 @@ var Recordings = {
             if(rec_match) return {
                 id    : rec_match[ 1] | 0
             };
-        //                site     year     month    day       hour     minute
-        //                1      2 3      4 5      6 7       8 9     10 11    10987654321
-        //                1     01 2     12 3     23 4      34 5     45 6     54 3 2 1
+            //                site     year     month    day       hour     minute
+            //                1        2 3      4 5      6 7       8 9     10 11    10987654321
+            //                1       01 2     12 3     23 4      34 5     45 6     54 3 2 1
             rec_match = /^([^-]*)(-([^-]*)(-([^-]*)(-([^-_]*)([_-]([^-]*)(-([^-]*))?)?)?)?)?(\.(wav|flac))?/.exec(recording_url);
             if(rec_match) return {
                 site   : rec_match[ 1],
@@ -456,7 +458,7 @@ var Recordings = {
      * @param {Integer} user_id id of the user to associate to this validation.
      * @param {Integer} project_id id associated to the project that is to be validated.
      * @param {Object}  validation object containing the validation to add to this recording.
-     * @param {String}  validation.class identifier used to obtain the class to be validated.
+     * @param {String}  validation.class comma separated list of species-songtype pairs. ej: '7-1,3-2'
      * @param {Integer} validation.val   value used to validate the class in the given recording.
      * @param {Function} callback(err, path) function to call back with the validation result.
      */
@@ -476,7 +478,7 @@ var Recordings = {
                 project_id: project_id
             };
 
-            if (valobj.val== 2) // 0 is not present , 1 is present and 2 is clear
+            if (valobj.val == 2) // 0 is not present , 1 is present and 2 is clear
             {
                 queryHandler(
                     "DELETE FROM `recording_validations` "+
@@ -505,7 +507,8 @@ var Recordings = {
             var cm = /(\d+)(-(\d+))?/.exec(val_class);
             if(!cm) {
                 next(new Error("validation class is missing."));
-            } else if(!cm[2]){
+            } 
+            else if(!cm[2]){
                 var project_class = cm[1] | 0;
                 queryHandler(
                     "SELECT species_id as species, songtype_id as songtype \n" +
@@ -516,10 +519,11 @@ var Recordings = {
                     if (!data || !data.length) { next(new Error("project class " + project_class + " not found")); return; }
                     add_one_validation(species_id, songtype_id, next);
                 });
-            } else {
+            } 
+            else {
                 add_one_validation(cm[1] | 0, cm[3] | 0, next);
             }
-        }, callback);        
+        }, callback);
         
     },
     
@@ -536,9 +540,10 @@ var Recordings = {
             precision:       joi.number(),
             duration:        joi.number(),
             samples:         joi.number(),
-            file_size:       joi.string(),
+            file_size:       joi.number(),
             bit_rate:        joi.string(),
-            sample_encoding: joi.string()
+            sample_encoding: joi.string(),
+            upload_time:     joi.date()
         };
         
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
@@ -579,9 +584,10 @@ var Recordings = {
             precision:       joi.number(),
             duration:        joi.number(),
             samples:         joi.number(),
-            file_size:       joi.string(),
+            file_size:       joi.number(),
             bit_rate:        joi.string(),
-            sample_encoding: joi.string()
+            sample_encoding: joi.string(),
+            upload_time:     joi.date()
         };
         
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
@@ -759,13 +765,13 @@ var Recordings = {
         
         var sqlFilterImported = 
             "SELECT r.recording_id AS id, \n"+
-            "    r.uri \n"+
+            "       r.uri \n"+
             "FROM recordings AS r  \n"+
             "JOIN sites AS s ON s.site_id = r.site_id  \n"+
-            "WHERE r.recording_id IN (%s) \n"+
-            "AND s.project_id = %s";
+            "WHERE r.recording_id IN (?) \n"+
+            "AND s.project_id = ?";
         
-        q = util.format(sqlFilterImported, mysql.escape(recIds), mysql.escape(project_id));
+        q = mysql.format(sqlFilterImported, [recIds, project_id]);
         
         queryHandler(q, function(err, rows) {
             
@@ -776,52 +782,65 @@ var Recordings = {
                 });
             }
             
-            var recIds = rows.map(function(rec) {
-                return rec.id;
-            });
+            var deleted = [];
             
-            var recKeys = rows.map(function(rec) {
-                return { Key: rec.uri };
-            });
-            
-            
-            async.series([
-                function(cb) {
+            async.eachSeries(rows, 
+                function loop(rec, next) {
+                    var ext = path.extname(rec.uri);
+                    var thumbnailUri = rec.uri.replace(ext, '.thumbnail.png');
+                    
                     var params = {
                         Bucket: config('aws').bucketName,
                         Delete: {
-                            Objects: recKeys,
+                            Objects: [
+                                { Key: rec.uri },
+                                { Key: thumbnailUri }
+                            ],
                         }
                     };
                     
-                    s3.deleteObjects(params, cb);
-                },
-                function(cb) {
-                    var sqlDelete = 
-                        "DELETE FROM recordings \n"+
-                        "WHERE recording_id IN (%s)";
+                    debug(params);
+                    
+                    s3.deleteObjects(params, function(err, data) {
+                        if(err && err.code != 'NoSuchKey') {
+                            return next(err);
+                        }
+                        
+                        debug(data);
+                        
+                        var sqlDelete = "DELETE FROM recordings \n"+
+                                        "WHERE recording_id = ?";
+                        
+                        q = mysql.format(sqlDelete, [rec.id]);
+                        queryHandler(q, function(err, results) {
+                            if(err) next(err);
                             
-                    q = util.format(sqlDelete, mysql.escape(recIds));
-                    queryHandler(q, cb);
+                            deleted.push(rec.id);
+                            next();
+                        });
+                    });
+                }, 
+                function done(err) {
+                    if(err) {
+                        if(!deleted.length) return callback(err);
+                        
+                        return callback(err, { 
+                            deleted: deleted, 
+                            msg: 'some recordings where deleted but an error ocurred'
+                        });
+                    }
+                    
+                    debug('recordings deleted:', deleted);
+                    
+                    var s = deleted.length > 1 ? 's' : '';
+                    
+                    callback(null, { 
+                        deleted: deleted, 
+                        msg: 'recording'+s+' deleted successfully' 
+                    });
                 }
-            ],
-            
-            function(err, results) {
-                if(err) return callback(err);
-                
-                debug('delete recordings result:', results);
-                
-                var s = recIds.length > 1 ? 's' : '';
-                
-                callback(null, { 
-                    deleted: recIds, 
-                    msg: 'recording'+s+' deleted successfully' 
-                });
-            });
+            );
         });
-        
-        
-        
     }
 };
 

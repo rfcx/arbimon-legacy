@@ -10,11 +10,13 @@ var rewire= require('rewire');
 var events = require('events');
 var sha256 = require('../../../utils/sha256');
 var router_expect = require('../../mock_tools/router_expect');
-var dd=console.log;
+var router_expect2 = require('../../mock_tools/router_expect2');
 var user = rewire('../../../routes/data-api/user');
 
 var mock = {
-    gravatar:{url:function(){return 'gravatar_image.png';}},
+    gravatar:{
+        url: function() { return 'gravatar_image.png'; }
+    },
     model:{
         projects:{},
         users:{},
@@ -23,10 +25,22 @@ var mock = {
 };
 user.__set__(mock);
 
-var user_router = router_expect(user,{session:{user:{id:9393}}});
+var user_router = router_expect(user, { session: { user: { id:9393 } } });
 
-describe('user.js', function(){
-    afterEach(function(){
+describe('routes/data-api/user.js', function(){
+    var userRouter2;
+    
+    before(function() {
+        userRouter2 = router_expect2(user, { 
+            session: { 
+                user: { 
+                    id: 9393,
+                } 
+            } 
+        });
+    });
+    
+    beforeEach(function(){
         mock.model.news={};
         mock.model.projects={};
         mock.model.users={};
@@ -71,32 +85,64 @@ describe('user.js', function(){
         });
     });
     describe('get /feed/:page', function(){
+        var req;
+        
+        beforeEach(function() {
+            req = { url:'/feed/1', params: { page: 1 }};
+        });
+        
+        
         it('Should return a feed of events for the user.', function(done){
+            var time = new Date();
             mock.model.news.newsTypesFormat = function(cb){cb(null, [{id:1, message_format:"mf1"}]);};
-            mock.model.news.userFeed = function(uid, page, cb){cb(null, [{email:'a@b.c', data:"{}", project:1, type:1}]);};
-            user_router.when({url:'/feed/1',params:{page:1}}, { json: function(req, res, obj){
-                should.exist(obj);
-                obj.should.deep.equal([{email:'a@b.c', data:"{}", project:1, type:1, message:"mf1", imageUrl:"gravatar_image.png"}]);
-                done();
-            }});
+            mock.model.news.userFeed = function(uid, page, cb) {
+                cb(null, [{
+                    data: '{}',
+                    username: 'user',
+                    email: 'user@site.com',
+                    timestamp: time,
+                    project: 'some project',
+                    type: 1
+                }]);
+            };
+            
+            var res = {
+                json: [
+                    [{
+                        message: "mf1",
+                        username: 'user',
+                        timestamp: time,
+                        imageUrl: "gravatar_image.png"
+                    }]
+                ]
+            };
+            userRouter2.whenExpect(req, res, done);
         });
+        
         it('Should fail if getting the news fail.', function(done){
+            var time = new Date();
             mock.model.news.newsTypesFormat = function(cb){cb(new Error('I am error'));};
-            mock.model.news.userFeed = function(uid, page, cb){cb(null, [{email:'a@b.c', data:"{}", project:1, type:1}]);};
-            user_router.when({url:'/feed/1',params:{page:1}}, { next: function(req, res, err){
-                should.exist(err);
-                err.message.should.equal('I am error');
-                done();
-            }});
+            mock.model.news.userFeed = function(uid, page, cb) {
+                cb(null, [{
+                    data: '{}',
+                    username: 'user',
+                    email: 'user@site.com',
+                    timestamp: time,
+                    project: 'some project',
+                    type: 1
+                }]);
+            };
+            
+            var res = { next: [new Error('I am error')] };
+            userRouter2.whenExpect(req, res, done);
         });
+        
         it('Should fail if getting the news type formats fail.', function(done){
             mock.model.news.newsTypesFormat = function(cb){cb(null, [{id:1, message_format:"mf1"}]);};
             mock.model.news.userFeed = function(uid, page, cb){cb(new Error('I am error'));};
-            user_router.when({url:'/feed/1',params:{page:1}}, { next: function(req, res, err){
-                should.exist(err);
-                err.message.should.equal('I am error');
-                done();
-            }});
+            
+            var res = { next: [new Error('I am error')] };
+            userRouter2.whenExpect(req, res, done);
         });
     });
     describe('get /info', function(){

@@ -67,28 +67,24 @@ router.post('/create', function(req, res, next) {
             results.error = true;
             return res.json(results);
         }
-
+        
+        //type cast is_private
+        project.is_private = Boolean(project.is_private);
+        
         // no error create new project
-        model.projects.insert(project, function(err, rows) {
+        model.projects.create(project, function(err, projectId) {
             if(err) return next(err);
 
-            var project_id = rows.insertId;
+            var project_id = projectId;
 
-            model.projects.addUser({
+            model.projects.insertNews({
+                news_type_id: 1, // project created
                 user_id: project.owner_id,
                 project_id: project_id,
-                role_id: 4 // owner role id
-            },
-            function(err, rows) {
-                if(err) next(err);
-
-                model.projects.insertNews({
-                    news_type_id: 1, // project created
-                    user_id: project.owner_id,
-                    project_id: project_id,
-                    data: JSON.stringify({})
-                });
-                res.json({ message: util.format("Project '%s' successfully created!", project.name) });
+                data: JSON.stringify({})
+            });
+            res.json({ 
+                message: util.format("Project '%s' successfully created!", project.name) 
             });
         });
     });
@@ -124,9 +120,27 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
         return res.json({ error: "missing parameters" });
     }
     
-    var newProjectInfo = req.body.project;
+    // make sure project requested is the one updated
+    req.body.project.project_id = req.project.project_id;
+    
+    var newProjectInfo;
     
     async.waterfall([
+        function(callback) {
+            var schema = {
+                project_id: joi.number().required(),
+                name: joi.string(),
+                url: joi.string(),
+                description: joi.string(),
+                is_private: joi.number(),
+            };
+            
+            joi.validate(req.body.project, schema, { stripUnknown: true }, 
+                function(err, projectInfo){ 
+                    newProjectInfo = projectInfo;
+                    callback();
+            });
+        },
         function verifyName(callback) {
             if(req.project.name !== newProjectInfo.name) {
                 model.projects.findByName(newProjectInfo.name, function(err, rows){
@@ -207,6 +221,7 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
         res.json({ success: true });
     });
 });
+
 router.post('/:projectUrl/class/del', function(req, res, next){
     if(!req.body.project_id || !req.body.project_classes) {
         return res.json({ error: "missing parameters"});
@@ -340,6 +355,14 @@ router.get('/:projectUrl/validations/count', function(req, res, next) {
         if(err) return next(err);
         
         res.json({ count: result[0].count });
+    });
+});
+
+router.get('/:projectUrl/usage', function(req, res, next) {
+    model.projects.getStorageUsage(req.project.project_id, function(err, result) {
+        if(err) return next(err);
+        
+        res.json({ min_usage: result[0].min_usage });
     });
 });
 

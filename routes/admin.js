@@ -7,29 +7,83 @@ var async = require('async');
 var config = require('../config');
 var model = require('../model');
 
+// only super user can access admin section
 router.use(function(req, res, next) {
-    if(!req.session.user.isSuper)
-        res.sendStatus(403);
-    next();
+    if(req.session.user.isSuper === 1) {
+        return next();
+    }
+    
+    res.sendStatus(403);
 });
 
 
 router.get('/', function(req, res) {
-    res.render('admin', { title: "Home", user: req.session.user });
+    res.render('admin', { user: req.session.user });
 });
 
 
-router.get('/job-queue', function(req, res, next) {
-    request.get(config('hosts').jobqueue + '/stats').on('error', function(err) {
-        res.json({error:'Could not read job queue stats.'});
-    }).pipe(res);
-});
-
-router.get('/active-jobs', function(req, res, next) {
-    model.jobs.activeJobs(function(err, rows) {
+router.get('/dashboard-stats', function(req, res, next) {
+    async.series([
+        model.jobs.status,
+        model.news.countProjectsCreatedToday,
+        model.users.countCreatedToday,
+    ], 
+    function(err, results) {
         if(err) return next(err);
-        res.json(rows);
+        
+        
+        var stats = {
+            jobsStatus: results[0],
+            newProjects: results[1][0][0].count,
+            newUsers: results[2][0][0].count,
+        };
+        
+        res.json(stats);
     });
 });
+
+router.get('/job-queue', function(req, res, next) {
+    request.get(config('hosts').jobqueue + '/stats')
+        .on('error', function(err) {
+            res.json({ error:'Could not read job queue stats.' });
+        })
+        .pipe(res);
+});
+
+router.get('/jobs', function(req, res, next) {
+    model.jobs.find(req.query, function(err, jobs) {
+        if(err) return next(err);
+        
+        res.json(jobs);
+    });
+});
+
+// router.get('/projects', function(req, res, next) {
+//     model.projects.listAll(function(err, rows) {
+//         if(err) return next(err);
+//         
+//         res.json(rows);
+//     });
+// });
+// 
+// router.put('/projects/:projectId', function(req, res, next) {
+//     var project = req.body.project;
+//     
+//     project.project_id = req.params.projectId;
+//     
+//     model.projects.update(project, function(err, rows) {
+//         if(err) return next(err);
+//         
+//         res.json(rows);
+//     });
+// });
+
+// router.get('/users', function(req, res, next) {
+//     model.users.list(function(err, rows) {
+//         if(err) return next(err);
+//         
+//         res.json(rows);
+//     });
+// });
 
 module.exports = router;

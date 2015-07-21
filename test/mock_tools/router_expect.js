@@ -2,6 +2,12 @@ var sinon = require('sinon');
 var lodash = require('lodash');
 var dd = console.log;
 
+/**
+ * @class mock_tools/router_expect
+ * @description expressjs router expectation lib
+ * @param router {Object} expressjs router
+ * @param defaults {Object} default request
+ */
 var router_expect = function(router, defaults){
     if(!(this instanceof router_expect)){
         return new router_expect(router, defaults);
@@ -20,6 +26,12 @@ var router_expect = function(router, defaults){
 };
 
 router_expect.prototype = {
+    /**
+     * @method mock_tools/router_expect#when
+     * @param url {Object} request object
+     * @param expectations {Object} response expectations
+     * @param scope (optional) {Object} object which request and reponse object are assigned to
+     */
     when: function(url, expectations, scope){
         var request = lodash.cloneDeep(this.defaults);
         if(typeof url == 'string'){

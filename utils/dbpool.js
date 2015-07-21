@@ -1,4 +1,4 @@
-var debug=require('debug')('arbimon2:dbpool');
+var debug = require('debug')('arbimon2:dbpool');
 var mysql = require('mysql');
 var config = require('../config');
 var showQueriesInConsole = true;
@@ -53,7 +53,8 @@ var dbpool = {
     getConnection : function(callback){
         debug('getConnection : fetching db connection.');
         dbpool.pool.getConnection(function(err, connection){
-            if(err){ callback(err); return; }
+            if (err) return callback(err);
+            
             dbpool.enable_query_debugging(connection);
             callback(null, connection);
         });

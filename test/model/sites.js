@@ -48,14 +48,17 @@ var sites = pre_wire('../../model/sites', {
 });
 
 describe('Sites', function(){
-    var insertsite={id:5173, name:'site', project_id:1, lat:1, lon:1, alt:1};
     var site={site_id:5173, name:'site', project_id:1, lat:1, lon:1, alt:1};
     describe('findById', function(){
-        beforeEach(function(){mock_mysql.pool.cache = {};});
+        beforeEach(function(){
+            mock_mysql.pool.cache = {};
+        });
+        
         it('Should find a site given its id', function(done){
             dbpool.pool.cache[
                 "SELECT * FROM sites WHERE site_id = 5173"
             ]={value:[site]};
+            
             sites.findById(5173, function(err, results){
                 should.not.exist(err);
                 results.should.deep.equal([site]);
@@ -63,31 +66,42 @@ describe('Sites', function(){
             });
         });
     });
+    
     describe('insert', function(){
-        beforeEach(function(){mock_mysql.pool.cache = {};});
+        var insertSite;
+        
+        beforeEach(function(){
+            mock_mysql.pool.cache = {};
+            insertSite = {
+                name:'site', 
+                project_id:1, 
+                lat:2, 
+                lon:3, 
+                alt:4
+            };
+        });
+        
         it('Should insert a site given the data', function(done){
             dbpool.pool.cache[
                 "INSERT INTO sites \n" +
-                "SET `name` = 'site', `project_id` = 1, `lat` = 1, `lon` = 1, `alt` = 1, `site_type_id` = 2"
+                "SET `name` = 'site', `project_id` = 1, `lat` = 2, `lon` = 3, `alt` = 4, `site_type_id` = 2"
             ]={value:{insertId:101}};
-            sites.insert(insertsite, function(err, results){
+            
+            sites.insert(insertSite, function(err, results){
                 should.not.exist(err);
                 results.should.deep.equal({insertId:101});
                 done();
             });
         });
-        var sitedata={name:'a', project_id: 'b', lat:'c', lon:'d', alt:'e'};
-        Object.keys(sitedata).forEach(function(key){
-            var obj={};
-            for(var k in sitedata){
-                if(k != key){
-                    obj[k] = sitedata[k];
-                }
-            }
+        
+        var siteRequired = ['name', 'project_id', 'lat', 'lon', 'alt'];
+        siteRequired.forEach(function(key){
             it('Should fail if '+key+' is not given', function(done){
-                sites.insert(obj, function(err, results){
+                delete insertSite[key];
+                
+                sites.insert(insertSite, function(err, results){
                     should.exist(err);
-                    err.message.should.equal("required field '"+key+"' missing");
+                    err.message.should.have.string(key);
                     should.not.exist(results);
                     done();
                 });

@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.41, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.24, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: arbimon2
 -- ------------------------------------------------------
--- Server version	5.5.41-0ubuntu0.14.04.1
+-- Server version	5.6.24-0ubuntu2
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -28,7 +28,11 @@ CREATE TABLE `classification_results` (
   `species_id` int(11) NOT NULL,
   `songtype_id` int(11) NOT NULL,
   `present` tinyint(4) NOT NULL,
-  `max_vector_value` float DEFAULT NULL
+  `max_vector_value` float DEFAULT NULL,
+  KEY `job_id` (`job_id`),
+  KEY `recording_id` (`recording_id`),
+  KEY `species_id` (`species_id`),
+  KEY `songtype_id` (`songtype_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -54,7 +58,7 @@ DROP TABLE IF EXISTS `invalid_logins`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `invalid_logins` (
   `ip` varchar(40) NOT NULL,
-  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `user` varchar(32) NOT NULL,
   `reason` varchar(50) NOT NULL,
   PRIMARY KEY (`ip`,`time`)
@@ -98,6 +102,7 @@ CREATE TABLE `job_params_soundscape` (
   `name` text NOT NULL,
   `threshold` float NOT NULL DEFAULT '0',
   `frequency` int(11) NOT NULL DEFAULT '0',
+  `normalize` tinyint(1) NOT NULL DEFAULT '0',
   UNIQUE KEY `job_id` (`job_id`),
   KEY `playlist_id` (`playlist_id`),
   KEY `soundscape_aggregation_type_id` (`soundscape_aggregation_type_id`),
@@ -219,11 +224,11 @@ CREATE TABLE `jobs` (
   `remarks` text NOT NULL,
   `progress_steps` int(11) NOT NULL DEFAULT '0',
   `hidden` tinyint(4) NOT NULL,
+  `ncpu` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`job_id`),
   KEY `user_id` (`user_id`),
   KEY `project_id` (`project_id`),
   KEY `job_type_id` (`job_type_id`),
-  KEY `state` (`state`),
   CONSTRAINT `jobs_ibfk_1` FOREIGN KEY (`job_type_id`) REFERENCES `job_types` (`job_type_id`),
   CONSTRAINT `jobs_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE,
   CONSTRAINT `jobs_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
@@ -277,6 +282,8 @@ CREATE TABLE `model_types` (
   `name` varchar(255) NOT NULL,
   `description` text NOT NULL,
   `training_set_type_id` int(10) unsigned NOT NULL,
+  `usesSsim` tinyint(4) NOT NULL DEFAULT '0',
+  `usesRansac` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`model_type_id`),
   KEY `training_set_type` (`training_set_type_id`),
   CONSTRAINT `model_types_ibfk_1` FOREIGN KEY (`training_set_type_id`) REFERENCES `training_set_types` (`training_set_type_id`)
@@ -439,7 +446,7 @@ CREATE TABLE `project_news` (
   KEY `news_type_id` (`news_type_id`),
   KEY `timestamp` (`timestamp`),
   CONSTRAINT `project_news_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
-  CONSTRAINT `project_news_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`),
+  CONSTRAINT `project_news_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE,
   CONSTRAINT `project_news_ibfk_3` FOREIGN KEY (`news_type_id`) REFERENCES `project_news_types` (`news_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -553,9 +560,10 @@ CREATE TABLE `recordings` (
   `precision` tinyint(3) unsigned DEFAULT NULL,
   `duration` float DEFAULT NULL,
   `samples` bigint(20) unsigned DEFAULT NULL,
-  `file_size` varchar(45) DEFAULT NULL,
+  `file_size` bigint(20) DEFAULT NULL,
   `bit_rate` varchar(45) DEFAULT NULL,
   `sample_encoding` varchar(45) DEFAULT NULL,
+  `upload_time` datetime DEFAULT NULL,
   PRIMARY KEY (`recording_id`),
   UNIQUE KEY `unique_uri` (`uri`),
   KEY `site_id` (`site_id`),
@@ -658,7 +666,7 @@ CREATE TABLE `sites` (
   `lon` double NOT NULL,
   `alt` double NOT NULL,
   `published` tinyint(1) NOT NULL DEFAULT '0',
-  `token_created_on` bigint(20) unsigned DEFAULT NULL,
+  `token_created_on` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`site_id`),
   KEY `project_id` (`project_id`),
   KEY `site_type_id` (`site_type_id`),
@@ -794,6 +802,7 @@ CREATE TABLE `soundscapes` (
   `playlist_id` int(10) unsigned NOT NULL,
   `frequency` int(11) DEFAULT '0',
   `threshold` float DEFAULT '0',
+  `normalized` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`soundscape_id`),
   KEY `	soundscape_aggregation_type_id` (`soundscape_aggregation_type_id`),
   CONSTRAINT `soundscapes_ibfk_1` FOREIGN KEY (`soundscape_aggregation_type_id`) REFERENCES `soundscape_aggregation_types` (`soundscape_aggregation_type_id`)
@@ -906,7 +915,7 @@ CREATE TABLE `training_set_roi_set_data` (
   KEY `species_id` (`species_id`),
   KEY `songtype_id` (`songtype_id`),
   CONSTRAINT `training_set_roi_set_data_ibfk_1` FOREIGN KEY (`training_set_id`) REFERENCES `training_sets` (`training_set_id`) ON DELETE CASCADE,
-  CONSTRAINT `training_set_roi_set_data_ibfk_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`),
+  CONSTRAINT `training_set_roi_set_data_ibfk_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `training_set_roi_set_data_ibfk_3` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`),
   CONSTRAINT `training_set_roi_set_data_ibfk_4` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -981,9 +990,11 @@ CREATE TABLE `uploads_processing` (
   `upload_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `project_id` int(10) unsigned NOT NULL,
   `site_id` int(10) unsigned NOT NULL,
-  `user_id` int(10) unsigned DEFAULT NULL,
+  `user_id` int(10) unsigned NOT NULL,
   `upload_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `filename` varchar(100) NOT NULL,
+  `state` varchar(45) NOT NULL,
+  `duration` float NOT NULL,
   PRIMARY KEY (`upload_id`),
   UNIQUE KEY `filename` (`filename`),
   KEY `project_id` (`project_id`),
@@ -1012,9 +1023,9 @@ CREATE TABLE `user_account_support_request` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `expires` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`support_request_id`),
-  UNIQUE KEY `idx_user_account_support_request_hash` (`hash`),
   KEY `user_id` (`user_id`),
   KEY `support_type_id` (`support_type_id`),
+  KEY `hash` (`hash`),
   CONSTRAINT `user_account_support_request_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `user_account_support_request_ibfk_2` FOREIGN KEY (`support_type_id`) REFERENCES `user_account_support_type` (`account_support_type_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -1070,11 +1081,11 @@ CREATE TABLE `users` (
   `firstname` varchar(255) NOT NULL,
   `lastname` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `last_login` datetime DEFAULT NULL,
+  `last_login` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `is_super` tinyint(1) NOT NULL DEFAULT '0',
   `project_limit` int(10) unsigned NOT NULL DEFAULT '1',
   `created_on` datetime DEFAULT NULL,
-  `login_tries` tinyint(3) unsigned DEFAULT '0',
+  `login_tries` tinyint(4) NOT NULL DEFAULT '0',
   `disabled_until` datetime DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`),
@@ -1112,4 +1123,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-03-19 14:21:26
+-- Dump completed on 2015-05-29 16:45:37
