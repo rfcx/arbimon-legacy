@@ -409,15 +409,25 @@ var Projects = {
     },
 
     modelList: function(project_url, callback) {
-        var q = "SELECT m.model_id, CONCAT(UCASE(LEFT(m.name, 1)), SUBSTRING(m.name, 2)) as mname "+
-                " ,UNIX_TIMESTAMP( m.`date_created` )*1000 as date "+
-                " , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,"+
-                "  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser " + 
-                " , mt.name as mtname "+
-                " FROM `models` as m,`model_types` as mt , `users` as u , `projects` as p "+
-                " WHERE p.url  = "+mysql.escape(project_url)+
-                " and m.`model_type_id` = mt.`model_type_id` and m.user_id = u.user_id "+
-                " and p.project_id = m.project_id and m.deleted = 0";
+        var q = "SELECT m.model_id, \n"+
+                "   CONCAT(UCASE(LEFT(m.name, 1)), \n"+
+                "   SUBSTRING(m.name, 2)) as mname, \n"+
+                "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n"+
+                "   CONCAT( \n"+
+                "       CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)), \n"+
+                "       ' ', \n"+
+                "       CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) \n"+
+                "   ) as muser, \n" + 
+                "   mt.name as mtname, \n"+
+                "   mt.enabled \n"+
+                "FROM `models` as m,  \n"+
+                "   `model_types` as mt,  \n"+
+                "   `users` as u , `projects` as p \n"+
+                "WHERE p.url = " + mysql.escape(project_url)+
+                "AND m.`model_type_id` = mt.`model_type_id` \n"+
+                "AND m.user_id = u.user_id \n"+
+                "AND p.project_id = m.project_id \n"+
+                "AND m.deleted = 0";
 
             queryHandler(q, callback);
     },

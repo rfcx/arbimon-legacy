@@ -435,6 +435,9 @@
             }
             */
             
+            // NOTE temporary block disabled model types
+            if(!$scope.datas.classifier.enabled) return;
+            
             var classiData = {
                 n: $scope.datas.name,
                 c: $scope.datas.classifier.model_id,
@@ -442,6 +445,7 @@
                 s: $scope.selectedSites.join(),
                 p: $scope.datas.playlist
             };
+            
             a2Classi.create(classiData, function(data) {
                 if (data.name) {
                     $scope.nameMsg = 'Name exists';
@@ -531,10 +535,10 @@
 
                     
                     
-                    if ($scope.minvect<-0.09) {
+                    if ($scope.minvect < -0.09) {
                         //code
                         ctx.beginPath();
-                        var i = 0;
+                        i = 0;
                         ctx.moveTo(i*xStep, height * (1 - ((0 - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
                         while(i < vector.length) {
                             i++;
