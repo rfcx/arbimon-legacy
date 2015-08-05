@@ -18,26 +18,9 @@
                 </ul>
             <% } %>
             <ul class="nav navbar-nav navbar-right">
-                <li><a target="_blank" href="/support"><i class="fa fa-life-ring"></i> Support</a></li>
-                <li class="dropdown" dropdown>
-                    <a class="dropdown-toggle" dropdown-toggle>
-                        <% if(user.isSuper) { %>Super<% } %> 
-                        <i class="fa fa-user"></i> <%= user.username %> 
-                        <i class="fa fa-caret-down"></i>
-                    </a>
-                    <ul class="dropdown-menu" role="menu">
-                        <li class="">
-                            <a href="/user-settings">
-                                <i class="fa fa-wrench"></i> Settings
-                            </a>
-                        </li>
-                        <li class="">
-                            <a href="/logout">
-                                <i class="fa fa-sign-out"></i> Log out
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                <% include user-dropdown %>
+                
+                <% include help-dropdown %>
             </ul>
         </div>
     </div>
