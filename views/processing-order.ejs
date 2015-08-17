@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="a2.orders">
+<html ng-app="a2.orders" class="a2-order">
 
 <head>
     <% include head %>
@@ -19,10 +19,12 @@
                 <div class="col-sm-12 col-md-8 col-md-offset-2">
                     <div class="panel registration">
                         <div class="panel-body">
+                            
                             <h3 style="margin:0;" ng-show="processing">
                                 <loader></loader>
                                 Processing your order
                             </h3>
+                            
                             <h3 ng-hide="success">
                                 <span ng-show="notFound">
                                     Order not found
@@ -40,6 +42,7 @@
                                     An error occurred, please contact us before trying to repeat the order
                                 </span>
                             </h3>
+                            
                             <div ng-show="success">
                                 <h3>Order successfully processed</h3>
                                 <p>
@@ -51,15 +54,82 @@
                                     </span>
                                     For status update on items ordered check your paypal account, you can also contact us.
                                 </p>
-                                <a href="/home" class="btn btn-success">Go to Home</a>
+                                <a href="/home" class="btn btn-success">
+                                    Go to Home
+                                </a>
+                            </div>
+                            
+                        </div>
+                        
+                        <div class="panel panel-default">
+                            
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    Invoice #{{ orderNumber }}
+                                </h3>
+                            </div>
+                            
+                            <div class="panel-body">
+                                
+                                <div class="col-sm-6">
+                                    <address>
+                                        <strong>{{ invoice.address.recipient_name }}</strong><br>
+                                        {{ invoice.address.line1 }}<br>
+                                        <span ng-if="invoice.address.line2">
+                                            {{ invoice.address.line2 }}<br>
+                                        </span>
+                                        {{ invoice.address.city }} 
+                                        {{ invoice.address.state }} <br>
+                                        {{ invoice.address.postal_code }} 
+                                        {{ invoice.address.country_code }}<br>
+                                        <abbr title="telephone">Tel:</abbr> 
+                                        {{ invoice.address.phone }}
+                                    </address>
+                                </div>
+                                
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Description</th>
+                                            <th>Unit</th>
+                                            <th>Quantity</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="item in invoice.items">
+                                            <td>{{ item.name }}</td>
+                                            <td>{{ item.description }}</td>
+                                            <td>${{ item.price | number : 2 }}</td>
+                                            <td>{{ item.quantity }}</td>
+                                            <td>${{ item.price * item.quantity | number : 2 }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <table class="table text-right">
+                                    <tr>
+                                        <td><b>subtotal:</b></td><td> ${{ invoice.amount.details.subtotal | number : 2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>shipping &amp; handling:</b></td><td>${{ invoice.amount.details.shipping | number : 2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>total:</b></td><td><b>${{ invoice.amount.total | number : 2 }}</b></td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
+                        
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <% include footer %>
+    <div class="hidden-print">
+        <% include footer %>
+    </div>
 </body>
 
 </html>

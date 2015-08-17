@@ -17,10 +17,11 @@
                 </div>
                 <ul class="list-group">
                     <li class="list-group-item">
-                        <b>name:</b> Plan for project '{{ project.name }}'<br>
+                        <b>name:</b> Project data plan<br>
                         <b>description:</b> includes storage for {{ plan.storage | number }} 
                         minutes of audio and capacity to process 
-                        {{ plan.processing | number }} minutes of audio<br>
+                        {{ plan.processing | number }} minutes of audio per year, for a term of 
+                        {{ plan.duration }} year(s) <br>
                         <b>unit price:</b> {{ plan.cost | number : 2 }}<br>
                         <b>quantity:</b> 1<br>
                         <p class="text-right">
@@ -43,7 +44,7 @@
                         <td><b>subtotal:</b></td><td> ${{ (plan.cost + (recorderQty * 125)) | number : 2 }}</td>
                     </tr>
                     <tr>
-                        <td><b>shipping & handling:</b></td><td>${{ shipping }}</td>
+                        <td><b>shipping &amp; handling:</b></td><td>${{ shipping }}</td>
                     </tr>
                     <tr>
                         <td><b>total:</b></td><td><b>${{ (plan.cost + (recorderQty * 125) + shipping ) | number : 2 }}</b></td>
@@ -90,8 +91,8 @@
     <button class="btn btn-primary"
         ng-click="submit()"
         ng-disabled="waiting">
-            <span ng-if="project.tier == 'paid'">Confirm & Pay</span>
-            <span ng-if="project.tier == 'free'">Confirm</span>
+            <span ng-if="project.plan.tier == 'paid'">Confirm &amp; Pay</span>
+            <span ng-if="project.plan.tier == 'free'">Confirm</span>
     </button>
     <button class="btn btn-default" 
         type="button" 

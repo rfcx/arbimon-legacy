@@ -12,6 +12,9 @@ var uuid = require('node-uuid');
 
 
 var model = require('../../model');
+var ordersUtils = require('../../utils/orders.js');
+var countries = require('../../utils/countries.js');
+var shippingCalculator = require('../../utils/shipping-calculator.js');
 
 /**
     creates a new project an create news about project creation
@@ -40,17 +43,63 @@ var findLinkObject = function(links, linkRelation) {
     return approvalLink[0] || null;
 };
 
+var createOrder = function(req, res, next) {
+    var orderId = uuid.v4();
+    
+    var projectPayment = ordersUtils.createPayment({
+        planType: req.order.planType,
+        plan: req.order.data.plan,
+        recorderQty: req.body.recorderQty, 
+        shippingAddress: req.body.address,
+        redirect_urls: {
+            return_url: req.appHost + "/process-order/"+ orderId,
+            cancel_url: req.appHost + "/api/orders/cancel/" + orderId,
+        },
+    });
+    
+    console.log(projectPayment, '\n\n');
+    console.log(projectPayment.transactions[0], '\n\n');
+    console.log(projectPayment.transactions[0].item_list, '\n\n');
+    
+    paypal.payment.create(projectPayment, function(err, resp) {
+        if(err) {
+            console.error(err.response.name);
+            console.error(err.response.details);
+            res.sendStatus(err.response.httpStatusCode);
+            return;
+        }
+        
+        console.log(resp);
+        
+        model.orders.insert({
+                order_id: orderId,
+                user_id: req.session.user.id,
+                datetime: resp.create_time,
+                status: 'created',
+                paypal_payment_id: resp.id,
+                action: req.order.action,
+                data: JSON.stringify(req.order.data),
+                payment_data: JSON.stringify(projectPayment.transactions[0])
+            }, 
+            function(err, result) {
+                if(err) return next(err);
+                
+                var approvalLink = findLinkObject(resp.links, 'approval_url');
+                
+                console.log('approvalLink',  approvalLink.href);
+                res.json({ approvalUrl: approvalLink.href });
+            }
+        );
+    });
+};
+
 
 router.post('/create-project', function(req, res, next) {
     if(!req.body.project) {
         return res.status(400).json({ error: "missing parameters" });
     }
     
-    
-    var orderData = {};
-    
-    orderData.recorderQty = +req.body.recorderQty || 0;
-    orderData.shippingAddress = req.body.address;
+    req.body.recorderQty = +req.body.recorderQty || 0;
     
     async.auto({
         projectData: function(callback) {
@@ -58,10 +107,11 @@ router.post('/create-project', function(req, res, next) {
                 name: joi.string(),
                 url: joi.string(),
                 description: joi.string(),
-                tier: joi.string().valid('paid', 'free'),
                 is_private: joi.boolean(),
                 plan: joi.object().keys({
+                    tier: joi.string().valid('paid', 'free'),
                     storage: joi.number(),
+                    duration: joi.number().optional(),
                 })
             });
             
@@ -101,20 +151,21 @@ router.post('/create-project', function(req, res, next) {
             return res.status(403).json(results);
         }
         
-        orderData.project = results.projectData;
-        console.log(orderData.project);
+        var project = results.projectData;
+        console.log('project:', project);
         
         // assign project_type_id to normal type
-        orderData.project.project_type_id = 1;
+        project.project_type_id = 1;
         
-        if(orderData.project.tier == 'free') {
+        if(project.plan.tier == 'free') {
             var freePlan = {
                 cost: 0,
                 storage: 100,
                 processing: 1000,
+                tier: 'free'
             };
             
-            orderData.project.plan = freePlan;
+            project.plan = freePlan;
             
             // check if user own another free project
             model.users.findOwnedProjects(req.session.user.id, { free: true }, function(err, rows) {
@@ -127,147 +178,146 @@ router.post('/create-project', function(req, res, next) {
                     return;
                 }
                 
-                createProject(orderData.project, req.session.user.id, function(err, result) {
+                createProject(project, req.session.user.id, function(err, result) {
                     if(err) return next(err);
                     
                     res.json({ 
-                        message: util.format("Project '%s' successfully created!", orderData.project.name)
+                        message: util.format("Project '%s' successfully created!", project.name)
                     });
                 });
             });
         }
-        else if(orderData.project.tier == 'paid') {
+        else if(project.plan.tier == 'paid') {
+            
+            var plan = project.plan;
+            delete project.plan;
+            
             // set plan cost base on selected plan minutes
-            orderData.project.plan.cost = orderData.project.plan.storage*0.03;
-            orderData.project.plan.processing = orderData.project.plan.storage*100;
+            plan.cost = plan.storage * plan.duration_period * 0.03;
+            plan.processing = plan.storage * 100;
+            plan.duration_period = plan.duration;
+            delete plan.duration;
             
-            var recorderInfo = {
-                price: 125,
-                currency: "USD",
-                tax: 0, // tax in dollars
-                name: "Arbimon recorder",
-                description: (
-                    "recorder description"
-                )
-            };
+            console.log('plan:', plan);
             
-            // prepare order and forward to paypal
-            var orderId = uuid.v4();
-            
-            var projectPayment = {
-                intent: "sale",
-                payer: {
-                    payment_method: "paypal"
-                },
-                redirect_urls: {
-                    return_url: req.appHost + "/process-order/"+ orderId,
-                    cancel_url: req.appHost + "/api/orders/cancel/" + orderId,
-                },
-                transactions: [{
-                    amount: {
-                        currency: "USD",
-                        details: {}
-                    },
-                    item_list: {
-                        items: [{
-                            quantity: 1,
-                            price: orderData.project.plan.cost,
-                            currency: "USD",
-                            tax: 0,
-                            name: "Plan for project '"+orderData.project.name+"'",
-                            description: (
-                                "includes storage for "+ 
-                                orderData.project.plan.storage +
-                                " minutes of audio "+
-                                "and capacity to process "+ 
-                                orderData.project.plan.processing +
-                                " minutes of audio"
-                            )
-                        }]
-                    }
-                }]
-            };
-            
-            var subtotal = 0, 
-                tax = 0,
-                total = 0,
-                shippingCost = 0;
-            
-            if(orderData.recorderQty) {
-                recorderInfo.quantity = +orderData.recorderQty;
-                
-                // updates item list to add recorders
-                var itemList = projectPayment.transactions[0].item_list;
-                itemList.items.push(recorderInfo);
-                
-                // add shipping_address
-                itemList.shipping_address = {
-                    recipient_name: orderData.shippingAddress.name,
-                    line1: orderData.shippingAddress.line1,
-                    line2: orderData.shippingAddress.line2,
-                    city: orderData.shippingAddress.city,
-                    state: orderData.shippingAddress.state,
-                    country_code: orderData.shippingAddress.country_code,
-                    postal_code: orderData.shippingAddress.postal_code,
-                    phone: orderData.shippingAddress.telephone,
-                };
-                
-                // TODO calculate shipping cost
-                shippingCost = 10;
-            }
-            
-            projectPayment.transactions[0].item_list.items.forEach(function(item) {
-                subtotal += item.price;
-                tax += item.tax;
-            });
-            
-            total = subtotal + tax;
-            
-            projectPayment.transactions[0].amount.details.shipping = shippingCost;
-            projectPayment.transactions[0].amount.details.subtotal = subtotal;
-            projectPayment.transactions[0].amount.details.tax = tax;
-            projectPayment.transactions[0].amount.total = total + shippingCost;
-            
-            paypal.payment.create(projectPayment, function(err, resp) {
-                if(err) {
-                    console.error(err.response.name);
-                    console.error(err.response.details);
-                    res.sendStatus(err.response.httpStatusCode);
-                    return;
+            req.order = {
+                action: 'create-project',
+                planType: 'new',
+                data: {
+                    plan: plan,
+                    project: project
                 }
-                console.log(resp);
-                model.orders.insert({
-                        order_id: orderId,
-                        user_id: req.session.user.id,
-                        datetime: resp.create_time,
-                        status: 'created',
-                        paypal_payment_id: resp.id,
-                        action: 'create-project',
-                        data: JSON.stringify(orderData),
-                    }, 
-                    function(err, result) {
-                        if(err) return next(err);
-                        
-                        var approvalLink = findLinkObject(resp.links, 'approval_url');
-                        
-                        console.log('approvalLink',  approvalLink.href);
-                        res.json({ approvalUrl: approvalLink.href });
-                    }
-                );
-            });
+            };
+            next();
+        }
+        else {
+            res.sendStatus(400);
         }
     });
-});
+}, createOrder);
+
+
 
 router.post('/update-project', function(req, res, next) {
+    console.log(req.body);
     
-});
+    var newPlan = req.body.project.plan;
+    req.body.recorderQty = +req.body.recorderQty || 0;
+    
+    if(!req.haveAccess(req.body.project.project_id, "manage project billing")) {
+        res.status(401).json({ 
+            error: "you dont have permission to 'manage project billing'" 
+        });
+        return;
+    }
+    
+    model.projects.find({ id: req.body.project.project_id }, function(err, rows) {
+        if(err) next(err);
+        
+        if(!rows.length) {
+            return res.status(400).json({ error: 'invalid project id' });
+        }
+        
+        console.log(rows[0]);
+        
+        var project = rows[0];
+        
+        // verify upgrade type (created new plan or upgrade current)
+        
+        if(project.plan_period) {
+            project.plan_due = new Date(project.plan_activated || project.plan_created);
+            project.plan_due.setFullYear(project.plan_due.getFullYear() + project.plan_period);
+        }
+        
+        console.log(project.plan_due, (new Date()));
+        
+        
+        var planType;
+        // calculate cost
+        if(project.plan_due && project.plan_due > (new Date()) ) {
+            console.log('upgrade current plan');
+            planType = 'upgrade';
+            
+            var monthsLeft = ordersUtils.monthsUntilDue(
+                project.plan_activated || project.plan_created, 
+                project.plan_period
+            );
+            
+            console.log(monthsLeft);
+            
+            
+            if(newPlan.storage < project.storage_limit) {
+                res.status(403).json({
+                    error: (
+                        "project plans can not be downgraded, "+
+                        "dont try this again"
+                    ),
+                });
+                return;
+            }
+            
+            newPlan.cost = (newPlan.storage - project.storage_limit) * monthsLeft * (0.03/12);
+            newPlan.tier = 'paid';
+        }
+        else {
+            console.log('create new plan');
+            planType = 'new';
+            newPlan.cost = newPlan.storage * 0.03;
+        }
+        
+        newPlan.processing = newPlan.storage * 100;
+        newPlan.duration_period = newPlan.duration;
+        delete newPlan.duration;
+        
+        req.order = {
+            action: planType + '-plan',
+            planType: planType,
+            data: {
+                plan: newPlan,
+                project_id: project.project_id,
+            }
+        };
+        
+        console.log(req.order);
+        
+        next();
+    });
+}, createOrder);
 
 router.post('/calculate-shipping', function(req, res, next) {
-    // TODO calculate shipping & handling cost
-    // receive list of items to be shipped
-    console.log(req.body.address);
+    if(!req.body.address || !req.body.recorderQty)
+        return res.status(400).json({ error: "missing parameters" });
+    
+    
     var address = req.body.address;
+    
+    var result = shippingCalculator(address, req.body.recorderQty);
+    
+    if(result.error) {
+        return res.status(400).json(result);
+    }
+    
+    console.log(result);
     
     model.users.updateAddress(
         {
@@ -281,16 +331,19 @@ router.post('/calculate-shipping', function(req, res, next) {
             postal_code: address.postal_code,
             telephone: address.telephone,
         },
-        function(err, result) {
+        function(err, result2) {
             res.json({ 
-                shipping_cost: 10, 
+                shipping_cost: result.cost, 
                 address: address 
             });
         }
     );
-    
 });
 
+
+router.get('/countries', function(req, res) {
+    res.json(countries);
+});
 
 
 router.param('orderId', function(req, res, next, orderId) {
@@ -304,99 +357,150 @@ router.param('orderId', function(req, res, next, orderId) {
 
         req.order = rows[0];
         req.order.data = JSON.parse(req.order.data);
+        req.order.payment_data = JSON.parse(req.order.payment_data);
+        
+        if(req.order.user_id !== req.session.user.id) {
+            res.sendStatus(403);
+        }
         
         return next();
     });
 });
 
-router.post('/process/:orderId', function(req, res, next) {
-    
-    if(!req.query.PayerID) {
-        return res.status(400).json({ error: 'MISSING_PARAMS'});
-    }
-    var payer = { payer_id : req.query.PayerID };
-    
-    if(req.order.status != 'created') {
-        return res.status(400).json({ error: 'ALREADY_PROCESSED' });
-    }
-    
-    async.series([
-        function executePayment(cb) {
-            paypal.payment.execute(req.order.paypal_payment_id, payer, {}, function(err, resp) {
-                if(err) {
-                    console.error(err);
-                    if(err.response.name == 'PAYMENT_NOT_APPROVED_FOR_EXECUTION') {
-                        paypal.payment.get(req.order.paypal_payment_id, function(err, resp) {
-                            if(err) {
-                                console.error(err);
-                                return res.sendStatus(500);
-                            }
-                            console.log(resp);
-                            var approvalLink = findLinkObject(resp.links, 'approval_url');
-                            
-                            res.status(400).json({ 
-                                error: 'APPROVAL_NEEDED',
-                                approvalLink: approvalLink.href,
-                            });
-                        });
-                    }
-                    else {
-                        model.orders.update({
-                            order_id: req.order.order_id,
-                            status: 'error',
-                            error: JSON.stringify(err),
-                        },
-                        function(err, result) {
-                            if(err) return next(err);
-                            
-                            res.status(500).json({ error: 'ERROR' });
-                        });
-                    }
-                    return;
-                }
-                
-                console.log(resp);
-                cb();
-            });
-        },
-        function setApproved(cb) {
-            model.orders.update({
-                order_id: req.order.order_id,
-                status: 'approved'
-            }, cb);
-        },
-        function performAction(cb) {
-            // perform action required by order:
-            
-            // create project and plan for it
-            if(req.order.action == 'create-project') {
-                createProject(
-                    req.order.data.project, 
-                    req.session.user.id, 
-                    function(err) {
-                        if(err) return cb(err);
-                        cb();
-                    }
-                );
-            }
-            // update project plan
-            else if(req.order.action == 'update-plan') {
-                
-            }
-        },
-        function setCompleted(cb) {
-            model.orders.update({
-                order_id: req.order.order_id,
-                status: 'completed'
-            }, cb);
-        },
-    ], function(err) {
-        console.log(err);
-        if(err) return next(err);
-        
-        res.json({ success: true, action: req.order.action });
+// DUMMY
+router.post('/process/:orderId', function(req, res, next) { 
+    res.json({ 
+        success: true, 
+        action: req.order.action,
+        invoice: req.order.payment_data
     });
 });
+
+// router.post('/process/:orderId', function(req, res, next) {
+//     
+//     if(!req.query.PayerID) {
+//         return res.status(400).json({ error: 'MISSING_PARAMS'});
+//     }
+//     var payer = { payer_id : req.query.PayerID };
+//     
+//     if(req.order.status != 'created') {
+//         return res.status(400).json({ error: 'ALREADY_PROCESSED' });
+//     }
+//     
+//     async.series([
+//         function executePayment(cb) {
+//             paypal.payment.execute(req.order.paypal_payment_id, payer, {}, function(err, resp) {
+//                 if(err) {
+//                     console.error(err);
+//                     if(err.response.name == 'PAYMENT_NOT_APPROVED_FOR_EXECUTION') {
+//                         paypal.payment.get(req.order.paypal_payment_id, function(err, resp) {
+//                             if(err) {
+//                                 console.error(err);
+//                                 return res.sendStatus(500);
+//                             }
+//                             console.log(resp);
+//                             var approvalLink = findLinkObject(resp.links, 'approval_url');
+//                             
+//                             res.status(400).json({ 
+//                                 error: 'APPROVAL_NEEDED',
+//                                 approvalLink: approvalLink.href,
+//                             });
+//                         });
+//                     }
+//                     else {
+//                         model.orders.update({
+//                             order_id: req.order.order_id,
+//                             status: 'error',
+//                             error: JSON.stringify(err),
+//                         },
+//                         function(err, result) {
+//                             if(err) return next(err);
+//                             
+//                             res.status(500).json({ error: 'ERROR' });
+//                         });
+//                     }
+//                     return;
+//                 }
+//                 
+//                 console.log(resp);
+//                 cb();
+//             });
+//         },
+//         function setApproved(cb) {
+//             model.orders.update({
+//                 order_id: req.order.order_id,
+//                 status: 'approved'
+//             }, cb);
+//         },
+//         function performAction(cb) {
+//             // perform action required by order:
+//             
+//             // create project and plan for it
+//             if(req.order.action == 'create-project') {
+//                 createProject(
+//                     req.order.data.project, 
+//                     req.session.user.id, 
+//                     function(err) {
+//                         if(err) return cb(err);
+//                         cb();
+//                     }
+//                 );
+//             }
+//             
+//             // update project plan
+//             else if(req.order.action == 'update-plan') {
+//                 // get Project
+//                 model.projects.find({ id: req.order.data.project_id }, function(err, rows) {
+//                     if(err) return cb(err);
+//                     
+//                     if(!rows.length) return cb(new Error('project not found'));
+//                     
+//                     var project = rows[0];
+//                     
+//                     // update current plan with order.data
+//                     model.plans.update(project.current_plan, req.order.data.plan, function(err) {
+//                         if(err) return cb(err);
+//                         cb();
+//                     });
+//                 });
+//                 // TODO add event to project_audit table
+//             }
+//             else if(req.order.action == 'new-plan') {
+//                 // create new plans
+//                 model.plans.insert(req.order.data.plan, function(err, result) {
+//                     if(err) return cb(err);
+//                     
+//                     var planId = result.insertId;
+//                     // assign plan_id to project.current_plan
+//                     
+//                     model.project.update({
+//                         project_id: req.order.data.project_id,
+//                         current_plan: planId,
+//                     }, function(err) {
+//                         if(err) return cb(err);
+//                         cb();
+//                     });
+//                 });
+//                 // TODO add event to project_audit table
+//             }
+//         },
+//         function setCompleted(cb) {
+//             model.orders.update({
+//                 order_id: req.order.order_id,
+//                 status: 'completed'
+//             }, cb);
+//         },
+//     ], function(err) {
+//         console.log(err);
+//         if(err) return next(err);
+//         
+//         res.json({ 
+//             success: true, 
+//             action: req.order.action,
+//             invoice: req.order.paymentData
+//         });
+//     });
+// });
 
 router.get('/cancel/:orderId', function(req, res, next) {
     // set order as canceled

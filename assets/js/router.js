@@ -1,4 +1,5 @@
 var a2 = angular.module('arbimon2', [
+    'a2.permissions',
     'templates-arbimon2',
     'a2.dashboard', 
     'a2.audiodata',
@@ -9,21 +10,24 @@ var a2 = angular.module('arbimon2', [
     'angularytics',
     'ui.router', 
     'ct.ui.router.extras',
-    'a2.permissions',
     'humane'
 ])
-.run(function($rootScope, Angularytics, a2UserPermit, notify) {
+.run(function($rootScope, Angularytics, a2UserPermit, notify, $state) {
     $rootScope.Math = Math; // export math library to angular :-)
     Angularytics.init();
 
-    $rootScope.$on('$stateChangeStart', function(e, to) {
-        console.log(to);
-        
+    $rootScope.$on('$stateChangeStart', function(e, to, params) {
+        // only check permissions if state have allowAccess
         if(!angular.isFunction(to.allowAccess)) return;
         
-        if(!to.allowAccess(a2UserPermit)) {
+        var allowed = to.allowAccess(a2UserPermit);
+        
+        if(allowed === undefined) { // if permissions have not loaded go dashboard
             e.preventDefault();
-            
+            $state.go('dashboard');
+        }
+        else if(allowed === false){
+            e.preventDefault();
             notify.log('You do not have access to this section');
         }
     });

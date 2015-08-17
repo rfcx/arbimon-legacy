@@ -16,9 +16,10 @@ var orderSchema = joi.object().keys({
     user_id: joi.number(),
     datetime: joi.date(),
     status: joi.string(),
-    paypal_payment_id: joi.string(),
     action: joi.string(),
-    data: joi.string().optional(),
+    data: joi.string(),
+    paypal_payment_id: joi.string(),
+    payment_data: joi.string(),
     error: joi.string().optional(),
 });
 

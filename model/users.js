@@ -175,15 +175,17 @@ var Users = {
             query = null;
         }
         
-        var q = "SELECT p.* \n"+
+        var q = "SELECT p.*, \n"+
+                "   pp.tier \n"+
                 "FROM projects as p \n"+
+                "JOIN project_plans AS pp ON (p.current_plan = pp.plan_id) \n"+
                 "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
                 "WHERE upr.user_id = ? \n";
         var values = [user_id];
         
         if(query) {
             if(query.free) {
-                q += "AND p.tier = 'free'";
+                q += "AND pp.tier = 'free'";
             }
         }
         

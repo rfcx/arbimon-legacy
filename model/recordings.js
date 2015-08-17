@@ -24,18 +24,9 @@ var queryHandler = dbpool.queryHandler;
 
 
 var getUTC = function (date) {
-    console.log('\n date  ', date);
     var d = new Date(date);
-    console.log('\n BEFORE', d);
     d.setTime(d.getTime() + (d.getTimezoneOffset() * 60000));
-    console.log('\n AFTER ', d);
     return d;
-};
-
-var parseUtcDatetime = function (field, next) {
-    if (field.type !== 'DATETIME') return next(); // 1 = true, 0 = false
-    
-    return new Date(field.string() + ' GMT');
 };
 
 var fileExtPattern = /\.(wav|flac)$/;
@@ -200,7 +191,7 @@ var Recordings = {
             
         var query = {
             sql: sql,
-            typeCast: parseUtcDatetime,
+            typeCast: sqlutil.parseUtcDatetime,
         };
         
         return queryHandler(query, function(err, data){
@@ -760,7 +751,7 @@ var Recordings = {
             
             var query = {
                 sql: q,
-                typeCast: parseUtcDatetime,
+                typeCast: sqlutil.parseUtcDatetime,
             };
             queryHandler(query, callback);
         });

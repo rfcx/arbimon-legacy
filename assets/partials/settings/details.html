@@ -4,14 +4,15 @@
             <h4>
                 Current plan 
                 <button class="btn btn-default"
-                    type="button">
+                    type="button"
+                    ng-click="changePlan()">
                     change
                 </button>
             </h4>
             <div class="panel panel-default">
                 <ul class="list-group">
                     <li class="list-group-item">Type: {{ project.tier }}</li>
-                    <li class="list-group-item">Storage capacity: {{ project.storage_limit }} minutes</li>
+                    <li class="list-group-item">Storage capacity: {{ project.storage_limit }} minutes ({{ minUsage }}% used)</li>
                     <li class="list-group-item">Processing capacity: {{ project.processing_limit }} minutes</li>
                 </ul>
             </div>

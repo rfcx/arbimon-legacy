@@ -23,8 +23,6 @@ angular.module('a2.dashboard',[
     
     var google = $window.google;
     
-    
-    
     Project.getInfo(function(info){
         $scope.project = info;
         done();

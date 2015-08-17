@@ -2,6 +2,8 @@ angular.module('a2.settings',[
     'a2.services', 
     'a2.directives', 
     'a2.forms',
+    'a2.orders',
+    'a2.permissions',
     'ui.bootstrap',
     'ui.router',
     'ct.ui.router.extras',
@@ -32,9 +34,15 @@ angular.module('a2.settings',[
         allowAccess: accessCheck
     });
 })
-.controller('SettingsDetailsCtrl', function($scope, Project, notify, $window, $timeout) {
+.controller('SettingsDetailsCtrl', function($scope, Project, notify, $window, $timeout, a2order) {
     Project.getInfo(function(info) {
         $scope.project = info;
+    });
+    
+    Project.getUsage().success(function(usage) {
+        $scope.minUsage = usage.min_usage;
+        console.log(usage);
+        console.log($scope.minUsage);
     });
     
     $scope.save = function() {
@@ -60,6 +68,10 @@ angular.module('a2.settings',[
                 }, 1000);
             }
         });
+    };
+    
+    $scope.changePlan = function() {
+        var modalInstance = a2order.changePlan({});
     };
 })
 .controller('SettingsUsersCtrl', function($scope, $http, Project, $modal, notify) {

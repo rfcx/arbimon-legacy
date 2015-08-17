@@ -13,6 +13,7 @@ var AWS = require('aws-sdk');
 var s3 = new AWS.S3();
 var config = require('../config');
 var dbpool = require('../utils/dbpool');
+var sqlutil = require('../utils/sqlutil');
 var queryHandler = dbpool.queryHandler;
 
 var species = require('./species');
@@ -28,10 +29,48 @@ var Projects = {
         queryHandler(q, callback);
     },
     
+    find: function (query, callback) {
+        var q = "SELECT p.*, \n"+
+                "   pp.tier, \n"+
+                "   pp.storage AS storage_limit, \n"+
+                "   pp.processing AS processing_limit, \n"+
+                "   pp.created_on AS plan_created, \n"+
+                "   pp.activation AS plan_activated, \n"+
+                "   pp.duration_period AS plan_period \n"+
+                "FROM projects AS p \n"+
+                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+                "WHERE ";
+        var whereExp = [];
+        
+        if(query.id) {
+            whereExp.push("p.project_id = " + mysql.escape(query.id));
+        }
+        if(query.url) {
+            whereExp.push("p.url = " + mysql.escape(query.url));
+        }
+        if(query.name) {
+            whereExp.push("p.name = " + mysql.escape(query.name));
+        }
+        
+        if(!whereExp.length) {
+            return callback(new Error('no query params'));
+        }
+        
+        q += whereExp.join(' \nAND ');
+        
+        return queryHandler(q, callback);
+    },
+    
+    // DEPRACATED use find()
     findById: function (project_id, callback) {
+        console.info('projects.findById DEPRECATED');
         var query = "SELECT p.*, \n"+
+                    "   pp.tier, \n"+
                     "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit \n"+
+                    "   pp.processing AS processing_limit, \n"+
+                    "   pp.created_on AS plan_created, \n"+
+                    "   pp.activation AS plan_activated, \n"+
+                    "   pp.duration_period AS plan_period \n"+
                     "FROM projects AS p \n"+
                     "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
                     "WHERE p.project_id = " + mysql.escape(project_id);
@@ -39,10 +78,16 @@ var Projects = {
         return queryHandler(query , callback);
     },
     
+    // DEPRACATED use find()
     findByUrl: function (project_url, callback) {
+        console.info('projects.findByUrl DEPRECATED');
         var query = "SELECT p.*, \n"+
+                    "   pp.tier, \n"+
                     "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit \n"+
+                    "   pp.processing AS processing_limit, \n"+
+                    "   pp.created_on AS plan_created, \n"+
+                    "   pp.activation AS plan_activated, \n"+
+                    "   pp.duration_period AS plan_period \n"+
                     "FROM projects AS p \n"+
                     "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
                     "WHERE p.url = " + mysql.escape(project_url);
@@ -50,10 +95,16 @@ var Projects = {
         return queryHandler(query , callback);
     },
 
+    // DEPRACATED use find()
     findByName: function (project_name, callback) {
+        console.info('projects.findByName DEPRECATED');
         var query = "SELECT p.*, \n"+
+                    "   pp.tier, \n"+
                     "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit \n"+
+                    "   pp.processing AS processing_limit, \n"+
+                    "   pp.created_on AS plan_created, \n"+
+                    "   pp.activation AS plan_activated, \n"+
+                    "   pp.duration_period AS plan_period \n"+
                     "FROM projects AS p \n"+
                     "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
                     "WHERE p.name = " + mysql.escape(project_name);
@@ -102,13 +153,14 @@ var Projects = {
             name: joi.string(),
             url: joi.string(),
             description: joi.string(),
-            tier: joi.string(),
             project_type_id: joi.number(),
             is_private: joi.boolean(),
             plan: joi.object().keys({
+                tier: joi.string(),
                 storage: joi.number(),
                 processing: joi.number(),
-                due_date: joi.date().optional(),
+                activation: joi.date().optional(),
+                duration_period: joi.number().optional(),
             })
         });
         
@@ -137,7 +189,9 @@ var Projects = {
         var createPlan = 'INSERT INTO project_plans \n'+
                          'SET ?';
                          
-        var updatePlan = 'UPDATE projects SET current_plan = ? WHERE project_id = ?';
+        var updatePlan = 'UPDATE projects \n'+
+                         'SET current_plan = ? \n'+
+                         'WHERE project_id = ?';
         
         dbpool.getConnection(function(err, db) {
             db.beginTransaction(function(err){
@@ -162,6 +216,7 @@ var Projects = {
                     },
                     function insertPlan(result, fields, cb) {
                         plan.project_id = projectId;
+                        plan.created_on = new Date();
                         
                         db.query(createPlan, plan, cb);
                     },
@@ -209,7 +264,7 @@ var Projects = {
             
             var q = 'UPDATE projects \n'+
                     'SET ? \n'+
-                    'WHERE project_id = ';
+                    'WHERE project_id = ?';
 
             q = mysql.format(q, [projectInfo, projectId]);
             queryHandler(q, callback);

@@ -12,7 +12,7 @@ var queryHandler = dbpool.queryHandler;
 
 var plans = {
     insert: function(planData, callback) {
-        var q = "INSERT INTO project_plans SET ?";
+        var q = "INSERT INTO project_plans \nSET ?";
         
         queryHandler(mysql.format(q, planData), callback);
     },
@@ -45,6 +45,12 @@ var plans = {
         
         queryHandler(q, callback);
     },
+    
+    update: function(planId, planData, callback) {
+        var q = "UPDATE project_plans \nSET ? WHERE plan_id = ?";
+        
+        queryHandler(mysql.format(q, [planData, planId]), callback);
+    }
 };
 
 module.exports = plans;

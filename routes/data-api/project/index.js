@@ -23,7 +23,7 @@ var jobsRoutes = require('./jobs');
 
 
 router.param('projectUrl', function(req, res, next, project_url){
-    model.projects.findByUrl(project_url, function(err, rows) {
+    model.projects.find({ url: project_url }, function(err, rows) {
         if(err){
             return next(err);
         }
@@ -300,7 +300,7 @@ router.get('/:projectUrl/user-permissions', function(req, res, next) {
             var result = { 
                 authorized: true,
                 public: !req.project.is_private,
-                super: req.session.user.isSuper,
+                super: !!req.session.user.isSuper,
                 permissions: rows.map(function(perm) { return perm.name; }),
             };
             
