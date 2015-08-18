@@ -17,7 +17,7 @@
                         <li class="list-group-item">Storage: {{ minUsage | number }} / {{ currentPlan.storage | number }} minutes</li>
                         <li class="list-group-item">Processing: {{ currentPlan.processing }} minutes</li>
                         <li class="list-group-item" 
-                            ng-hide="!currentPlan.plan_due && currentPlan.tier == 'free'"
+                            ng-show="project.plan_period"
                             ng-class="{ 'list-group-item-danger': (currentPlan.due < today) }">
                             Due on: 
                             <span>{{ currentPlan.due | moment: 'll' }}</span>
@@ -33,15 +33,17 @@
                         </li>
                     </ul>
                 </div>
-                <p ng-if="mode== 'new'">
+                <p ng-if="mode == 'new'">
                     Your free plan can be upgraded to a paid plan 
                     for more storage and processing capacity
                 </p>
-                <p ng-if="mode== 'upgrade'">
-                    Your current plan have not ended, and can only be upgraded. The upgrade price is prorated on a monthly basis
+                <p ng-if="mode == 'upgrade'">
+                    Your current plan has not ended, and can only be upgraded. 
+                    The upgrade price is prorated on a monthly basis
                 </p>
-                <p ng-if="mode== 'renew'">
-                    Your plan has ended, please select a new plan. The minumum plan is limited by the project storage usage.
+                <p ng-if="mode == 'renew'">
+                    Your current plan has ended, please select a new plan. 
+                    The minumum plan is limited by the project storage usage.
                 </p>
             </div>
         </div>

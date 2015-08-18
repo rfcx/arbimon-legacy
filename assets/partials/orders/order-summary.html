@@ -15,40 +15,47 @@
                         </button>
                     </h4>
                 </div>
-                <ul class="list-group">
-                    <li class="list-group-item">
-                        <b>name:</b> Project data plan<br>
-                        <b>description:</b> includes storage for {{ plan.storage | number }} 
-                        minutes of audio and capacity to process 
-                        {{ plan.processing | number }} minutes of audio per year, for a term of 
-                        {{ plan.duration }} year(s) <br>
-                        <b>unit price:</b> {{ plan.cost | number : 2 }}<br>
-                        <b>quantity:</b> 1<br>
-                        <p class="text-right">
-                            <b>amount:</b> ${{ plan.cost | number : 2 }}
-                        </p>
-                    </li>
-                    <li class="list-group-item" ng-show="recorderQty">
-                        <b>name:</b> Arbimon recorder<br>
-                        <b>description:</b> includes an android device,
-                        waterproof case(IP67), microphone, etc<br>
-                        <b>unit price:</b> $125<br>
-                        <b>quantity:</b> {{ recorderQty }}<br>
-                        <p class="text-right">
-                            <b>amount:</b> ${{ recorderQty * 125 | number : 2 }}
-                        </p>
-                    </li>
-                </ul>
-                <table class="table text-right">
-                    <tr>
-                        <td><b>subtotal:</b></td><td> ${{ (plan.cost + (recorderQty * 125)) | number : 2 }}</td>
-                    </tr>
-                    <tr>
-                        <td><b>shipping &amp; handling:</b></td><td>${{ shipping }}</td>
-                    </tr>
-                    <tr>
-                        <td><b>total:</b></td><td><b>${{ (plan.cost + (recorderQty * 125) + shipping ) | number : 2 }}</b></td>
-                    </tr>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Items</th>
+                            <th>Unit</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <b>{{ info.plan[type].name }} </b><br>
+                                {{ info.plan[type].description(plan) }}
+                            </td>
+                            <td>${{ plan.cost | number : 2 }}</td>
+                            <td>1</td>
+                            <td>${{ plan.cost | number : 2 }}</td>
+                        </tr>
+                        <tr ng-show="recorderQty">
+                            <td>
+                                <b>{{ info.recorder.name }} </b><br>
+                                {{ info.recorder.description }}
+                            </td>
+                            <td>${{ info.recorder.priceWithPlan | number : 2 }}</td>
+                            <td>{{ recorderQty }}</td>
+                            <td>${{ info.recorder.priceWithPlan * recorderQty | number : 2 }}</td>
+                        </tr>
+                        <tr class="text-right">
+                            <td colspan="3"><b>subtotal:</b></td>
+                            <td> ${{ (plan.cost + (recorderQty * 125)) | number : 2 }}</td>
+                        </tr>
+                        <tr class="text-right">
+                            <td colspan="3"><b>shipping &amp; handling:</b></td>
+                            <td>${{ shipping }}</td>
+                        </tr>
+                        <tr class="text-right">
+                            <td colspan="3"><b>total:</b></td>
+                            <td><b>${{ (plan.cost + (recorderQty * 125) + shipping ) | number : 2 }}</b></td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>

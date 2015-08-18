@@ -9,6 +9,7 @@ var paypal = require('paypal-rest-sdk');
 var async = require('async');
 var joi = require('joi');
 var uuid = require('node-uuid');
+var moment = require('moment');
 
 
 var model = require('../../model');
@@ -363,144 +364,170 @@ router.param('orderId', function(req, res, next, orderId) {
             res.sendStatus(403);
         }
         
+        req.order.number = (
+            moment(req.order.datetime).format("YYMMDDHHmm") + 
+            req.order.user_id
+        );
+        
         return next();
     });
 });
 
-// DUMMY
-router.post('/process/:orderId', function(req, res, next) { 
-    res.json({ 
-        success: true, 
-        action: req.order.action,
-        invoice: req.order.payment_data
-    });
-});
-
-// router.post('/process/:orderId', function(req, res, next) {
+// // DUMMY
+// router.post('/process/:orderId', function(req, res, next) { 
 //     
-//     if(!req.query.PayerID) {
-//         return res.status(400).json({ error: 'MISSING_PARAMS'});
-//     }
-//     var payer = { payer_id : req.query.PayerID };
-//     
-//     if(req.order.status != 'created') {
-//         return res.status(400).json({ error: 'ALREADY_PROCESSED' });
-//     }
-//     
-//     async.series([
-//         function executePayment(cb) {
-//             paypal.payment.execute(req.order.paypal_payment_id, payer, {}, function(err, resp) {
-//                 if(err) {
-//                     console.error(err);
-//                     if(err.response.name == 'PAYMENT_NOT_APPROVED_FOR_EXECUTION') {
-//                         paypal.payment.get(req.order.paypal_payment_id, function(err, resp) {
-//                             if(err) {
-//                                 console.error(err);
-//                                 return res.sendStatus(500);
-//                             }
-//                             console.log(resp);
-//                             var approvalLink = findLinkObject(resp.links, 'approval_url');
-//                             
-//                             res.status(400).json({ 
-//                                 error: 'APPROVAL_NEEDED',
-//                                 approvalLink: approvalLink.href,
-//                             });
-//                         });
-//                     }
-//                     else {
-//                         model.orders.update({
-//                             order_id: req.order.order_id,
-//                             status: 'error',
-//                             error: JSON.stringify(err),
-//                         },
-//                         function(err, result) {
-//                             if(err) return next(err);
-//                             
-//                             res.status(500).json({ error: 'ERROR' });
-//                         });
-//                     }
-//                     return;
-//                 }
-//                 
-//                 console.log(resp);
-//                 cb();
-//             });
+//     res.json({ 
+//         success: true, 
+//         action: req.order.action,
+//         invoice: req.order.payment_data,
+//         orderNumber: req.order.number,
+//         user: {
+//             email: req.session.user.email,
+//             fullName: req.session.user.firstname + ' ' + req.session.user.lastname,
 //         },
-//         function setApproved(cb) {
-//             model.orders.update({
-//                 order_id: req.order.order_id,
-//                 status: 'approved'
-//             }, cb);
-//         },
-//         function performAction(cb) {
-//             // perform action required by order:
-//             
-//             // create project and plan for it
-//             if(req.order.action == 'create-project') {
-//                 createProject(
-//                     req.order.data.project, 
-//                     req.session.user.id, 
-//                     function(err) {
-//                         if(err) return cb(err);
-//                         cb();
-//                     }
-//                 );
-//             }
-//             
-//             // update project plan
-//             else if(req.order.action == 'update-plan') {
-//                 // get Project
-//                 model.projects.find({ id: req.order.data.project_id }, function(err, rows) {
-//                     if(err) return cb(err);
-//                     
-//                     if(!rows.length) return cb(new Error('project not found'));
-//                     
-//                     var project = rows[0];
-//                     
-//                     // update current plan with order.data
-//                     model.plans.update(project.current_plan, req.order.data.plan, function(err) {
-//                         if(err) return cb(err);
-//                         cb();
-//                     });
-//                 });
-//                 // TODO add event to project_audit table
-//             }
-//             else if(req.order.action == 'new-plan') {
-//                 // create new plans
-//                 model.plans.insert(req.order.data.plan, function(err, result) {
-//                     if(err) return cb(err);
-//                     
-//                     var planId = result.insertId;
-//                     // assign plan_id to project.current_plan
-//                     
-//                     model.project.update({
-//                         project_id: req.order.data.project_id,
-//                         current_plan: planId,
-//                     }, function(err) {
-//                         if(err) return cb(err);
-//                         cb();
-//                     });
-//                 });
-//                 // TODO add event to project_audit table
-//             }
-//         },
-//         function setCompleted(cb) {
-//             model.orders.update({
-//                 order_id: req.order.order_id,
-//                 status: 'completed'
-//             }, cb);
-//         },
-//     ], function(err) {
-//         console.log(err);
-//         if(err) return next(err);
-//         
-//         res.json({ 
-//             success: true, 
-//             action: req.order.action,
-//             invoice: req.order.paymentData
-//         });
 //     });
 // });
+
+router.post('/process/:orderId', function(req, res, next) {
+    
+    if(!req.query.PayerID) {
+        return res.status(400).json({ error: 'MISSING_PARAMS'});
+    }
+    var payer = { payer_id : req.query.PayerID };
+    
+    if(req.order.status != 'created') {
+        return res.status(400).json({ error: 'ALREADY_PROCESSED' });
+    }
+    
+    async.series([
+        function executePayment(cb) {
+            paypal.payment.execute(req.order.paypal_payment_id, payer, {}, function(err, resp) {
+                if(err) {
+                    console.error(err);
+                    if(err.response.name == 'PAYMENT_NOT_APPROVED_FOR_EXECUTION') {
+                        paypal.payment.get(req.order.paypal_payment_id, function(err, resp) {
+                            if(err) {
+                                console.error(err);
+                                return res.sendStatus(500);
+                            }
+                            console.log(resp);
+                            var approvalLink = findLinkObject(resp.links, 'approval_url');
+                            
+                            res.status(400).json({ 
+                                error: 'APPROVAL_NEEDED',
+                                approvalLink: approvalLink.href,
+                            });
+                        });
+                    }
+                    else {
+                        model.orders.update({
+                            order_id: req.order.order_id,
+                            status: 'error',
+                            error: JSON.stringify(err),
+                        },
+                        function(err, result) {
+                            if(err) return next(err);
+                            
+                            res.status(500).json({ error: 'ERROR' });
+                        });
+                    }
+                    return;
+                }
+                
+                console.log(resp);
+                cb();
+            });
+        },
+        function setApproved(cb) {
+            model.orders.update({
+                order_id: req.order.order_id,
+                status: 'approved'
+            }, cb);
+        },
+        function performAction(cb) {
+            
+            if(req.order.data.plan.cost) {
+                delete req.order.data.plan.cost;
+            }
+            
+            // perform action required by order:
+            
+            // create project and plan for it
+            if(req.order.action == 'create-project') {
+                createProject(
+                    req.order.data.project, 
+                    req.session.user.id, 
+                    function(err) {
+                        if(err) return cb(err);
+                        cb();
+                    }
+                );
+            }
+            
+            // update project plan
+            else if(req.order.action == 'update-plan') {
+                // get Project
+                model.projects.find({ id: req.order.data.project_id }, function(err, rows) {
+                    if(err) return cb(err);
+                    
+                    if(!rows.length) return cb(new Error('project not found'));
+                    
+                    var project = rows[0];
+                    
+                    // update current plan with order.data
+                    model.plans.update(project.current_plan, req.order.data.plan, function(err) {
+                        if(err) return cb(err);
+                        cb();
+                    });
+                });
+                // TODO add event to project_audit table
+            }
+            else if(req.order.action == 'new-plan') {
+                
+                var plan = req.order.data.plan;
+                plan.project_id = req.order.data.project_id;
+                plan.created_on = new Date();
+                
+                // create new plans
+                model.plans.insert(plan, function(err, result) {
+                    if(err) return cb(err);
+                    
+                    var planId = result.insertId;
+                    // assign plan_id to project.current_plan
+                    
+                    model.projects.update({
+                        project_id: req.order.data.project_id,
+                        current_plan: planId,
+                    }, function(err) {
+                        if(err) return cb(err);
+                        cb();
+                    });
+                });
+                // TODO add event to project_audit table
+            }
+        },
+        function setCompleted(cb) {
+            model.orders.update({
+                order_id: req.order.order_id,
+                status: 'completed'
+            }, cb);
+        },
+    ], function(err) {
+        console.log(err);
+        if(err) return next(err);
+        
+        res.json({ 
+            success: true, 
+            action: req.order.action,
+            invoice: req.order.payment_data,
+            orderNumber: req.order.number,
+            user: {
+                email: req.session.user.email,
+                fullName: req.session.user.firstname + ' ' + req.session.user.lastname,
+            },
+        });
+    });
+});
 
 router.get('/cancel/:orderId', function(req, res, next) {
     // set order as canceled

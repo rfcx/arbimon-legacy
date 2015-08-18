@@ -29,6 +29,41 @@ angular.module('a2.orders', [
             }
 
             return totalMonths-currentMonth;
+        },
+        
+        info: {
+            recorder: {
+                name: 'Arbimon Recorder',
+                description: (
+                    "includes an Android device preset for acoustic monitoring, "+
+                    "waterproof case(IP67), microphone, 6500mAh lithium-ion battery "+
+                    "and USB charger"
+                ),
+                priceWithPlan: 125,
+                priceNoPlan: 300
+            },
+            plan: {
+                new: {
+                    name: "Project data plan",
+                    description: function(plan) {
+                        return (
+                            "includes storage for " + plan.storage + " minutes of audio "+
+                            "and capacity to process " + plan.processing + " minutes of audio "+
+                            "per year, for a term of " + plan.duration + " year(s)"
+                        );
+                    }
+                },
+                upgrade: {
+                    name: "Project data plan upgrade",
+                    description: function(plan) {
+                        return (
+                            "upgrade your plan storage to " + plan.storage + " minutes of audio "+
+                            "and capacity to process " + plan.processing + " minutes of audio "+
+                            "per year, until this plan due"
+                        );
+                    }
+                }
+            },
         }
     };
 })
@@ -114,8 +149,12 @@ angular.module('a2.orders', [
     });
     
     $scope.$watch('plan', function(value) {
-        if($scope.plan && $scope.plan.storage) {
-            $scope.planMinutes = $scope.plan.storage;
+        if($scope.plan) {
+            if($scope.plan.storage)
+                $scope.planMinutes = $scope.plan.storage;
+            
+            if($scope.plan.duration)
+                $scope.planYears = $scope.plan.duration;
         }
     });
     
@@ -214,11 +253,13 @@ angular.module('a2.orders', [
         templateUrl: '/partials/orders/plan-capacity.html',
     };
 })
-.controller('OrderSummaryCtrl', function($scope, $http, $modalInstance, orderData, notify, $window, a2order) {
+.controller('OrderSummaryCtrl', function($scope, $http, $modalInstance, orderData, notify, $window, a2order, a2orderUtils) {
     if(orderData.address) {
         $scope.address = orderData.address;
     }
     
+    $scope.type = orderData.mode == 'upgrade' ? 'upgrade' : 'new';
+    $scope.info = a2orderUtils.info;
     $scope.shipping = orderData.shipping || 0;
     $scope.project = orderData.project;
     $scope.plan = orderData.project.plan;
@@ -365,26 +406,24 @@ angular.module('a2.orders', [
     
     $scope.processing = true;
     
-    // $scope.orderNumber = '201507151707';
-    // $scope.orderAction = "create-project";
-    // $scope.orderData = JSON.parse('{"recorderQty":0,"project":{"is_private":false,"name":"test paid","url":"paid12","description":"lakjs laksj dlajs lkja sldk jalskdj alks djlkasdjglkasjd","plan":{"storage":20000,"cost":600,"processing":2000000},"tier":"paid","project_type_id":1}}');
-    // 
-    // 
-    // $scope.success = true;
-    // $scope.processing = false;
-    
     $http.post('/api/orders/process/'+orderId+$window.location.search)
         .success(function(data) {
-            console.log(data);
-            $scope.success = true;
+            console.log('data', data);
             $scope.invoice = {
                 items: data.invoice.item_list.items,
-                address: data.invoice.item_list.shipping_address,
                 amount: data.invoice.amount,
+                number: data.orderNumber,
+                user: data.user,
             };
+            
+            if(data.invoice.item_list.shipping_address) {
+                $scope.invoice.address = data.invoice.item_list.shipping_address;
+            }
+            
             $scope.action = data.action;
             
             $scope.processing = false;
+            $scope.success = true;
         })
         .error(function(data, status) {
             if(status == 404) {
@@ -406,6 +445,8 @@ angular.module('a2.orders', [
 })
 .controller('ChangeProjectPlanCtrl', function($scope, orderData, Project, $window, a2order, $modalInstance, notify) {
     $scope.today = new Date();
+    console.log(orderData);
+    $scope.recorderQty = orderData.recorderQty;
     
     Project.getInfo(function(info) {
         $scope.project = info;
@@ -434,7 +475,7 @@ angular.module('a2.orders', [
             $scope.mode = 'new';
         }
         
-        $scope.project.plan = {};
+        $scope.project.plan = (orderData.project && orderData.project.plan) || {};
         
         Project.getUsage().success(function(usage) {
             $scope.minUsage = usage.min_usage;
@@ -463,6 +504,7 @@ angular.module('a2.orders', [
             action: 'update-project',
             project: $scope.project,
             recorderQty: $scope.recorderQty,
+            mode: $scope.mode,
         };
         
         if($scope.recorderQty > 0 && $scope.project.plan.tier == 'paid') {

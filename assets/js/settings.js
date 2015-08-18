@@ -35,7 +35,14 @@ angular.module('a2.settings',[
     });
 })
 .controller('SettingsDetailsCtrl', function($scope, Project, notify, $window, $timeout, a2order) {
+    $scope.today = new Date();
+    
     Project.getInfo(function(info) {
+        if(info.plan_activated && info.plan_period) {
+            info.plan_due = new Date(info.plan_activated);
+            info.plan_due.setFullYear(info.plan_due.getFullYear()+info.plan_period);
+        }
+        
         $scope.project = info;
     });
     

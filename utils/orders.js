@@ -20,19 +20,23 @@ var info = {
     plan: {
         new: {
             name: "Project data plan",
-            description: (
-                "includes storage for %(storage)d minutes of audio "+
-                "and capacity to process %(processing)d minutes of audio "+
-                "per year, for a term of %(duration_period)d year(s)"
-            )
+            description: function(plan) {
+                return (
+                    "includes storage for " + plan.storage + " minutes of audio "+
+                    "and capacity to process " + plan.processing + " minutes of audio "+
+                    "per year, for a term of " + plan.duration_period + " year(s)"
+                );
+            }
         },
         upgrade: {
             name: "Project data plan upgrade",
-            description: (
-                "upgrade your plan storage to %(storage)d minutes of audio "+
-                "and capacity to process %(processing)d minutes of audio "+
-                "per year, until this plan due"
-            )
+            description: function(plan) {
+                return (
+                    "upgrade your plan storage to " + plan.storage + " minutes of audio "+
+                    "and capacity to process " + plan.processing + " minutes of audio "+
+                    "per year, until this plan due"
+                );
+            }
         }
     },
 };
@@ -85,7 +89,7 @@ module.exports = {
                         currency: "USD",
                         tax: 0,
                         name: info.plan[type].name,
-                        description: sprintf(info.plan[type].description, paymentData.plan),
+                        description: info.plan[type].description(paymentData.plan),
                     }]
                 }
             }]

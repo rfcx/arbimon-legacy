@@ -14,6 +14,12 @@
                     <li class="list-group-item">Type: {{ project.tier }}</li>
                     <li class="list-group-item">Storage capacity: {{ project.storage_limit }} minutes ({{ minUsage }}% used)</li>
                     <li class="list-group-item">Processing capacity: {{ project.processing_limit }} minutes</li>
+                    <li class="list-group-item" 
+                        ng-show="project.plan_due"
+                        ng-class="{ 'list-group-item-danger': (project.plan_due < today) }">
+                        Plan due on: {{ project.plan_due | moment: 'll' }}
+                        <span ng-show="project.plan_due < today">plan expired</span>
+                    </li>
                 </ul>
             </div>
         </div>
