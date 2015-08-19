@@ -12,6 +12,7 @@ var rewire= require('rewire');
 
 var robTheBuilder = require('../mock_tools/rob-the-builder');
 var uploadQueue = rewire('../../utils/upload-queue');
+var Uploader = require('../../utils/uploader');
 
 var mock = {
     model:{
@@ -50,6 +51,7 @@ describe("Module: utils/upload-queue", function() {
     
     describe('uploadQueue.enqueue', function() {
         var restoreUploadQueue;
+        var restoreUploader;
         var _uploadQueue;
         var enqueue;
         
@@ -60,17 +62,20 @@ describe("Module: utils/upload-queue", function() {
         beforeEach(function() {
             _uploadQueue = [];
             restoreUploadQueue = uploadQueue.__set__("queue", _uploadQueue);
+            sinon.stub(Uploader, 'moveToTempArea');
             mock.model.uploads.insertRecToList = sinon.stub();
         });
         
         afterEach(function() {
             restoreUploadQueue();
+            Uploader.moveToTempArea.restore();
             delete mock.model.uploads.insertRecToList;
         });
         
         it('should add upload to uploads_processing and push in _uploadQueue', function(done) {
             mock.model.uploads.insertRecToList.onFirstCall()
                 .callsArgWith(1, null, { insertId: 1 }, {});
+            Uploader.moveToTempArea.onFirstCall().callsArg(1);
             
             enqueue(fileUpload, function(err) {
                 expect(err).to.not.exist;
@@ -78,6 +83,17 @@ describe("Module: utils/upload-queue", function() {
                 expect(mock.model.uploads.insertRecToList.calledOnce).to.equal(true);
                 mock.model.uploads.insertRecToList.firstCall.args[0]
                     .should.deep.equal({
+                        filename: fileUpload.name, 
+                        project_id: fileUpload.projectId,
+                        site_id: fileUpload.siteId,
+                        user_id: fileUpload.userId,
+                        state: 'waiting',
+                        duration: fileUpload.info.duration
+                    });
+                expect(Uploader.moveToTempArea.calledOnce).to.equal(true);
+                Uploader.moveToTempArea.firstCall.args[0]
+                    .should.deep.equal({
+                        id: 1, 
                         filename: fileUpload.name, 
                         project_id: fileUpload.projectId,
                         site_id: fileUpload.siteId,
@@ -101,12 +117,33 @@ describe("Module: utils/upload-queue", function() {
                 expect(err.message).to.have.string('err');
                 
                 expect(mock.model.uploads.insertRecToList.calledOnce).to.equal(true);
+                expect(Uploader.moveToTempArea.calledOnce).to.equal(false);
                 
                 expect(_uploadQueue).to.deep.equal([]);
                 
                 done();
             });
         });
+
+        it('should throw err if Uploader.moveToTempArea fails', function(done) {
+            mock.model.uploads.insertRecToList.onFirstCall()
+                .callsArgWith(1, null, { insertId: 1 }, {});
+            Uploader.moveToTempArea.onFirstCall()
+                .callsArgWith(1, new Error('err'));
+            
+            enqueue(fileUpload, function(err) {
+                expect(err).to.exist;
+                expect(err.message).to.have.string('err');
+                
+                expect(mock.model.uploads.insertRecToList.calledOnce).to.equal(true);
+                expect(Uploader.moveToTempArea.calledOnce).to.equal(true);
+                
+                expect(_uploadQueue).to.deep.equal([]);
+                
+                done();
+            });
+        });
+
     });
 
     describe('worker', function() {
