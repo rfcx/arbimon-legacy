@@ -58,7 +58,7 @@ describe('Module: utils/uploader, Uploader', function() {
             projectId: 100,
             siteId: 20,
             userId: 101,
-            tempFileUri: 'uploading/project_100/site_20/2014/07/default-2014-07-14_08-30.wav'
+            tempFileUri: 'uploading/project_100/site_20/2014/7/default-2014-07-14_08-30.wav'
         };
         
         dummyCallback = sinon.stub();
@@ -682,7 +682,7 @@ describe('Module: utils/uploader, Uploader', function() {
         });
     });
     
-    describe('prototype.process', function() {
+        describe('prototype.process', function() {
         var process;
         var dataPrep;
         var ensureFileIsLocallyAvailable;
@@ -831,8 +831,8 @@ describe('Module: utils/uploader, Uploader', function() {
         });
         
         beforeEach(function() {
-            sinon.stub(mock.fs, 'writeFile');
-            sinon.stub(mock.s3, 'getObject');
+            mock.fs.writeFile = sinon.stub();
+            mock.s3.getObject = sinon.stub();
             data = {
                 upload: fileUpload,
                 thumbnail: 'thumbnail',
@@ -842,8 +842,8 @@ describe('Module: utils/uploader, Uploader', function() {
         });
         
         afterEach(function() {
-            mock.fs.writeFile.restore();
-            mock.s3.getObject.restore();
+            delete mock.fs.writeFile;
+            delete mock.s3.getObject.restore;
             fileUpload.tempFileUri = tempFileUri;
         });
         
@@ -852,9 +852,9 @@ describe('Module: utils/uploader, Uploader', function() {
         });
 
         
-        it('Should getObject from bucket if upload.tempFileUri is defined', function() {
-            mock.fs.writeFile.onFirstCall().callsArg(1);
-            mock.s3.getObject.onFirstCall().callsArgWith(2, null, {Body:'body data'});
+        it('Should getObject from bucket if upload.tempFileUri is defined', function(done) {
+            mock.fs.writeFile.onFirstCall().callsArg(2);
+            mock.s3.getObject.onFirstCall().callsArgWith(1, null, {Body:'body data'});
             
             Uploader.prototype.ensureFileIsLocallyAvailable.call(data, function(err){
                 expect(mock.s3.getObject.callCount).to.equal(1);
@@ -865,11 +865,13 @@ describe('Module: utils/uploader, Uploader', function() {
                 expect(mock.fs.writeFile.firstCall.args[0]).to.equal(data.upload.path);
                 expect(mock.fs.writeFile.firstCall.args[1]).to.equal('body data');
 
-                expect(err).to.be.empty();
+                expect(err).to.be.empty;
+                
+                done();
             });
         });
 
-        it('Should call callback immediately if upload.tempFileUri is not defined', function() {
+        it('Should call callback immediately if upload.tempFileUri is not defined', function(done) {
             // mock.fs.writefile.onFirstCall().callsArg(1);
             // mock.s3.getObject.onFirstCall().callsArg(1);
             delete data.upload.tempFileUri;
@@ -877,14 +879,16 @@ describe('Module: utils/uploader, Uploader', function() {
             Uploader.prototype.ensureFileIsLocallyAvailable.call(data, function(err){
                 expect(mock.s3.getObject.callCount).to.equal(0);
                 expect(mock.fs.writeFile.callCount).to.equal(0);
-                expect(err).to.be.empty();
-                expect(fileUpload.tempFileUri).to.equal(tempFileUri);
+                expect(err).to.be.empty;
+                expect(fileUpload.tempFileUri).to.be.empty;
+                
+                done();
             });
         });
         
-        it('Should callback with error if getObject fails', function() {
-            mock.fs.writeFile.onFirstCall().callsArg(1);
-            mock.s3.getObject.onFirstCall().callsArgWith(2, new Error('err'));
+        it('Should callback with error if getObject fails', function(done) {
+            mock.fs.writeFile.onFirstCall().callsArg(2);
+            mock.s3.getObject.onFirstCall().callsArgWith(1, new Error('err'));
             
             Uploader.prototype.ensureFileIsLocallyAvailable.call(data, function(err){
                 expect(mock.s3.getObject.callCount).to.equal(1);
@@ -893,14 +897,15 @@ describe('Module: utils/uploader, Uploader', function() {
 
                 expect(mock.fs.writeFile.callCount).to.equal(0);
 
-                expect(err).to.not.be.empty();
-                expect(err.message).to.equal('err');
+                expect(err && err.message).to.equal('err');
+                
+                done();
             });
         });
 
-        it('Should callback with error if fs.writeFile fails', function() {
-            mock.fs.writeFile.onFirstCall().callsArgWith(1, new Error('err'));
-            mock.s3.getObject.onFirstCall().callsArgWith(2, null, {Body:'body data'});
+        it('Should callback with error if fs.writeFile fails', function(done) {
+            mock.fs.writeFile.onFirstCall().callsArgWith(2, new Error('err'));
+            mock.s3.getObject.onFirstCall().callsArgWith(1, null, {Body:'body data'});
             
             Uploader.prototype.ensureFileIsLocallyAvailable.call(data, function(err){
                 expect(mock.s3.getObject.callCount).to.equal(1);
@@ -911,8 +916,9 @@ describe('Module: utils/uploader, Uploader', function() {
                 expect(mock.fs.writeFile.firstCall.args[0]).to.equal(data.upload.path);
                 expect(mock.fs.writeFile.firstCall.args[1]).to.equal('body data');
 
-                expect(err).to.not.be.empty();
-                expect(err.message).to.equal('err');
+                expect(err && err.message).to.equal('err');
+                
+                done();
             });
         });
 
@@ -932,16 +938,16 @@ describe('Module: utils/uploader, Uploader', function() {
         
         beforeEach(function() {
             delete fileUpload.tempFileUri;
-            sinon.stub(mock.fs, 'createReadStream');
+            mock.fs.createReadStream = sinon.stub();
             mock.fs.createReadStream.onFirstCall().returns('ReadStream');
-            sinon.stub(mock.fs, 'unlink');
-            sinon.stub(mock.s3, 'putObject');
+            mock.fs.unlink = sinon.stub();
+            mock.s3.putObject = sinon.stub();
         });
         
         afterEach(function() {
-            mock.fs.createReadStream.restore();
-            mock.fs.unlink.restore();
-            mock.s3.putObject.restore();
+            delete mock.fs.createReadStream;
+            delete mock.fs.unlink;
+            delete mock.s3.putObject;
             fileUpload.tempFileUri = tempFileUri;
         });
         
@@ -953,6 +959,7 @@ describe('Module: utils/uploader, Uploader', function() {
         it('Should put file in bucket, remove file, set upload.tempFileUri and call callback', function(done) {
             mock.fs.unlink.onFirstCall().callsArg(1);
             mock.s3.putObject.onFirstCall().callsArg(1);
+            expect(fileUpload.tempFileUri).to.empty;
             
             Uploader.moveToTempArea(fileUpload, function(err){
                 expect(mock.fs.createReadStream.callCount).to.equal(1);
@@ -966,7 +973,7 @@ describe('Module: utils/uploader, Uploader', function() {
                 expect(mock.fs.unlink.callCount).to.equal(1);
                 expect(mock.fs.unlink.firstCall.args[0]).to.equal(fileUpload.path);
 
-                expect(err).to.be.empty();
+                expect(err).to.be.empty;
                 expect(fileUpload.tempFileUri).to.equal(tempFileUri);
                 
                 done();
@@ -976,6 +983,7 @@ describe('Module: utils/uploader, Uploader', function() {
         it('Should call callback with error if putObject to bucket fails', function(done) {
             mock.s3.putObject.onFirstCall().callsArgWith(1, new Error('err'));
             mock.fs.unlink.onFirstCall().callsArg(1);
+            expect(fileUpload.tempFileUri).to.empty;
             
             Uploader.moveToTempArea(fileUpload, function(err){
                 expect(mock.fs.createReadStream.callCount).to.equal(1);
@@ -988,9 +996,8 @@ describe('Module: utils/uploader, Uploader', function() {
                 
                 expect(mock.fs.unlink.callCount).to.equal(0);
 
-                expect(err).to.not.be.empty();
-                expect(err.message).to.equal('err');
-                expect(fileUpload.tempFileUri).to.be.empty();
+                expect(err && err.message).to.equal('err');
+                expect(fileUpload.tempFileUri).to.equal(tempFileUri);
                 
                 done();
             });
@@ -999,6 +1006,7 @@ describe('Module: utils/uploader, Uploader', function() {
         it('Should call callback with error if file unlink fails', function(done) {
             mock.fs.unlink.onFirstCall().callsArgWith(1, new Error('err'));
             mock.s3.putObject.onFirstCall().callsArg(1);
+            expect(fileUpload.tempFileUri).to.empty;
             
             Uploader.moveToTempArea(fileUpload, function(err){
                 expect(mock.fs.createReadStream.callCount).to.equal(1);
@@ -1012,9 +1020,8 @@ describe('Module: utils/uploader, Uploader', function() {
                 expect(mock.fs.unlink.callCount).to.equal(1);
                 expect(mock.fs.unlink.firstCall.args[0]).to.equal(fileUpload.path);
 
-                expect(err).to.not.be.empty();
-                expect(err.message).to.equal('err');
-                expect(fileUpload.tempFileUri).to.be.empty();
+                expect(err && err.message).to.equal('err');
+                expect(fileUpload.tempFileUri).to.equal(tempFileUri);
                 
                 done();
             });

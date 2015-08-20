@@ -91,16 +91,7 @@ describe("Module: utils/upload-queue", function() {
                         duration: fileUpload.info.duration
                     });
                 expect(Uploader.moveToTempArea.calledOnce).to.equal(true);
-                Uploader.moveToTempArea.firstCall.args[0]
-                    .should.deep.equal({
-                        id: 1, 
-                        filename: fileUpload.name, 
-                        project_id: fileUpload.projectId,
-                        site_id: fileUpload.siteId,
-                        user_id: fileUpload.userId,
-                        state: 'waiting',
-                        duration: fileUpload.info.duration
-                    });
+                Uploader.moveToTempArea.firstCall.args[0].should.equal(fileUpload);
                 
                 expect(_uploadQueue).to.deep.equal([fileUpload]);
                 
