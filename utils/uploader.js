@@ -20,9 +20,19 @@ var tmpFileCache = require('../utils/tmpfilecache');
 
 var deleteFile = function(filename) {
     fs.unlink(filename, function(err) {
-        if(err) console.error("failed to delete: %s", filename);
+        if(err) console.error("failed to delete: %s. error: %s", filename, err);
     });
 };
+
+var deleteBucketObject = function(key) {
+    if(key) s3.deleteObject({
+        Bucket : config('aws').bucketName,
+        Key    : key
+    }, function (err) {
+        if(err) console.error("failed to delete bucket object: %s. error: %s", key, err);
+    });
+};
+
 
 AWS.config.update({
     accessKeyId: config('aws').accessKeyId, 
@@ -226,6 +236,7 @@ Uploader.prototype.cleanUpAfter = function() {
     // delete temp files
     deleteFile(this.thumbnail);
     deleteFile(this.inFile);
+    deleteBucketObject(this.upload.tempFileUri);
     if(this.outFile !== this.inFile) {
         deleteFile(this.outFile);
     }

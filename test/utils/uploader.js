@@ -603,15 +603,17 @@ describe('Module: utils/uploader, Uploader', function() {
     
     describe('prototype.cleanUpAfter', function() {
         var cleanUpAfter;
-        var unlink;
         var removeFromList;
+        var deleteFile, restoreDeleteFile;
+        var deleteBucketObject, restoreDeleteBucketObject;
         
         before(function() {
             cleanUpAfter = Uploader.prototype.cleanUpAfter;
         });
         
         beforeEach(function() {
-            mock.fs.unlink = unlink = sinon.stub();
+            restoreDeleteBucketObject = Uploader.__set__('deleteBucketObject', deleteBucketObject=sinon.stub());
+            restoreDeleteFile = Uploader.__set__('deleteFile', deleteFile=sinon.stub());
             removeFromList = sinon.stub();
             mock.model.uploads = {
                 removeFromList: removeFromList,
@@ -627,6 +629,11 @@ describe('Module: utils/uploader, Uploader', function() {
             fileUpload.id = 1;
         });
         
+        afterEach(function(){
+            restoreDeleteBucketObject();
+            restoreDeleteFile();
+        });
+        
         after(function() {
             delete mock.model.uploads;
         });
@@ -634,13 +641,81 @@ describe('Module: utils/uploader, Uploader', function() {
         it('Should delete temp file and remove upload from uploads_processing', function() {
             cleanUpAfter.call(data);
             
-            expect(unlink.callCount).to.equal(3);
-            expect(unlink.firstCall.args[0]).to.equal(data.thumbnail);
-            expect(unlink.secondCall.args[0]).to.equal(data.inFile);
-            expect(unlink.thirdCall.args[0]).to.equal(data.outFile);
+            expect(deleteFile.callCount).to.equal(3);
+            expect(deleteFile.firstCall.args[0]).to.equal(data.thumbnail);
+            expect(deleteFile.secondCall.args[0]).to.equal(data.inFile);
+            expect(deleteFile.thirdCall.args[0]).to.equal(data.outFile);
+            
+            expect(deleteBucketObject.callCount).to.equal(1);
+            expect(deleteBucketObject.firstCall.args[0]).to.equal(fileUpload.tempFileUri);
             
             expect(removeFromList.callCount).to.equal(1);
             expect(removeFromList.firstCall.args[0]).to.equal(fileUpload.id);
+        });
+    });
+    
+    describe('[private functions]', function(){
+        describe('deleteFile', function(){
+            var deleteFile;
+            
+            before(function() {
+                deleteFile = Uploader.__get__('deleteFile');
+            });
+            
+            beforeEach(function() {
+                mock.fs.unlink = sinon.stub();
+            });
+            
+            afterEach(function(){
+                delete mock.fs.unlink;
+            });
+            
+            it('Should call deleteObject in bucket with the given key', function() {
+                mock.fs.unlink.callsArg(1);
+                
+                deleteFile('./file/to/delete');
+                
+                expect(mock.fs.unlink.callCount).to.equal(1);
+                expect(mock.fs.unlink.firstCall.args[0]).to.equal('./file/to/delete');
+            });            
+        });
+
+        describe('deleteBucketObject', function(){
+            var deleteBucketObject;
+            var restoreConfig;
+            
+            before(function() {
+                deleteBucketObject = Uploader.__get__('deleteBucketObject');
+            });
+            
+            beforeEach(function() {
+                mock.s3.deleteObject = sinon.stub();
+                var config = sinon.stub();
+                config.withArgs('aws').returns({ bucketName: 'bucket' });
+                restoreConfig = Uploader.__set__('config', config);
+            });
+            
+            afterEach(function(){
+                delete mock.s3.deleteObject;
+                restoreConfig();
+            });
+            
+            it('Should call deleteObject in bucket with the given key', function() {
+                mock.s3.deleteObject.callsArg(1);
+                
+                deleteBucketObject('/key/to/delete');
+                
+                expect(mock.s3.deleteObject.callCount).to.equal(1);
+                expect(mock.s3.deleteObject.firstCall.args[0]).to.have.property('Key', '/key/to/delete');
+                expect(mock.s3.deleteObject.firstCall.args[0]).to.have.property('Bucket', 'bucket');
+
+            });
+            
+            it('Should do nothing if no key is given', function() {
+                deleteBucketObject('');
+                
+                expect(mock.s3.deleteObject.callCount).to.equal(0);
+            });
         });
     });
     
