@@ -1,3 +1,6 @@
+/* jshint node:true */
+"use strict";
+
 // dependencies
 var util  = require('util');
 var path   = require('path');
@@ -80,7 +83,7 @@ var Recordings = {
         if(item){
             var t_item = typeof item;  
             if(/string|number/.test(t_item) && !/^[_*?]$/.test(item)){
-                m = /^\[([^\]]*)\]$/.exec(item);
+                var m = /^\[([^\]]*)\]$/.exec(item);
                 if(m) {
                     item = m[1];
                     if(allow_range && /:/.test(item)){
@@ -478,8 +481,8 @@ var Recordings = {
                 project_id: project_id
             };
 
-            if (valobj.val == 2) // 0 is not present , 1 is present and 2 is clear
-            {
+            // 0 is not present , 1 is present and 2 is clear
+            if (valobj.val == 2) {
                 queryHandler(
                     "DELETE FROM `recording_validations` "+
                     " WHERE `recording_id` = "+mysql.escape(valobj.recording)+" and `project_id` = "+mysql.escape(valobj.project_id)+"  " +
@@ -489,8 +492,7 @@ var Recordings = {
                     callback(null, valobj);
                 });
             }
-            else
-            {
+            else {
                 queryHandler(
                     "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id) \n" +
                     " VALUES (" + mysql.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id]) + ") \n" +
@@ -504,24 +506,33 @@ var Recordings = {
         var classes = validation['class'].split(',');
         
         async.map(classes, function(val_class, next){
-            var cm = /(\d+)(-(\d+))?/.exec(val_class);
-            if(!cm) {
+            var validationClass = /(\d+)(-(\d+))?/.exec(val_class);
+            if(!validationClass) {
                 next(new Error("validation class is missing."));
             } 
-            else if(!cm[2]){
-                var project_class = cm[1] | 0;
-                queryHandler(
-                    "SELECT species_id as species, songtype_id as songtype \n" +
-                    "FROM project_classes \n" +
-                    "WHERE project_class_id = " + mysql.escape(project_class) + "\n" +
-                    "  AND project_id = " + mysql.escape(project_id), function(err, data){
-                    if (err) { next(err); return; }
-                    if (!data || !data.length) { next(new Error("project class " + project_class + " not found")); return; }
-                    add_one_validation(species_id, songtype_id, next);
+            else if(!validationClass[2]){
+                var project_class = validationClass[1] | 0;
+                
+                var q = "SELECT species_id, songtype_id \n"+
+                        "FROM project_classes \n"+
+                        "WHERE project_class_id = ? \n"+
+                        "AND project_id = ?";
+                
+                queryHandler(mysql.format(q, [project_class, project_id]), function(err, rows){
+                    if(err) return  next(err);
+                    
+                    if(!rows.length) { 
+                        next(new Error("project class " + project_class + " not found")); 
+                        return; 
+                    }
+                    
+                    var validation = rows[0];
+                    
+                    add_one_validation(validation.species_id, validation.songtype_id, next);
                 });
             } 
             else {
-                add_one_validation(cm[1] | 0, cm[3] | 0, next);
+                add_one_validation(validationClass[1] | 0, validationClass[3] | 0, next);
             }
         }, callback);
         
@@ -771,9 +782,7 @@ var Recordings = {
             "WHERE r.recording_id IN (?) \n"+
             "AND s.project_id = ?";
         
-        q = mysql.format(sqlFilterImported, [recIds, project_id]);
-        
-        queryHandler(q, function(err, rows) {
+        queryHandler(mysql.format(sqlFilterImported, [recIds, project_id]), function(err, rows) {
             
             if(!rows.length) {
                 return callback(null, { 
@@ -811,8 +820,7 @@ var Recordings = {
                         var sqlDelete = "DELETE FROM recordings \n"+
                                         "WHERE recording_id = ?";
                         
-                        q = mysql.format(sqlDelete, [rec.id]);
-                        queryHandler(q, function(err, results) {
+                        queryHandler(mysql.format(sqlDelete, [rec.id]), function(err, results) {
                             if(err) next(err);
                             
                             deleted.push(rec.id);

@@ -1,3 +1,6 @@
+/* jshint node:true */
+"use strict";
+
 var debug = require('debug')('arbimon2:model:projects');
 var util = require('util');
 var mysql = require('mysql');
@@ -659,15 +662,23 @@ var Projects = {
                 "FROM `validation_set` ts, `projects` p \n" +
                 "WHERE ts.`project_id` = p.`project_id` \n" +
                 "AND p.`url` = " + mysql.escape(project_url);
+                
         queryHandler(q, callback);
     },
    
-    validationsStats: function(project_url,species,songtype, callback) {
-        var q = "select * from "+
-            " (SELECT count(*) as total FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+" ) a, "+
-            " (SELECT count(*) as present FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+"  and present = 1) b , "+
-            " (SELECT count(*) as absent FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+"and `songtype_id` = "+mysql.escape(songtype)+"  and present = 0) c ";
-        queryHandler(q, callback);
+    validationsStats: function(projectUrl, speciesId, songtypeId, callback) {
+        var q = "SELECT SUM( present ) AS present, \n"+
+                "    (COUNT( present ) - SUM( present )) AS absent, \n"+
+                "    COUNT( present ) AS total \n"+
+                "FROM `recording_validations` rv, \n"+
+                "    `projects` p \n"+
+                "WHERE rv.`project_id` = p.`project_id` \n"+
+                "AND p.`url` = ? \n"+
+                "AND `species_id` = ? \n"+
+                "AND `songtype_id` = ? \n"+
+                "GROUP BY species_id, songtype_id";
+        
+        queryHandler(mysql.format(q, [projectUrl, speciesId, songtypeId]), callback);
     },
     
     validationsCount: function(project_id, callback) {

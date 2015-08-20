@@ -51,7 +51,6 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
             $scope.is_selected = {};
             
             $scope.select = function(project_class, $event) {
-                console.log($event);
                 if($($event.target).is('a')){
                     return;
                 }
