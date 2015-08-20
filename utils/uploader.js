@@ -20,9 +20,19 @@ var tmpFileCache = require('../utils/tmpfilecache');
 
 var deleteFile = function(filename) {
     fs.unlink(filename, function(err) {
-        if(err) console.error("failed to delete: %s", filename);
+        if(err) console.error("failed to delete: %s. error: %s", filename, err);
     });
 };
+
+var deleteBucketObject = function(key) {
+    if(key) s3.deleteObject({
+        Bucket : config('aws').bucketName,
+        Key    : key
+    }, function (err) {
+        if(err) console.error("failed to delete bucket object: %s. error: %s", key, err);
+    });
+};
+
 
 AWS.config.update({
     accessKeyId: config('aws').accessKeyId, 
@@ -226,6 +236,7 @@ Uploader.prototype.cleanUpAfter = function() {
     // delete temp files
     deleteFile(this.thumbnail);
     deleteFile(this.inFile);
+    deleteBucketObject(this.upload.tempFileUri);
     if(this.outFile !== this.inFile) {
         deleteFile(this.outFile);
     }
@@ -235,6 +246,20 @@ Uploader.prototype.cleanUpAfter = function() {
         model.uploads.removeFromList(this.upload.id, function(e) {
             if(e) console.error(e);
         });
+    }
+};
+
+Uploader.prototype.ensureFileIsLocallyAvailable = function(callback) {
+    if(this.upload.tempFileUri){// it's in the bucket!!!
+        s3.getObject({
+            Bucket : config('aws').bucketName,
+            Key    : this.upload.tempFileUri
+        }, (function(err, data){
+            if(err) { callback(err); return; }
+            fs.writeFile(this.upload.path, data.Body, callback);
+        }).bind(this));
+    } else {// is already available
+        callback();
     }
 };
 
@@ -290,7 +315,9 @@ Uploader.prototype.process = function(upload, done) {
     async.auto({
         prepInfo: self.dataPrep.bind(self),
         
-        insertUploadRecs: ['prepInfo', self.insertUploadRecs.bind(self)],
+        ensureFileIsLocallyAvailable: ['prepInfo', self.ensureFileIsLocallyAvailable.bind(self)],
+        
+        insertUploadRecs: ['ensureFileIsLocallyAvailable', self.insertUploadRecs.bind(self)],
         
         convertMonoFlac: ['insertUploadRecs', self.convertMonoFlac.bind(self)],
         // update audio file info after conversion
@@ -321,5 +348,34 @@ Uploader.prototype.process = function(upload, done) {
         done(null, results);
     });
 };
+
+Uploader.moveToTempArea = function(upload, callback){
+    var tempFileUri = util.format('uploading/project_%d/site_%d/%d/%d/%s%s', 
+        upload.projectId,
+        upload.siteId,
+        upload.FFI.datetime.getFullYear(),
+        upload.FFI.datetime.getMonth()+1,
+        upload.FFI.filename,
+        upload.FFI.filetype
+    );
+    upload.tempFileUri = tempFileUri;    
+    
+    var params = { 
+        Bucket: config('aws').bucketName, 
+        Key: tempFileUri,
+        Body: fs.createReadStream(upload.path)
+    };
+
+    s3.putObject(params, function(err, data) {
+        if(err) {
+            return callback(err);
+        }
+            
+        debug("Successfully moved uploaded ", upload.path, " to ", tempFileUri);
+        
+        fs.unlink(upload.path, callback);
+    });
+};
+
 
 module.exports = Uploader;
