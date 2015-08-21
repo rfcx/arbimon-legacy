@@ -33,7 +33,7 @@ router.use('/uploads', uploads);
 // all routes after this middleware
 // are available only to logged users
 router.use(function(req, res, next) {                
-    if(req.session && req.session.loggedIn) { 
+    if(req.session && (req.session.loggedIn || req.session.isAnonymousGuest)) { 
         return next(); 
     }
     res.render('get_fragment_hack.ejs');
@@ -51,7 +51,11 @@ router.get('/home', function(req, res) {
 
 
 router.get('/user-settings', function(req, res) {
-    res.render('user-settings', { title: "User settings", user: req.session.user });
+    if(req.session.user && req.session.loggedIn){
+        res.render('user-settings', { title: "User settings", user: req.session.user });
+    } else {
+        res.redirect('/home');        
+    }
 });
 
 router.use('/api', dataApi);

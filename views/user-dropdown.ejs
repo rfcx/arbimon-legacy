@@ -1,3 +1,10 @@
+<% if(user.isAnonymousGuest) { %>
+<li>
+    <a>
+        <i class="fa fa-user"></i> <%= user.username %> 
+    </a>
+</li>
+<% } else { %>
 <li class="dropdown" dropdown>
     <a class="dropdown-toggle" dropdown-toggle>
         <% if(user.isSuper) { %>Super<% } %> 
@@ -17,3 +24,4 @@
         </li>
     </ul>
 </li>
+<% } %> 

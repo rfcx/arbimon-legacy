@@ -34,6 +34,26 @@ var transport = nodemailer.createTransport({
     }
 });
 
+router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
+    if(req.session && !req.session.loggedIn && !req.session.isAnonymousGuest){
+        req.session.isAnonymousGuest = true;
+        req.session.user = {
+            id: 0,
+            username: 'guest',
+            email: '',
+            firstname: 'Anonymous',
+            lastname: 'Guest',
+            isAnonymousGuest: true,
+            isSuper: false,
+            imageUrl: gravatar.url(new Date().getTime() + '@b.com', { d: 'monsterid', s: 60 }, https=req.secure),
+            projectLimit: 0
+        };
+        debug("Anonimous guest user created in session.");
+    }
+    debug(req.session);
+    next();
+});
+
 router.use(function(req, res, next) {
     
     req.haveAccess = function(project_id, permission_name) {
@@ -206,6 +226,7 @@ router.post('/login', function(req, res, next) {
             
             // set session
             req.session.loggedIn = true; 
+            req.session.isAnonymousGuest = false;
             req.session.user = {
                 id: user.user_id,
                 username: user.login,
