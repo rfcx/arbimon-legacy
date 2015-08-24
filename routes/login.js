@@ -38,7 +38,7 @@ var transport = nodemailer.createTransport({
 });
 
 router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
-    if(req.session && !req.session.loggedIn && !req.session.isAnonymousGuest){
+    if(req.session && !req.session.loggedIn && (!req.session.isAnonymousGuest || !req.session.user)){
         req.session.isAnonymousGuest = true;
         req.session.user = {
             id: 0,
@@ -48,12 +48,11 @@ router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
             lastname: 'Guest',
             isAnonymousGuest: true,
             isSuper: false,
-            imageUrl: gravatar.url(new Date().getTime() + '@b.com', { d: 'monsterid', s: 60 }, https=req.secure),
+            imageUrl: gravatar.url(new Date().getTime() + '@b.com', { d: 'monsterid', s: 60 }, req.secure == 'https'),
             projectLimit: 0
         };
         debug("Anonimous guest user created in session.");
     }
-    debug(req.session);
     next();
 });
 
@@ -109,12 +108,20 @@ router.get('/api/email_available', function(req, res, next) {
     });
 });
 
-router.get(['/','/login'], function(req, res) {  
+router.get('/', function(req, res) {  
+    if(req.session) { 
+        if(req.session.loggedIn) return res.redirect('/home'); 
+    }
+    res.render('landing-page', { message: '' });
+});
+
+router.get('/login', function(req, res) {  
     if(req.session) { 
         if(req.session.loggedIn) return res.redirect('/home'); 
     }
     res.render('login', { message: '' });
 });
+
 
 router.post('/login', function(req, res, next) {
     var username = req.body.username || '';
