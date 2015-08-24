@@ -115,7 +115,6 @@ var Sites = {
     },
     
     removeFromProject: function(site_id, project_id, callback) {
-        
         if(!site_id || !project_id)
             return callback(new Error("required field missing"));
         
@@ -131,7 +130,7 @@ var Sites = {
                     if(result) {
                         Sites.update({
                             id: site_id,
-                            project_id: 1,
+                            project_id: config('trash-project').id,
                             published: false
                         }, callback);
                     }
