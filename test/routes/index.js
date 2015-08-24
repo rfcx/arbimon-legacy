@@ -107,7 +107,7 @@ describe('index.js', function(){
     });
     describe('GET /user-settings', function(){
         it('Should show the user settings page to logged in users.', function(done){
-            routes.handle({method:'get', url:'/user-settings', session:{loggedIn:true}}, {
+            routes.handle({method:'get', url:'/user-settings', session:{loggedIn:true, user:{}}}, {
                 render: function(page){
                     page.should.equal('user-settings');
                     done();
@@ -116,10 +116,10 @@ describe('index.js', function(){
                 done(err || new Error("Request was wrongly handled"));
             });
         });
-        it('Should restrict access if not logged in.', function(done){
-            routes.handle({method:'get', url:'/user-settings'}, {
-                render: function(page){
-                    page.should.equal('get_fragment_hack.ejs');
+        it('Should redirect to home if not logged in.', function(done){
+            routes.handle({method:'get', url:'/user-settings', session:{}}, {
+                redirect: function(url){
+                    url.should.equal('/home');
                     done();
                 }
             }, function(err){

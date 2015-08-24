@@ -62,7 +62,7 @@ describe('index.js', function(){
         });
         it('Should allow access on a project if the user has permissions for it.', function(done){
             var req, res;
-            login.handle(req={method:'get', url:'/some-exotic-url-link', session:{user:{
+            login.handle(req={method:'get', url:'/some-exotic-url-link', session:{loggedIn:true, user:{
                 isSuper:0,
                 permissions:{
                     1:[{name:'do the hooky pooky'}, {name:'jump around'}]
