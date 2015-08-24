@@ -7,9 +7,8 @@ var router = express.Router();
 var project = require('./project');
 var dataApi = require('./data-api');
 var uploads = require('./uploads');
-var admin = require('./admin');
-
 var login = require('./login');
+
 
 
 router.use('/', login);
@@ -22,15 +21,11 @@ router.get('/support', function(req, res) {
     res.render('support');
 });
 
-router.get('/alive', function(req, res) { // for health checks
-    res.sendStatus(200);
-});
-
 router.use('/uploads', uploads);
 
 // all routes after this middleware
 // are available only to logged users
-router.use(function(req, res, next) {                
+router.use(function(req, res, next) {
     if(req.session && req.session.loggedIn) { 
         return next(); 
     }
@@ -59,6 +54,6 @@ router.get('/user-settings', function(req, res) {
 router.use('/api', dataApi);
 router.use('/project', project);
 
-router.use('/admin', admin);
+
 
 module.exports = router;

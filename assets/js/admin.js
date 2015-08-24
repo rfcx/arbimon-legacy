@@ -41,7 +41,29 @@ angular.module('a2.admin', [
             $scope.Jobs = data.jobsStatus;
         });
     
+    $scope.getSystemSettings = function() {
+        $http.get('/admin/system-settings')
+            .success(function(data) {
+                $scope.settings = data;
+            });
+    };
+    $scope.getSystemSettings();
     
+    $scope.toggleSetting = function(setting) {
+        var value = $scope.settings[setting] == 'on' ? 'off' : 'on';
+        
+        $http.put('/admin/system-settings', {
+                setting: setting,
+                value: value
+            })
+            .success(function(data) {
+                $scope.getSystemSettings();
+            })
+            .error(function(data) {
+                console.error(data);
+                $scope.getSystemSettings();
+            });
+    };
 })
 .controller('AdminJobsCtrl', function($scope, $http, $interval) {
     

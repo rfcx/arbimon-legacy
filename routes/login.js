@@ -1,3 +1,6 @@
+/* jshint node:true */
+"use strict";
+
 var debug = require('debug')('arbimon2:route:login');
 var express = require('express');
 var router = express.Router();
@@ -213,7 +216,7 @@ router.post('/login', function(req, res, next) {
                 firstname: user.firstname,
                 lastname: user.lastname,
                 isSuper: user.is_super,
-                imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure),
+                imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, req.secure == 'https'),
             };
             
             response.success = true;

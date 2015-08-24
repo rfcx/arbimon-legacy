@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.6.24, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.25, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: arbimon2
 -- ------------------------------------------------------
--- Server version	5.6.24-0ubuntu2
+-- Server version	5.6.25-0ubuntu0.15.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -30,7 +30,7 @@ INSERT INTO `job_types` VALUES (4,'Soundscape analysis','peak-soundscape','The c
 --
 
 /*!40000 ALTER TABLE `model_types` DISABLE KEYS */;
-INSERT INTO `model_types` VALUES (1,'Pattern Matching (slow)','Pattern Matching using ROIs. Matrix comparisons computed using SSIM (Structural similarity index).',1,1,0,1);
+INSERT INTO `model_types` VALUES (1,'Pattern Matching (slow)','Pattern Matching using ROIs. Matrix comparisons computed using SSIM (Structural similarity index).',1,1,0,0);
 INSERT INTO `model_types` VALUES (2,'Pattern Matching (fast)','Pattern Matching using ROIs. Matrix comparisons computed using matrix norms.',1,0,0,1);
 INSERT INTO `model_types` VALUES (3,'Search and Match','Pattern Matching using ROIs. Search interesting areas and compute matrix comparisons using SSIM (Structural similarity index).',1,0,1,1);
 /*!40000 ALTER TABLE `model_types` ENABLE KEYS */;
@@ -217,4 +217,4 @@ INSERT INTO `user_account_support_type` VALUES (2,'password_recovery','Allows a 
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-07-16 14:58:34
+-- Dump completed on 2015-08-24 11:16:24

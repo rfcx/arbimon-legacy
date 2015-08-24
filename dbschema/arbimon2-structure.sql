@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.6.24, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.25, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: arbimon2
 -- ------------------------------------------------------
--- Server version	5.6.24-0ubuntu2
+-- Server version	5.6.25-0ubuntu0.15.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -354,9 +354,10 @@ CREATE TABLE `orders` (
   `user_id` int(10) unsigned NOT NULL,
   `datetime` datetime NOT NULL,
   `status` varchar(20) NOT NULL COMMENT 'created,\napproved,\ncanceled',
-  `paypal_payment_id` varchar(50) NOT NULL COMMENT 'JSON object',
   `action` varchar(45) NOT NULL,
   `data` text NOT NULL COMMENT 'order data in JSON format',
+  `paypal_payment_id` varchar(50) NOT NULL COMMENT 'JSON object',
+  `payment_data` text,
   `error` text,
   PRIMARY KEY (`order_id`),
   KEY `fk_orders_2_idx` (`user_id`),
@@ -540,12 +541,15 @@ DROP TABLE IF EXISTS `project_plans`;
 CREATE TABLE `project_plans` (
   `plan_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `project_id` int(10) unsigned NOT NULL,
-  `due_date` date DEFAULT NULL,
+  `created_on` date DEFAULT NULL,
+  `activation` date DEFAULT NULL COMMENT 'project activation date - this is when the first upload was done or after 30 days of the project creation',
   `storage` int(10) unsigned NOT NULL COMMENT 'storage capacity',
   `processing` int(10) unsigned NOT NULL COMMENT 'processing capacity',
+  `duration_period` int(10) unsigned DEFAULT NULL COMMENT 'plan duration in years',
+  `tier` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`plan_id`),
   KEY `fk_plans_1_idx` (`project_id`),
-  KEY `index3` (`due_date`),
+  KEY `index3` (`activation`),
   CONSTRAINT `fk_plans_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -580,7 +584,6 @@ CREATE TABLE `projects` (
   `project_type_id` int(10) unsigned NOT NULL,
   `is_private` tinyint(1) NOT NULL,
   `is_enabled` tinyint(4) NOT NULL DEFAULT '1',
-  `tier` varchar(10) NOT NULL,
   `current_plan` int(10) unsigned DEFAULT NULL COMMENT 'plan_id of current plan',
   `storage_usage` float DEFAULT NULL,
   `processing_usage` float DEFAULT NULL,
@@ -976,6 +979,20 @@ CREATE TABLE `species_taxons` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `system_settings`
+--
+
+DROP TABLE IF EXISTS `system_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_settings` (
+  `key` varchar(20) NOT NULL,
+  `value` text NOT NULL COMMENT 'global system configuration shared accross servers',
+  PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='global system settings shared across servers';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `system_stats`
 --
 
@@ -1221,4 +1238,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-07-16 14:58:30
+-- Dump completed on 2015-08-24 11:16:21

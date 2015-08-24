@@ -6,7 +6,6 @@ var mysql = require('mysql');
 var async = require('async');
 var joi = require('joi');
 
-var config = require('../config');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
