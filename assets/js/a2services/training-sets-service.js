@@ -1,4 +1,4 @@
-angular.module('a2-training-sets-service', ['a2-project-service'])
+angular.module('a2.srv.training-sets', ['a2.srv.project'])
 .factory('a2TrainingSets', function(Project, $http) {
     return {
         getList: function(callback) {
@@ -17,30 +17,30 @@ angular.module('a2-training-sets-service', ['a2-project-service'])
                 });
         },
 
-        addData: function(training_set, tset_data, callback) {
+        addData: function(trainingSetId, tset_data, callback) {
             var projectName = Project.getUrl();
-            $http.post('/api/project/'+projectName+'/training-sets/add-data/'+encodeURIComponent(training_set), tset_data)
+            $http.post('/api/project/'+projectName+'/training-sets/add-data/'+trainingSetId, tset_data)
                 .success(function(data) {
                     callback(data);
                 });
         },
 
-        getData: function(training_set, recording_uri, callback) {
+        getData: function(trainingSetId, recording_uri, callback) {
             if( recording_uri instanceof Function ) {
                 callback = recording_uri;
                 recording_uri = "";
             }
 
             var projectName = Project.getUrl();
-            $http.get('/api/project/'+projectName+'/training-sets/list/'+encodeURIComponent(training_set)+'/'+recording_uri)
+            $http.get('/api/project/'+projectName+'/training-sets/list/'+trainingSetId+'/'+recording_uri)
                 .success(function(data) {
                     callback(data);
                 });
         },
 
-        getDataImage: function(training_set, data_id, callback) {
+        getDataImage: function(trainingSetId, dataId, callback) {
             var projectName = Project.getUrl();
-            $http.get('/api/project/'+projectName+'/training-sets/data/'+encodeURIComponent(training_set)+'/get-image/'+data_id)
+            $http.get('/api/project/'+projectName+'/training-sets/data/'+trainingSetId+'/get-image/'+dataId)
                 .success(function(data) {
                     callback(data);
                 });
@@ -53,25 +53,24 @@ angular.module('a2-training-sets-service', ['a2-project-service'])
                     callback(data);
                 });
         },
-
-        getRois: function(training_set, callback) {
+        
+        getRois: function(trainingSetId, callback) {
             var projectName = Project.getUrl();
-            $http.get('/api/project/'+projectName+'/training-sets/rois/'+encodeURIComponent(training_set))
+            $http.get('/api/project/'+projectName+'/training-sets/rois/'+trainingSetId)
                 .success(function(data) {
                     callback(data);
                 });
         },
-        getSpecies: function(training_set, callback) {
+        getSpecies: function(trainingSetId, callback) {
             var projectName = Project.getUrl();
-            $http.get('/api/project/'+projectName+'/training-sets/species/'+encodeURIComponent(training_set))
+            $http.get('/api/project/'+projectName+'/training-sets/species/'+trainingSetId)
                 .success(function(data) {
                     callback(data);
                 });
         },
-        // TODO chance use of training_set.name to training_set_id, traing sets name are not url safe
-        removeRoi: function(roi_id, training_set, callback) {
+        removeRoi: function(trainingSetId, roiId, callback) {
             var projectName = Project.getUrl();
-            $http.get('/api/project/'+projectName+'/training-sets/'+encodeURIComponent(training_set.name)+'/remove-roi/'+roi_id)
+            $http.get('/api/project/'+projectName+'/training-sets/'+trainingSetId+'/remove-roi/'+roiId)
                 .success(function(data) {
                     callback(data);
                 });

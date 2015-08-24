@@ -1,5 +1,5 @@
 
-angular.module('a2-visualizer-spectrogram-click2zoom', ['a2Classy'])
+angular.module('a2-visualizer-spectrogram-click2zoom', ['a2.classy'])
 .service('a2SpectrogramClick2Zoom', function(makeClass, a22PointBBoxEditor){
     return makeClass({
         super : a22PointBBoxEditor.prototype,

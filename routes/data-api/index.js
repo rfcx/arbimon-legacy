@@ -5,7 +5,8 @@ var routes = {
     '/sites'     : require('./sites'),
     '/species'   : require('./species'),
     '/songtypes' : require('./songtypes'),
-    '/project'   : require('./project')
+    '/project'   : require('./project'),
+    '/orders'   : require('./orders')
 };
 
 
@@ -13,6 +14,7 @@ Object.keys(routes).forEach(function(route){
     router.use(route, routes[route]);
 });
 
+// TODO move routes on models to their respective places
 router.use("/", require('./models'));
 
 module.exports = router;

@@ -1,4 +1,4 @@
-angular.module('visualizer-services', ['a2services'])
+angular.module('visualizer-services', ['a2.services'])
     .factory('layer_types', function() {
         var type_array = [{
                 type: "browser-layer",

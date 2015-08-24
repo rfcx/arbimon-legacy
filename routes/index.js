@@ -1,12 +1,12 @@
+/* jshint node:true */
+"use strict";
+
 var express = require('express');
 var router = express.Router();
-
 
 var project = require('./project');
 var dataApi = require('./data-api');
 var uploads = require('./uploads');
-var admin = require('./admin');
-
 var login = require('./login');
 
 
@@ -22,10 +22,6 @@ router.get('/support', function(req, res) {
 
 router.get('/classifiers', function(req, res) {
     res.render('classifiers');
-});
-
-router.get('/alive', function(req, res) { // for health checks
-    res.sendStatus(200);
 });
 
 router.use('/uploads', uploads);
@@ -44,6 +40,10 @@ router.get('/', function(req, res) {
     res.redirect('/home');
 });
 
+router.get('/process-order/:orderId', function(req, res, next) {
+    // render view to show progress
+    res.render('processing-order');
+});
 
 router.get('/home', function(req, res) {
     res.render('home', { title: "Home", user: req.session.user });
@@ -61,6 +61,6 @@ router.get('/user-settings', function(req, res) {
 router.use('/api', dataApi);
 router.use('/project', project);
 
-router.use('/admin', admin);
+
 
 module.exports = router;

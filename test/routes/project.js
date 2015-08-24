@@ -22,7 +22,7 @@ var project_router = router_expect(project, {
     session:{user:{id:9393, isSuper:0}}
 });
 
-describe('project.js', function(){
+describe('routes/project.js', function(){
     beforeEach(function(){
         mock.model.projects={};
         mock.model.users={
@@ -41,10 +41,10 @@ describe('project.js', function(){
                 done();
             }});
         });
-        it('Should redirect to /home if the project is private, the user has no permissions in the project and is not a super user.', function(done){
+        it('Should call next() if the project is private, the user has no permissions in the project and is not a super user.', function(done){
             mock.model.projects.findByUrl = function(url, cb){setImmediate(cb, null, [{project_id:5, name:'project_5', is_private:true, is_enabled:true}]);};
-            project_router.when('/project_5/', {redirect: function(req, res, url){
-                url.should.equal('/home');
+            project_router.when('/project_5/', { next: function(req, res, err){
+                should.not.exist(err);
                 done();
             }});
         });

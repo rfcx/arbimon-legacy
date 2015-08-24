@@ -4,7 +4,17 @@
 <div class="modal-body">
     <div class="row">
         <div class="col-sm-11"><strong>Presence in recordings:</strong></div>
-        <div class="col-sm-1"><a class="btn btn-xs btn-default" target="_blank" ng-href="/api/project/classification/csv/{{id}}"><i class="fa fa-download " tooltip="Download CSV" tooltip-placement="bottom"  ></i></a></div>
+        <div class="col-sm-1">
+            <a class="btn btn-xs btn-default" 
+                ng-if="showDownload"
+                target="_blank" 
+                ng-href="/api/project/classification/csv/{{id}}">
+                <i class="fa fa-download " 
+                    tooltip="Download CSV" 
+                    tooltip-placement="bottom">
+                </i>
+            </a>
+        </div>
     </div>
     <div class="spacing-details-classification"></div>
     <table class="table">

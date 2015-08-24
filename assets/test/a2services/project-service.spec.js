@@ -1,6 +1,13 @@
-describe('Module: a2-project-service', function() {
+/* jshint mocha:true */
+/* global module:true */
+/* global inject:true */
+/* global sinon:true */
+
+describe('Module: a2.srv.project', function() {
+    "use strict";
+    
     beforeEach(function() { 
-        module('a2-project-service');
+        module('a2.srv.project');
     });
         
     describe('Project', function() {

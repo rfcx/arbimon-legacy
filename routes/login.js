@@ -1,3 +1,6 @@
+/* jshint node:true */
+"use strict";
+
 var debug = require('debug')('arbimon2:route:login');
 var express = require('express');
 var router = express.Router();
@@ -62,8 +65,8 @@ router.use(function(req, res, next) {
             return true;
         
         var projectPerms = req.session.user.permissions[project_id];
-        
-        debug("project permission:", projectPerms);
+        console.log(project_id);
+        debug("user permissions:", req.session.user.permissions);
         
         if(!projectPerms)
             return false;
@@ -234,8 +237,7 @@ router.post('/login', function(req, res, next) {
                 firstname: user.firstname,
                 lastname: user.lastname,
                 isSuper: user.is_super,
-                imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, https=req.secure),
-                projectLimit: user.project_limit
+                imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, req.secure == 'https'),
             };
             
             response.success = true;

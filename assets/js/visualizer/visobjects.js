@@ -1,5 +1,5 @@
-angular.module('a2visobjects', [
-    'a2services'
+angular.module('a2.visobjects', [
+    'a2.services'
 ])
 .service('VisualizerObjectTypes', function ($q, Project, $injector) {
     var type_list = ["recording", "soundscape"];

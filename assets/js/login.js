@@ -1,4 +1,4 @@
-angular.module('login', ['humane', 'g-recaptcha'])
+angular.module('a2.login', ['humane', 'g-recaptcha'])
 .controller('LoginCtrl', function($scope, $http, $window, notify) {
     
     // $scope.mode have the String value of the next mode and 

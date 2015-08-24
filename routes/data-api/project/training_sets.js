@@ -4,10 +4,7 @@ var model = require('../../../model');
 
 
 router.param('trainingSet', function(req, res, next, training_set){
-    model.training_sets.find({
-        name    : training_set,
-        project : req.project.project_id
-    }, function(err, trainingSets) {
+    model.trainingSets.find({ id: training_set }, function(err, trainingSets) {
         if(err) return next(err);
 
         if(!trainingSets.length){
@@ -27,7 +24,7 @@ router.param('dataId', function(req, res, next, dataId){
 /** Return a list of all the training sets in a project.
  */
 router.get('/', function(req, res, next) {
-    model.training_sets.find({project:req.project.project_id}, function(err, count) {
+    model.trainingSets.find({ project:req.project.project_id }, function(err, count) {
         if(err) return next(err);
 
         res.json(count);
@@ -38,7 +35,7 @@ router.get('/', function(req, res, next) {
 /** Return a list of all the training set types in a project (actually in the system).
  */
 router.get('/types', function(req, res, next) {
-    model.training_sets.getTypes(function(err, types) {
+    model.trainingSets.getTypes(function(err, types) {
         if(err) return next(err);
 
         res.json(types);
@@ -50,7 +47,7 @@ router.get('/types', function(req, res, next) {
 /** Return a training set's data.
  */
 router.get('/list/:trainingSet/:recUrl?', function(req, res, next) {
-    model.training_sets.fetchData(req.trainingSet, {
+    model.trainingSets.fetchData(req.trainingSet, {
         recording: req.params.recUrl
     }, function(err, count) {
         if(err) return next(err);
@@ -61,7 +58,7 @@ router.get('/list/:trainingSet/:recUrl?', function(req, res, next) {
 });
 
 router.get('/rois/:trainingSet', function(req, res, next) {
-    model.training_sets.fetchRois(req.trainingSet,
+    model.trainingSets.fetchRois(req.trainingSet,
     function(err, data) {
         if(err) return next(err);
 
@@ -71,7 +68,7 @@ router.get('/rois/:trainingSet', function(req, res, next) {
 });
 
 router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
-    model.training_sets.fetchDataImage(req.trainingSet, req.dataId, function(err, data) {
+    model.trainingSets.fetchDataImage(req.trainingSet, req.dataId, function(err, data) {
         if(err) return next(err);
         res.json(data);
         return null;
@@ -80,7 +77,7 @@ router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
 
 
 router.get('/species/:trainingSet', function(req, res, next) {
-    model.training_sets.fetchSpecies(req.trainingSet,
+    model.trainingSets.fetchSpecies(req.trainingSet,
     function(err, data) {
         if(err) return next(err);
 
@@ -103,14 +100,14 @@ router.use(function(req, res, next) {
 */
 router.post('/add', function(req, res, next) {
     
-    model.training_sets.nameInUse(req.project.project_id, req.body.name, function(err, result) {
+    model.trainingSets.nameInUse(req.project.project_id, req.body.name, function(err, result) {
         if(err) return next(err);
         
         if(result[0].count) {
             return res.json({ field: "name", error: "Training set name in use" });
         }
         
-        model.training_sets.insert({
+        model.trainingSets.insert({
             project_id : req.project.project_id,
             name    : req.body.name,
             type    : req.body.type,
@@ -135,7 +132,7 @@ router.post('/add', function(req, res, next) {
 /** Add a training set to a project.
 */
 router.post('/add-data/:trainingSet', function(req, res, next) {
-    model.training_sets.addData(req.trainingSet, req.body, function(err, tset_data) {
+    model.trainingSets.addData(req.trainingSet, req.body, function(err, tset_data) {
         if(err) return next(err);
         return res.json(tset_data);
     });
@@ -143,7 +140,7 @@ router.post('/add-data/:trainingSet', function(req, res, next) {
 
 
 router.get('/:trainingSet/remove-roi/:roiId', function(req, res, next) {
-    model.training_sets.removeRoi(req.params.roiId,req.trainingSet,
+    model.trainingSets.removeRoi(req.params.roiId,req.trainingSet,
     function(err, data) {
         if(err) return next(err);
 

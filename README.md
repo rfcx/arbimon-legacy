@@ -9,6 +9,7 @@ Bio-Acoustic Analyzer
    sudo apt-get install -y python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev python-virtualenv
    ```
    
+
  - install python dependencies, create python virtualenv and build
     ```
     npm run-script setup
@@ -18,8 +19,6 @@ Bio-Acoustic Analyzer
     ```
     npm start
     ```
-
----
 
 
 ### System dependencies:
@@ -48,7 +47,8 @@ Bio-Acoustic Analyzer
    ```
    
    
- - image magick - image manipulation tool (deprecated use node-lwip)
+
+ - imagemagick - image manipulation tool (deprecated use node-lwip)
    ```
    sudo apt-get install imagemagick
    ```
@@ -108,3 +108,7 @@ run server and watch
 removes packages and builds (node_modules, bower_components, public/assets)
 
 `grunt clean` 
+
+to run unit tests 
+
+`grunt test`

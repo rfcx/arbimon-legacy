@@ -1,18 +1,19 @@
 (function(angular) {
-    var models = angular.module('models', [
-        'ngTable',
+    var models = angular.module('a2.analysis.models', [
+        'a2.services',
+        'a2.permissions',
+        'a2.utils',
         'ui.bootstrap',
-        'a2services',
         'ui.select',
         'ngSanitize',
+        'ngTable',
         'ngCsv',
-        'a2utils',
         'humane'
     ]);
     var template_root = '/partials/models/';
 
     models.controller('ModelsCtrl', 
-        function($scope, $modal, $filter, ngTableParams, Project, a2Models, JobsData, $location, notify) {
+        function($scope, $modal, $filter, ngTableParams, Project, a2Models, JobsData, $location, notify, a2UserPermit) {
             $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
             $scope.loading = true;
@@ -112,31 +113,14 @@
                 $scope.showInfo = false;
                 $scope.loading = false;
             }
-                        
-            $scope.newClassification = function(model_id, model_name) {
-
-                var modalInstance = $modal.open({
-                    templateUrl: template_root + 'newclassification.html',
-                    controller: 'NewClassificationInstanceCtrl',
-                    resolve: {
-                        model_name: function() {
-                            return model_name;
-                        },
-                        model_id: function() {
-                            return model_id;
-                        }
-                    }
-                });
-
-                modalInstance.result.then(
-                    function() {
-                        //console.log('new classification: ' + new Date());
-                    }
-                );
-            };
-
-
+            
+            
             $scope.deleteModel = function(model_id, model_name) {
+                if(!a2UserPermit.can('manage models and classification')) {
+                    notify.log('You do not have permission to delete models');
+                    return;
+                }
+                
                 $scope.infoInfo = "Loading...";
                 $scope.showInfo = true;
                 $scope.loading = true;
@@ -192,10 +176,16 @@
             $scope.validationdata = null;
 
             $scope.newModel = function() {
+                if(!a2UserPermit.can('manage models and classification')) {
+                    notify.log('You do not have permission to create models');
+                    return;
+                }
+                
                 $scope.infoInfo = "Loading...";
                 $scope.showInfo = true;
                 $scope.loading = true;
                 var url = $scope.projectData.url;
+                
                 a2Models.getFormInfo(function(data) {
 
                     var modalInstance = $modal.open({
@@ -422,7 +412,7 @@
                 'Loading validations',
                 'Loading vectors'
             ];
-            $scope.loading = true
+            $scope.loading = true;
             $scope.showValidationsTable = true;
             $scope.allYesMax = [];
             $scope.allMax = [];

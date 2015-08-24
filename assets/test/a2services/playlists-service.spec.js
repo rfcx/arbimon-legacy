@@ -1,7 +1,14 @@
-describe('Module: a2-playlists-service', function() {
+/* jshint mocha:true */
+/* global module:true */
+/* global inject:true */
+/* global sinon:true */
+
+describe('Module: a2.srv.playlists', function() {
+    "use strict";
+    
     beforeEach(function() { 
-        module('a2-playlists-service');
-        module('a2-project-service');
+        module('a2.srv.playlists');
+        module('a2.srv.project');
         module('a2-project-service-mock');
     });
         

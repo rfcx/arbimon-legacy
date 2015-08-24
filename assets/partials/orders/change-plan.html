@@ -1,0 +1,67 @@
+<form name="projectForm"
+    role="form"
+    ng-submit="upgrade()">
+
+    <div class="modal-header">
+        <h2>Change plan</h2>
+    </div>
+
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-sm-12">
+                <h4>
+                    Current plan
+                </h4>
+                <div class="panel panel-default">
+                    <ul class="list-group">
+                        <li class="list-group-item">Storage: {{ minUsage | number }} / {{ currentPlan.storage | number }} minutes</li>
+                        <li class="list-group-item">Processing: {{ currentPlan.processing }} minutes</li>
+                        <li class="list-group-item" 
+                            ng-show="project.plan_period"
+                            ng-class="{ 'list-group-item-danger': (currentPlan.due < today) }">
+                            Due on: 
+                            <span>{{ currentPlan.due | moment: 'll' }}</span>
+                            <span ng-show="!currentPlan.due">
+                                This plan do not have a due date yet 
+                                <i class="fa fa-info-circle"
+                                    tooltip=
+                                        "The plan due date is set on the first 
+                                        upload or after 30 days of creation, 
+                                        whichever happens first">
+                                </i>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+                <p ng-if="mode == 'new'">
+                    Your free plan can be upgraded to a paid plan 
+                    for more storage and processing capacity
+                </p>
+                <p ng-if="mode == 'upgrade'">
+                    Your current plan has not ended, and can only be upgraded. 
+                    The upgrade price is prorated on a monthly basis
+                </p>
+                <p ng-if="mode == 'renew'">
+                    Your current plan has ended, please select a new plan. 
+                    The minumum plan is limited by the project storage usage.
+                </p>
+            </div>
+        </div>
+        <plan-select 
+            current-plan="currentPlan"
+            usage="minUsage"
+            plan="project.plan"
+            recorder-qty="recorderQty">
+        </plan-select>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="submit">
+            <span ng-show="recorderQty <= 0 || project.plan.tier == 'free'">Review order</span>
+            <span ng-show="recorderQty > 0 && project.plan.tier != 'free'">Enter shipping info</span>
+        </button>
+        <button class="btn btn-default" type="button" 
+            ng-click="$dismiss()">
+            Close
+        </button>
+    </div>
+</form>

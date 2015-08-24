@@ -1,4 +1,4 @@
-angular.module('a2-project-service', [])
+angular.module('a2.srv.project', [])
 .factory('Project', function($location, $http) {
         
         var nameRe = /\/?project\/([\w\_\-]+)/;
@@ -114,22 +114,10 @@ angular.module('a2-project-service', [])
                     });
             },
             addClass: function(projectClass, callback) {
-                $http.post('/api/project/'+url+'/class/add', projectClass)
-                    .success(function(data){
-                        callback(null, data);
-                    })
-                    .error(function(err){
-                        callback(err);
-                    });
+                return $http.post('/api/project/'+url+'/class/add', projectClass);
             },
             removeClasses: function(projectClasses, callback) {
-                $http.post('/api/project/'+url+'/class/del', projectClasses)
-                    .success(function(data){
-                        callback(null, data);
-                    })
-                    .error(function(err){
-                        callback(err);
-                    });
+                return $http.post('/api/project/'+url+'/class/del', projectClasses);
             },
             getUsers: function(callback) {
                 $http.get('/api/project/'+url+'/users')
@@ -204,7 +192,7 @@ angular.module('a2-project-service', [])
             validationBySpeciesSong: function(speciesId, songtypeId, callback) {
                 $http.get( '/api/project/' + url + '/validations/' + speciesId + "/" + songtypeId)
                     .success(callback);
-            }
+            }, 
         };
     })
 ;

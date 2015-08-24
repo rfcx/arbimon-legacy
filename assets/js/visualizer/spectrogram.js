@@ -1,5 +1,5 @@
 
-angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
+angular.module('visualizer-spectrogram', ['visualizer-services', 'a2.utils'])
 .service('a2AffixCompute', function(){
     return function($viewport, $el, layout){
         var v;
@@ -50,7 +50,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
         restrict : 'E',
         templateUrl : '/partials/visualizer/visualizer-spectrogram.html',
         replace  : true,
-        link     : function($scope, $element, $attrs){
+        link     : function($scope, $element, $attrs) {
             var layout_tmp = $scope.layout.tmp;
             var views = {
                 viewport : $element.children('.spectrogram-container')
@@ -66,6 +66,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 );
                 $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
             };
+            
             $scope.onScrolling = function(e){
                 var layout = $scope.layout;
                 var max_s_h = layout.spectrogram.height - layout.viewport.height;
@@ -91,14 +92,17 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 $element.children('.axis-y').css({left: layout.y_axis.left + 'px'});
                 layout.x_axis.top = $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh - layout_tmp.gutter;
                 $element.children('.axis-x').css({top: (layout.x_axis.top-1) + 'px'});
+                
                 if(layout.legend){
                     layout.legend.left = $element.scrollLeft() + $element.width() - a2BrowserMetrics.scrollSize.width - layout_tmp.legend_width - layout_tmp.legend_gutter;
                     $element.children('.legend').css({left: layout.legend.left + 'px'});
                 }
+                
                 $element.find('.a2-visualizer-spectrogram-affixed').each(function(i, el){
                     a2AffixCompute($element, $(el), layout);
                 });
             };
+            
             $scope.onMouseMove = function (e) {
                 var elOff = $element.offset();
                 var x = e.pageX - elOff.left + $element.scrollLeft() - $scope.layout.spectrogram.left;
@@ -217,6 +221,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                 var rsc = $scope.audio_player.resource;
                 return rsc && rsc.currentTime;
             };
+            
             $scope.$watch(function () {
                 return { 
                     'h': $element.height(), 'w': $element.width()
@@ -224,6 +229,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
             }, function (newValue, oldValue) {
                 $scope.layout.apply($element, $scope, newValue.w, newValue.h, true);
             }, true);
+            
             $scope.$watch($scope.getRecordingPlaybackTime, function (newValue, oldValue) {
                 if($scope.audio_player.is_playing) {
                     var pbh = layout_tmp.axis_sizew + $scope.layout.scale.sec2px * newValue;
@@ -234,20 +240,25 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2utils'])
                     }
                 }
             }, true);
+            
             $scope.$watch('visobject', function (newValue, oldValue) {
                 $element.scrollLeft(0);
                 $element.scrollTop(999999);
                 $scope.layout.apply($element, $scope, $element.width(), $element.height());
             }, true);
+            
             $element.bind('resize', function () {
                 $scope.$apply();
             });
+            
             $scope.$watch('layout.scale.zoom.x', function (newValue, oldValue) {
                 $scope.layout.apply($element, $scope, $element.width(), $element.height(), true);
             });
+            
             $scope.$watch('layout.scale.zoom.y', function (newValue, oldValue) {
                 $scope.layout.apply($element, $scope, $element.width(), $element.height(), true);
             });
+            
             $scope.layout.apply($element, $scope, $element.width(), $element.height());
             $scope.onScrolling();
         }

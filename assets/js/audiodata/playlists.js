@@ -1,10 +1,10 @@
-angular.module('audiodata.playlists', [
-    'a2services', 
-    'a2directives', 
+angular.module('a2.audiodata.playlists', [
+    'a2.services', 
+    'a2.directives', 
     'ui.bootstrap',
     'humane'
 ])
-.controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify) {
+.controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit) {
     $scope.loading = true;
     
     a2Playlists.getList(function(data) {
@@ -15,6 +15,11 @@ angular.module('audiodata.playlists', [
     $scope.edit = function() {
         if(!$scope.selected)
             return;
+            
+        if(!a2UserPermit.can('manage playlists')) {
+            notify.log('You do not have permission to edit playlists');
+            return;
+        }
         
         $scope.pname = $scope.selected.name;
         var playlist_id = $scope.selected.id;
@@ -40,6 +45,11 @@ angular.module('audiodata.playlists', [
     $scope.del = function() {
         if(!$scope.checked || !$scope.checked.length)
             return;
+        
+        if(!a2UserPermit.can('manage playlists')) {
+            notify.log('You do not have permission to delete playlists');
+            return;
+        }
         
         var playlists = $scope.checked.map(function(row) {
             return '"'+ row.name +'"';

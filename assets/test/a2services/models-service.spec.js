@@ -1,7 +1,14 @@
-describe('Module: a2-models-service', function() {
+/* jshint mocha:true */
+/* global module:true */
+/* global inject:true */
+/* global sinon:true */
+
+describe('Module: a2.srv.models', function() {
+    "use strict";
+    
     beforeEach(function() { 
-        module('a2-models-service');
-        module('a2-project-service');
+        module('a2.srv.models');
+        module('a2.srv.project');
         module('a2-project-service-mock');
     });
         
@@ -9,11 +16,13 @@ describe('Module: a2-models-service', function() {
         var $httpBackend;
         var a2Models;
         var notifyError;
+        var callback;
         
         beforeEach(inject(function($injector, notify, _a2Models_) {
             $httpBackend = $injector.get('$httpBackend');
             a2Models = _a2Models_;
             notifyError = sinon.spy(notify, 'serverError');
+            callback = sinon.spy();
         }));
         
         afterEach(function() {
@@ -39,8 +48,6 @@ describe('Module: a2-models-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Models.list(callback);
                 
                 $httpBackend.flush();
@@ -50,8 +57,6 @@ describe('Module: a2-models-service', function() {
             
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
-                
-                callback = sinon.spy();
                 
                 a2Models.list(callback);
                 
@@ -73,8 +78,6 @@ describe('Module: a2-models-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Models.getFormInfo(callback);
                 
                 $httpBackend.flush();
@@ -84,8 +87,6 @@ describe('Module: a2-models-service', function() {
             
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
-                
-                callback = sinon.spy();
                 
                 a2Models.getFormInfo(callback);
                 
@@ -107,8 +108,6 @@ describe('Module: a2-models-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Models.findById(1)
                     .success(callback);
                 
@@ -120,8 +119,7 @@ describe('Module: a2-models-service', function() {
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
                 
-                callback = sinon.spy();
-                errorCallback = sinon.spy();
+                var errorCallback = sinon.spy();
                 
                 a2Models.findById(1)
                     .success(callback)
@@ -171,8 +169,6 @@ describe('Module: a2-models-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Models.delete(1, callback);
                 
                 $httpBackend.flush();
@@ -182,8 +178,6 @@ describe('Module: a2-models-service', function() {
             
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
-                
-                callback = sinon.spy();
                 
                 a2Models.delete(1, callback);
                 
@@ -205,8 +199,6 @@ describe('Module: a2-models-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Models.getValidationResults(1, callback);
                 
                 $httpBackend.flush();
@@ -216,8 +208,6 @@ describe('Module: a2-models-service', function() {
             
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
-                
-                callback = sinon.spy();
                 
                 a2Models.getValidationResults(1, callback);
                 

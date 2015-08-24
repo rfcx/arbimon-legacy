@@ -1,5 +1,5 @@
-describe('Module: a2utils', function() {
-    beforeEach(module('a2utils'));
+describe('Module: a2.utils', function() {
+    beforeEach(module('a2.utils'));
     
     describe('Filters', function() {
         var $filter;

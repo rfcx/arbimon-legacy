@@ -1,30 +1,38 @@
-<table style="width:100%"><tr><td>
 <div class="margin-xs">
-    <div class="dropdown">
-            <button class="btn btn-block btn-default" role="button" data-toggle="dropdown">
-                <span class="fa" ng-class="{'fa-list' : !browser.$type.loading.playlists, 'fa-spinner fa-spin': browser.$type.loading.playlists}"></span>
-                <span class="finite-h-extent">{{browser.$type.playlist.name || "[Playlist]"}}</span>
-                <span class="caret"></span>
-                <span class="badge">{{browser.$type.playlist.count}}</span>
-            </button>
-            <ul class="dropdown-menu has-badges dropdown-height-7" role="menu" aria-labelledby="dLabel">
-                <li ng-show="browser.$type.loading.playlists">
-                    <a><i class="fa fa-spinner fa-spin"></i> Loading Playlists</a>
-                </li>
-                <li ng-hide="browser.$type.loading.playlists || browser.$type.playlists">
-                    <a>No Playlists in Project</a>
-                </li>
-                <li ng-hide="browser.$type.loading.playlists" ng-repeat="playlist in browser.$type.playlists" ng-class="{active: browser.$type.playlist == playlist}">
-                    <a ng-click="browser.$type.playlist = playlist | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist'">{{playlist.name}}</a>
+    <div class="dropdown" dropdown>
+        <button class="btn btn-block btn-default dropdown-toggle" dropdown-toggle>
+            <i class="fa" ng-class="{
+                'fa-list' : !browser.$type.loading.playlists, 
+                'fa-spinner fa-spin': browser.$type.loading.playlists}">
+            </i>
+            <span class="finite-h-extent">{{browser.$type.playlist.name || "Select a playlist"}}</span>
+            <i class="fa fa-caret-down"></i>
+            <span class="badge">{{browser.$type.playlist.count}}</span>
+        </button>
+        <ul class="dropdown-menu has-badges dropdown-height-7" role="menu">
+            <li ng-show="browser.$type.loading.playlists">
+                <a><i class="fa fa-spinner fa-spin"></i> Loading Playlists</a>
+            </li>
+            <li ng-hide="browser.$type.loading.playlists || browser.$type.playlists">
+                <a>No Playlists in Project</a>
+            </li>
+            <li ng-hide="browser.$type.loading.playlists" 
+                ng-repeat="playlist in browser.$type.playlists" 
+                ng-class="{active: browser.$type.playlist == playlist}">
+                    <a ng-click="browser.$type.set_playlist(playlist) | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist'">
+                        {{playlist.name}}
+                    </a>
                     <span class="badge">{{playlist.count}}</span>
-                </li>
-            </ul>
+            </li>
+        </ul>
     </div>
-    </td><td><table><tr><td ng-repeat="link in browser.lovo.links">
-        <button class="btn btn-default" ng-click="browser.$type.resolve_link(link) | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist object'"
-            tooltip="{{link.tooltip}}" tooltip-append-to-body="true" tooltip-placement="bottom"
-        ><i class="fa" ng-class="link.icon"></i></button>
-    </td></tr></table></td></tr></table>
+    
+    <button ng-repeat="link in browser.lovo.links" 
+        class="btn btn-link btn-block"
+        style="margin-top:5px;"
+        ng-click="browser.$type.resolve_link(link) | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist object'">
+            <i class="fa" ng-class="link.icon"></i>{{ link.tooltip }}
+    </button>
 </div>
 
 <div class="col-sm-12">

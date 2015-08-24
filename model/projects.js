@@ -1,3 +1,6 @@
+/* jshint node:true */
+"use strict";
+
 var debug = require('debug')('arbimon2:model:projects');
 var util = require('util');
 var mysql = require('mysql');
@@ -10,6 +13,7 @@ var AWS = require('aws-sdk');
 var s3 = new AWS.S3();
 var config = require('../config');
 var dbpool = require('../utils/dbpool');
+var sqlutil = require('../utils/sqlutil');
 var queryHandler = dbpool.queryHandler;
 
 var species = require('./species');
@@ -25,20 +29,85 @@ var Projects = {
         queryHandler(q, callback);
     },
     
+    find: function (query, callback) {
+        var q = "SELECT p.*, \n"+
+                "   pp.tier, \n"+
+                "   pp.storage AS storage_limit, \n"+
+                "   pp.processing AS processing_limit, \n"+
+                "   pp.created_on AS plan_created, \n"+
+                "   pp.activation AS plan_activated, \n"+
+                "   pp.duration_period AS plan_period \n"+
+                "FROM projects AS p \n"+
+                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+                "WHERE ";
+        var whereExp = [];
+        
+        if(query.id) {
+            whereExp.push("p.project_id = " + mysql.escape(query.id));
+        }
+        if(query.url) {
+            whereExp.push("p.url = " + mysql.escape(query.url));
+        }
+        if(query.name) {
+            whereExp.push("p.name = " + mysql.escape(query.name));
+        }
+        
+        if(!whereExp.length) {
+            return callback(new Error('no query params'));
+        }
+        
+        q += whereExp.join(' \nAND ');
+        
+        return queryHandler(q, callback);
+    },
+    
+    // DEPRACATED use find()
     findById: function (project_id, callback) {
-        var query = "SELECT * FROM projects WHERE project_id = " + mysql.escape(project_id);
+        console.info('projects.findById DEPRECATED');
+        var query = "SELECT p.*, \n"+
+                    "   pp.tier, \n"+
+                    "   pp.storage AS storage_limit, \n"+
+                    "   pp.processing AS processing_limit, \n"+
+                    "   pp.created_on AS plan_created, \n"+
+                    "   pp.activation AS plan_activated, \n"+
+                    "   pp.duration_period AS plan_period \n"+
+                    "FROM projects AS p \n"+
+                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+                    "WHERE p.project_id = " + mysql.escape(project_id);
 
         return queryHandler(query , callback);
     },
     
+    // DEPRACATED use find()
     findByUrl: function (project_url, callback) {
-        var query = "SELECT * FROM projects WHERE url = " + mysql.escape(project_url);
+        console.info('projects.findByUrl DEPRECATED');
+        var query = "SELECT p.*, \n"+
+                    "   pp.tier, \n"+
+                    "   pp.storage AS storage_limit, \n"+
+                    "   pp.processing AS processing_limit, \n"+
+                    "   pp.created_on AS plan_created, \n"+
+                    "   pp.activation AS plan_activated, \n"+
+                    "   pp.duration_period AS plan_period \n"+
+                    "FROM projects AS p \n"+
+                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+                    "WHERE p.url = " + mysql.escape(project_url);
 
         return queryHandler(query , callback);
     },
 
+    // DEPRACATED use find()
     findByName: function (project_name, callback) {
-        var query = "SELECT * FROM projects WHERE name = " + mysql.escape(project_name);
+        console.info('projects.findByName DEPRECATED');
+        var query = "SELECT p.*, \n"+
+                    "   pp.tier, \n"+
+                    "   pp.storage AS storage_limit, \n"+
+                    "   pp.processing AS processing_limit, \n"+
+                    "   pp.created_on AS plan_created, \n"+
+                    "   pp.activation AS plan_activated, \n"+
+                    "   pp.duration_period AS plan_period \n"+
+                    "FROM projects AS p \n"+
+                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+                    "WHERE p.name = " + mysql.escape(project_name);
 
         return queryHandler(query , callback);
     },
@@ -68,7 +137,8 @@ var Projects = {
     },
     
     /**
-     * creates a project and add the creator to the project as owner
+     * creates a project and its plan, and adds the creator to the project as 
+     * owner on user_project_role
      * @param {Object} project 
      * @param {String} project.name
      * @param {String} project.url
@@ -78,17 +148,21 @@ var Projects = {
      * @param {Boolean} project.is_private 
      * @param {Function} callback(err, projectId)
     */
-    create: function(project, callback) {
-        var values = [];
-
-        var schema = {
+    create: function(project, owner_id, callback) {
+        var schema = joi.object().keys({
             name: joi.string(),
             url: joi.string(),
             description: joi.string(),
-            owner_id: joi.number(),
             project_type_id: joi.number(),
-            is_private: joi.boolean()
-        };
+            is_private: joi.boolean(),
+            plan: joi.object().keys({
+                tier: joi.string(),
+                storage: joi.number(),
+                processing: joi.number(),
+                activation: joi.date().optional(),
+                duration_period: joi.number().optional(),
+            })
+        });
         
         var result = joi.validate(project, schema, {
             stripUnknown: true,
@@ -100,34 +174,69 @@ var Projects = {
         }
         
         project = result.value;
+        var plan = project.plan;
+        delete project.plan;
         
-        for(var i in project) {
-            if(i !== 'id') {
-                values.push(util.format('%s = %s', 
-                    mysql.escapeId(i), 
-                    mysql.escape(project[i])
-                ));
-            }
-        }
+        project.storage_usage = 0;
+        project.processing_usage = 0;
 
         var q = 'INSERT INTO projects \n'+
-                'SET %s';
-
-        q = util.format(q, values.join(", "));
-
-        queryHandler(q, function(err, result) {
-            if(err) return callback(err);
-
-            var projectId = result.insertId;
-
-            Projects.addUser({
-                user_id: project.owner_id,
-                project_id: projectId,
-                role_id: 4 // owner role id
-            }, function(err) {
+                'SET ?';
+        
+        var q2 = 'INSERT INTO user_project_role \n'+
+                 'SET ?';
+        
+        var createPlan = 'INSERT INTO project_plans \n'+
+                         'SET ?';
+                         
+        var updatePlan = 'UPDATE projects \n'+
+                         'SET current_plan = ? \n'+
+                         'WHERE project_id = ?';
+        
+        dbpool.getConnection(function(err, db) {
+            db.beginTransaction(function(err){
                 if(err) return callback(err);
                 
-                callback(null, projectId);
+                var projectId;
+                
+                async.waterfall([
+                    function insertProject(cb) {
+                        db.query(q, project, cb);
+                    },
+                    function insertOwner(result, fields, cb) {
+                        projectId = result.insertId;
+                        
+                        var values = {
+                            user_id: owner_id,
+                            project_id: projectId,
+                            role_id: 4 // owner role id
+                        };
+                        
+                        db.query(q2, values, cb);
+                    },
+                    function insertPlan(result, fields, cb) {
+                        plan.project_id = projectId;
+                        plan.created_on = new Date();
+                        
+                        db.query(createPlan, plan, cb);
+                    },
+                    function updateCurrentPlan(result, fields, cb) {
+                        db.query(updatePlan, [result.insertId, projectId], cb);
+                    },
+                    function commit(result, fields, cb) {
+                        db.commit(cb);
+                    }
+                ], 
+                function(err) {
+                    if(err) {
+                        db.rollback(function() {
+                            callback(err);
+                        });
+                        return;
+                    }
+                    
+                    callback(null, projectId);
+                });
             });
         });
     },
@@ -139,32 +248,25 @@ var Projects = {
             name: joi.string(),
             url: joi.string(),
             description: joi.string(),
-            owner_id: joi.number(),
             project_type_id: joi.number(),
             is_private: [joi.number().valid(0,1), joi.boolean()],
             is_enabled: [joi.number().valid(0,1), joi.boolean()],
-            recording_limit: joi.number()
+            current_plan: joi.number(),
+            storage_usage: joi.number(),
+            processing_usage: joi.number(),
         };
         
         joi.validate(project, schema, function(err, projectInfo){
             if(err) return callback(err);
             
-            var values = [];
-            
-            for( var i in projectInfo) {
-                if(i !== 'project_id' && i !== 'recording_limit') {
-                    values.push(util.format('%s = %s', 
-                        mysql.escapeId(i), 
-                        mysql.escape(projectInfo[i])
-                    ));
-                }
-            }
+            var projectId = projectInfo.project_id;
+            delete projectInfo.project_id;
             
             var q = 'UPDATE projects \n'+
-                    'SET %s \n'+
-                    'WHERE project_id = %s';
+                    'SET ? \n'+
+                    'WHERE project_id = ?';
 
-            q = util.format(q, values.join(", "), projectInfo.project_id);
+            q = mysql.format(q, [projectInfo, projectId]);
             queryHandler(q, callback);
         });
     },
@@ -208,8 +310,7 @@ var Projects = {
                     return callback(null, result);
                 } else {
                     if(err) {
-                        // throw err; // note[gio]: this could possibly kill the thread, do we want this?
-                        return console.error(err);
+                        return console.error(err.stack);
                     }
                 }
             });
@@ -659,15 +760,23 @@ var Projects = {
                 "FROM `validation_set` ts, `projects` p \n" +
                 "WHERE ts.`project_id` = p.`project_id` \n" +
                 "AND p.`url` = " + mysql.escape(project_url);
+                
         queryHandler(q, callback);
     },
    
-    validationsStats: function(project_url,species,songtype, callback) {
-        var q = "select * from "+
-            " (SELECT count(*) as total FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+" ) a, "+
-            " (SELECT count(*) as present FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+"  and present = 1) b , "+
-            " (SELECT count(*) as absent FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+"and `songtype_id` = "+mysql.escape(songtype)+"  and present = 0) c ";
-        queryHandler(q, callback);
+    validationsStats: function(projectUrl, speciesId, songtypeId, callback) {
+        var q = "SELECT SUM( present ) AS present, \n"+
+                "    (COUNT( present ) - SUM( present )) AS absent, \n"+
+                "    COUNT( present ) AS total \n"+
+                "FROM `recording_validations` rv, \n"+
+                "    `projects` p \n"+
+                "WHERE rv.`project_id` = p.`project_id` \n"+
+                "AND p.`url` = ? \n"+
+                "AND `species_id` = ? \n"+
+                "AND `songtype_id` = ? \n"+
+                "GROUP BY species_id, songtype_id";
+        
+        queryHandler(mysql.format(q, [projectUrl, speciesId, songtypeId]), callback);
     },
     
     validationsCount: function(project_id, callback) {

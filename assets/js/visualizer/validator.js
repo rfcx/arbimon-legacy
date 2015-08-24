@@ -1,5 +1,5 @@
-angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
-.directive('a2SpeciesValidator', function (Project) {
+angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
+.directive('a2SpeciesValidator', function (Project, a2UserPermit, notify) {
     var project = Project;
     return {
         restrict : 'E',
@@ -51,7 +51,6 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
             $scope.is_selected = {};
             
             $scope.select = function(project_class, $event) {
-                console.log($event);
                 if($($event.target).is('a')){
                     return;
                 }
@@ -87,6 +86,11 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
             $scope.validations = {};
             
             $scope.validate = function(project_class, val) {
+                if(!a2UserPermit.can('validate species')) {
+                    notify.log('You do not have permission to validate species');
+                    return;
+                }
+                
                 var keys = [],
                     key_idx = {};
                     

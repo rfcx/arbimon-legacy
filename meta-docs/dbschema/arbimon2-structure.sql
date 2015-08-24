@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.6.24, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.25, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: arbimon2
 -- ------------------------------------------------------
--- Server version	5.6.24-0ubuntu2
+-- Server version	5.6.25-0ubuntu0.15.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -14,6 +14,28 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `addresses`
+--
+
+DROP TABLE IF EXISTS `addresses`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `addresses` (
+  `user_id` int(10) unsigned NOT NULL,
+  `name` varchar(45) NOT NULL,
+  `line1` varchar(50) NOT NULL,
+  `line2` varchar(50) NOT NULL,
+  `city` varchar(20) NOT NULL,
+  `state` varchar(10) NOT NULL,
+  `country_code` varchar(2) NOT NULL,
+  `postal_code` varchar(20) NOT NULL,
+  `telephone` varchar(20) NOT NULL,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_addresses_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `classification_results`
@@ -284,6 +306,7 @@ CREATE TABLE `model_types` (
   `training_set_type_id` int(10) unsigned NOT NULL,
   `usesSsim` tinyint(4) NOT NULL DEFAULT '0',
   `usesRansac` tinyint(1) NOT NULL DEFAULT '0',
+  `enabled` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`model_type_id`),
   KEY `training_set_type` (`training_set_type_id`),
   CONSTRAINT `model_types_ibfk_1` FOREIGN KEY (`training_set_type_id`) REFERENCES `training_set_types` (`training_set_type_id`)
@@ -316,6 +339,29 @@ CREATE TABLE `models` (
   CONSTRAINT `models_ibfk_1` FOREIGN KEY (`model_type_id`) REFERENCES `model_types` (`model_type_id`),
   CONSTRAINT `models_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `models_ibfk_3` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `orders`
+--
+
+DROP TABLE IF EXISTS `orders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `orders` (
+  `order_id` varchar(36) NOT NULL,
+  `user_id` int(10) unsigned NOT NULL,
+  `datetime` datetime NOT NULL,
+  `status` varchar(20) NOT NULL COMMENT 'created,\napproved,\ncanceled',
+  `action` varchar(45) NOT NULL,
+  `data` text NOT NULL COMMENT 'order data in JSON format',
+  `paypal_payment_id` varchar(50) NOT NULL COMMENT 'JSON object',
+  `payment_data` text,
+  `error` text,
+  PRIMARY KEY (`order_id`),
+  KEY `fk_orders_2_idx` (`user_id`),
+  CONSTRAINT `fk_orders_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -384,6 +430,23 @@ CREATE TABLE `playlists` (
   UNIQUE KEY `project_id_2` (`project_id`,`name`),
   KEY `project_id` (`project_id`),
   KEY `playlist_type_id` (`playlist_type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `project_audit`
+--
+
+DROP TABLE IF EXISTS `project_audit`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_audit` (
+  `project_id` int(10) unsigned NOT NULL,
+  `user_id` int(10) unsigned NOT NULL,
+  `datetime` datetime NOT NULL,
+  `action` varchar(45) NOT NULL,
+  `description` text CHARACTER SET latin1 NOT NULL,
+  PRIMARY KEY (`project_id`,`user_id`,`datetime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -469,6 +532,29 @@ CREATE TABLE `project_news_types` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `project_plans`
+--
+
+DROP TABLE IF EXISTS `project_plans`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `project_plans` (
+  `plan_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `project_id` int(10) unsigned NOT NULL,
+  `created_on` date DEFAULT NULL,
+  `activation` date DEFAULT NULL COMMENT 'project activation date - this is when the first upload was done or after 30 days of the project creation',
+  `storage` int(10) unsigned NOT NULL COMMENT 'storage capacity',
+  `processing` int(10) unsigned NOT NULL COMMENT 'processing capacity',
+  `duration_period` int(10) unsigned DEFAULT NULL COMMENT 'plan duration in years',
+  `tier` varchar(10) DEFAULT NULL,
+  PRIMARY KEY (`plan_id`),
+  KEY `fk_plans_1_idx` (`project_id`),
+  KEY `index3` (`activation`),
+  CONSTRAINT `fk_plans_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `project_types`
 --
 
@@ -495,17 +581,18 @@ CREATE TABLE `projects` (
   `name` varchar(255) NOT NULL,
   `url` varchar(255) NOT NULL,
   `description` text NOT NULL,
-  `owner_id` int(10) unsigned NOT NULL,
   `project_type_id` int(10) unsigned NOT NULL,
   `is_private` tinyint(1) NOT NULL,
   `is_enabled` tinyint(4) NOT NULL DEFAULT '1',
-  `recording_limit` int(10) unsigned NOT NULL DEFAULT '50000',
+  `current_plan` int(10) unsigned DEFAULT NULL COMMENT 'plan_id of current plan',
+  `storage_usage` float DEFAULT NULL,
+  `processing_usage` float DEFAULT NULL,
   PRIMARY KEY (`project_id`),
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `url` (`url`),
-  KEY `owner_id` (`owner_id`),
   KEY `project_type_id` (`project_type_id`),
-  CONSTRAINT `projects_ibfk_1` FOREIGN KEY (`owner_id`) REFERENCES `users` (`user_id`),
+  KEY `fk_projects_1_idx` (`current_plan`),
+  CONSTRAINT `fk_projects_1` FOREIGN KEY (`current_plan`) REFERENCES `project_plans` (`plan_id`) ON DELETE SET NULL ON UPDATE SET NULL,
   CONSTRAINT `projects_ibfk_2` FOREIGN KEY (`project_type_id`) REFERENCES `project_types` (`project_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -892,6 +979,35 @@ CREATE TABLE `species_taxons` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `system_settings`
+--
+
+DROP TABLE IF EXISTS `system_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_settings` (
+  `key` varchar(20) NOT NULL,
+  `value` text NOT NULL COMMENT 'global system configuration shared accross servers',
+  PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='global system settings shared across servers';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `system_stats`
+--
+
+DROP TABLE IF EXISTS `system_stats`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_stats` (
+  `stat_id` int(11) NOT NULL,
+  `total_recs` bigint(20) unsigned NOT NULL,
+  `total_mins` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`stat_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `training_set_roi_set_data`
 --
 
@@ -1083,7 +1199,6 @@ CREATE TABLE `users` (
   `email` varchar(255) NOT NULL,
   `last_login` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `is_super` tinyint(1) NOT NULL DEFAULT '0',
-  `project_limit` int(10) unsigned NOT NULL DEFAULT '1',
   `created_on` datetime DEFAULT NULL,
   `login_tries` tinyint(4) NOT NULL DEFAULT '0',
   `disabled_until` datetime DEFAULT NULL,
@@ -1123,4 +1238,4 @@ CREATE TABLE `validation_set` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-05-29 16:45:37
+-- Dump completed on 2015-08-24 11:16:21

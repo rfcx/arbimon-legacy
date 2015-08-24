@@ -1,4 +1,4 @@
-angular.module('a2directives', ['a2services', 'templates-arbimon2'])
+angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
 .run(function($window) {
     var $ = $window.$;
     
@@ -139,7 +139,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             
             for(var i = 0; i < detaEle[0].children.length; i++) {
                 var child = $(detaEle[0].children[i]);
-                // console.log(child);
                 
                 fields.push({
                     title: child.attr('title'),
@@ -148,8 +147,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 });
             }
             
-            // console.log(fields);
-            // console.log($templateCache.get('/partials/directives/table.html'));
             
             return function(scope, element, attrs) {
                 scope.fields = fields;
@@ -164,7 +161,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 
                 if(attrs.search) {
                     scope.$watch('search', function(value) {
-                        console.log(value);
                         scope.query = scope.search;
                         scope.updateChecked();
                     });
@@ -217,8 +213,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
     $scope.check = function($event, $index) {
         
         if($scope.lastChecked && $event.shiftKey) {
-            console.log('shift!');
-            
             if($scope.lastChecked) {
                 var rows;
                 if($scope.lastChecked > $index) {
@@ -407,6 +401,8 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             year         : '=?',
             dateCount    : '=?',
             mode         : '@',
+            onYearChanged: '&?',
+            onDateChanged: '&?',
             disableEmpty : '&'
         },
         link: function(scope, element, attrs) {
@@ -443,9 +439,23 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             };
             var monthName = d3.time.format('%B');
             var dateFormat = d3.time.format("%Y-%m-%d");
+            function set_year(year){
+                var old_year = scope.year;
+                scope.year = year;
+                if(scope.onYearChanged && old_year != year){
+                    $timeout(function(){scope.onYearChanged({year:year});});
+                }
+            }
+            function set_date(date){
+                var old_date = scope.ngModel;
+                scope.ngModel = date;
+                if(scope.onDateChanged && old_date != date){
+                    $timeout(function(){scope.onDateChanged({date:date});});
+                }
+            }
             
             if(!scope.year){
-                scope.year = (new Date()).getFullYear();
+                set_year((new Date()).getFullYear());
             }
             var cubesize = 19;
             var width = 600;
@@ -576,7 +586,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                     .attr('transform', 'translate(0,'+ headerHeight +')')
                     .selectAll('g')
                     .data(function(d) { 
-                        // console.log(d);
                         return d3.time.months(new Date(d, 0, 1), new Date(d+1, 0, 1));
                     });
                 
@@ -614,7 +623,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                 days.attr('transform', function() { return 'translate(0,24)'; })
                     .classed('hover', true)
                     .classed('day-disabled cal-oor', function(d) {
-                        // console.log(d ,scope.minDate, (d < scope.minDate) );
                         return (scope.minDate ? (d < scope.minDate) : false) ||
                                (scope.maxDate ? (scope.maxDate < d) : false);
                     })
@@ -624,7 +632,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                     .on('click', function(d){
                         scope.$apply(function() {
                             d3.event.preventDefault();
-                            scope.ngModel = d;
+                            set_date(d);
                             if(is_a_popup) popup.css('display', 'none');
                         });
                     });
@@ -655,28 +663,28 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             
             scope.$watch('maxDate', function(){
                 if(scope.maxDate && scope.year > scope.maxDate.getFullYear()){
-                    scope.year = scope.maxDate.getFullYear();
+                    set_year(scope.maxDate.getFullYear());
                 }
                 draw();
             });
             
             scope.$watch('minDate', function(){
                 if(scope.minDate && scope.year < scope.minDate.getFullYear()){
-                    scope.year = scope.minDate.getFullYear();
+                    set_year(scope.minDate.getFullYear());
                 }
                 draw();
             });
             
             scope.$watch('year', function(){
                 if(!scope.year){
-                    scope.year = new Date().getFullYear();
+                    set_year(new Date().getFullYear());
                 }
                 draw();
             });
             
             scope.$watch('ngModel', function(){
                 if(scope.ngModel){
-                    scope.year = scope.ngModel.getFullYear();
+                    set_year(scope.ngModel.getFullYear());
                     days.classed('selected', function(d){
                         return scope.ngModel && (dateFormat(d) == dateFormat(scope.ngModel));
                     });
@@ -704,20 +712,6 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
             var img = $('<img>').load(function(){
                     $element.removeClass('loading');
                 }).appendTo($element);
-
-            $attr.$observe('a2Src', function(new_src){
-                if(!new_src){
-                    img.attr('src', '');
-                    return;
-                }
-                $element.addClass('loading');
-                var image = new Image();
-                image.onload = function () {
-                    img.attr('src', this.src);
-                };
-                image.src = new_src;
-                
-            });
             
             $attr.$observe('a2Src', function(new_src){
                 if(!new_src){
@@ -753,7 +747,7 @@ angular.module('a2directives', ['a2services', 'templates-arbimon2'])
                     var urikey = [$scope.trainingSet.id, $scope.datum.id].join('-');
                     if($scope.resolving != urikey){
                         $scope.resolving = urikey;
-                        a2TrainingSets.getDataImage($scope.trainingSet.name, $scope.datum.id, function(datum2){
+                        a2TrainingSets.getDataImage($scope.trainingSet.id, $scope.datum.id, function(datum2){
                             $scope.resolving = false;
                             if($scope.datum.id == datum2.id){
                                 $scope.datum.uri = datum2.uri;

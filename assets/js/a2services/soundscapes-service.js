@@ -1,5 +1,5 @@
-angular.module('a2-soundscapes-service', [
-    'a2-project-service',
+angular.module('a2.srv.soundscapes', [
+    'a2.srv.project',
     'humane'
 ])
 .factory('a2Soundscapes', function(Project, $http, $q, notify) {
