@@ -176,7 +176,7 @@ angular.module('a2.orders', [
             $scope.plan.cost = $scope.freePlan.cost;
             $scope.plan.storage = $scope.freePlan.storage;
             $scope.plan.processing = $scope.freePlan.processing;
-            $scope.plan.duration =  null;
+            $scope.plan.duration =  undefined;
         }
     });
     
@@ -383,7 +383,7 @@ angular.module('a2.orders', [
             return notify.error('You need to select a plan');
         }
         
-        if(!$scope.paymentsEnabled) {
+        if(!$scope.paymentsEnabled && $scope.project.plan.tier == 'paid') {
             return notify.log('Payments are unavailable');
         }
         
