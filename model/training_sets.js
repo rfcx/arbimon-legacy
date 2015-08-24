@@ -1,3 +1,6 @@
+/* jshint node:true */
+"use strict";
+
 // dependencies
 var debug = require('debug')('arbimon2:model:training_sets');
 var mysql        = require('mysql');
@@ -42,7 +45,7 @@ var TrainingSets = {
     find: function (query, callback) {
         var constraints = [];
 
-        if (query) {
+        if(query) {
             if (query.id) {
                 constraints.push('TS.training_set_id = ' + mysql.escape(query.id));
             } 
@@ -56,44 +59,22 @@ var TrainingSets = {
         }
 
         if(constraints.length === 0){
-            callback(new Error("TrainingSets.find called with invalid query."));
+            return callback(new Error("TrainingSets.find called with invalid query."));
         }
         
-        var q = "SELECT TS.training_set_id as id, \n"+
-                "       TS.name, \n"+
-                "       TS.date_created, \n"+
+        var q = "SELECT TS.training_set_id as id, \n" +
+                "       TS.name, \n" +
+                "       TS.date_created, \n" +
+                "       TS.project_id as project, \n" +
                 "       TST.identifier as type, \n" +
-                "       TSRS.species_id as TT_roi_set_TT_species, \n"+
-                "       TSRS.songtype_id as TT_roi_set_TT_songtype, \n"+
-                "       TS.project_id as project \n" +
+                "       TSRS.species_id as species, \n" +
+                "       TSRS.songtype_id as songtype \n" +
                 "FROM training_sets TS \n" +
                 "JOIN training_set_types TST ON TS.training_set_type_id = TST.training_set_type_id \n" +
                 "LEFT JOIN training_sets_roi_set TSRS ON TS.training_set_id = TSRS.training_set_id \n" +
                 "WHERE " + constraints.join(" \nAND ");
-                
-                
-        return dbpool.queryHandler(q, function(err, data, fields){
-            if(!err && data){
-                var ttfields=[];
-                fields.forEach(function(fielddef){
-                    var m = /TT_(\w+)_TT_(\w+)/.exec(fielddef.name);
-                    if(m){
-                        ttfields.push([m[0], m[1], m[2]]);
-                    }
-                });
-                data.forEach(function(item){
-                    var tt = item.type;
-                    ttfields.forEach(function(ttfield){
-                        var val = item[ttfield[0]];
-                        delete item[ttfield[0]];
-                        if(tt == ttfield[1]){
-                            item[ttfield[2]] = val;
-                        }
-                    });
-                });
-            }
-            callback(err, data);
-        });
+        
+        dbpool.queryHandler(q, callback);
     },
     
     nameInUse: function(project_id, set_name, callback) {
@@ -333,15 +314,16 @@ TrainingSets.types.roi_set = {
                 im.identify(spec_data.path, next);
             },
             function crop_roi(spectro_info, next){
-                roiDuration = rdata.x2-rdata.x1;
-                px2sec = rec_data.duration/spectro_info.width ;
-                roiWidth = Math.ceil(roiDuration/px2sec);
-                roiBanwdwith = rdata.y2-rdata.y1;
-                max_freq = rec_data.sample_rate / 2;
-                px2hz  = max_freq / spectro_info.height;
-                roiHeight = Math.ceil(roiBanwdwith/px2hz);
-                roiStartX = Math.floor(rdata.x1/px2sec);
-                roiStartY = spectro_info.height-Math.floor(rdata.y2/px2hz);
+                var roiDuration = rdata.x2-rdata.x1;
+                var px2sec = rec_data.duration/spectro_info.width ;
+                var roiWidth = Math.ceil(roiDuration/px2sec);
+                var roiBanwdwith = rdata.y2-rdata.y1;
+                var max_freq = rec_data.sample_rate / 2;
+                var px2hz  = max_freq / spectro_info.height;
+                var roiHeight = Math.ceil(roiBanwdwith/px2hz);
+                var roiStartX = Math.floor(rdata.x1/px2sec);
+                var roiStartY = spectro_info.height-Math.floor(rdata.y2/px2hz);
+                
                 // TODO change imagemagick for lwip
                 im.convert([
                     spec_data.path,
@@ -387,7 +369,10 @@ TrainingSets.types.roi_set = {
                 self.get_data(training_set, {id:data_id}, next);
             },
             function check_and_get_tset_data(rows, fields, next){
-                if(!rows.length){ next(new Error("Requested training set data does not exists.")); return; }
+                if(!rows.length) { 
+                    next(new Error("Requested training set data does not exists.")); 
+                    return; 
+                }
                 data = rows[0];
                 next();
             },

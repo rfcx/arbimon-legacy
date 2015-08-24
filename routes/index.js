@@ -10,7 +10,6 @@ var uploads = require('./uploads');
 var login = require('./login');
 
 
-
 router.use('/', login);
 
 router.get('/terms', function(req, res) {
@@ -19,6 +18,10 @@ router.get('/terms', function(req, res) {
 
 router.get('/support', function(req, res) {
     res.render('support');
+});
+
+router.get('/classifiers', function(req, res) {
+    res.render('classifiers');
 });
 
 router.use('/uploads', uploads);

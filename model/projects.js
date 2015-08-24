@@ -510,15 +510,25 @@ var Projects = {
     },
 
     modelList: function(project_url, callback) {
-        var q = "SELECT m.model_id, CONCAT(UCASE(LEFT(m.name, 1)), SUBSTRING(m.name, 2)) as mname "+
-                " ,UNIX_TIMESTAMP( m.`date_created` )*1000 as date "+
-                " , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,"+
-                "  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser " + 
-                " , mt.name as mtname "+
-                " FROM `models` as m,`model_types` as mt , `users` as u , `projects` as p "+
-                " WHERE p.url  = "+mysql.escape(project_url)+
-                " and m.`model_type_id` = mt.`model_type_id` and m.user_id = u.user_id "+
-                " and p.project_id = m.project_id and m.deleted = 0";
+        var q = "SELECT m.model_id, \n"+
+                "   CONCAT(UCASE(LEFT(m.name, 1)), \n"+
+                "   SUBSTRING(m.name, 2)) as mname, \n"+
+                "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n"+
+                "   CONCAT( \n"+
+                "       CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)), \n"+
+                "       ' ', \n"+
+                "       CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) \n"+
+                "   ) as muser, \n" + 
+                "   mt.name as mtname, \n"+
+                "   mt.enabled \n"+
+                "FROM `models` as m,  \n"+
+                "   `model_types` as mt,  \n"+
+                "   `users` as u , `projects` as p \n"+
+                "WHERE p.url = " + mysql.escape(project_url)+
+                "AND m.`model_type_id` = mt.`model_type_id` \n"+
+                "AND m.user_id = u.user_id \n"+
+                "AND p.project_id = m.project_id \n"+
+                "AND m.deleted = 0";
 
             queryHandler(q, callback);
     },
@@ -750,15 +760,23 @@ var Projects = {
                 "FROM `validation_set` ts, `projects` p \n" +
                 "WHERE ts.`project_id` = p.`project_id` \n" +
                 "AND p.`url` = " + mysql.escape(project_url);
+                
         queryHandler(q, callback);
     },
    
-    validationsStats: function(project_url,species,songtype, callback) {
-        var q = "select * from "+
-            " (SELECT count(*) as total FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+" ) a, "+
-            " (SELECT count(*) as present FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+" and `songtype_id` = "+mysql.escape(songtype)+"  and present = 1) b , "+
-            " (SELECT count(*) as absent FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = "+mysql.escape(project_url)+" and `species_id` = "+mysql.escape(species)+"and `songtype_id` = "+mysql.escape(songtype)+"  and present = 0) c ";
-        queryHandler(q, callback);
+    validationsStats: function(projectUrl, speciesId, songtypeId, callback) {
+        var q = "SELECT SUM( present ) AS present, \n"+
+                "    (COUNT( present ) - SUM( present )) AS absent, \n"+
+                "    COUNT( present ) AS total \n"+
+                "FROM `recording_validations` rv, \n"+
+                "    `projects` p \n"+
+                "WHERE rv.`project_id` = p.`project_id` \n"+
+                "AND p.`url` = ? \n"+
+                "AND `species_id` = ? \n"+
+                "AND `songtype_id` = ? \n"+
+                "GROUP BY species_id, songtype_id";
+        
+        queryHandler(mysql.format(q, [projectUrl, speciesId, songtypeId]), callback);
     },
     
     validationsCount: function(project_id, callback) {

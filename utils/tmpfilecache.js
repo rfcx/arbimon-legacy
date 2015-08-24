@@ -77,7 +77,7 @@ var cache = {
         fs.readdir(root, function(err, files){
             if(err) return console.error(err.stack);
             async.each(files, function(subfile, next){
-                if (subfile == '.placeholder') {
+                if (/\.gitignore|\.placeholder/.test(subfile)) {
                     next();
                     return;
                 }

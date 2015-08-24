@@ -20,53 +20,55 @@ var deleteFile = function(filename) {
 };
 
 // middleware to handle upload auth
-var authorize = function(req, res, next) {
-    if(req.session && req.session.loggedIn) { 
-        if(!req.query.project || !req.query.site || !req.query.nameformat) {
-            return res.status(400).json({ error: "missing parameters" });
+var authorize = function(authtype){
+    return function(req, res, next) {
+        if(authtype.session && req.session && req.session.loggedIn) { 
+            if(!req.query.project || !req.query.site || !req.query.nameformat) {
+                return res.status(400).json({ error: "missing parameters" });
+            }
+            
+            debug('project_id: %s | site_id: %s |format: %s', 
+                req.query.project, 
+                req.query.site, 
+                req.query.nameformat
+            );
+            
+            var perm = "manage project recordings";
+            
+            if(!req.haveAccess(req.query.project, perm)) {
+                res.status(401).json({ 
+                    error: "you dont have permission to '"+ perm +"'"
+                });
+                return;
+            }
+            
+            req.upload = {
+                userId: req.session.user.id,
+                projectId: Number(req.query.project),
+                siteId: Number(req.query.site),
+                nameFormat: req.query.nameformat,
+            };
+            
+            next();
         }
         
-        debug('project_id: %s | site_id: %s |format: %s', 
-            req.query.project, 
-            req.query.site, 
-            req.query.nameformat
-        );
-        
-        var perm = "manage project recordings";
-        
-        if(!req.haveAccess(req.query.project, perm)) {
-            res.status(401).json({ 
-                error: "you dont have permission to '"+ perm +"'"
-            });
-            return;
+        // verify token
+        else if(authtype.token && req.token) {
+            
+            req.upload = {
+                userId: 0,
+                projectId: Number(req.token.project),
+                siteId: Number(req.token.site),
+                nameFormat: "Arbimon",
+            };
+            
+            next();
         }
-        
-        req.upload = {
-            userId: req.session.user.id,
-            projectId: Number(req.query.project),
-            siteId: Number(req.query.site),
-            nameFormat: req.query.nameformat,
-        };
-        
-        next();
-    }
-    
-    // verify token
-    else if(req.token) {
-        
-        req.upload = {
-            userId: 0,
-            projectId: Number(req.token.project),
-            siteId: Number(req.token.site),
-            nameFormat: "Arbimon",
-        };
-        
-        next();
-    }
-    else {
-        // error not logged user nor site token
-        return res.sendStatus(401);
-    }
+        else {
+            // error not logged user nor site token
+            return res.sendStatus(401);
+        }
+    };
 };
 
 var verifySite = function(req, res, next) {
@@ -272,6 +274,71 @@ var receiveUpload = function(req, res, next) {
     });
 };
 
-router.post('/audio', authorize, verifySite, receiveUpload);
+var receiveSiteLogUpload = function(req, res, next) {    
+    var params = {};
+    var error;
+    var upload_file;
+            
+    if(!req.busboy) return res.status(400).json({ error: "no data" });
+    
+    req.busboy.on('field', function(fieldname, val) {
+        debug("req.busboy.on('field', function(fieldname, val) {");
+        if(fieldname === 'info') {
+            try {
+                params = JSON.parse(val);
+            } catch(err) {
+                error = { error: err.message };
+                return res.status(400).json(error);
+            }
+        }
+    });
+    
+    req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+        debug("req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {");
+        if(upload_file){
+            error = { error: "Only one log file at a time is allowed."};
+            return res.status(400).json(error);
+        } else {
+            upload_file = tmpFileCache.key2File("logfile/" + Date.now() + "/" + filename);
+            //                                 ^__ concat now() to prevent collitions
+            file.pipe(fs.createWriteStream(upload_file));
+        }
+    });
+    
+    req.busboy.on('finish', function() {
+        if(error){
+            return;
+        }
+            
+        if(!params.recorder || !params.from || !params.to) {
+            error = { error: "form data not complete"};
+        } else if(!/[- 0-9a-zA-Z]+/.test(params.recorder)) {
+            error = { error: "invalid recorder id format.", format:params.recorder};
+        }
+
+        if(error){
+            debug("upload error : ", error);
+            return res.status(400).json(error);
+        }
+        
+        model.sites.uploadLogFile({
+            site_id : req.upload.siteId,
+            project_id : req.upload.projectId
+        }, {
+            recorder : params.recorder,
+            from     : params.from    ,
+            to       : params.to      ,
+            file     : fs.createReadStream(upload_file)
+        }, function(err, data){
+            if(err) return next(err);            
+            res.status(202).json({ success: "log upload done!" });
+        });
+    });    
+    req.pipe(req.busboy);
+};
+
+router.post('/audio', authorize({session:true, token:true}), verifySite, receiveUpload);
+
+router.post('/site-log', authorize({token:true}), verifySite, receiveSiteLogUpload);
 
 module.exports = router;

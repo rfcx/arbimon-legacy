@@ -31,6 +31,11 @@
                     </h3>
                 </div>
             </div>
+			<div class="row">
+				<div class="col-md-12" ng-show="results.length < 1">
+					<h3>No projects found. <a ng-click="createProject() | trackEvent:'Home':'createProject'">Create a project.</a></h3>
+				</div>
+			</div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="list-group">
@@ -48,7 +53,7 @@
                             </a>
                         </dl>
                     </div>
-                    <pagination ng-show="results.length > 10" total-items="results.length" ng-model="currentPage"></pagination>
+                    <pagination ng-show="results.length > 10" total-items="results.length" ng-model="currentPage" max-size="5" rotate="false"></pagination>
                 </div>
             </div>
         </div>

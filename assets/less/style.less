@@ -59,6 +59,11 @@
     text-align: center;
 }
 
+
+// .inline -> newmodel.html, frequency-adjust-layer.html
+// .a2-block-inline -> (directive)a2TrainingSetDataImage
+// .ib -> new_roi_set_tset_partial.html
+// .inline-block -> browser/recordings-by
 .inline,
 .a2-block-inline,
 .ib, 
@@ -66,68 +71,41 @@
     display: inline-block;
 }
 
+// -> frequency-adjust-layer.html
 .w5em {
     width: 6em;
 }
+
+// -> new_roi_set_tset_partial.html
 .w12em {
     width: 12em;
 }
 
-.a2-header {
-    position: relative;
-    z-index: 1030;
-}
-header nav ul > li > a {
-    height: 52px;
-}
-header .navbar-brand > img,
-header nav ul.nav > li a > img {
-    vertical-align: middle;
-    margin-top: -5px;
-}
-
-.logo-text {
-    position: relative;
-    z-index: 0;
-    > .undertext {
-        position: absolute;
-        left: 0;
-        right: 0;
-        text-align: center;
-        font-family: serif;
-        z-index: -100;
-        bottom: 0;
-        top: 20%;
-        font-size: 190%;
-        color: rgb(144, 207, 176);
-    }
-}
 
 
-.make-full-column(@colstart; @colend; @gutter: @grid-gutter-width) {
-    @columns: @colend - @colstart;
-    min-height: 1px;
-    padding-left: (@gutter / 2);
-    padding-right: (@gutter / 2);
-    position: absolute;
-    @media (min-width: @screen-md-min) {
-        position: absolute;
-        left: percentage((@colstart / @grid-columns));
-        right: percentage(1 - (@colend / @grid-columns));
-        top: 0;
-        bottom: 0;
-    }
-}
+
+// no effect
+// header nav ul > li > a {
+//     height: 52px;
+// }
+// header .navbar-brand > img,
+// header nav ul.nav > li a > img {
+//     vertical-align: middle;
+//     margin-top: -5px;
+// }
 
 
 @banner-padding: 60px;
 
+// -> register.ejs
 .banner {
     background: url("/images/login-banner.png");
     background-position: center top; 
     height: 500px;
 }
 
+// -> login.ejs, activate.ejs, forgot.ejs, not-found.ejs, project_diasabled.ejs,
+//    reset-password.ejs, terms.ejs
 .login-banner {
     .banner();
     padding-top: @banner-padding;
@@ -135,6 +113,8 @@ header nav ul.nav > li a > img {
 }
 
 // adds transparent white background to div
+
+// ->  activate.ejs, forgot-request.ejs, register.ejs, reset-password.ejs
 .registration {
     margin-top: 20px;
     background-color: #dfdfdf;
@@ -142,11 +122,16 @@ header nav ul.nav > li a > img {
     border-radius: 10px;
 }
 
+// -> validator-main.html, recordings-by-playlist.html, recordings-by-site.html,
+//    browser/soundscapes.html, training-data.html, add_tset.html, 
+//    edit_soundscape_visual_scale.html, new_roi_set_tset_partial.html
 .dropdown-height-7 {
     overflow-y: auto;
     max-height: 7 * (2 * @nav-link-padding-v + 14);
 }
 
+
+// -> login.ejs
 .login-form {
     padding: 10px;
     background-color: transparent;
@@ -155,6 +140,9 @@ header nav ul.nav > li a > img {
         margin: 3px;
     }
 }
+
+// -> activate.ejs, forgot-request.ejs, login.ejs, not-found.ejs, terms.ejs,
+//    project_disabled.ejs, register.ejs, reset-password.ejs, support.ejs
 .login-top {
     padding-top: 15px;
     height: 52px;
@@ -165,68 +153,56 @@ header nav ul.nav > li a > img {
     margin-bottom: 6px;
     
 }
+
+// -> recordings-by-site.html
 .dropdown-menu.datepicker {
     min-width: 290px;
     padding: 5px;
 }
-.alert {
-    width: 30%;
-    margin: 0 auto;
-}
+
+
+// -> create-playlist.html, createnewclassification.html, newmodel.html, 
+//    createnewsoundscape.html
 .red {
     color: red;
     float: right;
     font-size: small;
 }
+
+// -> newmodel.html
+.classifiers-change{
+    color: red;
+    float: right;
+    font-size: x-small;
+}
+
+// -> modelinfo.html, newmodel.html
 .top-buffer {
     margin-top: 8px;
 }
-.hrline {
-    color: #000;
-    width: 100%;
-    height: 1px;
-}
-.model-details {
-    border-bottom: 1px solid #e5e5e5;
-    width: 100%;
-}
-.models-modal-window .modal-dialog {
-    //width: 80%;
-    min-width: 850px;
-}
+
+
+// -> createnewclassification.html
 .scrollul {
     height: 160px;
     width: 94%;
-}
-.scrollul {
     overflow: hidden;
     overflow-y: scroll;
     list-style-type: none;
 }
+
+// -> classinfo.html
 .ulnodeco {
     list-style-type: none;
 }
+
+// -> classinfo.html, createnewclassification.html
 .linodeco {
     text-decoration: none;
 }
-.progressbar {
-    z-index: 1009;
-    position: fixed;
-    bottom: 0;
-    background-color: #e5e5e5;
-    width: 100%;
-    text-align: center;
-    border-top: 1px solid #555;
-    border-top-left-radius: 25px;
-    border-top-right-radius: 25px;
-    overflow-y: auto;
-}
 
-.progressbardiv {
-    width: 95%;
-    margin-left: 45px;
-}
-
+// -> spectrogram.js, visualizer/main.html, soundscape-info-layer.html,
+//    soundscape-regions-layer.html, roi_set.html
 .bg {
     min-height: 20px;
     padding: 19px;
@@ -273,7 +249,7 @@ header nav ul.nav > li a > img {
     margin-left: 135px;
 }
 
-
+// duplicated bootstrap class
 .has-error {
     @text-color: @state-danger-text;
     @border-color: @state-danger-text;
@@ -285,10 +261,9 @@ header nav ul.nav > li a > img {
         //        background-color: @background-color;
     }
 }
-.pointer-events {
-    pointer-events: auto;
-}
 
+
+// -> project-form.html
 textarea.fixed-width {
     max-width: 100%;
     min-width: 100%;
@@ -296,173 +271,106 @@ textarea.fixed-width {
     height: 10em;
 }
 
-@training-job-color: #178fd5;
-@classify-job-color: #f45151;
-@soundscape-job-color: #090;
-//progress bar colors
-.barColor1 {
-    //training
-    background-image: none;
-    background-color: @training-job-color;
-}
-.barColor2 {
-    // classification
-    background-image: none;
-    background-color: @classify-job-color;
-}
-.barColor4 {
-    // soundscapes
-    background-image: none;
-    background-color: @soundscape-job-color;
-}
-
-.checkSelectors {
-    input[type=checkbox] {
-        visibility: hidden;
-    }
-    .checkboxex {
-        background: #ededed;
-        position: relative;
-        border: 0 solid rgb(208, 208, 208);
-        border: 0 solid rgba(0, 0, 0, 0.15);
-    }
-    .checkboxex label {
-        background: #aeaeae;
-        display: block;
-        width: 10px;
-        height: 12px;
-        border-radius: 50%;
-        cursor: pointer;
-        position: absolute;
-        top: 2px;
-        left: 2px;
-        z-index: 1;
-        box-shadow: 0 0 5px rgba(0,0,0,0.7) inset;
-        transition: all 0.1s ease;
-    }
-    .checkbox-1 input[type=checkbox]:checked + label {
-        background: @training-job-color;
-        //training
-        width: 12px;
-        height: 13px;
-        top: 2px;
-        left: 1px;
-    }
-    .checkbox-2 input[type=checkbox]:checked + label {
-        background: @classify-job-color;
-        // classification
-        width: 12px;
-        height: 13px;
-        top: 2px;
-        left: 1px;
-    }
-    .checkbox-4 input[type=checkbox]:checked + label {
-        background: @soundscape-job-color;
-        // soundscapes
-        width: 12px;
-        height: 13px;
-        top: 2px;
-        left: 1px;
-    }
-}
-.bordered {
-    border-top: 1px solid #bbb;
-    padding-bottom: 12px;
-    margin-left: 14px;
-    width: 60%;
-}
+// -> visualizer-spectrogram.html
 .vertical-text {
     display: inline-block;
     transform: rotate(-90deg);
     white-space: nowrap;
     width: 0;
 }
+
+// -> visualizer-spectrogram.html
 .no-wrap {
     white-space: nowrap;
 }
-.rotatedtext {
-    top: 64px;
-    -ms-transform: rotate(270deg);
-    /* IE 9 */
-    -moz-transform: rotate(270deg);
-    /* Firefox */
-    -webkit-transform: rotate(270deg);
-    /* Safari and Chrome */
-    -o-transform: rotate(270deg);
-    /* Opera */
-    transform: rotate(270deg);
-}
-.bottom-border {
-    border-bottom: 1px solid #9e9e9e;
-}
-.side-border {
-    border-left: 1px solid #9e9e9e;
-}
-.spaced-td {
-    padding-left: 10px;
-}
+
+// classinfo.html
 .text-centered-bordered {
     text-align: center;
     border-top: 1px solid #ddd;
 }
+
+// classinfo.html, modelinfo.html
 .sm-result-thumb {
     height: 100px;
     width: 100%;
 }
+
+// vectorchart.html
 .vector-chart {
     height: 50px;
     border: 1px solid #9e9e9e;
     width: 100%;
 }
+
+// -> classification.js
 .details-modal-window .modal-dialog {
     min-width: 800px;
 }
+
+// classinfo.html, modelinfo.html
 .axisWrapper {
     width: 100%;
     margin: auto;
 }
+
+// classinfo.html, modelinfo.html
 .yaxisWrapper {
     width: 20px;
     font-size: x-small;
     float: left;
 }
+
+// classinfo.html, modelinfo.html
 .vectorWrapper {
     margin-left: 20px;
 }
+
+// classinfo.html, modelinfo.html
 .lowaxis2 {
     line-height: 50px;
     vertical-align: bottom;
+    margin-left: -10px;
 }
+
+// classinfo.html, modelinfo.html
 .vertical-text2 {
     line-height: 110px;
     transform: rotate(-90deg);
     vertical-align: bottom;
     font-size: small;
 }
+
+// classinfo.html, modelinfo.html
 .cleardiv {
     clear: both;
 }
+
+// classinfo.html
 .horizontal-blank-space {
     padding-left: 30px;
 }
+
+// training-sets.html, classinfo.html
 .bordeder-empy-div {
     border-top: 1px solid #ddd;
     width: 100%;
     height: 1px;
     padding: 2px;
 }
-.on-queue {
-    color: #777;
-    text-align: center;
-}
+
+// classinfo.html
 .spacing-details-classification {
     margin-top: 4px;
 }
+
+// vectorchart.html
 .vector-loader-pos {
     padding-top: 10px;
     text-align: center;
 }
 
+// -> validator-main.html
 .no-select {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -472,6 +380,7 @@ textarea.fixed-width {
     user-select: none;
 }
 
+// a2-table directive style
 .a2-table {
     & > tbody > tr.active > td {
         background-color: #ccc;
@@ -485,10 +394,15 @@ textarea.fixed-width {
         white-space: nowrap;
     }
 }
+
+// -> recordings.html, sites.html, training-sets.html
 .toolbar {
     // top row
     padding-bottom: 10px;
 }
+
+// -> recordings-by-playlist.html, recordings-by-site.html, 
+//    soundscapes.html, edit_soundscape_visual_scale.html
 .dropdown-menu.has-badges > li {
     position: relative;
     div {
@@ -504,9 +418,13 @@ textarea.fixed-width {
         transform: translate(0px, -50%);
     }
 }
+
+// -> audiodata/training-sets.html
 .spacer-gallery {
     margin-bottom: 15px;
 }
+
+// -> audiodata/training-sets.html
 .trainingSetLoader {
     width: 10%;
     line-height: 100px;
@@ -514,41 +432,55 @@ textarea.fixed-width {
     height: 200px;
 }
 
+// -> home.ejs
 .more-btn {
     margin-bottom: 15px;
 }
+
+// 
 #aggregationlist .ui-selected {
     background: #d5d5d5;
     font-weight: bold;
 }
-.aggregationaxis path,
-.aggregationaxis line {
-    fill: none;
-    stroke: black;
-    shape-rendering: crispEdges;
+
+// directive a2DrawAggregation
+.aggregationaxis {
+    path,
+    line {
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+    text {
+        font-family: sans-serif;
+        font-size: 11px;
+    }
 }
-.aggregationaxis text {
-    font-family: sans-serif;
-    font-size: 11px;
-}
-.a2-li-spaced {
-    margin-bottom: 2px;
-    margin-left: -40px;
-}
+
+
+// use as .text-danger on -> createnewclassification.html,
+//                           newmodel.html, createnewsoundscape.html
 .nameExistsSpan {
     color: red;
     font-size: small;
 }
-.thresholdaxis path,
-.thresholdaxis line {
-    fill: none;
-    stroke: black;
-    shape-rendering: crispEdges;
+
+// directive a2DrawPeakThreshold
+.thresholdaxis {
+    path,
+    line {
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+    text {
+        font-family: sans-serif;
+        font-size: 11px;
+    }
 }
-.thresholdaxis text {
-    font-family: sans-serif;
-    font-size: 11px;
-}
+
+// directive a2ThresholdSelector 
+// resize text
 .thresholdtext {
     font-family: sans-serif;
     font-size: 12px;
@@ -577,49 +509,42 @@ textarea.fixed-width {
 }
 .bandwidthslider {
     margin-top: -4px;
+    
+    .ngrs-range-slider {
+        margin: 0;
+        width: 220px;
+        padding: 0;
+        margin-left: 40px;
+    }
 }
-.bandwidthslider .ngrs-range-slider {
-    margin: 0;
-    width: 220px;
-    padding: 0;
-    margin-left: 40px;
-}
+// end  -----------------------------------
+
+
+// -> createnewsoundscape.html
 .spacedhz {
     padding-left: 11px;
     padding-right: 11px;
 }
+// -> createnewsoundscape.html
 .binhzpadding {
     padding-left: 0;
     padding-bottom: 10px;
     margin-left: 0;
 }
-#binhzlist .ui-selected {
-    background: #d5d5d5;
-    font-weight: bold;
-}
-.bottom-fixed-alerts {
-    background-color: white;
-    border: 0 white solid;
-}
+
+// models/list, classification/list, soundscapes/list
 .padded-view-div {
     padding-bottom: 40px;
 }
-.left-rigth-padding-4 {
-    padding-left: 4px;
-    padding-right: 4px;
-}
-.font-blue-20 {
-    font-size: 20px;
-    color: #428bca;
-}
-.loading-top-padding {
-    padding-top: 20px;
-}
+
+
+// not sure
 .label > .btn.btn-close {
     &:last-child {
         margin-right: -0.5em;
     }
 }
+
 .label.a2-tag {
     display: inline-block;
     > .badge {
@@ -627,25 +552,28 @@ textarea.fixed-width {
         background-color: rgba(255,255,255,.2);
     }
 }
-.activate-height {
-    height: 250px;
-}
-.activate-center {
-    text-align: center;
-}
+
+// -> training-sets.html, classification/list, jobs/index, models/list, 
+//    modelinfo, soundscapes/list
 .hidelongtext {
     text-overflow: ellipsis;
     overflow: hidden;
 }
+
+// -> classification/list, models/list, modelinfo, soundscapes/list
 .widthtd {
     max-width: 300px;
 }
+
+// -> zoom-input-layer
 .text-shadow {
     text-shadow: 1px 1px rgba(255,255,255,.5);
     &.inverted {
         text-shadow: 1px 1px rgba(0,0,0,.5);
     }
 }
+
+// -> visualizer-spectrogram
 .ghost-like {
     opacity: 0.50;
     // pointer-events:none;
@@ -657,30 +585,40 @@ textarea.fixed-width {
     }
 }
 
+// -> visualizer-spectrogram
 .fa-xs {
     font-size: 0.5em;
 }
+
+// -> deleteclassification.html
 .centeredloder {
     width: 100%;
     margin-left: 50%;
 }
+
+// -> modelinfo.html
 .inlineh3 {
     display: inline;
 }
-.yAxishighvalue {
-    margin-left: -10px;
-}
-.padded-div-20 {
-    padding-left: 20px;
-}
+
+// -> modelinfo
 .seconds-div-center {
     text-align: center;
 }
+
+// -> classinfo, modelinfo
+.yAxishighvalue {
+    margin-left: -10px;
+}
+
+// hides tooltips on large screens 
 @media (min-width: 1200px) {
     .hide-tooltip-lg .tooltip {
         display: none !important;
     }
 }
+
+// -> support.ejs
 .support-list {
     & > dt {
         font-size: 20px;
@@ -690,6 +628,9 @@ textarea.fixed-width {
         padding-bottom: 14px;
     }
 }
+
+// add icon in the inner right part of an input
+// -> register.ejs, password-input
 .right-inner-icon {
     position: relative;
     input {
@@ -704,28 +645,37 @@ textarea.fixed-width {
     }
 }
 
+// -> activate.ejs, forgot-request.ejs, register.ejs
 .activation-text {
     font-size: 1.2em;
 }
 
+// -> login.ejs
 .forgot-text {
     font-size: 0.85em;
     color: #151515;
 }
 
 // use click icon
+// -> upload.html
 .clickable {
     cursor: pointer;
 }
 
-.table-hide-btns tr .btn {
-    opacity: 0;
-    -webkit-transition: opacity 0.3s ease;
-    transition: opacity 0.3s ease;
-}
 
-.table-hide-btns tr:hover .btn {
-    opacity: 1;
+// transition button on table to fade in on hover, focus or active
+.table-hide-btns {
+    tr .btn {
+        opacity: 0;
+        -webkit-transition: opacity 0.3s ease;
+        transition: opacity 0.3s ease;
+    }
+
+    tr:focus .btn,
+    tr:active .btn,
+    tr:hover .btn {
+        opacity: 1;
+    }
 }
 
 

@@ -214,12 +214,12 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
             });
 
             async.map(lines, function(line, callback) {
-                items = line.split(',');
+                var items = line.split(',');
                 var prec = items[1].trim(' ') == 1 ? 'yes' :'no';
                 var modelprec = items[2].trim(' ') == 'NA' ? '-' : ( items[2].trim(' ') == 1 ? 'yes' :'no');
                 var entryType = items[3] ? items[3].trim(' '):'';
                 
-                model.recordings.recordingInfoGivenUri(items[0], req.params.projectUrl, function(err, recData) {
+                model.recordings.recordingInfoGivenUri(items[0], function(err, recData) {
                     if(err) return callback(err);
                     
                     if(!recData.length) return callback(null, false);

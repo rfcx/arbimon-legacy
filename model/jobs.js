@@ -360,12 +360,12 @@ var Jobs = {
             
             async.map(rows, function(jobType, next) {
                 var getLast5Jobs = 
-                    'SELECT state \n'+
-                    'FROM `jobs` \n'+
-                    'WHERE job_type_id = ? \n'+
-                    'AND completed = 1 \n'+
-                    'ORDER BY job_id DESC \n'+
-                    'LIMIT 0, 5';
+                    "SELECT state \n"+
+                    "FROM `jobs` \n"+
+                    "WHERE job_type_id = ? \n"+
+                    "AND state IN ('completed', 'error', 'canceled', 'stalled') \n"+
+                    "ORDER BY job_id DESC \n"+
+                    "LIMIT 0, 10";
                 
                 getLast5Jobs = mysql.format(getLast5Jobs, [jobType.id]);
                 queryHandler(getLast5Jobs, function(err, rows) {
@@ -381,12 +381,21 @@ var Jobs = {
                         result[job.state]++;
                     });
                     
-                    if(result.completed >= 5) {
+                    var percentCompleted = result.completed/rows.length;
+                    
+                    // no jobs of this type
+                    if(isNaN(percentCompleted)) {
+                        status = 'no_data';
+                    }
+                    // last ten jobs were successful
+                    else if(percentCompleted >= 1) { 
                         status = 'ok';
                     }
-                    else if(result.completed >= 2) {
+                    // 20% or less of the jobs had a problem
+                    else if(percentCompleted >= 0.8) {
                         status = 'warning';
                     }
+                    // more than 20% of the jobs had a problem
                     else {
                         status = 'red_alert';
                     }

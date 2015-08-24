@@ -448,6 +448,9 @@
             }
             */
             
+            // NOTE temporary block disabled model types
+            if(!$scope.datas.classifier.enabled) return;
+            
             var classiData = {
                 n: $scope.datas.name,
                 c: $scope.datas.classifier.model_id,
@@ -455,6 +458,7 @@
                 s: $scope.selectedSites.join(),
                 p: $scope.datas.playlist
             };
+            
             a2Classi.create(classiData, function(data) {
                 if (data.name) {
                     $scope.nameMsg = 'Name exists';
@@ -532,7 +536,6 @@
                     ctx = canvas.getContext('2d');
                     ctx.beginPath();
                     
-                    
                     var i = 0;
                     ctx.moveTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
                     while(i < vector.length) {
@@ -542,6 +545,23 @@
                     
                     ctx.strokeStyle = '#000';
                     ctx.stroke();
+
+                    
+                    
+                    if ($scope.minvect < -0.09) {
+                        //code
+                        ctx.beginPath();
+                        i = 0;
+                        ctx.moveTo(i*xStep, height * (1 - ((0 - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                        while(i < vector.length) {
+                            i++;
+                            ctx.lineTo(i*xStep, height * (1 - ((0 - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
+                        }
+                        
+                        ctx.strokeStyle = '#aa0000';
+                        ctx.stroke();
+                    }
+                    
                     $scope.loadingflag = false;
                 };
                 

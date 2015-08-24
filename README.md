@@ -3,34 +3,31 @@ Bio-Acoustic Analyzer
 
 ---
 ### Quick Setup:
- - python 2.7 - comes with Ubuntu
- 
- - All dependencies  in one line
+ - install system dependencies
    ```
    curl -sL https://deb.nodesource.com/setup_0.10 | sudo bash -
    sudo apt-get install -y python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev python-virtualenv
    ```
    
-   
- - Install all python dependencies, create python virtual environment and build
+
+ - install python dependencies, create python virtualenv and build
     ```
     npm run-script setup
     ```
     
-    
- - Run app (the app will be available in localhost:3000)
+ - run app (the app will be available in localhost:3000)
     ```
     npm start
     ```
 
+
 ### System dependencies:
 
- - nodejs
+ - nodejs 0.10.x
    ```
    curl -sL https://deb.nodesource.com/setup_0.10 | sudo bash -
    sudo apt-get install -y nodejs
    ```
-   
    
  - python 2.7 - comes with Ubuntu
    
@@ -50,7 +47,8 @@ Bio-Acoustic Analyzer
    ```
    
    
- - imagemagick - image manipulation tool
+
+ - imagemagick - image manipulation tool (deprecated use node-lwip)
    ```
    sudo apt-get install imagemagick
    ```
@@ -72,8 +70,8 @@ Bio-Acoustic Analyzer
    ```
       
  - node global dependencies(`sudo npm install -g <package>`):
-  - bower
-  - grunt-cli
+    - bower
+    - grunt-cli
   
   
  - individual python dependencies (`sudo pip install`):
@@ -103,11 +101,11 @@ run
 
 `npm start` and the app will be available in localhost:3000
 
-run and watch
+run server and watch
 
-`grunt server` everytime a file changes the project will rebuild
+`grunt server` everytime a file changes the project will rebuild and/or server will restart
 
-remove packages and builds (node_modules, bower_components, public/assets)
+removes packages and builds (node_modules, bower_components, public/assets)
 
 `grunt clean` 
 

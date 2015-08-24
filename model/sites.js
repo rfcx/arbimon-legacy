@@ -1,9 +1,11 @@
 var util = require('util');
 var mysql = require('mysql');
+var AWS   = require('aws-sdk');
 var joi = require('joi');
 var jsonwebtoken = require('jsonwebtoken');
 var config = require('../config');
 
+var s3;
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
@@ -245,6 +247,40 @@ var Sites = {
             "SET token_created_on = NULL \n" + 
             "WHERE site_id = " + mysql.escape(site.site_id), 
         callback);
+    },
+    
+    /** Uploads a log file of a recorder associated to this site.
+     * @param {Object}  site - an object representing the site.
+     * @param {Integer} site.project_id - id of the site's project.
+     * @param {Integer} site.site_id - id of the given site.
+     * @param {Object}  log - an object representing the log file.
+     * @param {Integer} log.recorder - uuid representing the recorder whose log is being uploaded
+     * @param {Integer} log.from     - datetime at which this log was started.
+     * @param {Integer} log.to       - datetime at which this log was ended.
+     * @param {Integer} log.file     - file containing the log's data.
+     * @param {Callback} callback    - callback function
+     */
+    uploadLogFile: function(site, log, callback){
+        if(!s3){
+            s3 = new AWS.S3();
+        }
+        
+        var key = ('project_' + (site.project_id | 0) + 
+                  '/site_'  + (site.site_id | 0) + 
+                  '/logs/recorder_' + (log.recorder + '') +
+                  '/' + (log.from | 0) + '-' + (log.to | 0) + '.txt');
+        
+        s3.putObject({
+            Bucket : config('aws').bucketName,
+            Key    : key,
+            Body   : log.file
+        }, function(err, data){
+            if(err) { 
+                callback(err);
+            } else {
+                callback();
+            }
+        });        
     }
 
 };

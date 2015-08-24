@@ -205,7 +205,7 @@ module.exports = function(grunt) {
             zxcvbn: {
                expand: true,
                flatten: true,
-               src: 'bower_components/zxcvbn/zxcvbn.js',
+               src: 'bower_components/zxcvbn/dist/*',
                dest: 'public/assets/zxcvbn/'
            },
            leaflet: {
