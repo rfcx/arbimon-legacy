@@ -51,7 +51,8 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
             $scope.is_selected = {};
             
             $scope.select = function(project_class, $event) {
-                if($($event.target).is('button, a')){
+                console.log($event);
+                if($($event.target).is('a')){
                     return;
                 }
                 
@@ -59,8 +60,8 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                     $scope.is_selected[project_class.id] = true;
                     
                     var sel_range = {
-                        from:1/0, 
-                        to:-1/0
+                        from: Infinity, 
+                        to: -Infinity,
                     };
                     
                     $scope.classes.forEach(function(pc, idx){
@@ -73,9 +74,11 @@ angular.module('a2SpeciesValidator', ['a2utils', 'a2Infotags'])
                     for(var si = sel_range.from, se = sel_range.to + 1; si < se; ++si){
                         $scope.is_selected[$scope.classes[si].id] = true;
                     }
-                } else if($event.ctrlKey){
+                } 
+                else if($event.ctrlKey){
                     $scope.is_selected[project_class.id] = !$scope.is_selected[project_class.id];
-                } else {
+                } 
+                else {
                     $scope.is_selected={};
                     $scope.is_selected[project_class.id] = true;
                 }

@@ -43,9 +43,15 @@ module.exports = {
                     duration: upload.info.duration
                 }, 
                 callback);
-            },
+            },            
             function(result, fields, callback) {
                 upload.id = result.insertId;
+                callback();
+            },
+            function storeRawFileInBucket(callback){
+                Uploader.moveToTempArea(upload, callback);
+            },
+            function(callback){
                 queue.push(upload);
                 callback();
             }
