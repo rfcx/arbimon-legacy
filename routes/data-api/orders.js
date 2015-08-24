@@ -45,6 +45,11 @@ var findLinkObject = function(links, linkRelation) {
 };
 
 var createOrder = function(req, res, next) {
+    if(req.systemSettings('feature.payments') == 'off') {
+        res.status(503).json({ error: 'payments are unavailable, please try again later'});
+        return;
+    }
+    
     var orderId = uuid.v4();
     
     var projectPayment = ordersUtils.createPayment({
@@ -94,6 +99,11 @@ var createOrder = function(req, res, next) {
     });
 };
 
+router.get('/payments-status', function(req, res) {
+    res.json({ 
+        payments_enable: req.systemSettings('feature.payments') == 'on' 
+    });
+});
 
 router.post('/create-project', function(req, res, next) {
     if(!req.body.project) {

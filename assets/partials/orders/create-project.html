@@ -8,6 +8,10 @@
 
     <div class="modal-body">
         <project-form ng-model="project" valid="isValid"></project-form>
+        <p ng-if="paymentsEnabled === false" class="text-danger">
+            Payments are unavailable, at the moment only free projects can be created. <br>
+            Sorry for the inconvenience.
+        </p>
         <plan-select plan="project.plan" recorder-qty="recorderQty"></plan-select>
     </div>
     <div class="modal-footer">
