@@ -146,11 +146,16 @@ angular.module('a2.audiodata.uploads', [
     });
     
     $scope.uploader.onErrorItem = function(item, response, status, headers) {
-        if( status >= 500) {
-            item.errorMsg = "Server Error";
+        if(response.error) {
+            item.errorMsg = response.error;
+        }
+        else if( status >= 500) {
+            item.errorMsg = "Server error";
             return;
         }
-        item.errorMsg = response.error;
+        else {
+            item.errorMsg = "An error ocurred";
+        }
     };
     
     $scope.removeCompleted = function() {
@@ -222,7 +227,6 @@ angular.module('a2.audiodata.uploads', [
             return confirmationMessage;                                //Webkit, Safari, Chrome etc.
         }
     });
-
     
     return {
         getUploader: function() {
