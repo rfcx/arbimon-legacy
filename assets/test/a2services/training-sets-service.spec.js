@@ -1,7 +1,14 @@
-describe('Module: a2-training-sets-service', function() {
+/* jshint mocha:true */
+/* global module:true */
+/* global inject:true */
+/* global sinon:true */
+
+describe('Module: a2.srv.training-sets', function() {
+    "use strict";
+    
     beforeEach(function() { 
-        module('a2-training-sets-service');
-        module('a2-project-service');
+        module('a2.srv.training-sets');
+        module('a2.srv.project');
         module('a2-project-service-mock');
     });
         
@@ -166,14 +173,14 @@ describe('Module: a2-training-sets-service', function() {
             });
         });
         
-        describe.skip('a2TrainingSets.removeRoi', function() {
+        describe('a2TrainingSets.removeRoi', function() {
             it('requests to the correct route', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/training-sets/some name/remove-roi/1')
+                    .expectGET('/api/project/test/training-sets/1/remove-roi/2')
                     .respond(200, 'data');
                     
-                a2TrainingSets.removeRoi(1, { name: 'some name' }, function(data){
+                a2TrainingSets.removeRoi(1, 2, function(data){
                     expect(data).to.equal('data');
                 });
                 

@@ -1,6 +1,10 @@
+/* jshint node:true */
+"use strict";
+
+
 var util = require('util');
 var mysql = require('mysql');
-var Joi = require('joi');
+var joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;
 
 var dbpool = require('../utils/dbpool');
@@ -15,6 +19,7 @@ var Users = {
         q = util.format(q, mysql.escape(username));
         queryHandler(q, callback);
     },
+    
     findByEmail: function(email, callback) {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
@@ -22,6 +27,7 @@ var Users = {
         q = util.format(q, mysql.escape(email));
         queryHandler(q, callback);
     },
+    
     findById: function(user_id, callback) {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
@@ -29,6 +35,7 @@ var Users = {
         q = util.format(q, mysql.escape(user_id));
         queryHandler(q, callback);
     },
+    
     loginTry: function(ip, user, msg, callback) {
         
         var q = 'INSERT INTO invalid_logins(`ip`, `user`, `reason`) \n'+
@@ -39,6 +46,7 @@ var Users = {
                 
         queryHandler(q, callback);
     },
+    
     invalidLogins: function(ip, callback) {
         var q = 'SELECT COUNT(ip) as tries \n'+
                 'FROM invalid_logins \n'+
@@ -47,6 +55,7 @@ var Users = {
         q = util.format(q, mysql.escape(ip));
         queryHandler(q, callback);
     },
+    
     removeLoginTries: function(ip, callback) {
         var q = 'DELETE ' +
                 'FROM `invalid_logins` ' +
@@ -54,6 +63,7 @@ var Users = {
         q = util.format(q, mysql.escape(ip));
         queryHandler(q, callback);
     },
+    
     search: function(query, callback) {
         query = mysql.escape('%'+query+'%');
         
@@ -128,14 +138,21 @@ var Users = {
     },
 
     projectList: function(user_id, callback) {
-        var q = "SELECT p.project_id AS id, name, url, description, is_private, is_enabled \n"+
-                "FROM projects as p \n"+
-                "LEFT JOIN user_project_role as upr on (p.project_id = upr.project_id) \n"+
-                "WHERE p.is_private = 0 \n"+
-                "OR upr.user_id = %s \n"+
-                "GROUP BY p.project_id";
+        var q = "SELECT p.project_id AS id, \n"+
+                "    name, \n"+
+                "    url, \n"+
+                "    description, \n"+
+                "    is_private, \n"+
+                "    is_enabled, \n"+
+                "    u.login AS `owner` \n"+
+                "FROM projects AS p \n"+
+                "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
+                "JOIN user_project_role AS upr2 ON (p.project_id = upr2.project_id) \n"+
+                "JOIN users AS u ON (upr.user_id = u.user_id) \n"+
+                "WHERE upr2.user_id = ? \n"+
+                "OR p.is_private = 0;";
 
-        q = util.format(q, mysql.escape(user_id));
+        q = mysql.format(q, [user_id]);
         queryHandler(q, callback);
     },
 
@@ -152,12 +169,27 @@ var Users = {
         queryHandler(q, callback);
     },
     
-    ownedProjectsQty: function(user_id, callback) {
-        var q = "SELECT COUNT(p.project_id) as count \n"+
-                "FROM projects as p \n"+
-                "WHERE p.owner_id = %s";
+    findOwnedProjects: function(user_id, query, callback) {
+        if(typeof query == 'function') {
+            callback = query;
+            query = null;
+        }
         
-        q = util.format(q, mysql.escape(user_id));
+        var q = "SELECT p.*, \n"+
+                "   pp.tier \n"+
+                "FROM projects as p \n"+
+                "JOIN project_plans AS pp ON (p.current_plan = pp.plan_id) \n"+
+                "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
+                "WHERE upr.user_id = ? \n";
+        var values = [user_id];
+        
+        if(query) {
+            if(query.free) {
+                q += "AND pp.tier = 'free'";
+            }
+        }
+        
+        q = mysql.format(q, values);
         queryHandler(q, callback);
     },
     
@@ -252,7 +284,6 @@ var Users = {
                 'email, \n' +
                 'last_login, \n' +
                 'is_super, \n' +
-                'project_limit, \n' +
                 'created_on, \n' +
                 'disabled_until \n' +
                 'FROM users';
@@ -267,6 +298,18 @@ var Users = {
         
         queryHandler(q, callback);
     },
+    
+    getAddress: function(userId, callback) {
+        var q = "SELECT * FROM addresses WHERE user_id = ?";
+        
+        queryHandler(mysql.format(q, [userId]), callback);
+    },
+    
+    updateAddress: function(userAddressData, callback) {
+        var q = "REPLACE INTO addresses SET ?";
+        
+        queryHandler(mysql.format(q, userAddressData), callback);
+    }
 };
 
 module.exports = Users;

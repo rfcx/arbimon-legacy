@@ -1,5 +1,5 @@
 
-angular.module('visualizer-layers', ['visualizer-services', 'a2utils'])
+angular.module('visualizer-layers', ['visualizer-services', 'a2.utils'])
 .directive('a2VisualizerLayerItem', function(layer_types, $compile, $templateFetch){
     return {
         restrict : 'E',

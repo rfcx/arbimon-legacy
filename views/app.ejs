@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html ng-app="arbimon2">
     <% include head %>    
-    <title>Arbimon 2 - <%= project.name %></title>
+    <title>Arbimon II - <%= project.name %></title>
 </head>
 <body ng-controller="MainCtrl">
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
-                <button data-target="#navbar-collapse" data-toggle="collapse" type="button" class="navbar-toggle collapsed">
+                <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
                     <span class="sr-only">Toggle navigation</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
@@ -18,7 +18,7 @@
                 </a>
             </div>
         
-            <div class="collapse navbar-collapse" id="navbar-collapse">
+            <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
                 <ul class="nav navbar-nav hide-tooltip-lg">
                     <li ui-sref-active="active">
                         <a ui-sref="dashboard" tooltip="Dashboard" tooltip-placement="bottom">
@@ -54,25 +54,21 @@
                         </a>
                     </li>
                 </ul>
+                <ul class="nav navbar-nav hide-tooltip-lg">
+                    <li ui-sref-active="active">
+                        <a ui-sref="settings" tooltip="Settings" tooltip-placement="bottom">
+                            <i class="fa fa-wrench"></i> 
+                            <span class="visible-lg-inline visible-xs-inline">Settings</span> 
+                        </a>
+                    </li>
+                </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li class="dropdown" dropdown>
+                    <li>
                         <a class="dropdown-toggle" dropdown-toggle>
                             <i class="fa fa-sitemap"></i> <%=  project.name  %>
-                            <i class="fa fa-caret-down"></i>
                         </a>
-                        <ul class="dropdown-menu" role="menu">
-                            <li>
-                                <a ui-sref="settings" ui-sref-active="active">
-                                    <i class="fa fa-wrench"></i> Settings
-                                </a>
-                            </li>
-                            <li>
-                                <a ui-sref="users" ui-sref-active="active">
-                                    <i class="fa fa-users"></i> Users
-                                </a>
-                            </li>
-                        </ul>
                     </li>
+
                     <% include user-dropdown %>
                     
                     <% include help-dropdown %>
@@ -80,6 +76,16 @@
             </div>
         </div>
     </nav>
+    <% if(planAlert == 'expired') { %>
+        <div class="alert-bar alert-danger" ng-hide="hideAlertBar" ng-click="hideAlertBar = true">
+            Your project data plan have expired, please renew your plan. 
+            If a new plan is not selected after 30 days of the 
+            due date, the project will be disable. (click to dismiss)
+            <button class="close" ng-click="hideAlertBar = true">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+    <% } %>
     <div id="body">
         <div ui-view="audiodata"  ng-show="$state.includes('audiodata')"></div>
         <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>

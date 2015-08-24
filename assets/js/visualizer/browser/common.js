@@ -1,4 +1,4 @@
-angular.module('a2browser_common', [])
+angular.module('a2.browser_common', [])
 .service('browser_lovos', function(){
     var g=[], i={}, lovos = {$grouping : g};
     (lovos.$list = [

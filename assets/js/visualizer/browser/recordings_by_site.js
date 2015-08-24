@@ -1,4 +1,4 @@
-angular.module('a2browser_recordings_by_site', [])
+angular.module('a2.browser_recordings_by_site', [])
 .factory('rbDateAvailabilityCache', function ($cacheFactory) {
     return $cacheFactory('recordingsBrowserDateAvailabilityCache');
 })
@@ -54,10 +54,10 @@ angular.module('a2browser_recordings_by_site', [])
     };
     return lovo;
 })
-.controller('a2BrowserRecordingsBySiteController', function($scope, a2Browser, rbDateAvailabilityCache, Project, $timeout, $q, a2RecordingsBySiteLOVO){
+.controller('a2BrowserRecordingsBySiteController', function(a2Browser, rbDateAvailabilityCache, Project, $timeout, $q, a2RecordingsBySiteLOVO){
     var project = Project;
     var self = this;
-    // var $scope = pscope.$new();
+
     this.sites = [];
     this.dates = {
         refreshing  : false,
@@ -178,9 +178,9 @@ angular.module('a2browser_recordings_by_site', [])
             };
 
             if(self.site != self.auto.site) {
-                self.site = self.auto.site;
+                self.set_site(self.auto.site);
             } else if (self.date != self.auto.date) {
-                self.date = self.auto.date;
+                self.set_date(self.auto.date);
             } else {
                 a2Browser.setLOVO(make_lovo());
             }
@@ -189,9 +189,13 @@ angular.module('a2browser_recordings_by_site', [])
 
     this.resolve_location = function(location){
         var defer = $q.defer();
-        Project.getOneRecording(location, function(recording){
-            defer.resolve(recording);
-        });
+        if(location){
+            Project.getOneRecording(location, function(recording){
+                defer.resolve(recording);
+            });
+        } else {
+            defer.resolve();
+        }
         return defer.promise;
     };
     this.get_location = function(recording){
@@ -207,34 +211,39 @@ angular.module('a2browser_recordings_by_site', [])
         return self.lovo;
     };
 
-    $scope.$watch('browser.$type.dates.display_year', function(new_display_year){
-        if(!self.active){ return; }
-        self.dates.get_counts_for(new_display_year);
-    });
+    this.set_dates_display_year = function(new_display_year){
+        this.dates.display_year = new_display_year;
+        if(!this.active){ return; }
+        this.dates.get_counts_for(new_display_year);
+    };
 
-    $scope.$watch('browser.$type.site', function(newValue, oldValue){
-        if(!self.active){ return; }
-        self.recordings = [];
+    this.set_site = function(newValue){
+        this.site = newValue;
+        if(!this.active){ return; }
+        this.recordings = [];
         // reset the selections and stuff
-        self.date = null;
+        this.date = null;
         a2Browser.recording = null;
         // setup auto-selection
-        var auto_select = self.auto && self.auto.date;
+        var auto_select = this.auto && this.auto.date;
         if(auto_select) {
-            self.auto.date = null;
-            self.date = auto_select;
+            this.auto.date = null;
+            this.set_date(auto_select);
         }
         // reset date picker year range and counts
-        self.dates.fetch_year_range(newValue, function(year_range){
+        this.dates.fetch_year_range(newValue, function(year_range){
             $timeout(function(){
                 self.dates.display_year = year_range.max;
                 self.dates.get_counts_for(self.dates.display_year);
             });
         });
-    });
-    $scope.$watch('browser.$type.date', function(newValue, oldValue){
+    };
+    
+    this.set_date = function(newValue){
+        var oldValue = this.date;
+        this.date = newValue;
         if(!self.active){ return; }
-        $(document).find('.dropdown.open').removeClass('open');
+        // $(document).find('.dropdown.open').removeClass('open');
         var site = self.site;
         var date = self.date;
         if (site && date) {
@@ -245,5 +254,5 @@ angular.module('a2browser_recordings_by_site', [])
                 a2Browser.setLOVO(make_lovo());
             }
         }
-    });
+    };
 });

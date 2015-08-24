@@ -1,7 +1,14 @@
-describe('Module: a2-sites-service', function() {
+/* jshint mocha:true */
+/* global module:true */
+/* global inject:true */
+/* global sinon:true */
+
+describe('Module: a2.srv.sites', function() {
+    "use strict";
+    
     beforeEach(function() { 
-        module('a2-sites-service');
-        module('a2-project-service');
+        module('a2.srv.sites');
+        module('a2.srv.project');
         module('a2-project-service-mock');
     });
         

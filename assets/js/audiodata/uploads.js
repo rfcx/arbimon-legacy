@@ -1,11 +1,11 @@
-angular.module('audiodata.uploads', [
-    'a2services', 
-    'a2directives', 
+angular.module('a2.audiodata.uploads', [
+    'a2.services', 
+    'a2.directives', 
     'ui.bootstrap', 
     'angularFileUpload',
     'humane'
 ])
-.controller('UploadCtrl', function($scope, uploads, Project, $modal, $window) { 
+.controller('UploadCtrl', function($scope, uploads, Project, $modal, $window, a2UserPermit, notify) { 
     
     $scope.prettyBytes = function(bytes) {
         
@@ -24,6 +24,10 @@ angular.module('audiodata.uploads', [
     }; 
     
     $scope.verifyAndUpload = function() {
+        if(!a2UserPermit.can('manage project recordings')) {
+            notify.log("You do not have permission to upload recordings");
+            return;
+        }
         
         var index = 0;
         $scope.uploading = true;
@@ -83,6 +87,12 @@ angular.module('audiodata.uploads', [
     };
     
     $scope.batchInfo = function() {
+        
+        if(!a2UserPermit.can('manage project recordings')) {
+            notify.log("You do not have permission to upload recordings");
+            return;
+        }
+        
         var modalInstance = $modal.open({
             templateUrl: '/partials/audiodata/batch-info.html',
             controller: 'BatchInfoCtrl',

@@ -1,11 +1,11 @@
-angular.module('audiodata.sites', [
-    'a2services', 
-    'a2directives', 
+angular.module('a2.audiodata.sites', [
+    'a2.services', 
+    'a2.directives', 
     'ui.bootstrap',
     'humane',
-    'a2-qr-js'
+    'a2.qr-js'
 ])
-.controller('SitesCtrl', function($scope, Project, $http, $modal, notify, a2Sites) {
+.controller('SitesCtrl', function($scope, Project, $modal, notify, a2Sites, $window, a2UserPermit) {
     $scope.loading = true;
     
     Project.getInfo(function(info){
@@ -19,16 +19,35 @@ angular.module('audiodata.sites', [
     
     $scope.editing = false;
     
-    var mapOptions = {
-        center: { lat: 18.3, lng: -66.5},
-        zoom: 8
-    };
+    $scope.map = $window.L.map('map-site', { zoomControl: false }).setView([10, -20], 1);
+    L.control.zoom({ position: 'topright'}).addTo($scope.map);
     
-    $scope.map = new google.maps.Map(document.getElementById('map-site'), mapOptions);
+    $window.L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo($scope.map);
+    
+    var moveMarker = function(e) {
+        console.log(e.latlng);
+        
+        if(!$scope.marker) {
+            console.log('no marker');
+            $scope.marker = $window.L.marker(e.latlng).addTo($scope.map);
+        }
+        else {
+            console.log('marker');
+            $scope.marker.setLatLng(e.latlng);
+        }
+        
+        $scope.$apply(function () {
+            $scope.temp.lat = e.latlng.lat;
+            $scope.temp.lon = e.latlng.lng;
+        });
+    };
     
     $scope.close = function() {
         $scope.creating = false;
         $scope.editing = false;
+        $scope.map.removeEventListener('click', moveMarker);
     };
     
     $scope.save = function() {
@@ -55,11 +74,14 @@ angular.module('audiodata.sites', [
         });
     };
     
-    
-    
     $scope.del = function() {
         if(!$scope.selected)
             return;
+        
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to remove sites");
+            return;
+        }
         
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',
@@ -88,79 +110,66 @@ angular.module('audiodata.sites', [
         });
     };
     
-    
-    $scope.browseShared = function() {
-        var modalInstance = $modal.open({
-            templateUrl: '/partials/audiodata/browse-published-sites.html',
-            controller: 'PublishedSitesBrowserCtrl',
-            size: 'lg',
-            resolve: {
-                project: function() {
-                    var p = angular.copy($scope.project);
-                    p.sites = $scope.sites;
-                    return p;
-                }
-            }
-        });
-        
-        modalInstance.result.then(function(data) {
-            Project.getSites(function(sites) {
-                $scope.sites = sites;
-                $scope.loading = false;
-            });
-            notify.log(data.msg);
-        })
-        .catch(function(reason) {
-            if(reason) {
-                notify.error(reason);
-            }
-        });
-    };
+    // $scope.browseShared = function() {
+    //     var modalInstance = $modal.open({
+    //         templateUrl: '/partials/audiodata/browse-published-sites.html',
+    //         controller: 'PublishedSitesBrowserCtrl',
+    //         size: 'lg',
+    //         resolve: {
+    //             project: function() {
+    //                 var p = angular.copy($scope.project);
+    //                 p.sites = $scope.sites;
+    //                 return p;
+    //             }
+    //         }
+    //     });
+    //     
+    //     modalInstance.result.then(function(data) {
+    //         Project.getSites(function(sites) {
+    //             $scope.sites = sites;
+    //             $scope.loading = false;
+    //         });
+    //         notify.log(data.msg);
+    //     })
+    //     .catch(function(reason) {
+    //         if(reason) {
+    //             notify.error(reason);
+    //         }
+    //     });
+    // };
     
     $scope.create = function() {
+        
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to add sites");
+            return;
+        }
+        
         $scope.temp = {};
         
-        if(!$scope.marker) {
-            $scope.marker = new google.maps.Marker({
-                position: $scope.map.getCenter(),
-                title: 'New Site Location'
-            });
-            $scope.marker.setMap($scope.map);
-        }
-        else {
-            $scope.marker.setPosition($scope.map.getCenter());
+        if($scope.marker) {
+            $scope.map.removeLayer($scope.marker);
+            $scope.map.setView([10, -20], 1);
+            delete $scope.marker;
         }
         
-        $scope.marker.setDraggable(true);
+        
+        $scope.map.on('click', moveMarker);
         $scope.creating = true;
-        
-        google.maps.event.addListener($scope.marker, 'dragend', function(position) {
-            //~ console.log(position);
-            $scope.$apply(function () {
-                $scope.temp.lat = position.latLng.lat();
-                $scope.temp.lon = position.latLng.lng();
-            });
-        });
     };
 
     $scope.edit = function() {
+        if(!$scope.selected) return;
         
-        if(!$scope.selected)
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to edit sites");
             return;
-            
+        }
+        
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
         
-        $scope.marker.setDraggable(true);
-        
-        google.maps.event.addListener($scope.marker, 'dragend', function(position) {
-            //~ console.log(position);
-            $scope.$apply(function () {
-                $scope.temp.lat = position.latLng.lat();
-                $scope.temp.lon = position.latLng.lng();
-            });
-        });
-        
+        $scope.map.on('click', moveMarker);
         $scope.editing = true;
     };
 
@@ -168,7 +177,11 @@ angular.module('audiodata.sites', [
         
         if(!$scope.selected || $scope.selected.imported)
             return;
-            
+        
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to edit sites");
+            return;
+        }
         
         var modalInstance = $modal.open({
             templateUrl: '/partials/audiodata/site-tokens-popup.html',
@@ -178,83 +191,80 @@ angular.module('audiodata.sites', [
     };
     
     $scope.sel = function(site) {
-        //~ console.log('sel');
-        
-        $scope.editing = false;
-        $scope.creating = false;
+        $scope.close();
         
         $scope.selected = site;
         
-        var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
         
         if(!$scope.marker) {
-            $scope.marker = new google.maps.Marker({
-                position: position,
-                title: $scope.selected.name
-            });
-            $scope.marker.setMap($scope.map);
+            $scope.marker = new $window.L.marker(site)
+                .bindPopup(site.name)
+                .addTo($scope.map);
         }
         else {
-            $scope.marker.setDraggable(false);
-            $scope.marker.setPosition(position);
-            $scope.marker.setTitle($scope.selected.name);
+            $scope.marker.setLatLng(site);
+            $scope.marker.closePopup()
+                .unbindPopup()
+                .bindPopup(site.name);
         }
         
-        $scope.map.panTo(position);
+        $scope.map.setView(site, 10, { animate:true });
+        
         //~ console.log($scope.selected);
     };
     
 })
-.controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {
-        var geocoder = new $window.google.maps.Geocoder();
-        
-        a2Sites.listPublished(function(sites) {
-            
-            sites.forEach(function(site) {
-                geocoder.geocode({ 
-                        location: { 
-                            lat: site.lat, 
-                            lng: site.lon 
-                        } 
-                }, function(result, status) {
-                    
-                    if(result.length){
-                        site.location = result[1].formatted_address;
-                    }
-                    else {
-                        site.location = 'unknown';
-                    }
-                    
-                    $scope.$apply();
-                });
-                
-            });
-            
-            $scope.sites = sites;
-        });
-        
-        
-        $scope.addSite = function(site) {
-            
-            if(site.project_id === project.project_id) {
-                $modalInstance.dismiss("site is owned by this project");
-                return;
-            }
-            
-            var result = project.sites.filter(function(value) {
-                return value.id === site.id;
-            });
-            
-            if(result.length > 0) {
-                $modalInstance.dismiss("site is already on this project");
-                return;
-            }
-            
-            a2Sites.import(site, function(data) {
-                $modalInstance.close(data);
-            });
-        };
-    })
+// TODO remove properly published
+// .controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {
+//     var geocoder = new $window.google.maps.Geocoder();
+//     
+//     a2Sites.listPublished(function(sites) {
+//         
+//         sites.forEach(function(site) {
+//             geocoder.geocode({ 
+//                     location: { 
+//                         lat: site.lat, 
+//                         lng: site.lon 
+//                     } 
+//             }, function(result, status) {
+//                 
+//                 if(result.length){
+//                     site.location = result[1].formatted_address;
+//                 }
+//                 else {
+//                     site.location = 'unknown';
+//                 }
+//                 
+//                 $scope.$apply();
+//             });
+//             
+//         });
+//         
+//         $scope.sites = sites;
+//     });
+//     
+//     
+//     $scope.addSite = function(site) {
+//         
+//         if(site.project_id === project.project_id) {
+//             $modalInstance.dismiss("site is owned by this project");
+//             return;
+//         }
+//         
+//         var result = project.sites.filter(function(value) {
+//             return value.id === site.id;
+//         });
+//         
+//         if(result.length > 0) {
+//             $modalInstance.dismiss("site is already on this project");
+//             return;
+//         }
+//         
+//         a2Sites.import(site, function(data) {
+//             $modalInstance.close(data);
+//         });
+//     };
+// })
 .controller('SitesTokenGenaratorCtrl', function($scope, a2Sites, $modal, notify){
         $scope.site = $scope.selected;
         $scope.loading = {};

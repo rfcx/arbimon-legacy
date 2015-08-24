@@ -1,7 +1,14 @@
-describe('Module: a2-soundscapes-service', function() {
+/* jshint mocha:true */
+/* global module:true */
+/* global inject:true */
+/* global sinon:true */
+
+describe('Module: a2.srv.soundscapes', function() {
+    "use strict";
+    
     beforeEach(function() { 
-        module('a2-soundscapes-service');
-        module('a2-project-service');
+        module('a2.srv.soundscapes');
+        module('a2.srv.project');
         module('a2-project-service-mock');
     });
         
@@ -9,11 +16,13 @@ describe('Module: a2-soundscapes-service', function() {
         var $httpBackend;
         var a2Soundscapes;
         var notifyError;
+        var callback;
         
         beforeEach(inject(function($injector, notify, _a2Soundscapes_) {
             $httpBackend = $injector.get('$httpBackend');
             a2Soundscapes = _a2Soundscapes_;
             notifyError = sinon.spy(notify, 'serverError');
+            callback = sinon.spy();
         }));
         
         afterEach(function() {
@@ -144,8 +153,6 @@ describe('Module: a2-soundscapes-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Soundscapes.getList2(callback);
                 
                 $httpBackend.flush();
@@ -155,8 +162,6 @@ describe('Module: a2-soundscapes-service', function() {
             
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
-                
-                callback = sinon.spy();
                 
                 a2Soundscapes.getList2(callback);
                 
@@ -349,8 +354,6 @@ describe('Module: a2-soundscapes-service', function() {
             it('requests to the correct route and call success', function() {
                 request.respond(200, 'data');
                 
-                callback = sinon.spy();
-                
                 a2Soundscapes.delete(1, callback);
                 
                 $httpBackend.flush();
@@ -360,8 +363,6 @@ describe('Module: a2-soundscapes-service', function() {
             
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
-                
-                callback = sinon.spy();
                 
                 a2Soundscapes.delete(1, callback);
                 

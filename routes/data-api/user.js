@@ -74,7 +74,7 @@ router.get('/feed/:page', function(req, res, next) {
                 message: sprintf(results.formats[row.type], data),
                 username: row.username,
                 timestamp: row.timestamp,
-                imageUrl: gravatar.url(row.email, { d: 'monsterid', s: 30 }, https=req.secure)
+                imageUrl: gravatar.url(row.email, { d: 'monsterid', s: 30 }, req.secure == 'https')
             };
         });
         
@@ -104,7 +104,7 @@ router.get('/search/:query?', function(req, res, next) {
         if(err) return next(err);
         
         var users = rows.map(function(row){
-            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, https=req.secure);
+            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, req.secure == 'https');
             
             return row;
         });
@@ -169,6 +169,31 @@ router.post('/update/name', function(req, res, next){
             debug("update user name:", result);
             res.json({ message: "success! Name updated"});
         });
+    });
+});
+
+router.get('/address', function(req, res, next) {
+    model.users.getAddress(req.session.user.id, function(err, rows) {
+        if(err) return next(err);
+        
+        if(!rows.length) return res.json({ address: false });
+        
+        res.json({ address: rows[0] });
+    });
+});
+
+router.put('/address', function(req, res, next) {
+    if(!req.body.address) {
+        return res.status(400).json({ error: "missing parameters" });
+    }
+    
+    var address = req.body.address;
+    address.user_id = req.session.user.id;
+    
+    model.users.updateAddress(address, function(err, result) {
+        if(err) return next(err);
+        
+        res.json({ address_update: true });
     });
 });
 

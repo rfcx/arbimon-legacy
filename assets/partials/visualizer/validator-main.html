@@ -20,11 +20,11 @@
                     <td class="no-select"> {{ class.species_name }}</td>
                     <td class="no-select"> {{ class.songtype_name }} </td>
                     <td class="no-select">
-                        <div class="dropdown">
-                            <button class="btn-a2-validate btn btn-default btn-xs btn-block " role="button" data-toggle="dropdown">
-                                <span class="fa"  ng-class="'val-'+val_state(class.id).val"></span>
+                        <div class="dropdown" dropdown>
+                            <button class="btn-a2-validate btn btn-default btn-xs btn-block " role="button" dropdown-toggle>
+                                <i class="fa"  ng-class="'val-'+val_state(class.id).val"></i>
                                 {{ val_state(class.id).label || "---"}}
-                                <span class="caret"></span>
+                                <i class="fa fa-caret-down"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-height-7" role="menu">
                                 <li ng-repeat="option in val_options">

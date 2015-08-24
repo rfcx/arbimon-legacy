@@ -1,5 +1,5 @@
-angular.module('a2-classi-service', [
-    'a2-project-service',
+angular.module('a2.srv.classi', [
+    'a2.srv.project',
     'humane'
 ])
 .factory('a2Classi', function($http, Project, notify) {

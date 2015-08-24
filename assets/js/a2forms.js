@@ -1,4 +1,4 @@
-angular.module('a2forms',['templates-arbimon2'])
+angular.module('a2.forms',['templates-arbimon2'])
 .run(function($window) {
     
     // load zxcvbn 
@@ -145,13 +145,7 @@ angular.module('a2forms',['templates-arbimon2'])
         },
         templateUrl: '/partials/directives/project-form.html',
         controller: function($scope) {
-            console.log('project-form');
-            $scope.project = {
-                is_private: 0,
-            };
-            $scope.valid = false;
-            
-            var urlPattern = /^[a-z0-9]+([-_][a-z0-9]+)*$/;
+            var urlPattern = /^[a-z0-9]+([-_][a-z0-9]+)*$/i;
             
             $scope.verify = function () {
                 var good = true;
@@ -204,6 +198,14 @@ angular.module('a2forms',['templates-arbimon2'])
                 
                 $scope.valid = good;
             };
+            
+            if($scope.project) {
+                $scope.verify();
+            }
+            else {
+                $scope.project = { is_private: 0 };
+                $scope.valid = false;
+            }
         }
     };
 })

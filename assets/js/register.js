@@ -1,10 +1,10 @@
-angular.module('register' , [
+angular.module('a2.register' , [
+    'a2.forms', 
+    'a2.directives',
     'ui.bootstrap',
     'angularytics', 
     'g-recaptcha', 
     'humane', 
-    'a2forms', 
-    'a2directives'
 ])
 .config(function(AngularyticsProvider) {
     AngularyticsProvider.setEventHandlers(['Console', 'GoogleUniversal']);

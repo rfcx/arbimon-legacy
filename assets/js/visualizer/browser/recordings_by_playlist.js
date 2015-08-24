@@ -1,4 +1,4 @@
-angular.module('a2browser_recordings_by_playlist', ['a2Classy'])
+angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
 .service('a2PlaylistLOVO', function($q, makeClass, a2Playlists, a2Pager){
     return makeClass({
         static: {
@@ -211,7 +211,7 @@ angular.module('a2browser_recordings_by_playlist', ['a2Classy'])
         }
     });
 })
-.controller('a2BrowserRecordingsByPlaylistController', function($scope, itemSelection, a2Browser, rbDateAvailabilityCache, a2Playlists, $timeout, $q, a2PlaylistLOVO){
+.controller('a2BrowserRecordingsByPlaylistController', function(itemSelection, a2Browser, rbDateAvailabilityCache, a2Playlists, $timeout, $q, a2PlaylistLOVO){
     var self = this;
     this.playlists = [];
     this.active=false;
@@ -284,8 +284,9 @@ angular.module('a2browser_recordings_by_playlist', ['a2Classy'])
     this.get_location = function(recording){
         return 'playlist/' + (this.lovo ? this.lovo.playlist.id + (recording ? "/" + recording.id : '') : '');
     };
-
-    $scope.$watch('browser.$type.playlist', function(playlist){
+    
+    this.set_playlist = function(playlist){
+        this.playlist = playlist;
         if(!self.active){
             return;
         }
@@ -293,5 +294,6 @@ angular.module('a2browser_recordings_by_playlist', ['a2Classy'])
             self.lovo = new a2PlaylistLOVO(playlist);
         }
         a2Browser.setLOVO(self.lovo, self.lovo ? "playlist/"+self.lovo.playlist.id : '');
-    });
+    };
+
 });

@@ -8,6 +8,11 @@
         <div class="sidebar show">
             <!-- <div class="fa drawer" onclick="$(event.target).parent().toggleClass('show');" ></div> -->
             <div class="layers" >
+                <div class="layer">
+                    <a2-vis-object-browser name="browser" on-vis-object="setVisObject(visobject, type, location)" location="location.current" ></a2-vis-object-browser>
+                </div>
+            </div>
+            <div class="layers" >
                 <a2-visualizer-layer-item 
                     class="layer" 
                     ng-show="isSidebarVisible(layer)" 
@@ -39,4 +44,5 @@
             </tr>
         </table> -->
     </div>
+    <div ui-view></div>
 </div>

@@ -1,4 +1,8 @@
-angular.module('reset-password', ['a2forms', 'humane', 'a2directives'])
+angular.module('a2.reset-password', [
+    'a2.directives',
+    'a2.forms', 
+    'humane', 
+])
 .controller('ResetPassCtrl', function($scope, $http, $window, notify) {
     
     $scope.changePassword = function() {

@@ -3,12 +3,12 @@
 /* global inject:true */
 /* global sinon:true */
 
-describe('Module: a2-classi-service', function() {
+describe('Module: a2.srv.classi', function() {
     "use strict";
     
     beforeEach(function() { 
-        module('a2-classi-service');
-        module('a2-project-service');
+        module('a2.srv.classi');
+        module('a2.srv.project');
         module('a2-project-service-mock');
     });
         
@@ -156,7 +156,7 @@ describe('Module: a2-classi-service', function() {
             it('requests to the correct route and call error', function() {
                 request.respond(500, 'data');
                 
-                errorCallback = sinon.spy();
+                var errorCallback = sinon.spy();
                 
                 a2Classi.getRecVector(classificationId, recId)
                     .success(callback)

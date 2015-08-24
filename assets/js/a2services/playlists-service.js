@@ -1,5 +1,5 @@
-angular.module('a2-playlists-service', [
-    'a2-project-service'
+angular.module('a2.srv.playlists', [
+    'a2.srv.project'
 ])
 .factory('a2Playlists', function(Project, $http) {
     var projectName = Project.getUrl();

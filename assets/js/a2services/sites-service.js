@@ -1,5 +1,5 @@
-angular.module('a2-sites-service', [
-    'a2-project-service'
+angular.module('a2.srv.sites', [
+    'a2.srv.project',
 ])
 .factory('a2Sites',function($http, Project){
     return {

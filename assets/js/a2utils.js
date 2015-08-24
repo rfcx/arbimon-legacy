@@ -1,4 +1,4 @@
-angular.module('a2utils', [])
+angular.module('a2.utils', [])
 .factory('$templateFetch', function($http, $templateCache){
     return function $templateFetch(templateUrl, linker){
         var template = $templateCache.get(templateUrl);
@@ -127,7 +127,9 @@ angular.module('a2utils', [])
 })
 ;
 
-angular.module('a2-url-update-service', [])
+
+// TODO break to multiple files
+angular.module('a2.url-update-service', [])
 .factory('a2UrlUpdate', function(){
     return {
         cache:{},
@@ -172,10 +174,52 @@ angular.module('a2-url-update-service', [])
         return a2UrlUpdate.get(url);
     };
 })
+.service('EventlistManager', function(){
+    var EventlistManager = function(){
+        this.events={};
+    };
+    EventlistManager.prototype.get_event_def = function(event){
+        if(!this.events[event]){
+            this.events[event]={};
+        }
+        return this.events[event];
+    };
+    EventlistManager.prototype.send = function(/* ...args */){
+        var args = Array.prototype.slice.call(arguments);
+        var event = args.shift();
+        if(typeof event == 'string'){
+            event = {event:event};
+        }
+        var eventdef = this.get_event_def(event.event);
+        if(event.oneTime){
+            eventdef.oneTime=true;
+        }
+        var context = event.context;
+        var listeners = eventdef.listeners;
+        eventdef.fired = true;
+        if(listeners){
+            listeners.forEach(function(l){ l.apply(context, args); });
+        }
+    };
+    EventlistManager.prototype.on = function(event, fn){
+        var eventdef = this.get_event_def(event);
+        if(eventdef.fired && eventdef.oneTime){
+            fn.apply();
+        } else {
+            if(!eventdef.listeners){
+                eventdef.listeners = [];
+            }
+            eventdef.listeners.push(fn);
+        }
+    };
+    
+    return EventlistManager;    
+})
 ;
 
 
-angular.module('a2Infotags', ['a2-species-service'])
+// TODO break to multiple files
+angular.module('a2.infotags', ['a2.services'])
 .directive('a2Species', function (Species, $timeout) {
     return {
         restrict : 'E',
@@ -197,7 +241,7 @@ angular.module('a2Infotags', ['a2-species-service'])
         }
     };
 })
-.directive('a2Songtype', function (Songtypes, $timeout) {
+.directive('a2.songtype', function (Songtypes, $timeout) {
     return {
         restrict : 'E',
         scope : {
@@ -220,7 +264,8 @@ angular.module('a2Infotags', ['a2-species-service'])
 });
 
 
-angular.module('a2Classy', [])
+// TODO break to multiple files
+angular.module('a2.classy', [])
 .factory('makeClass', function($inheritFrom){
     var slice=Array.prototype.slice;
     return function makeClass(classdef){

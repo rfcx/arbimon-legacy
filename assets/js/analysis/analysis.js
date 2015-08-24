@@ -1,9 +1,9 @@
 (function(angular)
 { 
-    var analysis = angular.module('analysis', [ 
-        'models',
-        'classification',
-        'soundscapes',
+    var analysis = angular.module('a2.analysis', [ 
+        'a2.analysis.models',
+        'a2.analysis.classification',
+        'a2.analysis.soundscapes',
         'ui.router', 
         'ct.ui.router.extras'
     ]);

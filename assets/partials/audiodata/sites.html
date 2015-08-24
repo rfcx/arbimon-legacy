@@ -3,7 +3,13 @@
         <input class="form-control" type="text" placeholder="Search" ng-model="search">
     </div>
     <div class="col-md-3 col-md-pull-4 toolbar">
-        <div class="btn-group" dropdown>
+        <button class="btn btn-default"
+            ng-click="create() | trackEvent:'Dashboard-sites':'add site'" 
+            tooltip="Create a new site">
+            <i class="fa fa-plus"></i>
+        </button>
+        
+        <!-- <div class="btn-group" dropdown>
             <button class="btn btn-default dropdown-toggle"
                 id="addsite"
                 aria-expanded="true"
@@ -12,13 +18,13 @@
             </button>
             <ul class="dropdown-menu" role="menu" aria-labelledby="addsite">
                 <li role="presentation">
-                    <a role="menuitem" tabindex="-1" ng-click="create() | trackEvent:'Dashboard-sites':'add site'" >Create a new site</a>
+                    <a role="menuitem" tabindex="-1" ng-click="create() | trackEvent:'Dashboard-sites':'add site'" ></a>
                 </li>
                 <li role="presentation">
                     <a role="menuitem" tabindex="-1" ng-click="browseShared()">Add from published sites</a>
                 </li>
             </ul>
-        </div>
+        </div> -->
         <button class="btn btn-default"
             ng-click="edit() | trackEvent:'Dashboard-sites':'edit site'"
             ng-disabled="!selected || selected.imported"
@@ -43,14 +49,12 @@
     <div class="col-md-7" ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
         <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
             <field title="Name" key="name">
-                <!-- <i ng-show="row.published && !row.imported" class="fa fa-globe"></i> -->
-                <!-- <i ng-show="row.imported" class="fa fa-users"></i> -->
                 {{ row.name }} 
             </field>
-            <field>
+            <!-- <field>
                 <i ng-show="row.published && !row.imported" class="fa fa-globe"  title="Site is Published"></i>
                 <i ng-show="row.imported" class="fa fa-users" title="Site is Imported"></i>
-            </field>
+            </field> -->
             <field>
                 <i ng-show="row.token_created_on && !row.imported" class="fa fa-link" title="Has a Token"></i>
             </field>
@@ -81,7 +85,7 @@
                     <div class="form-group">
                         <label>Name:</label><input class="form-control" type="text" ng-model="temp.name" placeholder="Site name">
                     </div>
-                    <div class="checkbox">
+                    <!-- <div class="checkbox">
                         <label>
                             <input type="checkbox" ng-model="temp.published"> 
                             publish site 
@@ -89,7 +93,7 @@
                                 tooltip-placement="right"
                                 tooltip="when this option is checked, the site recordings become available to use in other projects"></i>
                         </label>
-                    </div>
+                    </div> -->
                     <div class="form-group">
                         <label>Location:</label>
                         <div class="input-group">
@@ -119,9 +123,7 @@
             </div>
         </div>
         <div class="panel panel-default">
-            <div class="panel-body">
-                <div class="map" id="map-site"></div>
-            </div>
+            <div class="map" id="map-site"></div>
         </div>
     </div>
 </div>

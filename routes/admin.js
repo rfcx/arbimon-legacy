@@ -1,3 +1,6 @@
+/* jshint node:true */
+"use strict";
+
 var debug = require('debug')('arbimon2:route:admin');
 var express = require('express');
 var request = require('request');
@@ -9,11 +12,15 @@ var model = require('../model');
 
 // only super user can access admin section
 router.use(function(req, res, next) {
-    if(req.session.user.isSuper === 1) {
+    if(
+        req.session && 
+        req.session.user && 
+        req.session.user.isSuper === 1
+    ) {
         return next();
     }
     
-    res.sendStatus(403);
+    res.sendStatus(404);
 });
 
 
@@ -58,6 +65,37 @@ router.get('/jobs', function(req, res, next) {
     });
 });
 
+router.get('/system-settings', function(req, res, next) {
+    model.settings.get(function(err, rows) {
+        if(err) return next(err);
+        
+        
+        console.log(rows);
+        
+        var settings = {};
+        async.each(rows, 
+            function(s, callback) {
+                settings[s.key] = s.value;
+                callback();
+            }, 
+            function done() {
+                res.json(settings);
+            }
+        );
+        
+    });
+});
+
+// update system setting value
+router.put('/system-settings', function(req, res, next) {
+    model.settings.set(req.body.setting, req.body.value, function(err, results) {
+        if(err) return next(err);
+        
+        debug('setting update:', results);
+        res.sendStatus(200);
+    });
+});
+
 // router.get('/projects', function(req, res, next) {
 //     model.projects.listAll(function(err, rows) {
 //         if(err) return next(err);
@@ -85,5 +123,8 @@ router.get('/jobs', function(req, res, next) {
 //         res.json(rows);
 //     });
 // });
+
+
+
 
 module.exports = router;

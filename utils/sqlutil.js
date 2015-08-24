@@ -223,8 +223,13 @@ var sqlutil = {
             group_by.project_part = group_by.projection.join(", ") + ",";
         }
         return group_by;
-    }
-
+    },
+    
+    parseUtcDatetime: function (field, next) {
+        if (field.type !== 'DATETIME') return next(); // 1 = true, 0 = false
+        
+        return new Date(field.string() + ' GMT');
+    },
 };
 
 module.exports = sqlutil;

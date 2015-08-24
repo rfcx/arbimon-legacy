@@ -1,6 +1,11 @@
-// packages
-var express = require('express');
+/* jshint node:true */
+"use strict";
+
+// native packages
 var path = require('path');
+
+// packages 3rd party
+var express = require('express');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
@@ -10,6 +15,7 @@ var SessionStore = require('express-mysql-session');
 var busboy = require('connect-busboy');
 var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
+var paypal = require('paypal-rest-sdk');
 
 
 var config = require('./config');
@@ -19,16 +25,17 @@ AWS.config.update({
     region: config('aws').region
 });
 
+var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');
 var model = require('./model');
 
 tmpfilecache.cleanup();
-
+paypal.configure(config('paypal'));
 var app = express();
 
 
-// middleware and app settings
-// ----------------------------------------------------------
+// app settings
+// -----------------------------------------------------------------
 
 app.disable('x-powered-by');
 
@@ -40,28 +47,44 @@ if (app.get('env') === 'production') {
     app.enable('trust proxy');
 }
 
-app.use(favicon(__dirname + '/public/images/favicon.ico'));
+// middleware
+// ------------------------------------------------------------------
+
+
+app.use(favicon(path.join(__dirname, '/public/images/favicon.ico')));
 
 logger.token('tag', function(req, res){ return 'arbimon2:request'; });
 
-if (app.get('env') === 'production') {
+if(app.get('env') === 'production') {
     app.use(logger(':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"'));
 }
 else {
     app.use(logger('dev'));
 }
 
+app.use(function(req, res, next) {
+    if(req.app.get('env') === 'production') {
+        req.appHost = req.protocol +"://" + req.hostname;
+    }
+    else {
+        req.appHost = req.protocol +"://" + req.hostname + ':' + req.app.get('app-port');
+    }
+    next();
+});
+
 app.use(jwt({ 
     secret: config('tokens').secret,
     userProperty: 'token',
     credentialsRequired: false
 }));
+
 app.use(cookieParser());
 app.use(busboy({
     limits: {
         fileSize: 1073741824, // 1GB
     }
 }));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -87,9 +110,25 @@ if (app.get('env') === 'production') {
 }
 
 app.use(session(sessionConfig));
+app.use(systemSettings.middleware());
 
-// routes
+// routes ----------------------------------------------
+
 var routes = require('./routes/index');
+var admin = require('./routes/admin');
+
+app.get('/alive', function(req, res) { // for health checks
+    res.sendStatus(200);
+});
+
+app.use('/admin', admin);
+
+app.use(function(req, res, next) {
+    if(req.systemSettings('maintenance_mode') == 'on')
+        return res.status(301).render('maintenance');
+    
+    next();
+});
 
 app.use('/', routes);
 

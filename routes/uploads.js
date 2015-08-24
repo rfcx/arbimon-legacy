@@ -110,10 +110,10 @@ var receiveUpload = function(req, res, next) {
         var project = results.getProjectInfo[0][0];
         var minsUsage = results.getUsage[0][0].min_usage;
         
-        debug('limit', project.recording_limit);
+        debug('limit', project.storage_limit);
         debug('usage', minsUsage);
         
-        if(minsUsage >= project.recording_limit) {
+        if(minsUsage >= project.storage_limit) {
             return res.status(401).json({ error: "Project Recording limit reached"});
         }
         
@@ -220,9 +220,9 @@ var receiveUpload = function(req, res, next) {
                     
                     debug('new usage', (info.duration/60)+minsUsage);
                     
-                    if((info.duration/60)+minsUsage > project.recording_limit) {
+                    if((info.duration/60)+minsUsage > project.storage_limit) {
                         deleteFile(upload.path);
-                        var msg = "Recording is too long, there is only " + Math.round((project.recording_limit-minsUsage)*100)/100 +
+                        var msg = "Recording is too long, there is only " + Math.round((project.storage_limit-minsUsage)*100)/100 +
                             " minutes of space left";
                         return res.status(401).json({ error: msg });
                     }
