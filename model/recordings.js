@@ -49,6 +49,7 @@ var Recordings = {
     parseUrl: function(recording_url){
         var patternFound = false, resolved = false;
         var deferred = Q.defer();
+        var promise = deferred.promise;
         var rec_match;
         if (recording_url) {
             // match given objects
@@ -74,6 +75,45 @@ var Recordings = {
                     hour   : rec_match[ 9],
                     minute : rec_match[11]
                 });
+
+                promise = promise.then(function(parsedUrl){
+                    // expand site if site is !q:(site_id)
+                    var m = /^!q:(\d+)$/.exec(parsedUrl.site);
+                    console.log("var m = /^!q:(\d+)$/.exec(parsedUrl.site);", m);
+                    if(m){
+                        var site_id = m[1] | 0;
+                        return Q.nfcall(queryHandler,
+                            "SELECT S.name\n" +
+                            "FROM sites S\n" +
+                            "WHERE S.site_id = " + site_id
+                        ).then(function(query_results){
+                            var data = query_results.shift();
+                            if(data && data.length){
+                                parsedUrl.site = data[0].name;
+                            } else {
+                                parsedUrl.site = null;
+                            }
+                            return parsedUrl;
+                        });
+                    } else {
+                        return parsedUrl;
+                    }
+                }).then(function(parsedUrl){
+                    // parse special /last|first/ flags
+                    var f = ["year", "month", "day", "hour", "minute"], m;
+                    var hasSpecial = false;
+                    for(var i=0, e=f.length; i<e; ++i){
+                        if((m=/^(first|last|latest)$/.exec(parsedUrl[f[i]]))){
+                            parsedUrl.special = m[1];
+                            hasSpecial = true;
+                        }
+                        if(hasSpecial){
+                            // if special flag is parsed, then subfields arent needed.
+                            delete parsedUrl[f[i]];
+                        }
+                    }
+                    return parsedUrl;
+                });
             }
         }
 
@@ -82,7 +122,7 @@ var Recordings = {
             patternFound = true;
         }
         
-        return deferred.promise;
+        return promise;
     },
     parseQueryItem: function(item, allow_range){
         if(item){
@@ -109,6 +149,7 @@ var Recordings = {
     parseUrlQuery: function(recording_url){
         return this.parseUrl(recording_url).then((function(components){
             return {
+                special: components.special,
                 id     : this.parseQueryItem(components.id    , false),
                 site   : this.parseQueryItem(components.site  , false),
                 year   : this.parseQueryItem(components.year  , true ),
@@ -189,6 +230,11 @@ var Recordings = {
         var group_by, query;
 
         var promise = this.parseUrlQuery(recording_url).then(function(urlquery){            
+            if(urlquery.special){
+                limit_clause = " LIMIT 1";
+                order_clause = " ORDER BY S.name ASC, R.datetime " + (urlquery.special == 'first' ? 'ASC' : 'DESC');
+            }
+
             var constraints = sqlutil.compile_query_constraints(urlquery, fields);
             
             if(!urlquery.id) {
