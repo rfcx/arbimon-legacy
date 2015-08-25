@@ -47,10 +47,21 @@ angular.module('a2.visualizer', [
         sticky: true,
     })
     .state('visualizer.view', {
-        url: '/:type/:idA/:idB',
-        params:{type:'', idA:{value:'', squash:true}, idB:{value:'', squash:true}},
+        url: '/:type/:idA/:idB/:idC',
+        params:{type:'', idA:{value:'', squash:true}, idB:{value:'', squash:true}, idC:{value:'', squash:true}},
         controller: function($state, $scope){
-            var p = $state.params, l = p.type + (p.idA ? ('/' + p.idA + (p.idB ? '/' + p.idB : '')) : '');
+            var p = $state.params;
+            var lc = [p.type];
+            if(p.idA){
+                lc.push(p.idA);
+                if(p.idB){
+                    lc.push(p.idB);
+                    if(p.idC){
+                        lc.push(p.idC);
+                    }
+                }
+            }
+            var l = lc.join('/');
             console.log(".state('visualizer.rec', { controller: function($state, $scope){ $state.params: ", $state.params);
             $scope.location.whenBrowserIsAvailable(function(){
                 $scope.$parent.$broadcast('set-browser-location', [l]);

@@ -190,9 +190,22 @@ angular.module('a2.browser_recordings_by_site', [])
     this.resolve_location = function(location){
         var defer = $q.defer();
         if(location){
-            Project.getOneRecording(location, function(recording){
-                defer.resolve(recording);
-            });
+            var site_match = /^site(\/(\d+)(\/([^/]+))?)?/.exec(location);
+            if(site_match){
+                var site = site_match[2]|0, query=site_match[4];
+                if(site){
+                    var key = '!q:'+site+(query ? '-' + query : '');
+                    Project.getRecordings(key, (function(recordings){
+                        defer.resolve(recordings && recordings.pop());
+                    }).bind(this));
+                } else {
+                    defer.resolve();                    
+                }
+            } else {
+                Project.getOneRecording(location, function(recording){
+                    defer.resolve(recording);
+                });
+            }
         } else {
             defer.resolve();
         }
