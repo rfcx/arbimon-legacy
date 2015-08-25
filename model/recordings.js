@@ -4,6 +4,7 @@
 // dependencies
 var util  = require('util');
 var path   = require('path');
+var Q = require('q');
 
 var debug = require('debug')('arbimon2:model:recordings');
 var async = require('async');
@@ -46,29 +47,42 @@ var Recordings = {
         minute : { subject: 'MINUTE(R.datetime)', project: true,  level:6,                 prev:'hour' }
     },
     parseUrl: function(recording_url){
+        var patternFound = false, resolved = false;
+        var deferred = Q.defer();
         var rec_match;
         if (recording_url) {
+            // match given objects
             if(typeof recording_url == "object"){
-                return recording_url;
-            }
-            rec_match = /^(\d+)$/.exec(recording_url);
-            if(rec_match) return {
-                id    : rec_match[ 1] | 0
-            };
+                patternFound = true;
+                deferred.resolve(recording_url);
+            // match recording ids
+            } else if((rec_match = /^(\d+)$/.exec(recording_url))){
+                patternFound = true;
+                deferred.resolve({
+                    id    : rec_match[ 1] | 0
+                });
             //                site     year     month    day       hour     minute
             //                1        2 3      4 5      6 7       8 9     10 11    10987654321
             //                1       01 2     12 3     23 4      34 5     45 6     54 3 2 1
-            rec_match = /^([^-]*)(-([^-]*)(-([^-]*)(-([^-_]*)([_-]([^-]*)(-([^-]*))?)?)?)?)?(\.(wav|flac))?/.exec(recording_url);
-            if(rec_match) return {
-                site   : rec_match[ 1],
-                year   : rec_match[ 3],
-                month  : rec_match[ 5],
-                day    : rec_match[ 7],
-                hour   : rec_match[ 9],
-                minute : rec_match[11]
-            };
+            } else if((rec_match = /^([^-]*)(-([^-]*)(-([^-]*)(-([^-_]*)([_-]([^-]*)(-([^-]*))?)?)?)?)?(\.(wav|flac))?/.exec(recording_url))){
+                patternFound = true;
+                deferred.resolve({
+                    site   : rec_match[ 1],
+                    year   : rec_match[ 3],
+                    month  : rec_match[ 5],
+                    day    : rec_match[ 7],
+                    hour   : rec_match[ 9],
+                    minute : rec_match[11]
+                });
+            }
         }
-        return {};
+
+        if(!patternFound){
+            deferred.resolve({});
+            patternFound = true;
+        }
+        
+        return deferred.promise;
     },
     parseQueryItem: function(item, allow_range){
         if(item){
@@ -93,16 +107,17 @@ var Recordings = {
         return undefined;
     },
     parseUrlQuery: function(recording_url){
-        var components = this.parseUrl(recording_url);
-        return {
-            id     : this.parseQueryItem(components.id    , false),
-            site   : this.parseQueryItem(components.site  , false),
-            year   : this.parseQueryItem(components.year  , true ),
-            month  : this.parseQueryItem(components.month , true ),
-            day    : this.parseQueryItem(components.day   , true ),
-            hour   : this.parseQueryItem(components.hour  , true ),
-            minute : this.parseQueryItem(components.minute, true )
-        };
+        return this.parseUrl(recording_url).then((function(components){
+            return {
+                id     : this.parseQueryItem(components.id    , false),
+                site   : this.parseQueryItem(components.site  , false),
+                year   : this.parseQueryItem(components.year  , true ),
+                month  : this.parseQueryItem(components.month , true ),
+                day    : this.parseQueryItem(components.day   , true ),
+                hour   : this.parseQueryItem(components.hour  , true ),
+                minute : this.parseQueryItem(components.minute, true )
+            };
+        }).bind(this));
     },
     applyQueryItem: function(subject, query){
         if(query){
@@ -141,7 +156,6 @@ var Recordings = {
             options = null;
         }
         options = options || {};
-        var urlquery = this.parseUrlQuery(recording_url);
         var keep_keys = options.keep_keys;
         var limit_clause = (options.limit ?
             " LIMIT " + (options.limit|0) + (options.offset ? " OFFSET " + (options.offset|0) : "") : ""
@@ -149,18 +163,7 @@ var Recordings = {
         var order_clause = (options.order ?
             " ORDER BY S.name ASC, R.datetime ASC" : ''
         );
-            
         var fields = Recordings.QUERY_FIELDS;
-        
-        var constraints = sqlutil.compile_query_constraints(urlquery, fields);
-        if(!urlquery.id) {
-            var pid = mysql.escape(project_id);
-            constraints.unshift('(S.project_id = ' + pid + ' OR PIS.project_id = ' + pid +')');
-        }
-        
-        var group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
-            count_only : options.count_only
-        });
         
         var projection;
         if (options.count_only) {
@@ -183,33 +186,59 @@ var Recordings = {
                         "R.sample_encoding";
         }
         
-        var sql = "SELECT " + group_by.project_part + projection + " \n" +
-            "FROM recordings R \n" +
-            "JOIN sites S ON S.site_id = R.site_id \n" +
-            "LEFT JOIN project_imported_sites PIS ON S.site_id = PIS.site_id AND PIS.project_id = " + mysql.escape(project_id) + "\n"+
-            "WHERE (" + constraints.join(") AND (") + ")" +
-            group_by.clause +
-            order_clause +
-            limit_clause;
+        var group_by, query;
+
+        var promise = this.parseUrlQuery(recording_url).then(function(urlquery){            
+            var constraints = sqlutil.compile_query_constraints(urlquery, fields);
             
-        var query = {
-            sql: sql,
-            typeCast: sqlutil.parseUtcDatetime,
-        };
-        
-        return queryHandler(query, function(err, data){
-            if (!err && data){
+            if(!urlquery.id) {
+                var pid = mysql.escape(project_id);
+                constraints.unshift('(S.project_id = ' + pid + ' OR PIS.project_id = ' + pid +')');
+            }
+            
+            group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
+                count_only : options.count_only
+            });
+            
+            
+            var sql = "SELECT " + group_by.project_part + projection + " \n" +
+                "FROM recordings R \n" +
+                "JOIN sites S ON S.site_id = R.site_id \n" +
+                "LEFT JOIN project_imported_sites PIS ON S.site_id = PIS.site_id AND PIS.project_id = " + mysql.escape(project_id) + "\n"+
+                "WHERE (" + constraints.join(") AND (") + ")" +
+                group_by.clause +
+                order_clause +
+                limit_clause;
+                
+            query = {
+                sql: sql,
+                typeCast: sqlutil.parseUtcDatetime,
+            };
+            
+            return Q.nfcall(queryHandler, query);
+        }).then(function(query_results){
+            var data = query_results.shift();
+            if(data){
                 if(group_by.levels.length > 0) {
-                    data = arrays_util.group_rows_by(data, group_by.levels, options);
+                    return arrays_util.group_rows_by(data, group_by.levels, options);
                 } else if(options.compute){
-                    arrays_util.compute_row_properties(data, options.compute, function(property){
+                    return arrays_util.compute_row_properties(data, options.compute, function(property){
                         return Recordings['__compute_' + property.replace(/-/g,'_')];
-                    }, callback);
-                    return;
+                    });
+                } else {
+                    return data;
                 }
             }
-            callback(err, data);
         });
+        
+        if(callback){
+            promise.then(function(data){
+                callback(null, data);
+                return data;
+            }, callback);
+        }
+        
+        return promise;
     },
     
     fetchNext: function (recording, callback) {

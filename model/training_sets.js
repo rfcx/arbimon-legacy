@@ -425,26 +425,36 @@ TrainingSets.types.roi_set = {
 
         if(query.id){
             constraints.push('TSD.roi_set_data_id = ' + mysql.escape(query.id));
+            return queryHandler(
+                "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
+                "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
+                "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 , \n"+
+                "   CONCAT('https://s3.amazonaws.com/','"+config('aws').bucketName+"','/',TSD.uri) as uri \n" +
+                "FROM "   + tables.join(" \n" +
+                "JOIN ")+ " \n" +
+                "WHERE " + constraints.join(" \n" +
+                "  AND "), callback);
         } else if(query.recording){
-            var req_query = Recordings.parseUrlQuery(query.recording);
-            constraints.push.apply(constraints, sqlutil.compile_query_constraints(
-                Recordings.parseUrlQuery(query.recording),
-                Recordings.QUERY_FIELDS
-            ));
-            tables.push(
-                'recordings R ON TSD.recording_id = R.recording_id',
-                'sites S ON R.site_id = S.site_id'
-            );
+            Recordings.parseUrlQuery(query.recording).then(function(req_query){
+                constraints.push.apply(constraints, sqlutil.compile_query_constraints(
+                    req_query,
+                    Recordings.QUERY_FIELDS
+                ));
+                tables.push(
+                    'recordings R ON TSD.recording_id = R.recording_id',
+                    'sites S ON R.site_id = S.site_id'
+                );
+                return queryHandler(
+                    "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
+                    "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
+                    "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 , \n"+
+                    "   CONCAT('https://s3.amazonaws.com/','"+config('aws').bucketName+"','/',TSD.uri) as uri \n" +
+                    "FROM "   + tables.join(" \n" +
+                    "JOIN ")+ " \n" +
+                    "WHERE " + constraints.join(" \n" +
+                    "  AND "), callback);
+            }, callback);
         }
-        return queryHandler(
-            "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
-            "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
-            "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 , \n"+
-            "   CONCAT('https://s3.amazonaws.com/','"+config('aws').bucketName+"','/',TSD.uri) as uri \n" +
-            "FROM "   + tables.join(" \n" +
-            "JOIN ")+ " \n" +
-            "WHERE " + constraints.join(" \n" +
-            "  AND "), callback);
     },
     /** Adds data to a training set.
      * @param {Object}  training_set  training set object as returned by find(), must be of type roi_set.
