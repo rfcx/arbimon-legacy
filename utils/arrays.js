@@ -1,4 +1,5 @@
 var async = require('async');
+var Q = require('q');
 
 module.exports = {
     /** Computes a set of properties for a given set of rows.
@@ -9,28 +10,41 @@ module.exports = {
      *                   each property method must recieve two arguments, the first one
      *                   is the row, the second one is a callback to call when the property is computed.
      * @param {Function} callback(err, row_set) function to call back with the results
+     * @return Promise with the row_set with its properties computed.
      */
     compute_row_properties : function(row_set, property_set, method_getter, callback){
+        var deferred = Q.defer();
+        var promise = deferred.promise;
         if(!property_set || !row_set){
-            callback();
+            deferred.resolve();
             return;
-        } else if(typeof(property_set) == 'string'){
-            property_set = property_set.split(',');
-        }
-        async.eachLimit(property_set, 10, function(property, next_property){
-            var method = method_getter(property);
-            if(method){
-                async.eachLimit(row_set, 10, function(row, next_row){
-                    method(row, next_row);
-                }, next_property);
-            } else {
-                next_property(new Error("Property " + property + " cannot be computed."));
+        } else {
+            if(typeof(property_set) == 'string'){
+                property_set = property_set.split(',');
             }
-        }, function(err){
-            if(err) return callback(err);
-            
-            callback(null, row_set);
-        });
+            async.eachLimit(property_set, 10, function(property, next_property){
+                var method = method_getter(property);
+                if(method){
+                    async.eachLimit(row_set, 10, function(row, next_row){
+                        method(row, next_row);
+                    }, next_property);
+                } else {
+                    next_property(new Error("Property " + property + " cannot be computed."));
+                }
+            }, function(err){
+                if(err){
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(row_set);                
+                }
+            });
+        }
+        if(callback){
+            promise = deferred.promise.then(function(row_set){
+                callback(null, row_set);
+            }, callback);
+        }
+        return promise;
     },
 
     sample_without_replacement: function(array, count){

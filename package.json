@@ -37,6 +37,7 @@
     "nodemailer-smtp-transport": "~1.0.2",
     "paypal-rest-sdk": "^1.5.3",
     "prompt": "~0.2.14",
+    "q": "^1.4.1",
     "request": "~2.57.0",
     "serve-favicon": "~2.2.0",
     "sprintf-js": "~1.0.2",
