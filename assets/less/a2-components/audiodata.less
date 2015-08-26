@@ -78,49 +78,71 @@
     }
 }
 
-.roi-list {
-    margin-left: -10px;
-    margin-right: -10px;
+.roi-thumbnail {
+    display:inline-block;
+    position:relative;
+    
+    .roi-btn-tr {
+        position:absolute;
+        top:5px;
+        right:5px;
+        z-index:10;
+    }
+    
+    .roi-btn-tl {
+        position:absolute;
+        top:5px;
+        left:5px;
+        z-index:10;
+    }
+    
+    .roi-btn-br {
+        position:absolute;
+        bottom:5px;
+        right:5px;
+        z-index:10;
+    }
+    
+    .roi-btn-bl {
+        position:absolute;
+        bottom:5px;
+        left:5px;
+        z-index:10;
+    }
+    
+    
+    .roi-img {
+        width:125px;
+        height:125px;
+        margin:2px;
+    }
+    
 }
 
-.roi-div-inline{
-    display:inline-block;position:relative;
-}
-.roi-div-inline-remove{
-    position:absolute;
-    top:0px;
-    right:5px;
-    z-index:10;
-}
-.roi-div-inline-vis{
-    position:absolute;
-    top:106px;
-    right:5px;
-    z-index:10;
-}
-.roi-div-inline-img{
-    width:125px;
-    height:125px;
-    margin:2px;
-}
 .roi-div-inline-remove-detail{
     float:right;
 }
 .roi-div-inline-img-detail{
-width:100%;height:150px;
+    width:100%;
+    height:150px;
+}
+
+.roi-icon-btn(@color) {
+    color: @color;
+    background:transparent;
+    border:none;
+    font-size: 1.2em;
+    
+    &:hover, &:focus {
+        color: darken(@color, 10%);
+    }
 }
 
 .roi-delete {
-    color:rgb(244, 59, 59);
-    color:rgba(255,0,0,0.8);
-    padding:0;
-    background:transparent;
-    border:none;
-    font-size:1.2em;
-    
-    &:hover {
-        color:rgba(255,0,0,1);
-    }
+    .roi-icon-btn(@btn-danger-bg);
+}
+.roi-info {
+    .roi-icon-btn(@btn-primary-bg);
 }
 
 .a2-training-set-data-image{

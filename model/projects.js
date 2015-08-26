@@ -776,7 +776,22 @@ var Projects = {
                 "AND `songtype_id` = ? \n"+
                 "GROUP BY species_id, songtype_id";
         
-        queryHandler(mysql.format(q, [projectUrl, speciesId, songtypeId]), callback);
+        queryHandler(mysql.format(q, [projectUrl, speciesId, songtypeId]), function(err, rows) {
+            if(err) return callback(err);
+            
+            if(!rows.length) {
+                var empty = {
+                    present: 0,
+                    absent: 0,
+                    total: 0,
+                };
+                
+                callback(null, empty);
+            }
+            else {
+                callback(null, rows[0]);
+            }
+        });
     },
     
     validationsCount: function(project_id, callback) {

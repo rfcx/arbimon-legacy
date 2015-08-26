@@ -65,7 +65,7 @@ angular.module('a2.admin', [
             });
     };
 })
-.controller('AdminJobsCtrl', function($scope, $http, $interval) {
+.controller('AdminJobsCtrl', function($scope, $http, $interval, Project) {
     
     var getJobQueueInfo = function(argument) {
         $http.get('/admin/job-queue')
@@ -165,7 +165,7 @@ angular.module('a2.admin', [
     getJobQueueInfo();
     
     
-    $http.get('/api/job/types')
+    $http.get('/api/project/'+Project.getUrl()+'/jobs/types')
         .success(function(jobTypes) {
             var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528'];
             

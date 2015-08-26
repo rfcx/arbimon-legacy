@@ -3,7 +3,7 @@ angular.module('a2.srv.training-sets', ['a2.srv.project'])
     return {
         getList: function(callback) {
             var projectName = Project.getUrl();
-            $http.get('/api/project/'+projectName+'/training-sets/')
+            $http.get('/api/project/'+projectName+'/training-sets')
                 .success(function(data) {
                     callback(data);
                 });

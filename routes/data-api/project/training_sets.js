@@ -1,15 +1,19 @@
+/* jshint node:true */
+"use strict";
+
 var express = require('express');
 var router = express.Router();
 var model = require('../../../model');
 
 
-router.param('trainingSet', function(req, res, next, training_set){
-    model.trainingSets.find({ id: training_set }, function(err, trainingSets) {
+router.param('trainingSet', function(req, res, next, trainingSet){
+    model.trainingSets.find({ id: trainingSet }, function(err, trainingSets) {
         if(err) return next(err);
 
         if(!trainingSets.length){
             return res.status(404).json({ error: "training set not found"});
         }
+        
         req.trainingSet = trainingSets[0];
         return next();
     });
@@ -53,7 +57,6 @@ router.get('/list/:trainingSet/:recUrl?', function(req, res, next) {
         if(err) return next(err);
 
         res.json(count);
-        return null;
     });
 });
 
@@ -63,7 +66,6 @@ router.get('/rois/:trainingSet', function(req, res, next) {
         if(err) return next(err);
 
         res.json(data);
-        return null;
     });
 });
 
@@ -71,18 +73,19 @@ router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
     model.trainingSets.fetchDataImage(req.trainingSet, req.dataId, function(err, data) {
         if(err) return next(err);
         res.json(data);
-        return null;
     });
 });
 
 
 router.get('/species/:trainingSet', function(req, res, next) {
-    model.trainingSets.fetchSpecies(req.trainingSet,
-    function(err, data) {
+    model.trainingSets.fetchSpecies(req.trainingSet, function(err, rows) {
         if(err) return next(err);
+        
+        if(!rows.length){
+            return res.sendStatus(404);
+        }
 
-        res.json(data);
-        return null;
+        res.json(rows[0]);
     });
 });
 

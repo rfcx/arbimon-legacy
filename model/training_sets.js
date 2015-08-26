@@ -1,17 +1,20 @@
 /* jshint node:true */
 "use strict";
 
-// dependencies
+// native dependencies
+var fs = require('fs');
+var util = require('util');
+
+
+// 3rd party dependencies
 var debug = require('debug')('arbimon2:model:training_sets');
-var mysql        = require('mysql');
-var async        = require('async');
-var joi          = require('joi');
-var im           = require('imagemagick');
-var AWS          = require('aws-sdk');
-var fs           = require('fs');
-var util         = require('util');
+var mysql = require('mysql');
+var async = require('async');
+var joi = require('joi');
+var im = require('imagemagick');
+var AWS = require('aws-sdk');
 
-
+// local dependencies
 var config       = require('../config'); 
 var tmpfilecache = require('../utils/tmpfilecache');
 var sqlutil      = require('../utils/sqlutil');
@@ -19,10 +22,10 @@ var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
 
-
 // local variables
 var s3;
 var queryHandler = dbpool.queryHandler;
+
 
 // exports
 var TrainingSets = {
@@ -226,7 +229,7 @@ var TrainingSets = {
      */
     fetchSpecies: function (training_set, callback) {
         var typedef = TrainingSets.types[training_set.type];
-        return typedef.get_species(training_set, callback);
+        typedef.get_species(training_set, callback);
     },
     
     /** Fetches the available training set types.
@@ -398,13 +401,14 @@ TrainingSets.types.roi_set = {
         );
     },
     get_species : function(training_set, callback) {
-        return queryHandler(
-            "SELECT  S.scientific_name as species  , SG.songtype \n"+
-            " FROM  songtypes SG , species S , training_sets_roi_set TRS \n"+
-            " WHERE TRS.training_set_id = " + mysql.escape(training_set.id) + " \n"+
-            " and TRS.species_id = S.species_id and TRS.songtype_id = SG.songtype_id ",
-            callback
-        );
+        var q = "SELECT S.scientific_name as species, \n"+
+                "       SG.songtype \n"+
+                "FROM training_sets_roi_set AS TRS \n"+
+                "JOIN songtypes AS SG ON TRS.songtype_id = SG.songtype_id \n"+
+                "JOIN species AS S ON TRS.species_id = S.species_id \n"+
+                "WHERE TRS.training_set_id = ?";
+        
+        queryHandler(mysql.format(q, [training_set.id]), callback);
     },
     remove_roi : function(roi_id, callback) {
         return queryHandler(

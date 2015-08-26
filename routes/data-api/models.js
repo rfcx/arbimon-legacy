@@ -621,12 +621,14 @@ router.get('/project/classification/csv/:cid', function(req, res) {
 
 // --------------------- validations routes -----------------------------------
 
-router.get('/project/:projectUrl/validations/:species/:songtype', function(req, res, next) {
-
-    model.projects.validationsStats(req.params.projectUrl,req.params.species,req.params.songtype, function(err, row) {
+router.get('/project/:projectUrl/validations', function(req, res, next) {
+    if(!req.query.species_id || !req.query.sound_id) {
+        return res.status(400).json({ error: "missing query parameters" });
+    }
+    model.projects.validationsStats(req.params.projectUrl, req.query.species_id, req.query.sound_id, function(err, stats) {
         if(err) return next(err);
-
-        res.json(row);
+        
+        res.json(stats);
     });
 });
 
