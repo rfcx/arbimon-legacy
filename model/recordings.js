@@ -52,21 +52,28 @@ var Recordings = {
                 return recording_url;
             }
             rec_match = /^(\d+)$/.exec(recording_url);
-            if(rec_match) return {
-                id    : rec_match[ 1] | 0
-            };
+            
+            if(rec_match) {
+                return {
+                    id: rec_match[ 1] | 0
+                };
+            }
+            
             //                site     year     month    day       hour     minute
             //                1        2 3      4 5      6 7       8 9     10 11    10987654321
             //                1       01 2     12 3     23 4      34 5     45 6     54 3 2 1
             rec_match = /^([^-]*)(-([^-]*)(-([^-]*)(-([^-_]*)([_-]([^-]*)(-([^-]*))?)?)?)?)?(\.(wav|flac))?/.exec(recording_url);
-            if(rec_match) return {
-                site   : rec_match[ 1],
-                year   : rec_match[ 3],
-                month  : rec_match[ 5],
-                day    : rec_match[ 7],
-                hour   : rec_match[ 9],
-                minute : rec_match[11]
-            };
+            
+            if(rec_match) {
+                return {
+                    site   : rec_match[ 1],
+                    year   : rec_match[ 3],
+                    month  : rec_match[ 5],
+                    day    : rec_match[ 7],
+                    hour   : rec_match[ 9],
+                    minute : rec_match[11]
+                };
+            }
         }
         return {};
     },
@@ -656,6 +663,8 @@ var Recordings = {
     },
     
     findProjectRecordings: function(params, callback) {
+        console.log('params', params);
+        
         var schema = {
             project_id: joi.number().required(),
             range: joi.object().keys({
@@ -723,10 +732,12 @@ var Recordings = {
             if(parameters.months){
                 var months;
                 
-                if(months instanceof Array)
+                if(parameters.months instanceof Array) {
                     months = parameters.months.map(function(m) { return parseInt(m)+1; });
-                else
+                }
+                else {
                     months = parseInt(parameters.months)+1;
+                }
                 
                 q += 'AND MONTH(r.datetime) IN (' + mysql.escape(months) + ') \n';
             }

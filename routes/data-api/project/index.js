@@ -113,7 +113,14 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
 });
 
 router.get('/:projectUrl/classes', function(req, res, next) {
-    model.projects.getProjectClasses(req.project.project_id, function(err, classes){
+    var classId = req.query.class_id || null;
+    var options = {};
+    if(req.query.validations) {
+        options.countValidations = true;
+    }
+    
+    console.log(classId, options);
+    model.projects.getProjectClasses(req.project.project_id, classId, options, function(err, classes){
         if(err) return next(err);
         res.json(classes);
     });

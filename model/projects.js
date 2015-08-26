@@ -324,28 +324,68 @@ var Projects = {
      * @param {{Integer}} class_id (optional) limit the query to this class
      * @param {{Callback}} callback
      */
-    getProjectClasses: function(project_id, class_id, callback){
-        if(class_id instanceof Function){
-            callback = class_id;
-            class_id = null;
+    getProjectClasses: function(projectId, classId, options, callback){
+        if(typeof options == 'function') {
+            callback = options;
+            options = {};
+            classId = null;
         }
-        var sql = (
-            "SELECT pc.project_class_id as id, \n"+
-            "       pc.species_id as species, \n"+
-            "       pc.songtype_id as songtype, \n"+
-            "       st.taxon, \n"+
-            "       sp.scientific_name as species_name, \n"+
-            "       so.songtype as songtype_name \n"+
-            "FROM project_classes AS pc \n"+
-            "JOIN species AS sp on sp.species_id = pc.species_id \n"+
-            "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
-            "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id \n" +
-            "WHERE pc.project_id = " + mysql.escape(project_id) +
-            (class_id ? "\n  AND pc.project_class_id = " + (class_id|0) : '') +
-            " ORDER BY st.taxon, sp.scientific_name"
-        );
+        else if(typeof classId == 'function') {
+            callback = classId;
+            options = {};
+            classId = null;
+        }
+        
+        
+        var params = [];
+        var q = "";
+        var sql = {
+            select: (
+                "SELECT pc.project_class_id as id, \n"+
+                "       pc.species_id as species, \n"+
+                "       pc.songtype_id as songtype, \n"+
+                "       st.taxon, \n"+
+                "       sp.scientific_name as species_name, \n"+
+                "       so.songtype as songtype_name \n"
+            ),
+            from: (
+                "FROM project_classes AS pc \n"+
+                "JOIN species AS sp on sp.species_id = pc.species_id \n"+
+                "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
+                "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id \n"
+            ),
+            where: (
+                "WHERE pc.project_id = ? \n"
+            ),
+        };
+        params.push(projectId);
+        
+        if(classId) {
+            sql.where += "AND pc.project_class_id = ? \n";
+            params.push(classId);
+        }
+        
+        if(options && options.countValidations) {
+            sql.select += (
+                ", coalesce(SUM(rv.present), 0) as vals_present, \n"+
+                "coalesce((COUNT(rv.present) - SUM(rv.present)), 0) as vals_absent \n"
+            );
+            sql.from += (
+                "LEFT JOIN recording_validations AS rv " + 
+                "ON rv.songtype_id = pc.songtype_id " +
+                "AND rv.species_id = pc.species_id " +
+                "AND rv.project_id = pc.project_id \n"
+            );
+            
+            q = sql.select + sql.from + sql.where + "GROUP BY pc.species_id, pc.songtype_id \n";
+        }
+        else {
+            q = sql.select + sql.from + sql.where;
+        }
+        
+            // " \nORDER BY st.taxon, sp.scientific_name"
 
-        return queryHandler(sql , callback);
+        return queryHandler(mysql.format(q, params), callback);
     },
 
     insertClass: function(project_class, callback) {
