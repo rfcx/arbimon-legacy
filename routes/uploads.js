@@ -22,6 +22,10 @@ var deleteFile = function(filename) {
 // middleware to handle upload auth
 var authorize = function(authtype){
     return function(req, res, next) {
+        if(req.systemSettings('feature.uploads') == 'off') {
+            return res.status(503).json({ error: 'uploads are unavailable, try again later' });
+        }
+        
         if(authtype.session && req.session && req.session.loggedIn) { 
             if(!req.query.project || !req.query.site || !req.query.nameformat) {
                 return res.status(400).json({ error: "missing parameters" });

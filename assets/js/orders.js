@@ -5,7 +5,7 @@ angular.module('a2.orders', [
     'a2.directives',
     'a2.services',
 ])
-.service('a2orderUtils', function() {
+.service('a2orderUtils', function($http) {
     return {
         /**
             receives a plan activation date and duration period, and calculates 
@@ -29,6 +29,10 @@ angular.module('a2.orders', [
             }
 
             return totalMonths-currentMonth;
+        },
+        
+        paymentsStatus: function() {
+            return $http.get('/api/orders/payments-status');
         },
         
         info: {
@@ -172,7 +176,7 @@ angular.module('a2.orders', [
             $scope.plan.cost = $scope.freePlan.cost;
             $scope.plan.storage = $scope.freePlan.storage;
             $scope.plan.processing = $scope.freePlan.processing;
-            $scope.plan.duration =  null;
+            $scope.plan.duration =  undefined;
         }
     });
     
@@ -362,13 +366,14 @@ angular.module('a2.orders', [
             });
     };
 })
-.controller('CreateProjectCtrl', function($scope, $http, $modalInstance, $modal, notify, a2order, orderData) {
-    console.log(orderData);
-    console.log($scope.project);
-    console.log($scope.recorderQty);
+.controller('CreateProjectCtrl', function($scope, $http, $modalInstance, $modal, notify, a2order, orderData, a2orderUtils) {
     
     $scope.project = orderData.project;
     $scope.recorderQty = orderData.recorderQty;
+    
+    a2orderUtils.paymentsStatus().success(function(data) {
+        $scope.paymentsEnabled = data.payments_enable;
+    });
     
     $scope.create = function() {
         console.log($scope.isValid);
@@ -376,6 +381,10 @@ angular.module('a2.orders', [
         
         if(!$scope.project.plan) {
             return notify.error('You need to select a plan');
+        }
+        
+        if(!$scope.paymentsEnabled && $scope.project.plan.tier == 'paid') {
+            return notify.log('Payments are unavailable');
         }
         
         // don't process orders over $10,000
@@ -443,10 +452,14 @@ angular.module('a2.orders', [
             $scope.processing = false;
         });
 })
-.controller('ChangeProjectPlanCtrl', function($scope, orderData, Project, $window, a2order, $modalInstance, notify) {
+.controller('ChangeProjectPlanCtrl', function($scope, orderData, Project, $window, a2order, $modalInstance, notify, a2orderUtils) {
     $scope.today = new Date();
     console.log(orderData);
     $scope.recorderQty = orderData.recorderQty;
+    
+    a2orderUtils.paymentsStatus().success(function(data) {
+        $scope.paymentsEnabled = data.payments_enable;
+    });
     
     Project.getInfo(function(info) {
         $scope.project = info;
@@ -484,6 +497,9 @@ angular.module('a2.orders', [
     
     
     $scope.upgrade = function() {
+        if(!$scope.paymentsEnabled) {
+            return notify.log('Payments are unavailable');
+        }
         
         if($scope.mode == 'renew') {
             if($scope.project.plan.storage < $scope.minUsage) {
@@ -497,8 +513,6 @@ angular.module('a2.orders', [
                 return;
             }
         }
-        
-        console.log('review');
         
         orderData = {
             action: 'update-project',

@@ -81,9 +81,10 @@
     <div class="col-md-5">
         <div ng-show="editing || creating" class="panel panel-default">
             <div class="panel-body">
-                <form class="form">
+                <form class="form" ng-submit="save() | trackEvent:'Dashboard-sites':'save site'" name="siteForm">
                     <div class="form-group">
-                        <label>Name:</label><input class="form-control" type="text" ng-model="temp.name" placeholder="Site name">
+                        <label>Name:</label>
+                        <input class="form-control" type="text" ng-model="temp.name" placeholder="Site name" required>
                     </div>
                     <!-- <div class="checkbox">
                         <label>
@@ -97,26 +98,46 @@
                     <div class="form-group">
                         <label>Location:</label>
                         <div class="input-group">
-                             <span class="input-group-addon">Lat</span>
-                            <input class="form-control" id="lat" type="text" ng-model="temp.lat" placeholder="Latitude">
+                            <span class="input-group-addon">Lat</span>
+                            <input class="form-control" 
+                                name="lat" 
+                                type="text" 
+                                ng-model="temp.lat" 
+                                placeholder="Latitude" 
+                                pattern="^-?\d+\.?\d*$"
+                                required>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="input-group">
-                             <span class="input-group-addon">Lon</span>
-                            <input class="form-control" id="lon" type="text" ng-model="temp.lon" placeholder="Longitude">
+                            <span class="input-group-addon">Lon</span>
+                            <input class="form-control" 
+                                name="lon" 
+                                type="text" 
+                                ng-model="temp.lon" 
+                                placeholder="Longitude" 
+                                pattern="^-?\d+\.?\d*$"
+                                required>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="input-group">
-                             <span class="input-group-addon">Alt</span>
-                            <input class="form-control" id="alt" type="text" ng-model="temp.alt" placeholder="Altitude">
+                            <span class="input-group-addon">Alt</span>
+                            <input class="form-control" 
+                                name="alt" 
+                                type="text" 
+                                ng-model="temp.alt" 
+                                placeholder="Altitude" 
+                                pattern="^-?\d+\.?\d*$"
+                                required>
                         </div>
                     </div>
-                    <button class="btn btn-primary" ng-click="save() | trackEvent:'Dashboard-sites':'save site'">
+                    <button class="btn btn-primary">
                         <i class="fa fa-floppy-o"></i> Save
                     </button>
-                    <button class="btn btn-default" ng-click="close() | trackEvent:'Dashboard-sites':'close site edit create'">
+                    <button class="btn btn-default" 
+                        type="button"
+                        ng-click="close() | trackEvent:'Dashboard-sites':'close site edit create'">
                         <i class="fa fa-times"></i> Close
                     </button>
                 </form>

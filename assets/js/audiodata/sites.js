@@ -53,6 +53,8 @@ angular.module('a2.audiodata.sites', [
     $scope.save = function() {
         var action = $scope.editing ? 'update' : 'create';
         
+        if($scope.siteForm.$invalid) return;
+        
         a2Sites[action]($scope.temp, function(data) {
             if(data.error)
                 return notify.error(data.error);
