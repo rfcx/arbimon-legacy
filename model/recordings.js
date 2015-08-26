@@ -79,7 +79,6 @@ var Recordings = {
                 promise = promise.then(function(parsedUrl){
                     // expand site if site is !q:(site_id)
                     var m = /^!q:(\d+)$/.exec(parsedUrl.site);
-                    console.log("var m = /^!q:(\d+)$/.exec(parsedUrl.site);", m);
                     if(m){
                         var site_id = m[1] | 0;
                         return Q.nfcall(queryHandler,
