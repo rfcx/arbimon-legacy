@@ -252,15 +252,13 @@ angular.module('a2.browser_recordings_by_site', [])
         });
     };
     
-    this.set_date = function(newValue){
-        var oldValue = this.date;
-        this.date = newValue;
+    this.set_date = function(date){
+        this.date = date;
         if(!self.active){ return; }
         // $(document).find('.dropdown.open').removeClass('open');
-        var site = self.site;
-        var date = self.date;
+        var site = this.site;
         if (site && date) {
-            if(newValue && oldValue && newValue.getTime() == oldValue.getTime() && self.lovo){
+            if(self.lovo && date && self.lovo.date && date.getTime() == self.lovo.date.getTime()){
                 a2Browser.setLOVO(self.lovo);
                 return;
             } else {
