@@ -4,9 +4,7 @@ angular.module('a2.audiodata.recordings', [
     'ui.bootstrap',
     'humane'
 ])
-.controller('RecsCtrl', function($scope, Project, $http, $modal, notify, a2UserPermit) {
-    $scope.loading = true;
-    
+.controller('RecsCtrl', function($scope, Project, $http, $modal, notify, a2UserPermit, $window) {
     
     var readFilters = function() {
         $scope.message = '';
@@ -21,20 +19,31 @@ angular.module('a2.audiodata.recordings', [
             params.range.to.setUTCMinutes(59);
         }
     
-        if($scope.params.sites && $scope.params.sites.length)
-            params.sites = $scope.params.sites.map(function(site) { return site.name; });
+        var mapValue = function(x) { return x.value; };
         
-        if($scope.params.hours && $scope.params.hours.length) 
-            params.hours = $scope.params.hours.map(function(h) { return h.value; });
-        
-        if($scope.params.months && $scope.params.months.length)
-            params.months = $scope.params.months.map(function(m) { return m.value; });
-        
-        if($scope.params.years && $scope.params.years.length)
-            params.years = $scope.params.years;
-            
-        if($scope.params.days && $scope.params.days.length)
-            params.days = $scope.params.days;
+        if($scope.params.sites && $scope.params.sites.length) {
+            params.sites = $scope.params.sites.map(mapValue);
+        }
+        if($scope.params.hours && $scope.params.hours.length) {
+            params.hours = $scope.params.hours.map(mapValue);
+        }
+        if($scope.params.months && $scope.params.months.length) {
+            params.months = $scope.params.months.map(mapValue);
+        }
+        if($scope.params.years && $scope.params.years.length) {
+            params.years = $scope.params.years.map(mapValue);
+        }
+        if($scope.params.days && $scope.params.days.length) {
+            params.days = $scope.params.days.map(mapValue);
+        }
+        if($scope.params.validations && $scope.params.validations.length) {
+            params.validations = $scope.params.validations.map(function(soundClass) {
+                return soundClass.id;
+            });
+        }
+        if($scope.params.presence) {
+            params.presence = $scope.params.presence;
+        }
         
         return params;
     };
@@ -61,10 +70,107 @@ angular.module('a2.audiodata.recordings', [
             else if(params.output == 'date_range') {
                 $scope.minDate = new Date(data[0].min_date);
                 $scope.maxDate = new Date(data[0].max_date);
-                $scope.years = d3.range($scope.minDate.getFullYear(), ($scope.maxDate.getFullYear() + 1) );
             }
         });
     };
+    
+    var findObjectWith = function(arr, key, value) {
+        var result = arr.filter(function(obj) {
+            return obj[key] === value;
+        });
+        return result.length > 0 ? result[0] : null;
+    };
+    
+    var getAvalilableFilters = function(filters) {
+        Project.getRecordingAvailability('---[1:31]', function(data) {
+            
+            var lists = {
+                sites: [], // sitesList
+                years: [], // yearsList
+                months: [], // monthsList
+                days: [], // daysList
+                hours: [], // hoursList
+            };
+            
+            var levelIds = Object.keys(lists);
+            
+            var getFilterOptions = function(filters, obj, level) {
+                var count = 0;
+                var currentLevel = levelIds[level];
+                
+                for(var child in obj) {
+                    if(
+                        Object.keys(filters).length && 
+                        filters[currentLevel] && 
+                        filters[currentLevel].indexOf(child) === -1
+                    ) { // skip if filter is define and the value is not in it
+                        continue;
+                    }
+                    
+                    var item = findObjectWith(lists[currentLevel], 'value', child);
+                    
+                    if(!item) {
+                        item = { value: child, count: 0 };
+                        lists[currentLevel].push(item);
+                    }
+                    
+                    var itemCount;
+                    if(typeof obj[child] == 'number') {
+                        itemCount = obj[child];
+                    }
+                    else {
+                        if(level === 0) count = 0;
+                            
+                        itemCount = getFilterOptions(filters, obj[child], level+1);
+                    }
+                    
+                    item.count += itemCount;
+                    count += itemCount;
+                }
+                
+                return count;
+            };
+            getFilterOptions(filters, data, 0);
+            
+            $scope.sites = lists.sites;
+            $scope.years = lists.years;
+            
+            $scope.months = lists.months.map(function(month) {
+                month.value = parseInt(month.value);
+                month.value--;
+                return { 
+                    value: month.value, 
+                    string: $window.moment().month(month.value).format('MMM'), 
+                    count: month.count
+                };
+            });
+            
+            $scope.days = lists.days.map(function(day) {
+                day.value = parseInt(day.value);
+                return day;
+            });
+            
+            $scope.hours = lists.hours.map(function(hour) {
+                hour.value = parseInt(hour.value);
+                return { 
+                    value: hour.value, 
+                    string: $window.moment().hour(hour.value).minute(0).format('HH:mm'), 
+                    count: hour.count
+                };
+            });
+            
+            var sort = function(a, b) {
+                return a.value > b.value;
+            };
+            
+            $scope.sites.sort(sort);
+            $scope.years.sort(sort);
+            $scope.months.sort(sort);
+            $scope.days.sort(sort);
+            $scope.hours.sort(sort);
+        });
+    };
+    
     $scope.sortRecs = function(sortKey, reverse) {
         $scope.sortKey = sortKey;
         $scope.reverse = reverse;
@@ -88,7 +194,7 @@ angular.module('a2.audiodata.recordings', [
     $scope.createPlaylist = function() {
         var listParams = readFilters();
         
-        if($.isEmptyObject(listParams))
+        if(!Object.keys(listParams).length)
             return;
             
         if(!a2UserPermit.can('manage playlists')) {
@@ -110,6 +216,7 @@ angular.module('a2.audiodata.recordings', [
             notify.log('Playlist created');
         });
     };
+    
     $scope.del = function() {
         if(!a2UserPermit.can('manage project recordings')) {
             notify.log('You do not have permission to delete recordings');
@@ -168,28 +275,33 @@ angular.module('a2.audiodata.recordings', [
                 });
         });
     };
+    
+    $scope.loading = true;
     $scope.params = {};
+    $scope.classes = [];
+    $scope.presence = ['present', 'absent'];
     $scope.sites = [];
     $scope.years = [];
+    $scope.months = [];
+    $scope.days = [];
+    $scope.hours = [];
     $scope.loading = true;
     $scope.currentPage  = 1;
     $scope.limitPerPage = 10;
-    $scope.days = d3.range(1,32);
     
-    $scope.months =  d3.range(12).map(function(month) {
-        return { value: month, string: moment().month(month).format('MMM') };
-    });
     
-    $scope.hours = d3.range(24).map(function(hour) {
-        return { value: hour, string: moment().hour(hour).minute(0).format('HH:mm') };
-    });
-    
-    Project.getSites(function(data){
-        $scope.sites = data;
-    });
+    Project.getClasses(
+        {
+            validations: true,
+        },
+        function(classes) {
+            $scope.classes = classes;
+        }
+    );
     
     searchRecs('count');
     searchRecs('date_range');
+    getAvalilableFilters({});
     
     $scope.$watch(function(scope) {
         return [

@@ -730,6 +730,8 @@ var Recordings = {
     },
     
     findProjectRecordings: function(params, callback) {
+        console.log('params', params);
+        
         var schema = {
             project_id: joi.number().required(),
             range: joi.object().keys({
@@ -741,6 +743,8 @@ var Recordings = {
             months: [joi.number(), joi.array().items(joi.number())],
             days:   [joi.number(), joi.array().items(joi.number())],
             hours:  [joi.number(), joi.array().items(joi.number())],
+            validations:  [joi.number(), joi.array().items(joi.number())],
+            presence:  joi.string().valid('absent', 'present'),
             limit:  joi.number(),
             offset: joi.number(),
             sortBy: joi.string(),
@@ -772,11 +776,17 @@ var Recordings = {
             };
             
             var q = select[parameters.output] +
-                    "FROM recordings AS r \n"+
-                    "JOIN sites AS s ON s.site_id = r.site_id \n"+
-                    "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = %1$s\n"+
-                    "WHERE (s.project_id = %1$s \n"+
-                    "OR pis.project_id = %1$s) \n";
+                "FROM recordings AS r \n"+
+                "JOIN sites AS s ON s.site_id = r.site_id \n"+
+                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = %1$s\n";
+                    
+            if(parameters.validations) {
+                q += "LEFT JOIN recording_validations as rv ON r.recording_id = rv.recording_id \n"+
+                     "LEFT JOIN project_classes as pc ON pc.species_id = rv.species_id AND pc.songtype_id = rv.songtype_id \n";
+            }
+            
+            q += "WHERE (s.project_id = %1$s \n"+
+                 "OR pis.project_id = %1$s) \n";
                     
             q = sprintf(q, parameters.project_id);
             
@@ -786,31 +796,42 @@ var Recordings = {
                     ' AND ' + mysql.escape(getUTC(parameters.range.to)) + ' \n';
             }
             
-            if(parameters.sites){
+            if(parameters.sites) {
                 q += 'AND s.name IN (' + mysql.escape(parameters.sites) + ') \n';
             }
             
-            if(parameters.years){
+            if(parameters.years) {
                 q += 'AND YEAR(r.datetime) IN (' + mysql.escape(parameters.years) + ') \n';
             }
             
-            if(parameters.months){
+            if(parameters.months) {
                 var months;
                 
-                if(months instanceof Array)
+                if(parameters.months instanceof Array) {
                     months = parameters.months.map(function(m) { return parseInt(m)+1; });
-                else
+                }
+                else {
                     months = parseInt(parameters.months)+1;
+                }
                 
                 q += 'AND MONTH(r.datetime) IN (' + mysql.escape(months) + ') \n';
             }
             
-            if(parameters.days){
+            if(parameters.days) {
                 q += 'AND DAY(r.datetime) IN (' + mysql.escape(parameters.days) + ') \n';
             }
             
-            if(parameters.hours){
+            if(parameters.hours) {
                 q += 'AND HOUR(r.datetime) IN (' + mysql.escape(parameters.hours) + ') \n';
+            }
+            
+            if(parameters.validations) {
+                q += 'AND pc.project_class_id IN (' + mysql.escape(parameters.validations) + ') \n';
+                
+                if(parameters.presence) {
+                    var flag = parameters.presence == 'present' ? '1' : '0';
+                    q += 'AND rv.present = ' + flag + ' \n';
+                }
             }
             
             if(parameters.output === 'list') {

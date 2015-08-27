@@ -248,16 +248,17 @@
             };
             
             
-            $http.get('/api/job/types').success(function(jobTypes) {
-                var training = jobTypes.filter(function(type) {
-                    return type.name === "Model training";
+            $http.get('/api/project/'+Project.getUrl()+'/jobs/types')
+                .success(function(jobTypes) {
+                    var training = jobTypes.filter(function(type) {
+                        return type.name === "Model training";
+                    });
+                    
+                    if(!training.length)
+                        return console.error('training job info not found');
+                    
+                    $scope.jobDisabled = !training[0].enabled;
                 });
-                
-                if(!training.length)
-                    return console.error('training job info not found');
-                
-                $scope.jobDisabled = !training[0].enabled;
-            });
             
             $scope.totalPresentValidation = 0;
             

@@ -33,8 +33,15 @@ angular.module('a2.srv.project', [])
                         callback(data);
                     });
             },
-            getClasses: function(callback) {
-                $http.get('/api/project/'+url+'/classes')
+            getClasses: function(options, callback) {
+                if(typeof options == 'function') {
+                    callback = options;
+                    options = {};
+                }
+                
+                $http.get('/api/project/'+url+'/classes', {
+                        params: options
+                    })
                     .success(function(data) {
                         callback(data);
                     });
@@ -190,7 +197,12 @@ angular.module('a2.srv.project', [])
                 });
             },
             validationBySpeciesSong: function(speciesId, songtypeId, callback) {
-                $http.get( '/api/project/' + url + '/validations/' + speciesId + "/" + songtypeId)
+                $http.get( '/api/project/' + url + '/validations', {
+                        params: {
+                            species_id: speciesId,
+                            sound_id: songtypeId
+                        }
+                    })
                     .success(callback);
             }, 
         };
