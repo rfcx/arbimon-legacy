@@ -95,8 +95,10 @@
                         Validations:
                     </div>
                     <div class="a2-filter">
-                        <ui-select multiple ng-model="params.validations" theme="bootstrap" style="width: 500px;">
-                            <ui-select-match placeholder="Sounds...">{{$item.species_name}} - {{$item.songtype_name}} </ui-select-match>
+                        <ui-select multiple ng-model="params.validations" theme="bootstrap" style="width: 400px;">
+                            <ui-select-match placeholder="Sounds...">
+                                {{$item.species_name}} - {{$item.songtype_name}} 
+                            </ui-select-match>
                             <ui-select-choices class="has-badges" repeat="item in classes | filter:$select.search">
                                 {{item.species_name }} - {{ item.songtype_name }} 
                                 <span class="badge">
@@ -106,14 +108,16 @@
                             </ui-select-choices>
                         </ui-select>
                     </div>
-                    <!-- <div class="a2-filter">
-                        <ui-select ng-model="params.presence" theme="bootstrap" style="width: 150px;">
-                            <ui-select-match placeholder="present or absent">{{$item.value}}</ui-select-match>
+                    <div class="a2-filter">
+                        <ui-select ng-disabled="!params.validations || !params.validations.length" ng-model="params.presence" theme="bootstrap" style="width: 150px;">
+                            <ui-select-match allow-clear="true" placeholder="present or absent">
+                                {{ $select.selected }}
+                            </ui-select-match>
                             <ui-select-choices class="has-badges" repeat="item in presence | filter:$select.search">
-                                {{item}} 
+                                {{ item }} 
                             </ui-select-choices>
                         </ui-select>
-                    </div> -->
+                    </div>
                 </div>
                 <div class="a2-filter-row">
                     <button class="btn btn-default" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'">
@@ -133,7 +137,6 @@
         </accordion>
     </div>
 </div>
-                <pre>{{ params }}</pre>
 <div class="row">
     <div class="col-sm-3">
         <button class="btn btn-danger" 

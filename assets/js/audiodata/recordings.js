@@ -21,20 +21,29 @@ angular.module('a2.audiodata.recordings', [
     
         var mapValue = function(x) { return x.value; };
         
-        if($scope.params.sites && $scope.params.sites.length)
+        if($scope.params.sites && $scope.params.sites.length) {
             params.sites = $scope.params.sites.map(mapValue);
-        
-        if($scope.params.hours && $scope.params.hours.length) 
+        }
+        if($scope.params.hours && $scope.params.hours.length) {
             params.hours = $scope.params.hours.map(mapValue);
-        
-        if($scope.params.months && $scope.params.months.length)
+        }
+        if($scope.params.months && $scope.params.months.length) {
             params.months = $scope.params.months.map(mapValue);
-        
-        if($scope.params.years && $scope.params.years.length)
+        }
+        if($scope.params.years && $scope.params.years.length) {
             params.years = $scope.params.years.map(mapValue);
-            
-        if($scope.params.days && $scope.params.days.length)
+        }
+        if($scope.params.days && $scope.params.days.length) {
             params.days = $scope.params.days.map(mapValue);
+        }
+        if($scope.params.validations && $scope.params.validations.length) {
+            params.validations = $scope.params.validations.map(function(soundClass) {
+                return soundClass.id;
+            });
+        }
+        if($scope.params.presence) {
+            params.presence = $scope.params.presence;
+        }
         
         return params;
     };
@@ -72,11 +81,9 @@ angular.module('a2.audiodata.recordings', [
         return result.length > 0 ? result[0] : null;
     };
     
-    var getAvalilableFilters = function(filters, callback) {
-        console.log(filters);
+    var getAvalilableFilters = function(filters) {
         Project.getRecordingAvailability('---[1:31]', function(data) {
             
-            console.time('get lists');
             var lists = {
                 sites: [], // sitesList
                 years: [], // yearsList
@@ -123,10 +130,7 @@ angular.module('a2.audiodata.recordings', [
                 
                 return count;
             };
-            console.log(filters);
             getFilterOptions(filters, data, 0);
-            console.timeEnd('get lists');
-            console.log(lists);
             
             $scope.sites = lists.sites;
             $scope.years = lists.years;
@@ -134,7 +138,6 @@ angular.module('a2.audiodata.recordings', [
             $scope.months = lists.months.map(function(month) {
                 month.value = parseInt(month.value);
                 month.value--;
-                console.log(month);
                 return { 
                     value: month.value, 
                     string: $window.moment().month(month.value).format('MMM'), 
@@ -191,7 +194,7 @@ angular.module('a2.audiodata.recordings', [
     $scope.createPlaylist = function() {
         var listParams = readFilters();
         
-        if($.isEmptyObject(listParams))
+        if(!Object.keys(listParams).length)
             return;
             
         if(!a2UserPermit.can('manage playlists')) {
@@ -276,6 +279,7 @@ angular.module('a2.audiodata.recordings', [
     $scope.loading = true;
     $scope.params = {};
     $scope.classes = [];
+    $scope.presence = ['present', 'absent'];
     $scope.sites = [];
     $scope.years = [];
     $scope.months = [];
@@ -297,7 +301,7 @@ angular.module('a2.audiodata.recordings', [
     
     searchRecs('count');
     searchRecs('date_range');
-    getAvalilableFilters(readFilters());
+    getAvalilableFilters({});
     
     $scope.$watch(function(scope) {
         return [
