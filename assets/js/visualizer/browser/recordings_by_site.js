@@ -79,7 +79,8 @@ angular.module('a2.browser_recordings_by_site', [])
             var availability = self.dates.cache.get(key);
             if(!availability) {
                 self.dates.fetch_counts(key);
-            } else if(availability.data){
+            } 
+            else if(availability.data){
                 self.dates.date_counts = availability.data;
             }
         },
@@ -255,6 +256,8 @@ angular.module('a2.browser_recordings_by_site', [])
     this.set_date = function(date){
         this.date = date;
         if(!self.active){ return; }
+        
+        this.yearpickOpen = false;
         // $(document).find('.dropdown.open').removeClass('open');
         var site = this.site;
         if (site && date) {

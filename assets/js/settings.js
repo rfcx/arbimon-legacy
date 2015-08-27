@@ -53,6 +53,7 @@ angular.module('a2.settings',[
     });
     
     $scope.save = function() {
+        console.log($scope);
         if(!$scope.isValid)  return;
         
         Project.updateInfo({

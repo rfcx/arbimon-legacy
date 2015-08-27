@@ -26,7 +26,15 @@
                 </div>
                 
                 <div class="visobj-list-item" ng-show="!browser.loading.times && !browser.lovo.list.length ">
-                    (No {{browser.type.vobject_type | plural}} in list)
+                    <p ng-if="browser.type.name == 'rec'">
+                        Please, select a site and a date to browse
+                    </p>
+                    <p ng-if="browser.type.name == 'playlist'">
+                        Please, select a playlist to browse
+                    </p>
+                    <p ng-if="browser.type.name == 'soundscape'">
+                        No soundscapes found
+                    </p>
                 </div>
                 
                 <div class="visobj-list-item"
