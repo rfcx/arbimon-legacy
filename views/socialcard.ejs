@@ -1,0 +1,25 @@
+<% if(typeof card != 'undefined' && card){ %>
+    <% if(card.twitter){ %>
+    <meta name="description" content="<%= card.description %>" />
+    <!-- Twitter Card data -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@publisher_handle">
+    <meta name="twitter:title" content="Page Title">
+    <meta name="twitter:description" content="Page description less than 200 characters">
+    <meta name="twitter:creator" content="@author_handle">
+    <!-- Twitter summary card with large image must be at least 280x150px -->
+    <meta name="twitter:image:src" content="http://www.example.com/image.html">
+    <% } %>
+    
+    <!-- Open Graph data -->
+    <meta property="og:title" content="<%= card.name %>" />
+    <meta property="og:type" content="<%= card.type || 'article' %>" />
+    <meta property="og:url" content="<%= card.url %>" />
+    <meta property="og:image" content="<%= card.image.fb %>" />
+    <meta property="og:description" content="<%= card.description %>" />
+    <meta property="og:site_name" content="Arbimon II" />
+    <meta property="article:published_time" content="<%= card.date %>" />
+    <% if(card.section){ %><meta property="article:section" content="<%= card.section %>" /><% } %>
+    <% if(card.tags){ %><meta property="article:tag" content="ArbimonII,<%= card.tags %>" /><% } %>
+    <% if(card.fbadmins){ %><meta property="fb:admins" content="<%= card.fbadmins %>" /><% } %>
+<% } %>

@@ -1,7 +1,11 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge"> 
-<meta name="description" content="Arbimon II - Bio-acoustics analyzer">
-<meta name="keywords" content="biodiversity, acoustics, audio">
+<% if(typeof card != 'undefined' && card){ %>
+    <% include socialcard %>
+<% } else { %>
+    <meta name="description" content="Arbimon II - Bio-acoustics analyzer">
+    <meta name="keywords" content="biodiversity, acoustics, audio">
+<% } %>
 
 <link rel="stylesheet" type="text/css" href="/assets/font-awesome/css/font-awesome.min.css" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">

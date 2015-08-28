@@ -3,10 +3,19 @@ var express = require('express');
 var model = require('../model');
 var router = express.Router();
 
+var cardStack = require('./resource-cards');
+var cardResolver = require('../utils/card-resolver')(cardStack);
+
 // discards rest of path
 router.use('/', function(req, res, next){
-    var m = /(\/([^\/]+))\/(.+)/.exec(req.url);
+    var m = /^(\/([^\/]+))\/(.+)$/.exec(req.url);
     if(m){
+        var m2 = /(.+)\.card\.json$/.exec(m[3]);
+        if(m2){
+            m[3] = m2[1];
+            req.show_card = true;
+        }
+        req.inAppUrl =  m[3];
         req.originalUrl = req.originalUrl.substring(0, req.originalUrl.length - m[3].length);
         req.url = m[1];
         next('route');
@@ -55,14 +64,24 @@ router.get('/:projecturl?/', function(req, res, next) {
                     id: project.project_id,
                     name: project.name
                 };
-
-                // return next();
-                return res.render('app', { 
-                    project: req.project, 
-                    url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
-                    user: req.session.user,  
-                    planAlert: project.plan_due < new Date() ? 'expired' : ''
-                });
+                
+                cardResolver.getCardFor(project, req.originalUrl, req.inAppUrl).then(function(card){
+                    if(req.show_card){ 
+                        if(card){
+                            res.json(card);
+                        } else {
+                            res.status(404).json({});
+                        }
+                    } else {
+                        res.render('app', { 
+                            project: req.project, 
+                            url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
+                            user: req.session.user,  
+                            card: card,
+                            planAlert: project.plan_due < new Date() ? 'expired' : ''
+                        });
+                    }
+                }, next);
 
             });
         }
