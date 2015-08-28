@@ -125,6 +125,8 @@ var sqlutil = {
                 return subject + ' IN (' + mysql.escape(query.IN) + ')';
             } else if (query.BETWEEN) {
                 return subject + ' BETWEEN ' + mysql.escape(query.BETWEEN[0]) + ' AND ' + mysql.escape(query.BETWEEN[1]);
+            } else if(query.no_match){
+                return '1 = 0';
             }
         }
         return undefined;

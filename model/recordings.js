@@ -91,7 +91,7 @@ var Recordings = {
                             if(data && data.length){
                                 parsedUrl.site = data[0].name;
                             } else {
-                                parsedUrl.site = null;
+                                parsedUrl.site = {no_match:true};
                             }
                             return parsedUrl;
                         });
@@ -160,6 +160,7 @@ var Recordings = {
             };
         }).bind(this));
     },
+    // TODO:: remove unused function
     applyQueryItem: function(subject, query){
         if(query){
             if (query['=']) {
