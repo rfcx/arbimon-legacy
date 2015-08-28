@@ -3,6 +3,17 @@ var express = require('express');
 var model = require('../model');
 var router = express.Router();
 
+// discards rest of path
+router.use('/', function(req, res, next){
+    var m = /(\/([^\/]+))\/(.+)/.exec(req.url);
+    if(m){
+        req.originalUrl = req.originalUrl.substring(0, req.originalUrl.length - m[3].length);
+        req.url = m[1];
+        next('route');
+    } else {
+        next();
+    }
+});
 
 router.get('/:projecturl?/', function(req, res, next) {
     var project_url = req.params.projecturl;
@@ -48,6 +59,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                 // return next();
                 return res.render('app', { 
                     project: req.project, 
+                    url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
                     user: req.session.user,  
                     planAlert: project.plan_due < new Date() ? 'expired' : ''
                 });

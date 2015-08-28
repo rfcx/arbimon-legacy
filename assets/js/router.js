@@ -32,8 +32,9 @@ var a2 = angular.module('arbimon2', [
         }
     });
 })
-.config(function($urlRouterProvider, AngularyticsProvider) {
+.config(function($urlRouterProvider, $locationProvider, AngularyticsProvider) {
     AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
+    $locationProvider.html5Mode(true);
     $urlRouterProvider.otherwise("/dashboard");
 })
 .controller('MainCtrl', function($scope, $state){
