@@ -150,7 +150,8 @@ var Users = {
                 "JOIN user_project_role AS upr2 ON (p.project_id = upr2.project_id) \n"+
                 "JOIN users AS u ON (upr.user_id = u.user_id) \n"+
                 "WHERE upr2.user_id = ? \n"+
-                "OR p.is_private = 0;";
+                "OR p.is_private = 0 \n"+
+                "GROUP BY p.project_id";
 
         q = mysql.format(q, [user_id]);
         queryHandler(q, callback);

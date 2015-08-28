@@ -89,7 +89,8 @@ router.get('/info', function(req, res) {
         username: user.username,
         email: user.email,
         name: user.firstname,
-        lastname: user.lastname
+        lastname: user.lastname,
+        isAnonymousGuest:  user.isAnonymousGuest,
     });
 });
 
