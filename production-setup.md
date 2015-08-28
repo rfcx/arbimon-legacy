@@ -4,7 +4,7 @@
  1. install app system dependencies
    ```
    curl -sL https://deb.nodesource.com/setup_0.10 | sudo bash -
-   sudo apt-get install -y python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev python-virtualenv
+   sudo apt-get install -y python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev pkg-config python-virtualenv
    ```
 
 
@@ -32,7 +32,9 @@
     ```
     git clone -b production https://github.com/Sieve-Analytics/arbimon2.git app
     cd app
-    npm run-script setup
+    sh scripts/setup/010-make_virtual_env.sh
+    npm i && bower i
+    grunt prod
     ```
     
     
