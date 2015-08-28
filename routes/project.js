@@ -81,7 +81,19 @@ router.get('/:projecturl?/', function(req, res, next) {
                             planAlert: project.plan_due < new Date() ? 'expired' : ''
                         });
                     }
-                }, next);
+                }, function(err){
+                    if(req.show_card){ 
+                        next(err);
+                    } else {
+                        res.render('app', { 
+                            project: req.project, 
+                            url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
+                            user: req.session.user,  
+                            card: undefined,
+                            planAlert: project.plan_due < new Date() ? 'expired' : ''
+                        });
+                    }
+                });
 
             });
         }
