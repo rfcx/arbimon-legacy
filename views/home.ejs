@@ -20,8 +20,9 @@
                         <button class="btn btn-default" 
                             tooltip="Create a project"
                             tooltip-trigger="mouseenter"
-                            ng-click="createProject() | trackEvent:'Home':'createProject'">
-                            <i class="fa fa-plus"></i>
+                            ng-click="createProject() | trackEvent:'Home':'createProject'"
+                            ng-hide="isAnonymousGuest">
+                                <i class="fa fa-plus"></i>
                         </button>
                     </h3>
                 </div>

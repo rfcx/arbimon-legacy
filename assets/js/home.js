@@ -15,30 +15,19 @@ angular.module('a2.home', [
 })
 .controller('HomeCtrl', function($scope, $http, $modal, notify, a2order) {
     
-    $scope.currentPage = 1;
-    
     $scope.loadProjectList = function() {
-        $http.get('api/user/projectlist')
+        $http.get('/api/user/projectlist')
         .success(function(data) {
             $scope.projects = data;
         });
     };
-    
-    $scope.loadProjectList();
-    
-    var nextNewsPage = 0;
-    $scope.newsFeed = [];
-    
     $scope.loadNewsPage = function() {
-        $http.get('api/user/feed/'+ nextNewsPage)
+        $http.get('/api/user/feed/'+ nextNewsPage)
             .success(function(data) {
                 $scope.newsFeed = $scope.newsFeed.concat(data);
                 nextNewsPage++;
             });
     };
-    
-    $scope.loadNewsPage();
-    
     $scope.displayTime = function(d) {
         return moment(d).fromNow();
     };
@@ -51,6 +40,19 @@ angular.module('a2.home', [
             $scope.loadProjectList();
         });
     };
+    
+    
+    $scope.currentPage = 1;
+    $scope.isAnonymousGuest = true;
+    var nextNewsPage = 0;
+    $scope.newsFeed = [];
+    $scope.loadProjectList();
+    $scope.loadNewsPage();
+    
+    $http.get('/api/user/info')
+        .success(function(data) {
+            $scope.isAnonymousGuest = data.isAnonymousGuest;
+        });
 })
 
 ;

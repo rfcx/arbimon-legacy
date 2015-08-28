@@ -245,6 +245,7 @@ router.post('/login', function(req, res, next) {
                 lastname: user.lastname,
                 isSuper: user.is_super,
                 imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, req.secure == 'https'),
+                isAnonymousGuest: false,
             };
             
             response.success = true;
