@@ -65,7 +65,8 @@ router.get('/:projecturl?/', function(req, res, next) {
                     name: project.name
                 };
                 
-                cardResolver.getCardFor(project, req.originalUrl, req.inAppUrl).then(function(card){
+                var appAbsUrl = req.appHost + req.originalUrl;
+                cardResolver.getCardFor(project, appAbsUrl, req.inAppUrl).then(function(card){
                     if(req.show_card){ 
                         if(card){
                             res.json(card);
