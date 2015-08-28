@@ -379,12 +379,6 @@ router.get('/project/:projectUrl/classification/:classiId/more/:from/:total', fu
 });
 
 router.get('/project/:projectUrl/classification/:cid/delete', function(req, res) {
-    if (!req.haveAccess(project_id, "manage models and classification")) {
-        return res.json({
-            err: "You dont have permission to 'manage models and classification'"
-        });
-    }
-    
     model.projects.findByUrl(req.params.projectUrl, function(err, rows) {
         if (err) {
             res.json({
@@ -399,6 +393,12 @@ router.get('/project/:projectUrl/classification/:cid/delete', function(req, res)
             return;
         }
         var project_id = rows[0].project_id;
+        
+        if(!req.haveAccess(project_id, "manage models and classification")) {
+            return res.json({
+                err: "You dont have permission to 'manage models and classification'"
+            });
+        }
 
         model.projects.classificationDelete(req.params.cid, function(err, data) {
             res.json(data);
@@ -569,35 +569,6 @@ router.get('/project/classification/csv/:cid', function(req, res) {
                            thisrow.scientific_name+'","'+ thisrow.songtype+'"');
                 }
                 res.send(data.join("\n"));
-                /*
-                async.eachLimit(row ,5,
-                    function(thisrow,callback)
-                    {
-                        var maxVal = thisrow['mvv']
-                        var tprec = 0;
-                           if(maxVal >= th )
-                        {
-                            tprec = 1;
-                        }                     
-
-                        data.push( '"'+ thisrow['rec']+'",'+ thisrow['present']+','+tprec +','+th+','+maxVal+','+
-                           thisrow['name']+',' + thisrow['year']+',' + thisrow['month']+','+
-                           thisrow['day']+',' + thisrow['hour']+','+ thisrow['min']+',"' +
-                           thisrow['scientific_name']+'","'+ thisrow['songtype']+'"');
-                      
-                        callback();
-
-
-                    },
-                    function(err)
-                    {
-                        if (err)
-                        {
-                            res.json({"err": "Error fetching classification information."});
-                        }
-                        res.send(data.join("\n"));
-                    }
-                );*/
             }
             else
             {
