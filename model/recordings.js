@@ -5,6 +5,7 @@
 var util  = require('util');
 var path   = require('path');
 var Q = require('q');
+var fs = require('fs');
 
 var debug = require('debug')('arbimon2:model:recordings');
 var async = require('async');
@@ -337,15 +338,18 @@ var Recordings = {
                 recording.sample_rate = recStats.sample_rate;
                 recording.duration = recStats.duration;
                 recording.samples = recStats.samples;
-                recording.file_size = recStats.file_size;
                 recording.bit_rate = recStats.bit_rate;
                 recording.precision = recStats.precision;
                 recording.sample_encoding = recStats.sample_encoding;
                 
-                Recordings.update(_.cloneDeep(recording), function(err, results) {
-                    if(err) callback(err);
-                    console.log('rec %s info added to DB', recording.id);
-                    callback(null, recording);
+                fs.stat(cachedRecording.path, function(err, stats){
+                    if(err){ callback(err); return; }
+                    recording.file_size = stats.size;
+                    Recordings.update(_.cloneDeep(recording), function(err, results) {
+                        if(err){ callback(err); return; }
+                        console.log('rec %s info added to DB', recording.id);
+                        callback(null, recording);
+                    });
                 });
                 
             });
