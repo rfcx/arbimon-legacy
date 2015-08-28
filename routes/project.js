@@ -10,14 +10,14 @@ var cardResolver = require('../utils/card-resolver')(cardStack);
 router.use('/', function(req, res, next){
     var m = /^(\/([^\/]+))\/(.+)$/.exec(req.url);
     if(m){
+        req.url = m[1]; 
+        req.originalUrl = req.originalUrl.substring(0, req.originalUrl.length - m[3].length);
         var m2 = /(.+)\.card\.json$/.exec(m[3]);
         if(m2){
             m[3] = m2[1];
             req.show_card = true;
         }
         req.inAppUrl =  m[3];
-        req.originalUrl = req.originalUrl.substring(0, req.originalUrl.length - m[3].length);
-        req.url = m[1];
         next('route');
     } else {
         next();

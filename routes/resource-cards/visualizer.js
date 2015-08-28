@@ -20,7 +20,7 @@ module.exports.rec = function(project, appUrl, url){
         
         return {
             name: recording.site + " " + recording.datetime,
-            url : appUrl + '/visualizer/rec/' + recording.id,
+            url : appUrl + 'visualizer/rec/' + recording.id,
             image : {
                 fb : recording.thumbnail 
             },
