@@ -52,4 +52,10 @@ angular.module('a2.login', ['humane', 'g-recaptcha'])
         });
     };
     
-});
+})
+.controller('RedirectToLoginCtrl', function($scope, $window) {
+    var redirect = $window.location.pathname + $window.location.search + $window.location.hash;
+    
+    $scope.loginUrl = "/login?redirect=" + encodeURIComponent(redirect);
+})
+;

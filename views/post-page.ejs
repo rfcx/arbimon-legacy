@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <% include head %>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ARBIMON II - <%= title %></title>
+</head>
+
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="/" class="navbar-brand">
+                    <img src="/images/logo.svg">
+                </a>
+            </div>
+            <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
+                
+                <ul class="nav navbar-nav">
+                    <li><a href="/home"></i> Explore</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-offset-1 col-sm-10">
+                <div class="page-header">
+                    <h1><%= title %></h1>
+                </div>
+                    
+                <%- include(content) %>
+            </div>
+        </div>
+    </div>
+    
+    <% include footer %>
+</body>
+
+</html>

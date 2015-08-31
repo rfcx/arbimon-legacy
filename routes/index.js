@@ -13,11 +13,15 @@ var login = require('./login');
 router.use('/', login);
 
 router.get('/terms', function(req, res) {
-    res.render('terms');
+    res.render('post-page', { title: "Terms of use", content: 'terms' });
+});
+
+router.get('/privacy', function(req, res) {
+    res.render('post-page', { title: "Privacy policy", content: 'privacy' });
 });
 
 router.get('/support', function(req, res) {
-    res.render('support');
+    res.render('post-page', { title: "Support", content: 'support' });
 });
 
 router.get('/classifiers', function(req, res) {

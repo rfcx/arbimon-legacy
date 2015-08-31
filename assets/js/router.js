@@ -7,6 +7,7 @@ var a2 = angular.module('arbimon2', [
     'a2.analysis',
     'a2.jobs',
     'a2.settings',
+    'a2.login',
     'angularytics',
     'ui.router', 
     'ct.ui.router.extras',

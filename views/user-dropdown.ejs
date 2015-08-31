@@ -6,8 +6,8 @@
     </a>
     <% if(user.isAnonymousGuest) { %>
         <ul class="dropdown-menu" role="menu">
-            <li class="">
-                <a href="/login">
+            <li class="" ng-controller="RedirectToLoginCtrl">
+                <a ng-href="{{ loginUrl }}">
                     <i class="fa fa-sign-in"></i> Log In
                 </a>
             </li>
