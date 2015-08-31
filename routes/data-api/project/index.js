@@ -20,7 +20,7 @@ var training_set_routes = require('./training_sets');
 var playlist_routes = require('./playlists');
 var soundscape_routes = require('./soundscapes');
 var jobsRoutes = require('./jobs');
-
+var classiRoutes = require('./classifications');
 
 router.param('projectUrl', function(req, res, next, project_url){
     model.projects.find({ url: project_url }, function(err, rows) {
@@ -32,8 +32,32 @@ router.param('projectUrl', function(req, res, next, project_url){
             return res.status(404).json({ error: "project not found"});
         }
 
-        req.project = rows[0];
-        return next();
+        var project = rows[0];
+        
+        var permissions = req.session.user.permissions && req.session.user.permissions[project.project_id];
+        
+        if(!permissions) {
+            model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) { 
+                if(project.is_private && !rows.length && req.session.user.isSuper === 0) {
+                    // if not authorized to see project send 401
+                    return res.sendStatus(401);
+                }
+
+                if(!req.session.user.permissions)
+                    req.session.user.permissions = {};
+
+                req.session.user.permissions[project.project_id] = rows;
+                
+                req.project = project;
+                
+                return next();
+            });
+        }
+        else {
+            req.project = project;
+            
+            return next();
+        }
     });
 });
 
@@ -332,11 +356,12 @@ router.get('/:projectUrl/usage', function(req, res, next) {
     });
 });
 
+
 router.use('/:projectUrl/recordings', recording_routes);
 router.use('/:projectUrl/training-sets', training_set_routes);
 router.use('/:projectUrl/playlists', playlist_routes);
 router.use('/:projectUrl/soundscapes', soundscape_routes);
 router.use('/:projectUrl/jobs', jobsRoutes);
-
+router.use('/:projectUrl/classifications', classiRoutes);
 
 module.exports = router;

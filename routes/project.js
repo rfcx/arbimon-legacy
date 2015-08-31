@@ -50,7 +50,7 @@ router.get('/:projecturl?/', function(req, res, next) {
 
                 if(project.is_private && !rows.length && req.session.user.isSuper === 0) {
                     // if not authorized to see project send 404
-                    return next(); 
+                    return res.redirect('/home'); 
                 }
 
                 if(!req.session.user.permissions)

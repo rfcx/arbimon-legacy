@@ -47,7 +47,7 @@ router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
             firstname: 'Anonymous',
             lastname: 'Guest',
             isAnonymousGuest: true,
-            isSuper: false,
+            isSuper: 0,
             imageUrl: gravatar.url(new Date().getTime() + '@b.com', { d: 'monsterid', s: 60 }, req.secure == 'https'),
             projectLimit: 0
         };
@@ -292,7 +292,7 @@ router.get('/logout', function(req, res, next) {
     req.session.destroy(function(err) {
         if(err) return next(err);
         
-        res.redirect('/login');
+        res.redirect('/');
     });
 });
 
