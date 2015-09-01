@@ -37,16 +37,22 @@ then
     curl -c a2.cookie -v -k --data "username=$user&password=$pass" "$host/login"
 fi
 
-info="info={\"format\":\"Arbimon\",\"site\":{\"id\":$site_id},\"recorder\":\"unknown\",\"mic\":\"unknown\",\"sver\":\"unknown\"}"
-project="project={\"project_id\":$project_id}"
+info="info={\"recorder\":\"unknown\",\"mic\":\"unknown\",\"sver\":\"unknown\"}"
 
-for f in `ls $directory`
+for f in `find $directory -type f -name '*.wav' -o -name '*.flac'`
 do 
-    path=`echo "$directory/$f" | sed 's/\/\//\//'`
+    path=`echo "$f" | sed 's/\/\//\//'`
+    echo " uploading $path"
     
     curl -k -b a2.cookie \
-    -vvv -include --form "$project" --form "$info" --form "file=@$path" \
-    "$host/uploads/audio/project/$project_id"
+    -vvv -include --form "$info" --form "file=@$path" \
+    "$host/uploads/audio?project=$project_id&site=$site_id&nameformat=Arbimon"
     
-    echo "$f done"
+    if [ -n $? ]
+    then
+        echo "error $?"
+        echo "$path" >> error.txt
+    else
+        echo "done"
+    fi
 done
