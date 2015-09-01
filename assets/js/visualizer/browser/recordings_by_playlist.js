@@ -264,14 +264,20 @@ angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
                 var playlist = self.playlists.filter(function(playlist){
                     return playlist.id == plid;
                 }).shift();
+                
                 if(playlist){
                     self.playlist = playlist;
                     self.lovo = new a2PlaylistLOVO(playlist);
-                    self.lovo.initialize().then(function(){
-                        return self.lovo.find(recid);
-                    }).then(function(recording){
-                        defer.resolve(recording);
-                    });
+                    self.lovo.initialize()
+                        .then(function(){
+                            return a2Browser.setLOVO(self.lovo);
+                        })
+                        .then(function(){
+                            return self.lovo.find(recid);
+                        })
+                        .then(function(recording){
+                            defer.resolve(recording);
+                        });
                 } else {
                     defer.resolve();
                 }

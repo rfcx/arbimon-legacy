@@ -48,7 +48,21 @@ angular.module('a2.visualizer', [
     })
     .state('visualizer.view', {
         url: '/:type/:idA/:idB/:idC',
-        params:{type:'', idA:{value:'', squash:true}, idB:{value:'', squash:true}, idC:{value:'', squash:true}},
+        params:{ 
+            type:'', 
+            idA: {
+                value:'', 
+                squash:true
+            }, 
+            idB:{
+                value:'', 
+                squash:true
+            }, 
+            idC:{
+                value:'', 
+                squash:true
+            }
+        },
         controller: function($state, $scope){
             var p = $state.params;
             var lc = [p.type];
@@ -62,7 +76,8 @@ angular.module('a2.visualizer', [
                 }
             }
             var l = lc.join('/');
-            console.log(".state('visualizer.rec', { controller: function($state, $scope){ $state.params: ", $state.params);
+            // console.log(".state('visualizer.rec', { controller: function($state, $scope){ $state.params: ", $state.params);
+            
             $scope.location.whenBrowserIsAvailable(function(){
                 $scope.$parent.$broadcast('set-browser-location', [l]);
             });
@@ -101,7 +116,7 @@ angular.module('a2.visualizer', [
             if(dont_sync){
                 this.__expected = location;
             }
-            // $location.path(this.prefix + location);
+            $location.path(this.prefix + location);
         },
         path_changed : function(path){
             if(path === undefined){
@@ -170,7 +185,7 @@ angular.module('a2.visualizer', [
     
     $scope.visobject = null;
     
-    var location = new a2VisualizerLocationManager($scope, ($state.current.url || '/visualizer') + '/');
+    var location = new a2VisualizerLocationManager($scope, '/visualizer' + '/');
     $scope.location = location;
     
     $scope.set_location = location.set.bind(location);
@@ -190,10 +205,6 @@ angular.module('a2.visualizer', [
         return $scope.layers;
     };
     
-    $scope.$on('browser-vobject-type', function(evt, type){
-        $scope.visobject_type = type;
-    });
-    
     $scope.setVisObject = function(visobject, type, location){
         if (visobject) {
             $scope.visobject_location = location;
@@ -212,20 +223,26 @@ angular.module('a2.visualizer', [
             $scope.visobject = null;
         }
     };
+    
     $scope.audio_player = new a2AudioPlayer($scope);
+    
+    $scope.$on('browser-vobject-type', function(evt, type){
+        $scope.visobject_type = type;
+    });
+    
     $scope.$on('browser-available', function(){
         $scope.location.notifyBrowserAvailable();
     });
+    
     $rootScope.$on('notify-visobj-updated', function(){
         var args = Array.prototype.slice.call(arguments, 1);
         args.unshift('visobj-updated');
         $scope.$broadcast.apply($scope, args);
     });
+    
     $scope.$on('visobj-updated', function(visobject){
         $scope.setVisObject($scope.visobject, $scope.visobject_type, $scope.visobject_location);
     });
-
-    // $scope.setRecording(test_data.recording);
 })
 .service('a2AudioPlayer', function(ngAudio){
     var a2AudioPlayer = function(scope){

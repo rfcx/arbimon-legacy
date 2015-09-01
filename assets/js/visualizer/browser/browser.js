@@ -20,14 +20,13 @@ angular.module('a2.visobjectsbrowser', [
         restrict : 'E',
         scope : {
             location    : '=?',
-            onVisObject : '&onVisObject'
+            onVisObject : '&'
         },
         templateUrl : '/partials/visualizer/browser/main.html',
         controller  : 'a2VisObjectBrowserController as browser',
         link : function(scope, element, attrs){
             var browser = scope.browser;
             browser.events.on('browser-available', function(){
-                console.log("browser.events.on('browser-available', function(){");
                 scope.$emit('browser-available');
             });
             browser.events.on('location-changed', function(){
@@ -128,20 +127,22 @@ angular.module('a2.visobjectsbrowser', [
         var old_lovo = self.lovo;
         self.lovo = lovo;
         if(lovo){
-            lovo.initialize().then(function(){
-                if(location){
-                    self.set_location(location);
-                }
-                if(self.auto.visobject){
-                    lovo.find(self.auto.visobject).then(function(visobject){
-                        self.visobj = visobject;
+            lovo.initialize()
+                .then(function(){
+                    if(location){
+                        self.set_location(location);
+                    }
+                    if(self.auto.visobject){
+                        lovo.find(self.auto.visobject).then(function(visobject){
+                            self.visobj = visobject;
+                            defer.resolve(lovo);
+                        });
+                    } else {
                         defer.resolve(lovo);
-                    });
-                } else {
-                    defer.resolve(lovo);
-                }
-            });
-        } else {
+                    }
+                });
+        } 
+        else {
             defer.resolve();
         }
         return defer.promise;
@@ -179,7 +180,7 @@ angular.module('a2.visobjectsbrowser', [
                 return self.activate();
             }
         }).then(function(){
-            self.events.send({'event':'browser-vobject-type', context:this}, type.vobject_type);
+            self.events.send({'event':'browser-vobject-type', context:self}, type.vobject_type);
         });
     };
 
@@ -220,18 +221,21 @@ angular.module('a2.visobjectsbrowser', [
         }
     };
     this.setBrowserLocation = function(evt, location){
-        console.log("this.setBrowserLocation = function(evt, location){", evt, location, "){");
-        var m=/([\w+]+)(\/(.+))?/.exec(location);
+        // console.log("this.setBrowserLocation = function(evt, location){", evt, location, "){");
+        var m = /([\w+]+)(\/(.+))?/.exec(location);
+        
         if(m && browser_lovos[m[1]]){
             var loc = m[3];
             var lovos_def = browser_lovos[m[1]];
-            this.setBrowserType(lovos_def).then(function(){
-                return lovos_def.$controller.resolve_location(loc);
-            }).then(function(visobject){
-                if(visobject){
-                    self.selectVisObject(visobject);
-                }
-            });
+            this.setBrowserType(lovos_def)
+                .then(function(){
+                    return lovos_def.$controller.resolve_location(loc);
+                })
+                .then(function(visobject){
+                    if(visobject){
+                        self.selectVisObject(visobject);
+                    }
+                });
         }
     };
     this.notifyVisobjUpdated = function(evt, visobject){
