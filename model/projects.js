@@ -123,11 +123,13 @@ var Projects = {
                 "       s.alt, \n"+
                 "       s.published, \n"+
                 "       COUNT( r.recording_id ) as rec_count, \n"+
+                "       COUNT( SLF.site_log_file_id ) > 0 as has_logs, \n"+
                 "       s.project_id != %1$s AS imported, \n"+
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = %1$s \n"+
                 "LEFT JOIN recordings AS r ON s.site_id = r.site_id \n"+
+                "LEFT JOIN site_log_files AS SLF ON s.site_id = SLF.site_id \n"+
                 "WHERE (s.project_id = %1$s \n"+
                 "OR pis.project_id = %1$s) \n"+
                 "GROUP BY s.site_id";

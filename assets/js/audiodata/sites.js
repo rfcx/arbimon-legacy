@@ -5,7 +5,7 @@ angular.module('a2.audiodata.sites', [
     'humane',
     'a2.qr-js'
 ])
-.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, a2UserPermit) {
+.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, a2UserPermit) {
     $scope.loading = true;
     
     Project.getInfo(function(info){
@@ -17,12 +17,18 @@ angular.module('a2.audiodata.sites', [
         $scope.loading = false;
         
         var psite = $state.params.site;
+        var pshow = $state.params.show;
         if(psite){
             var site = sites.filter(function(s){return s.id == psite;}).shift();
             if(site){
-                $scope.sel(site);
+                $scope.sel(site).then(function(){
+                    if(pshow){
+                        $scope.set_show(pshow);
+                    }
+                });
             }
         }
+// )
     });
     
     $scope.editing = false;
@@ -57,6 +63,8 @@ angular.module('a2.audiodata.sites', [
         $scope.editing = false;
         $scope.map.removeEventListener('click', moveMarker);
     };
+
+    $scope.status_controller = $controller('SiteStatusPlotterController', {'$scope':$scope});
     
     $scope.save = function() {
         var action = $scope.editing ? 'update' : 'create';
@@ -120,6 +128,16 @@ angular.module('a2.audiodata.sites', [
         });
     };
     
+    $scope.show = 'map';
+    $scope.set_show = function(new_show){
+        if(new_show == 'status' && $scope.selected && $scope.selected.has_logs){
+            $scope.status_controller.activate($scope.selected);
+        } else {
+            new_show='map';
+        }
+        $scope.show = new_show;
+        return $state.transitionTo($state.current.name, {site:$state.params.site, show:new_show}, {notify:false});
+    };
     // $scope.browseShared = function() {
     //     var modalInstance = $modal.open({
     //         templateUrl: '/partials/audiodata/browse-published-sites.html',
@@ -156,6 +174,7 @@ angular.module('a2.audiodata.sites', [
         }
         
         $scope.temp = {};
+        $scope.set_show('map');
         
         if($scope.marker) {
             $scope.map.removeLayer($scope.marker);
@@ -176,6 +195,7 @@ angular.module('a2.audiodata.sites', [
             return;
         }
         
+        $scope.set_show('map');
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
         
@@ -201,10 +221,14 @@ angular.module('a2.audiodata.sites', [
     };
     
     $scope.sel = function(site) {
-        return $state.transitionTo($state.current.name, {site:site.id}, {notify:false}).then(function(){
+        return $state.transitionTo($state.current.name, {site:site.id, show:$state.params.show}, {notify:false}).then(function(){
             $scope.close();
             
             $scope.selected = site;
+            
+            if(!site || !site.has_logs){
+                $scope.set_show('map');
+            }
             
             if(!$scope.marker) {
                 $scope.marker = new $window.L.marker(site)
@@ -367,4 +391,29 @@ angular.module('a2.audiodata.sites', [
             });
         };
     })
+
+.controller('SiteStatusPlotterController', function($scope, a2Sites){
+    this.activate = function(selected_site){
+        this.selected_site = selected_site;
+        this.refresh_logs();
+    };
+    
+    this.refresh_logs = function(){
+        // conso
+    };
+    this.data = {
+        series:[
+            {name:'Battery Status', icon:'fa fa-fw fa-plug'},
+            {name:'Voltage', icon:'fa fa-fw fa-bolt'},
+            {name:'Power', icon:'fa fa-fw fa-battery-half'}
+        ],
+        // min_date: 0,
+        // max_date: 10000,
+    };
+    this.selected = {
+        series:[],
+        from:undefined,
+        to:undefined
+    };
+})
 ;

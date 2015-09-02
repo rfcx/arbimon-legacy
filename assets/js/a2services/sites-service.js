@@ -39,6 +39,11 @@ angular.module('a2.srv.sites', [
         },
         
         // Uses Promises :-)
+        getLogFiles: function(site, callback) {
+            return $http.get('/api/project/'+ Project.getUrl() +'/sites/'+site+'/logs');
+        },
+        
+        // Uses Promises :-)
         generateToken : function(site){
             return $http.post('/api/project/'+ Project.getUrl() +'/sites/generate-token', {
                 site: site.id

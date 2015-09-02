@@ -44,6 +44,12 @@
             <i class="fa fa-trash"></i>
         </button>
     </div>
+    <div class="col-md-3">
+        <ul class="nav nav-pills">
+            <li ng-class="{'active':show == 'map'}"><a ng-click="set_show('map')" >Location</a></li>
+            <li ng-class="{'active':show == 'status'}" ng-disabled='!selected.has_logs'><a ng-click="set_show('status')" >Status</a></li>
+        </ul>
+    </div>
 </div>
 <div class="row">
     <div class="col-md-7" ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
@@ -56,6 +62,7 @@
                 <i ng-show="row.imported" class="fa fa-users" title="Site is Imported"></i>
             </field> -->
             <field>
+                <i ng-show="row.has_logs && !row.imported" class="fa fa-book" title="Has status logs"></i>
                 <i ng-show="row.token_created_on && !row.imported" class="fa fa-link" title="Has a Token"></i>
             </field>
             <field title="No. of recordings" key="rec_count">
@@ -143,8 +150,52 @@
                 </form>
             </div>
         </div>
-        <div class="panel panel-default">
+        <div class="panel panel-default" ng-show="show=='map'">
             <div class="map" id="map-site"></div>
+        </div>
+        <div class="panel panel-default" ng-show="show=='status'">
+            <div class="a2-filter-row">
+                <div class="a2-filter a2-filter-text">
+                    Show:
+                </div>
+                <div class="a2-filter">
+                    <ui-select multiple ng-model="status_controller.selected.series" theme="bootstrap" style="width: 300px;">
+                        <ui-select-match><i ng-class="$item.icon"></i> {{$item.name}}</ui-select-match>
+                        <ui-select-choices repeat="item in status_controller.data.series">
+                            <i ng-class="item.icon"></i>
+                            {{item.name}} 
+                        </ui-select-choices>
+                    </ui-select>
+                </div>
+            </div>
+            <div class="a2-filter-row">
+                <div class="a2-filter a2-filter-text">
+                    From:
+                </div>
+                <div class="a2-filter">
+                    <button class="btn btn-default" type="text" 
+                        yearpick 
+                        min-date="status_controller.data.min_date"
+                        max-date="status_controller.selected.to || status_controller.data.max_date"
+                        ng-model="status_controller.selected.from">
+                        <span ng-hide="status_controller.selected.from"> Select Date </span>
+                        {{ status_controller.selected.from | momentUtc: 'll' }}
+                    </button>
+                </div>
+                <div class="a2-filter a2-filter-text">
+                    To:
+                </div>
+                <div class="a2-filter">
+                    <button class="btn btn-default" type="text" 
+                        yearpick 
+                        min-date="status_controller.selected.from || status_controller.data.min_date"
+                        max-date="status_controller.data.max_date"
+                        ng-model="status_controller.selected.to">
+                        <span ng-hide="status_controller.selected.to"> Select Date </span>
+                        {{ status_controller.selected.to | momentUtc: 'll' }}
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

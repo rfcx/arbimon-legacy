@@ -121,6 +121,15 @@ router.param('siteid', function(req, res, next, siteid){
     });
 });
 
+router.get('/:siteid/logs', function(req, res, next){
+    model.sites.getLogFileList(req.site, function(err, logFileList){
+        if(err){
+            next(err);
+        } else {
+            res.json(logFileList);
+        }
+    })
+});
 
 router.post('/generate-token', function(req, res, next){
     if(!req.haveAccess(req.project.project_id, "manage project sites")) {

@@ -277,11 +277,32 @@ var Sites = {
             if(err) { 
                 callback(err);
             } else {
-                callback();
+                queryHandler(
+                    "INSERT INTO site_log_files(site_id, log_start, log_end, uri) \n" + 
+                    "VALUES ("+
+                        (site.site_id|0)+", " +
+                        "FROM_UNIXTIME("+Math.abs(log.from/1000.0)+"), " +
+                        "FROM_UNIXTIME("+Math.abs(log.to  /1000.0)+"), " + 
+                        mysql.escape(key) +
+                    ")", 
+                callback);
             }
         });        
-    }
+    },
 
+    /** Returns the list of uploaded log files.
+     * @param {Object}  site - an object representing the site.
+     * @param {Integer} site.project_id - id of the site's project.
+     * @param {Integer} site.site_id - id of the given site.
+     * @param {Callback} callback    - callback function
+     */
+    getLogFileList: function(site, callback){
+        queryHandler(
+            "SELECT site_log_file_id as id, UNIX_TIMESTAMP(log_start) as `from`, UNIX_TIMESTAMP(log_end) as `to`\n" + 
+            "FROM site_log_files \n" +
+            "WHERE site_id = " + (site.site_id | 0), 
+        callback);
+    }
 };
 
 module.exports = Sites;
