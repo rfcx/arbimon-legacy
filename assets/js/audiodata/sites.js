@@ -5,7 +5,7 @@ angular.module('a2.audiodata.sites', [
     'humane',
     'a2.qr-js'
 ])
-.controller('SitesCtrl', function($scope, Project, $modal, notify, a2Sites, $window, a2UserPermit) {
+.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, a2UserPermit) {
     $scope.loading = true;
     
     Project.getInfo(function(info){
@@ -15,6 +15,14 @@ angular.module('a2.audiodata.sites', [
     Project.getSites(function(sites) {
         $scope.sites = sites;
         $scope.loading = false;
+        
+        var psite = $state.params.site;
+        if(psite){
+            var site = sites.filter(function(s){return s.id == psite;}).shift();
+            if(site){
+                $scope.sel(site);
+            }
+        }
     });
     
     $scope.editing = false;
@@ -193,26 +201,25 @@ angular.module('a2.audiodata.sites', [
     };
     
     $scope.sel = function(site) {
-        $scope.close();
-        
-        $scope.selected = site;
-        
-        
-        if(!$scope.marker) {
-            $scope.marker = new $window.L.marker(site)
-                .bindPopup(site.name)
-                .addTo($scope.map);
-        }
-        else {
-            $scope.marker.setLatLng(site);
-            $scope.marker.closePopup()
-                .unbindPopup()
-                .bindPopup(site.name);
-        }
-        
-        $scope.map.setView(site, 10, { animate:true });
-        
-        //~ console.log($scope.selected);
+        return $state.transitionTo($state.current.name, {site:site.id}, {notify:false}).then(function(){
+            $scope.close();
+            
+            $scope.selected = site;
+            
+            if(!$scope.marker) {
+                $scope.marker = new $window.L.marker(site)
+                    .bindPopup(site.name)
+                    .addTo($scope.map);
+            }
+            else {
+                $scope.marker.setLatLng(site);
+                $scope.marker.closePopup()
+                    .unbindPopup()
+                    .bindPopup(site.name);
+            }
+            
+            $scope.map.setView(site, 10, { animate:true });
+        });
     };
     
 })

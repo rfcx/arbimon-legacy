@@ -22,7 +22,7 @@ angular.module('a2.audiodata', [
         sticky: true,
     })
     .state('audiodata.sites', {
-        url: '/sites',
+        url: '/sites?site&show',
         controller:'SitesCtrl',
         templateUrl: '/partials/audiodata/sites.html'
     })
