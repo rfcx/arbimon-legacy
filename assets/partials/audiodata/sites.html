@@ -1,8 +1,12 @@
 <div class="row">
-    <div class="col-md-push-3 col-md-4 toolbar">
+    <div class="col-md-7">
+        
+
+<div class="row">
+    <div class="col-md-push-6 col-md-6 toolbar">
         <input class="form-control" type="text" placeholder="Search" ng-model="search">
     </div>
-    <div class="col-md-3 col-md-pull-4 toolbar">
+    <div class="col-md-6 col-md-pull-6 toolbar">
         <button class="btn btn-default"
             ng-click="create() | trackEvent:'Dashboard-sites':'add site'" 
             tooltip="Create a new site">
@@ -44,15 +48,9 @@
             <i class="fa fa-trash"></i>
         </button>
     </div>
-    <div class="col-md-3">
-        <ul class="nav nav-pills">
-            <li ng-class="{'active':show == 'map'}"><a ng-click="set_show('map')" >Location</a></li>
-            <li ng-class="{'active':show == 'status'}" ng-disabled='!selected.has_logs'><a ng-click="set_show('status')" >Status</a></li>
-        </ul>
-    </div>
 </div>
 <div class="row">
-    <div class="col-md-7" ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
+    <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
         <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
             <field title="Name" key="name">
                 {{ row.name }} 
@@ -85,117 +83,111 @@
         </div>
         <loader ng-hide="!loading"></loader>
     </div>
-    <div class="col-md-5">
-        <div ng-show="editing || creating" class="panel panel-default">
-            <div class="panel-body">
-                <form class="form" ng-submit="save() | trackEvent:'Dashboard-sites':'save site'" name="siteForm">
-                    <div class="form-group">
-                        <label>Name:</label>
-                        <input class="form-control" type="text" ng-model="temp.name" placeholder="Site name" required>
-                    </div>
-                    <!-- <div class="checkbox">
-                        <label>
-                            <input type="checkbox" ng-model="temp.published"> 
-                            publish site 
-                            <i class="text-info fa fa-info-circle"
-                                tooltip-placement="right"
-                                tooltip="when this option is checked, the site recordings become available to use in other projects"></i>
-                        </label>
-                    </div> -->
-                    <div class="form-group">
-                        <label>Location:</label>
-                        <div class="input-group">
-                            <span class="input-group-addon">Lat</span>
-                            <input class="form-control" 
-                                name="lat" 
-                                type="text" 
-                                ng-model="temp.lat" 
-                                placeholder="Latitude" 
-                                pattern="^-?\d+\.?\d*$"
-                                required>
+</div>
+
+</div>
+<div class="col-md-5">
+    <tabset>
+        <tab select="set_show('map')" active="show.map" >
+            <tab-heading>
+                <i ng-class="editing ? 'fa fa-pencil' : (creating ? 'fa fa-plus' : 'fa fa-map')"></i>
+                {{editing ? 'Edit Site' : (creating ? 'New Site' : 'Location')}}
+            </tab-heading>
+            <div ng-show="editing || creating" class="panel panel-default">
+                <div class="panel-body">
+                    <form class="form" ng-submit="save() | trackEvent:'Dashboard-sites':'save site'" name="siteForm">
+                        <div class="form-group">
+                            <label>Name:</label>
+                            <input class="form-control" type="text" ng-model="temp.name" placeholder="Site name" required>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon">Lon</span>
-                            <input class="form-control" 
-                                name="lon" 
-                                type="text" 
-                                ng-model="temp.lon" 
-                                placeholder="Longitude" 
-                                pattern="^-?\d+\.?\d*$"
-                                required>
+                        <!-- <div class="checkbox">
+                            <label>
+                                <input type="checkbox" ng-model="temp.published"> 
+                                publish site 
+                                <i class="text-info fa fa-info-circle"
+                                    tooltip-placement="right"
+                                    tooltip="when this option is checked, the site recordings become available to use in other projects"></i>
+                            </label>
+                        </div> -->
+                        <div class="form-group">
+                            <label>Location:</label>
+                            <div class="input-group">
+                                <span class="input-group-addon">Lat</span>
+                                <input class="form-control" 
+                                    name="lat" 
+                                    type="text" 
+                                    ng-model="temp.lat" 
+                                    placeholder="Latitude" 
+                                    pattern="^-?\d+\.?\d*$"
+                                    required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon">Alt</span>
-                            <input class="form-control" 
-                                name="alt" 
-                                type="text" 
-                                ng-model="temp.alt" 
-                                placeholder="Altitude" 
-                                pattern="^-?\d+\.?\d*$"
-                                required>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <span class="input-group-addon">Lon</span>
+                                <input class="form-control" 
+                                    name="lon" 
+                                    type="text" 
+                                    ng-model="temp.lon" 
+                                    placeholder="Longitude" 
+                                    pattern="^-?\d+\.?\d*$"
+                                    required>
+                            </div>
                         </div>
-                    </div>
-                    <button class="btn btn-primary">
-                        <i class="fa fa-floppy-o"></i> Save
-                    </button>
-                    <button class="btn btn-default" 
-                        type="button"
-                        ng-click="close() | trackEvent:'Dashboard-sites':'close site edit create'">
-                        <i class="fa fa-times"></i> Close
-                    </button>
-                </form>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <span class="input-group-addon">Alt</span>
+                                <input class="form-control" 
+                                    name="alt" 
+                                    type="text" 
+                                    ng-model="temp.alt" 
+                                    placeholder="Altitude" 
+                                    pattern="^-?\d+\.?\d*$"
+                                    required>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary">
+                            <i class="fa fa-floppy-o"></i> Save
+                        </button>
+                        <button class="btn btn-default" 
+                            type="button"
+                            ng-click="close() | trackEvent:'Dashboard-sites':'close site edit create'">
+                            <i class="fa fa-times"></i> Close
+                        </button>
+                    </form>
+                </div>
             </div>
-        </div>
-        <div class="panel panel-default" ng-show="show=='map'">
-            <div class="map" id="map-site"></div>
-        </div>
-        <div class="panel panel-default" ng-show="show=='status'">
+        </tab>
+        <tab select="set_show('status')" active="show.status" disable="!selected.has_logs || creating">
+            <tab-heading><i class="fa fa-line-chart"></i> Status</tab-heading>
             <div class="a2-filter-row">
                 <div class="a2-filter a2-filter-text">
                     Show:
-                </div>
-                <div class="a2-filter">
-                    <ui-select multiple ng-model="status_controller.selected.series" theme="bootstrap" style="width: 300px;">
-                        <ui-select-match><i ng-class="$item.icon"></i> {{$item.name}}</ui-select-match>
-                        <ui-select-choices repeat="item in status_controller.data.series">
-                            <i ng-class="item.icon"></i>
-                            {{item.name}} 
-                        </ui-select-choices>
-                    </ui-select>
-                </div>
-            </div>
-            <div class="a2-filter-row">
-                <div class="a2-filter a2-filter-text">
-                    From:
-                </div>
-                <div class="a2-filter">
-                    <button class="btn btn-default" type="text" 
-                        yearpick 
-                        min-date="status_controller.data.min_date"
-                        max-date="status_controller.selected.to || status_controller.data.max_date"
-                        ng-model="status_controller.selected.from">
-                        <span ng-hide="status_controller.selected.from"> Select Date </span>
-                        {{ status_controller.selected.from | momentUtc: 'll' }}
-                    </button>
-                </div>
-                <div class="a2-filter a2-filter-text">
-                    To:
-                </div>
-                <div class="a2-filter">
-                    <button class="btn btn-default" type="text" 
-                        yearpick 
-                        min-date="status_controller.selected.from || status_controller.data.min_date"
-                        max-date="status_controller.data.max_date"
-                        ng-model="status_controller.selected.to">
-                        <span ng-hide="status_controller.selected.to"> Select Date </span>
-                        {{ status_controller.selected.to | momentUtc: 'll' }}
-                    </button>
+                    <div class="dropdown" style="display:inline-block" dropdown dropdown-append-to-body>
+                        <button class="btn btn-default dropdown-toggle" dropdown-toggle>
+                            <i ng-class="status_controller.selected.series.icon"></i>
+                            {{status_controller.selected.series.name}} 
+                            <i class="fa fa-caret-down"></i>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li ng-repeat="series in status_controller.data.series" 
+                                ng-class="{active: status_controller.selected.series == series}">
+                                <a ng-click="status_controller.set_series(series) | trackEvent:'Audiodata-Site-Status':'set series'">
+                                    <i ng-class="series.icon"></i>
+                                    {{series.name}} 
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </div>
+            <div class="">
+                
+            </div>                   
+        </tab>
+    </tabset>
+    <div class="panel" ng-show="show.map">
+        <div class="map" id="map-site"></div>
     </div>
+</div>
 </div>

@@ -12,18 +12,21 @@ angular.module('a2.audiodata.sites', [
         $scope.project = info;
     });
     
+    var p={
+        site : $state.params.site,
+        show : $state.params.show
+    };
+    
     Project.getSites(function(sites) {
         $scope.sites = sites;
         $scope.loading = false;
         
-        var psite = $state.params.site;
-        var pshow = $state.params.show;
-        if(psite){
-            var site = sites.filter(function(s){return s.id == psite;}).shift();
+        if(p.site){
+            var site = sites.filter(function(s){return s.id == p.site;}).shift();
             if(site){
                 $scope.sel(site).then(function(){
-                    if(pshow){
-                        $scope.set_show(pshow);
+                    if(p.show){
+                        $scope.set_show(p.show);
                     }
                 });
             }
@@ -33,12 +36,14 @@ angular.module('a2.audiodata.sites', [
     
     $scope.editing = false;
     
-    $scope.map = $window.L.map('map-site', { zoomControl: false }).setView([10, -20], 1);
-    L.control.zoom({ position: 'topright'}).addTo($scope.map);
-    
-    $window.L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo($scope.map);
+    if(!$scope.map){
+        $scope.map = $window.L.map('map-site', { zoomControl: false }).setView([10, -20], 1);
+        L.control.zoom({ position: 'topright'}).addTo($scope.map);
+        
+        $window.L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo($scope.map);
+    }
     
     var moveMarker = function(e) {
         console.log(e.latlng);
@@ -128,14 +133,19 @@ angular.module('a2.audiodata.sites', [
         });
     };
     
-    $scope.show = 'map';
+    $scope.show = {map:false, status:false};
+    $scope.show[p.show || 'map'] = true;
+    
     $scope.set_show = function(new_show){
         if(new_show == 'status' && $scope.selected && $scope.selected.has_logs){
             $scope.status_controller.activate($scope.selected);
         } else {
             new_show='map';
         }
-        $scope.show = new_show;
+        for(var i in $scope.show){
+            $scope.show[i] = false;
+        }
+        $scope.show[new_show] = true;
         return $state.transitionTo($state.current.name, {site:$state.params.site, show:new_show}, {notify:false});
     };
     // $scope.browseShared = function() {
@@ -393,27 +403,41 @@ angular.module('a2.audiodata.sites', [
     })
 
 .controller('SiteStatusPlotterController', function($scope, a2Sites){
-    this.activate = function(selected_site){
-        this.selected_site = selected_site;
-        this.refresh_logs();
-    };
-    
-    this.refresh_logs = function(){
-        // conso
-    };
     this.data = {
         series:[
-            {name:'Battery Status', icon:'fa fa-fw fa-plug'},
-            {name:'Voltage', icon:'fa fa-fw fa-bolt'},
-            {name:'Power', icon:'fa fa-fw fa-battery-half'}
+            {tag:'battery', name:'Battery Status', icon:'fa fa-fw fa-plug'},
+            {tag:'voltage', name:'Voltage', icon:'fa fa-fw fa-bolt'},
+            {tag:'power', name:'Power', icon:'fa fa-fw fa-battery-half'}
         ],
         // min_date: 0,
         // max_date: 10000,
     };
     this.selected = {
-        series:[],
+        series: undefined,
+        type:'daily',
         from:undefined,
         to:undefined
+    };
+
+    this.activate = function(selected_site){
+        this.selected_site = selected_site;
+        this.set_series('power');
+        this.refresh_logs();
+    };
+    
+    this.set_series = function(series){
+        if(typeof(series) == 'string'){
+            series = this.data.series.filter(function(s){return s.tag == series;}).shift();
+        }
+        if(!series){
+            series = this.data.series.filter(function(s){return s.tag == 'power';}).shift();
+        }
+        this.selected.series = series;
+    };
+
+    
+    this.refresh_logs = function(){
+        // getLogFiles
     };
 })
 ;
