@@ -1,4 +1,3 @@
-var path = require('path');
 var express = require('express');
 var router = express.Router();
 var routes = [
@@ -13,7 +12,7 @@ var routes = [
 
 
 routes.forEach(function(route){
-    router.use(route, require(path.join('.', route)));
+    router.use(route, require('.' + route));
 });
 
 // TODO move routes on models to their respective places
