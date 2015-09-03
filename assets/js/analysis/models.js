@@ -248,7 +248,7 @@
             };
             
             
-            $http.get('/api/project/'+Project.getUrl()+'/jobs/types')
+            $http.get('/api/jobs/types')
                 .success(function(jobTypes) {
                     var training = jobTypes.filter(function(type) {
                         return type.name === "Model training";
