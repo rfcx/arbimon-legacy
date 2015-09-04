@@ -32,3 +32,5 @@ angular-depends
 #temp file cache
 tmpfilecache/**
 !tmpfilecache/.placeholder
+
+backend.png

@@ -83,7 +83,7 @@ Bio-Acoustic Analyzer
     
 ---
 
-### Build
+### Build for development
 
 install backend and dev dependecies 
 
@@ -105,6 +105,9 @@ run server and watch
 
 `grunt server` everytime a file changes the project will rebuild and/or server will restart
 
+
+### Other tasks
+
 removes packages and builds (node_modules, bower_components, public/assets)
 
 `grunt clean` 
@@ -112,3 +115,8 @@ removes packages and builds (node_modules, bower_components, public/assets)
 to run unit tests 
 
 `grunt test`
+
+dependecy graphs (requires Graphviz installed)
+
+`grunt angular-depends` for frontend
+`npm run dep-graph` for backend (need npm package `madge`)
