@@ -362,7 +362,7 @@
             };
 
 
-            $scope.prev= function () {
+            $scope.prev = function () {
                 $scope.currentPage = $scope.currentPage - 1;
                 if ($scope.currentPage  < 0) {
                     $scope.currentPage = 0;
@@ -416,14 +416,14 @@
         };
 
 
-        $scope.$watch('recselected',
-            function()
-            {
-                if ($scope.recselected === 'selected')
-                    $scope.showselection = true;
-                else $scope.showselection = false;
+        $scope.$watch('recselected', function() {
+            if ($scope.recselected === 'selected') {
+                $scope.showselection = true;
             }
-        );
+            else {
+                $scope.showselection = false;
+            }
+        });
 
 
         $scope.ok = function () {
@@ -431,22 +431,6 @@
             var url = $scope.projectData.url;
             $scope.all = 0;
             $scope.selectedSites = [];
-            /*
-            if ($scope.recselected=='all')
-            {
-                $scope.all = 1;
-                $scope.selectedSites.push('none')
-            }
-            else
-            {
-                angular.forEach($scope.sites, function (site) {
-                    if (site.Selected)
-                    {
-                        $scope.selectedSites.push(site.id)
-                    }
-                });
-            }
-            */
             
             // NOTE temporary block disabled model types
             if(!$scope.datas.classifier.enabled) return;

@@ -109,23 +109,12 @@ router.get('/:classiId/delete', function(req, res) {
 });
 
 router.post('/new', function(req, res, next) {
-    
     var response_already_sent;
     var params, job_id;
     
     async.waterfall([
-        function find_project_by_url(next){
-            model.projects.findByUrl(req.params.projectUrl, next);
-        },
-        function gather_job_params(rows){
-            var next = arguments[arguments.length -1];
-            if(!rows.length){
-                res.status(404).json({ err: "project not found"});
-                response_already_sent = true;
-                next(new Error());
-                return;
-            }
-            var project_id = rows[0].project_id;
+        function gather_job_params(next){
+            var project_id = req.project.project_id;
 
             if(!req.haveAccess(project_id, "manage models and classification"))
                 return res.json({ error: "you dont have permission to 'manage models and classification'" });

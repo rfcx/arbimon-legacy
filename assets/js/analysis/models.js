@@ -316,9 +316,9 @@
                         $scope.data.training.species_id, 
                         $scope.data.training.songtype_id,
                         function(data) {
-                            $scope.data.totalValidations = data[0].total;
-                            $scope.data.presentValidations = data[0].present;
-                            $scope.data.absentsValidations = data[0].absent;
+                            $scope.data.totalValidations = data.total;
+                            $scope.data.presentValidations = data.present;
+                            $scope.data.absentsValidations = data.absent;
                         }
                     );
                 }
