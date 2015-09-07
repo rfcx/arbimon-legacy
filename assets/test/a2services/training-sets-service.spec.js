@@ -36,7 +36,7 @@ describe('Module: a2.srv.training-sets', function() {
             it('requests to the correct route', function() {
                 
                 $httpBackend
-                    .expectGET('/api/project/test/training-sets/')
+                    .expectGET('/api/project/test/training-sets')
                     .respond(200, 'data');
                     
                 a2TrainingSets.getList(function(data){
