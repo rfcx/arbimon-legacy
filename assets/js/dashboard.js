@@ -69,7 +69,7 @@ angular.module('a2.dashboard',[
             var map = $scope.map = $window.L.map('summary-map', { zoomControl: false }).setView([10, -20], 1);
             L.control.zoom({ position: 'topright'}).addTo($scope.map);
             
-            $window.L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            $window.L.tileLayer('//{s}.tile.osm.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
             
