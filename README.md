@@ -3,19 +3,26 @@ Bio-Acoustic Analyzer
 
 ---
 ### Quick Setup:
- - install system dependencies
+ - install system dependencies all
    ```
    curl -sL https://deb.nodesource.com/setup_0.10 | sudo bash -
-   sudo apt-get install -y python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev python-virtualenv
+   sudo apt-get install -y python-pip sox libsox-fmt-mp3 nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev python-virtualenv pkg-config
    ```
    
 
- - install python dependencies, create python virtualenv and build
+ - install python dependencies, create python virtualenv
     ```
-    npm run-script setup
+    sh scripts/setup/010-make_virtual_env.sh
+    ```
+
+
+ - install backend dependencies, frontend dependencies and build the app
+    ```
+    npm i && bower i
+    grunt prod
     ```
     
- - run app (the app will be available in localhost:3000)
+ - run app (the app will be available in http://localhost:3000)
     ```
     npm start
     ```
@@ -47,13 +54,6 @@ Bio-Acoustic Analyzer
    ```
    
    
-
- - imagemagick - image manipulation tool (deprecated use node-lwip)
-   ```
-   sudo apt-get install imagemagick
-   ```
-   
-   
  - MySQL-python dependencies
    ```
    sudo apt-get install libmysqlclient-dev python-dev
@@ -66,7 +66,7 @@ Bio-Acoustic Analyzer
       
  - matplotlib dependencies
    ```
-   sudo apt-get install libpng12-dev libfreetype6-dev
+   sudo apt-get install libpng12-dev libfreetype6-dev pkg-config
    ```
       
  - node global dependencies(`sudo npm install -g <package>`):

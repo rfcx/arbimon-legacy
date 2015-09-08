@@ -1,5 +1,7 @@
 #! /bin/sh
 
+# OUTDATED
+
 sudo apt-get install -y libcap2-bin git
 
 repo="chris-lea/node.js"
