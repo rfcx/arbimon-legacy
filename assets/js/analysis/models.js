@@ -1,4 +1,5 @@
 (function(angular) {
+    
     var models = angular.module('a2.analysis.models', [
         'a2.services',
         'a2.permissions',
@@ -407,6 +408,49 @@
     .controller('ModelDetailsCtrl', 
         function($scope, a2Models, $stateParams, $location, Project, a2Classi, notify, $window) {
             
+            var scopeExited = false;
+            $scope.$on('$destroy', function(argument) {
+                scopeExited = true;
+                a2Models.modelState(false);
+            });
+            
+            /*
+                method recursively get validations vectors and then call waitinFunction()
+             */
+            var getVectors = function(index) {
+                if(scopeExited) return;
+                
+                if(index >= $scope.validations.length) return $scope.waitinFunction();
+                
+                var currRec = $scope.validations[index];
+               
+                currRec.date = $window.moment(currRec.date, 'MM-DD-YYYY HH:mm');
+                
+                a2Models.getRecVector($scope.model.id, currRec.id)
+                    .success(function(data) {
+                        if(!(data.err && data.err == "vector-not-found")) {
+                            var vector = data.vector;
+                    
+                            var vmax = Math.max.apply(null, vector);
+                            var vmin = Math.min.apply(null, vector);
+                            currRec.vmax = vmax;
+                            currRec.vector = vector;
+                            $scope.allMax.push(vmax);
+                            $scope.allMin.push(vmin);
+                            if(currRec.presence == 'no') {
+                                if($scope.vectorNoMax < vmax) {
+                                    $scope.vectorNoMax = vmax;
+                                }
+                            }
+                            else if(currRec.presence == 'yes') {
+                                $scope.allYesMax.push(vmax);
+                            }
+                        }
+                        
+                        getVectors(++index);
+                    });
+            };
+            
             
             var loadingMsgs = [
                 '',
@@ -427,10 +471,6 @@
             
             Project.getInfo(function(data) {
                 $scope.project_id = data.project_id;
-            });
-            
-            $scope.$on("$destroy", function() {
-                a2Models.modelState(false);
             });
             
             a2Models.findById($stateParams.modelId)
@@ -459,39 +499,8 @@
                 getVectors(0);
             });
             
-            /*
-                method recursively get validations vectors and then call waitinFunction()
-             */
-            var getVectors = function(index) {
-                if(index >= $scope.validations.length) return $scope.waitinFunction();
-                
-                var currRec = $scope.validations[index];
-               
-                currRec.date = $window.moment(currRec.date, 'MM-DD-YYYY HH:mm');
-                
-                a2Models.getRecVector($scope.model.id, currRec.id)
-                    .success(function(data) {
-                        if(!(data.err && data.err == "vector-not-found")) {
-                            var vector = data.vector;
-                    
-                            var vmax = Math.max.apply(null, vector);
-                            var vmin = Math.min.apply(null, vector);
-                            currRec.vmax = vmax;
-                            currRec.vector = vector;
-                            $scope.allMax.push(vmax);
-                            $scope.allMin.push(vmin);
-                            if(currRec.presence == 'no') {
-                                if($scope.vectorNoMax < vmax) {
-                                    $scope.vectorNoMax = vmax;
-                                }
-                            }
-                            else if(currRec.presence == 'yes') {
-                                $scope.allYesMax.push(vmax);
-                            }
-                        }
-                        getVectors(++index);
-                    });
-            };
+            
+
             
             
             $scope.waitinFunction = function() {
