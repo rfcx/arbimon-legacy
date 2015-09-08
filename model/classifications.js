@@ -28,7 +28,7 @@ var Classifications = {
     // classifications -> list
     list: function(projectId, callback) {
         var q = (
-            "\nSELECT UNIX_TIMESTAMP( j.`date_created` )*1000  as `date`, \n"+
+            "SELECT UNIX_TIMESTAMP( j.`date_created` )*1000  as `date`, \n"+
             "    j.`job_id`, \n"+
             "    pl.`name` as playlistName,\n"+
             "    CONCAT(UCASE(LEFT(mode.`name`, 1)), SUBSTRING(mode.`name`, 2))  as modname, \n"+
@@ -139,7 +139,7 @@ var Classifications = {
     
     // classificationCsvData: function(classiJobId, callback) {
     getCsvData: function(classiJobId, callback) {
-        var q = "\nSELECT extract(year from r.`datetime`) year, \n"+
+        var q = "SELECT extract(year from r.`datetime`) year, \n"+
                 "   extract(month from r.`datetime`) month, \n"+
                 "   extract(day from r.`datetime`) day, \n"+
                 "   extract(hour from r.`datetime`) hour, \n"+

@@ -575,7 +575,7 @@ var Projects = {
    
     trainingSets: function(project_url, callback) {
         var q = (
-            "\nSELECT ( \n"+
+            "SELECT ( \n"+
             "        SELECT count(x1) \n"+
             "        FROM `training_set_roi_set_data` tsrsd \n"+
             "        WHERE tsrsd.`training_set_id` = ts.`training_set_id` \n"+
@@ -592,7 +592,7 @@ var Projects = {
             "    `training_sets_roi_set` tsrs, \n"+
             "    `songtypes` st, \n"+
             "    `species` s \n"+
-            "where ts.`training_set_id` = tsrs.`training_set_id` \n"+
+            "WHERE ts.`training_set_id` = tsrs.`training_set_id` \n"+
             "AND st.`songtype_id` = tsrs.`songtype_id` \n"+
             "AND s.`species_id`  = tsrs.`species_id` \n"+
             "AND ts.`project_id` = p.`project_id` \n"+
