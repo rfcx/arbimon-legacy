@@ -14,7 +14,7 @@ var mock_fs = require('../mock_tools/mock_fs');
 
 var mock_config = {
     tmpfilecache : {
-        path : '/!!MOCKPATH!!/',
+        path : '/DUMMYPATH/',
         maxObjectLifetime : 1000,
         cleanupInterval : 500
     }
@@ -32,6 +32,7 @@ tmpfilecache.__set__(mocks.tmpfilecache);
 
 
 describe('tmpfilecache', function(){
+    
     describe('#hash_key()', function(){
         it('Should return a sha256 hash of a given path, escaping the file extension.', function(){
             tmpfilecache.hash_key('this/is/a/test.txt').should.equal('7857951942d9f9d5ec2c0ba33dd9c2e3a0506c8f839dfb731607b5e8d155b7f7.txt');
@@ -53,6 +54,7 @@ describe('tmpfilecache', function(){
             });
         });
     });
+    
     describe('#key2File()', function(){
         it('Should convert a key to a file path.', function(){
             tmpfilecache.key2File('this/is/a/test.txt.bmp').should.equal(
@@ -60,6 +62,7 @@ describe('tmpfilecache', function(){
             );
         });
     });
+    
     describe('#checkValidity()', function(){
         beforeEach(function(){
             mocks.tmpfilecache.fs.__set_files__([
@@ -99,6 +102,7 @@ describe('tmpfilecache', function(){
             });
         });
     });
+    
     describe('#get()', function(){
         beforeEach(function(){
             mocks.tmpfilecache.fs.__set_files__([
@@ -136,6 +140,7 @@ describe('tmpfilecache', function(){
             });
         });
     });
+    
     describe('#put()', function(){
         beforeEach(function(){
             mocks.tmpfilecache.fs.__set_files__([
@@ -169,16 +174,29 @@ describe('tmpfilecache', function(){
             });
         });
     });
+    
     describe('#fetch()', function(){
         beforeEach(function(){
-            mocks.tmpfilecache.fs.__set_files__([
-                {path: 'this/is/a/test.txt.bmp', atime:new Date(new Date().getTime() - 100)}
-            ], {prefix: mock_config.tmpfilecache.path, pathmap:tmpfilecache.hash_key.bind(tmpfilecache)});
+            mocks.tmpfilecache.fs.__set_files__(
+                [
+                    {
+                        path: 'this/is/a/test.txt.bmp', 
+                        atime: new Date(new Date().getTime() - 100)
+                    }
+                ], 
+                {
+                    prefix: mock_config.tmpfilecache.path, 
+                    pathmap:tmpfilecache.hash_key.bind(tmpfilecache)
+                }
+            );
+            
             sinon.spy(mocks.tmpfilecache.fs, 'writeFile');
         });
+        
         afterEach(function(){
             mocks.tmpfilecache.fs.writeFile.restore();
         });
+        
         it('Should call the results callback without calling on cache_miss first for existing valid keys', function(done){
             tmpfilecache.fetch('this/is/a/test.txt.bmp', function(cache_miss){
                     done(new Error("cache_miss callback called"));
@@ -192,20 +210,26 @@ describe('tmpfilecache', function(){
                 }
             );
         });
+        
         it('Should call the cache_miss callback, write the file, and call the results callback for invalid keys and using cache_miss.set_file_data', function(done){
-            tmpfilecache.fetch('non/existent/file.txt', function(cache_miss){
-                cache_miss.set_file_data("new file data");
-            }, function(err, stat){
-                should.not.exist(err);
-                should.exist(stat);
-                should.exist(stat.path);
-                stat.path.should.equal(tmpfilecache.key2File('non/existent/file.txt'));
-                mocks.tmpfilecache.fs.writeFile.calledOnce.should.be.true;
-                should.exist(mocks.tmpfilecache.fs.__files__[stat.path]);
-                mocks.tmpfilecache.fs.__files__[stat.path].data.should.equal('new file data');
-                done();
-            });
+            tmpfilecache.fetch(
+                'non/existent/file.txt', 
+                function(cache_miss) {
+                    cache_miss.set_file_data("new file data");
+                }, 
+                function(err, stat) {
+                    should.not.exist(err, 'Error should not exist');
+                    should.exist(stat);
+                    should.exist(stat.path);
+                    stat.path.should.equal(tmpfilecache.key2File('non/existent/file.txt'));
+                    should.exist(mocks.tmpfilecache.fs.__files__[stat.path]);
+                    mocks.tmpfilecache.fs.writeFile.calledOnce.should.be.true;
+                    mocks.tmpfilecache.fs.__files__[stat.path].data.should.equal('new file data');
+                    done();
+                }
+            );
         });
+        
         it('Should call the cache_miss callback, and call the results callback with the new file for invalid keys and using cache_miss.retry_get, having added the file manually', function(done){
             tmpfilecache.fetch('non/existent/file.txt', function(cache_miss){
                 mocks.tmpfilecache.fs.writeFile(cache_miss.file, "new file data", function(err){

@@ -23,6 +23,7 @@ var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
 
+
 // local variables
 var s3 = new AWS.S3();
 var queryHandler = dbpool.queryHandler;
@@ -396,18 +397,33 @@ var Recordings = {
      * @param {Function} callback(err, path) function to call back with the recording audio file's path.
      */
     fetchAudioFile: function (recording, callback) {
+        debug('fetchAudioFile');
         var mp3audio_key = recording.uri.replace(fileExtPattern, '.mp3');
-        tmpfilecache.fetch(mp3audio_key, function(cache_miss){
+        var ifMissedGetFile = function(cache_miss) {
+            debug('mp3 not found');
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
-                if(err) { callback(err); return; }
-                audioTools.transcode(recording_path.path, cache_miss.file, {
-                    sample_rate: 44100, format: 'mp3', channels: 1
-                }, function(status_code){
-                    if(status_code) { callback({code:status_code}); return; }
-                    cache_miss.retry_get();
-                });
+                if(err) return callback(err); 
+                
+                audioTools.transcode(
+                    recording_path.path, 
+                    cache_miss.file, 
+                    {
+                        sample_rate: 44100, 
+                        format: 'mp3', 
+                        channels: 1
+                    }, 
+                    function(status_code){
+                        debug('done transcoding');
+                        if(status_code) {
+                            return callback({ code: status_code });
+                        }
+                        cache_miss.retry_get();
+                    }
+                );
             });
-        }, callback);
+        };
+        
+        tmpfilecache.fetch(mp3audio_key, ifMissedGetFile, callback);
     },
     
     /** Returns the spectrogram file of a given recording.
