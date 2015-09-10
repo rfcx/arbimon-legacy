@@ -69,14 +69,14 @@ var cache = {
             var now = (new Date()).getTime();
             
             if (stats.atime.getTime() + config("tmpfilecache").maxObjectLifetime >= now ) { 
-                debug('good %s', file);
+                debug('file is fresh %s', file);
                 callback(null, {
                     path : file,
                     stat : stats
                 });
             } 
             else {
-                debug('expired %s', file);
+                debug('file is expired %s', file);
                 fs.unlink(file, function() {
                     callback(null, null);
                 });

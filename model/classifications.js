@@ -67,6 +67,7 @@ var Classifications = {
         queryHandler(q, callback);
     },
     
+    // TODO delete async
     // classificationDelete
     delete: function(classificationId, callback) {
         
@@ -75,6 +76,7 @@ var Classifications = {
         var q;
         var allToDelete;
         
+        // TODO change nested queries to join 
         async.waterfall([
             function(cb) {
                 q = "SELECT `uri` FROM `models` WHERE `model_id` = "+
@@ -215,15 +217,12 @@ var Classifications = {
                 "       c.`songtype_id`, \n"+
                 "       c.`present` as present, \n"+
                 "       c.`recording_id`, \n"+
+                "       r.`uri`, \n"+
                 "       SUBSTRING_INDEX( \n"+
                 "           SUBSTRING_INDEX( r.`uri` , '.', 1 ), \n"+
                 "           '/', \n"+
                 "           -1  \n"+
                 "        ) as recname, \n"+
-                "       CONCAT( \n"+
-                "           SUBSTRING_INDEX( r.`uri` , '.', 1 ), \n"+
-                "           '.thumbnail.png' \n"+
-                "       ) as uri, \n"+
                 "       CONCAT( \n"+
                 "           UCASE(LEFT(st.`songtype`, 1)), \n"+
                 "           SUBSTRING(st.`songtype`, 2) \n"+

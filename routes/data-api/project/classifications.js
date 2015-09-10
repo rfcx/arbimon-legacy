@@ -85,10 +85,13 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
         if(err) return next(err);
                 
         rows.forEach(function(classiInfo) {
+            console.log(classiInfo);
             classiInfo.stats = JSON.parse(classiInfo.json_stats);
             delete classiInfo.json_stats;
             
-            classiInfo.rec_image_url = "https://"+ config('aws').bucketName + ".s3.amazonaws.com/"+ classiInfo.uri;
+            var thumbnail = classiInfo.uri.replace('.flac', '.thumbnail.png');
+            
+            classiInfo.rec_image_url = "https://"+ config('aws').bucketName + ".s3.amazonaws.com/"+ thumbnail;
             delete classiInfo.uri;
         });
         
