@@ -214,6 +214,12 @@ module.exports = function(grunt) {
                src: ['**'],
                dest: 'public/assets/leaflet/'
            },
+           esriLeaflet: {
+               expand: true,
+               cwd: 'bower_components/esri-leaflet/dist/',
+               src: ['**'],
+               dest: 'public/assets/esri-leaflet/'
+           },
         },
         
         ngAnnotate: {

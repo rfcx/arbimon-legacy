@@ -19,12 +19,22 @@ angular.module('a2.audiodata.sites', [
     
     $scope.editing = false;
     
-    $scope.map = $window.L.map('map-site', { zoomControl: false }).setView([10, -20], 1);
-    L.control.zoom({ position: 'topright'}).addTo($scope.map);
+    var satellite = $window.L.esri.basemapLayer('Imagery');
+    var topo = $window.L.esri.basemapLayer('Topographic');
     
-    $window.L.tileLayer('//{s}.tile.osm.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo($scope.map);
+    $scope.map = $window.L.map('map-site', { 
+            zoomControl: false ,
+            layers: [satellite, topo],
+        }).setView([10, -20], 1);
+    
+    $scope.maplayers = {
+        'Satellite': satellite,
+        'Topographic': topo, 
+    };
+    
+    L.control.zoom({ position: 'topright'}).addTo($scope.map);
+    L.control.layers($scope.maplayers, {}, { position: 'topright'}).addTo($scope.map);
+    
     
     var moveMarker = function(e) {
         console.log(e.latlng);
