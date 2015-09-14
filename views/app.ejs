@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html ng-app="arbimon2">
     <%if(url_base){%><base href="<%= url_base %>"/><%}%>
-    <% include head %>    
+    <% include head %>
+    <% include ng-permissions %>
     <title>Arbimon II - <%= project.name %><% if(card && card.name){ %> - <%= card.name %><%} %></title>
 </head>
 <body ng-controller="MainCtrl">

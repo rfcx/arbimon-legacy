@@ -1,13 +1,9 @@
 angular.module('a2.permissions', [
-    'a2.services'
+    'a2.services',
+    'ng-permissions'
 ])
-.service('a2UserPermit', function($http, Project, $q) {
-    var permit = {};
-    
-    $http.get('/api/project/'+Project.getUrl()+'/user-permissions')
-        .success(function(data) {
-            angular.extend(permit, data);
-        });
+.service('a2UserPermit', function($http, Project, $q, permits) {
+    var permit = permits;
     
     return {
         can: function(perm) {

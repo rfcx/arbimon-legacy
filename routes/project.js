@@ -57,6 +57,12 @@ router.get('/:projecturl?/', function(req, res, next) {
                     req.session.user.permissions = {};
 
                 req.session.user.permissions[project.project_id] = rows;
+                var perms = { 
+                    authorized: true,
+                    public: !project.is_private,
+                    super: !!req.session.user.isSuper,
+                    permissions: rows.map(function(perm) { return perm.name; }),
+                };
 
                 debug("project perms:", req.session.user.permissions);
 
@@ -66,32 +72,25 @@ router.get('/:projecturl?/', function(req, res, next) {
                 };
                 
                 var appAbsUrl = req.appHost + req.originalUrl;
-                cardResolver.getCardFor(project, appAbsUrl, req.inAppUrl).then(function(card){
-                    if(req.show_card){ 
+                cardResolver.getCardFor(project, appAbsUrl, req.inAppUrl).nodeify(function(err, card){
+                    if(req.show_card && err){ 
+                        next(err);
+                    }
+                    else if(req.show_card){ 
                         if(card){
                             res.json(card);
                         } else {
                             res.status(404).json({});
                         }
-                    } else {
+                    } 
+                    else {
                         res.render('app', { 
                             project: req.project, 
                             url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
                             user: req.session.user,  
                             card: card,
-                            planAlert: project.plan_due < new Date() ? 'expired' : ''
-                        });
-                    }
-                }, function(err){
-                    if(req.show_card){ 
-                        next(err);
-                    } else {
-                        res.render('app', { 
-                            project: req.project, 
-                            url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
-                            user: req.session.user,  
-                            card: undefined,
-                            planAlert: project.plan_due < new Date() ? 'expired' : ''
+                            planAlert: project.plan_due < new Date() ? 'expired' : '',
+                            perms: perms,
                         });
                     }
                 });
