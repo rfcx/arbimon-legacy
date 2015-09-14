@@ -14,8 +14,7 @@
             $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
 
-            $scope.updateFlags = function()
-            {
+            $scope.updateFlags = function() {
                 $scope.successInfo = "";
                 $scope.showSuccess = false;
                 $scope.errorInfo = "";
@@ -27,7 +26,6 @@
 
             Project.getInfo(function(data) {
                 $scope.projectData = data;
-                $scope.url = data.url;
             });
 
 
@@ -147,8 +145,8 @@
                             data: function () {
                                 return $scope.data;
                             },
-                            url: function () {
-                                return $scope.url;
+                            projectUrl: function () {
+                                return $scope.projectData.url;
                             },
                             id: function () {
                                 return $scope.classi_id;
@@ -311,18 +309,18 @@
         }
     )
     .controller('ClassiDetailsInstanceCtrl', 
-        function ($scope, $modalInstance, a2Classi, notify, a2UserPermit, data, url, id, pid, th) {
+        function ($scope, $modalInstance, a2Classi, notify, a2UserPermit, data, projectUrl, id, pid, th) {
             $scope.th = th;
             $scope.data = data.data;
             $scope.pid = pid;
-            $scope.url = url;
+            $scope.url = projectUrl;
             $scope.id = id;
             $scope.recs = [];
             $scope.showMore = false;
             $scope.currentPage = 0;
             $scope.maxPerPage = 1;
             $scope.totalRecs = Math.ceil($scope.data[0].total/$scope.maxPerPage);
-            
+            $scope.csvUrl = "/api/project/"+$scope.url+"/classifications/csv/"+id;
             
             $scope.showDownload = a2UserPermit.can('manage models and classification');
 

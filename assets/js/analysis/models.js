@@ -768,8 +768,7 @@
             };
             
             $scope.gotoRec = function() {
-                var rurl = "/project/" + Project.getUrl() + 
-                    "/#/visualizer/rec/" + $scope.selected.id;
+                var rurl = "/visualizer/rec/" + $scope.selected.id;
                 $location.path(rurl);
             };
         }

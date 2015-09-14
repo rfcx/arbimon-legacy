@@ -217,7 +217,7 @@ router.get('/:classiId/vector/:recId', function(req, res, next) {
 
 });
 
-router.get('/project/csv/:classiId', function(req, res) {
+router.get('/csv/:classiId', function(req, res) {
 
     model.classifications.getName(req.params.classiId, function(err, row) {
         if(err) throw err;
