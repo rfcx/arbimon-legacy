@@ -174,8 +174,8 @@ module.exports = function(grunt) {
             },
             angularFileUpload: {
                 expand: true,
-                flatten: true,
-                src: 'bower_components/angular-file-upload/**/*.js',
+                cwd: 'bower_components/angular-file-upload/dist/',
+                src: ['**'],
                 dest: 'public/assets/angular-file-upload/'
             },
             humanejs: {
