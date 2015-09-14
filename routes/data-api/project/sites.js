@@ -2,6 +2,7 @@ var debug = require('debug')('arbimon2:route:playlists');
 var async = require('async');
 var express = require('express');
 var router = express.Router();
+var csv_stringify = require("csv-stringify");
 
 var model = require('../../../model');
 
@@ -128,7 +129,58 @@ router.get('/:siteid/logs', function(req, res, next){
         } else {
             res.json(logFileList);
         }
-    })
+    });
+});
+
+router.get('/:siteid/log/data.txt', function(req, res, next){
+    var options={};
+    var output='csv', groupby;
+    if (req.query) {
+        if (req.query.get && req.query.get == 'dates') {
+            options.only_dates = true;
+            output='json';
+            groupby='dates';
+        } else {
+            if (req.query.date) {
+                options.dates = req.query.date.split(',');
+                output='csv';
+            }
+            if(req.query.q){
+                options.quantize = req.query.q;
+            }
+        }
+    }
+    model.sites.getDataLog(req.site, options, function(err, datastream, fields){
+        if(err){
+            next(err);
+        } else {
+            fields = fields.map(function(f){return f.name;});
+            switch(output){
+                case 'json':
+                    var rows;
+                    if(groupby){
+                        rows = {};
+                        fields = fields.filter(function(f){return f != groupby;});
+                        datastream.on('data', function(row){
+                            var idx = row[groupby];
+                            delete row[groupby];
+                            rows[idx] = fields.length == 1 ? row[fields[0]] : row;
+                        });
+                        datastream.on('end', function(row){
+                            res.json(rows);
+                        });
+                    }
+                break;
+                default:
+                    datastream
+                        .pipe(csv_stringify({
+                            header:true, 
+                            columns:fields
+                        }))
+                        .pipe(res);
+            }
+        }
+    });
 });
 
 router.post('/generate-token', function(req, res, next){

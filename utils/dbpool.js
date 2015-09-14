@@ -23,25 +23,29 @@ var dbpool = {
             if(values){
                 debug('- values: ', values);
             }
-            query_fn.call(connection, sql, values, function(err, rows, fields) {
-                if(err) {
-                    debug('  failed :| ', err+"");
-                } else if (rows) {
-                    if(rows.length !== undefined) {
-                        debug('  returned :', rows.length , " rows.");
+            if(cb){
+                query_fn.call(connection, sql, values, function(err, rows, fields) {
+                    if(err) {
+                        debug('  failed :| ', err+"");
+                    } else if (rows) {
+                        if(rows.length !== undefined) {
+                            debug('  returned :', rows.length , " rows.");
+                        }
+                        if(rows.affectedRows) {
+                            debug('  affected :', rows.affectedRows , " rows.");
+                        }
+                        if(rows.changedRows) {
+                            debug('  changed  :', rows.changedRows , " rows.");
+                        }
+                        if(rows.insertId) {
+                            debug('  insert id :', rows.insertId);
+                        }
                     }
-                    if(rows.affectedRows) {
-                        debug('  affected :', rows.affectedRows , " rows.");
-                    }
-                    if(rows.changedRows) {
-                        debug('  changed  :', rows.changedRows , " rows.");
-                    }
-                    if(rows.insertId) {
-                        debug('  insert id :', rows.insertId);
-                    }
-                }
-                cb(err, rows, fields);
-            });
+                    cb(err, rows, fields);
+                });
+            } else {
+                return query_fn.call(connection, sql, values);
+            }
         };
         connection.release = function(){
             debug('Connection released.');

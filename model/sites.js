@@ -290,6 +290,85 @@ var Sites = {
         });        
     },
 
+    /** Returns the site's data log.
+     * @param {Object}  site - an object representing the site.
+     * @param {Integer} site.site_id - id of the given site.
+     * @param {Callback} callback    - callback function
+     */
+    getDataLog: function(site, options, callback){
+        dbpool.getConnection(function(err, dbconn){
+            var m;
+            if(err){
+                callback(err);
+                return;
+            }
+            var site_id = site.site_id | 0;
+            
+            var sql, params=[site_id];
+            if (options.only_dates) {
+                sql = {sql:"SELECT DATE(SDL.datetime) as dates, COUNT(*) as count\n" + 
+                "FROM site_data_log SDL\n" +
+                "WHERE site_id = ?\n" +
+                "GROUP BY DATE(SDL.datetime)",
+                typeCast: function (field, next) {
+                    if (field.type !== 'DATE') return next(); // 1 = true, 0 = false
+                    return field.string();
+                }};
+            } else {
+                var fields = [['SDL.datetime', 'datetime'], ['SDL.power', 'power'], ['SDL.temp', 'temp'], ['SDL.voltage', 'voltage'], 
+                              ['SDL.battery', 'battery'], ['SDL.status', 'status'], ['SDLPT.type', 'plug_type'], ['SDLHT.type', 'health'], 
+                              ['SDLTT.type', 'bat_tech']];
+                var group_clause;
+                
+                if(options.quantize && (m=/^(\d+)(min|hour|day|week)s?$/.exec(options.quantize))){
+                    var scale=m[1]|0, qfunc = {
+                        min   : 'FLOOR(UNIX_TIMESTAMP(SDL.datetime)/60)',
+                        hour  : 'FLOOR(UNIX_TIMESTAMP(SDL.datetime)/3600)',
+                        day   : 'FLOOR(UNIX_TIMESTAMP(SDL.datetime)/86400)',
+                        week  : 'FLOOR(UNIX_TIMESTAMP(SDL.datetime)/604800)',
+                    }[m[2]];
+                    if(scale != 1){
+                        qfunc = 'FLOOR('+qfunc+'/'+scale+')*'+scale;
+                    }
+                    var mins = fields.map(function(f){ return ['MIN('+f[0]+')', 'min_'+f[1]];});
+                    var maxs = fields.map(function(f){ return ['MAX('+f[0]+')', 'max_'+f[1]];});
+                    var means = fields.map(function(f){ return ['AVG('+f[0]+')', 'mean_'+f[1]];});
+                    fields.push.apply(fields, mins);
+                    fields.push.apply(fields, maxs);
+                    fields.push.apply(fields, means);
+                    fields.push([qfunc, m[2]]);
+                    group_clause = qfunc;
+                }
+                
+                sql = "SELECT " + fields.map(function(field){
+                    return field[0] + ' as `'+ field[1] +'`';
+                }).join(", ")+ " \n" + 
+                "FROM site_data_log SDL\n" +
+                "JOIN site_data_log_plug_types SDLPT ON SDL.plug_type = SDLPT.plug_type_id \n" +
+                "JOIN site_data_log_health_types SDLHT ON SDL.health = SDLHT.health_type_id \n" +
+                "LEFT JOIN site_data_log_tech_types SDLTT ON SDL.bat_tech = SDLTT.tech_type_id \n" +
+                "WHERE site_id = ?" + 
+                (group_clause ? " \nGROUP BY " + group_clause : '');
+                if (options.dates) {
+                    sql += " AND DATE(SDL.datetime) IN (?)";
+                    params.push(options.dates);
+                }
+            }
+            
+            var resultstream = dbconn.query(sql, params).stream({highWaterMark:5});
+            resultstream.on('error', function(err) {
+                callback(err);
+            });
+            resultstream.on('fields',function(fields,i) {
+              callback(null, resultstream, fields);
+            });
+            resultstream.on('end', function(){
+                dbconn.release();
+            });
+        });
+    },
+
+    
     /** Returns the list of uploaded log files.
      * @param {Object}  site - an object representing the site.
      * @param {Integer} site.project_id - id of the site's project.
