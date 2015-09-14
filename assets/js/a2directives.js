@@ -439,6 +439,16 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
             };
             var monthName = d3.time.format('%B');
             var dateFormat = d3.time.format("%Y-%m-%d");
+            var format2Date = function(txt){
+                var m=/^(\d+)-(\d+)-(\d+)$/.exec(txt);
+                return m && new Date(m[1]|0, m[2]|0, m[3]|0);
+            };
+            var canHaveDateCounts = function(){
+                return scope.mode === "density" && attrs.dateCount;
+            };
+            var computeMax = !attrs.maxDate;
+            var computeMin = !attrs.minDate;
+            
             function setYear(year){
                 var old_year = scope.year;
                 scope.year = year;
@@ -691,8 +701,32 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
                 }
             });
             
-            if(scope.mode === "density" && attrs.dateCount) {
+            var computeMaxMinDateFromCounts = function(dateCounts, computeMax, computeMin){
+                var stats=null;
+                if(!dateCounts || (!computeMax && !computeMin)){
+                    return;
+                }
+                
+                for(var dateFmt in dateCounts){
+                    var date = format2Date(dateFmt);
+                    if(stats){
+                        stats.min = Math.min(date, stats.min);
+                        stats.max = Math.max(date, stats.max);
+                    } else {
+                        stats = {min:date, max:date};
+                    }
+                }
+                if(computeMin){
+                    scope.minDate = new Date(stats.min);
+                }
+                if(computeMax){
+                    scope.maxDate = new Date(stats.max);
+                }
+            };
+            
+            if(canHaveDateCounts()) {
                 scope.$watch('dateCount', function(value) {
+                    computeMaxMinDateFromCounts(value, computeMax, computeMin);
                     drawCounts();
                 });
             }
