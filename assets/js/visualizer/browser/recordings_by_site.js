@@ -272,11 +272,9 @@ angular.module('a2.browser_recordings_by_site', [])
             };
             
             if(isNewSiteAndDate()){
-                console.log('corri 1');
                 a2Browser.setLOVO(self.lovo);
             } 
             else {
-                console.log('corri 2');
                 a2Browser.setLOVO(make_lovo());
             }
         }

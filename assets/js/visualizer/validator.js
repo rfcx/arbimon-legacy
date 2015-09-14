@@ -1,5 +1,5 @@
 angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
-.directive('a2SpeciesValidator', function (Project, a2UserPermit, notify) {
+.directive('a2SpeciesValidator', function (Project, a2UserPermit, notify, $filter) {
     var project = Project;
     return {
         restrict : 'E',
@@ -41,7 +41,12 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                         taxons[c.taxon].push(c);
                     }
                     
+                    for(var t in taxons) {
+                        taxons[t] = $filter('orderBy')(taxons[t], ['species_name','songtype_name']);
+                    }
+                    
                     $scope.byTaxon = taxons;
+                    $scope.taxons = Object.keys($scope.byTaxon).sort();
                 });
             };
             
@@ -50,7 +55,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             $scope.classes = [];
             $scope.is_selected = {};
             
-            $scope.select = function(project_class, $event) {
+            $scope.select = function(taxon, project_class, $event) {
                 if($($event.target).is('a')){
                     return;
                 }
@@ -63,7 +68,9 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                         to: -Infinity,
                     };
                     
-                    $scope.classes.forEach(function(pc, idx){
+                    var taxonSpecies = $scope.byTaxon[taxon];
+                    
+                    taxonSpecies.forEach(function(pc, idx){
                         if($scope.is_selected[pc.id]){
                             sel_range.from = Math.min(sel_range.from, idx);
                             sel_range.to   = Math.max(sel_range.to  , idx);
@@ -71,21 +78,21 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                     });
                     
                     for(var si = sel_range.from, se = sel_range.to + 1; si < se; ++si){
-                        $scope.is_selected[$scope.classes[si].id] = true;
+                        $scope.is_selected[taxonSpecies[si].id] = true;
                     }
                 } 
                 else if($event.ctrlKey){
                     $scope.is_selected[project_class.id] = !$scope.is_selected[project_class.id];
                 } 
                 else {
-                    $scope.is_selected={};
+                    $scope.is_selected = {};
                     $scope.is_selected[project_class.id] = true;
                 }
             };
             
             $scope.validations = {};
             
-            $scope.validate = function(project_class, val) {
+            $scope.validate = function(val) {
                 if(!a2UserPermit.can('validate species')) {
                     notify.log('You do not have permission to validate species');
                     return;
@@ -94,13 +101,15 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                 var keys = [],
                     key_idx = {};
                     
-                var k = class2key(project_class);
+                var k;
+                // var k = class2key(project_class);
                 
-                if (k && !key_idx[k]) {
-                    key_idx[k] = true;
-                    keys.push(k);
-                }
-
+                // if (k && !key_idx[k]) {
+                //     key_idx[k] = true;
+                //     keys.push(k);
+                // }
+                
+                // sel_pc_id -> selected project class id
                 for (var sel_pc_id in $scope.is_selected) {
                     if ($scope.is_selected[sel_pc_id]) {
                         k = class2key(sel_pc_id);

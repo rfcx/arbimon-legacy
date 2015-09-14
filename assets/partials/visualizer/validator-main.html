@@ -2,8 +2,10 @@
     <p ng-hide="classes.length">
         You need to add species sounds <a ui-sref="audiodata.species">here</a>
     </p>
+    <pre>
+    </pre>
     <accordion close-others="false" class="accordion-group">
-        <accordion-group is-open="byTaxon[taxon].open" ng-repeat="(taxon, list) in byTaxon" class="accordion-table">
+        <accordion-group is-open="byTaxon[taxon].open" ng-repeat="taxon in taxons" class="accordion-table">
             <accordion-heading>
                 <i class="fa" ng-class="byTaxon[taxon].open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
                 {{ taxon }}
@@ -14,21 +16,21 @@
                     <th>Sound</th>
                     <th>Annotation</th>
                 </tr>
-                <tr ng-repeat="class in list | orderBy : ['species_name','songtype_name']" 
-                    ng-click="select(class, $event) | trackEvent:'Visualizer-Validator-Main':'Select'" 
-                    ng-class="is_selected[class.id] ? 'active' : ''">
-                        <td class="no-select"> {{ class.species_name }}</td>
-                        <td class="no-select"> {{ class.songtype_name }} </td>
+                <tr ng-repeat="cls in byTaxon[taxon]" 
+                    ng-click="select(taxon, cls, $event) | trackEvent:'Visualizer-Validator-Main':'Select'" 
+                    ng-class="is_selected[cls.id] ? 'active' : ''">
+                        <td class="no-select"> {{ cls.species_name }}</td>
+                        <td class="no-select"> {{ cls.songtype_name }} </td>
                         <td class="no-select">
                             <div class="dropdown" dropdown>
                                 <button class="btn-a2-validate btn btn-default btn-xs btn-block " role="button" dropdown-toggle>
-                                    <i class="fa"  ng-class="'val-'+val_state(class.id).val"></i>
-                                    {{ val_state(class.id).label || "---"}}
+                                    <i class="fa"  ng-class="'val-'+val_state(cls.id).val"></i>
+                                    {{ val_state(cls.id).label || "---"}}
                                     <i class="fa fa-caret-down"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-height-7" role="menu">
                                     <li ng-repeat="option in val_options">
-                                        <a ng-click="validate(class.id, option.val) | trackEvent:'Visualizer-Validator-Main':'Validate'">
+                                        <a ng-click="validate(cls.id, option.val) | trackEvent:'Visualizer-Validator-Main':'Validate'">
                                             <i class="fa" ng-class="'val-'+option.val"></i> 
                                             {{ option.label }}
                                         </a>
