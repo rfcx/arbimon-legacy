@@ -141,6 +141,15 @@ router.get('/:siteid/log/data.txt', function(req, res, next){
             output='json';
             groupby='dates';
         } else {
+            if(req.query.stat){ 
+                options.stat = req.query.stat.split(','); 
+            }
+            if(req.query.from){
+                options.from = new Date(+req.query.from); 
+            }
+            if(req.query.to){
+                options.to = new Date(+req.query.to); 
+            }
             if (req.query.date) {
                 options.dates = req.query.date.split(',');
                 output='csv';

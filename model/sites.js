@@ -293,6 +293,13 @@ var Sites = {
     /** Returns the site's data log.
      * @param {Object}  site - an object representing the site.
      * @param {Integer} site.site_id - id of the given site.
+     * @param {Object}  options - options object.
+     * @param {bool}  options.only_dates - show the dates with logged data instead of the logs.
+     * @param {String}  options.quantize - aggregate entries by the specified time interval. 
+     *                    Format is a number plus an unit (min(s), hour(s), day(s) or week(s))
+     * @param {Date}  options.from - limit returned data to entries after or at this date
+     * @param {Date}  options.to   - limit returned data to entries before or at this date
+     * @param {Date}  options.stat - limit returned data to the given stats
      * @param {Callback} callback    - callback function
      */
     getDataLog: function(site, options, callback){
@@ -315,12 +322,24 @@ var Sites = {
                     return field.string();
                 }};
             } else {
-                var fields = [['SDL.datetime', 'datetime'], ['SDL.power', 'power'], ['SDL.temp', 'temp'], ['SDL.voltage', 'voltage'], 
+                var fields = [['SDL.datetime', 'datetime']];
+                var stats  = [['SDL.power', 'power'], ['SDL.temp', 'temp'], ['SDL.voltage', 'voltage'], 
                               ['SDL.battery', 'battery'], ['SDL.status', 'status'], ['SDLPT.type', 'plug_type'], ['SDLHT.type', 'health'], 
                               ['SDLTT.type', 'bat_tech']];
+                if(options.stat){
+                    var options_stats={};
+                    options.stat.forEach(function(s){options_stats[s]=true;});
+                    stats.forEach(function(s){
+                        if(options_stats[s[1]]){
+                            fields.push(s);
+                        }
+                    });
+                } else {
+                    fields.push.apply(fields, stats);
+                }
                 var group_clause;
                 
-                if(options.quantize && (m=/^(\d+)(min|hour|day|week)s?$/.exec(options.quantize))){
+                if(options.quantize && (m=/^(\d+)\s?(min|hour|day|week)s?$/.exec(options.quantize))){
                     var scale=m[1]|0, qfunc = {
                         min   : 'FLOOR(UNIX_TIMESTAMP(SDL.datetime)/60)',
                         hour  : 'FLOOR(UNIX_TIMESTAMP(SDL.datetime)/3600)',
@@ -330,13 +349,16 @@ var Sites = {
                     if(scale != 1){
                         qfunc = 'FLOOR('+qfunc+'/'+scale+')*'+scale;
                     }
-                    var mins = fields.map(function(f){ return ['MIN('+f[0]+')', 'min_'+f[1]];});
-                    var maxs = fields.map(function(f){ return ['MAX('+f[0]+')', 'max_'+f[1]];});
-                    var means = fields.map(function(f){ return ['AVG('+f[0]+')', 'mean_'+f[1]];});
-                    fields.push.apply(fields, mins);
-                    fields.push.apply(fields, maxs);
-                    fields.push.apply(fields, means);
-                    fields.push([qfunc, m[2]]);
+                    var dtfield = fields.shift(); // remove datetime
+                    // var mins = fields.map(function(f){ return ['MIN('+f[0]+')', 'min_'+f[1]];});
+                    // var maxs = fields.map(function(f){ return ['MAX('+f[0]+')', 'max_'+f[1]];});
+                    // var means = fields.map(function(f){ return ['AVG('+f[0]+')', 'mean_'+f[1]];});
+                    // fields.push.apply(fields, mins);
+                    // fields.push.apply(fields, maxs);
+                    // fields.push.apply(fields, means);
+                    fields.forEach(function(f){ f[0] = 'AVG('+f[0]+')';});
+                    fields.unshift(dtfield); // add datetime
+                    // fields.push([qfunc, m[2]]);
                     group_clause = qfunc;
                 }
                 
@@ -347,11 +369,25 @@ var Sites = {
                 "JOIN site_data_log_plug_types SDLPT ON SDL.plug_type = SDLPT.plug_type_id \n" +
                 "JOIN site_data_log_health_types SDLHT ON SDL.health = SDLHT.health_type_id \n" +
                 "LEFT JOIN site_data_log_tech_types SDLTT ON SDL.bat_tech = SDLTT.tech_type_id \n" +
-                "WHERE site_id = ?" + 
-                (group_clause ? " \nGROUP BY " + group_clause : '');
+                "WHERE site_id = ?";
                 if (options.dates) {
                     sql += " AND DATE(SDL.datetime) IN (?)";
                     params.push(options.dates);
+                }
+                if (options.from) {
+                    if(options.to){
+                        sql += " AND SDL.datetime BETWEEN ? AND ?";
+                        params.push(options.from, options.to);
+                    } else {
+                        sql += " AND SDL.datetime >= ?";
+                        params.push(options.from);
+                    }
+                } else if(options.to){
+                    sql += " AND SDL.datetime <= ?";
+                    params.push(options.to);
+                }
+                if(group_clause){
+                    sql += " \nGROUP BY " + group_clause;
                 }
             }
             

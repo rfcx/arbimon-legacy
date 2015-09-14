@@ -99,6 +99,12 @@ module.exports = function(grunt) {
                 src: ['css/*', 'fonts/*'],
                 dest: 'public/assets/font-awesome/',
             },
+            c3: {
+                expand: true,
+                flatten: true,
+                src: 'bower_components/c3/*',
+                dest: 'public/assets/c3/'
+            },
             d3: {
                 expand: true,
                 flatten: true,

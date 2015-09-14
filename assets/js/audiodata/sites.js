@@ -5,7 +5,7 @@ angular.module('a2.audiodata.sites', [
     'humane',
     'a2.qr-js'
 ])
-.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, a2UserPermit) {
+.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit) {
     $scope.loading = true;
     
     Project.getInfo(function(info){
@@ -137,16 +137,28 @@ angular.module('a2.audiodata.sites', [
     $scope.show[p.show || 'map'] = true;
     
     $scope.set_show = function(new_show){
+        var d=$q.defer(), promise=d.promise;
+        d.resolve();
+        
         if(new_show == 'status' && $scope.selected && $scope.selected.has_logs){
-            $scope.status_controller.activate($scope.selected);
+            promise = promise.then(function(){
+                return $scope.status_controller.activate($scope.selected);
+            });
         } else {
-            new_show='map';
+            promise = promise.then(function(){
+                new_show='map';
+            });
         }
-        for(var i in $scope.show){
-            $scope.show[i] = false;
-        }
-        $scope.show[new_show] = true;
-        return $state.transitionTo($state.current.name, {site:$state.params.site, show:new_show}, {notify:false});
+        
+        return promise.then(function(){
+            for(var i in $scope.show){
+                $scope.show[i] = false;
+            }
+            
+            $scope.show[new_show] = true;
+            
+            return $state.transitionTo($state.current.name, {site:$state.params.site, show:new_show}, {notify:false});
+        });
     };
     // $scope.browseShared = function() {
     //     var modalInstance = $modal.open({
@@ -402,42 +414,201 @@ angular.module('a2.audiodata.sites', [
         };
     })
 
-.controller('SiteStatusPlotterController', function($scope, a2Sites){
+.controller('SiteStatusPlotterController', function($scope, $q, a2Sites){
+    function mk_time_range_fn(from, delta){
+        return function(){
+            var fromdt = (from == 'now' ? new Date() : new Date(from));
+            var todt = new Date(fromdt.getTime() + delta);
+            if(delta < 0){
+                var t=fromdt;
+                fromdt=todt;
+                todt=t;
+            }
+            return [fromdt, todt];
+        };
+    }
+    function get_by_tag(arr, tag){
+        return arr.filter(function(x){return x.tag == tag;}).shift();
+    }
+    function make_setter(options){
+        var attr = options.data;
+        var selattr = options.sel || attr;
+        var def = options.def;
+        return function set(value){
+            if(typeof(value) == 'string'){
+                value = get_by_tag(this.data[attr], value);
+            }
+            if(!value){
+                value = get_by_tag(this.data[attr], def);
+            }
+            this.selected[selattr] = value;
+            if(value.apply){
+                value.apply(this);
+            }
+            
+            return this.refresh_logs();
+                    
+        };
+    }
+    
     this.data = {
         series:[
-            {tag:'battery', name:'Battery Status', icon:'fa fa-fw fa-plug'},
+            {tag:'status', name:'Battery Status', icon:'fa fa-fw fa-plug'},
             {tag:'voltage', name:'Voltage', icon:'fa fa-fw fa-bolt'},
             {tag:'power', name:'Power', icon:'fa fa-fw fa-battery-half'}
+        ],
+        time_ranges:[
+            {tag:'1-hour' , text:'Last Hour'     , range:mk_time_range_fn('now', -      3600*1000)},
+            {tag:'3-hour' , text:'Last 3 Hours'  , range:mk_time_range_fn('now', -    3*3600*1000)},
+            {tag:'6-hour' , text:'Last 6 Hours'  , range:mk_time_range_fn('now', -    6*3600*1000)},
+            {tag:'12-hour', text:'Last 12 Hours' , range:mk_time_range_fn('now', -   12*3600*1000)},
+            {tag:'24-hour', text:'Last 24 Hours' , range:mk_time_range_fn('now', -   24*3600*1000)},
+            {tag:'3-days' , text:'Last 3 Days'   , range:mk_time_range_fn('now', - 3*24*3600*1000)},
+            {tag:'1-week' , text:'Last Week'     , range:mk_time_range_fn('now', - 7*24*3600*1000)},
+            {tag:'2-weeks', text:'Last 2 Weeks'  , range:mk_time_range_fn('now', -14*24*3600*1000)},
+            {tag:'1-month', text:'Last Month'    , range:mk_time_range_fn('now', -31*24*3600*1000)}
+        ],
+        periods:[
+            {tag:'1-minute'   , text:'1 Minute'   , sampling:'1 min'  , granularity:       1 * 60 * 1000},
+            {tag:'5-minutes'  , text:'5 Minutes'  , sampling:'5 mins' , granularity:       5 * 60 * 1000},
+            {tag:'10-minutes' , text:'10 Minutes' , sampling:'10 mins', granularity:      10 * 60 * 1000},
+            {tag:'30-minutes' , text:'30 Minutes' , sampling:'30 mins', granularity:      30 * 60 * 1000},
+            {tag:'1-hour'     , text:'1 Hour'     , sampling:'1 hour' , granularity:  1 * 60 * 60 * 1000},
+            {tag:'3-hours'    , text:'3 Hours'    , sampling:'3 hours', granularity:  3 * 60 * 60 * 1000},
+            {tag:'6-hours'    , text:'6 Hours'    , sampling:'6 hours', granularity:  6 * 60 * 60 * 1000},
+            {tag:'1-day'      , text:'1 Day'      , sampling:'1 day'  , granularity: 24 * 60 * 60 * 1000},
         ],
         // min_date: 0,
         // max_date: 10000,
     };
+    this.loading={};
     this.selected = {
-        series: undefined,
-        type:'daily',
-        from:undefined,
-        to:undefined
-    };
-
-    this.activate = function(selected_site){
-        this.selected_site = selected_site;
-        this.set_series('power');
-        this.refresh_logs();
+        series: get_by_tag(this.data.series, 'power'),
+        time_range: get_by_tag(this.data.time_ranges, '1-week'),
+        period: get_by_tag(this.data.periods, '1-hour'),
     };
     
-    this.set_series = function(series){
-        if(typeof(series) == 'string'){
-            series = this.data.series.filter(function(s){return s.tag == series;}).shift();
-        }
-        if(!series){
-            series = this.data.series.filter(function(s){return s.tag == 'power';}).shift();
-        }
-        this.selected.series = series;
+    this.set_series      = make_setter({data:'series'     , sel:'series'    , def:'power' });
+    this.set_time_range  = make_setter({data:'time_ranges', sel:'time_range', def:'1-week'});
+    this.set_period      = make_setter({data:'periods'    , sel:'period'    , def:'7-days'});
+    
+    this.activate = function(selected_site){
+        this.selected.site = selected_site;
+        return this.refresh_logs();
+    };
+
+    this.load_data = function(site, series, range, period){
+        var loading = this.loading;
+        loading.data=true;
+        return a2Sites.getSiteLogDataUrl(site.id, series.tag, range[0], range[1], period.sampling).then(function(data){
+            loading.data=false;
+            return {x:'datetime', url:data};
+        });
+    };
+    
+    this.make_chart_struct = function(data){
+        this.chart = {
+            data: data,
+            
+            axes : {
+                x : {
+                    tick: {
+                        format: function (x) { 
+                            return moment(new Date(x)).utc().format('MM-DD-YYYY HH:mm'); 
+                        }
+                    }
+                }
+            }
+        };
     };
 
     
     this.refresh_logs = function(){
-        // getLogFiles
+        var d = $q.defer(), promise=d.promise;
+        d.resolve();
+        var site = this.selected.site;
+        var series = this.selected.series;
+        var time_range = this.selected.time_range;
+        var period = this.selected.period;
+        
+        if(site && series && time_range && period) {
+            var range = time_range.range();
+            var granularity = period.granularity;
+            promise = d.promise.then((function(){
+                if(series.data) {
+                    if(series.data.site != site || series.data.period != period || !(
+                        series.data.range[0] - granularity >= range[0] && range[1] <= series.data.range[1] + granularity
+                    )){
+                        series.data = null;
+                    } 
+                }
+                if(!series.data){
+                    return this.load_data(site, series, range, period).then(function(data){
+                        series.data = {data:data, site:site, range:range, period:period};
+                        return series.data.data;
+                    });
+                } else {
+                    return series.data.data;
+                }
+            }).bind(this)).then((function(chart_data){
+                console.log("chart_data : ", chart_data);
+                if (chart_data) {
+                    this.make_chart_struct(chart_data);
+                }
+            }).bind(this));
+        }
+        
+        return promise;
+        
+    };
+})
+.directive('c3ChartDisplay', function($window) {
+    var c3 = $window.c3;
+    
+    function normalize(data){
+        if(typeof data != 'object') {
+            return {columns:data};
+        }
+        return data;
+    }
+    
+    var makeChart = function(element, data, axes){
+        var celem = element.find('div');
+        if(!data || !axes){
+            celem.remove();
+            return;
+        }
+        if(!celem.length){
+            celem = angular.element('<div></div>').appendTo(element);
+        }
+        
+        var args={bindto: celem[0], data: normalize(data)};
+        if(axes){
+            args.axis=axes;
+        }
+        
+        return c3.generate(args);
+    };
+    
+    return {
+        restrict: 'E',
+        scope: {
+            data:'=',
+            axes:'='
+        },
+        template:'<span></span>',
+        link: function (scope, element, attrs) {
+            var chart;
+            scope.$watch('axes', function(o,n){if(o != n) chart = makeChart(element, scope.data, scope.axes, chart);});
+            scope.$watch('data', function(o,n){
+                if(o != n && !chart){ 
+                    chart = makeChart(element, scope.data, scope.axes, chart);
+                } else if(chart){
+                    // chart.unload();
+                    chart.load(normalize(scope.data));
+                }
+            });
+        }
     };
 })
 ;

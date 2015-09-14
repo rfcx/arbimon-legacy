@@ -1,7 +1,7 @@
 angular.module('a2.srv.sites', [
     'a2.srv.project',
 ])
-.factory('a2Sites',function($http, Project){
+.factory('a2Sites',function($http, $q, Project){
     return {
         listPublished: function(callback) {
             $http.get('/api/sites/published')
@@ -42,7 +42,21 @@ angular.module('a2.srv.sites', [
         getLogFiles: function(site, callback) {
             return $http.get('/api/project/'+ Project.getUrl() +'/sites/'+site+'/logs');
         },
+
+        getSiteLogDataDates: function(site, series){
+            var d=$q.defer();
+            $http.get('/api/project/'+ Project.getUrl() +'/sites/'+site+'/log/data.txt?get=dates')
+                .success(d.resolve.bind(d))
+                .error(d.reject.bind(d));
+            return d.promise;
+        },
         
+        getSiteLogDataUrl: function(site, series, from, to, period){
+            var d=$q.defer();
+            d.resolve('/api/project/'+ Project.getUrl() +'/sites/'+site+'/log/data.txt?stat='+series+'&q='+period+'&from='+from.getTime()+'&to='+to.getTime());
+            return d.promise;
+        },
+
         // Uses Promises :-)
         generateToken : function(site){
             return $http.post('/api/project/'+ Project.getUrl() +'/sites/generate-token', {
