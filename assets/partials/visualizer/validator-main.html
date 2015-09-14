@@ -2,8 +2,6 @@
     <p ng-hide="classes.length">
         You need to add species sounds <a ui-sref="audiodata.species">here</a>
     </p>
-    <pre>
-    </pre>
     <accordion close-others="false" class="accordion-group">
         <accordion-group is-open="byTaxon[taxon].open" ng-repeat="taxon in taxons" class="accordion-table">
             <accordion-heading>
