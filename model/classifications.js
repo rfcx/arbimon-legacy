@@ -30,25 +30,19 @@ var Classifications = {
         var q = (
             "SELECT UNIX_TIMESTAMP( j.`date_created` )*1000  as `date`, \n"+
             "    j.`job_id`, \n"+
-            "    pl.`name` as playlistName,\n"+
-            "    CONCAT(UCASE(LEFT(mode.`name`, 1)), SUBSTRING(mode.`name`, 2))  as modname, \n"+
-            "    CONCAT(UCASE(LEFT(jpc.`name`, 1)), SUBSTRING(jpc.`name`, 2))  as cname, \n"+
-            "    CONCAT(\n"+
-            "        CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)), \n"+
-            "        ' ', \n"+
-            "        CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) \n"+
-            "    ) as muser\n"+
-            "FROM  `playlists`  as pl, \n"+
-            "    `models` as mode , \n"+
-            "    `jobs` as j,\n"+
-            "    `job_params_classification` as jpc, \n"+
-            "    `users` as u\n"+
-            "WHERE pl.`playlist_id` = jpc.`playlist_id` \n"+
-            "AND mode.`model_id` = jpc.`model_id` \n"+
-            "AND j.`job_id` = jpc.`job_id` \n"+
-            "AND j.`job_type_id` = 2 \n"+
+            "    pl.`name` as playlist_name,\n"+
+            "    pl.`playlist_id`,\n"+
+            "    m.name as modname, \n"+
+            "    m.model_id, \n"+
+            "    jpc.name as cname, \n"+
+            "    u.login as muser\n"+
+            "FROM `jobs` as j\n"+
+            "JOIN `job_params_classification` as jpc ON j.`job_id` = jpc.`job_id` \n"+
+            "JOIN `playlists` as pl ON pl.`playlist_id` = jpc.`playlist_id` \n"+
+            "JOIN `models` as m ON m.`model_id` = jpc.`model_id` \n"+
+            "JOIN `users` as u ON u.`user_id` = j.`user_id` \n"+
+            "WHERE j.`job_type_id` = 2 \n"+
             "AND j.`completed` = 1 \n"+
-            "AND u.`user_id` = j.`user_id` \n"+
             "AND j.`project_id` = ? "
         );
 
@@ -183,31 +177,32 @@ var Classifications = {
     },
     
     // classificationDetail: function(project_url, cid, callback) {
+    
     detail: function(cid, callback) {
-        var q = "SELECT c.`species_id`, \n"+
-                "       c.`songtype_id`, \n"+
-                "       c.`present`, \n"+
-                "       CONCAT( \n"+
-                "           UCASE(LEFT(st.`songtype`, 1)), \n"+
-                "           SUBSTRING(st.`songtype`, 2) \n"+
-                "       ) as songtype, \n"+
-                "       CONCAT( \n"+
-                "           UCASE(LEFT(s.`scientific_name`, 1)), \n"+
-                "           SUBSTRING(s.`scientific_name`, 2) \n"+
-                "       ) as scientific_name, \n"+
-                "       mm.`threshold` as th \n"+
-                "FROM  `models` mm, \n"+
-                "      `job_params_classification`jpc, \n"+
-                "      `classification_results` c, \n"+
-                "      `species` as s , \n"+
-                "      `songtypes` as st \n"+
-                "WHERE c.`job_id` = " + mysql.escape(cid) +"\n"+
-                "AND c.`species_id` = s.`species_id` \n"+
-                "AND c.`songtype_id` = st.`songtype_id` \n"+
-                "AND jpc.`job_id` = c.`job_id` \n"+
-                "AND mm.`model_id` = jpc.`model_id`";
+        var q = (
+            "SELECT c.`species_id`, \n"+
+            "   c.`songtype_id`, \n"+
+            "   SUM(c.`present`) as present, \n"+
+            "   COUNT(c.`present`) as total, \n"+
+            "   CONCAT( \n"+
+            "       UCASE(LEFT(st.`songtype`, 1)),  \n"+
+            "       SUBSTRING(st.`songtype`, 2)  \n"+
+            "   ) as songtype,  \n"+
+            "   CONCAT( \n"+
+            "       UCASE(LEFT(s.`scientific_name`, 1)),  \n"+
+            "       SUBSTRING(s.`scientific_name`, 2)  \n"+
+            "   ) as scientific_name, \n"+
+            "   m.`threshold` as th \n"+
+            "FROM `classification_results` as c \n"+
+            "JOIN `job_params_classification` as jpc ON jpc.`job_id` = c.`job_id` \n"+
+            "JOIN `models` m  ON m.`model_id` = jpc.`model_id` \n"+
+            "JOIN `species` as s ON c.`species_id` = s.`species_id` \n"+
+            "JOIN `songtypes` as st ON c.`songtype_id` = st.`songtype_id` \n"+
+            "WHERE c.`job_id` = ? \n"+
+            "GROUP BY c.`species_id`, c.`songtype_id`"
+        );
 
-        queryHandler(q, callback);
+        queryHandler(mysql.format(q,[cid]), callback);
     },
     
     // classificationDetailMore: function(project_url, cid, from, total, callback) {
@@ -236,14 +231,14 @@ var Classifications = {
                 "     `classification_results` c, \n"+
                 "     `species` as s , \n"+
                 "     `songtypes` as st \n"+
-                "WHERE c.`job_id` = " + mysql.escape(cid) + "\n"+
+                "WHERE c.`job_id` = ? \n"+
                 "AND c.`job_id` = cs.`job_id` \n"+
                 "AND c.`species_id` = s.`species_id` \n"+
                 "AND c.`songtype_id` = st.`songtype_id` \n"+
                 "AND r.`recording_id` = c.`recording_id` \n"+
-                "ORDER BY present DESC LIMIT " + parseInt(from) + "," + parseInt(total);
+                "ORDER BY present DESC LIMIT ?,?";
         
-        queryHandler(q, callback);
+        queryHandler(mysql.format(q,[cid, parseInt(from), parseInt(total)]), callback);
     },
     
     getRecVector: function(c12nId, recId, callback) {

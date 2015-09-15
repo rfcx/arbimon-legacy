@@ -17,27 +17,26 @@
         </button>
         
         <div ng-hide="loading">
-            <table ng-table="tableParams" class="table table-hide-btns" show-filter="true" >
+            <table ng-table="tableParams" class="table" show-filter="true" >
                 <tr ng-repeat="classification in classificationsData" >
-                    <td data-title="'Date'" data-sortable="'date'" >
-                        {{ classification.date | moment : 'lll' }}
-                    </td>
-
                     <td data-title="'Name'" class="hidelongtext widthtd" data-sortable="'cname'" filter="{ 'cname': 'text' }">
                         {{classification.cname}}
                     </td>
-                    <td data-title="'User'" data-sortable="'muser'" filter="{ 'muser': 'text' }" class="no-wrap-table-cell">
-                        {{classification.muser}}
+                    <td data-title="'Date'" data-sortable="'date'" >
+                        {{ classification.date | moment : 'lll' }}
                     </td>
                     <td data-title="'Model'" data-sortable="'modname'" filter="{ 'modname': 'text' }" class="no-wrap-table-cell">
                         {{classification.modname}}
                     </td>
-                    <td data-title="'Playlist'" data-sortable="'playlistName'" filter="{ 'playlistName': 'text' }" class="no-wrap-table-cell">
-                        {{classification.playlistName}}
+                    <td data-title="'Playlist'" data-sortable="'playlist_name'" filter="{ 'playlist_name': 'text' }" class="no-wrap-table-cell">
+                        {{classification.playlist_name}}
+                    </td>
+                    <td data-title="'User'" data-sortable="'muser'" filter="{ 'muser': 'text' }" class="no-wrap-table-cell">
+                        {{classification.muser}}
                     </td>
                     <td>
                         <button class="btn btn-default btn-xs" 
-                            ng-click="showClassificationDetails(classification.job_id) | trackEvent:'Analysis-Classification-List':' show classification details'">
+                            ng-click="showClassificationDetails(classification) | trackEvent:'Analysis-Classification-List':' show classification details'">
                                 Show details
                         </button>
                         <button class="btn btn-default btn-xs" 
