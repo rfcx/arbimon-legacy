@@ -254,19 +254,30 @@ angular.module('a2.browser_recordings_by_site', [])
     };
     
     this.set_date = function(date){
-        this.date = date;
         if(!self.active){ return; }
         
         this.yearpickOpen = false;
-        // $(document).find('.dropdown.open').removeClass('open');
         var site = this.site;
-        if (site && date) {
-            if(self.lovo && date && self.lovo.date && date.getTime() == self.lovo.date.getTime()){
+        this.date = date;
+        
+        if(site && date) {
+            var isNewSiteAndDate = function() {
+                return (
+                    this.lovo && 
+                    date && 
+                    this.lovo.date && 
+                    date.getTime() === this.lovo.date.getTime() &&
+                    site.id === this.lovo.site.id
+                );
+            };
+            
+            if(isNewSiteAndDate()){
                 a2Browser.setLOVO(self.lovo);
-                return;
-            } else {
+            } 
+            else {
                 a2Browser.setLOVO(make_lovo());
             }
         }
+        
     };
 });

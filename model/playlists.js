@@ -8,6 +8,7 @@ var util  = require('util');
 
 var sqlutil = require('../utils/sqlutil');
 var dbpool = require('../utils/dbpool');
+// TODO remove circular dependencies
 var model = require('../model');
 
 // local variables

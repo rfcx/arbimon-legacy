@@ -4,7 +4,7 @@
  1. install app system dependencies
    ```
    curl -sL https://deb.nodesource.com/setup_0.10 | sudo bash -
-   sudo apt-get install -y python-pip sox libsox-fmt-mp3 imagemagick nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev pkg-config python-virtualenv
+   sudo apt-get install -y python-pip sox libsox-fmt-mp3 nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev pkg-config python-virtualenv
    ```
 
 

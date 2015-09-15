@@ -74,7 +74,7 @@ router.get('/feed/:page', function(req, res, next) {
                 message: sprintf(results.formats[row.type], data),
                 username: row.username,
                 timestamp: row.timestamp,
-                imageUrl: gravatar.url(row.email, { d: 'monsterid', s: 30 }, req.secure == 'https')
+                imageUrl: gravatar.url(row.email, { d: 'monsterid', s: 30 }, req.secure)
             };
         });
         
@@ -105,7 +105,7 @@ router.get('/search/:query?', function(req, res, next) {
         if(err) return next(err);
         
         var users = rows.map(function(row){
-            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, req.secure == 'https');
+            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, req.secure);
             
             return row;
         });

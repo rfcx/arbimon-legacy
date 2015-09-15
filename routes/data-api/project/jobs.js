@@ -18,14 +18,6 @@ router.get('/progress', function(req, res, next) {
     });
 });
 
-router.get('/types', function(req, res, next) {
-    model.jobs.getJobTypes(function(err, types) {
-        if(err){ next(err); return; }
-        res.json(types);
-    });
-});
-
-
 // ------------------- routes with restriction -------------------------------
 
 router.use(function(req, res, next) { 

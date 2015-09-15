@@ -246,7 +246,7 @@ router.get('/:projectUrl/users', function(req, res, next) {
         if(err) return next(err);
         
         var users = rows.map(function(row){
-            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, req.secure == 'https');
+            row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, req.secure);
             
             return row;
         });

@@ -1,9 +1,12 @@
-function mock_fs_fd(entry){
+/* jshint node:true */
+"use strict";
+
+function MockFsFd(entry){
     this.entry = entry;
     this.data = entry.data || ''; 
 }
 
-mock_fs_fd.prototype = {
+MockFsFd.prototype = {
     read : function(buffer, offset, length, position){
         var data = this.data, len = data.length;
         if(position === null){
@@ -31,7 +34,9 @@ var mock_fs = {
         if(entry && entry.exists !== false){
             setImmediate(callback, null, entry);
         } else {
-            setImmediate(callback, new Error('ENOENT'));
+            var e = new Error('File not found');
+            e.code = 'ENOENT';
+            setImmediate(callback, e);
         }
     },
     unlink : function (file, callback){
@@ -52,7 +57,7 @@ var mock_fs = {
         }
     },
     read: function(fd, buffer, offset, length, position, callback){
-        if(!(fd instanceof mock_fs_fd)){
+        if(!(fd instanceof MockFsFd)){
             setImmediate(callback, new Error("Invalid file descriptor, cannot read"));
         } else if(!(buffer instanceof Buffer)){
             setImmediate(callback, new Error("Invalid buffer, cannot read"));
@@ -95,19 +100,21 @@ var mock_fs = {
         }
         var entry = this.__files__[filename];
         if(options.must_exist && !entry){
-            setImmediate(callback, new Error('ENOENT : file does not exist.'));
+            var e = new Error('File not found');
+            e.code = 'ENOENT';
+            setImmediate(callback, e);
         } else if(options.must_not_exist && entry){
             setImmediate(callback, new Error('EEXIST : file already exists.'));
         } else {
             if((entry && options.truncate) || !entry){
                 this.__files__[filename] = {path:filename, atime:new Date(), data:''};
             }
-            var fd = new mock_fs_fd(this.__files__[filename]);
+            var fd = new MockFsFd(this.__files__[filename]);
             setImmediate(callback, null, fd);
         }
     },
     close : function(fd, callback){
-        if(fd instanceof mock_fs_fd && fd.entry){
+        if(fd instanceof MockFsFd && fd.entry){
             fd.entry.data = fd.data;
             setImmediate(callback);
         } else {

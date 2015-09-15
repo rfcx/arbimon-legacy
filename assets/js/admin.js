@@ -2,6 +2,7 @@ angular.module('a2.admin', [
     'ui.router', 
     'ui.bootstrap', 
     'a2.utils',
+    'a2.services',
     'templates-arbimon2',
     'humane',
     'ui.select',
@@ -165,7 +166,7 @@ angular.module('a2.admin', [
     getJobQueueInfo();
     
     
-    $http.get('/api/project/'+Project.getUrl()+'/jobs/types')
+    $http.get('/api/jobs/types')
         .success(function(jobTypes) {
             var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528'];
             

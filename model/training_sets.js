@@ -11,7 +11,7 @@ var debug = require('debug')('arbimon2:model:training_sets');
 var mysql = require('mysql');
 var async = require('async');
 var joi = require('joi');
-var im = require('imagemagick');
+var lwip = require('lwip');
 var AWS = require('aws-sdk');
 
 // local dependencies
@@ -294,12 +294,14 @@ TrainingSets.types.roi_set = {
      * @param {Object} data                   - training set data element, as returned by get_data
      */
     create_data_image : function (training_set, rdata, callback){
-        var s3key='project_'+training_set.project+'/training_sets/'+training_set.id+'/'+rdata.id+'.png';
+        debug('create_data_image');
+        var s3key = 'project_'+training_set.project+'/training_sets/'+training_set.id+'/'+rdata.id+'.png';
         rdata.uri = 'https://s3.amazonaws.com/'+config('aws').bucketName+'/' + s3key;
         var roi_file = tmpfilecache.key2File(s3key);
         var rec_data;
         var rec_stats;
         var spec_data;
+        
         async.waterfall([
             function find_recording(next){
                 Recordings.findByUrlMatch(rdata.recording,0, {limit:1}, next);
@@ -312,34 +314,33 @@ TrainingSets.types.roi_set = {
                 rec_stats = data;
                 Recordings.fetchSpectrogramFile(rec_data, next);  
             },
-            function get_spectrogram_identify(data, next){
+            function get_spectrogram(data, next){
+                debug('get_spectrogram');
                 spec_data = data;
-                im.identify(spec_data.path, next);
+                lwip.open(spec_data.path, next);
             },
-            function crop_roi(spectro_info, next){
-                var roiDuration = rdata.x2-rdata.x1;
-                var px2sec = rec_data.duration/spectro_info.width ;
-                var roiWidth = Math.ceil(roiDuration/px2sec);
-                var roiBanwdwith = rdata.y2-rdata.y1;
-                var max_freq = rec_data.sample_rate / 2;
-                var px2hz  = max_freq / spectro_info.height;
-                var roiHeight = Math.ceil(roiBanwdwith/px2hz);
-                var roiStartX = Math.floor(rdata.x1/px2sec);
-                var roiStartY = spectro_info.height-Math.floor(rdata.y2/px2hz);
+            function crop_roi(spectrogram, next){
+                debug('crop_roi');
+                var px2sec = rec_data.duration/spectrogram.width();
+                var max_freq = rec_data.sample_rate/2;
+                var px2hz  = max_freq/spectrogram.height();
                 
-                // TODO change imagemagick for lwip
-                im.convert([
-                    spec_data.path,
-                    '-colorspace', 'RGB',
-                    '-crop',
-                    roiWidth+'x'+roiHeight+'+'+roiStartX+'+'+roiStartY,
-                    '+repage',
-                    '-colorspace', 'RGB',
-                    roi_file
-                ], next);
+                var left = Math.floor(rdata.x1/px2sec); 
+                var top = spectrogram.height()-Math.floor(rdata.y2/px2hz); 
+                var right = Math.ceil(rdata.x2/px2sec); 
+                var bottom = spectrogram.height()-Math.floor(rdata.y1/px2hz); 
+                
+                spectrogram.extract(left, top, right, bottom, 
+                    function(err, roi) {
+                        if(err) return next(err);
+                        
+                        roi.toBuffer('png', next);
+                    }
+                );
             }, 
-            function store_in_bucket(){
-                var next = arguments[arguments.length-1];
+            function store_in_bucket(roiBuffer, next) {
+                debug('store_in_bucket');
+                // var next = arguments[arguments.length-1];
                 if(!s3){
                     s3 = new AWS.S3();
                 }
@@ -347,24 +348,26 @@ TrainingSets.types.roi_set = {
                     Bucket: config('aws').bucketName, 
                     Key: s3key,
                     ACL: 'public-read',
-                    Body: fs.createReadStream(roi_file)
+                    Body: roiBuffer
                 }, next);
             },
             function update_roi_data() {
+                debug('update_roi_data');
                 var next = arguments[arguments.length-1];
-                dbpool.queryHandler(
-                    "UPDATE training_set_roi_set_data \n"+
-                    "SET uri = '"+s3key+"' \n"+
-                    "WHERE roi_set_data_id = " + rdata.id,
-                    next
-                );
+                
+                var q = "UPDATE training_set_roi_set_data \n"+
+                        "SET uri = ? \n"+
+                        "WHERE roi_set_data_id = ?";
+                dbpool.queryHandler(mysql.format(q, [s3key, rdata.id]), next);
             },
             function return_updated_roi(){
+                debug('return_updated_roi');
                 var next = arguments[arguments.length-1];
                 next(null, rdata);
             }
         ], callback);
     },
+    
     fetch_data_image : function (training_set, data_id, callback){
         var self = this, data;
         async.waterfall([

@@ -85,10 +85,13 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
         if(err) return next(err);
                 
         rows.forEach(function(classiInfo) {
+            console.log(classiInfo);
             classiInfo.stats = JSON.parse(classiInfo.json_stats);
             delete classiInfo.json_stats;
             
-            classiInfo.rec_image_url = "https://"+ config('aws').bucketName + ".s3.amazonaws.com/"+ classiInfo.uri;
+            var thumbnail = classiInfo.uri.replace('.flac', '.thumbnail.png');
+            
+            classiInfo.rec_image_url = "https://"+ config('aws').bucketName + ".s3.amazonaws.com/"+ thumbnail;
             delete classiInfo.uri;
         });
         
@@ -109,23 +112,12 @@ router.get('/:classiId/delete', function(req, res) {
 });
 
 router.post('/new', function(req, res, next) {
-    
     var response_already_sent;
     var params, job_id;
     
     async.waterfall([
-        function find_project_by_url(next){
-            model.projects.findByUrl(req.params.projectUrl, next);
-        },
-        function gather_job_params(rows){
-            var next = arguments[arguments.length -1];
-            if(!rows.length){
-                res.status(404).json({ err: "project not found"});
-                response_already_sent = true;
-                next(new Error());
-                return;
-            }
-            var project_id = rows[0].project_id;
+        function gather_job_params(next){
+            var project_id = req.project.project_id;
 
             if(!req.haveAccess(project_id, "manage models and classification"))
                 return res.json({ error: "you dont have permission to 'manage models and classification'" });
@@ -225,7 +217,7 @@ router.get('/:classiId/vector/:recId', function(req, res, next) {
 
 });
 
-router.get('/project/csv/:classiId', function(req, res) {
+router.get('/csv/:classiId', function(req, res) {
 
     model.classifications.getName(req.params.classiId, function(err, row) {
         if(err) throw err;

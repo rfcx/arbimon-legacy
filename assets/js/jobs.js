@@ -187,7 +187,7 @@ angular.module('a2.jobs', [
             return jobs;
         },
         getJobTypes: function() {
-            return $http.get('/api/project/' + url + '/jobs/types');
+            return $http.get('/api/jobs/types');
         },
         updateJobs: function() {
             $http.get('/api/project/' + url + '/jobs/progress')

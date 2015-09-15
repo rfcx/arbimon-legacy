@@ -28,7 +28,7 @@ var Classifications = {
     // classifications -> list
     list: function(projectId, callback) {
         var q = (
-            "\nSELECT UNIX_TIMESTAMP( j.`date_created` )*1000  as `date`, \n"+
+            "SELECT UNIX_TIMESTAMP( j.`date_created` )*1000  as `date`, \n"+
             "    j.`job_id`, \n"+
             "    pl.`name` as playlistName,\n"+
             "    CONCAT(UCASE(LEFT(mode.`name`, 1)), SUBSTRING(mode.`name`, 2))  as modname, \n"+
@@ -67,6 +67,7 @@ var Classifications = {
         queryHandler(q, callback);
     },
     
+    // TODO delete async
     // classificationDelete
     delete: function(classificationId, callback) {
         
@@ -75,6 +76,7 @@ var Classifications = {
         var q;
         var allToDelete;
         
+        // TODO change nested queries to join 
         async.waterfall([
             function(cb) {
                 q = "SELECT `uri` FROM `models` WHERE `model_id` = "+
@@ -139,7 +141,7 @@ var Classifications = {
     
     // classificationCsvData: function(classiJobId, callback) {
     getCsvData: function(classiJobId, callback) {
-        var q = "\nSELECT extract(year from r.`datetime`) year, \n"+
+        var q = "SELECT extract(year from r.`datetime`) year, \n"+
                 "   extract(month from r.`datetime`) month, \n"+
                 "   extract(day from r.`datetime`) day, \n"+
                 "   extract(hour from r.`datetime`) hour, \n"+
@@ -215,15 +217,12 @@ var Classifications = {
                 "       c.`songtype_id`, \n"+
                 "       c.`present` as present, \n"+
                 "       c.`recording_id`, \n"+
+                "       r.`uri`, \n"+
                 "       SUBSTRING_INDEX( \n"+
                 "           SUBSTRING_INDEX( r.`uri` , '.', 1 ), \n"+
                 "           '/', \n"+
                 "           -1  \n"+
                 "        ) as recname, \n"+
-                "       CONCAT( \n"+
-                "           SUBSTRING_INDEX( r.`uri` , '.', 1 ), \n"+
-                "           '.thumbnail.png' \n"+
-                "       ) as uri, \n"+
                 "       CONCAT( \n"+
                 "           UCASE(LEFT(st.`songtype`, 1)), \n"+
                 "           SUBSTRING(st.`songtype`, 2) \n"+

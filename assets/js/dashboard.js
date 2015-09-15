@@ -65,13 +65,25 @@ angular.module('a2.dashboard',[
         $scope.sites = sites;
         done();
         
+        
         $timeout(function() {
-            var map = $scope.map = $window.L.map('summary-map', { zoomControl: false }).setView([10, -20], 1);
-            L.control.zoom({ position: 'topright'}).addTo($scope.map);
             
-            $window.L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+            var satellite = $window.L.esri.basemapLayer('Imagery');
+            var topo = $window.L.esri.basemapLayer('Topographic');
+            
+            $scope.map = $window.L.map('summary-map', { 
+                    zoomControl: false ,
+                    layers: [satellite, topo],
+                }).setView([10, -20], 1);
+            
+            $scope.maplayers = {
+                'Satellite': satellite,
+                'Topographic': topo, 
+            };
+            
+            L.control.zoom({ position: 'topright'}).addTo($scope.map);
+            L.control.layers($scope.maplayers, {}, { position: 'topright'}).addTo($scope.map);
+            
             
             if(!$scope.sites.length){
                 return;
@@ -87,7 +99,7 @@ angular.module('a2.dashboard',[
                     
                     var content = $compile(layer_tmp)(infowindow_scope)[0];
                     
-                    $window.L.marker([site.lat, site.lon]).addTo(map)
+                    $window.L.marker([site.lat, site.lon]).addTo($scope.map)
                         .bindPopup(content);
                 });
             });

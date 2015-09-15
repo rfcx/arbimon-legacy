@@ -35,7 +35,7 @@
                 <div class="jumbotron" ng-show="(!sets || !sets.length > 0) && !loading">
                     <h3>
                         No training sets found. <a ng-click="add_new_tset() | trackEvent:'Audiodata-Training Sets':'add_new_tset'"  ng-show="(!sets || !sets.length > 0) && !loading" >Create a training set.</a>
-                    </h3    >
+                    </h3>
                 </div>
             </div>
         </div>
@@ -119,7 +119,6 @@
                             </ul>
                         </div>
                     </div>
-                    
                     <div ng-hide="detailedView">
                         <div ng-repeat="roi in currentrois" class="roi-thumbnail">
                             <button class="roi-btn-tl roi-info"
@@ -148,7 +147,7 @@
                                     class="fa fa-cubes">
                                 </i>
                             </a>
-                            <img ng-src="{{ currentUri }}" class="roi-img"/>
+                            <img ng-src="{{ roi.uri }}" class="roi-img"/>
                         </div>
                     </div>
                     

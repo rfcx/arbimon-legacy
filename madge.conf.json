@@ -1,0 +1,9 @@
+{
+    "imageColors": {
+        "noDependencies": "#01019c",
+        "dependencies": "#46a800",
+        "circular": "#cd7500",
+        "edge": "#666666",
+        "bgcolor": "#ffffff"
+    }
+}

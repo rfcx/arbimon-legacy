@@ -69,9 +69,11 @@ var dbpool = {
         dbpool.pool.getConnection(function(err, connection) {
             if(err) return callback(err);
             
+            var padding = '\n        ';
+            
             // for debugging
             var sql = query.sql || query;
-            debug('  query : -|', sql.replace(/\n/g,'\n             '));
+            debug('  query : -|', padding+sql.replace(/\n/g, padding));
             
             connection.query(query, function(err, rows, fields) {
                 connection.release();
