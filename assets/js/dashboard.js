@@ -6,6 +6,7 @@ angular.module('a2.dashboard',[
     'ct.ui.router.extras',
     'a2.forms',
     'humane',
+    'a2.googlemaps'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('dashboard', {
@@ -14,14 +15,12 @@ angular.module('a2.dashboard',[
         templateUrl: '/partials/dashboard/index.html',
     });
 })
-.controller('SummaryCtrl', function($scope, Project, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
+.controller('SummaryCtrl', function($scope, Project, a2GoogleMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
     $scope.loading = 9;
     
     var done = function() {
         if($scope.loading > 0) --$scope.loading;
     };
-    
-    var google = $window.google;
     
     Project.getInfo(function(info){
         $scope.project = info;
@@ -64,48 +63,30 @@ angular.module('a2.dashboard',[
     Project.getSites(function(sites) {
         $scope.sites = sites;
         done();
-        
-        
         $timeout(function() {
-            
-            var satellite = $window.L.esri.basemapLayer('Imagery');
-            var topo = $window.L.esri.basemapLayer('Topographic');
-            
-            $scope.map = $window.L.map('summary-map', { 
-                    zoomControl: false ,
-                    layers: [satellite, topo],
-                }).setView([10, -20], 1);
-            
-            $scope.maplayers = {
-                'Satellite': satellite,
-                'Topographic': topo, 
-            };
-            
-            L.control.zoom({ position: 'topright'}).addTo($scope.map);
-            L.control.layers($scope.maplayers, {}, { position: 'topright'}).addTo($scope.map);
-            
-            
-            if(!$scope.sites.length){
-                return;
-            }
-            
-            var bounds = [];
-            angular.forEach($scope.sites, function(site){
-                bounds.push([site.lat, site.lon]);
+            a2GoogleMapsLoader.then(function(google){
                 
-                var infowindow_scope = $scope.$new();
-                infowindow_scope.site = site;
-                $templateFetch('/partials/dashboard/site-info-window.html', function(layer_tmp){
+                $scope.map = new google.maps.Map($window.document.getElementById('summary-map'), {
+                    center: { lat: 18.3, lng: -66.5},
+                    zoom: 8
+                });
+                
+                var bounds = new google.maps.LatLngBounds();
                     
-                    var content = $compile(layer_tmp)(infowindow_scope)[0];
+                angular.forEach($scope.sites, function(site){
+                    var position = new google.maps.LatLng(site.lat, site.lon);
                     
-                    $window.L.marker([site.lat, site.lon]).addTo($scope.map)
-                        .bindPopup(content);
+                    var marker = new google.maps.Marker({
+                        position: position,
+                        title: site.name
+                    });
+                    
+                    bounds.extend(position);
+                    marker.setMap($scope.map);
+                    
+                    $scope.map.fitBounds(bounds);
                 });
             });
-            
-            $scope.map.fitBounds(bounds);
-            
         }, 100);
         
     });

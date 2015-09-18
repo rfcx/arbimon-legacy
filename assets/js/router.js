@@ -11,7 +11,9 @@ var a2 = angular.module('arbimon2', [
     'angularytics',
     'ui.router', 
     'ct.ui.router.extras',
-    'humane'
+    'humane',
+    'a2.googlemaps',
+    'a2.injected.data'
 ])
 .run(function($rootScope, Angularytics, a2UserPermit, notify, $state) {
     $rootScope.Math = Math; // export math library to angular :-)
@@ -33,7 +35,8 @@ var a2 = angular.module('arbimon2', [
         }
     });
 })
-.config(function($urlRouterProvider, $locationProvider, AngularyticsProvider) {
+.config(function($urlRouterProvider, $locationProvider, AngularyticsProvider, a2GoogleMapsLoaderProvider, a2InjectedData) {
+    a2GoogleMapsLoaderProvider.setAPIKey(a2InjectedData.googleAPI.key);
     AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
     $locationProvider.html5Mode(true);
     $urlRouterProvider.otherwise("/dashboard");
