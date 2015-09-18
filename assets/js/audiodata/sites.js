@@ -3,9 +3,10 @@ angular.module('a2.audiodata.sites', [
     'a2.directives', 
     'ui.bootstrap',
     'humane',
-    'a2.qr-js'
+    'a2.qr-js',
+    'a2.googlemaps'
 ])
-.controller('SitesCtrl', function($scope, Project, $modal, notify, a2Sites, $window, a2UserPermit) {
+.controller('SitesCtrl', function($scope, Project, $modal, notify, a2Sites, $window, a2UserPermit, a2GoogleMapsLoader) {
     $scope.loading = true;
     
     Project.getInfo(function(info){
@@ -19,45 +20,24 @@ angular.module('a2.audiodata.sites', [
     
     $scope.editing = false;
     
-    var satellite = $window.L.esri.basemapLayer('Imagery');
-    var topo = $window.L.esri.basemapLayer('Topographic');
-    
-    $scope.map = $window.L.map('map-site', { 
-            zoomControl: false ,
-            layers: [satellite, topo],
-        }).setView([10, -20], 1);
-    
-    $scope.maplayers = {
-        'Satellite': satellite,
-        'Topographic': topo, 
-    };
-    
-    L.control.zoom({ position: 'topright'}).addTo($scope.map);
-    L.control.layers($scope.maplayers, {}, { position: 'topright'}).addTo($scope.map);
-    
-    
-    var moveMarker = function(e) {
-        console.log(e.latlng);
-        
-        if(!$scope.marker) {
-            console.log('no marker');
-            $scope.marker = $window.L.marker(e.latlng).addTo($scope.map);
-        }
-        else {
-            console.log('marker');
-            $scope.marker.setLatLng(e.latlng);
-        }
-        
-        $scope.$apply(function () {
-            $scope.temp.lat = e.latlng.lat;
-            $scope.temp.lon = e.latlng.lng;
+    a2GoogleMapsLoader.then(function(google){
+        $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
+            center: { lat: 18.3, lng: -66.5},
+            zoom: 8
         });
-    };
+    });
     
     $scope.close = function() {
         $scope.creating = false;
         $scope.editing = false;
-        $scope.map.removeEventListener('click', moveMarker);
+        if($scope.marker){
+            a2GoogleMapsLoader.then(function(google){
+                var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
+                $scope.marker.setDraggable(false);
+                $scope.marker.setPosition(position);
+                $scope.marker.setTitle($scope.selected.name);
+            });
+        }
     };
     
     $scope.save = function() {
@@ -159,14 +139,29 @@ angular.module('a2.audiodata.sites', [
         
         $scope.temp = {};
         
-        if($scope.marker) {
-            $scope.map.removeLayer($scope.marker);
-            $scope.map.setView([10, -20], 1);
-            delete $scope.marker;
-        }
-        
-        
-        $scope.map.on('click', moveMarker);
+        a2GoogleMapsLoader.then(function(google){
+            if(!$scope.marker) {
+                    $scope.marker = new google.maps.Marker({
+                        position: $scope.map.getCenter(),
+                        title: 'New Site Location'
+                    });
+                    $scope.marker.setMap($scope.map);
+            }
+            else {
+                $scope.marker.setPosition($scope.map.getCenter());
+            }
+                    
+            $scope.marker.setDraggable(true);
+            $scope.creating = true;
+            
+            google.maps.event.addListener($scope.marker, 'dragend', function(position) {
+                $scope.$apply(function () {
+                    $scope.temp.lat = position.latLng.lat();
+                    $scope.temp.lon = position.latLng.lng();
+                });
+            });
+        });
+                
         $scope.creating = true;
     };
 
@@ -181,7 +176,14 @@ angular.module('a2.audiodata.sites', [
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
         
-        $scope.map.on('click', moveMarker);
+        $scope.marker.setDraggable(true);
+        
+        google.maps.event.addListener($scope.marker, 'dragend', function(position) {
+            $scope.$apply(function () {
+                $scope.temp.lat = position.latLng.lat();
+                $scope.temp.lon = position.latLng.lng();
+            });
+        });
         $scope.editing = true;
     };
 
@@ -207,22 +209,26 @@ angular.module('a2.audiodata.sites', [
         
         $scope.selected = site;
         
+
         
-        if(!$scope.marker) {
-            $scope.marker = new $window.L.marker(site)
-                .bindPopup(site.name)
-                .addTo($scope.map);
-        }
-        else {
-            $scope.marker.setLatLng(site);
-            $scope.marker.closePopup()
-                .unbindPopup()
-                .bindPopup(site.name);
-        }
-        
-        $scope.map.setView(site, 10, { animate:true });
-        
-        //~ console.log($scope.selected);
+        a2GoogleMapsLoader.then(function(google){
+            var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
+            
+            if(!$scope.marker) {
+                $scope.marker = new google.maps.Marker({
+                    position: position,
+                    title: $scope.selected.name
+                });
+                $scope.marker.setMap($scope.map);
+            }
+            else {
+                $scope.marker.setDraggable(false);
+                $scope.marker.setPosition(position);
+                $scope.marker.setTitle($scope.selected.name);
+            }
+            
+            $scope.map.panTo(position); 
+        });       
     };
     
 })
