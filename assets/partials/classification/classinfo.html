@@ -1,63 +1,105 @@
 <div class="modal-header">  
     <h3 class="modal-title">Classification Details</h3>  
 </div>  
-<div class="modal-body">
+<div class="modal-body" ng-show="loading">
+    Loading <loader></loader>
+</div>
+<div class="modal-body" ng-hide="loading">
     <div class="row">
-        <div class="col-sm-11"><strong>Presence in recordings:</strong></div>
-        <div class="col-sm-1">
-            <a class="btn btn-xs btn-default" 
-                ng-if="showDownload"
-                target="_blank" 
-                ng-href="{{csvUrl}}">
-                <i class="fa fa-download " 
-                    tooltip="Download CSV" 
-                    tooltip-placement="bottom">
-                </i>
-            </a>
+        <div class="col-sm-6">
+            <table class="table">
+                <tr>
+                    <td><b>Name</b></td>
+                    <td>{{classiData.name}}</td>
+                </tr>
+                <tr>
+                    <td><b>Playlist</b></td>
+                    <td><a ng-click="$close()" ng-href="/project/{{ project.url }}/visualizer/playlist/{{classiData.playlist.id}}">{{classiData.playlist.name}}</a></td>
+                </tr>
+            </table>
+            <p class="text-warning" ng-hide="model">Model not found</p>
+            <div ng-show="model">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4>Model used</h4>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <img class="" ng-src="{{model.pattern.thumbnail}}" style="width:120px; height:120px;">
+                    </div>
+                    <div class="col-sm-8">
+                        <table class="table">
+                            <tr>
+                                <td><b>Name</b></td>
+                                <td><a ng-click="$close()" ng-href="/project/{{ project.url }}/analysis/model/{{model.id}}">{{model.name}}</a></td>
+                            </tr>
+                            <tr>
+                                <td><b>Species</b></td>
+                                <td> {{model.species}} </td>
+                            </tr>
+                            <tr>
+                                <td><b>Sound</b></td>
+                                <td> {{model.songtype}} </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4>
+                        Results
+                        <a class="btn btn-default" 
+                            ng-if="showDownload"
+                            target="_blank" 
+                            ng-href="{{csvUrl}}">
+                            <i class="fa fa-download " 
+                                tooltip="Download CSV" 
+                                tooltip-placement="bottom">
+                            </i>
+                        </a>
+                    </h4>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-sm-12">
+                    <c3-chart data-columns="results" width="300" height="300" type="donut"></c3-chart>
+                    <table class="table">
+                        <tr>
+                            <td><b>Absent</b></td>
+                            <td>{{ classiData.total-classiData.present }}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Present</b></td>
+                            <td> {{classiData.present}} </td>
+                        </tr>
+                        <tr>
+                            <td><b>Total</b></td>
+                            <td> {{classiData.total}} </td>
+                        </tr>
+                        <tr ng-show="classiData.errCount">
+                            <td><b>Skipped</b></td>
+                            <td> {{classiData.errCount}} </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="spacing-details-classification"></div>
-    <table class="table">
-        <tr>
-            <th>Species</th>
-            <th>Sound</th>
-            <th>Present/Total</th>
-            <th>Percentage</th>
-            <th>Damaged Recordings</th>
-            <th>Threshold</th>
-        </tr>
-        <tr ng-repeat="species in data" >
-            <td class="no-wrap-table-cell">
-                {{species.species}}
-            </td>
-             <td class="no-wrap-table-cell">
-                {{species.songtype}}
-            </td>           
-            <td>
-                {{species.data}} / {{species.total}}
-            </td>
-            <td>
-                {{species.percentage}}%
-            </td>
-            <td>
-                {{species.err}}
-            </td>
-            <td ng-show="th">
-                {{th}}
-            </td>
-            <td ng-hide="th">
-                <small>No threshold saved.</small>
-            </td>
-        </tr>
-    </table>
-    <div>
-        
+    <hr>
+    <div class="text-center">
+        <button type="button" name="button" class="btn btn-default"
+            ng-click="toggleRecDetails() | trackEvent:'Analysis-Classification-Info':'toggleRecDetails'">
+                <i class="fa" ng-class="showMore ? 'fa-caret-up' : 'fa-caret-down'"></i> 
+                {{ showMore ? 'Hide' : 'Show' }} details per recording
+        </button>
     </div>
-    <div ng-hide="showMore" class="text-centered-bordered">
-        <h2><i class="fa fa-caret-down" tooltip="More Details" tooltip-placement="bottom"  ng-click="more() | trackEvent:'Analysis-Classification-Info':'more clicked'"></i></h2>
-    </div>
-    <div  ng-show="showMore" class="text-centered-bordered">
-        <h2><i class="fa fa-caret-up" tooltip="Less Details" tooltip-placement="bottom"  ng-click="less() | trackEvent:'Analysis-Classification-Info':'less clicked'"></i></h2>
+    <div ng-show="showMore">
+        <hr>
         <ul class="ulnodeco">
             <li ng-repeat="rec in recs" class="linodeco">
                 <div class="cleardiv"></div>

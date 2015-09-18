@@ -3,291 +3,270 @@
         'ui.bootstrap' , 
         'a2.services', 
         'a2.permissions', 
-        'humane'
+        'humane',
+        'c3-charts',
     ]);
     var template_root = '/partials/classification/';
 
-    classification.controller('ClassificationCtrl' , 
-        function ($scope, $modal, $filter, Project, ngTableParams, 
-                    JobsData, a2Playlists, notify, $q, a2Classi, a2UserPermit) {
+    classification.controller('ClassificationCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2Classi, a2UserPermit) {
+        var initTable = function(p,c,s,f,t) {
+            var sortBy = {};
+            var acsDesc = 'desc';
+            if (s[0]=='+') {
+                acsDesc = 'asc';
+            }
+            sortBy[s.substring(1)] = acsDesc;
+            var tableConfig = {
+                page: p,
+                count: c,
+                sorting: sortBy,
+                filter:f
+            };
+            
+            $scope.tableParams = new ngTableParams(tableConfig, {
+                total: t,
+                getData: function ($defer, params) {
+                    $scope.infopanedata = "";
+                    var filteredData = params.filter() ? $filter('filter')($scope.classificationsOriginal , params.filter()) : $scope.classificationsOriginal;
+
+                    var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.classificationsOriginal;
+
+                    params.total(orderedData.length);
+
+                    $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+
+                    if(orderedData.length < 1)
+                    {
+                        $scope.infopanedata = "No classifications found.";
+                    }
+
+                    $scope.classificationsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+                    a2Classi.saveState({'data':$scope.classificationsOriginal,
+                       'filtered': $scope.classificationsData,
+                       'f':params.filter(),
+                       'o':params.orderBy(),
+                       'p':params.page(),
+                       'c':params.count(),
+                       't':orderedData.length});
+                }
+            });
+        };
+        
+        $scope.updateFlags = function() {
+            $scope.successInfo = "";
+            $scope.showSuccess = false;
+            $scope.errorInfo = "";
+            $scope.showError = false;
+            $scope.infoInfo = "";
+            $scope.showInfo = false;
+            $scope.loading = false;
+        };
+        
+        $scope.loadClassifications = function() {
+            a2Classi.list(function(data) {
+                $scope.classificationsOriginal = data;
+                $scope.classificationsData = data;
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+                $scope.infopanedata = "";
+
+                if(data.length> 0) {
+                    if(!$scope.tableParams) {
+                        initTable(1,10,"+cname",{},data.length);
+                    }
+                    else {
+                        $scope.tableParams.reload();
+                    }
+                }
+                else {
+                    $scope.infopanedata = "No classifications found.";
+                }
+            });
+        };
+        
+        $scope.showClassificationDetails = function (classi) {
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            $scope.loading = true;
+            
+            var data = {
+                id: classi.job_id,
+                name: classi.cname,
+                modelId: classi.model_id,
+                playlist: {
+                    name: classi.playlist_name,
+                    id: classi.playlist_id
+                }
+            };
+            
+            var modalInstance = $modal.open({
+                templateUrl: template_root + 'classinfo.html',
+                controller: 'ClassiDetailsInstanceCtrl',
+                windowClass: 'details-modal-window',
+                backdrop: 'static',
+                resolve: {
+                    ClassiInfo: function () {
+                        return {
+                            data: data,
+                            project: $scope.projectData,
+                        };
+                    },
+                }
+            });
+
+            modalInstance.opened.then(function() {
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+            });
+        };
+        
+        $scope.createNewClassification = function () {
+            if(!a2UserPermit.can('manage models and classification')) {
+                notify.log('You do not have permission to create classifications');
+                return;
+            }
+            
             $scope.loading = true;
             $scope.infoInfo = "Loading...";
             $scope.showInfo = true;
 
-            $scope.updateFlags = function() {
-                $scope.successInfo = "";
-                $scope.showSuccess = false;
-                $scope.errorInfo = "";
-                $scope.showError = false;
-                $scope.infoInfo = "";
-                $scope.showInfo = false;
-                $scope.loading = false;
-            };
 
-            Project.getInfo(function(data) {
-                $scope.projectData = data;
+            var modalInstance = $modal.open({
+                templateUrl: template_root + 'createnewclassification.html',
+                controller: 'CreateNewClassificationInstanceCtrl',
+                resolve: {
+                    data: function($q){
+                        var d = $q.defer();
+                        Project.getModels(function(err, data){
+                            if(err){
+                                console.error(err);
+                            }
+
+                            d.resolve(data || []);
+
+                        });
+                        return d.promise;
+                    },
+                    playlists:function($q){
+                        var d = $q.defer();
+                        a2Playlists.getList(function(data) {
+                            d.resolve(data || []);
+                        });
+                        return d.promise;
+                    },
+                    projectData:function()
+                    {
+                        return $scope.projectData;
+                    }
+                }
             });
 
-
-            var initTable = function(p,c,s,f,t) {
-                var sortBy = {};
-                var acsDesc = 'desc';
-                if (s[0]=='+') {
-                    acsDesc = 'asc';
-                }
-                sortBy[s.substring(1)] = acsDesc;
-                var tableConfig = {
-                    page: p,
-                    count: c,
-                    sorting: sortBy,
-                    filter:f
-                };
-                
-                $scope.tableParams = new ngTableParams(tableConfig, {
-                    total: t,
-                    getData: function ($defer, params) {
-                        $scope.infopanedata = "";
-                        var filteredData = params.filter() ? $filter('filter')($scope.classificationsOriginal , params.filter()) : $scope.classificationsOriginal;
-
-                        var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.classificationsOriginal;
-
-                        params.total(orderedData.length);
-
-                        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-
-                        if(orderedData.length < 1)
-                        {
-                            $scope.infopanedata = "No classifications found.";
-                        }
-
-                        $scope.classificationsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                        a2Classi.saveState({'data':$scope.classificationsOriginal,
-                           'filtered': $scope.classificationsData,
-                           'f':params.filter(),
-                           'o':params.orderBy(),
-                           'p':params.page(),
-                           'c':params.count(),
-                           't':orderedData.length});
-                    }
-                });
-            };
-
-
-
-            $scope.loadClassifications = function() {
-                a2Classi.list(function(data) {
-                    $scope.classificationsOriginal = data;
-                    $scope.classificationsData = data;
-                    $scope.infoInfo = "";
-                    $scope.showInfo = false;
-                    $scope.loading = false;
-                    $scope.infopanedata = "";
-
-                    if(data.length> 0) {
-                        if(!$scope.tableParams) {
-                            initTable(1,10,"+cname",{},data.length);
-                        }
-                        else {
-                            $scope.tableParams.reload();
-                        }
-                    }
-                    else {
-                        $scope.infopanedata = "No classifications found.";
-                    }
-                });
-            };
-            
-            var stateData = a2Classi.getState();
-            
-            if (stateData === null) {
-                $scope.loadClassifications();
-            }
-            else {
-                if (stateData.data.length > 0) {
-                    $scope.classificationsData = stateData.filtered;
-                    $scope.classificationsOriginal = stateData.data;
-                    initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
-                }
-                else {
-                    $scope.infopanedata = "No models found.";
-                }            
+            modalInstance.opened.then(function() {
                 $scope.infoInfo = "";
                 $scope.showInfo = false;
                 $scope.loading = false;
+            });
+
+            modalInstance.result.then(function (result) {
+                data = result;
+                if (data.ok) {
+                    JobsData.updateJobs();
+                    notify.log("Your new classification is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+                }
+                
+                if (data.error) {
+                    notify.error("Error: "+data.error);
+                }
+                
+                if (data.url) {
+                    $location.path(data.url);
+                }
+            });
+        };
+        
+        $scope.deleteClassification = function(id,name) {
+            if(!a2UserPermit.can('manage models and classification')) {
+                notify.log('You do not have permission to delete classifications');
+                return;
             }
-
-            $scope.showClassificationDetails = function (classi_id) {
-                $scope.infoInfo = "Loading...";
-                $scope.showInfo = true;
-                $scope.loading = true;
-                var url = $scope.projectData.url;
-                var pid = $scope.projectData.project_id;
-                $scope.classi_id = classi_id;
-
-                a2Classi.getDetails(classi_id, function(data) {
-
-                    if(!data.data.length) {
-                        notify.log("No details available for this classification");
-                        $scope.showInfo = false;
-                        $scope.loading = false;
-
-                        return;
+            
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            $scope.loading = true;
+            
+            var modalInstance = $modal.open({
+                templateUrl: template_root + 'deleteclassification.html',
+                controller: 'DeleteClassificationInstanceCtrl',
+                resolve: {
+                    name: function() {
+                        return name;
+                    },
+                    id: function() {
+                        return id;
+                    },
+                    projectData: function() {
+                        return $scope.projectData;
                     }
-
-                    $scope.data = data;
-                    $scope.currentModelTh = data.data[0].th;
-                    
-                    var modalInstance = $modal.open({
-                        templateUrl: template_root + 'classinfo.html',
-                        controller: 'ClassiDetailsInstanceCtrl',
-                        windowClass: 'details-modal-window',
-                        resolve: {
-                            data: function () {
-                                return $scope.data;
-                            },
-                            projectUrl: function () {
-                                return $scope.projectData.url;
-                            },
-                            id: function () {
-                                return $scope.classi_id;
-                            },
-                            pid: function () {
-                                return $scope.pid;
-                            },
-                            th: function () {
-                                return $scope.currentModelTh;
-                            }
-                        }
-                    });
-
-                    modalInstance.opened.then(function() {
-                        $scope.infoInfo = "";
-                        $scope.showInfo = false;
-                        $scope.loading = false;
-                    });
-                });
-            };
-
-            $scope.createNewClassification = function () {
-                if(!a2UserPermit.can('manage models and classification')) {
-                    notify.log('You do not have permission to create classifications');
-                    return;
                 }
-                
-                $scope.loading = true;
-                $scope.infoInfo = "Loading...";
-                $scope.showInfo = true;
+            });
 
-
-                var modalInstance = $modal.open({
-                    templateUrl: template_root + 'createnewclassification.html',
-                    controller: 'CreateNewClassificationInstanceCtrl',
-                    resolve: {
-                        data: function($q){
-                            var d = $q.defer();
-                            Project.getModels(function(err, data){
-                                if(err){
-                                    console.error(err);
-                                }
-
-                                d.resolve(data || []);
-
-                            });
-                            return d.promise;
-                        },
-                        playlists:function($q){
-                            var d = $q.defer();
-                            a2Playlists.getList(function(data) {
-                                d.resolve(data || []);
-                            });
-                            return d.promise;
-                        },
-                        projectData:function()
-                        {
-                            return $scope.projectData;
-                        }
-                    }
-                });
-
-                modalInstance.opened.then(function() {
-                    $scope.infoInfo = "";
-                    $scope.showInfo = false;
-                    $scope.loading = false;
-                });
-
-                modalInstance.result.then(function (result) {
-                    data = result;
-                    if (data.ok) {
-                        JobsData.updateJobs();
-                        notify.log("Your new classification is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
-                    }
-                    
-                    if (data.error) {
-                        notify.error("Error: "+data.error);
-                    }
-                    
-                    if (data.url) {
-                        $location.path(data.url);
-                    }
-                });
-            };
-
-
-            $scope.deleteClassification = function(id,name) {
-                if(!a2UserPermit.can('manage models and classification')) {
-                    notify.log('You do not have permission to delete classifications');
-                    return;
+            modalInstance.opened.then(function() {
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+            });
+            
+            modalInstance.result.then(function(ret) {
+                if (ret.err) {
+                    notify.error("Error: "+ret.err);
                 }
-                
-                $scope.infoInfo = "Loading...";
-                $scope.showInfo = true;
-                $scope.loading = true;
-                
-                var modalInstance = $modal.open({
-                    templateUrl: template_root + 'deleteclassification.html',
-                    controller: 'DeleteClassificationInstanceCtrl',
-                    resolve: {
-                        name: function() {
-                            return name;
-                        },
-                        id: function() {
-                            return id;
-                        },
-                        projectData: function() {
-                            return $scope.projectData;
+                else {
+                    var index = -1;
+                    var modArr = angular.copy($scope.classificationsOriginal);
+                    for (var i = 0; i < modArr.length; i++) {
+                        if (modArr[i].job_id === id) {
+                            index = i;
+                            break;
                         }
                     }
-                });
-
-                modalInstance.opened.then(function() {
-                    $scope.infoInfo = "";
-                    $scope.showInfo = false;
-                    $scope.loading = false;
-                });
-
-                modalInstance.result.then(function(ret) {
-                    if (ret.err) {
-                        notify.error("Error: "+ret.err);
+                    if (index > -1) {
+                        $scope.classificationsOriginal.splice(index, 1);
+                        $scope.tableParams.reload();
+                        notify.log("Classification deleted successfully");
                     }
-                    else {
-                        var index = -1;
-                        var modArr = angular.copy($scope.classificationsOriginal);
-                        for (var i = 0; i < modArr.length; i++) {
-                            if (modArr[i].job_id === id) {
-                                index = i;
-                                break;
-                            }
-                        }
-                        if (index > -1) {
-                            $scope.classificationsOriginal.splice(index, 1);
-                            $scope.tableParams.reload();
-                            notify.log("Classification deleted successfully");
-                        }
-                    }
-                });
-            };
+                }
+            });
+        };
+        
+        $scope.loading = true;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+        
+        Project.getInfo(function(data) {
+            $scope.projectData = data;
+        });
+        
+        var stateData = a2Classi.getState();
+        
+        if (stateData === null) {
+            $scope.loadClassifications();
         }
-    )
+        else {
+            if (stateData.data.length > 0) {
+                $scope.classificationsData = stateData.filtered;
+                $scope.classificationsOriginal = stateData.data;
+                initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
+            }
+            else {
+                $scope.infopanedata = "No models found.";
+            }            
+            $scope.infoInfo = "";
+            $scope.showInfo = false;
+            $scope.loading = false;
+        }
+    })
     .controller('DeleteClassificationInstanceCtrl', 
         function($scope, $modalInstance, a2Classi, name, id, projectData) {
             $scope.name = name;
@@ -309,30 +288,11 @@
         }
     )
     .controller('ClassiDetailsInstanceCtrl', 
-        function ($scope, $modalInstance, a2Classi, notify, a2UserPermit, data, projectUrl, id, pid, th) {
-            $scope.th = th;
-            $scope.data = data.data;
-            $scope.pid = pid;
-            $scope.url = projectUrl;
-            $scope.id = id;
-            $scope.recs = [];
-            $scope.showMore = false;
-            $scope.currentPage = 0;
-            $scope.maxPerPage = 1;
-            $scope.totalRecs = Math.ceil($scope.data[0].total/$scope.maxPerPage);
-            $scope.csvUrl = "/api/project/"+$scope.url+"/classifications/csv/"+id;
-            
-            $scope.showDownload = a2UserPermit.can('manage models and classification');
-
-
-            $scope.ok = function () {
-                $modalInstance.close( );
-            };
-
+        function ($scope, $modalInstance, a2Classi, a2Models, notify, a2UserPermit, ClassiInfo) {
             var loadClassifiedRec = function() {
-                a2Classi.getResultDetails($scope.id, ($scope.currentPage*$scope.maxPerPage), $scope.maxPerPage, function(dataRec) {
+                a2Classi.getResultDetails($scope.classiData.id, ($scope.currentPage*$scope.maxPerPage), $scope.maxPerPage, function(dataRec) {
                     
-                    a2Classi.getRecVector($scope.id, dataRec[0].recording_id).success(function(data) {
+                    a2Classi.getRecVector($scope.classiData.id, dataRec[0].recording_id).success(function(data) {
                         var maxVal = Math.max.apply(null, data.vector);
                         if(typeof $scope.th === 'number') {
                             $scope.htresDeci = ( maxVal < $scope.th )? 'no' : 'yes';
@@ -345,12 +305,15 @@
                     });
                 });
             };
-
+            
+            $scope.ok = function () {
+                $modalInstance.close( );
+            };
 
             $scope.next = function () {
                 $scope.currentPage = $scope.currentPage + 1;
 
-                if($scope.currentPage*$scope.maxPerPage >= $scope.data[0].total) {
+                if($scope.currentPage*$scope.maxPerPage >= $scope.classiData.total) {
 
                     $scope.currentPage = $scope.currentPage - 1;
                 }
@@ -358,7 +321,6 @@
                     loadClassifiedRec();
                 }
             };
-
 
             $scope.prev = function () {
                 $scope.currentPage = $scope.currentPage - 1;
@@ -371,33 +333,68 @@
                 }
             };
 
-
             $scope.gotoc = function(where) {
                 if (where == 'first') {
                     $scope.currentPage = 0;
                 }
                 if (where == 'last') {
-                    $scope.currentPage = Math.ceil($scope.data[0].total/$scope.maxPerPage) - 1;
+                    $scope.currentPage = Math.ceil($scope.classiData.total/$scope.maxPerPage) - 1;
                 }
 
                 loadClassifiedRec();
             };
-            $scope.htresDeci = '-';
+        
 
-
-
-            $scope.more = function() {
-                $scope.showMore = true;
-                if ($scope.recs.length <1)
-                {
+            $scope.toggleRecDetails = function() {
+                $scope.showMore = !$scope.showMore;
+                if($scope.showMore && !$scope.recs) {
                     loadClassifiedRec();
                 }
             };
-
-            $scope.less= function () {
-                $scope.showMore = false;
-            };
-
+            
+            
+            $scope.loading = true;
+            $scope.htresDeci = '-';
+            $scope.classiData = ClassiInfo.data;
+            $scope.project = ClassiInfo.project;
+            $scope.showMore = false;
+            $scope.currentPage = 0;
+            $scope.maxPerPage = 1;
+            
+            $scope.csvUrl = "/api/project/"+$scope.project.url+"/classifications/csv/"+$scope.classiData.id;
+            
+            $scope.showDownload = a2UserPermit.can('manage models and classification');
+            
+            console.table($scope.classiData);
+            
+            a2Classi.getDetails($scope.classiData.id, function(data) {
+                if(!data) {
+                    $modalInstance.close();
+                    notify.log("No details available for this classification");
+                    return;
+                }
+                
+                angular.extend($scope.classiData, data);
+                
+                $scope.totalRecs = Math.ceil($scope.classiData.total/$scope.maxPerPage);
+                
+                console.log($scope.classiData);
+                $scope.results = [
+                    ['absent', $scope.classiData.total-$scope.classiData.present],
+                    ['present', $scope.classiData.present],
+                    ['skipped', $scope.classiData.errCount]
+                ];
+                
+                a2Models.findById($scope.classiData.modelId)
+                    .success(function(modelInfo) {
+                        console.log(modelInfo);
+                        $scope.model = modelInfo;
+                        $scope.loading = false;
+                    })
+                    .error(function(err) {
+                        $scope.loading = false;
+                    });
+            });
     })
     .controller('CreateNewClassificationInstanceCtrl', 
     function($scope, $modalInstance, a2Classi, data, projectData, playlists) {
