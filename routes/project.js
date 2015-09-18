@@ -1,10 +1,15 @@
 var debug = require('debug')('arbimon2:route:project');
 var express = require('express');
 var model = require('../model');
+var config = require('../config');
 var router = express.Router();
 
 var cardStack = require('./resource-cards');
 var cardResolver = require('../utils/card-resolver')(cardStack);
+
+var injected_data = {
+    googleAPI : config('google-api')
+};
 
 // discards rest of path
 router.use('/', function(req, res, next){
@@ -88,6 +93,8 @@ router.get('/:projecturl?/', function(req, res, next) {
                             project: req.project, 
                             url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
                             user: req.session.user,  
+                            // a2GoogleMapsLoader
+                            inject_data : injected_data,
                             card: card,
                             planAlert: project.plan_due < new Date() ? 'expired' : '',
                             perms: perms,

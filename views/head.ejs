@@ -15,7 +15,7 @@
 <link rel="stylesheet" type="text/css" href="/assets/angular-range-slider/angular.rangeSlider.css">
 <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
 <link rel="stylesheet" type="text/css" href="/assets/leaflet/leaflet.css">
-<link rel="stylesheet" type="text/css" href="/assets/c3/c3.css">
+<link rel="stylesheet" type="text/css" href="/assets/c3/c3.min.css">
 
 <script src="//www.google.com/recaptcha/api.js?render=explicit" async defer></script>
 <script src="/assets/jquery/jquery.min.js"></script>
@@ -54,3 +54,12 @@
 
 <script src="/assets/js/arbimon2.js"></script>
 <script src="/assets/js/arbimon2-templates.js"></script>
+
+<%if(typeof(inject_data) != 'undefined'){%>
+<script>
+(function(angular) { "use strict";
+    angular.module('a2.injected.data', [])
+    .constant('a2InjectedData', <%- JSON.stringify(inject_data) %>);
+})(angular);
+</script>
+<%}%>

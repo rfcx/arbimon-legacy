@@ -1,7 +1,7 @@
 {
-    "host"     : "10.0.0.4"        ,
-    "user"     : "arbimon2_user"   ,
-    "password" : "9rHvDTP3WJrXWAH2",
-    "database" : "arbimon2",
-    "timezone" : "Z"
+    "host"     : ""        ,
+    "user"     : ""   ,
+    "password" : "",
+    "database" : "",
+    "timezone" : ""
 }
