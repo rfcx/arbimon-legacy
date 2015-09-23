@@ -37,7 +37,7 @@
         <div class="col-sm-6">
             <div>
                 <i class="fa fa-sm fa-play"></i>
-                {{ audio_player.resource.currentTime | number }} s /
+                {{ audio_player.getCurrentTime() | number }} s /
                 {{ recording.duration | number }} s
             </div>
             <div>

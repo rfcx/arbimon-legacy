@@ -41,7 +41,7 @@
         
         <div ng-show="visobject.type=='recording'"
             class="spectrogram-layer playback-head" 
-            ng-style="{left:(audio_player.resource ? (audio_player.resource.currentTime * layout.scale.sec2px) : 0)+'px'}"
+            ng-style="{left:((audio_player.getCurrentTime() * layout.scale.sec2px) || 0)+'px'}"
         ></div>
         
     </div>

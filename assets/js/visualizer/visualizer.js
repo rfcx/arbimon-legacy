@@ -10,7 +10,6 @@
 angular.module('a2.visualizer', [
     'ui.router', 
     'ct.ui.router.extras', 
-    'ngAudio', 
     'a2.services', 
     'a2.utils', 
     'a2.visobjects', 
