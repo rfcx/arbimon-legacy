@@ -998,4 +998,51 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
         template:'<i class="text-info fa fa-info-circle"></i>'
     };
 })
+.directive('a2BsNgModelOnDirtySaveButton', function($parse){
+    return {
+        restrict:'A',
+        require:'ngModel',
+        link: function(scope, element, attrs, ngModel){
+            var saveBtn;
+            var onDirtySaveFN = $parse(attrs.a2BsNgModelOnDirtySaveButton);
+            
+            function addSaveBtn(){
+                element.wrap('<div class="input-group"></div>');
+                var parentEl = element.parent();
+                saveBtn = angular.element(
+                    '<div class="input-group-btn">' +
+                    '    <button class="btn btn-success"><i class="fa fa-save"></i></button>' +
+                    '</div>'
+                );
+                saveBtn.find('button.btn').on('click', function(){
+                    onDirtySaveFN(scope, {
+                        $name  : ngModel.$name, 
+                        $modelValue : ngModel.$modelValue,
+                        $setPristine: function(){
+                            ngModel.$setPristine();
+                            removeSaveBtn();
+                        }
+                    });
+                });
+
+                saveBtn.appendTo(parentEl);                
+            }
+            function removeSaveBtn(){
+                if(saveBtn){
+                    saveBtn.remove();
+                }
+                element.unwrap();
+                saveBtn = undefined;
+            }
+            
+            ngModel.$viewChangeListeners.push(function(){
+                if(ngModel.$dirty && !saveBtn){
+                    addSaveBtn();
+                } else if(saveBtn){
+                    removeSaveBtn();
+                }
+            });
+        }
+    };
+})
 ;
