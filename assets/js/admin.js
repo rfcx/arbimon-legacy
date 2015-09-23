@@ -33,7 +33,7 @@ angular.module('a2.admin', [
             templateUrl: '/partials/admin/jobs.html'
         });
 })
-.controller('AdminDashboardCtrl', function($scope, $http) {
+.controller('AdminDashboardCtrl', function($scope, $http, $q) {
     
     $http.get('/admin/dashboard-stats')
         .success(function(data) {
@@ -49,21 +49,33 @@ angular.module('a2.admin', [
             });
     };
     $scope.getSystemSettings();
-    
-    $scope.toggleSetting = function(setting) {
-        var value = $scope.settings[setting] == 'on' ? 'off' : 'on';
+
+    $scope.setSetting = function(setting, value){
+        var d=$q.defer();
         
+        if(!setting){
+            d.resolve();
+        } else {        
         $http.put('/admin/system-settings', {
                 setting: setting,
                 value: value
             })
             .success(function(data) {
                 $scope.getSystemSettings();
+                d.resolve(data[setting]);
             })
             .error(function(data) {
                 console.error(data);
                 $scope.getSystemSettings();
+                d.reject(data);
             });
+        }
+        return d.promise;
+    };
+    
+    $scope.toggleSetting = function(setting) {
+        var value = $scope.settings[setting] == 'on' ? 'off' : 'on';
+        return this.setSetting(setting, value);
     };
 })
 .controller('AdminJobsCtrl', function($scope, $http, $interval, Project) {
