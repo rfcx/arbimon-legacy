@@ -32,7 +32,11 @@ angular.module('a2.orders', [
         },
         
         paymentsStatus: function() {
-            return $http.get('/api/orders/payments-status');
+            return $http.get('/api/orders/payments-status', {cache:true});
+        },
+        
+        getOrdersContact: function() {
+            return $http.get('/api/orders/contact', {cache:true});
         },
         
         info: {
@@ -231,6 +235,9 @@ angular.module('a2.orders', [
         scope: {
             'plan': '=',
             'recorderQty': '=',
+            'availablePlans' : '=',
+            'ordersContact': '=',
+            'autoPaymentsEnabled':'=',
             'currentPlan':'=?',
             'usage': '=?',
         },
@@ -371,8 +378,12 @@ angular.module('a2.orders', [
     $scope.project = orderData.project;
     $scope.recorderQty = orderData.recorderQty;
     
-    a2orderUtils.paymentsStatus().success(function(data) {
-        $scope.paymentsEnabled = data.payments_enable;
+    a2orderUtils.getOrdersContact().then(function(response){
+        $scope.ordersContact = response.data;
+    });
+    
+    a2orderUtils.paymentsStatus().then(function(response) {
+        $scope.autoPaymentsEnabled = response.data.payments_enable;
     });
     
     $scope.create = function() {
@@ -383,7 +394,7 @@ angular.module('a2.orders', [
             return notify.error('You need to select a plan');
         }
         
-        if(!$scope.paymentsEnabled && $scope.project.plan.tier == 'paid') {
+        if(!$scope.autoPaymentsEnabled && $scope.project.plan.tier == 'paid') {
             return notify.log('Payments are unavailable');
         }
         
@@ -457,8 +468,12 @@ angular.module('a2.orders', [
     console.log(orderData);
     $scope.recorderQty = orderData.recorderQty;
     
-    a2orderUtils.paymentsStatus().success(function(data) {
-        $scope.paymentsEnabled = data.payments_enable;
+    a2orderUtils.getOrdersContact().then(function(response){
+        $scope.ordersContact = response.data;
+    });
+    
+    a2orderUtils.paymentsStatus().then(function(response) {
+        $scope.autoPaymentsEnabled = response.data.payments_enable;
     });
     
     Project.getInfo(function(info) {
@@ -497,7 +512,7 @@ angular.module('a2.orders', [
     
     
     $scope.upgrade = function() {
-        if(!$scope.paymentsEnabled) {
+        if(!$scope.autoPaymentsEnabled) {
             return notify.log('Payments are unavailable');
         }
         

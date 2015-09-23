@@ -44,9 +44,10 @@
                 <b>Total:</b>
                 ${{ plan.cost + (125 *recorderQty) | number : 2 }}
             </p>
-            <p class="text-warning" ng-if="plan.cost + (125 * recorderQty) > 10000">
-                You order can not be processed on the app, please contact us. 
-                Only orders up to $10,000 can be done through this app
+            <p class="text-warning" ng-if="!autoPaymentsEnabled || plan.cost + (125 * recorderQty) > 10000">
+                <span ng-if="!autoPaymentsEnabled">Currently we are not able to process orders online.</span>
+                <span ng-if="autoPaymentsEnabled && plan.cost + (125 * recorderQty) > 10000">Only orders up to $10,000 can be done online.</span>
+                Please <a ng-href="mailto:{{ordersContact.email}}">contact us</a> to place your order for a project plan.
             </p>
         </div>
         <div ng-show="plan.tier == 'free'">

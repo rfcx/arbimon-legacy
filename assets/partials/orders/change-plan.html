@@ -45,7 +45,7 @@
                     Your current plan has ended, please select a new plan. 
                     The minumum plan is limited by the project storage usage.
                 </p>
-                <p ng-if="paymentsEnabled === false" class="text-danger">
+                <p ng-if="autoPaymentsEnabled === false" class="text-danger">
                     Payments are unavailable, sorry for the inconvenience. <br>
                     Please contact us if you need to change your plan.
                 </p>
@@ -55,6 +55,8 @@
             current-plan="currentPlan"
             usage="minUsage"
             plan="project.plan"
+            auto-payments-enabled="autoPaymentsEnabled" 
+            orders-contact="ordersContact"
             recorder-qty="recorderQty">
         </plan-select>
     </div>

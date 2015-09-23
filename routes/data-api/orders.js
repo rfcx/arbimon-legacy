@@ -105,6 +105,12 @@ router.get('/payments-status', function(req, res) {
     });
 });
 
+router.get('/contact', function(req, res) {
+    res.json({
+        email:req.systemSettings('orders.contact.email')
+    });
+});
+
 router.post('/create-project', function(req, res, next) {
     if(req.session.user && req.session.user.isAnonymousGuest) {
         return res.status(401).json({ error: "unauthrized"});
