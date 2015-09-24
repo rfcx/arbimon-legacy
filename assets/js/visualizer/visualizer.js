@@ -16,6 +16,7 @@ angular.module('a2.visualizer', [
     'a2.visobjectsbrowser', 
     'a2.speciesValidator', 
     'visualizer-layers', 
+    'a2.visualizer.recordings',
     'visualizer-spectrogram', 
     'visualizer-training-sets', 
     'visualizer-training-sets-roi_set',

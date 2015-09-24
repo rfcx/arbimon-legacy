@@ -108,7 +108,7 @@
     .layer {
         padding: @layer-padding-v @layer-padding-right @layer-padding-v @layer-padding-left;
         &.layer.hide-btns {
-            padding-right: @layer-padding-left;
+            padding-right: @layer-padding-left - 5px;
             .layer-btns {
                 display: none;
             }
@@ -603,4 +603,47 @@ img.visobj-soundscape{
 
 .accordion-table .panel-body {
     padding: 0px;
+}
+
+
+.no-margin.ngrs-range-slider {
+    margin: 0;
+}
+.dropdown-menu.min-pad{
+    padding:2px;
+}
+
+
+.a2-audio-freq-filter-component{
+    display: inline-block;
+    position:relative;
+    height : 250px;
+    width : 280px;
+    img {
+        position: absolute;
+        top:0px;
+        left:45px;
+        width:200px;
+        height:250px;
+    }
+    div.stop-band{
+        position:absolute;
+        width:100%;
+        background-color:rgba(255,0,255,.7);
+        border-color:#ffffff;
+        &.top{
+            top:0;
+            border-bottom-width:1px;
+        }
+        &.bottom{
+            bottom:0;
+            border-top-width:1px;
+        }
+    }
+    .btn.stop-band{
+        position:absolute;
+        left:0;
+        width:6em;
+        transform: translateY(-50%);
+    }
 }

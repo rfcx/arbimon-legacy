@@ -1,0 +1,7 @@
+<div class="a2-audio-freq-filter-component">
+    <img ng-src="{{imgSrc}}" class="'visobj-recording'">
+    <div class="stop-band top" ng-style="{height:((1 - filterMax / maxFreq)*100) + '%'}"></div>
+    <div class="stop-band bottom" ng-style="{height:((filterMin / maxFreq)*100) + '%'}"></div>
+    <button class="btn btn-sm btn-default top stop-band" ng-style="{top:((1 - filterMax / maxFreq)*100) + '%'}">{{filterMax}} Hz</button>
+    <button class="btn btn-sm btn-default bottom stop-band" ng-style="{top:((1 - filterMin / maxFreq)*100) + '%'}">{{filterMin}} Hz</button>
+</div>

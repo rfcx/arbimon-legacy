@@ -12,6 +12,7 @@ angular.module('visualizer-services', ['a2.services'])
             }, {
                 type: "recording-layer",
                 title: "",
+                controller: 'a2VisualizerRecordingLayerController as controller',
                 require: {
                     type: 'recording'
                 },
