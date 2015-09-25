@@ -28,7 +28,7 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-height-7" role="menu">
                                     <li ng-repeat="option in val_options">
-                                        <a ng-click="validate(cls.id, option.val) | trackEvent:'Visualizer-Validator-Main':'Validate'">
+                                        <a ng-click="validate(option.val) | trackEvent:'Visualizer-Validator-Main':'Validate'">
                                             <i class="fa" ng-class="'val-'+option.val"></i> 
                                             {{ option.label }}
                                         </a>
