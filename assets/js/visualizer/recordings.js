@@ -1,7 +1,14 @@
 angular.module('a2.visualizer.recordings', [])
 .controller('a2VisualizerRecordingLayerController', 
 function($scope, $modal, $location){
-    this.i_am_ctrl="yes";
+    this.setGain = function(gain){
+        $scope.audio_player.setGain(gain).then(function(){
+            var gain=$scope.audio_player.gain;
+            $scope.location.updateParams({
+                gain: gain >= 1 ? gain : undefined
+            });
+        });
+    };
     this.openFreqFilterModal = function(){
         if(!$scope.visobject){
             return;
@@ -18,7 +25,12 @@ function($scope, $modal, $location){
             }
         }).result.then(
             $scope.audio_player.setFrequencyFilter.bind($scope.audio_player)
-        );
+        ).then(function(){
+            var filter=$scope.audio_player.filter;
+            $scope.location.updateParams({
+                filter: filter ? (filter.min + '-' + filter.max) : undefined
+            });
+        });
     };
 })
 .controller('a2VisualizerFrequencyFilterModalController', function($scope, $modalInstance, data){

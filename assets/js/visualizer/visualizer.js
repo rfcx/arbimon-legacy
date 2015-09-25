@@ -48,9 +48,11 @@ angular.module('a2.visualizer', [
         sticky: true,
     })
     .state('visualizer.view', {
-        url: '/:type/:idA/:idB/:idC',
+        url: '/:type/:idA/:idB/:idC?gain&filter',
         params:{ 
             type:'', 
+            gain:'',
+            filter:'',
             idA: {
                 value:'', 
                 squash:true
@@ -96,8 +98,9 @@ angular.module('a2.visualizer', [
     };
 })
 .service('a2VisualizerLocationManager', function($location){
-    var locman = function(scope, prefix){
+    var locman = function(scope, prefix, state){
         this.scope = scope;
+        this.state = state;
         this.prefix = prefix;
         this.current = '';
         this.__expected = '';
@@ -112,6 +115,19 @@ angular.module('a2.visualizer', [
         },
         update_path : function(){
             this.set(this.current);
+        },
+        updateParams : function(params){
+            var all_params=angular.extend({}, this.state.params);
+            for(var pk in params){
+                var pv = params[pk];
+                if(pv === undefined){
+                    delete all_params[pk];
+                } else {
+                    all_params[pk] = pv;
+                }
+            }
+            console.log(all_params, this.state.current.name);
+            this.state.transitionTo(this.state.current.name, all_params, {notify:false});
         },
         set : function(location, dont_sync){
             if(dont_sync){
@@ -164,6 +180,11 @@ angular.module('a2.visualizer', [
 ) {
     var layers = new a2VisualizerLayers($scope);
     var layer_types = layers.types;
+    var initial_state_params={
+        gain   : $state.params.gain,
+        filter : $state.params.filter
+    };
+
     
     $scope.layers = layers.list; // current layers in the visualizer
     $scope.addLayer = layers.add.bind(layers);
@@ -186,7 +207,7 @@ angular.module('a2.visualizer', [
     
     $scope.visobject = null;
     
-    var location = new a2VisualizerLocationManager($scope, '/visualizer' + '/');
+    var location = new a2VisualizerLocationManager($scope, '/visualizer' + '/', $state);
     $scope.location = location;
     
     $scope.set_location = location.set.bind(location);
@@ -225,7 +246,7 @@ angular.module('a2.visualizer', [
         }
     };
     
-    $scope.audio_player = new a2AudioPlayer($scope);
+    $scope.audio_player = new a2AudioPlayer($scope, initial_state_params);    
     
     $scope.$on('browser-vobject-type', function(evt, type){
         $scope.visobject_type = type;

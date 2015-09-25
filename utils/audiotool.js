@@ -89,6 +89,11 @@ var audiotools = {
      * @param {Object} options.format set the output audio format
      * @param {Object} options.compression set the output compression
      * @param {Object} options.channels set the number of channels in the output
+     * @param {Object} options.gain apply gain to the audio file.
+     * @param {Object} options.filter apply a frequency filter to the audio file.
+     * @param {Object} options.filter.max maximum frequency to allow.
+     * @param {Object} options.filter.min minimum frequency to allow.
+     * @param {Object} options.filter.type one of ['default', 'sinc'].
      * @param {Function} callback function to call with the results.
      */    
     transcode : function(source_path, destination_path, options, callback){
@@ -110,7 +115,32 @@ var audiotools = {
         if (options.channels) {
             args.push('-c', options.channels | 0);
         }
+
         args.push(destination_path);
+
+        if (options.gain) {
+            args.push('gain', options.gain | 0);
+        }
+        if (options.filter && (options.filter.min || options.filter.max)) {
+            var fmin=options.filter.min|0, fmax=options.filter.max|0;
+            switch(options.filter.type){
+                case 'sinc':
+                    args.push('sinc', (fmin || '')+(fmax ? ('-'+fmax) : '') );
+                break;
+                default:
+                    if(fmax){
+                        if(fmin){
+                            var fc=((fmax+fmin)/2)|0, fw=((fmax-fmin)/2)|0;
+                            args.push('bandpass', fc, fw);
+                        } else {
+                            args.push('lowpass', fmax);
+                        }
+                    } else if(fmin){
+                        args.push('highpass', fmin);
+                    }
+                break;
+            }
+        }
         audiotools.sox(args, {}, callback);
     },
     /** Generates a spectrogram of a given audio file.

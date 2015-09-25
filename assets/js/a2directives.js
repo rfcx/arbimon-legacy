@@ -1045,4 +1045,22 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
         }
     };
 })
+.filter('consoleLog', function(){
+    return function(x, type){
+        console[type || 'log'](x);
+        return x;
+    };
+})
+.filter('mouseEventContainerPercent', function(){
+    return function($event, selector){
+        var target=angular.element($event.currentTarget);
+        if(selector){
+            target = target.closest(selector);
+        }
+        var targetpos=target.offset();
+        var px = ($event.pageX - targetpos.left ) / target.width() ;
+        var py = ($event.pageY - targetpos.top  ) / target.height();
+        return {x:px, y:py};
+    };
+})
 ;
