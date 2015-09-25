@@ -566,6 +566,10 @@ var Recordings = {
                 val       : validation.val | 0,
                 project_id: project_id
             };
+            if (valobj.val < 0 || valobj.val > 2) {
+                callback(new Error("Invalid validation value " + valobj.val));
+                return;
+            }
 
             // 0 is not present , 1 is present and 2 is clear
             if (valobj.val == 2) {
