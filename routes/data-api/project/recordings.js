@@ -153,7 +153,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
                 });
             });
         break;
-        case 'audio'     : model.recordings.fetchAudioFile(recording, and_return.file); break;
+        case 'audio'     : model.recordings.fetchAudioFile(recording, req.query, and_return.file); break;
         case 'image'     : model.recordings.fetchSpectrogramFile(recording, and_return.file); break;
         case 'thumbnail' : model.recordings.fetchThumbnailFile(recording, and_return.file); break;
         case 'find'      : and_return.recording(null, [recording]); break;

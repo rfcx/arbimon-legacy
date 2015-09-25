@@ -7,6 +7,53 @@
     z-index:-1;
 }
 
+@audio-seek-bar-color:#225bca;
+@audio-seek-bar-bg-color:gray;
+@audio-seek-bar-height:3px;
+@audio-seek-bar-padding:5px;
+@audio-seek-bar-thumb-width:2px;
+.audio-seek-bar {
+    display: block;
+    height: @audio-seek-bar-height + 2 * @audio-seek-bar-padding;
+    position: relative;
+    margin-bottom: 2px
+    width: 100%;
+    
+    &.clickable{
+        cursor:hand;
+    }
+    
+    &::before {
+        background-color: @audio-seek-bar-bg-color;
+        border-radius: 5px;
+        content: "";
+        display: block;
+        height: @audio-seek-bar-height;
+        position: absolute;
+        top: @audio-seek-bar-padding;
+        width: 100%;
+    }
+    
+    > .bar {
+        background-color: mix(@audio-seek-bar-bg-color, @audio-seek-bar-color, 40%);
+        border-radius: 5px;
+        display: block;
+        height: @audio-seek-bar-height;
+        position: relative;
+        top: @audio-seek-bar-padding;
+        
+        &::after {
+            background-color: @audio-seek-bar-color;
+            content: "";
+            display: inline-block;
+            float: right;
+            height: @audio-seek-bar-height + 2 * @audio-seek-bar-padding;
+            transform: translate(-50%, -@audio-seek-bar-padding);
+            width: @audio-seek-bar-thumb-width;
+        }
+    }
+}
+
 @sidebar-width: 400px;
 .sidebar {
     min-height: 1px;
@@ -108,7 +155,7 @@
     .layer {
         padding: @layer-padding-v @layer-padding-right @layer-padding-v @layer-padding-left;
         &.layer.hide-btns {
-            padding-right: @layer-padding-left;
+            padding-right: @layer-padding-left - 5px;
             .layer-btns {
                 display: none;
             }
@@ -603,4 +650,47 @@ img.visobj-soundscape{
 
 .accordion-table .panel-body {
     padding: 0px;
+}
+
+
+.no-margin.ngrs-range-slider {
+    margin: 0;
+}
+.dropdown-menu.min-pad{
+    padding:2px;
+}
+
+
+.a2-audio-freq-filter-component{
+    display: inline-block;
+    position:relative;
+    height : 250px;
+    width : 280px;
+    img {
+        position: absolute;
+        top:0px;
+        left:45px;
+        width:200px;
+        height:250px;
+    }
+    div.stop-band{
+        position:absolute;
+        width:100%;
+        background-color:rgba(255,0,255,.7);
+        border-color:#ffffff;
+        &.top{
+            top:0;
+            border-bottom-width:1px;
+        }
+        &.bottom{
+            bottom:0;
+            border-top-width:1px;
+        }
+    }
+    .btn.stop-band{
+        position:absolute;
+        left:0;
+        width:6em;
+        transform: translateY(-50%);
+    }
 }

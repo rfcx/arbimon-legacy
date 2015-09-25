@@ -10,18 +10,19 @@
 angular.module('a2.visualizer', [
     'ui.router', 
     'ct.ui.router.extras', 
-    'ngAudio', 
     'a2.services', 
     'a2.utils', 
     'a2.visobjects', 
     'a2.visobjectsbrowser', 
     'a2.speciesValidator', 
     'visualizer-layers', 
+    'a2.visualizer.recordings',
     'visualizer-spectrogram', 
     'visualizer-training-sets', 
     'visualizer-training-sets-roi_set',
     'visualizer-soundscapes',
     'visualizer-services',
+    'a2.visualizer.audio-player',
     'a2-visualizer-spectrogram-Layout',
     'a2-visualizer-spectrogram-click2zoom',
     'a2.url-update-service',
@@ -47,9 +48,11 @@ angular.module('a2.visualizer', [
         sticky: true,
     })
     .state('visualizer.view', {
-        url: '/:type/:idA/:idB/:idC',
+        url: '/:type/:idA/:idB/:idC?gain&filter',
         params:{ 
             type:'', 
+            gain:'',
+            filter:'',
             idA: {
                 value:'', 
                 squash:true
@@ -95,8 +98,9 @@ angular.module('a2.visualizer', [
     };
 })
 .service('a2VisualizerLocationManager', function($location){
-    var locman = function(scope, prefix){
+    var locman = function(scope, prefix, state){
         this.scope = scope;
+        this.state = state;
         this.prefix = prefix;
         this.current = '';
         this.__expected = '';
@@ -111,6 +115,19 @@ angular.module('a2.visualizer', [
         },
         update_path : function(){
             this.set(this.current);
+        },
+        updateParams : function(params){
+            var all_params=angular.extend({}, this.state.params);
+            for(var pk in params){
+                var pv = params[pk];
+                if(pv === undefined){
+                    delete all_params[pk];
+                } else {
+                    all_params[pk] = pv;
+                }
+            }
+            console.log(all_params, this.state.current.name);
+            this.state.transitionTo(this.state.current.name, all_params, {notify:false});
         },
         set : function(location, dont_sync){
             if(dont_sync){
@@ -163,6 +180,11 @@ angular.module('a2.visualizer', [
 ) {
     var layers = new a2VisualizerLayers($scope);
     var layer_types = layers.types;
+    var initial_state_params={
+        gain   : $state.params.gain,
+        filter : $state.params.filter
+    };
+
     
     $scope.layers = layers.list; // current layers in the visualizer
     $scope.addLayer = layers.add.bind(layers);
@@ -185,7 +207,7 @@ angular.module('a2.visualizer', [
     
     $scope.visobject = null;
     
-    var location = new a2VisualizerLocationManager($scope, '/visualizer' + '/');
+    var location = new a2VisualizerLocationManager($scope, '/visualizer' + '/', $state);
     $scope.location = location;
     
     $scope.set_location = location.set.bind(location);
@@ -224,7 +246,7 @@ angular.module('a2.visualizer', [
         }
     };
     
-    $scope.audio_player = new a2AudioPlayer($scope);
+    $scope.audio_player = new a2AudioPlayer($scope, initial_state_params);    
     
     $scope.$on('browser-vobject-type', function(evt, type){
         $scope.visobject_type = type;
@@ -244,60 +266,7 @@ angular.module('a2.visualizer', [
         $scope.setVisObject($scope.visobject, $scope.visobject_type, $scope.visobject_location);
     });
 })
-.service('a2AudioPlayer', function(ngAudio){
-    var a2AudioPlayer = function(scope){
-        this.scope = scope;
-        this.is_playing = false;
-        this.is_muted = false;
-        this.has_recording = false;
-        this.has_next_recording = false;
-        this.has_prev_recording = false;
-        this.resource = null;
-    };
-    a2AudioPlayer.prototype = {
-        setCurrentTime: function(time){
-            if(this.resource) {
-                this.resource.currentTime = time;
-            }
-        },
-        load: function(url){
-            this.stop();
-            this.resource = ngAudio.load(url);
-            this.has_recording = true;
-        },
-        mute: function(muted){
-            if(this.resource) {
-                this.resource[muted ? 'mute' : 'unmute']();
-            }
-            this.is_muted = muted;
-        },
-        play: function(){
-            if(this.resource) {
-                this.resource.play();
-                this.is_playing = true;
-            }
-        },
-        pause: function(){
-            if(this.resource) {
-                this.resource.pause();
-            }
-            this.is_playing = false;
-        },
-        stop: function(){
-            if(this.resource) {
-                this.resource.stop();
-            }
-            this.is_playing = false;
-        },
-        prev_recording : function(){
-            this.scope.$broadcast('prev-visobject');
-        },
-        next_recording : function(){
-            this.scope.$broadcast('next-visobject');
-        },
-    };
-    return a2AudioPlayer;
-});
+;
 
 /**
  * @ngdoc overview

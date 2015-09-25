@@ -4,7 +4,6 @@
   "private": true,
   "dependencies": {
     "angular": "~1.4.5",
-    "angular-audio": "1.7.1",
     "angular-bootstrap": "0.13.3",
     "angular-file-upload": "~2.1.4",
     "angular-rangeslider": "~0.0.13",

@@ -123,12 +123,6 @@ module.exports = function(grunt) {
                 src: 'bower_components/angular/angular.min.js',
                 dest: 'public/assets/angular/'
             },
-            angularAudio: {
-                expand: true,
-                flatten: true,
-                src: 'bower_components/angular-audio/app/angular.audio.js',
-                dest: 'public/assets/angular-audio/'
-            },
             qr_js: {
                 expand: true,
                 flatten: true,

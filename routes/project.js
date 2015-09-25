@@ -90,6 +90,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     } 
                     else {
                         res.render('app', { 
+                            env : req.app.get('env'),
                             project: req.project, 
                             url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
                             user: req.session.user,  

@@ -218,8 +218,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2.utils'])
             });          
 
             $scope.getRecordingPlaybackTime = function () {
-                var rsc = $scope.audio_player.resource;
-                return rsc && rsc.currentTime;
+                return $scope.audio_player.getCurrentTime();
             };
             
             $scope.$watch(function () {

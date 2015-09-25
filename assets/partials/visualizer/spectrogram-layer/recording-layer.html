@@ -1,5 +1,15 @@
 <div class="input-source" ng-show="selection.layer == layer" ng-click="audio_player.setCurrentTime(pointer.sec) | trackEvent:'Visualizer-Recordings-Layer':'audio setcurrenttime'">
     <div a2-visualizer-spectrogram-affixed data-affix-top="20">
-        Click to set current play time to {{pointer.sec | number}}s <br/>
+        Click to set current play time to {{pointer.sec | number:2}}s <br/>
     </div>
 </div>
+
+<div class="filter-band" style="top:0px" ng-if="audio_player.freq_filter" ng-style="{
+    height:layout.hz2y(audio_player.freq_filter.max, 1) + 'px',
+    width: layout.spectrogram.width +'px'
+}" ></div>
+<div class="filter-band" ng-if="audio_player.freq_filter" ng-style="{
+    top:layout.hz2y(audio_player.freq_filter.min, 1) + 'px',
+    height:layout.dhz2height(audio_player.freq_filter.min, 0) + 'px',
+    width: layout.spectrogram.width +'px'
+}"></div>

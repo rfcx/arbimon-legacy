@@ -36,6 +36,7 @@ var getUTC = function (date) {
 };
 
 var fileExtPattern = /\.(wav|flac)$/;
+var freqFilterPrecision = 100;
 
 // exports
 var Recordings = {
@@ -394,24 +395,72 @@ var Recordings = {
     /** Returns the audio file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
-     * @param {Function} callback(err, path) function to call back with the recording audio file's path.
+     * @param {Object} options object containing optional modifiers to the fetched recording. (optional)
+     * @param {Object} options.gain the recording should have the specified gain applied.
+     * @param {Object} options.maxFreq frequencies above the given one should be filtered.
+     * @param {Object} options.minFreq frequencies below the given one should be filtered.
+     * @param {Function} callback(err, path) function to call back with the recording audio file's path. (optional)
+     * @return Promise with the fetched file.
      */
-    fetchAudioFile: function (recording, callback) {
+    fetchAudioFile: function (recording, options, callback) {
+        if(callback === undefined && options instanceof Function){
+            callback = options;
+            options = undefined;
+        }
+        
         debug('fetchAudioFile');
-        var mp3audio_key = recording.uri.replace(fileExtPattern, '.mp3');
+        var mods=[];
+        var mp3_ext = '.mp3';
+        
+        if(options){
+            if(options.gain && options.gain != 1){
+                mods.push({
+                    ext:'gain-'+(options.gain|0),
+                    args:{gain:options.gain}
+                });
+            }
+            if(options.minFreq || options.maxFreq){
+                var fmin=Math.min(((options.minFreq/freqFilterPrecision)|0)*freqFilterPrecision, 22049);
+                var fmax=Math.min(((options.maxFreq/freqFilterPrecision)|0)*freqFilterPrecision, 22049);
+                mods.push({
+                    ext:'sinc-'+(fmin||'')+'-'+(fmax||''),
+                    args:{filter:{min:fmin, max:fmax, type:'sinc'}}
+                });
+            }
+        }
+        
+        if(mods.length){
+            mp3_ext = '.' + mods.map(function(mod){
+                return mod.ext;
+            }).join('.') + mp3_ext;
+        }
+        
         var ifMissedGetFile = function(cache_miss) {
             debug('mp3 not found');
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
                 if(err) return callback(err); 
+
+                var transcode_args = {
+                    sample_rate: 44100, 
+                    format: 'mp3', 
+                    channels: 1
+                };
+                
+                if(mods.length){
+                    mods.forEach(function(mod){
+                        var modtak = Object.keys(mod.args);
+                        debug(mod, modtak);
+                        for(var i=0, e=modtak.length; i < e; ++i){
+                            transcode_args[modtak[i]] = mod.args[modtak[i]];
+                        }
+                    });
+                }
+                debug(transcode_args);
                 
                 audioTools.transcode(
                     recording_path.path, 
                     cache_miss.file, 
-                    {
-                        sample_rate: 44100, 
-                        format: 'mp3', 
-                        channels: 1
-                    }, 
+                    transcode_args,
                     function(status_code){
                         debug('done transcoding');
                         if(status_code) {
@@ -423,7 +472,8 @@ var Recordings = {
             });
         };
         
-        tmpfilecache.fetch(mp3audio_key, ifMissedGetFile, callback);
+        var mp3audio_key = recording.uri.replace(fileExtPattern, mp3_ext);
+        return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(mp3audio_key, ifMissedGetFile).nodeify(callback);
     },
     
     /** Returns the spectrogram file of a given recording.
