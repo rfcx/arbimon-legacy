@@ -15,13 +15,17 @@ module.exports = {
             filename: Joi.string().required(),
             project_id: Joi.number().required(),
             site_id: Joi.number().required(),
-            user_id: Joi.string().required(),
+            user_id: Joi.number().required(),
             state: Joi.string().required(),
             duration: Joi.number().required(),
         };
         
         Joi.validate(uploadData, schema, function(err, upload) {
             
+            if(err){
+                callback(err);
+                return;
+            }
             var q = "INSERT INTO uploads_processing \n"+
                     "SET ?";
                     
