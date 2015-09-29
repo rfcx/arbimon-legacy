@@ -28,6 +28,7 @@ AWS.config.update({
 var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');
 var model = require('./model');
+var uploadQueue = require('./utils/upload-queue');
 
 paypal.configure(config('paypal'));
 var app = express();
@@ -156,6 +157,7 @@ app.use(function(err, req, res, next) {
 
 app.start = function(){
     tmpfilecache.cleanup();
+    uploadQueue.resume();
 };
 
 module.exports = app;

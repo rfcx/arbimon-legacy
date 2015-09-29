@@ -101,12 +101,31 @@ Uploader.prototype.convertMonoFlac = function(callback) {
     
     args.push(this.outFile);
     
-    audioTools.sox(args, function(code, stdout, stderr) {
+    audioTools.sox(args, (function(code, stdout, stderr) {
         if(code !== 0)
             return callback(new Error("error converting to mono and/or to flac: \n" + stderr));
-        
+        this.upload.info.channels = 1;
         callback(null, code);
-    });
+    }).bind(this));
+};
+
+/**
+ * Fetches initial audio info if it wasnt provided or is incomplete.
+ */ 
+Uploader.prototype.getInitialAudioInfo = function(callback) {
+    debug('getInitialAudioInfo:', this.upload.name);
+    if(this.upload.info && this.upload.info.channels){
+        callback();
+    } else {
+        audioTools.info(this.inFile, (function(code, info) {
+            if(code !== 0) {
+                return callback(new Error("error getting audio file info"));
+            }
+            
+            this.upload.info = info;
+            callback();
+        }).bind(this));
+    }
 };
 
 /**
@@ -318,8 +337,10 @@ Uploader.prototype.process = function(upload, done) {
         ensureFileIsLocallyAvailable: ['prepInfo', self.ensureFileIsLocallyAvailable.bind(self)],
         
         insertUploadRecs: ['ensureFileIsLocallyAvailable', self.insertUploadRecs.bind(self)],
+        // run initial audio file info, just in case that data is missing, before deciding if conversion is needed
+        getInitialAudioInfo: ['insertUploadRecs', self.getInitialAudioInfo.bind(self)],
         
-        convertMonoFlac: ['insertUploadRecs', self.convertMonoFlac.bind(self)],
+        convertMonoFlac: ['getInitialAudioInfo', self.convertMonoFlac.bind(self)],
         // update audio file info after conversion
         updateAudioInfo: ['convertMonoFlac', self.updateAudioInfo.bind(self)],
         
@@ -349,8 +370,8 @@ Uploader.prototype.process = function(upload, done) {
     });
 };
 
-Uploader.moveToTempArea = function(upload, callback){
-    var tempFileUri = util.format('uploading/project_%d/site_%d/%d/%d/%s%s', 
+Uploader.computeTempAreaPath = function(upload){
+    return util.format('uploading/project_%d/site_%d/%d/%d/%s%s', 
         upload.projectId,
         upload.siteId,
         upload.FFI.datetime.getFullYear(),
@@ -358,11 +379,16 @@ Uploader.moveToTempArea = function(upload, callback){
         upload.FFI.filename,
         upload.FFI.filetype
     );
-    upload.tempFileUri = tempFileUri;    
+};
+
+Uploader.moveToTempArea = function(upload, callback){
+    if(!upload.tempFileUri){
+        upload.tempFileUri = Uploader.computeTempAreaPath(upload);
+    }
     
     var params = { 
         Bucket: config('aws').bucketName, 
-        Key: tempFileUri,
+        Key: upload.tempFileUri,
         Body: fs.createReadStream(upload.path)
     };
 
@@ -371,7 +397,7 @@ Uploader.moveToTempArea = function(upload, callback){
             return callback(err);
         }
             
-        debug("Successfully moved uploaded ", upload.path, " to ", tempFileUri);
+        debug("Successfully moved uploaded ", upload.path, " to ", upload.tempFileUri);
         
         fs.unlink(upload.path, callback);
     });
