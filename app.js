@@ -29,7 +29,6 @@ var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');
 var model = require('./model');
 
-tmpfilecache.cleanup();
 paypal.configure(config('paypal'));
 var app = express();
 
@@ -57,8 +56,7 @@ logger.token('tag', function(req, res){ return 'arbimon2:request'; });
 
 if(app.get('env') === 'production') {
     app.use(logger(':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"'));
-}
-else {
+} else {
     app.use(logger('dev'));
 }
 
@@ -156,5 +154,8 @@ app.use(function(err, req, res, next) {
     }
 });
 
+app.start = function(){
+    tmpfilecache.cleanup();
+};
 
 module.exports = app;
