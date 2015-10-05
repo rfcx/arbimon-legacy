@@ -330,9 +330,7 @@ var Projects = {
         if(typeof options == 'function') {
             callback = options;
             options = {};
-            classId = null;
-        }
-        else if(typeof classId == 'function') {
+        } else if(typeof classId == 'function') {
             callback = classId;
             options = {};
             classId = null;
