@@ -27,6 +27,7 @@ AWS.config.update({
 
 var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');
+var APIError = require('./utils/apierror');
 var model = require('./model');
 var uploadQueue = require('./utils/upload-queue');
 
@@ -138,20 +139,32 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-    console.error(err.stack);
-    
     res.status(err.status || 500);
-    if(app.get('env') === 'development') {
-        res.render('error', {
-            message: err.message,
-            error: err
-        });
-    }
-    else {
-        res.render('error', {
-            message: "Something went wrong",
-            error: {}
-        });
+
+    // json APIs have more error-handling possibilities
+    if(
+        /application\/json/.test(res.getHeader('Content-Type'))
+    ){
+        if(err instanceof APIError){
+            res.json(err.message);
+        } else {
+            console.error(err.stack);
+            res.json('Server error');
+        }
+    } else {
+        console.error(err.stack);
+        if(app.get('env') === 'development') {
+            res.render('error', {
+                message: err.message,
+                error: err
+            });
+        }
+        else {
+            res.render('error', {
+                message: "Something went wrong",
+                error: {}
+            });
+        }
     }
 });
 
