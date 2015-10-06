@@ -6,6 +6,7 @@ var util = require('util');
 var mysql = require('mysql');
 var async = require('async');
 var joi = require('joi');
+var q = require('q');
 var sprintf = require("sprintf-js").sprintf;
 var AWS = require('aws-sdk');
 
@@ -336,56 +337,51 @@ var Projects = {
             classId = null;
         }
         
-        
-        var params = [];
-        var q = "";
-        var sql = {
-            select: (
-                "SELECT pc.project_class_id as id, \n"+
-                "       pc.species_id as species, \n"+
-                "       pc.songtype_id as songtype, \n"+
-                "       st.taxon, \n"+
-                "       sp.scientific_name as species_name, \n"+
-                "       so.songtype as songtype_name \n"
-            ),
-            from: (
-                "FROM project_classes AS pc \n"+
-                "JOIN species AS sp on sp.species_id = pc.species_id \n"+
-                "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
-                "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id \n"
-            ),
-            where: (
-                "WHERE pc.project_id = ? \n"
-            ),
-        };
-        params.push(projectId);
+        var params = [projectId];
+        var select_clause = [
+            "pc.project_class_id as id",
+            "pc.species_id as species",
+            "pc.songtype_id as songtype",
+            "st.taxon",
+            "sp.scientific_name as species_name",
+            "so.songtype as songtype_name"
+        ];
+        var from_clause = [
+            "project_classes AS pc",
+            "JOIN species AS sp ON sp.species_id = pc.species_id",
+            "JOIN songtypes AS so ON so.songtype_id = pc.songtype_id",
+            "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id"
+        ];
+        var where_clause = ['pc.project_id = ?'];
+        var groupby_clause = [];
         
         if(classId) {
-            sql.where += "AND pc.project_class_id = ? \n";
+            where_clause.push("pc.project_class_id = ?");
             params.push(classId);
         }
-        
-        if(options && options.countValidations) {
-            sql.select += (
-                ", coalesce(SUM(rv.present), 0) as vals_present, \n"+
-                "coalesce((COUNT(rv.present) - SUM(rv.present)), 0) as vals_absent \n"
-            );
-            sql.from += (
-                "LEFT JOIN recording_validations AS rv " + 
-                "ON rv.songtype_id = pc.songtype_id " +
-                "AND rv.species_id = pc.species_id " +
-                "AND rv.project_id = pc.project_id \n"
-            );
-            
-            q = sql.select + sql.from + sql.where + "GROUP BY pc.species_id, pc.songtype_id \n";
-        }
-        else {
-            q = sql.select + sql.from + sql.where;
-        }
-        
-            // " \nORDER BY st.taxon, sp.scientific_name"
 
-        return queryHandler(mysql.format(q, params), callback);
+        if(options && options.countValidations) {
+            select_clause.push(
+                "coalesce(SUM(rv.present), 0) as vals_present",
+                "coalesce((COUNT(rv.present) - SUM(rv.present)), 0) as vals_absent"
+            );
+            from_clause.push(
+                "LEFT JOIN recording_validations AS rv ON (\n"+
+                "   rv.songtype_id = pc.songtype_id\n" +
+                "   AND rv.species_id = pc.species_id\n" +
+                "   AND rv.project_id = pc.project_id\n" +
+                ")"
+            );
+            groupby_clause.push("pc.species_id", "pc.songtype_id");
+        }
+
+        return q.nfcall(queryHandler, mysql.format(
+            "SELECT " + select_clause.join(", \n") + "\n" +
+            "FROM " + from_clause.join("\n") + "\n" +
+            "WHERE (" + where_clause.join(") AND (") + ")" + 
+            (groupby_clause.length ? "\nGROUP BY " + groupby_clause.join(",") : ""),
+            params)
+        ).get(0).nodeify(callback);
     },
 
     insertClass: function(project_class, callback) {
