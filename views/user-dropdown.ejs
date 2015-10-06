@@ -1,7 +1,7 @@
 <li class="dropdown" dropdown>
     <a class="dropdown-toggle" dropdown-toggle>
         <% if(user.isSuper) { %>Super<% } %> 
-        <i class="fa fa-user"></i> <%= user.username %> 
+        <i class="fa user-avatar" style="background-image:url('<%- user.imageUrl %>')"></i> <%= user.username %> 
         <i class="fa fa-caret-down"></i>
     </a>
     <% if(user.isAnonymousGuest) { %>
