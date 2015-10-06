@@ -48,6 +48,10 @@ if (app.get('env') === 'production') {
     app.enable('trust proxy');
 }
 
+if (app.get('env') === 'development') {
+    require('q').longStackSupport = true;
+}
+
 // middleware
 // ------------------------------------------------------------------
 
