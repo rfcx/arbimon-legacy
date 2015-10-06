@@ -49,6 +49,13 @@ router.get('/dashboard-stats', function(req, res, next) {
     });
 });
 
+router.get('/plot-data/data.txt', function(req, res, next) {
+    var stat = req.query && req.query.stat;
+    console.log(req.query)
+    res.json([]);
+});
+
+
 router.get('/job-queue', function(req, res, next) {
     request.get(config('hosts').jobqueue + '/stats')
         .on('error', function(err) {
