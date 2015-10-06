@@ -42,8 +42,8 @@ angular.module('a2.audiodata', [
         templateUrl: '/partials/audiodata/species.html'
     })
     .state('audiodata.trainingSets', {
-        url: '/training-sets',
-        controller: 'TrainingSetsCtrl',
+        url: '/training-sets?set&show',
+        controller: 'TrainingSetsCtrl as controller',
         templateUrl: '/partials/audiodata/training-sets.html'
     })
     .state('audiodata.playlists', {
