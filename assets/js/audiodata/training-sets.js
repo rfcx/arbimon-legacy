@@ -54,7 +54,7 @@ angular.module('a2.audiodata.training-sets', [
     this.rois = [];
     this.species = '';
     this.songtype = '';
-    this.showSetDetails = p.show != "gallery";
+    this.detailedView = p.show != "gallery";
     this.currentrois = [];
     this.roisPerpage = 12;
     this.detailedView = false;
@@ -200,7 +200,7 @@ angular.module('a2.audiodata.training-sets', [
     this.selectTrainingSet = function(selected) {
         $state.transitionTo($state.current.name, {set:selected.id, show:$state.params.show}, {notify:false});
         
-        this.showSetDetails = $state.params.show != "gallery";
+        this.detailedView = $state.params.show != "gallery";
         this.loaderDisplay = true;
         a2TrainingSetHistory.setLastSet(selected);
         

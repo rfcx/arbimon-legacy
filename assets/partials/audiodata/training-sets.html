@@ -56,7 +56,7 @@
             </div> 
         </div> 
         
-        <div class="panel panel-default" ng-show="controller.selected.trainingSet && controller.showSetDetails && !controller.loaderDisplay">
+        <div class="panel panel-default" ng-show="controller.selected.trainingSet && !controller.loaderDisplay">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         {{
@@ -127,12 +127,14 @@
                 <div class="panel-body" ng-show="controller.rois.length">
                     
                     <div class="row">
-                        <div class="col-sm-12">
-                            <ul class="pager">
-                                <li><a ng-click="controller.prev() | trackEvent:'Audiodata-Training Sets':'prevPage'">Previous</a></li>
-                                <li><a ng-hide="controller.detailedView">{{controller.selected.page + 1}} of {{controller.total.pages}}</a></li>
-                                <li><a ng-show="controller.detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a></li>
-                                <li><a ng-click="controller.next() | trackEvent:'Audiodata-Training Sets':'nextPage'">Next</a></li>
+                        <div class="col-sm-offset-2 col-sm-8">
+                            <div class="toolbar centered">
+                                <div class="btn-group">
+                                    <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Audiodata-Training Sets':'prevPage'">Previous</a>
+                                    <a class="btn btn-default" ng-hide="controller.detailedView">{{controller.selected.page + 1}} of {{controller.total.pages}}</a>
+                                    <a class="btn btn-default" ng-show="controller.detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a>
+                                    <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Audiodata-Training Sets':'nextPage'">Next</a>
+                                </div>
                                 
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-default" ng-click="controller.setDetailedView(true)"
@@ -144,7 +146,7 @@
                                         <i class="fa fa-th"></i>
                                     </button>
                                 </div>
-                            </ul>
+                            </div>
                         </div>
                     </div>
                     <div ng-hide="controller.detailedView">
@@ -179,7 +181,7 @@
                         </div>
                     </div>
                     
-                    <div ng-show="detailedView">
+                    <div ng-show="controller.detailedView">
                         <div class="row">
                             <div class="col-sm-offset-2 col-sm-8" >
                                 <div class="row">
