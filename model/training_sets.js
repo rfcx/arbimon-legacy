@@ -13,9 +13,11 @@ var async = require('async');
 var joi = require('joi');
 var lwip = require('lwip');
 var AWS = require('aws-sdk');
+var q = require('q');
 
 // local dependencies
 var config       = require('../config'); 
+var APIError = require('../utils/apierror');
 var tmpfilecache = require('../utils/tmpfilecache');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
@@ -40,13 +42,13 @@ var TrainingSets = {
     findName: function(set_id, callback) {
         var q = "SELECT name \n"+
                 "FROM training_sets \n"+
-                "WHERE training_set_id = " + mysql.escape(set_id);
+                "WHERE training_set_id = " + mysql.escape(set_id) + " AND removed=0";
                 
             queryHandler(q, callback);
     },
     
     find: function (query, callback) {
-        var constraints = [];
+        var constraints = ["TS.removed=0"];
 
         if(query) {
             if (query.id) {
@@ -62,10 +64,10 @@ var TrainingSets = {
         }
 
         if(constraints.length === 0){
-            return callback(new Error("TrainingSets.find called with invalid query."));
+            return q.reject(new Error("TrainingSets.find called with invalid query.")).nodeify(callback);
         }
         
-        var q = "SELECT TS.training_set_id as id, \n" +
+        var sql = "SELECT TS.training_set_id as id, \n" +
                 "       TS.name, \n" +
                 "       TS.date_created, \n" +
                 "       TS.project_id as project, \n" +
@@ -77,17 +79,19 @@ var TrainingSets = {
                 "LEFT JOIN training_sets_roi_set TSRS ON TS.training_set_id = TSRS.training_set_id \n" +
                 "WHERE " + constraints.join(" \nAND ");
         
-        dbpool.queryHandler(q, callback);
+        return q.ninvoke(dbpool, 'queryHandler', sql).get(0).nodeify(callback);
     },
     
     nameInUse: function(project_id, set_name, callback) {
-        var q = "SELECT count(*) as count \n"+
+        var sql = "SELECT count(*) as count \n"+
                 "FROM training_sets \n"+
                 "WHERE name = %s \n" + 
-                "AND project_id = %s";
+                "AND project_id = %s AND removed=0";
         
-        q = util.format(q, mysql.escape(set_name), mysql.escape(project_id));
-        queryHandler(q, callback);
+        sql = util.format(sql, mysql.escape(set_name), mysql.escape(project_id));
+        return q.nfcall(queryHandler, sql).get(0).get(0).get('count').then(function(count){
+            return (count | 0) > 0;
+        }).nodeify(callback);
     },
     
     /** Finds training sets, given a (non-empty) query.
@@ -163,6 +167,97 @@ var TrainingSets = {
             }
             callback(err, tset);
         });
+    },
+    
+    /** Edits a given training set.
+     * @param {Object} trainingSet - the training set to edit
+     * @param {Object} data
+     * @param {Object} data.name   new name for this training set.
+     * @param {Object} data.extra  other type-dependent values to modify in the trainingset.
+     * @param {Function} callback called back with the newly inserted training set, or with errors.
+     * @return {Promise} resolved with the newly edited training set, rejected on any errors.
+     */
+    edit: function (trainingSet, data, callback) {
+        var typedef = TrainingSets.types[trainingSet.type];
+        var typedef_action = typedef && typedef.edit;
+        var connection;
+        var in_transaction = false;
+        
+        return q().then(function check_training_set_not_empty(){
+            if(!trainingSet){
+                throw new APIError("Training set not given.", 422);
+            }
+        }).then(function check_name_is_valid(){
+            if(!data.name){
+                throw new APIError("Training set name is missing.", 422);
+            }
+            if(data.name != trainingSet.name){
+                return TrainingSets.nameInUse(trainingSet.project, data.name).then(function(isInUse){
+                    if(isInUse){
+                        throw new APIError("Name '" + data.name + "' is already in use", 409);
+                    }
+                });
+            }
+        }).then(function perform_typedef_extra_validation(){
+            if(typedef_action.validate){
+                return typedef_action.validate(trainingSet, data);
+            }
+        }).then(function get_connection(){
+            return q.ninvoke(dbpool, 'getConnection').then(function(_connection){
+                connection = _connection;
+            });
+        }).then(function begin_transaction(){
+            return q.ninvoke(connection, 'beginTransaction').then(function(){
+                in_transaction = true;                
+            });
+        }).then(function run_main_update_query(){
+            return q.ninvoke(connection, 'query',
+                "UPDATE training_sets\n" +
+                "SET name = ? \n" +
+                "WHERE training_set_id = ?",
+                [data.name, trainingSet.id]
+            );
+        }).then(function run_typedef_dependent_update_query(){
+            if(typedef_action.extras){
+                return typedef_action.extras(connection, trainingSet.id, data);
+            }
+        }).then(function commit_transaction() {
+            return q.ninvoke(connection, 'commit').then(function(){
+                in_transaction = false;                
+            });
+        }).then(function fetch_newly_edited_object() {
+            return TrainingSets.find({id:trainingSet.id});
+        }).finally(function(){
+            if(connection){
+                connection.release();
+            }
+        }).nodeify(callback);
+    },
+
+
+
+    
+    /** Removes a given training set.
+     * @param {Object} trainingSet - the training set to edit
+     * @param {Function} callback called back with the newly inserted training set, or with errors.
+     * @return {Promise} resolved with the newly edited training set, rejected on any errors.
+     */
+    remove: function (trainingSet) {
+        var typedef = TrainingSets.types[trainingSet.type];
+        var typedef_action = typedef && typedef.edit;
+        var connection;
+        var in_transaction = false;
+        
+        if(!trainingSet){
+            return q.reject(new APIError("Training set not given.", 422));
+        }
+        
+        return q.nfcall(queryHandler, mysql.format(
+            "UPDATE training_sets\n" +
+            "SET removed = 1 \n" +
+            "WHERE training_set_id = ?",
+            [trainingSet.id]
+        ));
     },
 
     /** Adds data to the given training set.
@@ -276,6 +371,45 @@ TrainingSets.types.roi_set = {
                 "INSERT INTO training_sets_roi_set (training_set_id, species_id, songtype_id) \n" +
                 "VALUES ("+mysql.escape([tset_id, data.species, data.songtype])+")",
             callback);
+        }
+    },
+    edit : {
+        /** Validates the data so its fit for editing the training set.
+         * @param {Object} data
+         * @return {Promise} resolved if the data is fit, rejected otherwise.
+         */
+        validate : function(trainingSet, data){
+            if (data.extras && data.extras.class) {
+                return q.nfcall(Projects.getProjectClasses, trainingSet.project, data.extras.class).then(function(classes){
+                    if(!classes || !classes.length) {
+                        throw new APIError("Project class is invalid.", 422);
+                    }
+
+                    data.species  = classes[0].species;
+                    data.songtype = classes[0].songtype;
+                    
+                    return [data.species, data.songtype];
+                });
+            } else if (data.extras && data.extras.species && data.extras.songtype) {
+                data.species  = data.extras.species;
+                data.songtype = data.extras.songtype;
+                return q([data.species, data.songtype]);
+            } else {
+                return q.reject(new APIError("Project class is invalid.", 422));
+            }
+        },
+        /** Updates the roi_set data of the associated training set.
+         * @param {Integer} tset_id - id of the associated training set
+         * @param {Object} data - data to update 
+         * @return {Promise} resolved if the data is fit, rejected otherwise.
+         */
+        extras   : function(connection, tset_id, data){
+            return q.ninvoke(connection, 'query',
+                "UPDATE training_sets_roi_set\n"+
+                "SET species_id = ?, songtype_id = ?\n"+
+                "WHERE training_set_id = ?",
+                [data.species, data.songtype, tset_id]
+            );
         }
     },
     data_schema : joi.object().keys({
@@ -472,7 +606,6 @@ TrainingSets.types.roi_set = {
         var self = this;
         async.waterfall([
             function(next){
-                // console.log('joi.validate(data:',data,', schema:', this.data_schema,', {context:',training_set,'},next);');
                 joi.validate(data, self.data_schema, {context:training_set},next);
             }, 
             function(vdata, next){
