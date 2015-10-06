@@ -81,7 +81,7 @@ angular.module('a2.audiodata.training-sets', [
             this.selected.page = 0;
             this.selected.currentrois = [];
         } else {
-            this.selected.page = Math.max(0, Math.min(page, (this.total.rois / this.roisPerPage) | 0));
+            this.selected.page = Math.max(0, Math.min(page, (this.total.rois / this.roisPerpage) | 0));
             this.currentrois = this.rois.slice( 
                 (this.selected.page  ) * this.roisPerpage, 
                 (this.selected.page+1) * this.roisPerpage
