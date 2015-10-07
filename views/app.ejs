@@ -70,10 +70,11 @@
                         </a>
                     </li>
                 </ul>
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
+                <ul class="nav navbar-nav navbar-right hide-tooltip-lg">
+                    <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
                         <a class="dropdown-toggle" dropdown-toggle>
-                            <i class="fa fa-sitemap"></i> <%=  project.name  %>
+                            <i class="fa fa-sitemap"></i> 
+                            <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>                            
                         </a>
                     </li>
 
