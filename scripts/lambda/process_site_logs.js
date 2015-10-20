@@ -1,4 +1,5 @@
 var fs = require('fs');
+var path = require('path');
 var mysql = require('mysql');
 var q = require('q');
 var stream = require('stream');
@@ -94,15 +95,15 @@ var line_chopper = make_stream_fn({objectMode:true}, {
         done();
     }
 });
-/** Returns a write stream that outputs objects using console.log.
- * @return {stream.Writable} that outputs given objects using console.log.
+/** Returns a write stream that just consumes the stream.
+ * @return {stream.Writable} that just consumes the stream.
  */
-var catter = make_stream_fn({objectMode:true}, {
+var dev_null = make_stream_fn({objectMode:true}, {
     write: function (line, encoding, done) {
-        console.log(line);
         done();
     }
 });
+
 /** Returns a stream that transforms raw text lines from a log into log entries.
  * @return {stream.Transform} stream that transforms raw text lines from a log into log entries.
  */
@@ -156,7 +157,7 @@ function parse_log_entry(line){
                 line = /^\[?(.*?)\]?$/.exec(line)[1];
                 comps = line.split(',');
                 power = comps.shift().split('/');
-                data.power = (+power[0]) / (+power[1]);
+                data.power = 100 * (+power[0]) / (+power[1]);
                 comps.forEach(function(c){
                     var kv = c.split(':');
                     data[kv[0].trim().toLowerCase()] = kv[1].toLowerCase();
@@ -185,7 +186,7 @@ var log_entry_to_site_entry_processor = make_stream_fn({objectMode:true}, {
             case 'notice'     : _entry = ['event', {date:log_entry.date, type:'notice', message:log_entry.message }]; break;
             case 'config'     : _entry = ['event', {date:log_entry.date, type:'config', message:log_entry.line    }]; break;
             case 'resetalarm' : _entry = ['event', {date:log_entry.date, type:'alarm', message:'Radio Reset Alarm'}]; break;
-            case 'network'    : _entry = ['connection', {date:log_entry.date, connection:log_entry.connection     }]; break;
+            case 'network'    : _entry = ['connection', {date:log_entry.date, connection:log_entry.connected     }]; break;
             case 'powerstate' : _entry = ['data', {date:log_entry.date, 
                     power: log_entry.power, battery: log_entry.battery, health: log_entry.health, status: log_entry.status,
                     plug_type: log_entry.plug, bat_tech: log_entry.tech, temp: log_entry.temp, voltage: log_entry.voltage,
@@ -206,17 +207,29 @@ var site_logger = make_stream_fn({objectMode:true}, {
     initialize: function(site_id, dbconnection){
         this.site_id = site_id;
         this.db = dbconnection;
+        this.$stats = {count:0};
     },
     transform: function(log_entry, _, done){
+        // console.log(log_entry);
         var log_type = log_entry[0], data = log_entry[1];
         var log_adder = '$add_'+log_type+'_log_entry';
+        this.$stats.count++;
+        if(!this.$stats.min_date || this.$stats.min_date > data.date){ 
+            this.$stats.min_date = data.date;
+        }
+        if(!this.$stats.max_date || this.$stats.max_date < data.date){ 
+            this.$stats.max_date = data.date;
+        }
         if(this[log_adder]){
             this[log_adder](data)
-                .then(
-                    done, 
+                .then((function(results){
+                    this.push(results);
+                }).bind(this)).then(
+                    function(){
+                        done();
+                    }, 
                     (function(err){
-                        console.log("this.emit('error', err);", err);
-                        this.emit('error', err);
+                        done(err);
                     }).bind(this)
                 );
         } else {
@@ -224,8 +237,8 @@ var site_logger = make_stream_fn({objectMode:true}, {
         }
     },
     $exec_query : function(sql, data){
-        this.push(data ? mysql.format(sql, data) : sql);
-        return q();
+        sql = data ? mysql.format(sql, data) : sql;
+        return q.ninvoke(this.db, 'query', sql, data);
     },    
     /** Returns the id for a given type's value.
      * @param {String} id_type - type of the value whose id is requested 
@@ -242,8 +255,28 @@ var site_logger = make_stream_fn({objectMode:true}, {
         } else if(ids.cached && ids.cached[value]){
             return q(ids.cached[value]);
         } else {
-            console.log(id_type, value, is_nullable, (value === undefined || value === null));
-            return q.reject(new Error(id_type + " id for value '" + value + "' not found."));
+            return (ids.query_sql ? 
+                this.$exec_query(ids.query_sql, [value]) : 
+                q()
+            ).then((function(results){
+                if(results && results[0] && results[0][0]){
+                    return results[0][0].id;
+                } else if(ids.insert_sql){
+                    return this.$exec_query(ids.insert_sql, [value]).then(function(results){
+                        return results && results[0] && results[0].insertId;
+                    });
+                }
+            }).bind(this)).then(function(id){
+                if(id){
+                    if(!ids.cached){
+                        ids.cached = {};
+                    }
+                    ids.cached[value] = id;
+                    return id;
+                } else {
+                    throw new Error(id_type + " id for value '" + value + "' not found.");
+                }
+            });
         }        
     },
     /** $get_id_for type definitions.
@@ -254,7 +287,7 @@ var site_logger = make_stream_fn({objectMode:true}, {
      */
     $type_ids : {
         connection_type : {
-            query_sql:"SELECT type_id FROM site_connection_types WHERE type = ?", 
+            query_sql:"SELECT type_id as id FROM site_connection_types WHERE type = ?", 
             insert_sql:"INSERT INTO site_connection_types(type) VALUES (?)", 
             // cached:{
             //     'mobile(LTE)'     : 1,
@@ -268,39 +301,41 @@ var site_logger = make_stream_fn({objectMode:true}, {
             // }
         },
         health_type : {
-            query_sql:"SELECT health_type_id FROM site_data_log_health_types WHERE type = ?", 
+            query_sql:"SELECT health_type_id as id FROM site_data_log_health_types WHERE type = ?", 
             insert_sql:"INSERT INTO site_data_log_health_types(type) VALUES (?)", 
-            cached:{
-                'unknown'         : 1,
-                'good'            : 2,
-            }
+            // cached:{
+            //     'unknown'         : 1,
+            //     'good'            : 2,
+            // }
         },
         plug_type : {
-            query_sql:"SELECT plug_type_id FROM site_data_log_plug_types WHERE type = ?", 
+            query_sql:"SELECT plug_type_id as id FROM site_data_log_plug_types WHERE type = ?", 
             insert_sql:"INSERT INTO site_data_log_plug_types(type) VALUES (?)", 
-            cached:{
-                'unknown'   : 1,
-                'unplugged' : 2,
-                'usb'       : 3,
-                'ac'        : 4,
-            }
+            // cached:{
+            //     'unknown'   : 1,
+            //     'unplugged' : 2,
+            //     'usb'       : 3,
+            //     'ac'        : 4,
+            // }
         },
         tech_type : {
-            query_sql:"SELECT tech_type_id FROM site_data_log_tech_types WHERE type = ?", 
+            query_sql:"SELECT tech_type_id as id FROM site_data_log_tech_types WHERE type = ?", 
             insert_sql:"INSERT INTO site_data_log_tech_types(type) VALUES (?)", 
-            cached:{
-                'li-ion'    : 1
-            }
+            // cached:{
+            //     'li-ion'    : 1
+            // }
         }
     },
     $add_connection_log_entry : function(data){
         return this.$get_id_for('connection_type', data.connection, true).then((function(connection_id){
             return this.$exec_query(
-                "INSERT INTO site_event_log(site_id, datetime, connection)\n" +
+                "INSERT INTO site_connection_log(site_id, datetime, connection)\n" +
                 "VALUES (?, ?, ?);", [
                 this.site_id, data.date, connection_id
             ]);
-        }).bind(this));
+        }).bind(this)).then(function(results){
+            return results && results[0] && results[0].insertId;
+        });
     },
     $add_data_log_entry : function(data){
         var plug_id, health_id, tech_id;
@@ -322,43 +357,180 @@ var site_logger = make_stream_fn({objectMode:true}, {
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", [
                 this.site_id, data.date, data.power, data.temp, data.voltage, data.battery, data.status, plug_id, health_id, tech_id
             ]);
-        }).bind(this));
+        }).bind(this)).then(function(results){
+            return results && results[0] && results[0].insertId;
+        });
     },    
-    $add_event_log_entry : function(data, done){
+    $add_event_log_entry : function(data){
         return this.$exec_query(
             "INSERT INTO site_event_log(site_id, datetime, type, message)\n" +
             "VALUES (?, ?, ?, ?);", [
             this.site_id, data.date, data.type, data.message
-        ]);
+        ]).then(function(results){
+            return results && results[0] && results[0].insertId;
+        });
     },
 });
 
+function make_stream_pipeline(streams, options){
+    var pipeline_err_handler;
+    var last_stream = streams[streams.length - 1];
+    if(options && options.pipe_errors){
+        pipeline_err_handler = function(err){
+            last_stream.emit('error', err);
+        };
+    }
+    return streams.reduce(function(_1, _2){
+        if(pipeline_err_handler){
+            _1.on('error', pipeline_err_handler);
+        }
+        return _1.pipe(_2);
+    });
+}
 
+/** Processes site logs and adds them to the database.
+ * @param{Object|Array} logfile - logfile, can be an object or an array of objects.
+ * @param{String} logfile.stream - stream holding the the site's log data.
+ * @param{String} logfile.uri - uri associated to this log data.
+ * @param{Integer} site_id - id of the site to add this log data to.
+ * @param{Object} db - opened connection to the database.
+ * @return {Promise} resolved when all log data has been read and added to the database as one transaction per file, rejected otherwise.
+ * @note if there is already an entry for the (site_id, logfile.uri) pair, then this is does nothing.
+ */
+function process_one_logfile(logfile, site_id, db){
+    var _site_logger;
+    return q().then(function(){
+        return q.ninvoke(db, 'query', "SELECT site_log_file_id as id FROM site_log_files WHERE site_id = ? AND uri = ?", [site_id, logfile.uri]);
+    }).then(function(results){
+        if(results && results[0] && results[0].length){
+            console.log("skipping " + logfile.uri  + ": already added to db (id:" + results[0][0].id + ").");
+        } else {
+            return q.ninvoke(db, 'query', "BEGIN").then(function(){
+                var d = q.defer();
+                _site_logger = site_logger(site_id, db);
+                make_stream_pipeline([
+                    logfile.stream, 
+                    line_chopper(), 
+                    log_entry_parser(),
+                    log_entry_to_site_entry_processor(),
+                    _site_logger, 
+                    dev_null()
+                ], {pipe_errors:true})
+                    .on('error', d.reject.bind(d))
+                    .on('finish', d.resolve.bind(d));
+                return d.promise;
+            }).then(function(){
+                return q.ninvoke(db, 'query', "INSERT INTO site_log_files(site_id, log_start, log_end, uri) VALUES (?, ?, ?, ?)", [
+                    site_id, _site_logger.$stats.min_date || '0000-00-00', _site_logger.$stats.max_date || '0000-00-00', logfile.uri 
+                ]);
+            }).then(function(){
+                console.log(_site_logger.$stats);
+                console.log("processed " + logfile.uri  + ":", _site_logger.$stats.count);
+                return q.ninvoke(db, 'query', "COMMIT");
+            }, function(err){
+                console.error("error processing " + logfile.uri  + ":", err);        
+                return q.ninvoke(db, 'query', "ROLLBACK");
+            });
+        }
+    });
 
+}
 
+/** Loops through an array, applying loopFn and using the promise API.
+ * Processes each item in order using loopFn, but stops after each iteration
+ * to resolve any pending promises returned by loopFn.
+ * @param{Array} array - array to loop
+ * @param{Function} loopFn - function used in loop.
+ * @return {Promise} resolved after loopFn is called with every item in the array,
+ *      rejected if loopFn(item) or its promises are rejected.
+ */
+function promisedLoop(array, loopFn){
+    function loopVal(){
+        return loopFn(array.shift());
+    }
+    function looper(){
+        if(array.length){
+            return q().then(loopVal).then(looper);
+        }
+    }
+    
+    return q(looper());
+}
+
+/** Processes site logs and adds them to the database.
+ * @param{Object|Array} logfile_arg - logfile argument, can be an object or an array of objects.
+ * @param{String} logfile_arg.file - path to file holding the site's log data, if its a folder, the all *.txt files are treated as log files.
+ * @param{String} logfile_arg.stream - stream holding the the site's log data.
+ * @param{String} logfile_arg.name - name associated to this log data.
+ * @param{String} logfile_arg.datetime - datetime associated to this log data.
+ * @param{Integer} site_id - id of the site to add this log data to.
+ * @param{Object} db - opened connection to the database.
+ * @return {Promise} resolved when all log data has been read and added to the database as one transaction per file, rejected otherwise.
+ */
+function process_site_logs(logfile_arg, site_id, db){
+    return q().then(function(){
+        if(logfile_arg.file){ 
+            return q.nfcall(fs.stat, logfile_arg.file).then(function(stat){
+                if(stat.isDirectory()){
+                    return q.nfcall(fs.readdir, logfile_arg.file).then(function(subfile_list){
+                        return subfile_list.filter(function(_){
+                            return /\.txt$/.test(_);
+                        }).map(function(_){
+                            return {file:path.join(logfile_arg.file, _)};
+                        });
+                    });
+                } else {
+                    return [logfile_arg];
+                }
+            });
+        } else if(logfile_arg instanceof Array){
+            return logfile_arg;
+        } else {
+            return [logfile_arg];
+        }
+    }).then(function(logfile_array){
+        return promisedLoop(logfile_array, function(logfile){
+            if(!logfile.uri){
+                if(logfile.file){
+                    logfile.uri = "file://"+logfile.file;
+                } else if(logfile.name){
+                    logfile.uri = "named://" + logfile.name + "/" + (new Date().getTime());
+                }
+            }
+            if(!logfile.stream && logfile.file){
+                logfile.stream = fs.createReadStream(logfile.file);
+            }
+            
+            return process_one_logfile(logfile, site_id, db);
+            // console.log(logfile.file || logfile.name);
+        });
+    });    
+}
 
 if(module.id == '.'){
     var config = require('../../config');
     
     var args = process.argv.slice(2);
     var site_id = args.shift() | 0;
-    var finp = args.length > 0 ? fs.createReadStream(args.shift()) : process.stdin;
-
-    var db = mysql.createConnection(config('db'));
-    db.connect();
-
-    finp
-        .pipe(line_chopper())
-        .pipe(log_entry_parser())
-        .pipe(log_entry_to_site_entry_processor())
-        .pipe(site_logger(site_id, db))
-        .pipe(catter())
-        .on('error', function(err){
-            console.error(err);
+    var db;
+    
+    
+    q().then(function(){
+        db = mysql.createConnection(config('db'));
+        db.connect();
+    }).then(function(){
+        return process_site_logs(
+            args.length > 0 ? {file:args.shift()} : {name:'stdin', stream:process.stdin},
+            site_id,
+            db
+        );
+    }).catch(function(err){
+        console.log("err:", err.stack);
+    }).finally(function(){
+        if(db){
             db.end();
-        })
-        .on('finish', function(){
-            console.log('done!');
-            db.end();
-        });
+        }
+    });
+
+
 }
