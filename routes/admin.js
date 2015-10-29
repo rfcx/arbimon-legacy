@@ -20,7 +20,7 @@ router.use(function(req, res, next) {
         return next();
     }
     
-    res.sendStatus(404);
+    res.status(404).render('not-found');
 });
 
 

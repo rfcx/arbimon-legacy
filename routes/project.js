@@ -34,6 +34,12 @@ router.get('/:projecturl?/', function(req, res, next) {
 
     debug('project_url:', project_url);
     
+    // redirect to home if no project is given
+    if(!project_url){
+        res.redirect('/home');
+        return;
+    }
+    
     model.projects.find({ url: project_url }, function(err, rows) {
             if(err) return next(err);
             
