@@ -10,6 +10,8 @@ var s3;
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
+var site_log_processor = require('../utils/site_log_processor');
+
 var Sites = {
     findById: function (site_id, callback) {
         var query = "SELECT * FROM sites WHERE site_id = " + mysql.escape(site_id);
@@ -265,11 +267,12 @@ var Sites = {
             s3 = new AWS.S3();
         }
         
+        var dbconn;
+        
         var key = ('project_' + (site.project_id | 0) + 
                   '/site_'  + (site.site_id | 0) + 
                   '/logs/recorder_' + (log.recorder + '') +
                   '/' + (log.from | 0) + '-' + (log.to | 0) + '.txt');
-                  
         return q.ninvoke(s3, 'putObject', {
             Bucket : config('aws').bucketName,
             Key    : key,
@@ -284,6 +287,16 @@ var Sites = {
                     mysql.escape(key) +
                 ")"
             );
+        }).then(function(){
+            return q.ninvoke(dbpool, 'getConnection');
+        }).then(function(dbconn){
+            return site_log_processor.process_site_logs(
+                {file:log.file},
+                site.site_id | 0,
+                dbconn
+            ).finally(function(){
+                dbconn.release();
+            });
         }).denodeify(callback);
     },
 
