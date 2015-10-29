@@ -270,7 +270,7 @@ var Sites = {
                   '/logs/recorder_' + (log.recorder + '') +
                   '/' + (log.from | 0) + '-' + (log.to | 0) + '.txt');
                   
-        return q.nfinvoke(s3, 'putObject', {
+        return q.ninvoke(s3, 'putObject', {
             Bucket : config('aws').bucketName,
             Key    : key,
             Body   : log.file
