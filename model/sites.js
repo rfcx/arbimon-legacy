@@ -2,6 +2,7 @@ var util = require('util');
 var mysql = require('mysql');
 var AWS   = require('aws-sdk');
 var joi = require('joi');
+var q = require('q');
 var jsonwebtoken = require('jsonwebtoken');
 var config = require('../config');
 
@@ -268,26 +269,22 @@ var Sites = {
                   '/site_'  + (site.site_id | 0) + 
                   '/logs/recorder_' + (log.recorder + '') +
                   '/' + (log.from | 0) + '-' + (log.to | 0) + '.txt');
-        
-        s3.putObject({
+                  
+        return q.nfinvoke(s3, 'putObject', {
             Bucket : config('aws').bucketName,
             Key    : key,
             Body   : log.file
-        }, function(err, data){
-            if(err) { 
-                callback(err);
-            } else {
-                queryHandler(
-                    "INSERT INTO site_log_files(site_id, log_start, log_end, uri) \n" + 
-                    "VALUES ("+
-                        (site.site_id|0)+", " +
-                        "FROM_UNIXTIME("+Math.abs(log.from/1000.0)+"), " +
-                        "FROM_UNIXTIME("+Math.abs(log.to  /1000.0)+"), " + 
-                        mysql.escape(key) +
-                    ")", 
-                callback);
-            }
-        });        
+        }).then(function(data){
+            return q.nfcall(queryHandler, 
+                "INSERT INTO site_log_files(site_id, log_start, log_end, uri) \n" + 
+                "VALUES ("+
+                    (site.site_id|0)+", " +
+                    "FROM_UNIXTIME("+Math.abs(log.from/1000.0)+"), " +
+                    "FROM_UNIXTIME("+Math.abs(log.to  /1000.0)+"), " + 
+                    mysql.escape(key) +
+                ")"
+            );
+        }).denodeify(callback);
     },
 
     /** Returns the site's data log.

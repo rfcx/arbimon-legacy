@@ -333,10 +333,9 @@ var receiveSiteLogUpload = function(req, res, next) {
             from     : params.from    ,
             to       : params.to      ,
             file     : fs.createReadStream(upload_file)
-        }, function(err, data){
-            if(err) return next(err);            
+        }).then(function(data){
             res.status(202).json({ success: "log upload done!" });
-        });
+        }, next);
     });    
     req.pipe(req.busboy);
 };
