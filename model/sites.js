@@ -291,13 +291,13 @@ var Sites = {
             return q.ninvoke(dbpool, 'getConnection');
         }).then(function(dbconn){
             return site_log_processor.process_site_logs(
-                {file:log.file},
+                {file:log.filepath},
                 site.site_id | 0,
                 dbconn
             ).finally(function(){
                 dbconn.release();
             });
-        }).denodeify(callback);
+        }).nodeify(callback);
     },
 
     /** Returns the site's data log.

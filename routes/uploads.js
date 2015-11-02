@@ -332,7 +332,8 @@ var receiveSiteLogUpload = function(req, res, next) {
             recorder : params.recorder,
             from     : params.from    ,
             to       : params.to      ,
-            file     : fs.createReadStream(upload_file)
+            file     : fs.createReadStream(upload_file),
+            filepath : upload_file
         }).then(function(data){
             res.status(202).json({ success: "log upload done!" });
         }, next);

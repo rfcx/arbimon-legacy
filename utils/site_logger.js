@@ -40,7 +40,7 @@ var site_logger = streaming.make_stream_fn({objectMode:true}, {
         }
     },
     $exec_query : function(sql, data){
-        sql = data ? mysql.format(sql, data) : sql;
+        // sql = data ? mysql.format(sql, data) : sql;
         return q.ninvoke(this.db, 'query', sql, data);
     },    
     /** Returns the id for a given type's value.

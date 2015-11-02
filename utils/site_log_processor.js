@@ -47,7 +47,7 @@ function process_one_logfile(logfile, site_id, db){
                 return q.ninvoke(db, 'query', "COMMIT");
             }, function(err){
                 console.error("error processing " + logfile.uri  + ":", err);        
-                return q.ninvoke(db, 'query', "ROLLBACK");
+                return q.ninvoke(db, 'query', "ROLLBACK").thenReject(err);
             });
         }
     });
