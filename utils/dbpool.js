@@ -11,8 +11,12 @@ var dbpool = {
     }),
 
     enable_query_debugging : function(connection){
+        if(connection.$_qd_enabled_$){
+            return connection;
+        }
         var query_fn = connection.query;
         var release_fn = connection.release;
+        connection.$_qd_enabled_$ = true;
         connection.query = function(sql, values, cb) {
             var sql_txt = sql.sql || sql;
             debug('- query : -|', sql_txt.replace(/\n/g,'\n             '));
