@@ -33,6 +33,7 @@ var Classifications = {
             "    pl.`name` as playlist_name,\n"+
             "    pl.`playlist_id`,\n"+
             "    m.name as modname, \n"+
+            "    m.`threshold`, \n"+
             "    m.model_id, \n"+
             "    jpc.name as cname, \n"+
             "    u.login as muser\n"+
