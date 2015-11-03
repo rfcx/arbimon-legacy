@@ -806,20 +806,27 @@ var Recordings = {
     
     findProjectRecordings: function(params, callback) {
         console.log('params', params);
-        
+        function arrayOrSingle(x){
+            return [x, joi.array().items(x)];
+        }
         var schema = {
             project_id: joi.number().required(),
             range: joi.object().keys({
                 from: joi.date(),
                 to: joi.date()
             }).and('from', 'to'),
-            sites:  [joi.string(), joi.array().items(joi.string())],
-            years:  [joi.number(), joi.array().items(joi.number())],
-            months: [joi.number(), joi.array().items(joi.number())],
-            days:   [joi.number(), joi.array().items(joi.number())],
-            hours:  [joi.number(), joi.array().items(joi.number())],
-            validations:  [joi.number(), joi.array().items(joi.number())],
+            sites:  arrayOrSingle(joi.string()),
+            years:  arrayOrSingle(joi.number()),
+            months: arrayOrSingle(joi.number()),
+            days:   arrayOrSingle(joi.number()),
+            hours:  arrayOrSingle(joi.number()),
+            validations:  arrayOrSingle(joi.number()),
             presence:  joi.string().valid('absent', 'present'),
+            classifications: arrayOrSingle(joi.number()),
+            classification_results: arrayOrSingle(joi.object().keys({
+                model: joi.number(),
+                th: joi.number()
+            }).optionalKeys('th')),
             limit:  joi.number(),
             offset: joi.number(),
             sortBy: joi.string(),
@@ -834,7 +841,7 @@ var Recordings = {
                 parameters.output = 'list';
             
             var select = {
-                list: "SELECT r.recording_id AS id, \n"+
+                list: "SELECT DISTINCT r.recording_id AS id, \n"+
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
                       "       s.name as site, \n"+
                       "       r.uri, \n"+
@@ -847,7 +854,7 @@ var Recordings = {
                 date_range: "SELECT DATE(MIN(r.datetime)) AS min_date, \n"+
                             "       DATE(MAX(r.datetime)) AS max_date \n",
                             
-                count: "SELECT COUNT(*) as count \n"
+                count: "SELECT COUNT(DISTINCT r.recording_id) as count \n"
             };
             
             var q = select[parameters.output] +
@@ -858,6 +865,12 @@ var Recordings = {
             if(parameters.validations) {
                 q += "LEFT JOIN recording_validations as rv ON r.recording_id = rv.recording_id \n"+
                      "LEFT JOIN project_classes as pc ON pc.species_id = rv.species_id AND pc.songtype_id = rv.songtype_id \n";
+            }
+            
+            if(parameters.classifications) {
+                q += "LEFT JOIN classification_results as CR ON r.recording_id = CR.recording_id \n"+
+                     "LEFT JOIN job_params_classification CRjp ON CRjp.job_id = CR.job_id \n"+
+                     "LEFT JOIN models CRm ON CRjp.model_id = CRm.model_id \n";
             }
             
             q += "WHERE (s.project_id = %1$s \n"+
@@ -906,6 +919,25 @@ var Recordings = {
                 if(parameters.presence) {
                     var flag = parameters.presence == 'present' ? '1' : '0';
                     q += 'AND rv.present = ' + flag + ' \n';
+                }
+            }
+            
+            if(parameters.classifications) {
+                q += 'AND CR.job_id IN (' + mysql.escape(parameters.classifications) + ') \n';
+                
+                if(parameters.classification_results) {
+                    if(!(parameters.classification_results instanceof Array)){
+                        parameters.classification_results = [parameters.classification_results];
+                    }
+                    var crflag = {
+                        'model':['CR.present = 0', 'CR.present = 1'], 
+                        'th':['CR.max_vector_value < CRm.threshold', 'CR.max_vector_value >= CRm.threshold']
+                    };
+                    q += 'AND (('+ parameters.classification_results.map(function(cr){
+                        return Object.keys(cr).map(function(crk){
+                            return crflag[crk][1 * (!!cr[crk])];
+                        }).join(' AND ');
+                    }).join(') OR (') +')) \n';
                 }
             }
             
