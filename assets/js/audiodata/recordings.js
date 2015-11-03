@@ -4,7 +4,7 @@ angular.module('a2.audiodata.recordings', [
     'ui.bootstrap',
     'humane'
 ])
-.controller('RecsCtrl', function($scope, Project, $http, $modal, notify, a2UserPermit, $window) {
+.controller('RecsCtrl', function($scope, Project, a2Classi, $http, $modal, notify, a2UserPermit, $window) {
     
     var readFilters = function() {
         $scope.message = '';
@@ -43,6 +43,16 @@ angular.module('a2.audiodata.recordings', [
         }
         if($scope.params.presence) {
             params.presence = $scope.params.presence;
+        }
+        if($scope.params.classifications && $scope.params.classifications.length) {
+            params.classifications = $scope.params.classifications.map(function(classification) {
+                return classification.id;
+            });
+        }
+        if($scope.params.classification_results && $scope.params.classification_results.length) {
+            params.classification_results = $scope.params.classification_results.map(function(r) {
+                return r.flags;
+            });
         }
         
         return params;
@@ -279,6 +289,7 @@ angular.module('a2.audiodata.recordings', [
     $scope.loading = true;
     $scope.params = {};
     $scope.classes = [];
+    $scope.classifications = [];
     $scope.presence = ['present', 'absent'];
     $scope.sites = [];
     $scope.years = [];
@@ -289,6 +300,21 @@ angular.module('a2.audiodata.recordings', [
     $scope.currentPage  = 1;
     $scope.limitPerPage = 10;
     
+    this.data = {
+        classifications:[],
+        classification_results:[{caption:"Results"}],
+        classification_results_dummy:[{caption:"Results"}],
+        classification_results_model_only : [
+            {caption:"absent", flags:{model:0}},
+            {caption:"present", flags:{model:1}}
+        ],
+        classification_results_model_th : [
+            {caption:"Model: absent, Th: absent", flags:{model:0, th:0}},
+            {caption:"Model: present, Th: absent", flags:{model:1, th:0}},
+            {caption:"Model: absent, Th: present", flags:{model:0, th:1}},
+            {caption:"Model: present, Th: present", flags:{model:1, th:1}}
+        ]
+    };
     
     Project.getClasses(
         {
@@ -298,6 +324,28 @@ angular.module('a2.audiodata.recordings', [
             $scope.classes = classes;
         }
     );
+
+    a2Classi.list((function(classifications) {
+        this.data.classifications = classifications.map(function(c){
+            c.name = c.cname;
+            c.id = c.job_id;
+            delete c.cname;
+            return c;
+        });
+    }).bind(this));
+    
+    this.computeClassificationResults = function(){
+        if(!$scope.params.classifications || !$scope.params.classifications.length){
+            this.data.classification_results = this.data.classification_results_dummy;
+        } else {
+            var haveThreshold = $scope.params.classifications.reduce(function(a, b){
+                return a || !!b.threshold;
+            }, false);
+            this.data.classification_results = haveThreshold ?
+                this.data.classification_results_model_th :
+                this.data.classification_results_model_only;
+        }
+    };
     
     searchRecs('count');
     searchRecs('date_range');

@@ -28,7 +28,7 @@ angular.module('a2.audiodata', [
     })
     .state('audiodata.recordings', {
         url: '/recordings',
-        controller: 'RecsCtrl',
+        controller: 'RecsCtrl as controller',
         templateUrl: '/partials/audiodata/recordings.html'
     })
     .state('audiodata.uploads', {

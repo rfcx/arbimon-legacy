@@ -120,6 +120,31 @@
                     </div>
                 </div>
                 <div class="a2-filter-row">
+                    <div class="a2-filter a2-filter-text">
+                        Classifications:
+                    </div>
+                    <div class="a2-filter">
+                        <ui-select multiple ng-model="params.classifications" ng-change="controller.computeClassificationResults()" theme="bootstrap" style="width: 350px;">
+                            <ui-select-match placeholder="Classifications...">
+                                {{$item.name}} - {{$item.date | moment : 'lll' }} 
+                            </ui-select-match>
+                            <ui-select-choices class="has-badges" repeat="item in controller.data.classifications | filter:$select.search">
+                                {{item.name }} - {{ item.date | moment : 'lll' }} 
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                    <div class="a2-filter">
+                        <ui-select multiple ng-disabled="!params.classifications || !params.classifications.length" ng-model="params.classification_results" theme="bootstrap" style="width: 150px;">
+                            <ui-select-match placeholder="results">
+                                {{ $item.caption }}
+                            </ui-select-match>
+                            <ui-select-choices class="has-badges" repeat="item in controller.data.classification_results | filter:$select.search">
+                                {{ item.caption }} 
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                </div>
+                <div class="a2-filter-row">
                     <button class="btn btn-default" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'">
                         Apply filters
                     </button>
