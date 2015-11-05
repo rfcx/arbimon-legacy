@@ -177,7 +177,7 @@
     <div class="col-sm-12">
         <div class="reclist-pagination-row">
             <pagination total-items="totalRecs" 
-                ng-model="currentPage" 
+                ng-model="currentPage" ng-change="controller.setCurrentPage(currentPage)"
                 class="pagination-sm" 
                 boundary-links="true" 
                 max-size="10" 
