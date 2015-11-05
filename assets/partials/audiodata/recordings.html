@@ -134,12 +134,12 @@
                         </ui-select>
                     </div>
                     <div class="a2-filter">
-                        <ui-select multiple ng-disabled="!params.classifications || !params.classifications.length" ng-model="params.classification_results" theme="bootstrap" style="width: 150px;">
+                        <ui-select multiple ng-model="params.classification_results" theme="bootstrap" style="width: 150px;">
                             <ui-select-match placeholder="results">
-                                {{ $item.caption }}
+                                <span ng-bind-html="$item.caption" tooltip="{{$item.tooltip}}" tooltip-append-to-body="true"></span>
                             </ui-select-match>
                             <ui-select-choices class="has-badges" repeat="item in controller.data.classification_results | filter:$select.search">
-                                {{ item.caption }} 
+                                <span ng-bind-html="item.caption" tooltip="{{item.tooltip}}" tooltip-append-to-body="true"></span>
                             </ui-select-choices>
                         </ui-select>
                     </div>

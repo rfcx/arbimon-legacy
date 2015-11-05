@@ -300,20 +300,22 @@ angular.module('a2.audiodata.recordings', [
     $scope.currentPage  = 1;
     $scope.limitPerPage = 10;
     
+    var classification_results={
+        model_only : [
+            {caption:'<i class="fa classified-not-present"></i> Absent', tooltip:'Absent' , flags:{model:0}, equiv:{model_th:[0,2]}},
+            {caption:'<i class="fa classified-present"></i> Present'   , tooltip:'Present', flags:{model:1}, equiv:{model_th:[1,3]}}
+        ],
+        model_th : [
+            {caption:'Model: <i class="fa classified-not-present"></i>, Th: <i class="fa classified-not-present"></i>', tooltip:'Model: absent, Theshold: absent'  , flags:{model:0, th:0}, equiv:{model_only:[0]}},
+            {caption:'Model: <i class="fa classified-present"></i>, Th: <i class="fa classified-not-present"></i>'    , tooltip:'Model: present, Theshold: absent' , flags:{model:1, th:0}},
+            {caption:'Model: <i class="fa classified-not-present"></i>, Th: <i class="fa classified-present"></i>'    , tooltip:'Model: absent, Theshold: present' , flags:{model:0, th:1}},
+            {caption:'Model: <i class="fa classified-present"></i>, Th: <i class="fa classified-present"></i>'        , tooltip:'Model: present, Theshold: present', flags:{model:1, th:1}, equiv:{model_only:[1]}}
+        ]
+    };
+    
     this.data = {
         classifications:[],
-        classification_results:[{caption:"Results"}],
-        classification_results_dummy:[{caption:"Results"}],
-        classification_results_model_only : [
-            {caption:"absent", flags:{model:0}},
-            {caption:"present", flags:{model:1}}
-        ],
-        classification_results_model_th : [
-            {caption:"Model: absent, Th: absent", flags:{model:0, th:0}},
-            {caption:"Model: present, Th: absent", flags:{model:1, th:0}},
-            {caption:"Model: absent, Th: present", flags:{model:0, th:1}},
-            {caption:"Model: present, Th: present", flags:{model:1, th:1}}
-        ]
+        classification_results: classification_results.model_only
     };
     
     Project.getClasses(
@@ -335,15 +337,27 @@ angular.module('a2.audiodata.recordings', [
     }).bind(this));
     
     this.computeClassificationResults = function(){
-        if(!$scope.params.classifications || !$scope.params.classifications.length){
-            this.data.classification_results = this.data.classification_results_dummy;
-        } else {
-            var haveThreshold = $scope.params.classifications.reduce(function(a, b){
-                return a || !!b.threshold;
-            }, false);
-            this.data.classification_results = haveThreshold ?
-                this.data.classification_results_model_th :
-                this.data.classification_results_model_only;
+        var haveThreshold = $scope.params.classifications && $scope.params.classifications.reduce(function(a, b){
+            return a || !!b.threshold;
+        }, false);
+        var old_crs = this.data.classification_results;
+        var crs_key = haveThreshold ? 'model_th' : 'model_only';
+        var new_crs = classification_results[crs_key];
+        this.data.classification_results = new_crs;
+        if(old_crs != new_crs){
+            $scope.params.classification_results = $scope.params.classification_results.reduce(function(r, cr){
+                var equiv = cr.equiv && cr.equiv[crs_key];
+                if(equiv){
+                    equiv.forEach(function(i){
+                        var new_cr = new_crs[i];
+                        if(!r.index[new_cr]){
+                            r.index[i] = 1;
+                            r.list.push(new_cr);
+                        }
+                    });
+                }
+                return r;
+            }, {list:[], index:{}}).list;
         }
     };
     
