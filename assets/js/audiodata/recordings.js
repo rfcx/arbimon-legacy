@@ -59,27 +59,38 @@ angular.module('a2.audiodata.recordings', [
     };
     var searchRecs = function(output) {
         var params = readFilters();
-        params.output = output || 'list';
+        output = output || ['list'];
+        params.output = output;
         params.limit = $scope.limitPerPage;
         params.offset = (params.output == 'list') ? ($scope.currentPage-1) * $scope.limitPerPage : 0;
         params.sortBy = $scope.sortKey;
         params.sortRev = $scope.reverse;
-        
+        var expect = output.reduce(function(obj, a){
+            obj[a] = true;
+            return obj;
+        }, {});
+
         Project.getRecs(params, function(data) {
-            if(params.output == 'list') {
-                $scope.recs = data;
+            if(output.length == 1){
+                data = output.reduce(function(obj, a){
+                    obj[a] = data;
+                    return obj;
+                }, {});
+            }
+            if(expect.list) {
+                $scope.recs = data.list;
             
                 $scope.recs.forEach(function(rec) {
                     rec.datetime = new Date(rec.datetime);
                 });
                 $scope.loading = false;
             }
-            else if(params.output == 'count'){
-                $scope.totalRecs = data[0].count;
+            if(expect.count){
+                $scope.totalRecs = data.count;
             }
-            else if(params.output == 'date_range') {
-                $scope.minDate = new Date(data[0].min_date);
-                $scope.maxDate = new Date(data[0].max_date);
+            if(expect.date_range) {
+                $scope.minDate = new Date(data.date_range.min_date);
+                $scope.maxDate = new Date(data.date_range.max_date);
             }
         });
     };
@@ -188,18 +199,15 @@ angular.module('a2.audiodata.recordings', [
     };
     $scope.applyFilters = function() {
         $scope.currentPage = 1;
-        searchRecs('count');
-        searchRecs();
+        searchRecs(['count', 'list']);
     };
     $scope.resetFilters = function() {
         $scope.currentPage = 1;
         $scope.params = {};
-        searchRecs('count');
-        searchRecs();
+        searchRecs(['count', 'list']);
     };
     $scope.reloadList = function() {
-        searchRecs('count');
-        searchRecs();
+        searchRecs(['count', 'list']);
     };
     $scope.createPlaylist = function() {
         var listParams = readFilters();
@@ -276,10 +284,7 @@ angular.module('a2.audiodata.recordings', [
                     if(data.error)
                         return notify.error(data.error);
                     
-                    searchRecs('count');
-                    $scope.recs = $scope.recs.filter(function(rec) {
-                        return data.deleted.indexOf(rec.id) === -1;
-                    });
+                    searchRecs(['count', 'list']);
                     
                     notify.log(data.msg);
                 });
@@ -361,9 +366,8 @@ angular.module('a2.audiodata.recordings', [
         }
     };
     
-    searchRecs('count');
-    searchRecs('date_range');
     getAvalilableFilters({});
+    searchRecs(['count', 'date_range', 'list']);
     
     this.setCurrentPage = function(currentPage){
         $scope.currentPage = currentPage;
@@ -373,8 +377,6 @@ angular.module('a2.audiodata.recordings', [
         $scope.limitPerPage = limitPerPage;
         searchRecs();
     };
-    
-    searchRecs();
     
 })
 .controller('SavePlaylistModalInstanceCtrl', function($scope, $modalInstance, a2Playlists, listParams) {
