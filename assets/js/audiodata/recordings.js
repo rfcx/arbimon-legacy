@@ -250,6 +250,7 @@ angular.module('a2.audiodata.recordings', [
         classifications:[],
         classification_results: classification_results.model_only
     };
+    this.params={};
     
     var filterDefs = [
         {name:"range"                 , map: function set_range_bounds(range){
@@ -400,7 +401,8 @@ angular.module('a2.audiodata.recordings', [
         }).bind(this));
     };
     
-    this.computeClassificationResults = function(classifications){
+    this.computeClassificationResultsOptions = function(classifications){
+        console.log("this.computeClassificationResults = function(classifications){", classifications);
         var haveThreshold = classifications && classifications.reduce(function(a, b){
             return a || !!b.threshold;
         }, false);
@@ -409,7 +411,7 @@ angular.module('a2.audiodata.recordings', [
         var new_crs = classification_results[crs_key];
         this.options.classification_results = new_crs;
         if(old_crs != new_crs){
-            params.classification_results = params.classification_results.reduce(function(r, cr){
+            this.params.classification_results = this.params.classification_results.reduce(function(r, cr){
                 var equiv = cr.equiv && cr.equiv[crs_key];
                 if(equiv){
                     equiv.forEach(function(i){
