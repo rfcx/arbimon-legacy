@@ -821,7 +821,7 @@ var Recordings = {
             days:   arrayOrSingle(joi.number()),
             hours:  arrayOrSingle(joi.number()),
             validations:  arrayOrSingle(joi.number()),
-            presence:  joi.string().valid('absent', 'present'),
+            presence:  arrayOrSingle(joi.string().valid('absent', 'present')),
             classifications: arrayOrSingle(joi.number()),
             classification_results: arrayOrSingle(joi.object().keys({
                 model: joi.number(),
@@ -916,7 +916,7 @@ var Recordings = {
             if(parameters.validations) {
                 q += 'AND pc.project_class_id IN (' + mysql.escape(parameters.validations) + ') \n';
                 
-                if(parameters.presence) {
+                if(parameters.presence && !(parameters.presence instanceof Array && parameters.presence.length >= 2)){
                     var flag = parameters.presence == 'present' ? '1' : '0';
                     q += 'AND rv.present = ' + flag + ' \n';
                 }

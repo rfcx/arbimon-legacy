@@ -96,7 +96,7 @@
                     </div>
                     <div class="a2-filter">
                         <ui-select multiple ng-model="params.validations" theme="bootstrap" style="width: 400px;">
-                            <ui-select-match placeholder="Sounds...">
+                            <ui-select-match placeholder="Species - Sound...">
                                 {{$item.species_name}} - {{$item.songtype_name}} 
                             </ui-select-match>
                             <ui-select-choices class="has-badges" repeat="item in classes | filter:$select.search">
@@ -109,12 +109,12 @@
                         </ui-select>
                     </div>
                     <div class="a2-filter">
-                        <ui-select ng-disabled="!params.validations || !params.validations.length" ng-model="params.presence" theme="bootstrap" style="width: 150px;">
-                            <ui-select-match allow-clear="true" placeholder="present or absent">
-                                {{ $select.selected }}
+                        <ui-select multiple ng-model="params.presence" theme="bootstrap" style="width: 150px;">
+                            <ui-select-match allow-clear="true" placeholder="validation">
+                                <i ng-class="'fa a2-' + $item"></i> {{ $item | wordCaps}}
                             </ui-select-match>
                             <ui-select-choices class="has-badges" repeat="item in presence | filter:$select.search">
-                                {{ item }} 
+                                <i ng-class="'fa a2-' + item"></i> {{ item | wordCaps}}
                             </ui-select-choices>
                         </ui-select>
                     </div>
