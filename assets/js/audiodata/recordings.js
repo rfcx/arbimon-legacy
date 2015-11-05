@@ -178,6 +178,9 @@ angular.module('a2.audiodata.recordings', [
         restrict:'E',
         templateUrl:'/partials/audiodata/recording-filter-parameters.html',
         scope:{
+            isOpen : '=',
+            maxDate : '=',
+            minDate : '=',
             onApplyFilters : '&',
             onCreatePlaylist : '&',
         },
@@ -185,77 +188,38 @@ angular.module('a2.audiodata.recordings', [
         requires:'^RecsCtrl', 
         link: function(scope, element, attrs) {
             var controller = scope.controller;
+            
             scope.applyFilters = function() {
-                scope.onApplyFilters({filters: controller.readFilters()});
+                scope.onApplyFilters({filters: controller.getFilters()});
             };
             scope.resetFilters = function() {
-                scope.params = {};
-                scope.onApplyFilters({filters: controller.readFilters()});
+                controller.params = {};
+                scope.onApplyFilters({filters: controller.getFilters()});
             };
             scope.createPlaylist = function() {
-                scope.onCreatePlaylist({filters: controller.readFilters()});
+                scope.onCreatePlaylist({filters: controller.getFilters()});
             };
             
+            controller.fetchOptions();
         }
     };
 })
 .controller('recordingFilterParametersController', function($scope, Project, a2Classi, $http, $modal, notify, a2UserPermit, $window) {
+    function _1_get(attribute){
+        return function(_1){
+            return _1[attribute];
+        };
+    }
+    function _1_mapper(mapFn){
+        return function(_1){
+            return _1.length !== undefined && _1.map(mapFn);
+        };
+    }
     
-    var readFilters = function() {
-        $scope.message = '';
-        var params = {};
-        
-        if($scope.params.range && $scope.params.range.from && $scope.params.range.to) {
-            params.range = $scope.params.range;
-            
-            params.range.from.setUTCHours(0);
-            params.range.from.setUTCMinutes(0);
-            params.range.to.setUTCHours(23);
-            params.range.to.setUTCMinutes(59);
-        }
-
-        var mapValue = function(x) { return x.value; };
-        
-        if($scope.params.sites && $scope.params.sites.length) {
-            params.sites = $scope.params.sites.map(mapValue);
-        }
-        if($scope.params.hours && $scope.params.hours.length) {
-            params.hours = $scope.params.hours.map(mapValue);
-        }
-        if($scope.params.months && $scope.params.months.length) {
-            params.months = $scope.params.months.map(mapValue);
-        }
-        if($scope.params.years && $scope.params.years.length) {
-            params.years = $scope.params.years.map(mapValue);
-        }
-        if($scope.params.days && $scope.params.days.length) {
-            params.days = $scope.params.days.map(mapValue);
-        }
-        if($scope.params.validations && $scope.params.validations.length) {
-            params.validations = $scope.params.validations.map(function(soundClass) {
-                return soundClass.id;
-            });
-        }
-        if($scope.params.presence) {
-            params.presence = $scope.params.presence;
-        }
-        if($scope.params.classifications && $scope.params.classifications.length) {
-            params.classifications = $scope.params.classifications.map(function(classification) {
-                return classification.id;
-            });
-        }
-        if($scope.params.classification_results && $scope.params.classification_results.length) {
-            params.classification_results = $scope.params.classification_results.map(function(r) {
-                return r.flags;
-            });
-        }
-        
-        console.log("readFilters", params);
-        return params;
-    };
-
-    this.readFilters = readFilters;
-
+    var _1_get_value_mapper = _1_mapper(_1_get("value"));
+    var _1_get_id_mapper    = _1_mapper(_1_get("id"));
+    var _1_get_flags_mapper = _1_mapper(_1_get("flags"));
+    
     var findObjectWith = function(arr, key, value) {
         var result = arr.filter(function(obj) {
             return obj[key] === value;
@@ -263,7 +227,73 @@ angular.module('a2.audiodata.recordings', [
         return result.length > 0 ? result[0] : null;
     };
 
-    var getAvalilableFilters = function(filters) {
+    var classification_results={
+        model_only : [
+            {caption:'<i class="fa a2-absent"></i> Absent', tooltip:'Absent' , flags:{model:0}, equiv:{model_th:[0,2]}},
+            {caption:'<i class="fa a2-present"></i> Present'   , tooltip:'Present', flags:{model:1}, equiv:{model_th:[1,3]}}
+        ],
+        model_th : [
+            {caption:'Model: <i class="fa a2-absent"></i>, Th: <i class="fa a2-absent"></i>', tooltip:'Model: absent, Theshold: absent'  , flags:{model:0, th:0}, equiv:{model_only:[0]}},
+            {caption:'Model: <i class="fa a2-present"></i>, Th: <i class="fa a2-absent"></i>'    , tooltip:'Model: present, Theshold: absent' , flags:{model:1, th:0}},
+            {caption:'Model: <i class="fa a2-absent"></i>, Th: <i class="fa a2-present"></i>'    , tooltip:'Model: absent, Theshold: present' , flags:{model:0, th:1}},
+            {caption:'Model: <i class="fa a2-present"></i>, Th: <i class="fa a2-present"></i>'        , tooltip:'Model: present, Theshold: present', flags:{model:1, th:1}, equiv:{model_only:[1]}}
+        ]
+    };
+    this.options = {
+        classes : [],
+        presence : ['present', 'absent'],
+        sites : [],
+        years : [],
+        months : [],
+        days : [],
+        hours : [],
+        classifications:[],
+        classification_results: classification_results.model_only
+    };
+    
+    var filterDefs = [
+        {name:"range"                 , map: function set_range_bounds(range){
+            if(range && range.from && range.to) {
+                range.from.setUTCHours(0);
+                range.from.setUTCMinutes(0);
+                range.to.setUTCHours(23);
+                range.to.setUTCMinutes(59);
+            }
+            return range;
+        }},
+        {name:"sites"                 , map: _1_get_value_mapper},
+        {name:"hours"                 , map: _1_get_value_mapper},
+        {name:"months"                , map: _1_get_value_mapper},
+        {name:"years"                 , map: _1_get_value_mapper},
+        {name:"days"                  , map: _1_get_value_mapper},
+        {name:"validations"           , map: _1_get_id_mapper},
+        {name:"presence"},
+        {name:"classifications"       , map: _1_get_id_mapper},
+        {name:"classification_results", map: _1_get_flags_mapper}
+    ];
+
+    this.getFilters = function() {
+        var filters = {};
+        var params = this.params;
+                
+        filterDefs.forEach(function(filterDef){
+            var param = params[filterDef.name];
+            var value = (param && filterDef.map) ? filterDef.map(param) : param;
+            if(value){
+                filters[filterDef.name] = value;
+            }
+        });
+        
+        return filters;
+    };
+
+    this.fetchOptions = function(filters) {
+        if(filters === undefined){
+            filters = {};
+        }
+        
+        var options = this.options;
+        
         Project.getRecordingAvailability('---[1:31]', function(data) {
             
             var lists = {
@@ -314,10 +344,10 @@ angular.module('a2.audiodata.recordings', [
             };
             getFilterOptions(filters, data, 0);
             
-            $scope.sites = lists.sites;
-            $scope.years = lists.years;
+            options.sites = lists.sites;
+            options.years = lists.years;
             
-            $scope.months = lists.months.map(function(month) {
+            options.months = lists.months.map(function(month) {
                 month.value = parseInt(month.value);
                 month.value--;
                 return { 
@@ -327,12 +357,12 @@ angular.module('a2.audiodata.recordings', [
                 };
             });
             
-            $scope.days = lists.days.map(function(day) {
+            options.days = lists.days.map(function(day) {
                 day.value = parseInt(day.value);
                 return day;
             });
             
-            $scope.hours = lists.hours.map(function(hour) {
+            options.hours = lists.hours.map(function(hour) {
                 hour.value = parseInt(hour.value);
                 return { 
                     value: hour.value, 
@@ -345,73 +375,41 @@ angular.module('a2.audiodata.recordings', [
                 return a.value > b.value;
             };
             
-            $scope.sites.sort(sort);
-            $scope.years.sort(sort);
-            $scope.months.sort(sort);
-            $scope.days.sort(sort);
-            $scope.hours.sort(sort);
+            options.sites.sort(sort);
+            options.years.sort(sort);
+            options.months.sort(sort);
+            options.days.sort(sort);
+            options.hours.sort(sort);
         });
+        Project.getClasses(
+            {
+                validations: true,
+            },
+            function(classes) {
+                options.classes = classes;
+            }
+        );
+
+        a2Classi.list((function(classifications) {
+            options.classifications = classifications.map(function(c){
+                c.name = c.cname;
+                c.id = c.job_id;
+                delete c.cname;
+                return c;
+            });
+        }).bind(this));
     };
-
-
-    $scope.params = {};
-    $scope.classes = [];
-    $scope.classifications = [];
-    $scope.presence = ['present', 'absent'];
-    $scope.sites = [];
-    $scope.years = [];
-    $scope.months = [];
-    $scope.days = [];
-    $scope.hours = [];
-    $scope.currentPage  = 1;
-    $scope.limitPerPage = 10;
-
-    var classification_results={
-        model_only : [
-            {caption:'<i class="fa a2-absent"></i> Absent', tooltip:'Absent' , flags:{model:0}, equiv:{model_th:[0,2]}},
-            {caption:'<i class="fa a2-present"></i> Present'   , tooltip:'Present', flags:{model:1}, equiv:{model_th:[1,3]}}
-        ],
-        model_th : [
-            {caption:'Model: <i class="fa a2-absent"></i>, Th: <i class="fa a2-absent"></i>', tooltip:'Model: absent, Theshold: absent'  , flags:{model:0, th:0}, equiv:{model_only:[0]}},
-            {caption:'Model: <i class="fa a2-present"></i>, Th: <i class="fa a2-absent"></i>'    , tooltip:'Model: present, Theshold: absent' , flags:{model:1, th:0}},
-            {caption:'Model: <i class="fa a2-absent"></i>, Th: <i class="fa a2-present"></i>'    , tooltip:'Model: absent, Theshold: present' , flags:{model:0, th:1}},
-            {caption:'Model: <i class="fa a2-present"></i>, Th: <i class="fa a2-present"></i>'        , tooltip:'Model: present, Theshold: present', flags:{model:1, th:1}, equiv:{model_only:[1]}}
-        ]
-    };
-
-    this.data = {
-        classifications:[],
-        classification_results: classification_results.model_only
-    };
-
-    Project.getClasses(
-        {
-            validations: true,
-        },
-        function(classes) {
-            $scope.classes = classes;
-        }
-    );
-
-    a2Classi.list((function(classifications) {
-        this.data.classifications = classifications.map(function(c){
-            c.name = c.cname;
-            c.id = c.job_id;
-            delete c.cname;
-            return c;
-        });
-    }).bind(this));
-
-    this.computeClassificationResults = function(){
-        var haveThreshold = $scope.params.classifications && $scope.params.classifications.reduce(function(a, b){
+    
+    this.computeClassificationResults = function(classifications){
+        var haveThreshold = classifications && classifications.reduce(function(a, b){
             return a || !!b.threshold;
         }, false);
-        var old_crs = this.data.classification_results;
+        var old_crs = this.options.classification_results;
         var crs_key = haveThreshold ? 'model_th' : 'model_only';
         var new_crs = classification_results[crs_key];
-        this.data.classification_results = new_crs;
+        this.options.classification_results = new_crs;
         if(old_crs != new_crs){
-            $scope.params.classification_results = $scope.params.classification_results.reduce(function(r, cr){
+            params.classification_results = params.classification_results.reduce(function(r, cr){
                 var equiv = cr.equiv && cr.equiv[crs_key];
                 if(equiv){
                     equiv.forEach(function(i){
@@ -427,6 +425,5 @@ angular.module('a2.audiodata.recordings', [
         }
     };
 
-    getAvalilableFilters({});
 })
 ;
