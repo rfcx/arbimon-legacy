@@ -944,6 +944,7 @@ var Recordings = {
 
             var from_clause  = "FROM " + tables.join('\n');
             var where_clause = mysql.format("WHERE " + constraints.join('\n AND '), data);
+            var order_clause = 'ORDER BY ' + mysql.escapeId(parameters.sortBy || 'site') + ' ' + (parameters.sortRev ? 'DESC' : '');
             var limit_clause = (parameters.limit) ? mysql.escape(parameters.offset || 0) + ', ' + mysql.escape(parameters.limit) : '';
             
             console.log(outputs);
@@ -957,9 +958,9 @@ var Recordings = {
                     var sortBy = parameters.sortBy || 'site';
                     var sortRev = parameters.sortRev ? 'DESC' : '';
                     query.push('ORDER BY ' + mysql.escapeId(sortBy) + ' ' + sortRev);
-                }
-                if(limit_clause){
-                    query.push("LIMIT " + limit_clause);
+                    if(limit_clause){
+                        query.push("LIMIT " + limit_clause);
+                    }
                 }
                 
                 return Q.nfcall(queryHandler, {
