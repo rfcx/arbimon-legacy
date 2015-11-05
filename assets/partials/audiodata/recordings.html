@@ -189,10 +189,10 @@
         <div class="reclist-total">{{ totalRecs }} Recordings</div>
         <div class="reclist-pagelimit">
             <div class="btn-group">
-                <button class="btn btn-default btn-sm" ng-model="limitPerPage" btn-radio="10">10</button>
-                <button class="btn btn-default btn-sm" ng-model="limitPerPage" btn-radio="25">25</button>
-                <button class="btn btn-default btn-sm" ng-model="limitPerPage" btn-radio="50">50</button>
-                <button class="btn btn-default btn-sm" ng-model="limitPerPage" btn-radio="100">100</button>
+                <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="10">10</button>
+                <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="25">25</button>
+                <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="50">50</button>
+                <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="100">100</button>
             </div>
             <button class="btn btn-default btn-sm" tooltip="Reload list" ng-click="reloadList()">
                 <i class="fa fa-refresh"></i>
@@ -230,7 +230,7 @@
 <div class="row">
     <div class="col-sm-12">
         <pagination total-items="totalRecs" 
-            ng-model="currentPage" 
+            ng-model="currentPage" ng-change="controller.setCurrentPage(currentPage)"
             class="pagination-sm" 
             boundary-links="true" 
             max-size="10" 

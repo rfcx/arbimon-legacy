@@ -365,17 +365,16 @@ angular.module('a2.audiodata.recordings', [
     searchRecs('date_range');
     getAvalilableFilters({});
     
-    $scope.$watch(function(scope) {
-        return [
-            $scope.currentPage,
-            $scope.limitPerPage
-        ];
-    }, 
-    function(){
+    this.setCurrentPage = function(currentPage){
+        $scope.currentPage = currentPage;
         searchRecs();
-    }, 
-    true);
+    };
+    this.setLimitPerPage = function(limitPerPage){
+        $scope.limitPerPage = limitPerPage;
+        searchRecs();
+    };
     
+    searchRecs();
     
 })
 .controller('SavePlaylistModalInstanceCtrl', function($scope, $modalInstance, a2Playlists, listParams) {
