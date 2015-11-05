@@ -805,36 +805,43 @@ var Recordings = {
     },
     
     findProjectRecordings: function(params, callback) {
-        console.log('params', params);
-        
+        function arrayOrSingle(x){
+            return joi.alternatives(x, joi.array().items(x));
+        }
         var schema = {
             project_id: joi.number().required(),
             range: joi.object().keys({
                 from: joi.date(),
                 to: joi.date()
             }).and('from', 'to'),
-            sites:  [joi.string(), joi.array().items(joi.string())],
-            years:  [joi.number(), joi.array().items(joi.number())],
-            months: [joi.number(), joi.array().items(joi.number())],
-            days:   [joi.number(), joi.array().items(joi.number())],
-            hours:  [joi.number(), joi.array().items(joi.number())],
-            validations:  [joi.number(), joi.array().items(joi.number())],
-            presence:  joi.string().valid('absent', 'present'),
+            sites:  arrayOrSingle(joi.string()),
+            years:  arrayOrSingle(joi.number()),
+            months: arrayOrSingle(joi.number()),
+            days:   arrayOrSingle(joi.number()),
+            hours:  arrayOrSingle(joi.number()),
+            validations:  arrayOrSingle(joi.number()),
+            presence:  arrayOrSingle(joi.string().valid('absent', 'present')),
+            classifications: arrayOrSingle(joi.number()),
+            classification_results: arrayOrSingle(joi.object().keys({
+                model: joi.number(),
+                th: joi.number()
+            }).optionalKeys('th')),
             limit:  joi.number(),
             offset: joi.number(),
             sortBy: joi.string(),
             sortRev: joi.boolean(), 
-            output:  joi.string()
+            output:  arrayOrSingle(joi.string().valid('count','list','date_range')).default('list')
         };
         
         joi.validate(params, schema, function(err, parameters) {
             if(err) return callback(err);
             
-            if(!parameters.output)
-                parameters.output = 'list';
+            var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
+                
+            var projection=[];
             
-            var select = {
-                list: "SELECT r.recording_id AS id, \n"+
+            var select_clause = {
+                list: "SELECT DISTINCT r.recording_id AS id, \n"+
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
                       "       s.name as site, \n"+
                       "       r.uri, \n"+
@@ -842,90 +849,141 @@ var Recordings = {
                       "       r.mic, \n"+
                       "       r.recorder, \n"+
                       "       r.version, \n"+
-                      "       s.project_id != %1$s as imported \n",
+                      "       s.project_id != " + parameters.project_id + " as imported \n",
                       
                 date_range: "SELECT DATE(MIN(r.datetime)) AS min_date, \n"+
                             "       DATE(MAX(r.datetime)) AS max_date \n",
                             
-                count: "SELECT COUNT(*) as count \n"
+                count: "SELECT COUNT(DISTINCT r.recording_id) as count \n"
             };
             
-            var q = select[parameters.output] +
-                "FROM recordings AS r \n"+
-                "JOIN sites AS s ON s.site_id = r.site_id \n"+
-                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = %1$s\n";
+            var tables = [
+                "recordings AS r",
+                "JOIN sites AS s ON s.site_id = r.site_id",
+                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = " + parameters.project_id
+            ];
+            var constraints = [
+                "(s.project_id = ? OR pis.project_id = ?)"
+            ];
+            var data = [parameters.project_id, parameters.project_id];
                     
-            if(parameters.validations) {
-                q += "LEFT JOIN recording_validations as rv ON r.recording_id = rv.recording_id \n"+
-                     "LEFT JOIN project_classes as pc ON pc.species_id = rv.species_id AND pc.songtype_id = rv.songtype_id \n";
-            }
-            
-            q += "WHERE (s.project_id = %1$s \n"+
-                 "OR pis.project_id = %1$s) \n";
-                    
-            q = sprintf(q, parameters.project_id);
-            
             if(parameters.range) {
                 console.log(parameters.range);
-                q += 'AND r.datetime BETWEEN '+ mysql.escape(getUTC(parameters.range.from)) +
-                    ' AND ' + mysql.escape(getUTC(parameters.range.to)) + ' \n';
+                constraints.push('r.datetime BETWEEN ? AND ?');
+                data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }
             
             if(parameters.sites) {
-                q += 'AND s.name IN (' + mysql.escape(parameters.sites) + ') \n';
+                constraints.push('s.name IN (?)');
+                data.push(parameters.sites);
             }
             
             if(parameters.years) {
-                q += 'AND YEAR(r.datetime) IN (' + mysql.escape(parameters.years) + ') \n';
+                constraints.push('YEAR(r.datetime) IN (?)');
+                data.push(parameters.years);
             }
             
             if(parameters.months) {
-                var months;
-                
-                if(parameters.months instanceof Array) {
-                    months = parameters.months.map(function(m) { return parseInt(m)+1; });
-                }
-                else {
-                    months = parseInt(parameters.months)+1;
-                }
-                
-                q += 'AND MONTH(r.datetime) IN (' + mysql.escape(months) + ') \n';
+                constraints.push('MONTH(r.datetime) IN (?)');
+                data.push((parameters.months instanceof Array) ?
+                    parameters.months.map(function(m) { return parseInt(m)+1; }) :
+                    parseInt(parameters.months)+1
+                );
             }
             
             if(parameters.days) {
-                q += 'AND DAY(r.datetime) IN (' + mysql.escape(parameters.days) + ') \n';
+                constraints.push('DAY(r.datetime) IN (?)');
+                data.push(parameters.days);
             }
             
             if(parameters.hours) {
-                q += 'AND HOUR(r.datetime) IN (' + mysql.escape(parameters.hours) + ') \n';
+                constraints.push('HOUR(r.datetime) IN (?)');
+                data.push(parameters.hours);
             }
             
             if(parameters.validations) {
-                q += 'AND pc.project_class_id IN (' + mysql.escape(parameters.validations) + ') \n';
+                tables.push(                    
+                    "LEFT JOIN recording_validations as rv ON r.recording_id = rv.recording_id",
+                    "LEFT JOIN project_classes as pc ON pc.species_id = rv.species_id AND pc.songtype_id = rv.songtype_id"
+                );
+                constraints.push('pc.project_class_id IN (?)');
+                data.push(parameters.validations);
                 
-                if(parameters.presence) {
-                    var flag = parameters.presence == 'present' ? '1' : '0';
-                    q += 'AND rv.present = ' + flag + ' \n';
+                if(parameters.presence && !(parameters.presence instanceof Array && parameters.presence.length >= 2)){
+                    constraints.push('rv.present = ?');
+                    data.push(parameters.presence == 'present' ? '1' : '0');
                 }
             }
             
-            if(parameters.output === 'list') {
-                var sortBy = parameters.sortBy || 'site';
-                var sortRev = parameters.sortRev ? 'DESC' : '';
+            if(parameters.classifications) {
+                tables.push(
+                    "LEFT JOIN classification_results as CR ON r.recording_id = CR.recording_id",
+                    "LEFT JOIN job_params_classification CRjp ON CRjp.job_id = CR.job_id",
+                    "LEFT JOIN models CRm ON CRjp.model_id = CRm.model_id"
+                );
+                constraints.push('CR.job_id IN (?)');
+                data.push(parameters.classifications);
                 
-                q += 'ORDER BY ' + mysql.escapeId(sortBy) + ' ' + sortRev +' \n';
+                if(parameters.classification_results) {
+                    if(!(parameters.classification_results instanceof Array)){
+                        parameters.classification_results = [parameters.classification_results];
+                    }
+                    var crflag = {
+                        'model':['CR.present = 0', 'CR.present = 1'], 
+                        'th':['CR.max_vector_value < CRm.threshold', 'CR.max_vector_value >= CRm.threshold']
+                    };
+                    constraints.push(
+                        '(('+ parameters.classification_results.map(function(cr){
+                            return Object.keys(cr).map(function(crk){
+                                return crflag[crk][1 * (!!cr[crk])];
+                            }).join(' AND ');
+                        }).join(') OR (') +'))'
+                    );
+                }
             }
+
+            var from_clause  = "FROM " + tables.join('\n');
+            var where_clause = mysql.format("WHERE " + constraints.join('\n AND '), data);
+            var order_clause = 'ORDER BY ' + mysql.escapeId(parameters.sortBy || 'site') + ' ' + (parameters.sortRev ? 'DESC' : '');
+            var limit_clause = (parameters.limit) ? mysql.escape(parameters.offset || 0) + ', ' + mysql.escape(parameters.limit) : '';
             
-            if(parameters.limit) {
-                var offset = parameters.offset || 0;
-                q += 'LIMIT ' + mysql.escape(offset) + ', ' + mysql.escape(parameters.limit);
-            }
-            
-            var query = {
-                sql: q,
-                typeCast: sqlutil.parseUtcDatetime,
-            };
-            queryHandler(query, callback);
+            console.log(outputs);
+            return Q.all(outputs.map(function(output){
+                var query=[
+                    select_clause[output],
+                    from_clause,
+                    where_clause
+                ];
+                if(output === 'list') {
+                    var sortBy = parameters.sortBy || 'site';
+                    var sortRev = parameters.sortRev ? 'DESC' : '';
+                    query.push('ORDER BY ' + mysql.escapeId(sortBy) + ' ' + sortRev);
+                    if(limit_clause){
+                        query.push("LIMIT " + limit_clause);
+                    }
+                }
+                
+                return Q.nfcall(queryHandler, {
+                    sql: query.join('\n'),
+                    typeCast: sqlutil.parseUtcDatetime,
+                });
+            })).then(function(results){
+                results = outputs.reduce(function(obj, output, i){
+                    var r = results[i][0];
+                    if(output == "count"){
+                        r = r[0].count;
+                    } else if(output != 'list'){
+                        r = r[0];
+                    }
+                    obj[output] = r;
+                    return obj;
+                }, {});
+                if(outputs.length > 1){
+                    return results;
+                } else {
+                    return results[outputs[0]];
+                }
+            }).nodeify(callback);            
         });
     },
     
