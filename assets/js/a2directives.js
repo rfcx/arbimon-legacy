@@ -1045,6 +1045,190 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
         }
     };
 })
+.factory('canvasObjectURL', function($window, $q){
+    var createObjectURL = $window.URL.createObjectURL;
+    var revokeObjectURL = $window.URL.revokeObjectURL;
+    if(!createObjectURL && $window.webkitURL.createObjectURL){
+        createObjectURL = $window.webkitURL.createObjectURL;
+        revokeObjectURL = $window.webkitURL.revokeObjectURL;
+    } 
+    if(!createObjectURL){
+        revokeObjectURL = function(){};
+    }
+    
+    function dataURIToBinaryBuffer(dataURI) {
+        var BASE64_MARKER = ';base64,';   
+        var base64Index = dataURI.indexOf(BASE64_MARKER) + BASE64_MARKER.length;
+        var base64 = dataURI.substring(base64Index);
+        var raw = $window.atob(base64);
+        var rawLength = raw.length;
+        var array = new $window.Uint8Array(new $window.ArrayBuffer(rawLength));
+        
+        for(i = 0; i < rawLength; i++) {
+            array[i] = raw.charCodeAt(i);
+        }
+        return array.buffer;
+    }
+    
+    function getCanvasBlob(canvas){
+        if(canvas.toBlob){
+            return $q(function(resolve){
+                canvas.toBlob(resolve);
+            });
+        } else {
+            var data = dataURIToBinaryBuffer(canvas.toDataURL("image/png"));
+            var blob;
+            var BlobBuilder = $window.BlobBuilder || $window.WebKitBlobBuilder;
+            if(BlobBuilder){
+                var bb = new WebKitBlobBuilder();
+                bb.append(data);
+                blob = bb.getBlob("image/png");
+            } else {
+                blob = new $window.Blob([data]);
+            }
+            return $q.resolve(blob);
+        }
+    }
+
+    return {
+        create: function(canvas){
+            if(!createObjectURL){
+                return $q.resolve(canvas.toDataURL("image/png"));
+            }
+            
+            return getCanvasBlob(canvas).then(function(blob){
+                return createObjectURL(blob);
+            });
+        },
+        revoke: revokeObjectURL
+    };
+})
+.directive('axis', function($timeout, canvasObjectURL, $q){
+    var promiseCache = {};
+    var canvas = angular.element('<canvas></canvas>')[0];
+    function computeHash(w, h, type, data){
+        return [w, h, type, data].join("--");
+    }
+    
+    function createAxisData(canvas, w, h, type, data){
+        if(!w || !h){
+            return $q.reject("Empty canvas size");
+        }
+        
+        canvas.width = w;
+        canvas.height = h;
+        
+        var i;
+        var min = data.range[0], max = data.range[1];
+        var scale;
+        var unit = data.unit;
+        var count = data.count;
+        var dTick = (((max - min)|0) / count)|0;
+        var ctx = canvas.getContext('2d');
+        var w1=w-1, h1=h-1;
+        // var compStyle = getComputedStyle(canvas);
+        ctx.font = data.font;
+        ctx.strokeStyle = data.color;
+        ctx.lineWidth = 0.5;
+        
+        ctx.clearRect(0, 0, w, h);
+        var val, x, y, pad=3;
+        var lblSize={w:0,h:10};
+        for(val=min; val<max; val += dTick){
+            var tW = ctx.measureText(val + unit).width;
+            if(lblSize.w < tW){
+                lblSize.w = tW;
+            }
+        }
+        
+        
+        if(type == 'h'){
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            scale = w / (max - min);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(w1, 0);
+            ctx.stroke();
+
+            for(val=min; val<max; val += dTick){
+                x = scale * (val - min);
+                ctx.beginPath();
+                ctx.moveTo(x, pad);
+                ctx.lineTo(x, 0);
+                ctx.stroke();
+                ctx.strokeText(val + unit, x, pad);
+            }
+        } else if(type == 'v'){
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'alphabet';
+            scale = h / (max - min);
+            
+            ctx.beginPath();
+            ctx.moveTo(w1, 0);
+            ctx.lineTo(w1, h1);
+            ctx.stroke();
+
+            for(val=min; val<max; val += dTick){
+                y = h - scale * (val - min);
+                ctx.beginPath();
+                ctx.moveTo(w1-pad, y);
+                ctx.lineTo(w1, y);
+                ctx.stroke();
+                ctx.strokeText(val + unit, lblSize.w, y, w1-pad-1);
+            }
+        }
+        // {
+        //     range:[0, recording.sample_rate/2000],
+        //     count:10,
+        //     unit:'kHz'
+        // }
+                
+        // console.log("drawAxis(",canvas, w, h, type, data,")");
+        return canvasObjectURL.create(canvas);
+        // return canvas.toDataURL();
+    }
+
+    function drawAxisOnImg(img, w, h, type, data){
+        var hash = computeHash(w, h, type, data);
+        var axisDataPromise = promiseCache[hash];
+        if(!axisDataPromise){
+            axisDataPromise = promiseCache[hash] = createAxisData(canvas, w, h, type, data);    
+        }
+        
+        return axisDataPromise.then(function(axisData){
+            img.src = axisData;
+        });
+    }
+    return {
+        restrict:'E',
+        template:'<img />',
+        scope:{
+            type:"@",
+            data:"="
+        },
+        link:function(scope, element, attrs){
+            var img = element.find('img')[0];
+            var tout;
+            
+            function redrawAxis(){
+                $timeout.cancel(tout);
+                tout = $timeout(function(){
+                    drawAxisOnImg(img, element.width(), element.height(), scope.type, scope.data);
+                }, 500);
+            }
+            
+            function elementSize(){
+                return element.width() * element.height();
+            }
+            
+            scope.$watch(elementSize, redrawAxis);
+            scope.$watch('type', redrawAxis);
+            scope.$watch('data', redrawAxis);
+        }
+    };
+})
 .filter('consoleLog', function(){
     return function(x, type){
         console[type || 'log'](x);

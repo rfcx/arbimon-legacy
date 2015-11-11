@@ -25,6 +25,12 @@ angular.module('a2.browser_recordings_by_site', [])
                     recordings = $filter('orderBy')(recordings, 'datetime');
                     recordings.forEach(function(recording){
                         recording.caption = [recording.site, moment(recording.datetime).utc().format('lll')].join(', ');
+                        recording.vaxis = {
+                            font:'7px', color:'#333333',
+                            range:[0, recording.sample_rate/2000],
+                            count:5,
+                            unit:''
+                        };
                     });
                     this.list = recordings;
                     this.count = recordings.length;
