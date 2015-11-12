@@ -292,11 +292,16 @@ var TrainingSets = {
     
     /** Fetches a training set's rois
      *  @param {Object}  training_set
-     *  @param {Function} callback(err, path) function to call back with the results.
+     *  @param {Object}  options - set of options
+     *  @param {Boolean|Object}  options.stream - whether to stream the results, or not. If an object, then
+     *                           it is passed to mysql.query(...).stream() (default:false).
+     *  @param {Boolean} options.resolveIds - whether to resolve foreign key ids to their associated names or not (default:false).
+     *  @param {Boolean} options.noURI - whether to return uris to any associated resource (default:false).
+     *  @param {Function} callback(err, path) function to call back with the results, or a stream of them, if options.stream is true.
      */
-    fetchRois: function (training_set, callback) {
+    fetchRois: function (training_set, options, callback) {
         var typedef = TrainingSets.types[training_set.type];
-        return typedef.get_rois(training_set, callback);
+        return typedef.get_rois(training_set, options, callback);
     },
     
     /** Fetches the image of a training set's data element
@@ -525,15 +530,38 @@ TrainingSets.types.roi_set = {
             }
         ], callback);
     },
-    get_rois : function(training_set, callback) {
+    get_rois : function(training_set, options, callback) {
+        var uri_prefix = 'https://s3.amazonaws.com/' + config('aws').bucketName + '/';
+        var fields=["TSD.roi_set_data_id as id"];
+        var tables=["training_set_roi_set_data TSD"];
+        if(options && options.resolveIds){
+            fields.push("SUBSTRING_INDEX(R.uri,'/',-1) as recording", "Sp.scientific_name as species", "Sng.songtype as songtype");
+            tables.push(
+                "JOIN recordings R ON R.recording_id = TSD.recording_id",
+                "JOIN species Sp ON Sp.species_id = TSD.species_id",
+                "JOIN songtypes Sng ON Sng.songtype_id = TSD.songtype_id"
+            );
+        } else {
+            fields.push("TSD.recording_id as recording", "TSD.species_id as species", "TSD.songtype_id as songtype");
+        }
+
+        fields.push(
+            "TSD.x1",
+            "ROUND(TSD.y1,0) as y1",
+            "TSD.x2",
+            "ROUND(TSD.y2,0) as y2",
+            "ROUND(TSD.x2-TSD.x1,1) as dur",
+            "ROUND(TSD.y2-TSD.y1,1) as bw"
+        );
+        if(!options || !options.noURI){
+            fields.push("CONCAT(" + mysql.escape(uri_prefix) + ",TSD.uri) as uri");
+        }
+        
         return queryHandler(
-            "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
-            "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
-            "   TSD.x1,  ROUND(TSD.y1,0) as y1, TSD.x2,  ROUND(TSD.y2,0) as y2 , \n"+
-            "   ROUND(TSD.x2-TSD.x1,1) as dur , \n"+
-            "   CONCAT('https://s3.amazonaws.com/','"+config('aws').bucketName+"','/',TSD.uri) as uri \n" +
-            " FROM training_set_roi_set_data TSD \n"+
-            " WHERE TSD.training_set_id = " + mysql.escape(training_set.id),
+            'SELECT ' + fields.join(',') + '\n' +
+            'FROM ' + tables.join('\n') + '\n' +
+            'WHERE TSD.training_set_id = ' + mysql.escape(training_set.id),
+            options,
             callback
         );
     },

@@ -68,7 +68,11 @@ var dbpool = {
         });
     },
 
-    queryHandler: function (query, callback) {
+    queryHandler: function (query, options, callback) {
+        if(callback === undefined && options instanceof Function){
+            callback = options;
+            options = undefined;
+        }
         debug('queryHandler : fetching db connection.');
         dbpool.pool.getConnection(function(err, connection) {
             if(err) return callback(err);
@@ -78,29 +82,42 @@ var dbpool = {
             // for debugging
             var sql = query.sql || query;
             debug('  query : -|', padding+sql.replace(/\n/g, padding));
-            
-            connection.query(query, function(err, rows, fields) {
-                connection.release();
-                // for debugging
-                if(err) {
-                    debug('  failed :| ', err+"");
-                }
-                else if (rows) {
-                    if(rows.length !== undefined) {
-                        debug('  returned :', rows.length , " rows.");
+            if(options && options.stream){
+                var stream_args = options.stream === true ? {highWaterMark:5} : options.stream;
+                var resultstream = connection.query(query).stream(stream_args);
+                resultstream.on('error', function(err) {
+                    callback(err);
+                });
+                resultstream.on('fields',function(fields,i) {
+                  callback(null, resultstream, fields);
+                });
+                resultstream.on('end', function(){
+                    connection.release();
+                });
+            } else {
+                connection.query(query, function(err, rows, fields) {
+                    connection.release();
+                    // for debugging
+                    if(err) {
+                        debug('  failed :| ', err+"");
                     }
-                    if(rows.affectedRows !== undefined) {
-                        debug('  affected :', rows.affectedRows , " rows.");
+                    else if (rows) {
+                        if(rows.length !== undefined) {
+                            debug('  returned :', rows.length , " rows.");
+                        }
+                        if(rows.affectedRows !== undefined) {
+                            debug('  affected :', rows.affectedRows , " rows.");
+                        }
+                        if(rows.changedRows !== undefined) {
+                            debug('  changed  :', rows.changedRows , " rows.");
+                        }
+                        if(rows.insertId !== undefined) {
+                            debug('  insert id :', rows.insertId);
+                        }
                     }
-                    if(rows.changedRows !== undefined) {
-                        debug('  changed  :', rows.changedRows , " rows.");
-                    }
-                    if(rows.insertId !== undefined) {
-                        debug('  insert id :', rows.insertId);
-                    }
-                }
-                callback(err, rows, fields);
-            });
+                    callback(err, rows, fields);
+                });
+            }
         });
     },
 };
