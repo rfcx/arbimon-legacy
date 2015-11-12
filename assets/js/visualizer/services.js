@@ -14,7 +14,8 @@ angular.module('visualizer-services', ['a2.services'])
                 title: "",
                 controller: 'a2VisualizerRecordingLayerController as controller',
                 require: {
-                    type: 'recording'
+                    type: 'recording',
+                    selection: true
                 },
                 visible: true,
                 hide_visibility: true
