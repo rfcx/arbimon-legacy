@@ -4,6 +4,7 @@
 var express = require('express');
 var router = express.Router();
 var model = require('../../../model');
+var csv_stringify = require("csv-stringify");
 
 
 router.param('trainingSet', function(req, res, next, trainingSet){
@@ -61,12 +62,28 @@ router.get('/list/:trainingSet/:recUrl?', function(req, res, next) {
 });
 
 router.get('/rois/:trainingSet', function(req, res, next) {
-    model.trainingSets.fetchRois(req.trainingSet,
-    function(err, data) {
-        if(err) return next(err);
+    if(!!req.query.export){
+        res.attachment(req.trainingSet.name + '.csv');
+        model.trainingSets.fetchRois(req.trainingSet, {resolveIds:true, noURI:true, stream:true}, function(err, datastream, fields) {
+            if(err){
+                next(err);
+            } else {
+                fields = fields.map(function(f){return f.name;});
+                datastream
+                    .pipe(csv_stringify({
+                        header:true, 
+                        columns:fields
+                    }))
+                    .pipe(res);
+            }
+        });
+    } else {
+        model.trainingSets.fetchRois(req.trainingSet, function(err, data) {
+            if(err) return next(err);
 
-        res.json(data);
-    });
+            res.json(data);
+        });
+    }
 });
 
 router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
