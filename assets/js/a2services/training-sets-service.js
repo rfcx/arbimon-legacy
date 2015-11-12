@@ -73,6 +73,7 @@ angular.module('a2.srv.training-sets', ['a2.srv.project'])
         },
         
         getExportUrl: function(trainingSetId){
+            var projectName = Project.getUrl();
             return '/api/project/'+projectName+'/training-sets/rois/'+trainingSetId+'?export=1';
         },        
         
