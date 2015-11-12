@@ -146,6 +146,17 @@
                                         <i class="fa fa-th"></i>
                                     </button>
                                 </div>
+                                
+                                <div class="btn-group">
+                                    <a class="btn btn-default"
+                                        ng-href="{{controller.selected.trainingSet.export_url}}"
+                                        ng-click="| trackEvent:'Audiodata-Training Sets':'export training set'"
+                                        ng-disabled="!controller.selected.trainingSet"
+                                        tooltip="Export Training Set Data">
+                                        <i class="fa fa-download"></i>
+                                    </a>
+                                </div>
+
                             </div>
                         </div>
                     </div>

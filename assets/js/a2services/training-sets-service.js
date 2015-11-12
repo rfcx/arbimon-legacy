@@ -71,6 +71,11 @@ angular.module('a2.srv.training-sets', ['a2.srv.project'])
                     callback(data);
                 });
         },
+        
+        getExportUrl: function(trainingSetId){
+            return '/api/project/gio_test_project/training-sets/rois/'+trainingSetId+'?export=1';
+        },        
+        
         getSpecies: function(trainingSetId, callback) {
             var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/species/'+trainingSetId)

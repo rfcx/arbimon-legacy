@@ -211,6 +211,7 @@ angular.module('a2.audiodata.training-sets', [
         }
         
         this.selected.trainingSet = selected;
+        this.selected.trainingSet.export_url = a2TrainingSets.getExportUrl(selected.id);
         
         Project.validationBySpeciesSong(selected.species, selected.songtype, (function(data) {
             this.selected.trainingSet.validations = data;
@@ -313,7 +314,7 @@ angular.module('a2.audiodata.training-sets', [
             }).bind(this));
         }).bind(this));
     };
-    
+
     this.getTrainingSetList();
     this.projecturl = Project.getUrl();
     
