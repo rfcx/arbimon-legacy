@@ -17,6 +17,7 @@ angular.module('a2.visualizer', [
     'a2.speciesValidator', 
     'visualizer-layers', 
     'a2.visualizer.recordings',
+    'a2.visualizer.layer.recording-tags',
     'visualizer-spectrogram', 
     'visualizer-training-sets', 
     'visualizer-training-sets-roi_set',
@@ -202,6 +203,7 @@ angular.module('a2.visualizer', [
     layers.add(
         'base-image-layer',
         'recording-layer',
+        'recording-tags-layer',
         'soundscape-info-layer',
         'soundscape-regions-layer',
         'recording-soundscape-region-tags',
