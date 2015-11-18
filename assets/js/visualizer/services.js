@@ -1,5 +1,6 @@
 angular.module('visualizer-services', ['a2.services'])
-    .factory('layer_types', function() {
+    .provider('layer_types', function(){
+
         var type_array = [{
                 type: "browser-layer",
                 title: "",
@@ -110,11 +111,20 @@ angular.module('visualizer-services', ['a2.services'])
                 visible: true,
             }
         ];
-        var layer_types = {};
-        type_array.forEach(function(lt) {
-            layer_types[lt.type] = lt;
-        });
-        return layer_types;
+        
+        return {
+            addLayerType: function(layerType){
+                type_array.push(layerType);
+                return this;
+            },
+            $get : function(){
+                var layer_types = {};
+                type_array.forEach(function(lt) {
+                    layer_types[lt.type] = lt;
+                });
+                return layer_types;
+            }
+        };
 
     })
     .service('a2VisualizerLayers', function(layer_types, $controller) {
