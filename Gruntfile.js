@@ -114,7 +114,7 @@ module.exports = function(grunt) {
             ngTable: {
                 expand: true, 
                 cwd: 'bower_components/ng-table/',
-                src: ['ng-table.min.js', 'ng-table.min.css'],
+                src: ['ng-table.min.js', 'ng-table.map', 'ng-table.min.css'],
                 dest: 'public/assets/ng-table/',
             },
             angular: {
@@ -126,7 +126,8 @@ module.exports = function(grunt) {
             qr_js: {
                 expand: true,
                 flatten: true,
-                src: 'bower_components/qr-js/*.js',
+                cwd: 'bower_components/qr-js/',
+                src: ['*.js', '*.map'],
                 dest: 'public/assets/qr-js/'
             },
             angularBootstrap: {
@@ -193,7 +194,8 @@ module.exports = function(grunt) {
             angularSanitize : {
                 expand: true,
                 flatten: true,
-                src: 'bower_components/angular-sanitize/angular-sanitize.min.js',
+                cwd: 'bower_components/angular-sanitize/',
+                src: ['angular-sanitize.min.js', 'angular-sanitize.min.js.map'],
                 dest: 'public/assets/angular-sanitize/'               
             },
             angularytics : {

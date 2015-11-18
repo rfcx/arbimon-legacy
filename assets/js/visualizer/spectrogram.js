@@ -283,7 +283,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2.utils'])
         }
     };
 })
-.directive('a2VisualizerSpectrogramAffixed', function(a2AffixCompute){
+.directive('a2VisualizerSpectrogramAffixed', function(a2AffixCompute, $debounce){
     return {
         restrict :'A',
         link     : function($scope, $element, $attrs){
@@ -317,10 +317,10 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2.utils'])
             }
             a2AffixCompute($element.offsetParent(), $element, $scope.layout);
             $scope.$watch(function(){
-                return [$element.width(), $element.height()];
-            }, function(){
+                return $element.width() * $element.height();
+            }, $debounce(function(){
                 a2AffixCompute($element.offsetParent(), $element, $scope.layout);
-            }, true);
+            }));
         }
     };
 });

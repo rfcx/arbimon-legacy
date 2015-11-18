@@ -95,7 +95,10 @@ var dbpool = {
                     connection.release();
                 });
             } else {
-                connection.query(query, function(err, rows, fields) {
+                if(options){
+                    debug('  values : -|', options);
+                }
+                connection.query(query, options, function(err, rows, fields) {
                     connection.release();
                     // for debugging
                     if(err) {

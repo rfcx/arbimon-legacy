@@ -1084,7 +1084,7 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
                 bb.append(data);
                 blob = bb.getBlob("image/png");
             } else {
-                blob = new $window.Blob([data]);
+                blob = new $window.Blob([data], {type:'image/png'});
             }
             return $q.resolve(blob);
         }

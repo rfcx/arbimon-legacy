@@ -204,7 +204,7 @@ angular.module('a2.audiodata.recordings', [
         }
     };
 })
-.controller('recordingFilterParametersController', function($scope, Project, a2Classi, $http, $modal, notify, a2UserPermit, $window) {
+.controller('recordingFilterParametersController', function($scope, Project, a2Classi, $http, $modal, notify, a2UserPermit, a2Tags, $window) {
     function _1_get(attribute){
         return function(_1){
             return _1[attribute];
@@ -218,6 +218,7 @@ angular.module('a2.audiodata.recordings', [
     
     var _1_get_value_mapper = _1_mapper(_1_get("value"));
     var _1_get_id_mapper    = _1_mapper(_1_get("id"));
+    var _1_get_tag_id_mapper  = _1_mapper(_1_get("tag_id"));
     var _1_get_flags_mapper = _1_mapper(_1_get("flags"));
     
     var findObjectWith = function(arr, key, value) {
@@ -247,6 +248,7 @@ angular.module('a2.audiodata.recordings', [
         months : [],
         days : [],
         hours : [],
+        tags : [],
         classifications:[],
         classification_results: classification_results.model_only
     };
@@ -268,6 +270,7 @@ angular.module('a2.audiodata.recordings', [
         {name:"years"                 , map: _1_get_value_mapper},
         {name:"days"                  , map: _1_get_value_mapper},
         {name:"validations"           , map: _1_get_id_mapper},
+        {name:"tags"                  , map: _1_get_tag_id_mapper},
         {name:"presence"},
         {name:"classifications"       , map: _1_get_id_mapper},
         {name:"classification_results", map: _1_get_flags_mapper}
@@ -390,7 +393,9 @@ angular.module('a2.audiodata.recordings', [
                 options.classes = classes;
             }
         );
-
+        a2Tags.getForType('recording').then((function(tags){
+            options.tags = tags;
+        }).bind(this));
         a2Classi.list((function(classifications) {
             options.classifications = classifications.map(function(c){
                 c.name = c.cname;

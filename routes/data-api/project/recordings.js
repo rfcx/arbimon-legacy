@@ -24,6 +24,7 @@ router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
 });
 
 router.get('/search', function(req, res, next) {
+    res.type('json');
     var params = req.query;
     
     params.project_id = req.project.project_id;
