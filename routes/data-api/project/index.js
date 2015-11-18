@@ -21,6 +21,7 @@ var playlist_routes = require('./playlists');
 var soundscape_routes = require('./soundscapes');
 var jobsRoutes = require('./jobs');
 var classiRoutes = require('./classifications');
+var tagRoutes = require('./tags');
 
 router.param('projectUrl', function(req, res, next, project_url){
     model.projects.find({ url: project_url }, function(err, rows) {
@@ -363,5 +364,6 @@ router.use('/:projectUrl/playlists', playlist_routes);
 router.use('/:projectUrl/soundscapes', soundscape_routes);
 router.use('/:projectUrl/jobs', jobsRoutes);
 router.use('/:projectUrl/classifications', classiRoutes);
+router.use('/:projectUrl/tags', tagRoutes);
 
 module.exports = router;

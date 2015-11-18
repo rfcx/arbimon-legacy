@@ -22,6 +22,37 @@ angular.module('a2.utils', [])
         }
     };
 })
+.factory('a2EventEmitter', function(){
+    function a2EventEmitter(){
+        this.list={};
+    }
+    a2EventEmitter.prototype = {
+        on:function(event, callback){
+            var list = this.list[event] || (this.list[event] = []);
+            list.push(callback);
+            return callback;
+        },
+        off: function(event, callback){
+            var list = this.list[event];
+            if(list){
+                var idx = list.indexOf(callback);
+                if(idx){
+                    list.splice(idx, 1);
+                }
+            }
+        },
+        emit: function(event){
+            var args = Array.prototype.slice.call(arguments, 1);
+            var list = this.list[event];
+            if(list){
+                for(var i=0,e=list.length; i <e; ++i){
+                    list[i].apply(null, args);
+                }
+            }
+        }
+    };
+    return a2EventEmitter;
+})
 .factory('itemSelection', function(){
     return {
         make : function make_itemSelection_obj(item_name){
@@ -173,6 +204,59 @@ angular.module('a2.url-update-service', [])
     return function(url){
         return a2UrlUpdate.get(url);
     };
+})
+.factory('$debounce', function($timeout){
+    return function $debounce(fn, rate){
+        var t;
+        rate = rate || 100;
+        return function(){
+            var self=this;
+            var args = Array.prototype.slice.call(arguments);
+            if(t){
+                $timeout.cancel(t);
+            }
+            t = $timeout(function(){
+                fn.apply(self, args);
+            }, rate);
+        };
+    };
+})
+.factory('a2LookaheadHelper', function($q){
+    var a2LookaheadHelper = function(options){
+        this.options=options||{};
+        if(!options.searchCompare){
+            options.searchCompare = function(a, b){ 
+                return a == b;
+            };
+        }
+    };
+    a2LookaheadHelper.prototype={
+        search: function(text){
+            var options=this.options;
+            if(options.minLength && text.length < options.minLength){
+                return $q.resolve([]);
+            }
+            
+            var promise = options.fn(text);
+            
+            if(options.includeSearch){
+                promise = promise.then(function(items){
+                    var textItem = items.filter(function(item){
+                        return options.searchCompare(text, item);
+                    }).pop();
+                    if(!textItem){
+                        items.unshift(
+                            options.searchPromote ? options.searchPromote(text) : text
+                        );
+                    }
+                    return items;
+                });
+            }
+            
+            return promise;
+        }
+    };
+    return a2LookaheadHelper;
 })
 .service('EventlistManager', function(){
     var EventlistManager = function(){

@@ -1,5 +1,6 @@
 angular.module('visualizer-services', ['a2.services'])
-    .factory('layer_types', function() {
+    .provider('layer_types', function(){
+
         var type_array = [{
                 type: "browser-layer",
                 title: "",
@@ -14,7 +15,8 @@ angular.module('visualizer-services', ['a2.services'])
                 title: "",
                 controller: 'a2VisualizerRecordingLayerController as controller',
                 require: {
-                    type: 'recording'
+                    type: 'recording',
+                    selection: true
                 },
                 visible: true,
                 hide_visibility: true
@@ -109,16 +111,26 @@ angular.module('visualizer-services', ['a2.services'])
                 visible: true,
             }
         ];
-        var layer_types = {};
-        type_array.forEach(function(lt) {
-            layer_types[lt.type] = lt;
-        });
-        return layer_types;
+        
+        return {
+            addLayerType: function(layerType){
+                type_array.push(layerType);
+                return this;
+            },
+            $get : function(){
+                var layer_types = {};
+                type_array.forEach(function(lt) {
+                    layer_types[lt.type] = lt;
+                });
+                return layer_types;
+            }
+        };
 
     })
     .service('a2VisualizerLayers', function(layer_types, $controller) {
-        var layers = function($scope) {
+        var layers = function($scope, VisualizerCtrl) {
             this.$scope = $scope;
+            this.VisualizerCtrl = VisualizerCtrl;
             this.list = [];
         };
         
@@ -134,7 +146,8 @@ angular.module('visualizer-services', ['a2.services'])
                         var cname = /^(.*?)( as (.*?))$/.exec(layer.controller);
                         if (cname) {
                             layer[cname[2] ? cname[3] : 'controller'] = $controller(cname[1], {
-                                $scope: this.$scope
+                                $scope: this.$scope,
+                                VisualizerCtrl: this.VisualizerCtrl
                             });
                         }
                     }
