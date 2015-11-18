@@ -1,0 +1,23 @@
+# CHANGELOG
+
+- v1.2.0
+    - Added changelog
+    - Added more visual emphasis on selected layer
+    - Added recording tagging:
+        - Added new `recording-tags-layer` layer
+        - Added `a2.srv.tags.a2Tags` service
+        - recordings are now searchable by tags
+        - Added tag routes and model
+    - Modified `Arbimon` time format to allow for seconds.
+    - Added missing .map files to copy task in grunt
+    - blobs for generated content URL are now of image/png content type.
+    - layers now recieve an injected reference to the `VisualizerCtrl` instance
+    - `VisualizerCtrl` now throws `visobject` event when a `visobject` is set
+    - Bugs:
+        - Fixed infinite digest bug in spectrogram
+    - Misc:
+        - Added `a2.srv.api.a2APIService` for managing the basic API I/O
+        - promisified `getProjectSites()`
+        - `layer_type` is now a provider instead of a factory.
+        - `options` argument is now passed to `connection.query` in to `dbpool.queryHandler`
+        - Added debug output for options in `dbpool.queryHandler`
