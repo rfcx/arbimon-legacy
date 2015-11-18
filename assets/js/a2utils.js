@@ -22,6 +22,37 @@ angular.module('a2.utils', [])
         }
     };
 })
+.factory('a2EventEmitter', function(){
+    function a2EventEmitter(){
+        this.list={};
+    }
+    a2EventEmitter.prototype = {
+        on:function(event, callback){
+            var list = this.list[event] || (this.list[event] = []);
+            list.push(callback);
+            return callback;
+        },
+        off: function(event, callback){
+            var list = this.list[event];
+            if(list){
+                var idx = list.indexOf(callback);
+                if(idx){
+                    list.splice(idx, 1);
+                }
+            }
+        },
+        emit: function(event){
+            var args = Array.prototype.slice.call(arguments, 1);
+            var list = this.list[event];
+            if(list){
+                for(var i=0,e=list.length; i <e; ++i){
+                    list[i].apply(null, args);
+                }
+            }
+        }
+    };
+    return a2EventEmitter;
+})
 .factory('itemSelection', function(){
     return {
         make : function make_itemSelection_obj(item_name){
