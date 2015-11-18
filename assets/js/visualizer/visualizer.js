@@ -183,7 +183,7 @@ angular.module('a2.visualizer', [
     this.on = events.on.bind(events);
     this.off = events.off.bind(events);
 
-    var layers = new a2VisualizerLayers($scope);
+    var layers = new a2VisualizerLayers($scope, this);
     var layer_types = layers.types;
     var initial_state_params={
         gain   : $state.params.gain,

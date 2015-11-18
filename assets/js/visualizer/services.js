@@ -128,8 +128,9 @@ angular.module('visualizer-services', ['a2.services'])
 
     })
     .service('a2VisualizerLayers', function(layer_types, $controller) {
-        var layers = function($scope) {
+        var layers = function($scope, VisualizerCtrl) {
             this.$scope = $scope;
+            this.VisualizerCtrl = VisualizerCtrl;
             this.list = [];
         };
         
@@ -145,7 +146,8 @@ angular.module('visualizer-services', ['a2.services'])
                         var cname = /^(.*?)( as (.*?))$/.exec(layer.controller);
                         if (cname) {
                             layer[cname[2] ? cname[3] : 'controller'] = $controller(cname[1], {
-                                $scope: this.$scope
+                                $scope: this.$scope,
+                                VisualizerCtrl: this.VisualizerCtrl
                             });
                         }
                     }
