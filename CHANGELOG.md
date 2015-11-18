@@ -1,6 +1,6 @@
 # CHANGELOG
 
-- v1.2.0
+- v1.1.0
     - Added changelog
     - Added more visual emphasis on selected layer
     - Added recording tagging:
