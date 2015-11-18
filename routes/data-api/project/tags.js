@@ -13,6 +13,15 @@ router.get('/', function(req, res, next){
     }).catch(next);
 });
 
+router.get('/:resource', function(req, res, next) {
+    res.type('json');
+    model.tags.getTagsForType(req.params.resource, {
+        project: req.project.project_id
+    }).then(function(tags){
+        res.json(tags);
+    }).catch(next);
+});
+
 router.get('/:resource/:id', function(req, res, next) {
     res.type('json');
     model.tags.getTagsFor(req.params.resource, req.params.id).then(function(tags){
@@ -30,14 +39,13 @@ router.use(function(req, res, next) {
 
 router.put('/:resource/:id', function(req, res, next) {
     res.type('json');
-    var tag = {user:req.session && req.session.user};
+    var tag = {};
     if(req.body){
-        if(req.body.id){
-            tag.id = req.body.id;
-        } else if(req.body.text){
-            tag.text = req.body.text;
-        }
+        Object.keys(req.body).forEach(function(k){
+            tag[k] = req.body[k];
+        });
     }
+    tag.user = req.session && req.session.user;
     model.tags.addTagTo(req.params.resource, req.params.id, tag).then(function(tags){
         res.json(tags);
     }).catch(next);
