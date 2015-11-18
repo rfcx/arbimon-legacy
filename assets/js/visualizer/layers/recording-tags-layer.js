@@ -29,7 +29,7 @@ angular.module('a2.visualizer.layer.recording-tags', ['a2.srv.tags'])
  * Responds to VisualizerCtrl.event::visobject by loading the visobject tags, if it is a
  * recording.
  */
-.controller('a2VisualizerRecordingTagsLayerController', function(VisualizerCtrl, a2Tags, a2LookaheadHelper, $q, $debounce){
+.controller('a2VisualizerRecordingTagsLayerController', function(VisualizerCtrl, a2Tags, a2LookaheadHelper, a22PointBBoxEditor, $q, $debounce){
     function makeTagsIndex(tags){
         return tags.reduce(function(idx, tag){
             if(tag.id){
@@ -37,7 +37,26 @@ angular.module('a2.visualizer.layer.recording-tags', ['a2.srv.tags'])
             }
             return idx;
         }, {});
+    }    
+    
+    function groupByBbox(tags){
+        var bboxes=[];
+        tags.reduce(function(bboxIdx, tag){
+            if(tag.f0){
+                var bbox = [tag.t0, tag.f0, tag.t1, tag.f1];
+                var bbox_key = bbox.join(',');
+                if(!bboxIdx[bbox_key]){
+                    bboxes.push(bboxIdx[bbox_key] = {
+                        bbox: tag, tags:[]
+                    });
+                }
+                bboxIdx[bbox_key].tags.push(tag);
+            }
+            return bboxIdx;
+        },  {});
+        return bboxes;
     }
+    
     var lookaheadHelper = new a2LookaheadHelper({
         fn:a2Tags.search,
         minLength:3,
@@ -49,6 +68,12 @@ angular.module('a2.visualizer.layer.recording-tags', ['a2.srv.tags'])
             return tag.tag==text;
         }
     });
+    
+    this.tags = [];
+    this.spectrogramTags = [];
+    this.tagsIndex = {};
+    this.bboxTags = [];
+    this.bboxTagsIndex = {};
     
     /**
      * @ngdoc method
@@ -83,6 +108,7 @@ angular.module('a2.visualizer.layer.recording-tags', ['a2.srv.tags'])
         this.visobject = visobject;
         return a2Tags.getFor(visobject).then((function(tags){
             this.tagsIndex = makeTagsIndex(tags);
+            this.spectrogramTags = groupByBbox(tags);
             this.tags = tags;
             return tags;
         }).bind(this)).finally((function(){
@@ -117,23 +143,76 @@ angular.module('a2.visualizer.layer.recording-tags', ['a2.srv.tags'])
      * @return Promise resolved whenever the list of tags has been checked entirely.
      */
     this.onTagListChanged = $debounce(function(){
+        var tagUpdate = this.determineTagUpdate(this.tags, this.tagsIndex);
+        return this.updateTags(tagUpdate);
+    }, 100);
+    
+    this.onBBoxTagListChanged = $debounce(function(){
+        var tagUpdate = this.determineTagUpdate(this.bboxTags);
+        this.bboxTags = [];
+        var bbox = this.bbox.bbox;
+        tagUpdate.add.forEach(function(tag){
+            tag.t0 = bbox.x1;
+            tag.f0 = bbox.y1;
+            tag.t1 = bbox.x2;
+            tag.f1 = bbox.y2;
+        });
+        return this.updateTags(tagUpdate).then;
+    });
+
+    this.determineTagUpdate = function(tags, oldTagsIndex){
+        var tagsIndex = makeTagsIndex(tags);
+        
+        var toDelete = Object.keys(oldTagsIndex || {}).filter(function(tagId){
+            return !tagsIndex[tagId];
+        });
+        
+        var toAdd = tags.filter(function(tag){
+            return !tag.id;
+        });
+        return {
+            add : toAdd,
+            delete: toDelete
+        };
+    };
+    
+    this.updateTags = function(tagUpdate){
         var visobject = this.visobject;
-        var tagsIndex = makeTagsIndex(this.tags);
+        console.log("visobject : ", visobject);
+        console.log("tag update : ", tagUpdate);
+        
         return $q.all([
-            $q.all(Object.keys(this.tagsIndex).filter(function(tagId){
-                return tagsIndex[tagId];
-            }).map(function(tagId){
+            $q.all(tagUpdate.delete.map(function(tagId){
                 return a2Tags.deleteFor(visobject, tagId);
             })),
-            $q.all(this.tags.filter(function(tag){
-                return !tag.id;
-            }).map(function(tag){
+            $q.all(tagUpdate.add.map(function(tag){
                 return a2Tags.addFor(visobject, tag);
             }))
-        ]).then(function(updateResponse){
-            
-        });
-    }, 100);
+        ]).then((function(updateResponse){
+            return this.loadTags();
+        }).bind(this)).catch((function(){
+            // TODO:: notify user of failure... maybe should be done through a notification service...
+            return this.loadTags();
+        }).bind(this));
+    };
+    
+    this.bbox = angular.extend(
+        new a22PointBBoxEditor(), {
+        add_tracer_point : function(point){
+            this.super.add_tracer_point.call(this, point.sec, point.hz);
+        },
+        add_point : function(point, min_eps){
+            this.super.add_point.call(this, point.sec, point.hz, min_eps);
+        },
+        resetBboxTags: (function(){
+            console.log("resetBboxTags", this.bboxTags);
+            this.bboxTags=[];
+        }).bind(this),
+        reset: function(){
+            this.resetBboxTags();
+            this.super.reset.call(this);
+        }
+    });
     
     VisualizerCtrl.on('visobject', (this.setVisobject).bind(this));
 })

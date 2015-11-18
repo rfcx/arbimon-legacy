@@ -1,5 +1,66 @@
+<div>
+    <div class="roi" ng-repeat="bbox in layer.controller.spectrogramTags"
+        ng-style="{
+            left:layout.sec2x(bbox.bbox.t0, 1) + 'px', 
+            top:layout.hz2y(bbox.bbox.f1, 1) + 'px', 
+            width:layout.dsec2width(bbox.bbox.t1, bbox.bbox.t0, 1) + 'px', 
+            height:layout.dhz2height(bbox.bbox.f1, bbox.bbox.f0) + 'px'
+        }">
+        <a2-tag tag="tag" ng-repeat="tag in bbox.tags"></a2-tag>
+    </div>
+</div>
 <div class="input-source"
     ng-style="{height: layout.spectrogram.height, width: layout.spectrogram.width}"
     a2-visualizer-fit-spectrogram ng-show="selection.layer == layer" 
->
+    ng-mousedown="($event.which == 1) && [layer.controller.bbox.reset(), layer.controller.bbox.add_point(pointer)]"
+    ng-mousemove="($event.buttons == 1) && layer.controller.bbox.add_tracer_point(pointer)"
+    ng-mouseup  ="($event.which == 1) && layer.controller.bbox.add_point(pointer)">
+    
+    <div a2-visualizer-spectrogram-affixed data-affix-top="20">
+        Click to add tags to this recording.
+        <div ng-show="layer.controller.bbox.bbox && !layer.controller.bbox.bbox.id" 
+            a2-global-keyup="($event.which == 27) && layer.controller.bbox.reset()">
+            Press <kbd>esc</kbd> to cancel tag addition.
+        </div>
+    </div>
+    <div class="roi roi-current" ng-show="layer.controller.bbox.bbox"
+        ng-style="{
+            left: layout.sec2x(layer.controller.bbox.bbox.x1, 1) + 'px', 
+            top:layout.hz2y(layer.controller.bbox.bbox.y2, 1) + 'px', 
+            width:layout.dsec2width(layer.controller.bbox.bbox.x2, 
+            layer.controller.bbox.bbox.x1, 1) + 'px', 
+            height:layout.dhz2height(layer.controller.bbox.bbox.y2, layer.controller.bbox.bbox.y1) + 'px'
+        }">
+            
+        <i class="fa fa-circle-o control-point cp-resize-tl" style="position:absolute;    top:-7px;  left:-6px" ></i>
+        <i class="fa fa-circle-o control-point cp-resize-tr" style="position:absolute;    top:-7px; right:-6px" ></i>
+        <i class="fa fa-circle-o control-point cp-resize-bl" style="position:absolute; bottom:-7px;  left:-6px" ></i>
+        <i class="fa fa-circle-o control-point cp-resize-br" style="position:absolute; bottom:-7px; right:-6px" ></i>
+    </div>
+    <div a2-insert-in=".visualizer-root">
+        <div class="popover right confirm-roi"
+            ng-style="{
+                display: layer.controller.bbox.valid ? 'block' : 'none', 
+                left:(layout.viewport.left + layout.sec2x(layer.controller.bbox.bbox.x2, 1)) + 'px', 
+                top:(layout.spectrogram.top + layout.hz2y((layer.controller.bbox.bbox.y1 + layer.controller.bbox.bbox.y2)/2, 1)) + 'px'
+            }">
+            <div class="arrow"></div>
+            <div class="popover-content" ng-if="layer.controller.bbox.valid">
+                <ui-select multiple ng-model="layer.controller.bboxTags" ng-change="layer.controller.onBBoxTagListChanged()" theme="bootstrap" autofocus="true">
+                    <ui-select-match placeholder="Add tags to this region.">
+                        <a2-tag tag="$item"></a2-tag>
+                    </ui-select-match>
+                    <ui-select-choices repeat="$item in layer.controller.searchedTags"
+                             refresh="layer.controller.searchTags($select.search)"
+                             refresh-delay="300">
+                             <a2-tag tag="$item"></a2-tag>
+                    </ui-select-choices>
+                </ui-select>
+                <button class="btn btn-sm btn-default" 
+                    ng-click="$event.stopPropagation(); layer.controller.bbox.reset()">
+                    <i class="fa fa-ban text-danger"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
