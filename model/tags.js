@@ -1,6 +1,8 @@
 var q = require('q');
+var mysql = require('mysql');
 var dbpool = require('../utils/dbpool');
 var APIError = require('../utils/apierror');
+var projects = require('./projects');
 
 /** Tags model.
  *  Holds all functions for manipulating tags.
@@ -25,6 +27,21 @@ var tags = {
         }
         
         return resourceDef.getFor(id);
+    },
+    /** Fetches the tags for a given resource.type
+     *  @param {String} resource - the type of resource whose tags to fetch.
+     *  @param {String} options - options delimiting what tags to fetch.
+     *  @param {String} options.project - limit tags to resources in the given project.
+     *  @returns {Promise} Promise resolving to fetched tags, or rejecting if the
+     *     resource type does not support tags or any error occurred.
+     */
+    getTagsForType : function(resource, options){
+        var resourceDef = this.resourceDefs[resource];
+        if(!resourceDef){
+            return q.reject(new APIError(resource + " resources do not support tags.", 415));
+        }
+        
+        return resourceDef.getForType(options);
     },
     /** Adds a tag to a given resource.
      *  @param {String} resource - type of the resource to add the tag to.
@@ -100,6 +117,42 @@ tags.resourceDefs.recording = {
             "WHERE RT.recording_id = ?", [id]
         ).get(0);
     },
+    /** Fetches the tags for a given resource.type
+     *  @param {String} options - options delimiting what tags to fetch.
+     *  @param {String} options.project - limit tags to resources in the given project.
+     *  @returns {Promise} Promise resolving to fetched tags.
+     */
+    getForType: function(options){
+        var tables = ['tags T', 'JOIN recording_tags RT ON RT.tag_id = T.tag_id'];
+        var constraints = [];
+        var data = [];
+        
+        if(options && options.project){
+            promise = projects.getProjectSites(options.project).then(function(sites){
+                tables.push(
+                    'JOIN recordings R ON R.recording_id = RT.recording_id',
+                    'JOIN sites S ON S.site_id = R.site_id'
+                );
+                constraints.push('S.site_id IN (' + mysql.escape(sites.map(function(site){
+                    return site.id;
+                })) + ')');
+            });
+        }
+        
+        if(!promise){
+            promise = q();
+        }
+        
+        return promise.then(function(){
+            return q.ninvoke(dbpool, 'queryHandler', 
+                "SELECT T.tag_id, T.tag, COUNT(*) as count\n" +
+                "FROM " + tables.join("\n") + "\n" +
+                (constraints.length ? "WHERE " + constraints.join(' AND ') + '\n' : '') + 
+                'GROUP BY T.tag_id', 
+                data
+            ).get(0);
+        });
+    },
     /** Adds a tag to a given recording.
      *  @param {String} id - the id of the recording to add the tag to.
      *  @param {String} tag - tag to be added to the recording.
@@ -153,8 +206,8 @@ tags.resourceDefs.recording = {
      */
     removeFrom: function(id, recordingTagId){
         return q.ninvoke(dbpool, 'queryHandler', 
-            "DELETE FROM recording_tags RT\n" +
-            "WHERE RT.recording_id = ? AND RT.recording_tag_id = ?", [id, recordingTagId]
+            "DELETE FROM recording_tags\n" +
+            "WHERE recording_id = ? AND recording_tag_id = ?", [id, recordingTagId]
         ).get(0);
     },
 };

@@ -821,6 +821,7 @@ var Recordings = {
             hours:  arrayOrSingle(joi.number()),
             validations:  arrayOrSingle(joi.number()),
             presence:  arrayOrSingle(joi.string().valid('absent', 'present')),
+            tags: arrayOrSingle(joi.number()),
             classifications: arrayOrSingle(joi.number()),
             classification_results: arrayOrSingle(joi.object().keys({
                 model: joi.number(),
@@ -915,6 +916,13 @@ var Recordings = {
                 }
             }
             
+            if(parameters.tags) {
+                tables.push(
+                    "LEFT JOIN recording_tags as RT ON r.recording_id = RT.recording_id"
+                );
+                constraints.push('RT.tag_id IN (?)');
+                data.push(parameters.tags);
+            }
             if(parameters.classifications) {
                 tables.push(
                     "LEFT JOIN classification_results as CR ON r.recording_id = CR.recording_id",

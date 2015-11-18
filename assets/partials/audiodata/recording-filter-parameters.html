@@ -143,6 +143,23 @@
             </div>
         </div>
         <div class="a2-filter-row">
+            <div class="a2-filter a2-filter-text">
+                Tags:
+            </div>
+            <div class="a2-filter">
+                <ui-select multiple ng-model="controller.params.tags" theme="bootstrap" style="width: 350px;">
+                    <ui-select-match placeholder="Tags...">
+                        <a2-tag tag="$item"></a2-tag>
+                        <span class="badge">{{ $item.count }}</span>
+                    </ui-select-match>
+                    <ui-select-choices class="has-badges" repeat="$item in controller.options.tags | filter:$select.search">
+                        <a2-tag tag="$item"></a2-tag>
+                        <span class="badge">{{ $item.count }}</span>
+                    </ui-select-choices>
+                </ui-select>
+            </div>
+        </div>
+        <div class="a2-filter-row">
             <button class="btn btn-default" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'">
                 Apply filters
             </button>
