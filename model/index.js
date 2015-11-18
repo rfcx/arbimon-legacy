@@ -1,6 +1,7 @@
 exports.users           = require('./users');
 exports.projects        = require('./projects');
 exports.recordings      = require('./recordings');
+exports.tags            = require('./tags');
 exports.sites           = require('./sites');
 exports.trainingSets    = require('./training_sets');
 exports.species         = require('./species');

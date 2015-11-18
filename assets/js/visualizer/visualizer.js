@@ -17,6 +17,7 @@ angular.module('a2.visualizer', [
     'a2.speciesValidator', 
     'visualizer-layers', 
     'a2.visualizer.recordings',
+    'a2.visualizer.layer.recording-tags',
     'visualizer-spectrogram', 
     'visualizer-training-sets', 
     'visualizer-training-sets-roi_set',
@@ -176,9 +177,14 @@ angular.module('a2.visualizer', [
     VisualizerObjectTypes, 
     VisualizerLayout, 
     a2AudioPlayer, 
-    a2VisualizerLocationManager
+    a2VisualizerLocationManager,
+    a2EventEmitter
 ) {
-    var layers = new a2VisualizerLayers($scope);
+    var events = new a2EventEmitter();
+    this.on = events.on.bind(events);
+    this.off = events.off.bind(events);
+
+    var layers = new a2VisualizerLayers($scope, this);
     var layer_types = layers.types;
     var initial_state_params={
         gain   : $state.params.gain,
@@ -197,6 +203,7 @@ angular.module('a2.visualizer', [
     layers.add(
         'base-image-layer',
         'recording-layer',
+        'recording-tags-layer',
         'soundscape-info-layer',
         'soundscape-regions-layer',
         'recording-soundscape-region-tags',
@@ -240,9 +247,11 @@ angular.module('a2.visualizer', [
                 $scope.loading_visobject = false;
                 $scope.visobject = visobject;
                 $scope.visobject_type = visobject.type;
+                events.emit('visobject', visobject);
             });
         } else {
             $scope.visobject = null;
+            events.emit('visobject', null);
         }
     };
     
