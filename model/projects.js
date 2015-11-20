@@ -113,7 +113,16 @@ var Projects = {
         return queryHandler(query , callback);
     },
 
-    getProjectSites: function(project_id, callback){
+    /** Fetch a project's list of sites.
+     * @param {Integer} project_id - the id of the project.
+     * @param {Object} options - options object.
+     * @return {Promise} promise resolving to the list of sites.
+     */
+    getProjectSites: function(project_id, options, callback){
+        if(callback === undefined && options instanceof Function){
+            callback = options;
+            options = undefined;
+        }
         if(typeof project_id !== 'number')
             return callback(new Error("invalid type for 'project_id'"));
         
