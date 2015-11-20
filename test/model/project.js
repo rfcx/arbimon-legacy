@@ -171,25 +171,73 @@ describe('Project', function(){
          
         it('Should return a list of sites in the given project.', function(done){
             dbpool.pool.cache[
-                "SELECT s.site_id as id, \n" + 
-                "       s.name, \n" + 
-                "       s.lat, \n" + 
-                "       s.lon, \n" + 
-                "       s.alt, \n" + 
-                "       s.published, \n" + 
-                "       COUNT( r.recording_id ) as rec_count, \n" + 
-                "       s.project_id != 1 AS imported, \n" + 
-                "       s.token_created_on \n" + 
-                "FROM sites AS s \n" + 
-                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = 1 \n" + 
-                "LEFT JOIN recordings AS r ON s.site_id = r.site_id \n" + 
-                "WHERE (s.project_id = 1 \n" + 
-                "OR pis.project_id = 1) \n" + 
-                "GROUP BY s.site_id"
+                "SELECT s.site_id as id, \n" +
+                "       s.name, \n" +
+                "       s.lat, \n" +
+                "       s.lon, \n" +
+                "       s.alt, \n" +
+                "       s.published, \n" +
+                "       s.project_id != ? AS imported, \n" +
+                "       s.token_created_on \n" +
+                "FROM sites AS s \n" +
+                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n" +
+                "WHERE (s.project_id = ? OR pis.project_id = ?)"
             ]={value:['site1', 'site2']};
             projects.getProjectSites(1, function(err, results){
                 should.not.exist(err);
                 results.should.deep.equal(['site1', 'site2']);
+                done();
+            });
+        });
+        it('Should compute rec_count if options.compute.rec_count.', function(done){
+            dbpool.pool.cache[
+                "SELECT s.site_id as id, \n" +
+                "       s.name, \n" +
+                "       s.lat, \n" +
+                "       s.lon, \n" +
+                "       s.alt, \n" +
+                "       s.published, \n" +
+                "       s.project_id != ? AS imported, \n" +
+                "       s.token_created_on \n" +
+                "FROM sites AS s \n" +
+                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n" +
+                "WHERE (s.project_id = ? OR pis.project_id = ?)"
+            ]={value:[{id:1}, {id:2}]};
+            dbpool.pool.cache[
+                "SELECT r.site_id, COUNT(r.recording_id ) as rec_count\n" +
+                "FROM recordings AS r\n" +
+                "WHERE r.site_id IN (?)\n" +
+                "GROUP BY r.site_id"
+            ]={value:[{site_id:1, rec_count:4}, {site_id:2, rec_count:19}]};
+            projects.getProjectSites(1, {compute:{rec_count:true}}, function(err, results){
+                should.not.exist(err);
+                results.should.deep.equal([{id:1, rec_count:4}, {id:2, rec_count:19}]);
+                done();
+            });
+        });
+        it('Should compute has_logs if options.compute.has_logs.', function(done){
+            dbpool.pool.cache[
+                "SELECT s.site_id as id, \n" +
+                "       s.name, \n" +
+                "       s.lat, \n" +
+                "       s.lon, \n" +
+                "       s.alt, \n" +
+                "       s.published, \n" +
+                "       s.project_id != ? AS imported, \n" +
+                "       s.token_created_on \n" +
+                "FROM sites AS s \n" +
+                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n" +
+                "WHERE (s.project_id = ? OR pis.project_id = ?)"
+            ]={value:[{id:1}, {id:2}]};
+            dbpool.pool.cache[
+                "SELECT SLF.site_id, COUNT(SLF.site_log_file_id ) > 0 as has_logs \n" +
+                "FROM site_log_files AS SLF\n" +
+                "WHERE SLF.site_id IN (?)\n" +
+                "GROUP BY SLF.site_id"
+            ]={value:[{site_id:1, has_logs:1}, {site_id:2, has_logs:0}]};
+            projects.getProjectSites(1, {compute:{has_logs:true}}, function(err, results){
+                should.not.exist(err);
+                results.should.deep.equal([{id:1, has_logs:1}, {id:2, has_logs:0}]);
                 done();
             });
         });

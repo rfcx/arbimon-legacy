@@ -113,30 +113,87 @@ var Projects = {
         return queryHandler(query , callback);
     },
 
-    getProjectSites: function(project_id, callback){
+    /** Fetch a project's list of sites.
+     * @param {Integer} project_id - the id of the project.
+     * @param {Object} options - options object.
+     * @param {Boolean} options.compute.rec_count - compute recording counts as well.
+     * @param {Boolean} options.compute.has_logs - compute wether each site has log files or not.
+     * @return {Promise} promise resolving to the list of sites.
+     */
+    getProjectSites: function(project_id, options, callback){
+        if(callback === undefined && options instanceof Function){
+            callback = options;
+            options = undefined;
+        }
         if(typeof project_id !== 'number')
             return callback(new Error("invalid type for 'project_id'"));
-        
-        return q.nfcall(queryHandler, 
+        var promise = q.nfcall(queryHandler, 
                 "SELECT s.site_id as id, \n"+
                 "       s.name, \n"+
                 "       s.lat, \n"+
                 "       s.lon, \n"+
                 "       s.alt, \n"+
                 "       s.published, \n"+
-                "       COUNT( r.recording_id ) as rec_count, \n"+
-                "       COUNT( SLF.site_log_file_id ) > 0 as has_logs, \n"+
                 "       s.project_id != ? AS imported, \n"+
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
-                "LEFT JOIN recordings AS r ON s.site_id = r.site_id \n"+
-                "LEFT JOIN site_log_files AS SLF ON s.site_id = SLF.site_id \n"+
-                "WHERE (s.project_id = ? \n"+
-                "OR pis.project_id = ?) \n"+
-                "GROUP BY s.site_id",
+                "WHERE (s.project_id = ? OR pis.project_id = ?)",
                 [project_id, project_id, project_id, project_id]
-        ).get(0).nodeify(callback);
+        ).get(0);
+        if(options && options.compute){
+            var sites, sitesById={};
+            var siteIds;
+            promise = promise.then(function(_sites){
+                sites = _sites;
+                siteIds = sites.map(function(site){
+                    sitesById[site.id] = site;
+                    return site.id;
+                });
+            });
+            
+            if(options.compute.rec_count){
+                promise = promise.then(function(sites){
+                    return q.nfcall(queryHandler, 
+                            "SELECT r.site_id, COUNT(r.recording_id ) as rec_count\n"+
+                            "FROM recordings AS r\n"+
+                            "WHERE r.site_id IN (?)\n" +
+                            "GROUP BY r.site_id",
+                            [siteIds]
+                    );
+                }).then(function(results){
+                    sites.forEach(function(site){
+                        site.rec_count=0;
+                    });
+                    results[0].forEach(function(row){
+                        sitesById[row.site_id].rec_count = row.rec_count;
+                    });
+                });
+            }
+            if(options.compute.has_logs){
+                promise = promise.then(function(sites){
+                    return q.nfcall(queryHandler, 
+                            "SELECT SLF.site_id, COUNT(SLF.site_log_file_id ) > 0 as has_logs \n" +
+                            "FROM site_log_files AS SLF\n" +
+                            "WHERE SLF.site_id IN (?)\n" +
+                            "GROUP BY SLF.site_id",
+                            [siteIds]
+                    );
+                }).then(function(results){
+                    sites.forEach(function(site){
+                        site.has_logs=false;
+                    });
+                    results[0].forEach(function(row){
+                        sitesById[row.site_id].has_logs = row.has_logs;
+                    });
+                });
+            }
+            promise = promise.then(function(){
+                return sites;
+            });
+        }
+        
+        return promise.nodeify(callback);
     },
     
     /**
