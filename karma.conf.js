@@ -23,6 +23,7 @@ module.exports = function(config) {
         'bower_components/angular-mocks/angular-mocks.js',
         'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
         'public/assets/js/arbimon2-templates.js',
+        'assets/test-utils/*.js',
         'assets/js/**/*.js',
         'assets/test/**/*.js'
     ],
