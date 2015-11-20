@@ -4,7 +4,7 @@ angular.module('a2.visualizer.audio-player', [])
     var a2AudioPlayer = function(scope, options){
         this.scope = scope;
         this.gain = 1;
-        this.gain_levels = [1, 2, 3, 4, 5];
+        this.gain_levels = [1, 2, 5, 10, 15];
         this.freq_filter = undefined;
         this.is_playing = false;
         this.is_muted = false;
@@ -15,7 +15,7 @@ angular.module('a2.visualizer.audio-player', [])
         this.resource_params = {};
         if(options){
             if(options.gain){
-                this.gain = Math.min(Math.max(1, (options && options.gain)|0), 5);
+                this.gain = Math.min(Math.max(1, (options && options.gain)|0), this.gain_levels[this.gain_levels.length-1]);
                 this.resource_params.gain = this.gain;
             }
             if(options.filter){
