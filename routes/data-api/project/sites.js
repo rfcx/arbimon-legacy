@@ -7,7 +7,12 @@ var csv_stringify = require("csv-stringify");
 var model = require('../../../model');
 
 router.get('/', function(req, res, next) {
-    model.projects.getProjectSites(req.project.project_id, function(err, rows) {
+    model.projects.getProjectSites(req.project.project_id, {
+        compute:{
+            rec_count:true,
+            has_logs:true
+        }
+    },function(err, rows) {
         if(err) return next(err);
         res.json(rows);
         return null;
