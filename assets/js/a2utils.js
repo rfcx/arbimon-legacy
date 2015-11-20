@@ -205,19 +205,43 @@ angular.module('a2.url-update-service', [])
         return a2UrlUpdate.get(url);
     };
 })
-.factory('$debounce', function($timeout){
+;
+
+angular.module('a2.utils')
+/**
+ * @ngdoc factory
+ * @name a2.utils.factory:$debounce
+ * @description asynchronous debouncing function decorator
+ * Decorates an asynchronous function with a debouncing function. A debouncing
+ * function withholds the function call by a set ammount of time and wait for
+ * any othe function calls, resetting the wait for time every call. After its wait
+ * time, the function gets called with the last given arguments and context.
+ * @param {Function} fn - the function to debounce
+ * @param {Function} rate - the timeout 
+ * @return {Promise} resolved with the function's return value.
+ */
+.factory('$debounce', function($timeout, $q, $log){
     return function $debounce(fn, rate){
-        var t;
+        var timeoutPromise, qDefer, debouncePromise;
         rate = rate || 100;
         return function(){
             var self=this;
             var args = Array.prototype.slice.call(arguments);
-            if(t){
-                $timeout.cancel(t);
+            if(timeoutPromise){
+                $timeout.cancel(timeoutPromise);
             }
-            t = $timeout(function(){
-                fn.apply(self, args);
+            if(!qDefer){
+                qDefer = $q.defer();
+                debouncePromise = qDefer.promise.then(function(){
+                    // qDefer got resolved. forget it's reference in case of recursivity.
+                    qDefer = null; 
+                    return fn.apply(self, args);
+                });
+            }
+            timeoutPromise = $timeout(function(){
+                qDefer.resolve();
             }, rate);
+            return debouncePromise;
         };
     };
 })
