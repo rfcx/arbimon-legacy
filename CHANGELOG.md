@@ -21,3 +21,6 @@
         - `layer_type` is now a provider instead of a factory.
         - `options` argument is now passed to `connection.query` in to `dbpool.queryHandler`
         - Added debug output for options in `dbpool.queryHandler`
+- v1.2.0
+    - Fixed double counting bug in `getProjectSites` recording counting
+    - Added two more site status plots + improved UI
