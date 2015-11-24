@@ -7,7 +7,12 @@ var csv_stringify = require("csv-stringify");
 var model = require('../../../model');
 
 router.get('/', function(req, res, next) {
-    model.projects.getProjectSites(req.project.project_id, function(err, rows) {
+    model.projects.getProjectSites(req.project.project_id, {
+        compute:{
+            rec_count:true,
+            has_logs:true
+        }
+    },function(err, rows) {
         if(err) return next(err);
         res.json(rows);
         return null;
@@ -132,6 +137,122 @@ router.get('/:siteid/logs', function(req, res, next){
     });
 });
 
+router.get('/:siteid/uploads.txt', function(req, res, next){
+    var options={};
+    var output='csv', groupby;
+    if (req.query) {
+        if (req.query.get && req.query.get == 'dates') {
+            options.only_dates = true;
+            output='json';
+            groupby='dates';
+        } else {
+            if(req.query.from){
+                options.from = new Date(+req.query.from); 
+            }
+            if(req.query.to){
+                options.to = new Date(+req.query.to); 
+            }
+            if (req.query.date) {
+                options.dates = req.query.date.split(',');
+                output='csv';
+            }
+            if(req.query.q){
+                options.quantize = req.query.q;
+            }
+        }
+    }
+    model.sites.getUploadStats(req.site, options, function(err, datastream, fields){
+        if(err){
+            next(err);
+        } else {
+            fields = fields.map(function(f){return f.name;});
+            switch(output){
+                case 'json':
+                    res.type('application/json');
+                    var rows;
+                    if(groupby){
+                        rows = {};
+                        fields = fields.filter(function(f){return f != groupby;});
+                        datastream.on('data', function(row){
+                            var idx = row[groupby];
+                            delete row[groupby];
+                            rows[idx] = fields.length == 1 ? row[fields[0]] : row;
+                        });
+                        datastream.on('end', function(row){
+                            res.json(rows);
+                        });
+                    }
+                break;
+                default:
+                    res.type('text/plain');
+                    datastream
+                        .pipe(csv_stringify({
+                            header:true, 
+                            columns:fields
+                        }))
+                        .pipe(res);
+            }
+        }
+    });
+});
+router.get('/:siteid/data.txt', function(req, res, next){
+    var options={};
+    var output='csv', groupby;
+    if (req.query) {
+        if (req.query.get && req.query.get == 'dates') {
+            options.only_dates = true;
+            output='json';
+            groupby='dates';
+        } else {
+            if(req.query.from){
+                options.from = new Date(+req.query.from); 
+            }
+            if(req.query.to){
+                options.to = new Date(+req.query.to); 
+            }
+            if (req.query.date) {
+                options.dates = req.query.date.split(',');
+                output='csv';
+            }
+            if(req.query.q){
+                options.quantize = req.query.q;
+            }
+        }
+    }
+    model.sites.getRecordingStats(req.site, options, function(err, datastream, fields){
+        if(err){
+            next(err);
+        } else {
+            fields = fields.map(function(f){return f.name;});
+            switch(output){
+                case 'json':
+                    res.type('application/json');
+                    var rows;
+                    if(groupby){
+                        rows = {};
+                        fields = fields.filter(function(f){return f != groupby;});
+                        datastream.on('data', function(row){
+                            var idx = row[groupby];
+                            delete row[groupby];
+                            rows[idx] = fields.length == 1 ? row[fields[0]] : row;
+                        });
+                        datastream.on('end', function(row){
+                            res.json(rows);
+                        });
+                    }
+                break;
+                default:
+                    res.type('text/plain');
+                    datastream
+                        .pipe(csv_stringify({
+                            header:true, 
+                            columns:fields
+                        }))
+                        .pipe(res);
+            }
+        }
+    });
+});
 router.get('/:siteid/log/data.txt', function(req, res, next){
     var options={};
     var output='csv', groupby;
@@ -166,6 +287,7 @@ router.get('/:siteid/log/data.txt', function(req, res, next){
             fields = fields.map(function(f){return f.name;});
             switch(output){
                 case 'json':
+                    res.type('application/json');
                     var rows;
                     if(groupby){
                         rows = {};
@@ -181,6 +303,7 @@ router.get('/:siteid/log/data.txt', function(req, res, next){
                     }
                 break;
                 default:
+                    res.type('text/plain');
                     datastream
                         .pipe(csv_stringify({
                             header:true, 
