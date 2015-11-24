@@ -166,56 +166,46 @@
     </div>
     <div class="a2-filter-row" ng-show="show.status">
         <div class="a2-filter a2-filter-text toolbar">
-
-            <div class="dropdown" style="display:inline-block" dropdown dropdown-append-to-body>
-                <button class="btn btn-default dropdown-toggle" dropdown-toggle>
-                    <i ng-class="status_controller.selected.series.icon"></i>
-                    {{status_controller.selected.series.name}} 
-                    <i class="fa fa-caret-down"></i>
-                </button>
-                <ul class="dropdown-menu" role="menu">
-                    <li ng-repeat="series in status_controller.data.series" 
-                        ng-class="{active: status_controller.selected.series == series}">
-                        <a ng-click="status_controller.set_series(series) | trackEvent:'Audiodata-Site-Status':'set series'">
-                            <i ng-class="series.icon"></i>
-                            {{series.name}} 
-                        </a>
-                    </li>
-                </ul>
+            <div class="col-sm-4">
+                <ui-select ng-model="status_controller.selected.series" theme="bootstrap" style="width: 150px;" append-to-body="true"
+                ng-change="status_controller.set_series(status_controller.selected.series) | trackEvent:'Audiodata-Site-Status':'set series'" >
+                    <ui-select-match placeholder="Series">
+                        <i ng-class="$select.selected.icon"></i>
+                        {{$select.selected.name}} 
+                    </ui-select-match>
+                    <ui-select-choices repeat="series in status_controller.data.series | filter:$select.search" group-by="status_controller.itemGroup">
+                        <i ng-class="series.icon"></i>
+                        {{series.name}} 
+                    </ui-select-choices>
+                </ui-select>
             </div>
-            <div class="dropdown" style="display:inline-block" dropdown dropdown-append-to-body>
-                <button class="btn btn-default dropdown-toggle" dropdown-toggle>
-                    <i class="fa fa-clock-o"></i>
-                    {{status_controller.selected.time_range.text}} 
-                    <i class="fa fa-caret-down"></i>
-                </button>
-                <ul class="dropdown-menu" role="menu">
-                    <li ng-repeat="time_range in status_controller.data.time_ranges" 
-                        ng-class="{active: status_controller.selected.time_range == time_range}">
-                        <a ng-click="status_controller.set_time_range(time_range) | trackEvent:'Audiodata-Site-Status':'set time range'">
-                            {{time_range.text}} 
-                        </a>
-                    </li>
-                </ul>
+            <div class="col-sm-4">
+                <ui-select ng-model="status_controller.selected.time_range" theme="bootstrap" style="width: 150px;" append-to-body="true"
+                ng-change="status_controller.set_time_range(status_controller.selected.time_range) | trackEvent:'Audiodata-Site-Status':'set time range'" >
+                    <ui-select-match placeholder="View">
+                        <i class="fa fa-clock-o"></i>
+                        {{$select.selected.text}} 
+                    </ui-select-match>
+                    <ui-select-choices repeat="time_range in status_controller.data.time_ranges | filter:$select.search" group-by="status_controller.itemGroup">
+                        {{time_range.text}} 
+                    </ui-select-choices>
+                </ui-select>
             </div>
-            <div class="dropdown" style="display:inline-block" dropdown dropdown-append-to-body>
-                <button class="btn btn-default dropdown-toggle" dropdown-toggle>
-                    <i class="fa fa-hourglass-3"></i>
-                    {{status_controller.selected.period.text}} 
-                    <i class="fa fa-caret-down"></i>
-                </button>
-                <ul class="dropdown-menu" role="menu">
-                    <li ng-repeat="period in status_controller.data.periods" 
-                        ng-class="{active: status_controller.selected.period == period}">
-                        <a ng-click="status_controller.set_period(period) | trackEvent:'Audiodata-Site-Status':'set period'">
-                            {{period.text}} 
-                        </a>
-                    </li>
-                </ul>
+            <div class="col-sm-4">
+                <ui-select ng-model="status_controller.selected.period" theme="bootstrap" style="width: 150px;" append-to-body="true"
+                ng-change="status_controller.set_period(status_controller.selected.period) | trackEvent:'Audiodata-Site-Status':'set period'" >
+                    <ui-select-match placeholder="Detail">
+                        <i class="fa fa-hourglass-3"></i>
+                        {{$select.selected.text}} 
+                    </ui-select-match>
+                    <ui-select-choices repeat="period in status_controller.data.periods | filter:$select.search" group-by="status_controller.itemGroup">
+                        {{period.text}} 
+                    </ui-select-choices>
+                </ui-select>
             </div>
         </div>
-        <div class="">
-            <!-- <loader ng-hide="status_controller.loading">Loading Data</loader> -->
+        <div class="chart-container">
+            <loader class="block" ng-hide="!status_controller.loading.data" text="Loading {{status_controller.selected.series.name}} Data"></loader>
             <c3-chart-display data="status_controller.chart.data" axes="status_controller.chart.axes"></c3-chart-display>
         </div>
     </div>
