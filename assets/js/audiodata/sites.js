@@ -491,8 +491,8 @@ angular.module('a2.audiodata.sites', [
     this.data = {
         series:[
             {tag:'status', group:'Site', name:'Battery Status', icon:'fa fa-fw fa-plug', axis:{y:{tick:{
-                values:[1,2,3,4], format:function(x){
-                    return ['unknown', 'charging', 'not charging', 'full'][(x-1)|0];
+                values:[0,1,2,3], format:function(x){
+                    return ['unknown', 'charging', 'not charging', 'full'][(x)|0];
                 }
             }}}},
             {tag:'voltage'   , group:'Site', name:'Voltage', icon:'fa fa-fw fa-bolt'},
