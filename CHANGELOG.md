@@ -24,3 +24,5 @@
 - v1.2.0
     - Fixed double counting bug in `getProjectSites` recording counting
     - Added two more site status plots + improved UI
+- v1.2.1
+    - battery status labels are now correct
