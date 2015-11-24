@@ -17,6 +17,10 @@ angular.module('a2.audiodata.sites', [
         site : $state.params.site,
         show : $state.params.show
     };
+    if(p.show){
+        p.show_path = p.show.split(':');
+        p.show = p.show_path.shift();
+    }
     
     Project.getSites(function(sites) {
         $scope.sites = sites;
@@ -27,7 +31,7 @@ angular.module('a2.audiodata.sites', [
             if(site){
                 $scope.sel(site).then(function(){
                     if(p.show){
-                        $scope.set_show(p.show);
+                        $scope.set_show(p.show, p.show_path);
                     }
                 });
             }
@@ -58,6 +62,17 @@ angular.module('a2.audiodata.sites', [
     };
 
     $scope.status_controller = $controller('SiteStatusPlotterController', {'$scope':$scope});
+    var onLogsRefreshed = $scope.status_controller.on('logs-refreshed', function(logParams){
+        if($scope.show.status){
+            var new_show = [$state.params.show.split(':').slice(0, 1)].concat(logParams).join(':');
+            console.log("logParams", logParams, new_show);
+            $state.transitionTo($state.current.name, {site:$state.params.site, show:new_show}, {notify:false});
+        }
+    });
+    
+    $scope.$on('$destroy', function(){
+        $scope.status_controller.off('logs-refreshed', onLogsRefreshed);
+    });
     
     $scope.save = function() {
         var action = $scope.editing ? 'update' : 'create';
@@ -124,13 +139,14 @@ angular.module('a2.audiodata.sites', [
     $scope.show = {map:false, status:false};
     $scope.show[p.show || 'map'] = true;
     
-    $scope.set_show = function(new_show){
+    $scope.set_show = function(new_show, show_path){
         var d=$q.defer(), promise=d.promise;
         d.resolve();
-        
+        var show_state_param = new_show;
         if(new_show == 'status' && $scope.selected && $scope.selected.has_logs){
+            show_state_param = [new_show].concat(show_path).join(':');
             promise = promise.then(function(){
-                return $scope.status_controller.activate($scope.selected);
+                return $scope.status_controller.activate($scope.selected, show_path);
             });
         } else {
             promise = promise.then(function(){
@@ -145,7 +161,7 @@ angular.module('a2.audiodata.sites', [
             
             $scope.show[new_show] = true;
             
-            return $state.transitionTo($state.current.name, {site:$state.params.site, show:new_show}, {notify:false});
+            return $state.transitionTo($state.current.name, {site:$state.params.site, show:show_state_param}, {notify:false});
         });
     };
     // $scope.browseShared = function() {
@@ -427,7 +443,7 @@ angular.module('a2.audiodata.sites', [
         };
     })
 
-.controller('SiteStatusPlotterController', function($scope, $q, a2Sites){
+.controller('SiteStatusPlotterController', function($scope, $q, a2Sites, $debounce, a2EventEmitter){
     function mk_time_range_fn(from, delta){
         return function(){
             var fromdt = (from == 'now' ? new Date() : new Date(from));
@@ -447,7 +463,7 @@ angular.module('a2.audiodata.sites', [
         var attr = options.data;
         var selattr = options.sel || attr;
         var def = options.def;
-        return function set(value){
+        return function set(value, dontRefreshLogs){
             if(typeof(value) == 'string'){
                 value = get_by_tag(this.data[attr], value);
             }
@@ -459,37 +475,51 @@ angular.module('a2.audiodata.sites', [
                 value.apply(this);
             }
             
-            return this.refresh_logs();
+            return dontRefreshLogs ? $q.resolve() : this.refresh_logs();
                     
         };
     }
     
+    var events = new a2EventEmitter();
+    this.on = events.on.bind(events);
+    this.off = events.off.bind(events);
+    
+    
+    this.itemGroup = function (item){
+      return item.group;
+    };
     this.data = {
         series:[
-            {tag:'status', name:'Battery Status', icon:'fa fa-fw fa-plug'},
-            {tag:'voltage', name:'Voltage', icon:'fa fa-fw fa-bolt'},
-            {tag:'power', name:'Power', icon:'fa fa-fw fa-battery-half'}
+            {tag:'status', group:'Site', name:'Battery Status', icon:'fa fa-fw fa-plug', axis:{y:{tick:{
+                values:[1,2,3,4], format:function(x){
+                    return ['unknown', 'charging', 'not charging', 'full'][(x-1)|0];
+                }
+            }}}},
+            {tag:'voltage'   , group:'Site', name:'Voltage', icon:'fa fa-fw fa-bolt'},
+            {tag:'power'     , group:'Site', name:'Power', icon:'fa fa-fw fa-battery-half'},
+            {tag:'uploads'   , group:'Data', name:'Uploads', icon:'fa fa-fw fa-upload'},
+            {tag:'recordings', group:'Data', name:'Recordings', icon:'fa fa-fw fa-volume-up'}
         ],
         time_ranges:[
-            {tag:'1-hour' , text:'Last Hour'     , range:mk_time_range_fn('now', -      3600*1000)},
-            {tag:'3-hour' , text:'Last 3 Hours'  , range:mk_time_range_fn('now', -    3*3600*1000)},
-            {tag:'6-hour' , text:'Last 6 Hours'  , range:mk_time_range_fn('now', -    6*3600*1000)},
-            {tag:'12-hour', text:'Last 12 Hours' , range:mk_time_range_fn('now', -   12*3600*1000)},
-            {tag:'24-hour', text:'Last 24 Hours' , range:mk_time_range_fn('now', -   24*3600*1000)},
-            {tag:'3-days' , text:'Last 3 Days'   , range:mk_time_range_fn('now', - 3*24*3600*1000)},
-            {tag:'1-week' , text:'Last Week'     , range:mk_time_range_fn('now', - 7*24*3600*1000)},
-            {tag:'2-weeks', text:'Last 2 Weeks'  , range:mk_time_range_fn('now', -14*24*3600*1000)},
-            {tag:'1-month', text:'Last Month'    , range:mk_time_range_fn('now', -31*24*3600*1000)}
+            {tag:'1-hour' , text:'Last Hour'    , group:'Hours', range:mk_time_range_fn('now', -      3600*1000)},
+            {tag:'3-hour' , text:'Last 3 Hours' , group:'Hours', range:mk_time_range_fn('now', -    3*3600*1000)},
+            {tag:'6-hour' , text:'Last 6 Hours' , group:'Hours', range:mk_time_range_fn('now', -    6*3600*1000)},
+            {tag:'12-hour', text:'Last 12 Hours', group:'Hours', range:mk_time_range_fn('now', -   12*3600*1000)},
+            {tag:'24-hour', text:'Last 24 Hours', group:'Hours', range:mk_time_range_fn('now', -   24*3600*1000)},
+            {tag:'3-days' , text:'Last 3 Days'  , group:'Days', range:mk_time_range_fn('now', - 3*24*3600*1000)},
+            {tag:'1-week' , text:'Last Week'    , group:'Weeks', range:mk_time_range_fn('now', - 7*24*3600*1000)},
+            {tag:'2-weeks', text:'Last 2 Weeks' , group:'Weeks', range:mk_time_range_fn('now', -14*24*3600*1000)},
+            {tag:'1-month', text:'Last Month'   , group:'Month', range:mk_time_range_fn('now', -31*24*3600*1000)}
         ],
         periods:[
-            {tag:'1-minute'   , text:'1 Minute'   , sampling:'1 min'  , granularity:       1 * 60 * 1000},
-            {tag:'5-minutes'  , text:'5 Minutes'  , sampling:'5 mins' , granularity:       5 * 60 * 1000},
-            {tag:'10-minutes' , text:'10 Minutes' , sampling:'10 mins', granularity:      10 * 60 * 1000},
-            {tag:'30-minutes' , text:'30 Minutes' , sampling:'30 mins', granularity:      30 * 60 * 1000},
-            {tag:'1-hour'     , text:'1 Hour'     , sampling:'1 hour' , granularity:  1 * 60 * 60 * 1000},
-            {tag:'3-hours'    , text:'3 Hours'    , sampling:'3 hours', granularity:  3 * 60 * 60 * 1000},
-            {tag:'6-hours'    , text:'6 Hours'    , sampling:'6 hours', granularity:  6 * 60 * 60 * 1000},
-            {tag:'1-day'      , text:'1 Day'      , sampling:'1 day'  , granularity: 24 * 60 * 60 * 1000},
+            {tag:'1-minute'   , text:'1 Minute'   , group: 'Minutes' , sampling:'1 min'  , granularity:       1 * 60 * 1000},
+            {tag:'5-minutes'  , text:'5 Minutes'  , group: 'Minutes' , sampling:'5 mins' , granularity:       5 * 60 * 1000},
+            {tag:'10-minutes' , text:'10 Minutes' , group: 'Minutes' , sampling:'10 mins', granularity:      10 * 60 * 1000},
+            {tag:'30-minutes' , text:'30 Minutes' , group: 'Minutes' , sampling:'30 mins', granularity:      30 * 60 * 1000},
+            {tag:'1-hour'     , text:'1 Hour'     , group: 'Hours'   , sampling:'1 hour' , granularity:  1 * 60 * 60 * 1000},
+            {tag:'3-hours'    , text:'3 Hours'    , group: 'Hours'   , sampling:'3 hours', granularity:  3 * 60 * 60 * 1000},
+            {tag:'6-hours'    , text:'6 Hours'    , group: 'Hours'   , sampling:'6 hours', granularity:  6 * 60 * 60 * 1000},
+            {tag:'1-day'      , text:'1 Day'      , group: 'Days'    , sampling:'1 day'  , granularity: 24 * 60 * 60 * 1000},
         ],
         // min_date: 0,
         // max_date: 10000,
@@ -505,38 +535,57 @@ angular.module('a2.audiodata.sites', [
     this.set_time_range  = make_setter({data:'time_ranges', sel:'time_range', def:'1-week'});
     this.set_period      = make_setter({data:'periods'    , sel:'period'    , def:'7-days'});
     
-    this.activate = function(selected_site){
+    this.activate = function(selected_site, plot_uri){
         this.selected.site = selected_site;
+        if(plot_uri){
+            if(plot_uri.length){
+                this.set_series(plot_uri.shift());
+            }
+            if(plot_uri.length){
+                this.set_time_range(plot_uri.shift());
+            }
+            if(plot_uri.length){
+                this.set_period(plot_uri.shift());
+            }
+        }
         return this.refresh_logs();
     };
 
     this.load_data = function(site, series, range, period){
         var loading = this.loading;
         loading.data=true;
-        return a2Sites.getSiteLogDataUrl(site.id, series.tag, range[0], range[1], period.sampling).then(function(data){
+        return a2Sites.getSiteLogData(site.id, series.tag, range[0], range[1], period.sampling).then(function(data){
             loading.data=false;
-            return {x:'datetime', url:data};
+            data.x = 'datetime';
+            data.axis = series.axis;
+            data.empty = {
+                label: {text: "No data to show."}
+            };           
+            return data;
         });
     };
     
     this.make_chart_struct = function(data){
-        this.chart = {
-            data: data,
-            
-            axes : {
-                x : {
-                    tick: {
-                        format: function (x) { 
-                            return moment(new Date(x)).utc().format('MM-DD-YYYY HH:mm'); 
-                        }
+        var axes = {
+            x : {
+                tick: {
+                    format: function (x) { 
+                        return moment(new Date(x)).utc().format('MM-DD-YYYY HH:mm'); 
                     }
                 }
             }
         };
+        if(data.axis){
+            angular.merge(axes, data.axis);
+            delete data.axis;
+        }
+        this.chart = {
+            data: data, axes : axes
+        };
     };
 
     
-    this.refresh_logs = function(){
+    this.refresh_logs = $debounce(function(){
         var d = $q.defer(), promise=d.promise;
         d.resolve();
         var site = this.selected.site;
@@ -568,12 +617,18 @@ angular.module('a2.audiodata.sites', [
                 if (chart_data) {
                     this.make_chart_struct(chart_data);
                 }
-            }).bind(this));
+            }).bind(this)).then(function(){
+                events.emit('logs-refreshed', [
+                    series.tag,
+                    time_range.tag,
+                    period.tag
+                ]);
+            });
         }
         
         return promise;
         
-    };
+    }, 10);
 })
 .directive('c3ChartDisplay', function($window) {
     var c3 = $window.c3;

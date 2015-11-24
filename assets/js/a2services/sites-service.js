@@ -52,11 +52,30 @@ angular.module('a2.srv.sites', [
         },
         
         getSiteLogDataUrl: function(site, series, from, to, period){
-            var d=$q.defer();
-            d.resolve('/api/project/'+ Project.getUrl() +'/sites/'+site+'/log/data.txt?stat='+series+'&q='+period+'&from='+from.getTime()+'&to='+to.getTime());
-            return d.promise;
+            var args = 'q='+period+'&from='+from.getTime()+'&to='+to.getTime();
+            if(/uploads/.test(series)){
+                return $q.resolve('/api/project/'+ Project.getUrl() +'/sites/'+site+'/uploads.txt?'+args);
+            } else if(/recordings/.test(series)){
+                    return $q.resolve('/api/project/'+ Project.getUrl() +'/sites/'+site+'/data.txt?'+args);
+            } else {
+                return $q.resolve('/api/project/'+ Project.getUrl() +'/sites/'+site+'/log/data.txt?stat='+series+'&'+args);
+            }
         },
-
+        
+        getSiteLogData: function(site, series, from, to, period){
+            return this.getSiteLogDataUrl(site, series, from, to, period).then(function(url){
+                return $q.when($http.get(url));
+            }).then(function(response){
+                var data = {};
+                if(response.data){
+                    data.rows = response.data.trim().split('\n').map(function(line){
+                        return line.split(',');
+                    });
+                }
+                return data;
+            });
+        },
+        
         // Uses Promises :-)
         generateToken : function(site){
             return $http.post('/api/project/'+ Project.getUrl() +'/sites/generate-token', {
