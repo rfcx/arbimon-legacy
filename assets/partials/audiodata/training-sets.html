@@ -128,8 +128,8 @@
                     
                     <div class="row">
                         <div class="col-sm-offset-2 col-sm-8">
-                            <div class="toolbar centered">
-                                <div class="btn-group">
+                            <div class="toolbar pull-right">
+                                <div class="btn-group" ng-show="controller.total.pages > 1 || controller.detailedView">
                                     <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Audiodata-Training Sets':'prevPage'">Previous</a>
                                     <a class="btn btn-default" ng-hide="controller.detailedView">{{controller.selected.page + 1}} of {{controller.total.pages}}</a>
                                     <a class="btn btn-default" ng-show="controller.detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a>
@@ -150,7 +150,7 @@
                                 <div class="btn-group">
                                     <a class="btn btn-default"
                                         ng-href="{{controller.selected.trainingSet.export_url}}"
-                                        ng-click="| trackEvent:'Audiodata-Training Sets':'export training set'"
+                                        ng-click="true | trackEvent:'Audiodata-Training Sets':'export training set'"
                                         ng-disabled="!controller.selected.trainingSet"
                                         tooltip="Export Training Set Data">
                                         <i class="fa fa-download"></i>
@@ -161,19 +161,14 @@
                         </div>
                     </div>
                     <div ng-hide="controller.detailedView">
-                        <div ng-repeat="roi in controller.currentrois" class="roi-thumbnail">
-                            <button class="roi-btn-tl roi-info"
-                                tooltip-placement="left" 
-                                tooltip-append-to-body="true"
-                                tooltip="click for details"
-                                popover-html="'Duration: {{roi.dur}}s <br>
-                                         Bandwidth: {{roi.y2-roi.y1}}Hz <br>
-                                         Upper freq: {{roi.y2}}Hz <br>
-                                         Lower freq: {{roi.y1}}Hz'"
-                                popover-trigger="focus"
-                                popover-append-to-body="true" tabindex="1">
-                                    <i class="fa fa-info-circle"></i>
-                            </button>
+                        <div ng-repeat="roi in controller.currentrois" class="roi-thumbnail"
+                            popover-html="'Duration: {{roi.dur}}s <br>
+                                     Bandwidth: {{roi.y2-roi.y1}}Hz <br>
+                                     Upper freq: {{roi.y2}}Hz <br>
+                                     Lower freq: {{roi.y1}}Hz'"
+                            popover-trigger="mouseenter"
+                            popover-append-to-body="true"
+                        >
                             <button ng-click="controller.removeRoi(roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'"
                                 class="roi-btn-tr roi-delete"
                                 tooltip-placement="left" 
@@ -213,7 +208,18 @@
                                         </div>
                                     </small>
                                 </div>
-                                <img ng-src="{{controller.selected.roi.uri}}" class="roi-div-inline-img-detail"/>
+                                <div class="thumbnail-viewer v-axis-wide roi-div-inline-img-detail has-vaxis has-haxis" ng-if="controller.selected.roi">
+                                    <axis type="v" class="v-axis" data="{
+                                        range:[controller.selected.roi.y1, controller.selected.roi.y2], 
+                                        count:5, unit:'Hz',  font:'7px', color:'#333333'}
+                                    "></axis>
+                                    <axis type="h" class="h-axis" data="{
+                                        range:[0, controller.selected.roi.dur], prec:0.001,
+                                        count:5, unit:'s',  font:'7px', color:'#333333'}
+                                    "></axis>
+                                    <div class="img-holder positioned"><img class="crisp-image" ng-src="{{controller.selected.roi.uri}}"/></div>
+                                </div>                                
+                                
                                 <div class="bordeder-empy-div"></div>
                             </div>
                         </div>
