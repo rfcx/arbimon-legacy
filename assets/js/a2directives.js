@@ -1103,7 +1103,7 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
         revoke: revokeObjectURL
     };
 })
-.directive('axis', function($timeout, canvasObjectURL, $q){
+.directive('axis', function(canvasObjectURL, $q, $debounce){
     var promiseCache = {};
     var canvas = angular.element('<canvas></canvas>')[0];
     function computeHash(w, h, type, data){
@@ -1119,11 +1119,13 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
         canvas.height = h;
         
         var i;
-        var min = data.range[0], max = data.range[1];
+        var prec = data.prec || 1;
+        var min = ((data.range[0] / prec) | 0) * prec;
+        var max = ((data.range[1] / prec) | 0) * prec;
         var scale;
         var unit = data.unit;
-        var count = data.count;
-        var dTick = (((max - min)|0) / count)|0;
+        var count = data.count || 1;
+        var dTick = (((((max - min)/prec)|0) / count)|0) * prec;
         var ctx = canvas.getContext('2d');
         var w1=w-1, h1=h-1;
         // var compStyle = getComputedStyle(canvas);
@@ -1134,7 +1136,8 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
         ctx.clearRect(0, 0, w, h);
         var val, x, y, pad=3;
         var lblSize={w:0,h:10};
-        for(val=min; val<max; val += dTick){
+        var loopCt = data.loopCt || 250;
+        for(val=min; loopCt>0 && val<max; val += dTick, --loopCt){
             var tW = ctx.measureText(val + unit).width;
             if(lblSize.w < tW){
                 lblSize.w = tW;
@@ -1152,8 +1155,12 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
             ctx.lineTo(w1, 0);
             ctx.stroke();
 
-            for(val=min; val<max; val += dTick){
+            loopCt = data.loopCt || 250;
+            for(val=min; loopCt>0 && val<max; val += dTick, --loopCt){
                 x = scale * (val - min);
+                if(val >= max - dTick){
+                    ctx.textAlign = 'right';
+                }
                 ctx.beginPath();
                 ctx.moveTo(x, pad);
                 ctx.lineTo(x, 0);
@@ -1170,8 +1177,12 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
             ctx.lineTo(w1, h1);
             ctx.stroke();
 
-            for(val=min; val<max; val += dTick){
+            loopCt = data.loopCt || 250;
+            for(val=min; loopCt>0 && val<max; val += dTick, --loopCt){
                 y = h - scale * (val - min);
+                if(val >= max - dTick){
+                    ctx.textBaseline = 'top';
+                }
                 ctx.beginPath();
                 ctx.moveTo(w1-pad, y);
                 ctx.lineTo(w1, y);
@@ -1212,12 +1223,9 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
             var img = element.find('img')[0];
             var tout;
             
-            function redrawAxis(){
-                $timeout.cancel(tout);
-                tout = $timeout(function(){
-                    drawAxisOnImg(img, element.width(), element.height(), scope.type, scope.data);
-                }, 500);
-            }
+            var redrawAxis = $debounce(function (){
+                drawAxisOnImg(img, element.width(), element.height(), scope.type, scope.data);
+            }, 500);
             
             function elementSize(){
                 return element.width() * element.height();
