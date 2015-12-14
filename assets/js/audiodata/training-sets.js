@@ -56,7 +56,7 @@ angular.module('a2.audiodata.training-sets', [
     this.songtype = '';
     this.detailedView = p.show != "gallery";
     this.currentrois = [];
-    this.roisPerpage = 12;
+    this.roisPerpage = 100;
     this.detailedView = false;
     this.loaderDisplay = false;
 
