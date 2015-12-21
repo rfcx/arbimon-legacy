@@ -418,43 +418,86 @@
                 color: @nav-pills-active-link-hover-color;
                 background-color: @nav-pills-active-link-hover-bg;
             }
-            > .thumbnail-viewer{
-                height: @thumbnail-viewer-height;
-                // width: @thumbnail-viewer-width;
-                position: relative;
-                // max-width: 422px;
-                overflow: hidden;
-                margin: 0px 5px;
-                > .img-holder {
-                    height: @thumbnail-viewer-height;
-                    // width: @thumbnail-viewer-width;
-                    &.visobj-soundscape, &.visobj-recording{
-                        position: absolute;
-                        left: 0;
-                        right:0;
-                    }
-                    > img{
-                       width: 100%;
-                       height: 100%;
-                   }
-                }
-                &.has-vaxis > .img-holder{
-                    &.visobj-soundscape, &.visobj-recording{
-                        left:@thumbnail-viewer-axis-width;
-                    }
-                }
-                > .v-axis{
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: @thumbnail-viewer-axis-width;
-                    bottom: 0;
-                }
-            }
         }
 
     }
 }
+
+.thumbnail-viewer{
+    height: @thumbnail-viewer-height;
+    &.has-haxis{
+        height: @thumbnail-viewer-height + @thumbnail-viewer-axis-height;
+    }
+    // width: @thumbnail-viewer-width;
+    position: relative;
+    // max-width: 422px;
+    overflow: hidden;
+    margin: 0px 5px;
+    > .img-holder {
+        height: @thumbnail-viewer-height;
+        // width: @thumbnail-viewer-width;
+        &.visobj-soundscape, &.visobj-recording, &.positioned{
+            position: absolute;
+            left: 0;
+            right:0;
+        }
+        > img{
+           width: 100%;
+           height: 100%;
+       }
+    }
+    &.has-vaxis > .img-holder{
+        &.visobj-soundscape, &.visobj-recording, &.positioned{
+            left:@thumbnail-viewer-axis-width;
+        }
+    }
+    &.has-vaxis.v-axis-wide {
+        > .v-axis{
+            width: @thumbnail-viewer-axis-width * 2.3;
+        }
+        > .img-holder{
+            &.visobj-soundscape, &.visobj-recording, &.positioned{
+                left:@thumbnail-viewer-axis-width * 2.3;
+            }
+        }
+    }
+    > .v-axis{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: @thumbnail-viewer-axis-width;
+        height: @thumbnail-viewer-height;
+    }
+    > .h-axis{
+        position: absolute;
+        top: @thumbnail-viewer-height;
+        left: 0;
+        right:0;
+        bottom: 0;
+    }
+    &.has-vaxis > .h-axis{
+        left: @thumbnail-viewer-axis-width;
+    }
+    &.has-vaxis.v-axis-wide > .h-axis{
+        left: @thumbnail-viewer-axis-width * 2.3;
+    }
+    &.roi-div-inline-img-detail{
+        height: @roi-div-thumbnail-viewer-height;
+        &.has-haxis{
+            height: @roi-div-thumbnail-viewer-height  + @thumbnail-viewer-axis-height;
+        }
+        > .h-axis{
+            top: @roi-div-thumbnail-viewer-height;
+        }
+        > .v-axis{
+            height: @roi-div-thumbnail-viewer-height;
+        }
+        > .img-holder {
+            height: @roi-div-thumbnail-viewer-height;
+        }
+    }
+}
+
 
 .fa.val-2{
     &:before{

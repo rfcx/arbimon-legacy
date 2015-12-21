@@ -58,6 +58,15 @@ module.exports = {
         ).get(0);
     },
     
+    fetchRandomUploadItems: function(count){
+        return q.denodeify(queryHandler)(
+            "SELECT upload_id as id, project_id, site_id, user_id, upload_time, filename, state, duration, datetime, recorder, mic, software\n" +
+            "FROM uploads_processing\n" +
+            "ORDER BY RAND()\n" +
+            "LIMIT ?", [count | 0]
+        ).get(0);
+    },
+    
     updateState: function(uploadId, newState, callback) {
         var q = "UPDATE uploads_processing \n"+
                 "SET state = ? \n"+
