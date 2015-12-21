@@ -251,7 +251,7 @@ Uploader.prototype.insertOnDB = function(callback) {
  * Removes all the files remaining on the tmpFileCache and remoce the recording
  * from the uploads_processing table on the database
  */ 
-Uploader.prototype.cleanUpAfter = function() {
+Uploader.prototype.cleanUpAfter = function(callback) {
     // delete temp files
     deleteFile(this.thumbnail);
     deleteFile(this.inFile);
@@ -264,7 +264,10 @@ Uploader.prototype.cleanUpAfter = function() {
     if(this.upload.id) {
         model.uploads.removeFromList(this.upload.id, function(e) {
             if(e) console.error(e);
+            callback(e);
         });
+    } else {
+        callback();
     }
 };
 
@@ -355,18 +358,23 @@ Uploader.prototype.process = function(upload, done) {
         insertOnDB: ['uploadFlac', 'uploadThumbnail', self.insertOnDB.bind(self)]
     },
     function(err, results) {
-        self.cleanUpAfter();
-        
-        if(err) {
-            console.error(err.stack);
-            return done(err);
-        }
-        
-        debug('upload processing results:', results);
-        debug('done processing %s for site %s', self.upload.name, self.upload.siteId);
-        debug('elapse:', ((new Date()) - self.start)/1000 + 's');
-        
-        done(null, results);
+        self.cleanUpAfter(function(err2){
+            if(err) {
+                console.error(err.stack);
+                return done(err);
+            }
+            // silently ignoring cleanup problems.......
+            // if(err2) {
+            //     console.error(err2.stack);
+            //     return done(err2);
+            // }
+            
+            debug('upload processing results:', results);
+            debug('done processing %s for site %s', self.upload.name, self.upload.siteId);
+            debug('elapse:', ((new Date()) - self.start)/1000 + 's');
+            
+            done(null, results);
+        });
     });
 };
 
