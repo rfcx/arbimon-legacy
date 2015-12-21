@@ -60,11 +60,15 @@ app.use(favicon(path.join(__dirname, '/public/images/favicon.ico')));
 
 logger.token('tag', function(req, res){ return 'arbimon2:request'; });
 
-if(app.get('env') === 'production') {
-    app.use(logger(':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"'));
-} else {
-    app.use(logger('dev'));
-}
+app.use(logger(
+    app.get('env') === 'production' ? 
+    ':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"' :
+    'dev', {
+    skip: function(req, res){
+        return /\/jobs\/progress/.test(req.originalUrl);
+    }
+}));
+
 
 app.use(function(req, res, next) {
     if(req.app.get('env') === 'production') {
