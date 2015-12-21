@@ -684,9 +684,9 @@ var Recordings = {
             site_id:         joi.number().required(),
             uri:             joi.string().required(),
             datetime:        joi.date().required(),
-            mic:             joi.string().required(),
-            recorder:        joi.string().required(),
-            version:         joi.string().required(),
+            mic:             joi.optional(),
+            recorder:        joi.optional(),
+            version:         joi.optional(),
             sample_rate:     joi.number(),
             precision:       joi.number(),
             duration:        joi.number(),
@@ -700,20 +700,13 @@ var Recordings = {
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
             if(err) return callback(err);
             
-            var values = [];
-        
-            for( var j in rec) {
-                values.push(util.format('%s = %s', 
-                    mysql.escapeId(j), 
-                    mysql.escape(rec[j])
-                ));
-            }
-            
-            var q = 'INSERT INTO recordings \n'+
-                    'SET %s';
-                    
-            q = util.format(q, values.join(", "));
-            queryHandler(q, callback);
+            queryHandler('INSERT INTO recordings (\n' +
+                'site_id, uri, datetime, mic, recorder, version, sample_rate, \n'+
+                'precision, duration, samples, file_size, bit_rate, sample_encoding, upload_time\n' +
+            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
+                rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
+                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time
+            ], callback);
         });
     },
     
