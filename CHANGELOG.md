@@ -26,3 +26,6 @@
     - Added two more site status plots + improved UI
 - v1.2.1
     - battery status labels are now correct
+- v1.2.2
+    - uploader now uploads in random order, uses db as queue holder and uses promise-based job scheduler.
+    - recordings are no longer required to have mic, software and recorder metadata (initializes to '').
