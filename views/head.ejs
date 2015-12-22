@@ -62,4 +62,11 @@
     .constant('a2InjectedData', <%- JSON.stringify(inject_data) %>);
 })(angular);
 </script>
-<%}%>
+<%} else {%>
+<script>
+(function(angular) { "use strict";
+    angular.module('a2.injected.data', [])
+    .constant('a2InjectedData', {});
+})(angular);
+</script>
+<%} %>

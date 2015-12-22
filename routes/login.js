@@ -115,14 +115,25 @@ router.get('/', function(req, res) {
     if(req.session) { 
         if(req.session.loggedIn) return res.redirect('/home'); 
     }
-    res.render('landing-page', { message: '' });
+    console.log("google_oauth_client:", config('google-api').oauthId);
+    res.render('landing-page', { 
+        message: '', 
+        inject_data: {
+            google_oauth_client: config('google-api').oauthId
+        }
+    });
 });
 
 router.get('/login', function(req, res) {  
     if(req.session) { 
         if(req.session.loggedIn) return res.redirect('/home'); 
     }
-    res.render('login', { message: '' });
+    res.render('login', { 
+        message: '',
+        inject_data: {
+            google_oauth_client: config('google-api').oauthId
+        }
+    });
 });
 
 
@@ -289,6 +300,10 @@ router.post('/login', function(req, res, next) {
         
         res.json(response);
     });
+});
+
+router.post('/oauth-login', function(req, res, next) {
+    res.json({a:1});
 });
 
 router.get('/logout', function(req, res, next) {
