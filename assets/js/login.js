@@ -1,4 +1,9 @@
-angular.module('a2.login', ['humane', 'g-recaptcha'])
+angular.module('a2.login', [
+    'humane', 
+    'templates-arbimon2',
+    'g-recaptcha',
+    'a2.utils.google-login-button'
+])
 .controller('LoginCtrl', function($scope, $http, $window, notify) {
     
     // $scope.mode have the String value of the next mode and 
@@ -44,6 +49,37 @@ angular.module('a2.login', ['humane', 'g-recaptcha'])
             }
             
             if(data.success) {
+                $window.location.assign(data.redirect);
+            }
+        })
+        .error(function() {
+            notify.error('Something went wrong, try again later');
+        });
+    };
+    
+
+    this.oAuthLogin = function(type, user){
+        var oauthData;
+        if(type == 'google'){
+            oauthData = {
+                type:'google',
+                token:user.getAuthResponse().id_token
+            };
+        } else {
+            return;
+        }
+        
+        $http.post('/oauth-login' + $window.location.search, oauthData).success(function(data) {
+            if(data.error) {
+                notify.error(data.error);
+                
+                if(data.captchaNeeded) {
+                    $scope.showCaptcha = true;
+                }
+                
+                $scope.resetCaptcha();
+                $scope.captchaResp = '';
+            } else if(data.success) {
                 $window.location.assign(data.redirect);
             }
         })

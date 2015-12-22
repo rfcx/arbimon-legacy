@@ -3,11 +3,12 @@
 
 <head>
     <% include head %>
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ARBIMON II</title>
 </head>
 
-<body ng-controller="LoginCtrl">
+<body ng-controller="LoginCtrl as controller">
     <div class="login-top">
         <div class="container">
             <a href="/"><img src="/images/logo.svg"></a>
@@ -48,6 +49,10 @@
                             </div>
                             <button class="btn btn-primary btn-block" type="submit"><i class="fa fa-sign-in"></i> log in</button>
                             <div class=""><a href="/forgot_request" class="forgot-text">forgot password?</a></div>
+
+                            <div class="form-group oauth-buttons">
+                                <a2-google-login-button class="btn-block" on-signed-in="controller.oAuthLogin('google', user)"></a2-google-login-button>
+                            </div>
                         </form>
                     </div>
                 </div>
