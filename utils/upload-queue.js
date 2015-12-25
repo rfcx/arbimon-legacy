@@ -22,7 +22,6 @@ var JobScheduler = require('../utils/job-scheduler');
 
 var scheduler = new JobScheduler({
     fetch: function(queue){
-        console.log("fetch: function(queue){");
         return model.uploads.fetchRandomUploadItems(10).then(function(upload_items){
             if(upload_items.length){
                 queue.push.apply(queue, upload_items.map(uploadFromUploadItemEntry));
