@@ -1,4 +1,5 @@
 var q = require('q');
+var async = require('async');
 
 /** Scheduler that processes items in order.
  */
@@ -31,13 +32,28 @@ JobScheduler.prototype = {
         }
 
         this.running = true;
-        return this.oneRunIteration().catch((function(error){
-            return this.onError(error);
-        }).bind(this)).finally(function(){
-            this.running=false;
+        return q(function(resolve, reject){
+            async.doWhilst(function(nextStep){
+                this.oneRunIteration().then(function(){
+                    nextStep();
+                }, function(err){
+                    nextStep(err);
+                });
+            }, function(){
+                return this.queue.length;
+            }, (function(err){
+                this.running = false;
+                if(err){
+                    reject(err);
+                } else if(this.drain){
+                    resolve(this.drain(this));
+                } else {
+                    resolve();
+                }
+            }).bind(this));
         }).then((function(){
             if(this.drain){
-                return this.drain(this);
+                resolve(this.drain(this));
             }
         }).bind(this));
     },
