@@ -3,12 +3,12 @@
 
 /**
     @module utils/upload-queue
-    @description 
-    Module export <a href="https://github.com/caolan/async#queue">async.queue</a> 
+    @description
+    Module export <a href="https://github.com/caolan/async#queue">async.queue</a>
     using as worker processUpload()
     @example
     var uploadQueue = require('../utils/upload-queue');
-    
+
     uploadQueue.enqueue(upload); // processUpload() upload param
  */
 var debug = require('debug')('arbimon2:upload-queue');
@@ -22,15 +22,13 @@ var JobScheduler = require('../utils/job-scheduler');
 
 var scheduler = new JobScheduler({
     fetch: function(queue){
-        console.log("fetch: function(queue){");
         return model.uploads.fetchRandomUploadItems(10).then(function(upload_items){
             if(upload_items.length){
                 queue.push.apply(queue, upload_items.map(uploadFromUploadItemEntry));
             }
         });
-    }, 
+    },
     process: function(upload){
-        console.log("process: function(upload){");
         var uploader = new Uploader();
         return q.ninvoke(uploader, 'process', upload);
     },
@@ -75,7 +73,7 @@ module.exports = {
         async.waterfall([
             function(callback) {
                 upload.tempFileUri = Uploader.computeTempAreaPath(upload);
-                
+
                 model.uploads.insertRecToList({
                     filename: upload.name,
                     project_id: upload.projectId,
@@ -86,9 +84,9 @@ module.exports = {
                     datetime: upload.FFI.datetime,
                     channels: upload.info.channels,
                     duration: upload.info.duration
-                }, 
+                },
                 callback);
-            },            
+            },
             function(result, fields, callback) {
                 upload.id = result.insertId;
                 callback();
