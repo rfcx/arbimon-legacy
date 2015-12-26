@@ -32,28 +32,26 @@ JobScheduler.prototype = {
         }
 
         this.running = true;
-        return q(function(resolve, reject){
-            async.doWhilst(function(nextStep){
+        return q((function(resolve, reject){
+            async.doWhilst((function(nextStep){
                 this.oneRunIteration().then(function(){
                     nextStep();
                 }, function(err){
                     nextStep(err);
                 });
-            }, function(){
+            }).bind(this), (function(){
                 return this.queue.length;
-            }, (function(err){
+            }).bind(this), (function(err){
                 this.running = false;
                 if(err){
                     reject(err);
-                } else if(this.drain){
-                    resolve(this.drain(this));
                 } else {
                     resolve();
                 }
             }).bind(this));
-        }).then((function(){
+        }).bind(this)).then((function(){
             if(this.drain){
-                resolve(this.drain(this));
+                return this.drain(this);
             }
         }).bind(this));
     },
@@ -73,9 +71,11 @@ JobScheduler.prototype = {
                     }
                 }).bind(this)).catch((function(error){
                     return this.onError(error);
-                }).bind(this)).then((function(){
-                    return this.oneRunIteration();
                 }).bind(this));
+            }
+        }).bind(this)).then((function(){
+            if(!this.queue.length){
+                return this._fillQueue();
             }
         }).bind(this));
     },
