@@ -32,7 +32,7 @@ JobScheduler.prototype = {
         }
 
         this.running = true;
-        return q((function(resolve, reject){
+        return q.Promise((function(resolve, reject){
             async.doWhilst((function(nextStep){
                 this.oneRunIteration().then(function(){
                     nextStep();
