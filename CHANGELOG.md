@@ -29,3 +29,7 @@
 - v1.2.2
     - uploader now uploads in random order, uses db as queue holder and uses promise-based job scheduler.
     - recordings are no longer required to have mic, software and recorder metadata (initializes to '').
+- v1.2.3
+    - removed uninformative highly repeating console log from uploader code
+- v1.2.4
+    - Fixed breaking bug in uploader.
