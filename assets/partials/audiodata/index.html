@@ -2,7 +2,11 @@
     <div class="sidenav">
         <a ui-sref="audiodata.sites"    ui-sref-active="active">Sites</a>
         <a ui-sref="audiodata.species"  ui-sref-active="active">Species</a>
-        <a ui-sref="audiodata.uploads" ui-sref-active="active">Uploads</a>
+        <a ui-sref="audiodata.uploads.upload" ng-class=" ('audiodata.uploads' | includedByState) ? 'active' : ''">Uploads</a>
+        <div class="subnav collapse" ng-class=" ('audiodata.uploads' | includedByState) ? 'expanded' : ''">
+            <a ui-sref="audiodata.uploads.upload" ui-sref-active="active">New Batch</a>
+            <a ui-sref="audiodata.uploads.processing" ui-sref-active="active">Processing</a>
+        </div>
         <a ui-sref="audiodata.recordings" ui-sref-active="active">Recordings</a>
         <a ui-sref="audiodata.trainingSets" ui-sref-active="active">Training sets</a>
         <a ui-sref="audiodata.playlists" ui-sref-active="active">Playlists</a>
