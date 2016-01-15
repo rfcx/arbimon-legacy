@@ -72,7 +72,7 @@ module.exports = {
         var q = "UPDATE uploads_processing \n"+
                 "SET state = ? \n"+
                 "WHERE upload_id = ?";
-        q = mysql.format(q, [uploadId, newState]);
+        q = mysql.format(q, [newState, uploadId]);
         queryHandler(q, callback);
     },
     
@@ -80,7 +80,7 @@ module.exports = {
         var q = "UPDATE uploads_processing \n"+
                 "SET state = ?, remark = ? \n"+
                 "WHERE upload_id = ?";
-        q = mysql.format(q, [uploadId, remark, newState]);
+        q = mysql.format(q, [newState, remark, uploadId]);
         queryHandler(q, callback);
     },
     

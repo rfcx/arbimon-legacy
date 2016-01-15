@@ -273,6 +273,7 @@ Uploader.prototype.finishProcessing = function(callback) {
 
 Uploader.prototype.ensureFileIsLocallyAvailable = function(callback) {
     if(this.upload.tempFileUri){// it's in the bucket!!!
+        console.log("fetching ", this.upload.tempFileUri, " from ", config('aws').bucketName);
         s3.getObject({
             Bucket : config('aws').bucketName,
             Key    : this.upload.tempFileUri
@@ -405,8 +406,10 @@ Uploader.moveToTempArea = function(upload, callback){
         Body: fs.createReadStream(upload.path)
     };
 
+    debug("Putting object in bucket ", upload.path, " to ", upload.tempFileUri);
     s3.putObject(params, function(err, data) {
         if(err) {
+            console.error("Error putting object in bucket ", upload.path, " to ", upload.tempFileUri, err);
             return callback(err);
         }
             

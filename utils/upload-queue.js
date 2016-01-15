@@ -79,7 +79,7 @@ module.exports = {
                     project_id: upload.projectId,
                     site_id: upload.siteId,
                     user_id: upload.userId,
-                    state: 'waiting',
+                    state: 'initializing',
                     metadata: upload.metadata,
                     datetime: upload.FFI.datetime,
                     channels: upload.info.channels,
@@ -93,6 +93,11 @@ module.exports = {
             },
             function storeRawFileInBucket(callback){
                 Uploader.moveToTempArea(upload, callback);
+            },
+            function flagAsWaiting(callback){
+                model.uploads.updateState(upload.id, 'waiting', function(err){
+                    callback(err);
+                });
             },
             function(callback){
                 // scheduler.push(upload);
