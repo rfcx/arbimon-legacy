@@ -365,5 +365,6 @@ router.use('/:projectUrl/soundscapes', soundscape_routes);
 router.use('/:projectUrl/jobs', jobsRoutes);
 router.use('/:projectUrl/classifications', classiRoutes);
 router.use('/:projectUrl/tags', tagRoutes);
+router.use('/:projectUrl/uploads', require('./uploads'));
 
 module.exports = router;

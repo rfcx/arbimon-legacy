@@ -31,11 +31,6 @@ angular.module('a2.audiodata', [
         controller: 'RecsCtrl as controller',
         templateUrl: '/partials/audiodata/recordings.html'
     })
-    .state('audiodata.uploads', {
-        url: '/uploads',
-        controller: 'UploadCtrl',
-        templateUrl: '/partials/audiodata/upload.html'
-    })
     .state('audiodata.species', {
         url: '/species',
         controller:'SpeciesCtrl',
