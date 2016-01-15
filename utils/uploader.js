@@ -265,10 +265,10 @@ Uploader.prototype.cleanUpTempFiles = function(callback) {
  * Finish the upload by updating the state to uploaded and deleting the bucket object.
  */ 
 Uploader.prototype.finishProcessing = function(callback) {
-    model.uploads.updateState(this.upload.id, 'uploaded', function(err){
+    model.uploads.updateState(this.upload.id, 'uploaded', (function(err){
         deleteBucketObject(this.upload.tempFileUri);
         callback(err);
-    });
+    }).bind(this));
 };
 
 Uploader.prototype.ensureFileIsLocallyAvailable = function(callback) {
