@@ -63,6 +63,7 @@ module.exports = {
             "SELECT upload_id as id, project_id, site_id, user_id, upload_time, filename, state, duration, datetime, recorder, mic, software\n" +
             "FROM uploads_processing\n" +
             "ORDER BY RAND()\n" +
+            "WHERE state='waiting'\n" + 
             "LIMIT ?", [count | 0]
         ).get(0);
     },
