@@ -248,27 +248,27 @@ Uploader.prototype.insertOnDB = function(callback) {
 };
 
 /**
- * Removes all the files remaining on the tmpFileCache and remoce the recording
- * from the uploads_processing table on the database
+ * Removes all the local and temporary files.
  */ 
-Uploader.prototype.cleanUpAfter = function(callback) {
+Uploader.prototype.cleanUpTempFiles = function(callback) {
     // delete temp files
     deleteFile(this.thumbnail);
     deleteFile(this.inFile);
-    deleteBucketObject(this.upload.tempFileUri);
     if(this.outFile !== this.inFile) {
         deleteFile(this.outFile);
     }
     
     // remove from uploads_processing table
-    if(this.upload.id) {
-        model.uploads.removeFromList(this.upload.id, function(e) {
-            if(e) console.error(e);
-            callback(e);
-        });
-    } else {
-        callback();
-    }
+    callback();
+};
+/**
+ * Finish the upload by updating the state to uploaded and deleting the bucket object.
+ */ 
+Uploader.prototype.finishProcessing = function(callback) {
+    model.uploads.updateState(this.upload.id, 'uploaded', function(err){
+        deleteBucketObject(this.upload.tempFileUri);
+        callback(err);
+    });
 };
 
 Uploader.prototype.ensureFileIsLocallyAvailable = function(callback) {
@@ -355,13 +355,18 @@ Uploader.prototype.process = function(upload, done) {
         
         uploadThumbnail: ['genThumbnail', async.retry(self.uploadThumbnail.bind(self))],
         
-        insertOnDB: ['uploadFlac', 'uploadThumbnail', self.insertOnDB.bind(self)]
+        insertOnDB: ['uploadFlac', 'uploadThumbnail', self.insertOnDB.bind(self)],
+        
+        finishProcessing: ['insertOnDB', self.finishProcessing.bind(self)]
     },
     function(err, results) {
-        self.cleanUpAfter(function(err2){
+        self.cleanUpTempFiles(function(err2){
             if(err) {
-                console.error(err.stack);
-                return done(err);
+                console.error("Error while processing upload.", err.stack);
+                model.uploads.updateStateAndComment(self.upload.id, 'error', JSON.stringify(err), function(){
+                    done(err);
+                });
+                return;
             }
             // silently ignoring cleanup problems.......
             // if(err2) {

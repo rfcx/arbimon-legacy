@@ -75,6 +75,14 @@ module.exports = {
         queryHandler(q, callback);
     },
     
+    updateStateAndComment: function(uploadId, newState, remark, callback) {
+        var q = "UPDATE uploads_processing \n"+
+                "SET state = ?, remark = ? \n"+
+                "WHERE upload_id = ?";
+        q = mysql.format(q, [uploadId, remark, newState]);
+        queryHandler(q, callback);
+    },
+    
     removeFromList: function(upload_id, callback) {
         if(typeof upload_id !== "number")
             return callback(new Error("invalid value for upload_id"));
