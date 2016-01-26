@@ -192,7 +192,7 @@ router.post('/create-project', function(req, res, next) {
             model.users.findOwnedProjects(req.session.user.id, { free: true }, function(err, rows) {
                 if(err) return next(err);
                 
-                if(rows.length > 0) {
+                if(rows.length > 0 && !req.session.user.isSuper) {
                     res.status(403).json({ 
                         freeProjectLimit: true
                     });

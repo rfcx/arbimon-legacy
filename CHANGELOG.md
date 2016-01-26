@@ -33,3 +33,5 @@
     - removed uninformative highly repeating console log from uploader code
 - v1.2.4
     - Fixed breaking bug in uploader.
+- v1.2.5
+    - 1 free project limit is now waived for super users
