@@ -25,65 +25,34 @@ angular.module('a2.user-settings', [
     };
     
     var confirmPass = function() {
-        var modalInstance = $modal.open({
+        return $modal.open({
             templateUrl: '/partials/settings/confirm-password.html'
-        });
-        
-        return modalInstance.result;
+        }).result;
     };
     
     this.save = function() {
-        confirmPass().then(function(pass) {
-            
-            $http.post('/api/user/update/name', {
+        var data = this.data;
+        return confirmPass().then(function(pass) {
+            return $http.post('/api/user/update', {
                 userData: {
-                    name: $scope.user.name,
-                    lastname: $scope.user.lastname,
-                    oauth: user.oauth,
-                    password: $scope.newPass
+                    name     : data.name,
+                    lastname : data.lastname,
+                    oauth    : data.oauth,
+                    password : data.password
                 },
                 password: pass
-            })
-            .success(function(data){
-                if(data.error)
-                {
-                    notify.serverError();
-                    
+            }).then(function(response){
+                if(response.data.error){
+                    notify.error(response.data.error);
+                } else {
+                    notify.log(response.data.message);
                 }
-                else
-                {    
-                    notify.log(data.message);
-                }
-            })
-            .error(function(err){
+            }).catch(function(err){
+                console.log("err", err);
                 notify.serverError();
             });
         });
     };
-    
-    
-    $scope.changePass = function() {
-        console.log($scope.passResult);
         
-        if(!$scope.passResult.valid) {
-            return notify.log($scope.passResult.msg);
-        }
-        
-        confirmPass().result.then(function(pass) {
-            $http.post('/api/user/update/password', {
-                userData: {
-                    newPass: $scope.newPass,
-                },
-                password: pass
-            })
-            .success(function(data){
-                notify.log(data.message);
-            })
-            .error(function(err){
-                notify.serverError();
-            });
-        });
-    };
-    
 })
 ;

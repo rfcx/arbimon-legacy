@@ -22,6 +22,8 @@ function hashPassword(password){
 }
 
 var Users = {
+    hashPassword: hashPassword,
+    
     findByUsername: function(username, callback) {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
@@ -39,11 +41,13 @@ var Users = {
     },
     
     findById: function(user_id, callback) {
-        var q = 'SELECT * \n' +
-                'FROM users \n' +
-                'WHERE user_id = %s';
-        q = util.format(q, mysql.escape(user_id));
-        queryHandler(q, callback);
+        return q.nfcall(queryHandler, 
+            'SELECT * \n' +
+            'FROM users \n' +
+            'WHERE user_id = ?', [
+                user_id
+            ]
+        ).get(0).nodeify(callback);
     },
     
     loginTry: function(ip, user, msg, callback) {
@@ -94,25 +98,22 @@ var Users = {
             return;
         }
 
-        var values = [];
+        var values=[], data=[];
 
         // process values to be updated
         for( var i in userData) {
-            if(i !== 'user_id' && typeof userData[i] !== 'undefined') {
-                values.push(util.format('%s = %s', 
-                    mysql.escapeId(i), 
-                    mysql.escape(userData[i])
-                ));
+            if(i !== 'user_id' && userData[i] !== undefined) {
+                values.push(mysql.escapeId(i) + ' = ?');
+                data.push(userData[i]);
             }
         }
+        data.push(userData.user_id);
 
-        var q = 'UPDATE users \n'+
-                'SET %s \n'+
-                'WHERE user_id=%s';
-
-        q = util.format(q, values.join(", "), mysql.escape(userData.user_id));
-
-        queryHandler(q, callback);
+        return q.nfcall(queryHandler, 
+            'UPDATE users \n'+
+            'SET ' + values.join(', ') + ' \n'+
+            'WHERE user_id=?', data
+        ).nodeify(callback);
     },
 
     insert: function(userData, callback) {
@@ -499,14 +500,13 @@ var Users = {
             
             return {
                 success: true,
-                redirect : req.query.redirect,
+                redirect : req.query.redirect || '/home',
                 captchaNeeded: result.captchaNeeded
             };
         });
     },
 
     makeUserObject: function(user, options){
-        console.log("makeUserObject: function(user, options){");
         return {
             id: user.user_id,
             username: user.login,
