@@ -90,7 +90,9 @@ router.get('/info', function(req, res) {
         email: user.email,
         name: user.firstname,
         lastname: user.lastname,
+        imageUrl:  user.imageUrl,
         isAnonymousGuest:  user.isAnonymousGuest,
+        oauth: user.oauth
     });
 });
 
