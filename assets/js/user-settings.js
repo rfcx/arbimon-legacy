@@ -12,28 +12,35 @@ angular.module('a2.user-settings', [
     Angularytics.init();
 })
 .controller('UserSettingsCtrl', function($scope, $modal, $http, notify){
+    this.data={};
     
-    $http.get('/api/user/info')
-    .success(function(data){
-        $scope.user = data;
-    });
+    $http.get('/api/user/info').then((function(response){
+        $scope.user = response.data;
+        this.user = response.data;
+        this.reset();
+    }).bind(this));
     
+    this.reset = function(){
+        this.data = angular.copy(this.user);
+    };
     
     var confirmPass = function() {
         var modalInstance = $modal.open({
             templateUrl: '/partials/settings/confirm-password.html'
         });
         
-        return modalInstance;
+        return modalInstance.result;
     };
     
-    $scope.saveName = function() {
-        confirmPass().result.then(function(pass) {
+    this.save = function() {
+        confirmPass().then(function(pass) {
             
             $http.post('/api/user/update/name', {
                 userData: {
                     name: $scope.user.name,
-                    lastname: $scope.user.lastname
+                    lastname: $scope.user.lastname,
+                    oauth: user.oauth,
+                    password: $scope.newPass
                 },
                 password: pass
             })
