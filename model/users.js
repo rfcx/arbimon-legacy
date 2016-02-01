@@ -2,14 +2,24 @@
 "use strict";
 
 
+var debug = require('debug')('arbimon2:model:users');
+var request = require('request');
+var config = require('../config');
 var util = require('util');
 var mysql = require('mysql');
 var joi = require('joi');
+var q = require('q');
+var APIError = require('../utils/apierror');
 var sprintf = require("sprintf-js").sprintf;
+var gravatar = require('gravatar');
 
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
+var sha256 = require('../utils/sha256');
 
+function hashPassword(password){
+    return sha256(password);
+}
 
 var Users = {
     findByUsername: function(username, callback) {
@@ -310,7 +320,267 @@ var Users = {
         var q = "REPLACE INTO addresses SET ?";
         
         queryHandler(mysql.format(q, userAddressData), callback);
-    }
+    },
+
+    challengeOAuth: function(credentials){
+        var result = { 
+            user: null,
+            error: null,
+        };
+        return q.ninvoke(Users, "findByEmail", credentials.email).get(0).get(0).then(function(userByEmail){
+            result.user = userByEmail;
+            
+            if(!userByEmail){
+                // User does not exist!!!
+            } else if(userByEmail.disabled_until === '0000-00-00 00:00:00'){
+                result.error = new APIError("This account had been disabled", 423);
+            } else if(!userByEmail["oauth_" + credentials.type]){
+                // User has not authorized login with the given oauth, thus this needs be confirmed.
+                result.error = new APIError("Must first authorize " + credentials.type + " oauth.", 449);
+            }
+            return result;
+        });
+    },
+    
+    
+    /** Executes a user login challenge, returning its promised results.
+     * @params auth
+     * @params auth.username
+     * @params auth.password
+     * @params auth.captcha
+     * @params options - options
+     * @params options.captcha
+     * @params options.compareUsername
+     */
+    challengeLogin: function(auth, options){
+        options = options || {};
+        var username = auth.username || '';
+        var password = auth.password || '';
+        var ip = auth.ip;
+        var captchaResponse = auth.captcha;
+        var redirectUrl = options.redirect || '/home';
+        
+        var permitedRetries = 10;
+        var captchaRequired = 3;
+        var waitTime = 3600000; // miliseconds
+        var now = new Date();
+        
+        var result = {};
+
+        return q.all([
+            //find ip invalid login tries
+            q.ninvoke(Users, "invalidLogins", ip).get(0).get(0),
+            //find user
+            q.ninvoke(Users, "findByUsername", username).get(0).get(0)
+        ]).then(function(all){
+            var invalidLogins = all[0];
+            var user = all[1] || null;
+            
+            var tries;
+            
+            if(!user) {
+                tries = invalidLogins.tries;
+            } else {
+                tries = Math.max(invalidLogins.tries, user.login_tries);
+            }
+
+            result.user = user;
+            result.tries = tries;
+            
+            debug('login tries:', tries);
+            
+            if(user && (user.disabled_until === '0000-00-00 00:00:00') ){
+                throw { error: "This account had been disabled" };
+            }
+            
+            if(tries >=  permitedRetries || (user && (user.disabled_until > now) ) ) {
+                // TODO:: esto dice una hora pero no necesariamente es una, o si?
+                throw { error: "Too many tries, try again in 1 hour. If you think this is wrong contact us." };
+            }
+            
+            return result;
+        }).then(function(result){
+            // verify if user not exceeded max retries check captcha if needed
+            if(result.tries >= captchaRequired && !options.skipCaptcha) {
+                return q.nfcall(request, { 
+                    uri:'https://www.google.com/recaptcha/api/siteverify',
+                    qs: {
+                        secret: config('recaptcha').secret,
+                        response: captchaResponse,
+                        remoteip: ip,
+                    }
+                }).then(function(args) { 
+                    var response = args[0];
+                    var body = args[1];
+                    
+                    body = JSON.parse(body);
+                    
+                    debug('captcha validation:\n', body);
+                    
+                    return body.success;
+                });
+            } else {
+                return true;
+            }
+        }).then(function(captchaResult){
+            result.verifyCaptcha = captchaResult;
+        }).then(function(){
+            var user = result.user;
+            var tries = result.tries;
+            var response = {};
+            
+            if(!result.verifyCaptcha) {
+                result.error = "Error validating captcha";
+                result.reason = 'invalid_captcha';
+            } else if(!user) {
+                result.error = "Invalid username or password";
+                result.reason = 'invalid_username';
+            } else if(hashPassword(password) !== user.password){
+                result.error = "Invalid username or password";
+                result.reason = 'invalid_password';
+            } else {
+                result.success = true;
+                result.redirect = redirectUrl;
+            }
+            
+            if(result.error) {
+                result.captchaNeeded = (tries + 1) >= captchaRequired;
+                result.tries += 1;
+                if(result.tries >= permitedRetries) {
+                    now.setHours(now.getHours() + 1);
+                    result.disable_until = now;
+                }
+            }
+            
+            return result;
+        });
+    },
+    
+    performLogin: function(req, auth, options){
+        return Users.challengeLogin(auth, {
+            redirect : req.query.redirect
+        }).then(function(result){
+            var user = result.user;
+            var tries = result.tries;
+            var response = {};
+            
+            if(result.error) {
+                if(user) {
+                    q.ninvoke(Users, "update", result.disable_until ? {
+                        user_id: user.user_id,
+                        login_tries: 0,
+                        disabled_until : result.disable_until
+                    } : {
+                        user_id: user.user_id,
+                        login_tries: user.login_tries + 1
+                    }).catch(console.error.bind(console));
+                }
+                
+                q.ninvoke(Users, "loginTry", 
+                    req.ip, 
+                    auth.username, 
+                    result.reason
+                ).catch(console.error.bind(console));
+                
+                throw result.error;
+            }
+            
+            // update user info
+            q.ninvoke(Users, "update", { 
+                user_id: user.user_id,
+                last_login: new Date(),
+                login_tries: 0
+            }).catch(console.error.bind(console));
+            
+            // set session
+            req.session.loggedIn = true; 
+            req.session.isAnonymousGuest = false;
+            req.session.user = Users.makeUserObject(user, {secure: req.secure});
+            
+            return {
+                success: true,
+                redirect : req.query.redirect,
+                captchaNeeded: result.captchaNeeded
+            };
+        });
+    },
+
+    makeUserObject: function(user, options){
+        console.log("makeUserObject: function(user, options){");
+        return {
+            id: user.user_id,
+            username: user.login,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            isSuper: user.is_super,
+            oauth: {
+                google: user.oauth_google
+            },
+            imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, !!(options && options.secure)),
+            isAnonymousGuest: false,
+        };
+    },
+    
+    /** Attempts to log in the user using validated oauth credentials.
+     * @params req - request holding the session (for logging in ofcourse)
+     * @params credentials - oauth credentials in question
+     * @params options - options
+     * @params options.authorize - whether to authorize the oauth login (if not previously authorized)
+     * @params options.username - username used in the oauth autorization.
+     * @params options.password - password used in the oauth autorization.
+     */
+    oauthLogin: function(req, credentials, options) {
+        options = options || {};
+        var now = new Date();        
+        return this.challengeOAuth(credentials).then(function(result){
+            if(!result.error && !result.user){ 
+                // No error and User does not exist!!!, it must be created, then OAuth is deemed sucessfull with the created user.
+                return Users.createFromOAuth(credentials);
+            } else if(result.error){
+                if(result.error.status == 449 && options.authorize){
+                    return Users.challengeLogin({
+                        username: options.username, 
+                        password: options.password
+                    }, {
+                        skipCaptcha: true,
+                        compareUsername: result.user.login
+                    }).then(function(loginResult){
+                        if(loginResult.error){
+                            console.log("loginResult.error", loginResult.error);
+                            throw loginResult.error;
+                        }
+                        
+                        var userData={user_id: loginResult.user.user_id};
+                        userData['oauth_' + credentials.type] = 1;
+                        
+                        return q.ninvoke(Users, "update", userData).then(function(){
+                            return loginResult.user;
+                        });
+                    });
+                }
+                // Error in challenge
+                throw result.error;
+            } else {
+                return result.user;
+            }
+        }).then(function(authenticatedUser) {
+            // update user info
+            return q.ninvoke(Users, "update", { 
+                user_id: authenticatedUser.user_id,
+                last_login: new Date(),
+                login_tries: 0
+            }).then(function(){
+                // set session
+                req.session.loggedIn = true; 
+                req.session.isAnonymousGuest = false;
+                req.session.user = Users.makeUserObject(authenticatedUser, {secure: req.secure});
+                
+                return authenticatedUser;
+            });
+        });
+    },
+
 };
 
 module.exports = Users;
