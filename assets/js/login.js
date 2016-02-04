@@ -1,5 +1,12 @@
-angular.module('a2.login', ['humane', 'g-recaptcha'])
-.controller('LoginCtrl', function($scope, $http, $window, notify) {
+angular.module('a2.login', [
+    'humane', 
+    'ui.bootstrap', 
+    'templates-arbimon2',
+    'g-recaptcha',
+    'a2.utils.google-login-button',
+    'a2.utils.facebook-login-button'
+])
+.controller('LoginCtrl', function($scope, $http, $window, $modal, notify) {
     
     // $scope.mode have the String value of the next mode and 
     // is used as text for the mode button
@@ -52,6 +59,80 @@ angular.module('a2.login', ['humane', 'g-recaptcha'])
         });
     };
     
+
+    this.oAuthLogin = function(type, user){
+        var oauthData;
+        if(type == 'google'){
+            oauthData = {
+                type:'google',
+                token:user.getAuthResponse().id_token
+            };
+        } else if(type == 'facebook'){
+            oauthData = {
+                type:'facebook',
+                token:user.authResponse.accessToken
+            };
+        } else {
+            return;
+        }
+        
+        $http.post('/oauth-login' + $window.location.search, oauthData).then(function(response){
+            var data = response.data;
+            if(data.error) {
+                notify.error(data.error);
+            } else if(data.success) {
+                $window.location.assign(data.redirect);
+            }
+        }).catch((function(response) {
+            if(response.status == 449){
+                return this.showEnableOAuthModal(oauthData);
+            } else {
+                notify.error(response.data || 'Something went wrong, try again later');
+            }
+        }).bind(this));
+    };
+    
+    this.showEnableOAuthModal = function(oauthData){
+        var modalData={};
+        $modal.open({
+            templateUrl: '/partials/authorize-enter-credentials-pop-up.html',
+            controller: function() {
+                this.title = "User Authorization Required";
+                this.data = modalData;
+                this.oauthType = oauthData.type;
+                this.messages = [
+                    "Before using " + oauthData.type + " to sign into your account you must first allow it."
+                ];
+                this.authorizeMessage = "Authorize " + oauthData.type + " sign-in on my account.";
+                this.btnOk = "Confirm";
+                this.btnCancel = "Cancel";
+            },
+            controllerAs: 'popup'
+        }).result.then(function() {
+            if(!modalData.authorized){
+                notify.log("Login authorization canceled.");
+            } else {
+                $http.post('/oauth-login' + $window.location.search, angular.extend({}, oauthData, {
+                    authorize : 1,
+                    username : modalData.username,
+                    password : modalData.password,
+                })).then(function(response){
+                    var data = response.data;
+                    if(data.error) {
+                        notify.error(data.error);
+                    } else if(data.success) {
+                        $window.location.assign(data.redirect);
+                    }
+                }).catch((function(response) {
+                    if(response.status == 449){
+                        return this.showEnableOAuthModal(oauthData);
+                    } else {
+                        notify.error(response.data || 'Something went wrong, try again later');
+                    }
+                }).bind(this));
+            }
+        });
+    };
 })
 .controller('RedirectToLoginCtrl', function($scope, $window) {
     var redirect = $window.location.pathname + $window.location.search + $window.location.hash;

@@ -7,6 +7,7 @@ var sprintf = require("sprintf-js").sprintf;
 
 var model = require('../../model');
 var sha256 = require('../../utils/sha256');
+var APIError = require('../../utils/apierror');
 
 router.get('/projectlist', function(req, res, next) {
     // super user list all projects
@@ -90,7 +91,9 @@ router.get('/info', function(req, res) {
         email: user.email,
         name: user.firstname,
         lastname: user.lastname,
+        imageUrl:  user.imageUrl,
         isAnonymousGuest:  user.isAnonymousGuest,
+        oauth: user.oauth
     });
 });
 
@@ -142,35 +145,40 @@ router.post('/update/password', function(req, res, next){
     });
 });
 
-router.post('/update/name', function(req, res, next){
+router.post('/update', function(req, res, next){
+    res.type('json');
     var userData = req.body.userData;
-    var password = req.body.password;
+    var password = req.body.password || '';
     
-    if(!userData || !userData.name || !userData.lastname || !password) {
-        return res.json({ error: "missing parameters" });
-    }
-    
-    model.users.findById(req.session.user.id, function(err, user){
-        if(err) return next(err);
+    model.users.findById(req.session.user.id).get(0).then(function(user){
+        if(model.users.hashPassword(password) != user.password){
+            throw new APIError({ error: "Invalid confirmation password" }, 200);
+        }
         
-        if(sha256(password) !== user[0].password)
-            return res.json({ error: "invalid password" });
+        if(userData){
+            var updateData = {
+                user_id: req.session.user.id,
+                firstname: userData.name,
+                lastname: userData.lastname
+            };
+            if(userData.password){
+                updateData.password = userData.password;
+            }
+            if(userData.oauth){
+                updateData.oauth_google = userData.oauth.google;
+                updateData.oauth_facebook = userData.oauth.facebook;
+            }
+            
+            return model.users.update(updateData);
+        }
         
-        model.users.update({
-            user_id: req.session.user.id,
-            firstname: userData.name,
-            lastname: userData.lastname
-        },
-        function(err, result) {
-            if(err) return next(err);
-            
-            req.session.user.firstname = userData.name;
-            req.session.user.lastname = userData.lastname;
-            
-            debug("update user name:", result);
-            res.json({ message: "success! Name updated"});
-        });
-    });
+    }).then(function(){
+        return model.users.findById(req.session.user.id).get(0);
+    }).then(function(updatedUser){
+        req.session.user = model.users.makeUserObject(updatedUser, {secure: req.secure});
+        debug("updated data for user:", updatedUser.login);
+        res.json({ message: "User data updated."});
+    }).catch(next);
 });
 
 router.get('/address', function(req, res, next) {
