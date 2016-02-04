@@ -119,6 +119,7 @@ router.get('/', function(req, res) {
     res.render('landing-page', { 
         message: '', 
         inject_data: {
+            facebook_api: config('facebook-api').public,
             google_oauth_client: config('google-api').oauthId
         }
     });
@@ -131,6 +132,7 @@ router.get('/login', function(req, res) {
     res.render('login', { 
         message: '',
         inject_data: {
+            facebook_api: config('facebook-api').public,
             google_oauth_client: config('google-api').oauthId
         }
     });

@@ -515,7 +515,8 @@ var Users = {
             lastname: user.lastname,
             isSuper: user.is_super,
             oauth: {
-                google: user.oauth_google
+                google: user.oauth_google,
+                facebook: user.oauth_facebook
             },
             imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, !!(options && options.secure)),
             isAnonymousGuest: false,

@@ -166,6 +166,7 @@ router.post('/update', function(req, res, next){
             }
             if(userData.oauth){
                 updateData.oauth_google = userData.oauth.google;
+                updateData.oauth_facebook = userData.oauth.facebook;
             }
             
             return model.users.update(updateData);

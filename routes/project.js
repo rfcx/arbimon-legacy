@@ -8,6 +8,7 @@ var cardStack = require('./resource-cards');
 var cardResolver = require('../utils/card-resolver')(cardStack);
 
 var injected_data = {
+    facebook_api: config('facebook-api').public,
     googleAPI : config('google-api')
 };
 
