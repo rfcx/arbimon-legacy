@@ -763,7 +763,12 @@ textarea.fixed-width {
 
 .oauth-buttons{
     padding-top: 15px;
- 
+    > *{
+        display:block;
+        &:not(:first-child) {
+            margin-top: 7px;
+        }
+    }
 }
 
 .v-center > *{

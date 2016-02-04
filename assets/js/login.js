@@ -3,7 +3,8 @@ angular.module('a2.login', [
     'ui.bootstrap', 
     'templates-arbimon2',
     'g-recaptcha',
-    'a2.utils.google-login-button'
+    'a2.utils.google-login-button',
+    'a2.utils.facebook-login-button'
 ])
 .controller('LoginCtrl', function($scope, $http, $window, $modal, notify) {
     
@@ -65,6 +66,11 @@ angular.module('a2.login', [
             oauthData = {
                 type:'google',
                 token:user.getAuthResponse().id_token
+            };
+        } else if(type == 'facebook'){
+            oauthData = {
+                type:'facebook',
+                token:user.authResponse.accessToken
             };
         } else {
             return;
