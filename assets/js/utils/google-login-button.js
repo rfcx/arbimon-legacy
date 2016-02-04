@@ -1,30 +1,8 @@
 angular.module('a2.utils.google-login-button', [
     'a2.utils',
-    'a2.injected.data'
+    'a2.utils.global-anonymous-function',
+    'a2.injected.data',
 ])
-.factory('globalAnonymousFunction', function($window){
-    var ct=0;
-    return function(fn, options){
-        console.log("return function(fn, options)", fn, options);
-        var wrapperFn = function(){
-            if(options && options.oneTime){
-                wrapperFn.remove();
-            }
-            fn.apply(this, Array.prototype.slice.call(arguments));
-        };
-        
-        wrapperFn.id = '__g_a_f_'+(ct++);
-        $window[wrapperFn.id] = wrapperFn;        
-        
-        wrapperFn.remove = function(){
-            if($window[wrapperFn.id] == wrapperFn){
-                delete $window[wrapperFn.id];
-            }
-        };
-        
-        return wrapperFn;        
-    };
-})
 .service('a2GoogleAPIClient', function($q, $window, globalAnonymousFunction){
     var APIURL = "https://apis.google.com/js/client.js";
     function loadAPI(){
@@ -99,16 +77,6 @@ angular.module('a2.utils.google-login-button', [
                     );
                 });
             };            
-        }
-    };
-})
-.service('OAuthLoginService', function(a2EventEmitter){
-    var events = new a2EventEmitter();
-    return {
-        on : events.on.bind(events),
-        off: events.off.bind(events),
-        notifyLoggedIn: function(event){
-            events.emit('logged-in', event);
         }
     };
 })
