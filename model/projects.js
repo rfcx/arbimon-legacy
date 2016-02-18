@@ -24,7 +24,7 @@ var s3;
 var Projects = {
     
     listAll: function(callback) {
-        var q = "SELECT name, url, description, is_private, is_enabled \n"+
+        var q = "SELECT project_id as id, name, url, description, is_private, is_enabled \n"+
                 "FROM projects";
 
         queryHandler(q, callback);
@@ -738,7 +738,7 @@ var Projects = {
                 "FROM ( \n"+
                 "    (SELECT upload_id as id \n"+
                 "    FROM uploads_processing  \n"+
-                "    WHERE project_id = %1$s) \n"+
+                "    WHERE project_id = %1$s AND state != 'uploaded') \n"+
                 "    UNION \n"+
                 "    (SELECT recording_id as id \n"+
                 "    FROM recordings AS r \n"+
