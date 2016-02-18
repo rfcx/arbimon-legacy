@@ -7,18 +7,7 @@
             <plan-capacity minutes="planMinutes"></plan-capacity>
             <p>
                 <b>Plan duration:</b>
-                <select ng-model="planYears" ng-disabled="upgradeOnly">
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
-                    <option>6</option>
-                    <option>7</option>
-                    <option>8</option>
-                    <option>9</option>
-                    <option>10</option>
-                </select>
+                <select ng-model="planYears" ng-disabled="upgradeOnly" ng-options="year for year in controller.planData.yearOptions"></select>
                 year<span ng-if="planYears > 1">s</span>
             </p>
             <p><b>Storage capacity:</b> {{ plan.storage | number }} minutes of audio</p>
