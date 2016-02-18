@@ -756,7 +756,7 @@ var Projects = {
                 "FROM ( \n"+
                 "    (SELECT u.duration \n"+
                 "    FROM uploads_processing as u \n"+
-                "    WHERE project_id = ?) \n"+
+                "    WHERE project_id = ? AND state != 'uploaded') \n"+
                 "    UNION ALL \n"+
                 "    (SELECT r.duration \n"+
                 "    FROM recordings AS r \n"+
