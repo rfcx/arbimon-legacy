@@ -1,0 +1,57 @@
+<div class="modal-header">Create New Activation Code</div>
+<div class="modal-body">
+    <p>
+        This will create a new activation code that can be used to create or upgrade a project to the code's given project parameters.
+    </p>
+    <p>
+        This code can optionally be locked to a specific user or project, so that no other user/project can use it.
+        Please specify if this code will be locked to a specific user or project:
+    </p>
+    <div class="form-horizontal">
+        <div class="form-group">
+            <label for="lockUser" class="col-sm-3">Lock to User</label>
+            <div class="col-sm-9">
+                <select id="lockUser" class="form-control" ng-model="popup.data.lockToUser" ng-options="option.username for option in popup.usersList track by option.id">
+                    <option value="">---</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lockProject" class="col-sm-3">Lock to Project</label>
+            <div class="col-sm-9">
+                <select id="lockProject" class="form-control" ng-model="popup.data.lockProject" ng-options="option.name for option in popup.projectsList |orderBy:'name' track by option.id">
+                    <option value="">---</option>
+                </select>
+            </div>
+        </div>
+    </div>    
+    <hr />
+    <p>
+        Please add the project parameters given by this code:
+    </p>
+    <div class="form-horizontal">
+        <div class="form-group">
+            <label for="recordings" class="col-sm-3">Recordings</label>
+            <div class="col-sm-9">
+                <input id="recordings" type="number" ng-model="popup.data.recordings" ng-change="popup.computeProcessingAmount()"/>
+                minutes
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="processing" class="col-sm-3">Processing</label>
+            <div class="col-sm-9">
+                <input id="processing" type="number" ng-model="popup.data.processing"  ng-change="popup.processingCountChanged()"/><br />
+                <label class="v-center normal">
+                    <input type="checkbox" ng-model="popup.data.tieProcessingWithRecordings" ng-change="popup.computeProcessingAmount()"/>
+                    <div class="inlined">
+                        Tie processing and recordings amount <br /> (x 100 recording minutes)
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>    
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="$close(popup.data)">Create Code</button>
+    <button class="btn btn-default" ng-click="$dismiss()">Cancel</button>
+</div>

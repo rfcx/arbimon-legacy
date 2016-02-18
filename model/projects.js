@@ -24,7 +24,7 @@ var s3;
 var Projects = {
     
     listAll: function(callback) {
-        var q = "SELECT name, url, description, is_private, is_enabled \n"+
+        var q = "SELECT project_id as id, name, url, description, is_private, is_enabled \n"+
                 "FROM projects";
 
         queryHandler(q, callback);

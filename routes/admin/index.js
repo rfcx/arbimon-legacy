@@ -7,8 +7,8 @@ var request = require('request');
 var router = express.Router();
 var async = require('async');
 
-var config = require('../config');
-var model = require('../model');
+var config = require('../../config');
+var model = require('../../model');
 
 // only super user can access admin section
 router.use(function(req, res, next) {
@@ -96,33 +96,9 @@ router.put('/system-settings', function(req, res, next) {
     });
 });
 
-// router.get('/projects', function(req, res, next) {
-//     model.projects.listAll(function(err, rows) {
-//         if(err) return next(err);
-//         
-//         res.json(rows);
-//     });
-// });
-// 
-// router.put('/projects/:projectId', function(req, res, next) {
-//     var project = req.body.project;
-//     
-//     project.project_id = req.params.projectId;
-//     
-//     model.projects.update(project, function(err, rows) {
-//         if(err) return next(err);
-//         
-//         res.json(rows);
-//     });
-// });
+router.use('/projects', require('./projects'));
+router.use('/users', require('./users'));
 
-// router.get('/users', function(req, res, next) {
-//     model.users.list(function(err, rows) {
-//         if(err) return next(err);
-//         
-//         res.json(rows);
-//     });
-// });
 
 
 

@@ -1,0 +1,43 @@
+<div>
+
+    <div class="toolbar">
+        <button class="btn btn-default"
+            ng-click="controller.createNewCode()" 
+            tooltip="Create a new code">
+            <i class="fa fa-plus"></i>
+        </button>
+        <button class="btn btn-default"
+            ng-click="controller.editSelectedCode()"
+            tooltip="Edit code">
+            <i class="fa fa-pencil"></i>
+        </button>
+        <button class="btn btn-danger"
+            ng-click="controller.deleteSelectedCode()"
+            ng-disabled="!selected"
+            tooltip="Delete code">
+            <i class="fa fa-trash"></i>
+        </button>
+    </div>
+
+    <div ng-if="controller.loader.loading.codes">
+        Loading activation codes.
+    </div>
+    <div ng-if="!controller.loader.loading.codes && !controller.codes.length">
+        No project activation codes found.
+    </div>
+    <div ng-show="controller.codes.length">
+        <a2-table rows="controller.codes" no-checkbox selected="controller.selectedCode">
+            <field title="Id" key="id">{{ row.id }}</field>
+            <!-- hash -->
+            <field title="Created" key="created">{{row.created}}</field>
+            <field title="Creator" key="creator">{{row.creator}}</field>
+            <field title="Payload" key="payload">{{row.payload}}</field>
+            <field title="Consumed" key="consumed">{{row.consumed ? "Yes" : "No"}}</field>
+            <field title="Consumer" key="consumer">{{row.consumer || "---"}}</field>
+            <field title="Project" key="project">{{row.project || "---"}}</field>
+            <field title="" key="">
+                <button class="button" ng-click="controller.showHash(row)"><i class="fa fa-qrcode"></i>View Hash</button>
+            </field>
+        </a2-table>
+    </div>
+</div>
