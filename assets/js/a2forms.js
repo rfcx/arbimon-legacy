@@ -145,8 +145,23 @@ angular.module('a2.forms',['templates-arbimon2'])
             valid: '=', // validation object
         },
         templateUrl: '/partials/directives/project-form.html',
+        controllerAs:'controller',
         controller: function($scope) {
             var urlPattern = /^[a-z0-9]+([-_][a-z0-9]+)*$/i;
+            
+            this.deriveUrlFromName = true;
+            this.nameChanged = function(){
+                if(this.deriveUrlFromName){
+                    $scope.project.url = ($scope.project.name || '').replace(/[^a-z0-9A-Z-]/g, '-').replace(/-+/g,'-').replace(/(^-)|(-$)/g, '').replace(/[A-Z]/g, function(_1){
+                        return _1.toLowerCase();
+                    });
+                }
+                $scope.verify();
+            };
+            this.urlChanged = function(){
+                this.deriveUrlFromName = false;
+                $scope.verify();
+            };
             
             $scope.verify = function () {
                 var good = true;
@@ -198,6 +213,7 @@ angular.module('a2.forms',['templates-arbimon2'])
                 }
                 
                 $scope.valid = good;
+                return good;
             };
             
             if($scope.project) {
