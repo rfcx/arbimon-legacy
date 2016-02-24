@@ -39,6 +39,7 @@ angular.module('a2.admin.projects.codes', [
                 this.data = {
                     lockToUser: undefined,
                     lockProject: undefined,
+                    duration  : 1,
                     recordings: 10000,
                     processing: 1000000,
                     tieProcessingWithRecordings: true
@@ -75,6 +76,7 @@ angular.module('a2.admin.projects.codes', [
                 user : data.lockToUser && data.lockToUser.id,
                 project : data.lockProject && data.lockProject.id,
                 recordings : data.recordings,
+                duration : data.duration,
                 processing : data.processing,
             }).then(function(data) {
                 return data.response;

@@ -37,6 +37,9 @@
             <field title="Processing" key="row.payload.processing">
                 {{row.payload.processing}}
             </field>
+            <field title="Duration" key="row.payload.duration">
+                {{row.payload.duration}} {{row.payload.duration > 1 ? "years" : "year"}}
+            </field>
             <field title="Consumed" key="consumed">{{row.consumed ? "Yes" : "No"}}</field>
             <field title="Consumer" key="consumer">{{row.consumer || "---"}}</field>
             <field title="Project" key="project">{{row.project || "---"}}</field>
