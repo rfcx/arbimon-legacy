@@ -2,10 +2,11 @@ angular.module('a2.orders.create-project', [
     'a2.orders.orders',
     'a2.orders.order-utils',
     'a2.orders.plan-selection',
+    'a2.orders.project-order-service',
     'ui.bootstrap',
     'humane',
 ])
-.controller('CreateProjectCtrl', function($scope, $http, $modalInstance, $modal, notify, a2order, orderData, a2orderUtils) {
+.controller('CreateProjectCtrl', function($scope, $http, $modalInstance, $modal, notify, a2order, orderData, a2orderUtils, ProjectOrderService) {
     
     $scope.project = orderData.project;
     $scope.recorderQty = orderData.recorderQty;
@@ -20,34 +21,25 @@ angular.module('a2.orders.create-project', [
     
     $scope.create = function() {
         console.log($scope.isValid);
-        if(!$scope.isValid) return;
-        
-        if(!$scope.project.plan) {
-            return notify.error('You need to select a plan');
+        if(!$scope.isValid){
+            return;
         }
-        
-        if(!$scope.autoPaymentsEnabled && $scope.project.plan.tier == 'paid') {
-            return notify.log('Payments are unavailable');
-        }
-        
-        // don't process orders over $10,000
-        if($scope.project.plan.cost + ($scope.recorderQty * 125) > 10000) return;
-        
-        orderData = {
-            action: 'create-project',
-            project: $scope.project,
-            recorderQty: $scope.recorderQty,
-        };
-        console.log(orderData);
-        // if user added recorders to paid order show shipping address form
-        if($scope.recorderQty > 0 && $scope.project.plan.tier == 'paid') {
-            a2order.enterShippingAddress(orderData);
-        }
-        else {
-            a2order.reviewOrder(orderData);
-        }
-        
-        $modalInstance.dismiss();
+
+        return ProjectOrderService.makeOrder('create-project', $scope.project, $scope.recorderQty, {
+            autoPaymentsEnabled: $scope.autoPaymentsEnabled
+        }).then(function(order){
+            console.log(order);
+            // if user added recorders to paid order show shipping address form
+            if(order.hasCoupon){
+                ProjectOrderService.placeOrder(order.data);
+            } else if(order.isPaidProject && order.data.recorderQty > 0) {
+                a2order.enterShippingAddress(order.data);
+            } else {
+                a2order.reviewOrder(order.data);
+            }
+            
+            $modalInstance.dismiss();
+        });
     };
 })
 ;
