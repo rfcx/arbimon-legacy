@@ -31,35 +31,38 @@ var Projects = {
     },
     
     find: function (query, callback) {
-        var q = "SELECT p.*, \n"+
-                "   pp.tier, \n"+
-                "   pp.storage AS storage_limit, \n"+
-                "   pp.processing AS processing_limit, \n"+
-                "   pp.created_on AS plan_created, \n"+
-                "   pp.activation AS plan_activated, \n"+
-                "   pp.duration_period AS plan_period \n"+
-                "FROM projects AS p \n"+
-                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                "WHERE ";
-        var whereExp = [];
+        var whereExp = [], data=[];
         
         if(query.id) {
-            whereExp.push("p.project_id = " + mysql.escape(query.id));
+            whereExp.push("p.project_id = ?");
+            data.push(query.id);
         }
         if(query.url) {
-            whereExp.push("p.url = " + mysql.escape(query.url));
+            whereExp.push("p.url = ?");
+            data.push(query.url);
         }
         if(query.name) {
-            whereExp.push("p.name = " + mysql.escape(query.name));
+            whereExp.push("p.name = ?");
+            data.push(query.name);
         }
         
         if(!whereExp.length) {
-            return callback(new Error('no query params'));
+            return q.reject(new Error('no query params'));
         }
         
-        q += whereExp.join(' \nAND ');
-        
-        return queryHandler(q, callback);
+        return dbpool.query(
+            "SELECT p.*, \n"+
+            "   pp.tier, \n"+
+            "   pp.storage AS storage_limit, \n"+
+            "   pp.processing AS processing_limit, \n"+
+            "   pp.created_on AS plan_created, \n"+
+            "   pp.activation AS plan_activated, \n"+
+            "   pp.duration_period AS plan_period \n"+
+            "FROM projects AS p \n"+
+            "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+            "WHERE (" + whereExp.join(") \n" +
+            "  AND (") + ")", data
+        ).nodeify(callback);
     },
     
     // DEPRACATED use find()
