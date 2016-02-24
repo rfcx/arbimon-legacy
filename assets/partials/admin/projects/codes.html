@@ -31,7 +31,12 @@
             <!-- hash -->
             <field title="Created" key="created">{{row.created}}</field>
             <field title="Creator" key="creator">{{row.creator}}</field>
-            <field title="Payload" key="payload">{{row.payload}}</field>
+            <field title="Recordings" key="row.payload.recordings">
+                {{row.payload.recordings}}
+            </field>
+            <field title="Processing" key="row.payload.processing">
+                {{row.payload.processing}}
+            </field>
             <field title="Consumed" key="consumed">{{row.consumed ? "Yes" : "No"}}</field>
             <field title="Consumer" key="consumer">{{row.consumer || "---"}}</field>
             <field title="Project" key="project">{{row.project || "---"}}</field>
