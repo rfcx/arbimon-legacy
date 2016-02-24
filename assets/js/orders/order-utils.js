@@ -29,6 +29,14 @@ angular.module('a2.orders.order-utils', [
         paymentsStatus: function() {
             return $http.get('/api/orders/payments-status', {cache:true});
         },
+
+        checkCouponCode: function(code, project) {
+            return $http.post('/api/orders/check-coupon', {
+                hash:code, project:project
+            }).then(function(response){
+                return response.data;
+            });
+        },
         
         getOrdersContact: function() {
             return $http.get('/api/orders/contact', {cache:true});

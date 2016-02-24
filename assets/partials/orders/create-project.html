@@ -8,12 +8,13 @@
 
     <div class="modal-body">
         <project-form ng-model="project" valid="isValid"></project-form>
-        <plan-select plan="project.plan" auto-payments-enabled="autoPaymentsEnabled" orders-contact="ordersContact" recorder-qty="recorderQty"></plan-select>
+        <plan-select project="project" plan="project.plan" auto-payments-enabled="autoPaymentsEnabled" orders-contact="ordersContact" recorder-qty="recorderQty"></plan-select>
     </div>
     <div class="modal-footer">
         <button class="btn btn-primary" type="submit" >
-            <span ng-if="recorderQty <= 0 || (project.plan && project.plan.tier == 'free')">Review order</span>
-            <span ng-if="recorderQty > 0 && (project.plan && project.tier != 'free')">Enter shipping info</span>
+            <span ng-if="(!project.plan.coupon && recorderQty <= 0) || project.plan.tier == 'free'">Review order</span>
+            <span ng-if="project.plan.coupon && project.plan.tier != 'free'">Redeem Coupon</span>
+            <span ng-if="!project.plan.coupon && recorderQty  > 0 && project.plan.tier != 'free'">Enter shipping info</span>
         </button>
         <button class="btn btn-default" type="button" 
             ng-click="$dismiss() | trackEvent:'Home-Create-Project':'close'">

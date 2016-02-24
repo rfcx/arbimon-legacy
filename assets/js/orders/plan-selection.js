@@ -2,10 +2,49 @@ angular.module('a2.orders.plan-selection', [
     'countries-list',
     'ui.bootstrap',
     'humane',
+    'a2.orders.directives.plan-capacity',
+    'a2.orders.directives.tier-select',
     'a2.directives',
     'a2.services',
 ])
 .controller('PlanSelectionCtrl', function($scope, a2orderUtils) {
+    this.coupon = {
+        code:'',
+        validation:null,
+    };
+    
+    this.checkCouponCode = function(){
+        if(this.coupon.code){
+            this.coupon.validation = {
+                class: 'fa fa-spinner fa-spin'
+            };
+            delete this.coupon.payload;
+            delete $scope.plan.coupon;
+            return a2orderUtils.checkCouponCode(this.coupon.code, this.project).then((function(code){
+                if(code.valid){
+                    $scope.plan.coupon = code;
+                    this.coupon.payload = code.payload;
+                    this.coupon.validation = {
+                        valid: true,
+                        class: 'fa fa-check text-success',
+                    };
+                } else {
+                    this.coupon.validation = {
+                        valid: false,
+                        class: 'fa fa-times text-danger'
+                    };
+                }
+            }).bind(this), (function(){
+                this.coupon.validation = {
+                    valid: false,
+                    class: 'fa fa-times text-danger'
+                };
+            }).bind(this));
+        } else {
+            delete this.coupon.validation;
+        }
+    };
+    
     $scope.freePlan = { 
         cost: 0, 
         storage: 100, 
@@ -115,6 +154,7 @@ angular.module('a2.orders.plan-selection', [
     return {
         restrict: 'E',
         scope: {
+            'project': '=',
             'plan': '=',
             'recorderQty': '=',
             'availablePlans' : '=',
@@ -125,6 +165,11 @@ angular.module('a2.orders.plan-selection', [
         },
         templateUrl: '/partials/orders/select-plan.html',
         controller: 'PlanSelectionCtrl as controller',
+        link: function(scope, element, attrs, controller){
+            scope.$watch('project', function(project){
+                controller.project = project;
+            });
+        }
     };
 })
 ;
