@@ -1,10 +1,11 @@
 angular.module('a2.orders.order-summary', [
     'a2.orders.orders',
     'a2.orders.order-utils',
+    'a2.orders.project-order-service',
     'ui.bootstrap',
     'humane',
 ])
-.controller('OrderSummaryCtrl', function($scope, $http, $modalInstance, orderData, notify, $window, a2order, a2orderUtils) {
+.controller('OrderSummaryCtrl', function($scope, $http, $modalInstance, orderData, notify, $window, a2order, a2orderUtils, ProjectOrderService) {
     if(orderData.address) {
         $scope.address = orderData.address;
     }
@@ -33,52 +34,52 @@ angular.module('a2.orders.order-summary', [
     
     $scope.submit = function() {
         $scope.waiting = true;
-        $http.post('/api/orders/'+orderData.action, orderData)
-            .success(function(data) {
-                console.log(data);
-                // if free project notify project was created
-                if(data.message) {
-                    notify.log(data.message);
-                    $modalInstance.close();
-                }
-                
-                // else redirect to paypal
-                if(data.approvalUrl) {
-                    $window.location.assign(data.approvalUrl);
-                }
+        console.log(orderData);
+        return ProjectOrderService.placeOrder(orderData).then(function(response){
+            var data = response.data;
+            console.log(data);
+            // if free project notify project was created
+            if(data.message) {
+                notify.log(data.message);
+                $modalInstance.close();
+            }            
+            // else redirect to paypal
+            else if(data.approvalUrl) {
+                $window.location.assign(data.approvalUrl);
+            }
+            $scope.waiting = false;
+        }).catch(function(err){
+            var data = err;
+            if(!data) {
                 $scope.waiting = false;
-            })
-            .error(function(data) {
-                if(!data) {
-                    $scope.waiting = false;
-                    return;
-                }
-                
-                var responded = false;
-                if(data.freeProjectLimit) {
-                    $modalInstance.dismiss();
-                    notify.error(
-                        'You already have own a free project, '+
-                        'the limit is one per user'
-                    );
-                    responded = true;
-                }
-                
-                if(data.nameExists) {
-                    notify.error('Name <b>'+$scope.project.name+'</b> not available');
-                    responded = true;
-                }
-                
-                if(data.urlExists) {
-                    notify.error('URL <b>'+$scope.project.url+'</b> is taken, choose another one');
-                    responded = true;
-                }
-                
-                if(!responded)
-                    notify.serverError();
-                    
-                $scope.waiting = false;
-            });
+                return;
+            }
+            
+            var responded = false;
+            if(data.freeProjectLimit) {
+                $modalInstance.dismiss();
+                notify.error(
+                    'You already have own a free project, '+
+                    'the limit is one per user'
+                );
+                responded = true;
+            }
+            
+            if(data.nameExists) {
+                notify.error('Name <b>'+$scope.project.name+'</b> not available');
+                responded = true;
+            }
+            
+            if(data.urlExists) {
+                notify.error('URL <b>'+$scope.project.url+'</b> is taken, choose another one');
+                responded = true;
+            }
+            
+            if(!responded)
+            notify.serverError();
+            
+            $scope.waiting = false;
+        });
     };
 })
 ;
