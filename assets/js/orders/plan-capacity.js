@@ -10,9 +10,15 @@ angular.module('a2.orders.directives.plan-capacity', [
     return {
         restrict: 'E',
         scope: {
+            'disabled': '=',
             'minutes': '=',
         },
         templateUrl: '/partials/orders/plan-capacity.html',
+        link:function(scope, element, attrs){
+            if(!attrs.enabled){
+                scope.enabled = true;
+            }
+        }
     };
 })
 ;
