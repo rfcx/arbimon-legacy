@@ -50,6 +50,7 @@
 /*
  * general styles
 */
+@import "branding.less";
 
 // ui-bootstrap no href fix
 .nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
@@ -756,5 +757,45 @@ textarea.fixed-width {
     li {
         font-size: 1.2em;
         padding: 10px 0px;
+    }
+}
+
+
+.oauth-buttons{
+    padding-top: 15px;
+    > *{
+        display:block;
+        &:not(:first-child) {
+            margin-top: 7px;
+        }
+    }
+}
+
+.v-center > *{
+    vertical-align: middle;
+}
+
+input[type="number"]{
+    text-align: right;
+}
+
+div.inlined{
+    display: inline-block;
+}
+
+label.normal{
+    font-weight: normal;
+}
+
+
+.explainer {
+    float: right;
+    font-size: 0.9em;
+    font-weight: normal;
+    ::before{
+        content:'(';
+    }
+    ::after{
+        content:')';
     }
 }

@@ -183,11 +183,10 @@ describe('Project', function(){
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n" +
                 "WHERE (s.project_id = ? OR pis.project_id = ?)"
             ]={value:['site1', 'site2']};
-            projects.getProjectSites(1, function(err, results){
-                should.not.exist(err);
+            projects.getProjectSites(1).then(function(results){
                 results.should.deep.equal(['site1', 'site2']);
                 done();
-            });
+            }).catch(done);
         });
         it('Should compute rec_count if options.compute.rec_count.', function(done){
             dbpool.pool.cache[
@@ -209,11 +208,10 @@ describe('Project', function(){
                 "WHERE r.site_id IN (?)\n" +
                 "GROUP BY r.site_id"
             ]={value:[{site_id:1, rec_count:4}, {site_id:2, rec_count:19}]};
-            projects.getProjectSites(1, {compute:{rec_count:true}}, function(err, results){
-                should.not.exist(err);
+            projects.getProjectSites(1, {compute:{rec_count:true}}).then(function(results){
                 results.should.deep.equal([{id:1, rec_count:4}, {id:2, rec_count:19}]);
                 done();
-            });
+            }).catch(done);
         });
         it('Should compute has_logs if options.compute.has_logs.', function(done){
             dbpool.pool.cache[
@@ -235,16 +233,17 @@ describe('Project', function(){
                 "WHERE SLF.site_id IN (?)\n" +
                 "GROUP BY SLF.site_id"
             ]={value:[{site_id:1, has_logs:1}, {site_id:2, has_logs:0}]};
-            projects.getProjectSites(1, {compute:{has_logs:true}}, function(err, results){
-                should.not.exist(err);
+            projects.getProjectSites(1, {compute:{has_logs:true}}).then(function(results){
                 results.should.deep.equal([{id:1, has_logs:1}, {id:2, has_logs:0}]);
                 done();
-            });
+            }).catch(done);
         });
         it('Requires project_id to be a number.', function(done){
-            projects.getProjectSites('1', function(err, results){
-                should.exist(err);
+            projects.getProjectSites('1').then(function(results){
                 should.not.exist(results);
+                done(new Error("Promise should not have been resolved."));
+            }).catch(function(err){
+                should.exist(err);
                 done();
             });
         });

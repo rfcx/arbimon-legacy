@@ -1,40 +1,43 @@
 <ng-form name="a2projForm">
     <div class="form-group" 
         ng-class="{'has-error': errorName }">
-        <label class="control-label" for="name" >Name:</label>
+        <label class="control-label" for="name" >
+            Name:
+        </label>
+        <span class="explainer" ng-class="errorName ? 'text-danger' : ''">
+            6 - 50 characters
+        </span>
         <input class="form-control" 
             id="name" 
             name="name" 
             type="text" 
             ng-model="project.name"
-            ng-change="verify()"
+            ng-change="controller.nameChanged()"
             placeholder="Project Name" required>
     </div>
-    <div class="form-group" >
-        <p ng-show="errorName" class="text-danger">
-            {{ errorName }}
-        </p>
-    </div>
     <div class="form-group" ng-class="{'has-error': errorUrl }">
-        <label class="control-label" for="url">URL: </label> 
-        <input class="form-control" 
-            id="url" 
-            name="url" 
-            type="text" 
-            ng-model="project.url"
-            ng-change="verify()"
-            placeholder="examples: project_url, project-url, projecturl" required>
-    </div>
-    <div class="form-group" >
-        <p ng-show="errorUrl" class="text-danger">
-            {{ errorUrl }}
-        </p>
-        <p ng-hide="errorUrl || !project.url" class="text-info">
-            https://arbimon.sieve-analytics.com/project/{{ project.url }}
-        </p>
+        <label class="control-label" for="url">
+            URL: 
+        </label> 
+        <span class="explainer" ng-class="errorUrl ? 'text-danger' : ''">
+            6 - 50 characters, only alphanumeric characters separated by - or _
+        </span>
+        <div class="input-group">
+            <label class="input-group-addon" for="url" >https://arbimon.sieve-analytics.com/project/</label>
+            <input class="form-control" 
+                id="url" 
+                name="url" 
+                type="text" 
+                ng-model="project.url"
+                ng-change="controller.urlChanged()"
+                placeholder="your-project" required />
+        </div>
     </div>
     <div class="form-group" ng-class="{'has-error': errorDesc }">
         <label class="control-label" for="description">Description:</label>
+        <span class="explainer" ng-class="errorDesc ? 'text-danger' : ''">
+            50 characters or more.  (You have {{+project.description.length}}).
+        </span>
         <textarea class="form-control fixed-width" 
             id="description" 
             name="description" 
@@ -42,11 +45,6 @@
             ng-change="verify()"
             placeholder="this project is about... (mininum 50 characters)" required>
         </textarea>
-    </div>
-    <div class="form-group" >
-        <p ng-show="errorDesc" class="text-danger">
-            {{ errorDesc }}
-        </p>
     </div>
     <div class="radio">
         <label class="control-label" for="public">

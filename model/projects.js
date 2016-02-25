@@ -31,86 +31,56 @@ var Projects = {
     },
     
     find: function (query, callback) {
-        var q = "SELECT p.*, \n"+
-                "   pp.tier, \n"+
-                "   pp.storage AS storage_limit, \n"+
-                "   pp.processing AS processing_limit, \n"+
-                "   pp.created_on AS plan_created, \n"+
-                "   pp.activation AS plan_activated, \n"+
-                "   pp.duration_period AS plan_period \n"+
-                "FROM projects AS p \n"+
-                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                "WHERE ";
-        var whereExp = [];
+        var whereExp = [], data=[];
         
-        if(query.id) {
-            whereExp.push("p.project_id = " + mysql.escape(query.id));
+        if(query.hasOwnProperty("id")) {
+            whereExp.push("p.project_id = ?");
+            data.push(query.id);
         }
-        if(query.url) {
-            whereExp.push("p.url = " + mysql.escape(query.url));
+        if(query.hasOwnProperty("url")) {
+            whereExp.push("p.url = ?");
+            data.push(query.url);
         }
-        if(query.name) {
-            whereExp.push("p.name = " + mysql.escape(query.name));
+        if(query.hasOwnProperty("name")) {
+            whereExp.push("p.name = ?");
+            data.push(query.name);
         }
         
         if(!whereExp.length) {
-            return callback(new Error('no query params'));
+            return q.reject(new Error('no query params'));
         }
         
-        q += whereExp.join(' \nAND ');
-        
-        return queryHandler(q, callback);
+        return dbpool.query(
+            "SELECT p.*, \n"+
+            "   pp.tier, \n"+
+            "   pp.storage AS storage_limit, \n"+
+            "   pp.processing AS processing_limit, \n"+
+            "   pp.created_on AS plan_created, \n"+
+            "   pp.activation AS plan_activated, \n"+
+            "   pp.duration_period AS plan_period \n"+
+            "FROM projects AS p \n"+
+            "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+            "WHERE (" + whereExp.join(") \n" +
+            "  AND (") + ")", data
+        ).nodeify(callback);
     },
     
     // DEPRACATED use find()
     findById: function (project_id, callback) {
         console.info('projects.findById DEPRECATED');
-        var query = "SELECT p.*, \n"+
-                    "   pp.tier, \n"+
-                    "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit, \n"+
-                    "   pp.created_on AS plan_created, \n"+
-                    "   pp.activation AS plan_activated, \n"+
-                    "   pp.duration_period AS plan_period \n"+
-                    "FROM projects AS p \n"+
-                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                    "WHERE p.project_id = " + mysql.escape(project_id);
-
-        return queryHandler(query , callback);
+        return Projects.find({id: project_id}, callback);
     },
     
     // DEPRACATED use find()
     findByUrl: function (project_url, callback) {
         console.info('projects.findByUrl DEPRECATED');
-        var query = "SELECT p.*, \n"+
-                    "   pp.tier, \n"+
-                    "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit, \n"+
-                    "   pp.created_on AS plan_created, \n"+
-                    "   pp.activation AS plan_activated, \n"+
-                    "   pp.duration_period AS plan_period \n"+
-                    "FROM projects AS p \n"+
-                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                    "WHERE p.url = " + mysql.escape(project_url);
-
-        return queryHandler(query , callback);
+        return Projects.find({url: project_url}, callback);
     },
 
     // DEPRACATED use find()
     findByName: function (project_name, callback) {
         console.info('projects.findByName DEPRECATED');
-        var query = "SELECT p.*, \n"+
-                    "   pp.tier, \n"+
-                    "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit, \n"+
-                    "   pp.created_on AS plan_created, \n"+
-                    "   pp.activation AS plan_activated, \n"+
-                    "   pp.duration_period AS plan_period \n"+
-                    "FROM projects AS p \n"+
-                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                    "WHERE p.name = " + mysql.escape(project_name);
-
-        return queryHandler(query , callback);
+        return Projects.find({name: project_name}, callback);
     },
 
     /** Fetch a project's list of sites.
@@ -120,14 +90,11 @@ var Projects = {
      * @param {Boolean} options.compute.has_logs - compute wether each site has log files or not.
      * @return {Promise} promise resolving to the list of sites.
      */
-    getProjectSites: function(project_id, options, callback){
-        if(callback === undefined && options instanceof Function){
-            callback = options;
-            options = undefined;
+    getProjectSites: function(project_id, options){
+        if(typeof project_id !== 'number'){
+            return q.reject(new Error("invalid type for 'project_id'"));
         }
-        if(typeof project_id !== 'number')
-            return callback(new Error("invalid type for 'project_id'"));
-        var promise = q.nfcall(queryHandler, 
+        return dbpool.query(
                 "SELECT s.site_id as id, \n"+
                 "       s.name, \n"+
                 "       s.lat, \n"+
@@ -140,60 +107,48 @@ var Projects = {
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
                 "WHERE (s.project_id = ? OR pis.project_id = ?)",
                 [project_id, project_id, project_id, project_id]
-        ).get(0);
-        if(options && options.compute){
-            var sites, sitesById={};
-            var siteIds;
-            promise = promise.then(function(_sites){
-                sites = _sites;
-                siteIds = sites.map(function(site){
+        ).then(function(sites){
+            if(sites.length && options && options.compute){
+                var sitesById={}, siteIds = sites.map(function(site){
                     sitesById[site.id] = site;
                     return site.id;
                 });
-            });
-            
-            if(options.compute.rec_count){
-                promise = promise.then(function(sites){
-                    return q.nfcall(queryHandler, 
-                            "SELECT r.site_id, COUNT(r.recording_id ) as rec_count\n"+
-                            "FROM recordings AS r\n"+
-                            "WHERE r.site_id IN (?)\n" +
-                            "GROUP BY r.site_id",
-                            [siteIds]
-                    );
-                }).then(function(results){
-                    sites.forEach(function(site){
-                        site.rec_count=0;
-                    });
-                    results[0].forEach(function(row){
-                        sitesById[row.site_id].rec_count = row.rec_count;
-                    });
+                
+                return q.all([
+                    options.compute.rec_count ? dbpool.query(
+                        "SELECT r.site_id, COUNT(r.recording_id ) as rec_count\n"+
+                        "FROM recordings AS r\n"+
+                        "WHERE r.site_id IN (?)\n" +
+                        "GROUP BY r.site_id",
+                        [siteIds]
+                    ).then(function(results){
+                        sites.forEach(function(site){
+                            site.rec_count=0;
+                        });
+                        results[0].forEach(function(row){
+                            sitesById[row.site_id].rec_count = row.rec_count;
+                        });
+                    }) : q(),
+                    options.compute.has_logs ? dbpool.query(
+                        "SELECT SLF.site_id, COUNT(SLF.site_log_file_id ) > 0 as has_logs \n" +
+                        "FROM site_log_files AS SLF\n" +
+                        "WHERE SLF.site_id IN (?)\n" +
+                        "GROUP BY SLF.site_id",
+                        [siteIds]
+                    ).then(function(results){
+                        sites.forEach(function(site){
+                            site.has_logs=false;
+                        });
+                        results[0].forEach(function(row){
+                            sitesById[row.site_id].has_logs = row.has_logs;
+                        });
+                    }): q()
+                ]).then(function(){
+                    return sites;
                 });
             }
-            if(options.compute.has_logs){
-                promise = promise.then(function(sites){
-                    return q.nfcall(queryHandler, 
-                            "SELECT SLF.site_id, COUNT(SLF.site_log_file_id ) > 0 as has_logs \n" +
-                            "FROM site_log_files AS SLF\n" +
-                            "WHERE SLF.site_id IN (?)\n" +
-                            "GROUP BY SLF.site_id",
-                            [siteIds]
-                    );
-                }).then(function(results){
-                    sites.forEach(function(site){
-                        site.has_logs=false;
-                    });
-                    results[0].forEach(function(row){
-                        sitesById[row.site_id].has_logs = row.has_logs;
-                    });
-                });
-            }
-            promise = promise.then(function(){
-                return sites;
-            });
-        }
-        
-        return promise.nodeify(callback);
+            return sites;
+        });
     },
     
     /**

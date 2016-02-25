@@ -93,6 +93,12 @@ module.exports = function(grunt) {
                 src: 'bower_components/jquery-ui/jquery-ui.min.js',
                 dest: 'public/assets/jquery/',
             },
+            robotoFontface: {
+                expand: true,
+                cwd: 'bower_components/roboto-fontface/',
+                src: ['css/*', 'fonts/*'],
+                dest: 'public/assets/roboto-fontface/',
+            },
             fontAwesome: {
                 expand: true,
                 cwd: 'bower_components/font-awesome/',

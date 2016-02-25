@@ -16,3 +16,5 @@ exports.orders          = require('./orders');
 exports.plans           = require('./plans');
 exports.settings        = require('./system-settings');
 exports.classifications = require('./classifications');
+exports.oauth           = require('./oauth');
+exports.ActivationCodes = require('./activation-codes');
