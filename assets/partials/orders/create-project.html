@@ -11,10 +11,14 @@
         <plan-select project="project" plan="project.plan" auto-payments-enabled="autoPaymentsEnabled" orders-contact="ordersContact" recorder-qty="recorderQty"></plan-select>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" type="submit" >
-            <span ng-if="(!project.plan.coupon && recorderQty <= 0) || project.plan.tier == 'free'">Review order</span>
-            <span ng-if="project.plan.coupon && project.plan.tier != 'free'">Redeem Coupon</span>
-            <span ng-if="!project.plan.coupon && recorderQty  > 0 && project.plan.tier != 'free'">Enter shipping info</span>
+        <button class="btn btn-primary" type="submit" ng-disabled="!autoPaymentsEnabled && project.plan.tier != 'free' && !project.plan.coupon">
+            {{
+                project.plan.tier == 'free' ? 'Create FREE Project' : (
+                    project.plan.coupon ? 'Redeem Coupon' : (
+                        recorderQty > 0 ? 'Enter shipping info' : 'Review order'
+                    )
+                )
+            }}
         </button>
         <button class="btn btn-default" type="button" 
             ng-click="$dismiss() | trackEvent:'Home-Create-Project':'close'">
