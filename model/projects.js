@@ -90,13 +90,10 @@ var Projects = {
      * @param {Boolean} options.compute.has_logs - compute wether each site has log files or not.
      * @return {Promise} promise resolving to the list of sites.
      */
-    getProjectSites: function(project_id, options, callback){
-        if(callback === undefined && options instanceof Function){
-            callback = options;
-            options = undefined;
+    getProjectSites: function(project_id, options){
+        if(typeof project_id !== 'number'){
+            return q.reject(new Error("invalid type for 'project_id'"));
         }
-        if(typeof project_id !== 'number')
-            return callback(new Error("invalid type for 'project_id'"));
         var promise = q.nfcall(queryHandler, 
                 "SELECT s.site_id as id, \n"+
                 "       s.name, \n"+
@@ -163,7 +160,7 @@ var Projects = {
             });
         }
         
-        return promise.nodeify(callback);
+        return promise;
     },
     
     /**
