@@ -35,3 +35,11 @@
     - Fixed breaking bug in uploader.
 - v1.2.5
     - 1 free project limit is now waived for super users
+- v1.2.6
+    - Fixed uploaded recordings double counting
+- v1.2.7
+    - Fixed double counting for storage usage
+- v1.3.0
+    - Added login with facebook and google buttons
+    - Added activation codes for creating Projects
+    - fixed crashing bug with getProjectSites on a project without sites.
