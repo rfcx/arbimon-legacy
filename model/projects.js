@@ -125,7 +125,7 @@ var Projects = {
                         sites.forEach(function(site){
                             site.rec_count=0;
                         });
-                        results[0].forEach(function(row){
+                        results.forEach(function(row){
                             sitesById[row.site_id].rec_count = row.rec_count;
                         });
                     }) : q(),
@@ -139,7 +139,7 @@ var Projects = {
                         sites.forEach(function(site){
                             site.has_logs=false;
                         });
-                        results[0].forEach(function(row){
+                        results.forEach(function(row){
                             sitesById[row.site_id].has_logs = row.has_logs;
                         });
                     }): q()

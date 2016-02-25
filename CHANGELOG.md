@@ -43,3 +43,5 @@
     - Added login with facebook and google buttons
     - Added activation codes for creating Projects
     - fixed crashing bug with getProjectSites on a project without sites.
+- v1.3.1
+    - fixed crashing bug with getProjectSites on a project without sites. (again)
