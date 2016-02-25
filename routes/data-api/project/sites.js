@@ -12,11 +12,9 @@ router.get('/', function(req, res, next) {
             rec_count:true,
             has_logs:true
         }
-    },function(err, rows) {
-        if(err) return next(err);
+    }).then(function(rows) {
         res.json(rows);
-        return null;
-    });
+    }).catch(next);
 });
 
 router.post('/create', function(req, res, next) {
