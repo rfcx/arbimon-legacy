@@ -1,6 +1,7 @@
 var debug = require('debug')('arbimon2:dbpool');
 var mysql = require('mysql');
 var config = require('../config');
+var q = require('q');
 var showQueriesInConsole = true;
 var dbpool = {
     pool: mysql.createPool({
@@ -9,6 +10,8 @@ var dbpool = {
         password : config('db').password,
         database : config('db').database
     }),
+    
+    escape: mysql.escape.bind(mysql),
 
     enable_query_debugging : function(connection){
         if(connection.$_qd_enabled_$){
@@ -123,6 +126,10 @@ var dbpool = {
             }
         });
     },
+};
+
+dbpool.query = function(sql, options){
+    return q.ninvoke(dbpool, 'queryHandler', sql, options).get(0);
 };
 
 module.exports = dbpool;

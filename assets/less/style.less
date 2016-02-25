@@ -774,3 +774,28 @@ textarea.fixed-width {
 .v-center > *{
     vertical-align: middle;
 }
+
+input[type="number"]{
+    text-align: right;
+}
+
+div.inlined{
+    display: inline-block;
+}
+
+label.normal{
+    font-weight: normal;
+}
+
+
+.explainer {
+    float: right;
+    font-size: 0.9em;
+    font-weight: normal;
+    ::before{
+        content:'(';
+    }
+    ::after{
+        content:')';
+    }
+}

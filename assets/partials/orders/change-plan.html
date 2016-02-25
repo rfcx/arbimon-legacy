@@ -22,11 +22,11 @@
                             Due on: 
                             <span>{{ currentPlan.due | moment: 'll' }}</span>
                             <span ng-show="!currentPlan.due">
-                                This plan do not have a due date yet 
+                                This plan does not have a due date yet 
                                 <i class="fa fa-info-circle"
                                     tooltip=
-                                        "The plan due date is set on the first 
-                                        upload or after 30 days of creation, 
+                                        "The plan's due date is set on the first 
+                                        upload or after 30 days of its creation, 
                                         whichever happens first">
                                 </i>
                             </span>
@@ -47,11 +47,11 @@
                 </p>
                 <p ng-if="autoPaymentsEnabled === false" class="text-danger">
                     Payments are unavailable, sorry for the inconvenience. <br>
-                    Please contact us if you need to change your plan.
+                    Please <a ng-href="mailto:{{ordersContact.email}}">contact us</a> if you need to change your plan.
                 </p>
             </div>
         </div>
-        <plan-select 
+        <plan-select  ng-if="autoPaymentsEnabled"
             current-plan="currentPlan"
             usage="minUsage"
             plan="project.plan"
@@ -61,7 +61,7 @@
         </plan-select>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" type="submit">
+        <button class="btn btn-primary" type="submit" ng-if="autoPaymentsEnabled">
             <span ng-show="recorderQty <= 0 || project.plan.tier == 'free'">Review order</span>
             <span ng-show="recorderQty > 0 && project.plan.tier != 'free'">Enter shipping info</span>
         </button>

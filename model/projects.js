@@ -31,86 +31,56 @@ var Projects = {
     },
     
     find: function (query, callback) {
-        var q = "SELECT p.*, \n"+
-                "   pp.tier, \n"+
-                "   pp.storage AS storage_limit, \n"+
-                "   pp.processing AS processing_limit, \n"+
-                "   pp.created_on AS plan_created, \n"+
-                "   pp.activation AS plan_activated, \n"+
-                "   pp.duration_period AS plan_period \n"+
-                "FROM projects AS p \n"+
-                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                "WHERE ";
-        var whereExp = [];
+        var whereExp = [], data=[];
         
-        if(query.id) {
-            whereExp.push("p.project_id = " + mysql.escape(query.id));
+        if(query.hasOwnProperty("id")) {
+            whereExp.push("p.project_id = ?");
+            data.push(query.id);
         }
-        if(query.url) {
-            whereExp.push("p.url = " + mysql.escape(query.url));
+        if(query.hasOwnProperty("url")) {
+            whereExp.push("p.url = ?");
+            data.push(query.url);
         }
-        if(query.name) {
-            whereExp.push("p.name = " + mysql.escape(query.name));
+        if(query.hasOwnProperty("name")) {
+            whereExp.push("p.name = ?");
+            data.push(query.name);
         }
         
         if(!whereExp.length) {
-            return callback(new Error('no query params'));
+            return q.reject(new Error('no query params'));
         }
         
-        q += whereExp.join(' \nAND ');
-        
-        return queryHandler(q, callback);
+        return dbpool.query(
+            "SELECT p.*, \n"+
+            "   pp.tier, \n"+
+            "   pp.storage AS storage_limit, \n"+
+            "   pp.processing AS processing_limit, \n"+
+            "   pp.created_on AS plan_created, \n"+
+            "   pp.activation AS plan_activated, \n"+
+            "   pp.duration_period AS plan_period \n"+
+            "FROM projects AS p \n"+
+            "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+            "WHERE (" + whereExp.join(") \n" +
+            "  AND (") + ")", data
+        ).nodeify(callback);
     },
     
     // DEPRACATED use find()
     findById: function (project_id, callback) {
         console.info('projects.findById DEPRECATED');
-        var query = "SELECT p.*, \n"+
-                    "   pp.tier, \n"+
-                    "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit, \n"+
-                    "   pp.created_on AS plan_created, \n"+
-                    "   pp.activation AS plan_activated, \n"+
-                    "   pp.duration_period AS plan_period \n"+
-                    "FROM projects AS p \n"+
-                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                    "WHERE p.project_id = " + mysql.escape(project_id);
-
-        return queryHandler(query , callback);
+        return Projects.find({id: project_id}, callback);
     },
     
     // DEPRACATED use find()
     findByUrl: function (project_url, callback) {
         console.info('projects.findByUrl DEPRECATED');
-        var query = "SELECT p.*, \n"+
-                    "   pp.tier, \n"+
-                    "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit, \n"+
-                    "   pp.created_on AS plan_created, \n"+
-                    "   pp.activation AS plan_activated, \n"+
-                    "   pp.duration_period AS plan_period \n"+
-                    "FROM projects AS p \n"+
-                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                    "WHERE p.url = " + mysql.escape(project_url);
-
-        return queryHandler(query , callback);
+        return Projects.find({url: project_url}, callback);
     },
 
     // DEPRACATED use find()
     findByName: function (project_name, callback) {
         console.info('projects.findByName DEPRECATED');
-        var query = "SELECT p.*, \n"+
-                    "   pp.tier, \n"+
-                    "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit, \n"+
-                    "   pp.created_on AS plan_created, \n"+
-                    "   pp.activation AS plan_activated, \n"+
-                    "   pp.duration_period AS plan_period \n"+
-                    "FROM projects AS p \n"+
-                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                    "WHERE p.name = " + mysql.escape(project_name);
-
-        return queryHandler(query , callback);
+        return Projects.find({name: project_name}, callback);
     },
 
     /** Fetch a project's list of sites.
