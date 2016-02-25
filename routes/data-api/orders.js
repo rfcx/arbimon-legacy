@@ -23,10 +23,8 @@ var shippingCalculator = require('../../utils/shipping-calculator.js');
 /**
     creates a new project an create news about project creation
 */
-var createProject = function(project, userId, callback) {
-    model.projects.create(project, userId, function(err, projectId) {
-        if(err) return callback(err);
-        
+var createProject = function(project, userId) {
+    return q.ninvoke(model.projects, "create", project, userId).then(function(projectId) {
         model.projects.insertNews({
             news_type_id: 1, // project created
             user_id: userId,
@@ -34,7 +32,7 @@ var createProject = function(project, userId, callback) {
             data: JSON.stringify({})
         });
         
-        callback(null, projectId);
+        return projectId;
     });
 };
 
@@ -146,6 +144,7 @@ var freePlan = {
 
 
 router.post('/create-project', function(req, res, next) {
+    res.type('json');
     if(req.session.user && req.session.user.isAnonymousGuest) {
         return res.status(401).json({ error: "unauthorized"});
     }
@@ -157,35 +156,39 @@ router.post('/create-project', function(req, res, next) {
     req.body.recorderQty = +req.body.recorderQty || 0;
     
     
-    q.Promise(function(){
-        var project = req.body.project;
-        var plan = project.plan;
-        delete project.plan;
-        //type cast is_private
-        project.is_private = !!project.is_private;
+    var project = req.body.project;
+    var plan = project.plan;
+    var couponHash = req.body.coupon;
+    delete project.plan;
+    //type cast is_private
+    project.is_private = !!project.is_private;
+
+    q.all([
+        q.ninvoke(joi, 'validate', project, projectSchema, {
+            stripUnknown: true,
+            presence: 'required',
+        }),
+        plan ? q.ninvoke(joi, 'validate', plan, planSchema, {
+            stripUnknown: true,
+            presence: 'required',
+        }) : q(),
+        couponHash ? model.ActivationCodes.listAll({hash: couponHash}).get(0) : q()
+    ]).then(function(all){
+        var project = all[0];
+        var plan    = all[1];
+        var coupon  = all[2];
+        
+        console.log(project, plan, coupon);
         
         return q.all([
-            q.ninvoke(joi, 'validate', project, projectSchema, {
-                stripUnknown: true,
-                presence: 'required',
-            }),
-            q.ninvoke(joi, 'validate', plan, planSchema, {
-                stripUnknown: true,
-                presence: 'required',
-            })
-        ]);
-    }).then(function(all){
-        var project=all[0];
-        var plan = all[1];
-        return q.all([
-            model.projects.findByName(project.name).then(function(rows){
+            model.projects.find({name:project.name}).then(function(rows){
                 if(rows.length){
-                    throw new APIError({nameExists:true}, 403);
+                    throw new APIError({nameExists:true}, 422);
                 }
             }),
-            model.projects.findByUrl(project.url).then(function(rows){
+            model.projects.find({url:project.url}).then(function(rows){
                 if(rows.length){
-                    throw new APIError({urlExists:true}, 403);
+                    throw new APIError({urlExists:true}, 422);
                 }
             })
         ]).then(function() {
@@ -193,50 +196,75 @@ router.post('/create-project', function(req, res, next) {
             // assign project_type_id to normal type
             project.project_type_id = 1;
             
-            if(plan.tier == 'free') {
-                plan = freePlan;
-                
-                // check if user own another free project
-                model.users.findOwnedProjects(req.session.user.id, { free: true }).then(function(rows) {
-                    if(rows.length > 0 && !req.session.user.isSuper) {
-                        throw new APIError({freeProjectLimit: true}, 403);
+            if(couponHash){
+                if(coupon){
+                    if(coupon.consumed){
+                        throw new APIError("The given coupon has expired.", 424);
                     }
-                }).then(function(){
-                    project.plan = plan;
-                    return createProject(project, req.session.user.id);
-                }).then(function(result) {
-                    res.json({ 
-                        message: util.format("Project '%s' successfully created!", project.name)
-                    });
-                });
-            } else if(project.plan.tier == 'paid') {                
-                // set plan cost base on selected plan minutes
-                plan.cost = plan.storage * plan.duration_period * 0.03;
-                plan.processing = plan.storage * 100;
-                plan.duration_period = plan.duration;
-                delete plan.duration;
-                
-                console.log('plan:', plan);
-                
-                var order = req.order = {
-                    action: 'create-project',
-                    planType: 'new',
-                    data: {
-                        plan: plan,
-                        project: project
-                    }
-                };
+                    console.log(coupon);
+                    project.plan = {
+                        storage : coupon.payload.recordings,
+                        processing : coupon.payload.processing,
+                        tier : 'paid',
+                    };
 
-                var addendum = {
-                    recorderQty: req.body.recorderQty,
-                    address: req.body.address
-                };
-                
-                return createOrder(req.session.user, order, addendum, req.appHost).then(function(orderHandle){
-                    res.json(orderHandle);
-                });
+                    return createProject(project, req.session.user.id).then(function() {
+                        return model.ActivationCodes.consumeCode(coupon, req.session.user.id);
+                    }).then(function(){
+                        res.json({ 
+                            message: util.format("Project '%s' successfully created!", project.name)
+                        });
+                    });
+
+                } else {
+                    throw new APIError("The given coupon does not exists.", 422);
+                }
             } else {
-                res.sendStatus(400);
+                if(plan.tier == 'free') {
+                    plan = freePlan;
+                    
+                    // check if user own another free project
+                    return model.users.findOwnedProjects(req.session.user.id, { free: true }).then(function(rows) {
+                        if(rows.length > 0 && !req.session.user.isSuper) {
+                            throw new APIError({freeProjectLimit: true}, 422);
+                        }
+                    }).then(function(){
+                        project.plan = plan;
+                        return createProject(project, req.session.user.id);
+                    }).then(function(result) {
+                        res.json({ 
+                            message: util.format("Project '%s' successfully created!", project.name)
+                        });
+                    });
+                } else if(project.plan.tier == 'paid') {                
+                    // set plan cost base on selected plan minutes
+                    plan.cost = plan.storage * plan.duration_period * 0.03;
+                    plan.processing = plan.storage * 100;
+                    plan.duration_period = plan.duration;
+                    delete plan.duration;
+                    
+                    console.log('plan:', plan);
+                    
+                    var order = req.order = {
+                        action: 'create-project',
+                        planType: 'new',
+                        data: {
+                            plan: plan,
+                            project: project
+                        }
+                    };
+                    
+                    var addendum = {
+                        recorderQty: req.body.recorderQty,
+                        address: req.body.address
+                    };
+                    
+                    return createOrder(req.session.user, order, addendum, req.appHost).then(function(orderHandle){
+                        res.json(orderHandle);
+                    });
+                } else {
+                    res.sendStatus(400);
+                }
             }
         });
     }).catch(next);
@@ -478,12 +506,8 @@ router.post('/process/:orderId', function(req, res, next) {
             if(req.order.action == 'create-project') {
                 createProject(
                     req.order.data.project, 
-                    req.session.user.id, 
-                    function(err) {
-                        if(err) return cb(err);
-                        cb();
-                    }
-                );
+                    req.session.user.id
+                ).nodeify(cb);
             }
             
             // update project plan
