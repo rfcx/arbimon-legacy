@@ -35,49 +35,15 @@ angular.module('a2.orders.order-summary', [
     $scope.submit = function() {
         $scope.waiting = true;
         console.log(orderData);
-        return ProjectOrderService.placeOrder(orderData).then(function(response){
-            var data = response.data;
+        return ProjectOrderService.placeOrder(orderData).then(function(data){
             console.log(data);
-            // if free project notify project was created
-            if(data.message) {
-                notify.log(data.message);
+            if(data.message) { // if free project notify project was created
                 $modalInstance.close();
-            }            
-            // else redirect to paypal
-            else if(data.approvalUrl) {
+            } else if(data.approvalUrl) { // else redirect to paypal
                 $window.location.assign(data.approvalUrl);
             }
             $scope.waiting = false;
         }).catch(function(err){
-            var data = err;
-            if(!data) {
-                $scope.waiting = false;
-                return;
-            }
-            
-            var responded = false;
-            if(data.freeProjectLimit) {
-                $modalInstance.dismiss();
-                notify.error(
-                    'You already have own a free project, '+
-                    'the limit is one per user'
-                );
-                responded = true;
-            }
-            
-            if(data.nameExists) {
-                notify.error('Name <b>'+$scope.project.name+'</b> not available');
-                responded = true;
-            }
-            
-            if(data.urlExists) {
-                notify.error('URL <b>'+$scope.project.url+'</b> is taken, choose another one');
-                responded = true;
-            }
-            
-            if(!responded)
-            notify.serverError();
-            
             $scope.waiting = false;
         });
     };

@@ -1,15 +1,42 @@
 angular.module('a2.orders.project-order-service', [
+    'humane',
 ])
-.factory("ProjectOrderService", function($q, $filter, $http){
+.factory("ProjectOrderService", function($q, $filter, $http, notify){
     var currencyFilter = $filter('currency');
-    return {
+    var ProjectOrderService = {
         placeOrder: function(orderData){
             if(!/(create|update)-project/.test(orderData.action)){
                 return $q.reject("Invalid action " + orderData.action);
             }
             var data = angular.merge({}, orderData);
             delete data.action;
-            return $http.post('/api/orders/'+orderData.action, orderData);
+            return $http.post('/api/orders/'+orderData.action, orderData).then(function(response){
+                var data = response.data;
+                // notify any succesfull messages
+                if(data.message) {
+                    notify.log(data.message);
+                }
+                return data;
+            }).catch(function(response){
+                var err = response.data;
+                console.log("err", err);
+                console.log("err resp", response);
+                if(err) {
+                    if(err.freeProjectLimit) {
+                        notify.error(
+                            'You already have own a free project, '+
+                            'the limit is one per user.'
+                        );
+                    } else if(err.nameExists) {
+                        notify.error('Name <b>'+orderData.project.name+'</b> not available.');
+                    } else if(err.urlExists) {
+                        notify.error('URL <b>'+orderData.project.url+'</b> is taken, choose another one.');
+                    } else {
+                        notify.serverError();
+                    }
+                }
+                throw err;
+            });
         },
         makeOrder: function(action, project, recorderQty, settings){
             console.log("makeOrder", action, project, recorderQty, settings);
@@ -49,5 +76,6 @@ angular.module('a2.orders.project-order-service', [
             });
         }
     };
+    return ProjectOrderService;
 })
 ;
