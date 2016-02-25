@@ -30,7 +30,7 @@ angular.module('a2.orders.create-project', [
         }).then(function(order){
             console.log(order);
             // if user added recorders to paid order show shipping address form
-            if(order.hasCoupon){
+            if(order.hasCoupon || !order.isPaidProject){
                 return ProjectOrderService.placeOrder(order.data).then(function(){
                     return $modalInstance.close();
                 });
