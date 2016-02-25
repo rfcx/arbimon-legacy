@@ -76,6 +76,15 @@ var ActivationCodes = {
             ]
         );
     },
+    consumeCode: function(code, consumer){
+        return db.query(
+            "UPDATE activation_codes\n"+
+            "SET consumed=1, consumer=?\n"+
+            "WHERE activation_code_id=?", [
+                consumer, code.id
+            ]
+        );
+    },
 };
 
 
