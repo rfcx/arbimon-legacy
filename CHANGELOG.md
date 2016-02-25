@@ -45,3 +45,5 @@
     - fixed crashing bug with getProjectSites on a project without sites.
 - v1.3.1
     - fixed crashing bug with getProjectSites on a project without sites. (again)
+- v1.4.0
+    - added admin activity plot
