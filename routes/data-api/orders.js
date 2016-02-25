@@ -205,6 +205,7 @@ router.post('/create-project', function(req, res, next) {
                     project.plan = {
                         storage : coupon.payload.recordings,
                         processing : coupon.payload.processing,
+                        duration_period : (coupon.payload.duration | 0) || 1,
                         tier : 'paid',
                     };
 
