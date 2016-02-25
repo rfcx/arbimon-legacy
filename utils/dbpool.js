@@ -132,4 +132,19 @@ dbpool.query = function(sql, options){
     return q.ninvoke(dbpool, 'queryHandler', sql, options).get(0);
 };
 
+dbpool.streamQuery = function(sql, options){
+    return q.ninvoke(dbpool, "getConnection").then(function(dbconn){
+        return q.Promise(function(resolve, reject){
+            var resultstream = dbconn.query(sql, options).stream({highWaterMark:5});
+            resultstream.on('error', reject);
+            resultstream.on('fields',function(fields,i) {
+                resolve([resultstream, fields]);
+            });
+            resultstream.on('end', function(){
+                dbconn.release();
+            });
+        });
+    });
+};
+
 module.exports = dbpool;
