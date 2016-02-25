@@ -11,7 +11,7 @@ var joi = require('joi');
 var uuid = require('node-uuid');
 var moment = require('moment');
 var q = require('q');
-var systemSettings = require('./utils/settings-monitor');
+var systemSettings = require('../../utils/settings-monitor');
 
 
 var model = require('../../model');
