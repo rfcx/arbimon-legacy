@@ -28,13 +28,8 @@ angular.module('a2.audiodata', [
     })
     .state('audiodata.recordings', {
         url: '/recordings',
-        controller: 'RecsCtrl',
+        controller: 'RecsCtrl as controller',
         templateUrl: '/partials/audiodata/recordings.html'
-    })
-    .state('audiodata.uploads', {
-        url: '/uploads',
-        controller: 'UploadCtrl',
-        templateUrl: '/partials/audiodata/upload.html'
     })
     .state('audiodata.species', {
         url: '/species',
@@ -42,8 +37,8 @@ angular.module('a2.audiodata', [
         templateUrl: '/partials/audiodata/species.html'
     })
     .state('audiodata.trainingSets', {
-        url: '/training-sets',
-        controller: 'TrainingSetsCtrl',
+        url: '/training-sets?set&show',
+        controller: 'TrainingSetsCtrl as controller',
         templateUrl: '/partials/audiodata/training-sets.html'
     })
     .state('audiodata.playlists', {

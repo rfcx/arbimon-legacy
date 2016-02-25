@@ -4,6 +4,7 @@
 var express = require('express');
 var router = express.Router();
 var model = require('../../../model');
+var csv_stringify = require("csv-stringify");
 
 
 router.param('trainingSet', function(req, res, next, trainingSet){
@@ -61,12 +62,28 @@ router.get('/list/:trainingSet/:recUrl?', function(req, res, next) {
 });
 
 router.get('/rois/:trainingSet', function(req, res, next) {
-    model.trainingSets.fetchRois(req.trainingSet,
-    function(err, data) {
-        if(err) return next(err);
+    if(!!req.query.export){
+        res.attachment(req.trainingSet.name + '.csv');
+        model.trainingSets.fetchRois(req.trainingSet, {resolveIds:true, noURI:true, stream:true}, function(err, datastream, fields) {
+            if(err){
+                next(err);
+            } else {
+                fields = fields.map(function(f){return f.name;});
+                datastream
+                    .pipe(csv_stringify({
+                        header:true, 
+                        columns:fields
+                    }))
+                    .pipe(res);
+            }
+        });
+    } else {
+        model.trainingSets.fetchRois(req.trainingSet, function(err, data) {
+            if(err) return next(err);
 
-        res.json(data);
-    });
+            res.json(data);
+        });
+    }
 });
 
 router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
@@ -103,10 +120,8 @@ router.use(function(req, res, next) {
 */
 router.post('/add', function(req, res, next) {
     
-    model.trainingSets.nameInUse(req.project.project_id, req.body.name, function(err, result) {
-        if(err) return next(err);
-        
-        if(result[0].count) {
+    model.trainingSets.nameInUse(req.project.project_id, req.body.name).then(function(isInUse) {
+        if(isInUse) {
             return res.json({ field: "name", error: "Training set name in use" });
         }
         
@@ -128,7 +143,43 @@ router.post('/add', function(req, res, next) {
             res.json(new_tset && new_tset[0]);
             return null;
         });
-    });
+    }, next);
+});
+
+/** Edit a training set.
+*/
+router.post('/edit/:trainingSet', function(req, res, next) {
+    res.contentType('application/json');
+    model.trainingSets.edit(req.trainingSet, {
+        name    : req.body.name,
+        extras  : req.body
+    }).then(function(edited_tset) {
+        model.projects.insertNews({
+            news_type_id: 12, // training set created
+            user_id: req.session.user.id,
+            project_id: req.project.project_id,
+            data: JSON.stringify({ training_set: req.trainingSet.name })
+        });
+        
+        res.json(edited_tset && edited_tset[0]);
+        return null;
+    }, next);
+});
+
+/** Remove a training set.
+*/
+router.post('/remove/:trainingSet', function(req, res, next) {
+    model.trainingSets.remove(req.trainingSet).then(function() {
+        model.projects.insertNews({
+            news_type_id: 13, // training set created
+            user_id: req.session.user.id,
+            project_id: req.project.project_id,
+            data: JSON.stringify({ training_set: req.trainingSet.name })
+        });
+        
+        res.json(req.trainingSet);
+        return null;
+    }, next);
 });
 
 

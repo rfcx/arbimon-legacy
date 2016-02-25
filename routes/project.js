@@ -8,6 +8,7 @@ var cardStack = require('./resource-cards');
 var cardResolver = require('../utils/card-resolver')(cardStack);
 
 var injected_data = {
+    facebook_api: config('facebook-api').public,
     googleAPI : config('google-api')
 };
 
@@ -33,6 +34,12 @@ router.get('/:projecturl?/', function(req, res, next) {
     var project_url = req.params.projecturl;
 
     debug('project_url:', project_url);
+    
+    // redirect to home if no project is given
+    if(!project_url){
+        res.redirect('/home');
+        return;
+    }
     
     model.projects.find({ url: project_url }, function(err, rows) {
             if(err) return next(err);

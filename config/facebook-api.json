@@ -1,0 +1,7 @@
+{
+    "public" : {
+        "appId"      : "",
+        "version"    : "v2.5"
+    },
+    "secret"     : ""
+}

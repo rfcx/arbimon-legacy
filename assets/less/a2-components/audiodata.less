@@ -81,6 +81,10 @@
 .roi-thumbnail {
     display:inline-block;
     position:relative;
+
+    > button, > a {
+        text-shadow: 0 0 5px rgba(0, 0, 0, 1);
+    }
     
     .roi-btn-tr {
         position:absolute;
@@ -158,4 +162,30 @@
     min-height:200px;
     max-height:500px;
     overflow-y:auto;
+}
+
+.chart-container{
+    position: relative;
+    > loader {
+        left: 50%;
+        position: absolute;
+        top: 40%;
+        transform: translateX(-50%);
+    }
+}
+
+loader.block{
+    > svg{
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+.sidenav .subnav a {
+    padding-left: 36px;
+}
+
+.collapse.expanded{
+    display: block;
 }

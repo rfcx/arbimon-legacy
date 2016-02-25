@@ -248,28 +248,32 @@ Uploader.prototype.insertOnDB = function(callback) {
 };
 
 /**
- * Removes all the files remaining on the tmpFileCache and remoce the recording
- * from the uploads_processing table on the database
+ * Removes all the local and temporary files.
  */ 
-Uploader.prototype.cleanUpAfter = function() {
+Uploader.prototype.cleanUpTempFiles = function(callback) {
     // delete temp files
     deleteFile(this.thumbnail);
     deleteFile(this.inFile);
-    deleteBucketObject(this.upload.tempFileUri);
     if(this.outFile !== this.inFile) {
         deleteFile(this.outFile);
     }
     
     // remove from uploads_processing table
-    if(this.upload.id) {
-        model.uploads.removeFromList(this.upload.id, function(e) {
-            if(e) console.error(e);
-        });
-    }
+    callback();
+};
+/**
+ * Finish the upload by updating the state to uploaded and deleting the bucket object.
+ */ 
+Uploader.prototype.finishProcessing = function(callback) {
+    model.uploads.updateState(this.upload.id, 'uploaded', (function(err){
+        deleteBucketObject(this.upload.tempFileUri);
+        callback(err);
+    }).bind(this));
 };
 
 Uploader.prototype.ensureFileIsLocallyAvailable = function(callback) {
     if(this.upload.tempFileUri){// it's in the bucket!!!
+        console.log("fetching ", this.upload.tempFileUri, " from ", config('aws').bucketName);
         s3.getObject({
             Bucket : config('aws').bucketName,
             Key    : this.upload.tempFileUri
@@ -352,21 +356,31 @@ Uploader.prototype.process = function(upload, done) {
         
         uploadThumbnail: ['genThumbnail', async.retry(self.uploadThumbnail.bind(self))],
         
-        insertOnDB: ['uploadFlac', 'uploadThumbnail', self.insertOnDB.bind(self)]
+        insertOnDB: ['uploadFlac', 'uploadThumbnail', self.insertOnDB.bind(self)],
+        
+        finishProcessing: ['insertOnDB', self.finishProcessing.bind(self)]
     },
     function(err, results) {
-        self.cleanUpAfter();
-        
-        if(err) {
-            console.error(err.stack);
-            return done(err);
-        }
-        
-        debug('upload processing results:', results);
-        debug('done processing %s for site %s', self.upload.name, self.upload.siteId);
-        debug('elapse:', ((new Date()) - self.start)/1000 + 's');
-        
-        done(null, results);
+        self.cleanUpTempFiles(function(err2){
+            if(err) {
+                console.error("Error while processing upload.", err.stack);
+                model.uploads.updateStateAndComment(self.upload.id, 'error', JSON.stringify(err), function(){
+                    done(err);
+                });
+                return;
+            }
+            // silently ignoring cleanup problems.......
+            // if(err2) {
+            //     console.error(err2.stack);
+            //     return done(err2);
+            // }
+            
+            debug('upload processing results:', results);
+            debug('done processing %s for site %s', self.upload.name, self.upload.siteId);
+            debug('elapse:', ((new Date()) - self.start)/1000 + 's');
+            
+            done(null, results);
+        });
     });
 };
 
@@ -392,8 +406,10 @@ Uploader.moveToTempArea = function(upload, callback){
         Body: fs.createReadStream(upload.path)
     };
 
+    debug("Putting object in bucket ", upload.path, " to ", upload.tempFileUri);
     s3.putObject(params, function(err, data) {
         if(err) {
+            console.error("Error putting object in bucket ", upload.path, " to ", upload.tempFileUri, err);
             return callback(err);
         }
             

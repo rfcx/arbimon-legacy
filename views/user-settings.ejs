@@ -8,51 +8,70 @@
     </title>
 </head>
 
-<body ng-controller="UserSettingsCtrl">
+<body ng-controller="UserSettingsCtrl as controller">
     <% include home-nav %>
     <div class="container">
-        <div class="page-header">
-            <h1>User settings</h1>
-        </div>
-        <div class="col-sm-6">
-            <div class="well">
-                <h5><strong>Avatar</strong></h5>
-                <img src="<%- user.imageUrl %>" alt="gravatar">
-                <p>Change your avatar at <a href="https://gravatar.com" target="_blank">gravatar.com</a></p>
+        <div class="col-sm-6 panel panel-default">
+            <div class="panel-heading row">
+                <img class="user-avatar col-sm-2 img-responsive" ng-src="{{controller.user.imageUrl}}" alt="user avatar">
+                <h3 class="col-sm-10">{{controller.user.name}} {{controller.user.lastname}}'s Profile</h3>
             </div>
-            <div class="well">
-                <form name="fullname">
-                    <div class="form-group">
-                        <label for="name">Name</label>
-                        <input type="text" 
-                            class="form-control" 
-                            id="name" 
-                            name="name" 
-                            placeholder="Name"
-                            ng-model="user.name">
+            <div class="panel-body">
+                <div class="form-group">
+                    <label class="control-label">Username</label>
+                    <p class="form-control-static">{{controller.user.username}}</p>
+                </div>
+                <!-- <div class="form-group">
+                    <h5><strong>Avatar</strong></h5>
+                    <img class="user-avatar" src="<%- user.imageUrl %>" alt="user avatar">
+                    <p>Change your avatar at <a href="https://gravatar.com" target="_blank">gravatar.com</a></p>
+                </div> -->
+                <div class="form-group">
+                    <label for="firstname">Name</label>
+                    <div class="row">
+                        <div class="col-sm-6 form-group">
+                            <input id="firstname" type="text" class="form-control" placeholder="First Name" ng-model="controller.data.name">
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <input type="text" class="form-control" placeholder="Last Name" ng-model="controller.data.lastname">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="lastname">Lastname</label>
-                        <input type="text" 
-                            class="form-control" 
-                            id="lastname" 
-                            name="lastname" 
-                            placeholder="Lastname"
-                            ng-model="user.lastname">
+                </div>
+                <div class="form-group">
+                    <label for="new_password">Password</label>
+                    <password-input ng-model="controller.data.password" user-inputs="[controller.user.username, controller.user.name, controller.user.lastname, controller.data.username, controller.data.name, controller.data.lastname]" validation="controller.data.passResult"></password-input>
+                </div>
+
+                <div class="form-group">
+                    <label for="new_password">3<sup>rd</sup> Party Login Authorization</label>
+                    <div class="checkbox">
+                        <label class="v-center">
+                            <input type="checkbox" ng-model="controller.data.oauth.google" ng-true-value="1" ng-false-value="0"/>
+                            <i class="icon icon-google"></i>
+                            <span>Google account</span>
+                        </label>
                     </div>
-                    
-                    <button class="btn btn-primary" ng-click="saveName() | trackEvent:'User Settings':'saveName'">
-                        <i class="fa fa-floppy-o"></i> Save
-                    </button>
-                </form>
-            </div>
-            <div class="well">
-                <form name="pass">
-                    <password-input ng-model="newPass" user-inputs="[user.username, user.name, user.lastname]" validation="passResult"></password-input>
-                    <button class="btn btn-primary" ng-click="changePass() | trackEvent:'User Settings':'changePass'">
-                        <i class="fa fa-key"></i> change password
-                    </button>
-                </form>
+                    <div class="checkbox">
+                        <label class="v-center">
+                            <input type="checkbox" ng-model="controller.data.oauth.facebook" ng-true-value="1" ng-false-value="0"/>
+                            <i class="icon icon-facebook inlined"></i>
+                            <span>Facebook account</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-6">
+                        <button class="btn btn-block btn-primary" ng-click="controller.save()">
+                            <i class="fa fa-floppy-o"></i> Save
+                        </button>
+                    </div>
+                    <div class="col-sm-6">
+                        <button class="btn btn-block btn-default" ng-click="controller.reset()">
+                            <i class="fa fa-rotate-left"></i> Reset
+                        </button>
+                    </div>
+                </div>                
             </div>
         </div>
     </div>

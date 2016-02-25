@@ -1,0 +1,45 @@
+# CHANGELOG
+
+- v1.1.0
+    - Added changelog
+    - Added more visual emphasis on selected layer
+    - Added recording tagging:
+        - Added new `recording-tags-layer` layer
+        - Added `a2.srv.tags.a2Tags` service
+        - recordings are now searchable by tags
+        - Added tag routes and model
+    - Modified `Arbimon` time format to allow for seconds.
+    - Added missing .map files to copy task in grunt
+    - blobs for generated content URL are now of image/png content type.
+    - layers now recieve an injected reference to the `VisualizerCtrl` instance
+    - `VisualizerCtrl` now throws `visobject` event when a `visobject` is set
+    - Bugs:
+        - Fixed infinite digest bug in spectrogram
+    - Misc:
+        - Added `a2.srv.api.a2APIService` for managing the basic API I/O
+        - promisified `getProjectSites()`
+        - `layer_type` is now a provider instead of a factory.
+        - `options` argument is now passed to `connection.query` in to `dbpool.queryHandler`
+        - Added debug output for options in `dbpool.queryHandler`
+- v1.2.0
+    - Fixed double counting bug in `getProjectSites` recording counting
+    - Added two more site status plots + improved UI
+- v1.2.1
+    - battery status labels are now correct
+- v1.2.2
+    - uploader now uploads in random order, uses db as queue holder and uses promise-based job scheduler.
+    - recordings are no longer required to have mic, software and recorder metadata (initializes to '').
+- v1.2.3
+    - removed uninformative highly repeating console log from uploader code
+- v1.2.4
+    - Fixed breaking bug in uploader.
+- v1.2.5
+    - 1 free project limit is now waived for super users
+- v1.2.6
+    - Fixed uploaded recordings double counting
+- v1.2.7
+    - Fixed double counting for storage usage
+- v1.3.0
+    - Added login with facebook and google buttons
+    - Added activation codes for creating Projects
+    - fixed crashing bug with getProjectSites on a project without sites.

@@ -3,15 +3,22 @@
     <div class="col-lg-5 col-sm-12">
         <div class="row">
             <div class="col-sm-6">
-                <button ng-click="addNewTrainingSet() | trackEvent:'Audiodata-Training Sets':'add_new_tset'" class="btn btn-default" 
-                    tooltip="Create training set">
+                <button ng-click="controller.addNewTrainingSet() | trackEvent:'Audiodata-Training Sets':'add_new_tset'" class="btn btn-default" 
+                    tooltip="Create Training Set">
                     <i class="fa fa-plus"></i>
                 </button>
-                <!-- <button class="btn btn-danger" 
-                    tooltip="Delete training set"
-                    tooltip-trigger="mouseenter">
+                <button class="btn btn-default"
+                    ng-click="controller.editSelectedTrainingSet() | trackEvent:'Audiodata-Training Sets':'edit training set'"
+                    ng-disabled="!controller.selected.trainingSet"
+                    tooltip="Edit Training Set">
+                    <i class="fa fa-pencil"></i>
+                </button>
+                <button class="btn btn-danger"
+                    ng-click="controller.deleteSelectedTrainingSet() | trackEvent:'Audiodata-Training Sets':'delete training set'"
+                    ng-disabled="!controller.selected.trainingSet"
+                    tooltip="Remove Training Set">
                     <i class="fa fa-trash"></i>
-                </button> -->
+                </button>
             </div>
             <div class="col-sm-6">
                 <input class="form-control" type="text" placeholder="Search" ng-model="search.name">
@@ -20,7 +27,7 @@
         
         <div class="row">
             <div class="col-md-12">
-                <a2-table search="search" rows="sets" no-checkbox on-select="displaySetData(row)">
+                <a2-table search="search" rows="controller.trainingSets" no-checkbox on-select="controller.selectTrainingSet(row)">
                     <field title="Name" key="name">
                         {{ row.name }}
                     </field>
@@ -31,10 +38,10 @@
                         {{ row.date_created | moment: 'll' }}
                     </field>
                 </a2-table>
-                <loader ng-show="loading"></loader>
-                <div class="jumbotron" ng-show="(!sets || !sets.length > 0) && !loading">
+                <loader ng-show="controller.loading.list"></loader>
+                <div class="jumbotron" ng-show="(!controller.trainingSets || !controller.trainingSets.length > 0) && !controller.loading.list">
                     <h3>
-                        No training sets found. <a ng-click="add_new_tset() | trackEvent:'Audiodata-Training Sets':'add_new_tset'"  ng-show="(!sets || !sets.length > 0) && !loading" >Create a training set.</a>
+                        No training sets found. <a ng-click="controller.addNewTrainingSet() | trackEvent:'Audiodata-Training Sets':'addNewTrainingSet'"  ng-show="(!controller.trainingSets || !controller.trainingSets.length > 0) && !controller.loading.list" >Create a training set.</a>
                     </h3>
                 </div>
             </div>
@@ -43,43 +50,72 @@
     </div>
     
     <div class="col-lg-7 col-sm-12">
-        <div class="panel panel-default" ng-show="loaderDisplay">
+        <div class="panel panel-default" ng-show="controller.loaderDisplay">
             <div class="panel-body">
                 Loading <loader></loader>
             </div> 
         </div> 
         
-        <div class="panel panel-default" ng-show="showSetDetails && !loaderDisplay">
+        <div class="panel panel-default" ng-show="controller.selected.trainingSet && !controller.loaderDisplay">
                 <div class="panel-heading">
                     <h3 class="panel-title">
-                        Training set info
+                        {{
+                            (controller.selected.trainingSet.edit ? "Editing - " : "") +
+                            controller.selected.trainingSet.name +
+                            (!controller.selected.trainingSet.edit ? " info" : "")
+                        }}
                     </h3>
-                    <!-- <button type="button" ng-click="closeSetDetails()" class="btn btn-default">
-                        <i class="fa fa-times"></i>
-                    </button> -->
                 </div>
-                <table class="table">
-                    <tbody>
-                        <tr>
-                            <td><strong>Name:</strong> {{ selectedName }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>ROI Count :</strong> {{ rois.length }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Species sound:</strong> {{ species }} - {{ songtype }}</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <strong>Validations:</strong> 
-                                present - {{ selectedSet.validations.present }} 
-                                | absent - {{ selectedSet.validations.absent }}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div>
+                    <div class="clearfix form-group">
+                        <label class="col-sm-3 control-label">Name</label>
+                        <div class="col-sm-9" ng-if="!controller.selected.trainingSet.edit">
+                            {{ controller.selected.trainingSet.name }}
+                        </div>
+                        <div class="col-sm-9" ng-if="controller.selected.trainingSet.edit">
+                            <input class="form-control" ng-model="controller.selected.trainingSet.edit.name" />
+                        </div>
+                    </div>
+                    <div class="clearfix form-group">
+                        <label class="col-sm-3 control-label">Species sound</label>
+                        <div class="col-sm-9" ng-if="!controller.selected.trainingSet.edit">
+                            {{ controller.species }} - {{ controller.songtype }}
+                        </div>
+                        <div class="col-sm-9" ng-if="controller.selected.trainingSet.edit">
+                            <ui-select ng-model="controller.selected.trainingSet.edit.class" theme="bootstrap">
+                                <ui-select-match placeholder="Select a species sound">
+                                    {{ $select.selected.species_name }} {{ $select.selected.songtype_name }}
+                                </ui-select-match>
+                                <ui-select-choices repeat="class in controller.selected.trainingSet.edit.projectClasses | filter:$select.search">
+                                    {{ class.species_name }}, {{ class.songtype_name }}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    <div class="clearfix form-group" ng-if="controller.selected.trainingSet.edit">
+                        <div class="col-md-offset-3 col-sm-1">
+                            <button type="button" ng-click="controller.selected.trainingSet.edit.save()" class="btn btn-primary">Save</button>
+                        </div>
+                        <div class="col-sm-8">
+                            <button type="button" ng-click="controller.selected.trainingSet.edit.cancel()" class="btn btn-default">Cancel</button>
+                        </div>
+                    </div>
+                    <div class="clearfix form-group" ng-if="!controller.selected.trainingSet.edit">
+                        <div class="col-sm-3"></div>
+                        <div class="col-sm-3">
+                            <i class="fa val-1"></i> present: {{ controller.selected.trainingSet.validations.present }} 
+                        </div>
+                        <div class="col-sm-6">
+                             <i class="fa val-0"></i> absent: {{ controller.selected.trainingSet.validations.absent }}
+                        </div>
+                    </div>
+                    <div class="clearfix form-group">
+                        <label class="col-sm-3 control-label">ROI Count</label>
+                        <div class="col-sm-9">{{ controller.rois.length }}</div>
+                    </div>
+                </div>
                 
-                <div class="panel-body" ng-hide="rois.length">
+                <div class="panel-body" ng-hide="controller.rois.length">
                     <div class="well">
                         This training set is empty. 
                         <a ui-sref="visualizer" href="#/visualizer">
@@ -88,59 +124,59 @@
                     </div>
                 </div>
                 
-                <div class="panel-body" ng-show="rois.length">
+                <div class="panel-body" ng-show="controller.rois.length">
                     
                     <div class="row">
-                        <div class="col-sm-12">
-                            <ul class="pager">
-                                <li><a ng-click="prev() | trackEvent:'Audiodata-Training Sets':'prevPage'">Previous</a></li>
-                                <li><a ng-hide="detailedView">{{currentPage+1}} of {{totalpages}}</a></li>
-                                <li><a ng-show="detailedView">{{currentRoi+1}} of {{totalRois}}</a></li>
-                                <li><a ng-click="next() | trackEvent:'Audiodata-Training Sets':'nextPage'">Next</a></li>
+                        <div class="col-sm-offset-2 col-sm-8">
+                            <div class="toolbar pull-right">
+                                <div class="btn-group" ng-show="controller.total.pages > 1 || controller.detailedView">
+                                    <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Audiodata-Training Sets':'prevPage'">Previous</a>
+                                    <a class="btn btn-default" ng-hide="controller.detailedView">{{controller.selected.page + 1}} of {{controller.total.pages}}</a>
+                                    <a class="btn btn-default" ng-show="controller.detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a>
+                                    <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Audiodata-Training Sets':'nextPage'">Next</a>
+                                </div>
                                 
                                 <div class="btn-group">
-                                    <button type="button"
-                                        class="btn btn-default"
-                                        ng-model="detailedView"
-                                        btn-radio="true"
-                                        tooltip="Detail view"
-                                        tooltip-append-to-body="true">
+                                    <button type="button" class="btn btn-default" ng-click="controller.setDetailedView(true)"
+                                        tooltip="Detail view" tooltip-append-to-body="true">
                                         <i class="fa fa-search"></i>
                                     </button>
-                                    <button type="button" 
-                                        class="btn btn-default"
-                                        ng-model="detailedView"
-                                        btn-radio="false"
-                                        tooltip="Gallery view"
-                                        tooltip-append-to-body="true">
+                                    <button type="button" class="btn btn-default" ng-click="controller.setDetailedView(false)"
+                                        tooltip="Gallery view" tooltip-append-to-body="true">
                                         <i class="fa fa-th"></i>
                                     </button>
                                 </div>
-                            </ul>
+                                
+                                <div class="btn-group">
+                                    <a class="btn btn-default"
+                                        ng-href="{{controller.selected.trainingSet.export_url}}"
+                                        ng-click="true | trackEvent:'Audiodata-Training Sets':'export training set'"
+                                        ng-disabled="!controller.selected.trainingSet"
+                                        tooltip="Export Training Set Data">
+                                        <i class="fa fa-download"></i>
+                                    </a>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
-                    <div ng-hide="detailedView">
-                        <div ng-repeat="roi in currentrois" class="roi-thumbnail">
-                            <button class="roi-btn-tl roi-info"
-                                tooltip-placement="left" 
-                                tooltip-append-to-body="true"
-                                tooltip="click for details"
-                                popover-html="'Duration: {{roi.dur}}s <br>
-                                         Bandwidth: {{roi.y2-roi.y1}}Hz <br>
-                                         Upper freq: {{roi.y2}}Hz <br>
-                                         Lower freq: {{roi.y1}}Hz'"
-                                popover-trigger="focus"
-                                popover-append-to-body="true" tabindex="1">
-                                    <i class="fa fa-info-circle"></i>
-                            </button>
-                            <button ng-click="removeRoi(roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'"
+                    <div ng-hide="controller.detailedView">
+                        <div ng-repeat="roi in controller.currentrois" class="roi-thumbnail"
+                            popover-html="'Duration: {{roi.dur}}s <br>
+                                     Bandwidth: {{roi.y2-roi.y1}}Hz <br>
+                                     Upper freq: {{roi.y2}}Hz <br>
+                                     Lower freq: {{roi.y1}}Hz'"
+                            popover-trigger="mouseenter"
+                            popover-append-to-body="true"
+                        >
+                            <button ng-click="controller.removeRoi(roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'"
                                 class="roi-btn-tr roi-delete"
                                 tooltip-placement="left" 
                                 tooltip-append-to-body="true"
                                 tooltip="Delete ROI">
                                 <i class="fa fa-times"></i>
                             </button>
-                            <a class="roi-btn-br" ng-href="/project/{{projecturl}}/#/visualizer/rec/{{roi.recording}}">
+                            <a class="roi-btn-br" ng-href="{{controller.getROIVisualizerUrl(roi)}}">
                                 <i tooltip-placement="left" 
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer" 
@@ -151,32 +187,41 @@
                         </div>
                     </div>
                     
-                    <div ng-show="detailedView">
+                    <div ng-show="controller.detailedView">
                         <div class="row">
-                            <div class="col-sm-2" ></div>
-                            <div class="col-sm-8" >
+                            <div class="col-sm-offset-2 col-sm-8" >
                                 <div class="row">
                                     <small>
-                                        <div class="col-sm-5" >Duration: {{currentDuration}}s</div>
-                                        <div class="col-sm-5" >{{currentlow}}-{{currenthigh}}Hz</div>
+                                        <div class="col-sm-5" >Duration: {{controller.selected.roi.dur}}s</div>
+                                        <div class="col-sm-5" >{{controller.selected.roi.y1}}-{{controller.selected.roi.y2}}Hz</div>
                                         <div class="col-sm-1" >
-                                            <a ng-href="{{currentUrl}}">
+                                            <a ng-href="{{controller.getROIVisualizerUrl(controller.selected.roi)}}">
                                                 <i tooltip="View in Visualizer" class="fa fa-cubes"></i>
                                             </a>
                                         </div>
                                         <div class="col-sm-1" class="roi-div-inline-remove-detail" >
                                             <button class="roi-delete"
-                                                ng-click="removeRoi(currentId) | trackEvent:'Audiodata-Training Sets':'removeRoi'" 
+                                                ng-click="controller.removeRoi(controller.selected.roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'" 
                                                 tooltip="Delete ROI">
                                                 <i class="fa fa-times"></i>
                                             </button>
                                         </div>
                                     </small>
                                 </div>
-                                <img ng-src="{{currentUri}}" class="roi-div-inline-img-detail"/>
+                                <div class="thumbnail-viewer v-axis-wide roi-div-inline-img-detail has-vaxis has-haxis" ng-if="controller.selected.roi">
+                                    <axis type="v" class="v-axis" data="{
+                                        range:[controller.selected.roi.y1, controller.selected.roi.y2], 
+                                        count:5, unit:'Hz',  font:'7px', color:'#333333'}
+                                    "></axis>
+                                    <axis type="h" class="h-axis" data="{
+                                        range:[0, controller.selected.roi.dur], prec:0.001,
+                                        count:5, unit:'s',  font:'7px', color:'#333333'}
+                                    "></axis>
+                                    <div class="img-holder positioned"><img class="crisp-image" ng-src="{{controller.selected.roi.uri}}"/></div>
+                                </div>                                
+                                
                                 <div class="bordeder-empy-div"></div>
                             </div>
-                            <div class="col-sm-2" ></div>
                         </div>
                     </div>
                     

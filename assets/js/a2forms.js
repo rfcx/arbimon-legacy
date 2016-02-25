@@ -31,13 +31,16 @@ angular.module('a2.forms',['templates-arbimon2'])
             $scope.minLength = 6;
             $scope.maxLength = 32;
             
-            var initValidation = function() {
-                $scope.validation = {
-                    valid: false,
+            $scope.validation = getValidation();
+            
+            function getValidation(){
+                return $scope.validation || ($scope.validation = {
+                    confirm:null,
+                    result:{},
+                    valid:false,
                     msg: ''
-                };
-            };
-            initValidation();
+                });
+            }
             
             
             if(!$scope.userInputs) {
@@ -45,33 +48,31 @@ angular.module('a2.forms',['templates-arbimon2'])
             }
             
             $scope.testConfirm = function() {
-                $scope.confirmOk = '';
-                $scope.confirmErr = '';
-                initValidation();
+                var validation = getValidation();
+                validation.result.confirm = null;
                 
-                if(!$scope.passResult || !$scope.password){
+                if(!validation.result.pass || !$scope.password){
                     return;
                 }
                 
-                else if($scope.passResult.score < $scope.requiredScore) {
+                else if(validation.result.pass.score < $scope.requiredScore) {
                     $scope.validation.msg = 'password need to be stronger';
                     return;
                 }
                 
-                if($scope.password === $scope.confirm) {
-                    $scope.confirmOk = true;
-                    $scope.validation = {
-                        valid: true,
-                        msg:''
-                    };
-                }
-                else {
-                    $scope.validation.msg = $scope.confirmErr = "Passwords do not match";
+                if($scope.password === validation.confirm) {
+                    validation.result.confirm = {ok:true};
+                    validation.valid = true;
+                    validation.msg = '';
+                } else {
+                    validation.result.confirm = {err:"Passwords do not match"};
+                    validation.msg = validation.result.confirm.err;
                 }
             };
             
             
             $scope.testPass = function() {
+                var validation = getValidation();
                 // wait for zxcvbn library to be available
                 if(typeof $window.zxcvbn === 'undefined') {
                     if($scope.waitForZxcvbn) return;
@@ -90,9 +91,7 @@ angular.module('a2.forms',['templates-arbimon2'])
                     $interval.cancel($scope.waitForZxcvbn);
                 }
                 
-                
-                $scope.passResult = {};
-                initValidation();
+                validation.result.pass = null;
                 
                 var colors = [
                     '#da3939',
@@ -112,23 +111,25 @@ angular.module('a2.forms',['templates-arbimon2'])
                 
                 if(!$scope.password) {
                     return;
-                }
-                else if($scope.password.length < 6 || $scope.password.length > 32) {
+                } else if($scope.password.length < 6 || $scope.password.length > 32) {
                     var size = ($scope.password.length < 6) ? 'short' : 'long';
                     
-                    $scope.passResult.shields = [];
-                    $scope.passResult.color = colors[0];
-                    $scope.validation.msg = $scope.passResult.msg = 'Password is too '+size+', 6-32 characters';
+                    validation.result.pass = {
+                        shields : [],
+                        color   : colors[0],
+                        msg     : 'Password is too '+size+', 6-32 characters'
+                    };
                     
-                }
-                else {
+                    $scope.validation.msg = validation.result.pass.msg;                    
+                } else {
                     var test = $window.zxcvbn($scope.password, $scope.userInputs);
                     
-                    $scope.passResult.score = test.score;
-                    
-                    $scope.passResult.shields = new Array(test.score+1);
-                    $scope.passResult.color = colors[test.score];
-                    $scope.passResult.msg = mesgs[test.score];
+                    validation.result.pass = {
+                        score   : test.score,
+                        shields : new Array(test.score+1),
+                        color   : colors[test.score],
+                        msg     : mesgs[test.score],
+                    };
                     
                     $scope.testConfirm();
                 }
@@ -144,8 +145,23 @@ angular.module('a2.forms',['templates-arbimon2'])
             valid: '=', // validation object
         },
         templateUrl: '/partials/directives/project-form.html',
+        controllerAs:'controller',
         controller: function($scope) {
             var urlPattern = /^[a-z0-9]+([-_][a-z0-9]+)*$/i;
+            
+            this.deriveUrlFromName = true;
+            this.nameChanged = function(){
+                if(this.deriveUrlFromName){
+                    $scope.project.url = ($scope.project.name || '').replace(/[^a-z0-9A-Z-]/g, '-').replace(/-+/g,'-').replace(/(^-)|(-$)/g, '').replace(/[A-Z]/g, function(_1){
+                        return _1.toLowerCase();
+                    });
+                }
+                $scope.verify();
+            };
+            this.urlChanged = function(){
+                this.deriveUrlFromName = false;
+                $scope.verify();
+            };
             
             $scope.verify = function () {
                 var good = true;
@@ -197,6 +213,7 @@ angular.module('a2.forms',['templates-arbimon2'])
                 }
                 
                 $scope.valid = good;
+                return good;
             };
             
             if($scope.project) {

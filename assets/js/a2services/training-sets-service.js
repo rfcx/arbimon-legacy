@@ -17,6 +17,16 @@ angular.module('a2.srv.training-sets', ['a2.srv.project'])
                 });
         },
 
+        edit: function(trainingSetId, tset_data) {
+            var projectName = Project.getUrl();
+            return $http.post('/api/project/'+projectName+'/training-sets/edit/'+trainingSetId, tset_data);
+        },
+        
+        delete: function(trainingSetId) {
+            var projectName = Project.getUrl();
+            return $http.post('/api/project/'+projectName+'/training-sets/remove/'+trainingSetId);
+        },
+        
         addData: function(trainingSetId, tset_data, callback) {
             var projectName = Project.getUrl();
             $http.post('/api/project/'+projectName+'/training-sets/add-data/'+trainingSetId, tset_data)
@@ -61,6 +71,12 @@ angular.module('a2.srv.training-sets', ['a2.srv.project'])
                     callback(data);
                 });
         },
+        
+        getExportUrl: function(trainingSetId){
+            var projectName = Project.getUrl();
+            return '/api/project/'+projectName+'/training-sets/rois/'+trainingSetId+'?export=1';
+        },        
+        
         getSpecies: function(trainingSetId, callback) {
             var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/training-sets/species/'+trainingSetId)

@@ -41,85 +41,92 @@ angular.module('a2.audiodata.training-sets', [
         };
     }
 )
-.controller('TrainingSetsCtrl', function($scope, a2TrainingSets, Project, $modal, a2TrainingSetHistory, a2UserPermit, notify) {
+.controller('TrainingSetsCtrl', function($state, $scope, a2TrainingSets, Project, $q, $modal, a2TrainingSetHistory, a2UserPermit, notify) {
+    var p={
+        set : $state.params.set,
+        show : $state.params.show
+    };
+
+    this.selected = {roi_index:0, roi:null, page:0};
+    this.total = {rois:0, pages:0};
+    this.loading = {list:false, details:false};
     
-    $scope.nextROI = function() {
-        $scope.currentRoi = $scope.currentRoi + 1;
-        if ($scope.currentRoi >= $scope.totalRois) {
-            $scope.currentRoi = $scope.currentRoi - 1;
-        }
-        else {
-            $scope.roi = $scope.rois[$scope.currentRoi];
-            $scope.currentDuration = $scope.roi.dur;
-            $scope.currentlow = $scope.roi.y1;
-            $scope.currenthigh = $scope.roi.y2;
-            $scope.currentId = $scope.roi.id;
-            $scope.currentUri = $scope.roi.uri;
-            $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
-        }
+    this.rois = [];
+    this.species = '';
+    this.songtype = '';
+    this.detailedView = p.show != "gallery";
+    this.currentrois = [];
+    this.roisPerpage = 100;
+    this.detailedView = false;
+    this.loaderDisplay = false;
+
+    this.getROIVisualizerUrl = function(roi){
+        return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording : '';
     };
     
-    $scope.prevROI = function () {
-        $scope.currentRoi = $scope.currentRoi- 1;
-        if ($scope.currentRoi  < 0) {
-            $scope.currentRoi = 0;
+    this.setROI = function(roi_index){
+        if(this.total.rois <= 0){
+            this.selected.roi_index = 0;
+            this.selected.roi = null;
+        } else {
+            this.selected.roi_index = Math.max(0, Math.min(roi_index | 0, this.total.rois - 1));
+            this.selected.roi = this.rois[this.selected.roi_index];
         }
-        else {
-            $scope.roi = $scope.rois[$scope.currentRoi];
-            $scope.currentDuration = $scope.roi.dur;
-            $scope.currentlow = $scope.roi.y1;
-            $scope.currenthigh = $scope.roi.y2;
-            $scope.currentId = $scope.roi.id;
-            $scope.currentUri = $scope.roi.uri;
-            $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
-        }
+        a2TrainingSetHistory.setLastRoi(this.selected.roi);
+        return this.selected.roi;
     };
-    
-    $scope.nextPage = function() {
-        $scope.currentPage = $scope.currentPage + 1;
-        if ($scope.currentPage*$scope.roisPerpage >= $scope.totalRois) {
-            $scope.currentPage= $scope.currentPage - 1;
-        }
-        else {
-            $scope.currentrois = $scope.rois.slice( 
-                ($scope.currentPage ) * $scope.roisPerpage, 
-                ($scope.currentPage+1) * $scope.roisPerpage
+
+    this.setPage = function(page){
+        if(this.total.rois <= 0){
+            this.selected.page = 0;
+            this.selected.currentrois = [];
+        } else {
+            this.selected.page = Math.max(0, Math.min(page, (this.total.rois / this.roisPerpage) | 0));
+            this.currentrois = this.rois.slice( 
+                (this.selected.page  ) * this.roisPerpage, 
+                (this.selected.page+1) * this.roisPerpage
             );
         }
+        a2TrainingSetHistory.setLastPage(this.selected.page);
+        return this.currentrois;
     };
     
-    $scope.prevPage = function() {
-        $scope.currentPage = $scope.currentPage - 1;
-        if ($scope.currentPage*$scope.roisPerpage  < 0) {
-            $scope.currentPage = 0;
-        }
-        else {
-            $scope.currentrois = $scope.rois.slice(
-                ($scope.currentPage ) * $scope.roisPerpage, 
-                ($scope.currentPage+1) * $scope.roisPerpage
-            );
+    this.setROISet = function(rois){
+        this.rois = rois;
+        a2TrainingSetHistory.setLastRoiSet(this.rois);
+    }
+    
+    this.nextROI = function(step) {
+        return this.setROI(this.selected.roi_index + (step || 1));
+    };
+    
+    this.prevROI = function (step) {
+        return this.setROI(this.selected.roi_index - (step || 1));
+    };
+    
+    this.nextPage = function(step) {
+        return this.setPage(this.selected.page + (step || 1));
+    };
+    
+    this.prevPage = function(step) {
+        return this.setPage(this.selected.page - (step || 1));
+    };
+    
+    this.next = function(step) {
+        if(!step){step = 1;}
+        if(this.detailedView) {
+            this.nextROI(step);
+        } else {
+            this.nextPage(step);
         }
     };
     
-    $scope.next = function() {
-        if($scope.detailedView) {
-            $scope.nextROI();
-        }
-        else {
-            $scope.nextPage();
-        }
+    this.prev = function(step) {
+        if(!step){step = 1;}
+        return this.next(-step);
     };
     
-    $scope.prev = function() {
-        if($scope.detailedView) {
-            $scope.prevROI();
-        }
-        else {
-            $scope.prevPage();
-        }
-    };
-    
-    $scope.removeRoi = function(roiId) {
+    this.removeRoi = function(roiId) {
         if(!a2UserPermit.can('manage training sets')) {
             notify.log('You do not have permission to edit training sets');
             return;
@@ -128,62 +135,55 @@ angular.module('a2.audiodata.training-sets', [
         var modalInstance = $modal.open({
             templateUrl: '/partials/pop-up.html',
             controller: function() {
-                this.messages = [
-                    "You are about to delete a ROI. Are you sure??"
-                ];
+                this.messages = ["You are about to delete a ROI. Are you sure??"];
                 this.btnOk = "Yes, do it!";
                 this.btnCancel = "No";
             },
             controllerAs: 'popup'
         });
         
-        modalInstance.result.then(function() {
-            a2TrainingSets.removeRoi($scope.selectedSet.id, roiId, function(data){
+        modalInstance.result.then((function() {
+            a2TrainingSets.removeRoi(this.selected.trainingSet.id, roiId, (function(data){
                 if(data.affectedRows) {
-                    for(var i = 0 ; i < $scope.rois.length ; i++)
-                    {
-                        if ($scope.rois[i].id == roiId){
-                            $scope.rois.splice(i,1);
+                    for(var i = 0 ; i < this.rois.length ; i++){
+                        if (this.rois[i].id == roiId){
+                            this.rois.splice(i,1);
                             break;
                         }
                     }
 
-                    if ($scope.currentRoi >= $scope.rois.length) {
-                        $scope.currentRoi = $scope.rois.length -1;
-                    }
-                    $scope.totalRois = $scope.rois.length;
-                    if ($scope.totalRois>0) {
-                    
-                        $scope.roi = $scope.rois[$scope.currentRoi];
-                        $scope.currentDuration = $scope.roi.dur;
-                        $scope.currentlow = $scope.roi.y1;
-                        $scope.currenthigh = $scope.roi.y2;
-                        $scope.currentId = $scope.roi.id;
-                        $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
-                        $scope.currentUri = $scope.roi.uri;
-                        $scope.totalpages = Math.ceil( $scope.totalRois/$scope.roisPerpage);
-                        if($scope.currentPage>($scope.totalpages-1)){
-                            $scope.currentPage = $scope.totalpages-1;
-                        }
-                        $scope.currentrois =  $scope.rois.slice(
-                            ($scope.currentPage ) * $scope.roisPerpage, 
-                            ($scope.currentPage+1) * $scope.roisPerpage
-                        );
-                    }
-                    else {
-                        $scope.rois = [];
-                        $scope.norois = true;
-                    }
+                    this.total.rois = this.rois.length;
+                    this.setROI(this.selected.roi_index);
+                    this.setPage(this.selected.page);
                 }
+            }).bind(this));
+        }).bind(this));
+    };
+    
+    this.closeSetDetails = function(){
+       this.showSetDetails = false;
+    };
+    
+    this.getTrainingSetList = function(){
+        this.loading.list = true;
+        return a2TrainingSets.getList((function(data){
+            this.trainingSets = data.map(function(d) {
+                d.date_created = new Date(d.date_created);
+                return d;
             });
-        });
+            if(p.set){
+                var selected = this.trainingSets.filter(function(tset){
+                    return tset.id == p.set;
+                }).pop();
+                if(selected){
+                    this.selectTrainingSet(selected);
+                }
+            }
+            this.loading.list = false;
+        }.bind(this)));
     };
     
-    $scope.closeSetDetails = function(){
-       $scope.showSetDetails = false;
-    };
-    
-    $scope.addNewTrainingSet = function() {
+    this.addNewTrainingSet = function() {
         if(!a2UserPermit.can('manage training sets')) {
             notify.log('You do not have permission to create training sets');
             return;
@@ -192,151 +192,147 @@ angular.module('a2.audiodata.training-sets', [
         $modal.open({
             templateUrl : '/partials/visualizer/modal/add_tset.html',
             controller  : 'a2VisualizerAddTrainingSetModalController'
-        }).result.then(function (new_tset) {
-            a2TrainingSets.getList(function(data){
-                $scope.sets = data.map(function(d) {
-                    d.date_created = new Date(d.date_created);
-                    return d;
-                });
-            });
-        });
+        }).result.then(
+            this.getTrainingSetList.bind(this)
+        );
     };
     
-    $scope.displaySetData = function(selected) {
-        $scope.showSetDetails = true;
-        $scope.norois = false;
-        $scope.loaderDisplay = true;
+    this.selectTrainingSet = function(selected) {
+        $state.transitionTo($state.current.name, {set:selected.id, show:$state.params.show}, {notify:false});
+        
+        this.detailedView = $state.params.show != "gallery";
+        this.loaderDisplay = true;
         a2TrainingSetHistory.setLastSet(selected);
         
-        $scope.selectedSet = selected;
-        $scope.selectedName = selected.name;
-        
-        Project.validationBySpeciesSong(selected.species, selected.songtype, function(data) {
-            $scope.selectedSet.validations = data;
-        });
-        
-        a2TrainingSets.getSpecies(selected.id, function(speciesData) {
-            $scope.species = speciesData.species;
-            $scope.songtype = speciesData.songtype;
-            
-        
-            a2TrainingSetHistory.setLastSpecies($scope.species,$scope.songtype);
-        
-            a2TrainingSets.getRois(selected.id, function(data) {
-                $scope.loaderDisplay = false;
-                $scope.detailedView = false;
-                $scope.totalRois = data.length;
-                $scope.currentPage = 0;
-                $scope.totalpages = Math.ceil($scope.totalRois/$scope.roisPerpage);
-                
-                if($scope.totalRois > 0) {
-                    $scope.roi = data[0];
-                    $scope.currentDuration = $scope.roi.dur;
-                    $scope.currentRoi = 0;
-                    $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
-                    $scope.currentUri = $scope.roi.uri;
-                    $scope.currentlow = $scope.roi.y1;
-                    $scope.currenthigh = $scope.roi.y2;
-                    $scope.currentId = $scope.roi.id;
-                    $scope.currentrois = data.slice(
-                        ($scope.currentPage ) * $scope.roisPerpage, 
-                        ($scope.currentPage+1) * $scope.roisPerpage
-                    );
-                    $scope.rois = data;
-                } 
-                else { 
-                    $scope.rois = []; 
-                    $scope.norois = true;
-                }
-            });
-        });
-    };
-    
-    $scope.loading = true;
-    $scope.rois = [];
-    $scope.selectedName = '';
-    $scope.species = '';
-    $scope.songtype = '';
-    $scope.showSetDetails = false;
-    $scope.roi = null;
-    $scope.currentrois = [];
-    $scope.currentPage = 0;
-    $scope.roisPerpage = 12;
-    $scope.currentRoi = 0;
-    $scope.totalRois = 0;
-    $scope.currentUri = '';
-    $scope.totalpages = 0;
-    $scope.detailedView = false;
-    $scope.currentDuration = 0;
-    $scope.currentlow = 0;
-    $scope.currenthigh = 0;
-    $scope.currentId = 0;
-    $scope.currentUrl = '';
-    $scope.norois = false;
-    $scope.loaderDisplay = false;
-    
-    a2TrainingSets.getList(function(data){
-        $scope.sets = data.map(function(d) {
-            d.date_created = new Date(d.date_created);
-            return d;
-        });
-        
-        $scope.loading = false;
-    });
-    
-    $scope.projecturl = Project.getUrl();
-    
-    a2TrainingSetHistory.getLastSet(function(data) {
-        if(data.ls) {
-            $scope.showSetDetails = true;
-            $scope.selectedSet = data.ls;
-            $scope.selectedName = $scope.selectedSet.name;
-            $scope.species = data.sp;
-            $scope.songtype = data.sg;
-            $scope.detailedView = data.vs;
-            $scope.totalRois = data.lrs.length;
-            $scope.currentPage = data.lp;
-            $scope.totalpages = Math.ceil($scope.totalRois/$scope.roisPerpage);
-            
-            if($scope.totalRois > 0) {
-                if (data.lr === undefined){
-                    data.lr = 0;
-                }
-                $scope.roi = data.lrs[data.lr];
-                $scope.currentDuration = $scope.roi.dur;
-                $scope.currentRoi = data.lr;
-                $scope.currentUrl = "/project/"+$scope.projecturl+"/#/visualizer/rec/"+$scope.roi.recording;
-                $scope.currentUri = $scope.roi.uri;
-                $scope.currentlow = $scope.roi.y1;
-                $scope.currenthigh = $scope.roi.y2;
-                $scope.currentId = $scope.roi.id;
-                $scope.currentrois = data.lrs.slice(
-                    ($scope.currentPage ) * $scope.roisPerpage, 
-                    ($scope.currentPage+1) * $scope.roisPerpage
-                );
-                $scope.rois = data.lrs;
-            } 
-            else { 
-                $scope.rois = []; 
-                $scope.norois = true;
+        if(this.selected.trainingSet){
+            if(this.selected.trainingSet.edit){
+                delete this.selected.trainingSet.edit;
             }
         }
-    });
+        
+        this.selected.trainingSet = selected;
+        this.selected.trainingSet.export_url = a2TrainingSets.getExportUrl(selected.id);
+        
+        Project.validationBySpeciesSong(selected.species, selected.songtype, (function(data) {
+            this.selected.trainingSet.validations = data;
+        }).bind(this));
+        
+        a2TrainingSets.getSpecies(selected.id, (function(speciesData) {
+            this.species = speciesData.species;
+            this.songtype = speciesData.songtype;            
+        
+            a2TrainingSetHistory.setLastSpecies(this.species,this.songtype);
+        
+            a2TrainingSets.getRois(selected.id, (function(data) {
+                this.loaderDisplay = false;
+                this.detailedView = false;
+                this.total.rois = data.length;
+                this.total.pages = Math.ceil(this.total.rois/this.roisPerpage);
+                this.setROISet(data);
+                this.setROI(0);
+                this.setPage(0);
+                this.selected.page = 0;
+            }).bind(this) );
+        }).bind(this));
+    };
     
-    $scope.$watch('detailedView', function() {
-        a2TrainingSetHistory.setViewState($scope.detailedView);
-    });
+    this.setDetailedView = function(detailedView){
+        $state.transitionTo($state.current.name, {set:$state.params.set, show:detailedView?"detail":"gallery"}, {notify:false});
+        this.detailedView = detailedView;
+        a2TrainingSetHistory.setViewState(this.detailedView);
+    };
+    
+    this.editSelectedTrainingSet = function(){
+        if(!a2UserPermit.can('manage training sets')) {
+            notify.log('You do not have permission to edit training sets');
+            return;
+        }
+
+        if(this.selected.trainingSet){
+            var trainingSet = this.selected.trainingSet;
+            var speciesClass = {species:trainingSet.species, songtype:trainingSet.songtype};
+            speciesClass.species_name = this.species;
+            speciesClass.songtype_name = this.songtype;
+            Project.getClasses().then(function(classes){
+                var d = $q.defer();
+                var current = classes.filter(function(cls){
+                    return speciesClass.species == cls.species && speciesClass.songtype == cls.songtype;
+                }).pop() || speciesClass;
+                
+                trainingSet.edit = {
+                    name : trainingSet.name,
+                    class : current,
+                    projectClasses : classes
+                };
+                trainingSet.edit.cancel = d.reject.bind(d);
+                trainingSet.edit.save = function(){
+                    return a2TrainingSets.edit(trainingSet.id, {
+                        name: trainingSet.edit.name,
+                        class: trainingSet.edit.class.id
+                    }).then(function(response){
+                        d.resolve(response.data);
+                    }, function(response){
+                        notify.log(response.data);
+                    });
+                };
+                                
+                return d.promise;
+            }).then((function(editedTrainingSet){
+                for(var i in editedTrainingSet){
+                    trainingSet[i] = editedTrainingSet[i];
+                }
+                this.selectTrainingSet(trainingSet);
+            }).bind(this)).finally(function(){
+                delete trainingSet.edit;                
+            });
+        }
+    };
+
+    this.deleteSelectedTrainingSet = function() {
+        var trainingSet = this.selected.trainingSet;
+        if(!trainingSet){
+            return;
+        }
+        
+        if(!a2UserPermit.can('manage training sets')) {
+            notify.log('You do not have permission to edit training sets');
+            return;
+        }
+        
+        $modal.open({
+            templateUrl: '/partials/pop-up.html',
+            controller: function() {
+                this.messages = ["You are about to delete a the training set \"" + trainingSet.name + "\". Are you sure??"];
+                this.btnOk = "Yes, do it!";
+                this.btnCancel = "No";
+            },
+            controllerAs: 'popup'
+        }).result.then((function() {
+            a2TrainingSets.delete(trainingSet.id, (function(data){
+                this.trainingSets.splice(this.trainingSets.indexOf(trainingSet), 1);
+                delete this.selected.trainingSet;
+            }).bind(this));
+        }).bind(this));
+    };
+
+    this.getTrainingSetList();
+    this.projecturl = Project.getUrl();
+    
+    a2TrainingSetHistory.getLastSet((function(data) {
+        if(data.ls) {
+            this.showSetDetails = true;
+            this.selected.trainingSet = data.ls;
+            this.species = data.sp;
+            this.songtype = data.sg;
+            this.detailedView = data.vs;
+            this.total.rois = data.lrs.length;
+            this.total.pages = Math.ceil(this.total.rois/this.roisPerpage);
+            this.selected.page = data.lp;
+            this.setROISet(data.lrs);
+            this.setPage(data.lp);
+            this.setROI(data.lr || 0);
+        }
+    }).bind(this));
      
-    $scope.$watch('currentPage', function() {
-        a2TrainingSetHistory.setLastPage($scope.currentPage);
-    });
-    
-    $scope.$watch('currentRoi', function() {
-        a2TrainingSetHistory.setLastRoi($scope.currentRoi);
-    });
-    
-    $scope.$watch('rois', function() {
-        a2TrainingSetHistory.setLastRoiSet($scope.rois);
-    });
 })
 ;

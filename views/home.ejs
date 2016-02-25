@@ -64,7 +64,7 @@
                 <ul class="list-group">
                     <li class="list-group-item" ng-repeat="news in newsFeed track by $index">
                         <p>
-                            <img ng-src="{{ news.imageUrl }}"> 
+                            <img class="user-avatar" ng-src="{{ news.imageUrl }}" alt="user avatar">
                             <strong>{{ news.username }}</strong>
                             {{ news.message }} 
                         </p>

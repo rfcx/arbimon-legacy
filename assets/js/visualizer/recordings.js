@@ -26,7 +26,7 @@ function($scope, $modal, $location){
         }).result.then(
             $scope.audio_player.setFrequencyFilter.bind($scope.audio_player)
         ).then(function(){
-            var filter=$scope.audio_player.filter;
+            var filter=$scope.audio_player.freq_filter;
             $scope.location.updateParams({
                 filter: filter ? (filter.min + '-' + filter.max) : undefined
             });

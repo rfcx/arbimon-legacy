@@ -1,11 +1,18 @@
-angular.module('a2.audiodata.uploads', [
+angular.module('a2.audiodata.uploads.upload', [
     'a2.services', 
     'a2.directives', 
     'ui.bootstrap', 
     'angularFileUpload',
     'humane'
 ])
-.controller('UploadCtrl', function($scope, uploads, Project, $modal, $window, a2UserPermit, notify) { 
+.config(function($stateProvider, $urlRouterProvider) {
+    $stateProvider.state('audiodata.uploads.upload', {
+        url: '/',
+        controller: 'A2AudioDataUploadsUploadCtrl',
+        templateUrl: '/partials/audiodata/uploads/upload.html'
+    });
+})
+.controller('A2AudioDataUploadsUploadCtrl', function($scope, uploads, Project, $modal, $window, a2UserPermit, notify) { 
     
     $scope.prettyBytes = function(bytes) {
         

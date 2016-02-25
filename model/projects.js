@@ -6,6 +6,7 @@ var util = require('util');
 var mysql = require('mysql');
 var async = require('async');
 var joi = require('joi');
+var q = require('q');
 var sprintf = require("sprintf-js").sprintf;
 var AWS = require('aws-sdk');
 
@@ -23,119 +24,131 @@ var s3;
 var Projects = {
     
     listAll: function(callback) {
-        var q = "SELECT name, url, description, is_private, is_enabled \n"+
+        var q = "SELECT project_id as id, name, url, description, is_private, is_enabled \n"+
                 "FROM projects";
 
         queryHandler(q, callback);
     },
     
     find: function (query, callback) {
-        var q = "SELECT p.*, \n"+
-                "   pp.tier, \n"+
-                "   pp.storage AS storage_limit, \n"+
-                "   pp.processing AS processing_limit, \n"+
-                "   pp.created_on AS plan_created, \n"+
-                "   pp.activation AS plan_activated, \n"+
-                "   pp.duration_period AS plan_period \n"+
-                "FROM projects AS p \n"+
-                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                "WHERE ";
-        var whereExp = [];
+        var whereExp = [], data=[];
         
-        if(query.id) {
-            whereExp.push("p.project_id = " + mysql.escape(query.id));
+        if(query.hasOwnProperty("id")) {
+            whereExp.push("p.project_id = ?");
+            data.push(query.id);
         }
-        if(query.url) {
-            whereExp.push("p.url = " + mysql.escape(query.url));
+        if(query.hasOwnProperty("url")) {
+            whereExp.push("p.url = ?");
+            data.push(query.url);
         }
-        if(query.name) {
-            whereExp.push("p.name = " + mysql.escape(query.name));
+        if(query.hasOwnProperty("name")) {
+            whereExp.push("p.name = ?");
+            data.push(query.name);
         }
         
         if(!whereExp.length) {
-            return callback(new Error('no query params'));
+            return q.reject(new Error('no query params'));
         }
         
-        q += whereExp.join(' \nAND ');
-        
-        return queryHandler(q, callback);
+        return dbpool.query(
+            "SELECT p.*, \n"+
+            "   pp.tier, \n"+
+            "   pp.storage AS storage_limit, \n"+
+            "   pp.processing AS processing_limit, \n"+
+            "   pp.created_on AS plan_created, \n"+
+            "   pp.activation AS plan_activated, \n"+
+            "   pp.duration_period AS plan_period \n"+
+            "FROM projects AS p \n"+
+            "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+            "WHERE (" + whereExp.join(") \n" +
+            "  AND (") + ")", data
+        ).nodeify(callback);
     },
     
     // DEPRACATED use find()
     findById: function (project_id, callback) {
         console.info('projects.findById DEPRECATED');
-        var query = "SELECT p.*, \n"+
-                    "   pp.tier, \n"+
-                    "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit, \n"+
-                    "   pp.created_on AS plan_created, \n"+
-                    "   pp.activation AS plan_activated, \n"+
-                    "   pp.duration_period AS plan_period \n"+
-                    "FROM projects AS p \n"+
-                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                    "WHERE p.project_id = " + mysql.escape(project_id);
-
-        return queryHandler(query , callback);
+        return Projects.find({id: project_id}, callback);
     },
     
     // DEPRACATED use find()
     findByUrl: function (project_url, callback) {
         console.info('projects.findByUrl DEPRECATED');
-        var query = "SELECT p.*, \n"+
-                    "   pp.tier, \n"+
-                    "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit, \n"+
-                    "   pp.created_on AS plan_created, \n"+
-                    "   pp.activation AS plan_activated, \n"+
-                    "   pp.duration_period AS plan_period \n"+
-                    "FROM projects AS p \n"+
-                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                    "WHERE p.url = " + mysql.escape(project_url);
-
-        return queryHandler(query , callback);
+        return Projects.find({url: project_url}, callback);
     },
 
     // DEPRACATED use find()
     findByName: function (project_name, callback) {
         console.info('projects.findByName DEPRECATED');
-        var query = "SELECT p.*, \n"+
-                    "   pp.tier, \n"+
-                    "   pp.storage AS storage_limit, \n"+
-                    "   pp.processing AS processing_limit, \n"+
-                    "   pp.created_on AS plan_created, \n"+
-                    "   pp.activation AS plan_activated, \n"+
-                    "   pp.duration_period AS plan_period \n"+
-                    "FROM projects AS p \n"+
-                    "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
-                    "WHERE p.name = " + mysql.escape(project_name);
-
-        return queryHandler(query , callback);
+        return Projects.find({name: project_name}, callback);
     },
 
-    getProjectSites: function(project_id, callback){
-        if(typeof project_id !== 'number')
-            return callback(new Error("invalid type for 'project_id'"));
-        
-        var q = "SELECT s.site_id as id, \n"+
+    /** Fetch a project's list of sites.
+     * @param {Integer} project_id - the id of the project.
+     * @param {Object} options - options object.
+     * @param {Boolean} options.compute.rec_count - compute recording counts as well.
+     * @param {Boolean} options.compute.has_logs - compute wether each site has log files or not.
+     * @return {Promise} promise resolving to the list of sites.
+     */
+    getProjectSites: function(project_id, options){
+        if(typeof project_id !== 'number'){
+            return q.reject(new Error("invalid type for 'project_id'"));
+        }
+        return dbpool.query(
+                "SELECT s.site_id as id, \n"+
                 "       s.name, \n"+
                 "       s.lat, \n"+
                 "       s.lon, \n"+
                 "       s.alt, \n"+
                 "       s.published, \n"+
-                "       COUNT( r.recording_id ) as rec_count, \n"+
-                "       COUNT( SLF.site_log_file_id ) > 0 as has_logs, \n"+
-                "       s.project_id != %1$s AS imported, \n"+
+                "       s.project_id != ? AS imported, \n"+
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
-                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = %1$s \n"+
-                "LEFT JOIN recordings AS r ON s.site_id = r.site_id \n"+
-                "LEFT JOIN site_log_files AS SLF ON s.site_id = SLF.site_id \n"+
-                "WHERE (s.project_id = %1$s \n"+
-                "OR pis.project_id = %1$s) \n"+
-                "GROUP BY s.site_id";
-        
-        q = sprintf(q, mysql.escape(project_id));
-        return queryHandler(q , callback);
+                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
+                "WHERE (s.project_id = ? OR pis.project_id = ?)",
+                [project_id, project_id, project_id, project_id]
+        ).then(function(sites){
+            if(sites.length && options && options.compute){
+                var sitesById={}, siteIds = sites.map(function(site){
+                    sitesById[site.id] = site;
+                    return site.id;
+                });
+                
+                return q.all([
+                    options.compute.rec_count ? dbpool.query(
+                        "SELECT r.site_id, COUNT(r.recording_id ) as rec_count\n"+
+                        "FROM recordings AS r\n"+
+                        "WHERE r.site_id IN (?)\n" +
+                        "GROUP BY r.site_id",
+                        [siteIds]
+                    ).then(function(results){
+                        sites.forEach(function(site){
+                            site.rec_count=0;
+                        });
+                        results[0].forEach(function(row){
+                            sitesById[row.site_id].rec_count = row.rec_count;
+                        });
+                    }) : q(),
+                    options.compute.has_logs ? dbpool.query(
+                        "SELECT SLF.site_id, COUNT(SLF.site_log_file_id ) > 0 as has_logs \n" +
+                        "FROM site_log_files AS SLF\n" +
+                        "WHERE SLF.site_id IN (?)\n" +
+                        "GROUP BY SLF.site_id",
+                        [siteIds]
+                    ).then(function(results){
+                        sites.forEach(function(site){
+                            site.has_logs=false;
+                        });
+                        results[0].forEach(function(row){
+                            sitesById[row.site_id].has_logs = row.has_logs;
+                        });
+                    }): q()
+                ]).then(function(){
+                    return sites;
+                });
+            }
+            return sites;
+        });
     },
     
     /**
@@ -336,56 +349,51 @@ var Projects = {
             classId = null;
         }
         
-        
-        var params = [];
-        var q = "";
-        var sql = {
-            select: (
-                "SELECT pc.project_class_id as id, \n"+
-                "       pc.species_id as species, \n"+
-                "       pc.songtype_id as songtype, \n"+
-                "       st.taxon, \n"+
-                "       sp.scientific_name as species_name, \n"+
-                "       so.songtype as songtype_name \n"
-            ),
-            from: (
-                "FROM project_classes AS pc \n"+
-                "JOIN species AS sp on sp.species_id = pc.species_id \n"+
-                "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
-                "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id \n"
-            ),
-            where: (
-                "WHERE pc.project_id = ? \n"
-            ),
-        };
-        params.push(projectId);
+        var params = [projectId];
+        var select_clause = [
+            "pc.project_class_id as id",
+            "pc.species_id as species",
+            "pc.songtype_id as songtype",
+            "st.taxon",
+            "sp.scientific_name as species_name",
+            "so.songtype as songtype_name"
+        ];
+        var from_clause = [
+            "project_classes AS pc",
+            "JOIN species AS sp ON sp.species_id = pc.species_id",
+            "JOIN songtypes AS so ON so.songtype_id = pc.songtype_id",
+            "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id"
+        ];
+        var where_clause = ['pc.project_id = ?'];
+        var groupby_clause = [];
         
         if(classId) {
-            sql.where += "AND pc.project_class_id = ? \n";
+            where_clause.push("pc.project_class_id = ?");
             params.push(classId);
         }
-        
-        if(options && options.countValidations) {
-            sql.select += (
-                ", coalesce(SUM(rv.present), 0) as vals_present, \n"+
-                "coalesce((COUNT(rv.present) - SUM(rv.present)), 0) as vals_absent \n"
-            );
-            sql.from += (
-                "LEFT JOIN recording_validations AS rv " + 
-                "ON rv.songtype_id = pc.songtype_id " +
-                "AND rv.species_id = pc.species_id " +
-                "AND rv.project_id = pc.project_id \n"
-            );
-            
-            q = sql.select + sql.from + sql.where + "GROUP BY pc.species_id, pc.songtype_id \n";
-        }
-        else {
-            q = sql.select + sql.from + sql.where;
-        }
-        
-            // " \nORDER BY st.taxon, sp.scientific_name"
 
-        return queryHandler(mysql.format(q, params), callback);
+        if(options && options.countValidations) {
+            select_clause.push(
+                "coalesce(SUM(rv.present), 0) as vals_present",
+                "coalesce((COUNT(rv.present) - SUM(rv.present)), 0) as vals_absent"
+            );
+            from_clause.push(
+                "LEFT JOIN recording_validations AS rv ON (\n"+
+                "   rv.songtype_id = pc.songtype_id\n" +
+                "   AND rv.species_id = pc.species_id\n" +
+                "   AND rv.project_id = pc.project_id\n" +
+                ")"
+            );
+            groupby_clause.push("pc.species_id", "pc.songtype_id");
+        }
+
+        return q.nfcall(queryHandler, mysql.format(
+            "SELECT " + select_clause.join(", \n") + "\n" +
+            "FROM " + from_clause.join("\n") + "\n" +
+            "WHERE (" + where_clause.join(") AND (") + ")" + 
+            (groupby_clause.length ? "\nGROUP BY " + groupby_clause.join(",") : ""),
+            params)
+        ).get(0).nodeify(callback);
     },
 
     insertClass: function(project_class, callback) {
@@ -685,7 +693,7 @@ var Projects = {
                 "FROM ( \n"+
                 "    (SELECT upload_id as id \n"+
                 "    FROM uploads_processing  \n"+
-                "    WHERE project_id = %1$s) \n"+
+                "    WHERE project_id = %1$s AND state != 'uploaded') \n"+
                 "    UNION \n"+
                 "    (SELECT recording_id as id \n"+
                 "    FROM recordings AS r \n"+
@@ -703,7 +711,7 @@ var Projects = {
                 "FROM ( \n"+
                 "    (SELECT u.duration \n"+
                 "    FROM uploads_processing as u \n"+
-                "    WHERE project_id = ?) \n"+
+                "    WHERE project_id = ? AND state != 'uploaded') \n"+
                 "    UNION ALL \n"+
                 "    (SELECT r.duration \n"+
                 "    FROM recordings AS r \n"+

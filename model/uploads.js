@@ -51,10 +51,61 @@ module.exports = {
         });
     },
     
-    getUploadsList: function(){
+    getUploadsList: function(options){
+        options = options || {};
+        var select = ['UP.upload_id as id, UP.project_id, UP.site_id, UP.user_id, UP.upload_time, UP.filename, UP.state, UP.duration, UP.datetime, UP.recorder, UP.mic, UP.software'];
+        var from = ['uploads_processing UP'];
+        var where=[], data=[], limit='';
+        if(options.project){
+            where.push('UP.project_id = ?');
+            data.push(options.project);
+        }
+        if(options.refs){
+            select.push('S.name as site');
+            from.push('JOIN sites S ON S.site_id = UP.site_id');
+            select.push('U.login as username');
+            from.push('JOIN users U ON U.user_id = UP.user_id');
+        }
+        
+        if(options.count){
+            options.count = false;
+            return q.all([
+                this.getUploadsList(options),
+                q.nfcall(queryHandler,
+                    "SELECT COUNT(*) as count\n" +
+                    "FROM uploads_processing UP" + 
+                    (where.length ? '\nWHERE (' + where.join(') AND (') + ')' : ''), 
+                    data
+                ).get(0).get(0).get('count')
+            ]).then(function(all){
+                return {list:all[0], count:all[1]};
+            });
+        }
+        
+        if(options.limit){
+            limit = "\nLIMIT ?";
+            data.push(Math.max(options.limit|0, 0));
+            if(options.offset){
+                limit += " OFFSET ?";
+                data.push(options.offset|0);
+            }
+        }
+                
+        return q.denodeify(queryHandler)(
+            "SELECT " + select.join(', ') + "\n" +
+            "FROM " + from.join("\n") + 
+            (where.length ? '\nWHERE (' + where.join(') AND (') + ')' : '') + 
+            limit, data
+        ).get(0);
+    },
+    
+    fetchRandomUploadItems: function(count){
         return q.denodeify(queryHandler)(
             "SELECT upload_id as id, project_id, site_id, user_id, upload_time, filename, state, duration, datetime, recorder, mic, software\n" +
-            "FROM uploads_processing"
+            "FROM uploads_processing\n" +
+            "WHERE state='waiting'\n" + 
+            "ORDER BY RAND()\n" +
+            "LIMIT ?", [count | 0]
         ).get(0);
     },
     
@@ -62,7 +113,15 @@ module.exports = {
         var q = "UPDATE uploads_processing \n"+
                 "SET state = ? \n"+
                 "WHERE upload_id = ?";
-        q = mysql.format(q, [uploadId, newState]);
+        q = mysql.format(q, [newState, uploadId]);
+        queryHandler(q, callback);
+    },
+    
+    updateStateAndComment: function(uploadId, newState, remark, callback) {
+        var q = "UPDATE uploads_processing \n"+
+                "SET state = ?, remark = ? \n"+
+                "WHERE upload_id = ?";
+        q = mysql.format(q, [newState, remark, uploadId]);
         queryHandler(q, callback);
     },
     

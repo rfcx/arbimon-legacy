@@ -22,6 +22,37 @@ angular.module('a2.utils', [])
         }
     };
 })
+.factory('a2EventEmitter', function(){
+    function a2EventEmitter(){
+        this.list={};
+    }
+    a2EventEmitter.prototype = {
+        on:function(event, callback){
+            var list = this.list[event] || (this.list[event] = []);
+            list.push(callback);
+            return callback;
+        },
+        off: function(event, callback){
+            var list = this.list[event];
+            if(list){
+                var idx = list.indexOf(callback);
+                if(idx){
+                    list.splice(idx, 1);
+                }
+            }
+        },
+        emit: function(event){
+            var args = Array.prototype.slice.call(arguments, 1);
+            var list = this.list[event];
+            if(list){
+                for(var i=0,e=list.length; i <e; ++i){
+                    list[i].apply(null, args);
+                }
+            }
+        }
+    };
+    return a2EventEmitter;
+})
 .factory('itemSelection', function(){
     return {
         make : function make_itemSelection_obj(item_name){
@@ -173,6 +204,83 @@ angular.module('a2.url-update-service', [])
     return function(url){
         return a2UrlUpdate.get(url);
     };
+})
+;
+
+angular.module('a2.utils')
+/**
+ * @ngdoc factory
+ * @name a2.utils.factory:$debounce
+ * @description asynchronous debouncing function decorator
+ * Decorates an asynchronous function with a debouncing function. A debouncing
+ * function withholds the function call by a set ammount of time and wait for
+ * any othe function calls, resetting the wait for time every call. After its wait
+ * time, the function gets called with the last given arguments and context.
+ * @param {Function} fn - the function to debounce
+ * @param {Function} rate - the timeout 
+ * @return {Promise} resolved with the function's return value.
+ */
+.factory('$debounce', function($timeout, $q, $log){
+    return function $debounce(fn, rate){
+        var timeoutPromise, qDefer, debouncePromise;
+        rate = rate || 100;
+        return function(){
+            var self=this;
+            var args = Array.prototype.slice.call(arguments);
+            if(timeoutPromise){
+                $timeout.cancel(timeoutPromise);
+            }
+            if(!qDefer){
+                qDefer = $q.defer();
+                debouncePromise = qDefer.promise.then(function(){
+                    // qDefer got resolved. forget it's reference in case of recursivity.
+                    qDefer = null; 
+                    return fn.apply(self, args);
+                });
+            }
+            timeoutPromise = $timeout(function(){
+                qDefer.resolve();
+            }, rate);
+            return debouncePromise;
+        };
+    };
+})
+.factory('a2LookaheadHelper', function($q){
+    var a2LookaheadHelper = function(options){
+        this.options=options||{};
+        if(!options.searchCompare){
+            options.searchCompare = function(a, b){ 
+                return a == b;
+            };
+        }
+    };
+    a2LookaheadHelper.prototype={
+        search: function(text){
+            var options=this.options;
+            if(options.minLength && text.length < options.minLength){
+                return $q.resolve([]);
+            }
+            
+            var promise = options.fn(text);
+            
+            if(options.includeSearch){
+                promise = promise.then(function(items){
+                    var textItem = items.filter(function(item){
+                        return options.searchCompare(text, item);
+                    }).pop();
+                    if(!textItem){
+                        items.unshift(
+                            options.searchPromote ? options.searchPromote(text) : text
+                        );
+                    }
+                    return items;
+                });
+            }
+            
+            return promise;
+        }
+    };
+    return a2LookaheadHelper;
 })
 .service('EventlistManager', function(){
     var EventlistManager = function(){

@@ -2,12 +2,15 @@ var util = require('util');
 var mysql = require('mysql');
 var AWS   = require('aws-sdk');
 var joi = require('joi');
+var q = require('q');
 var jsonwebtoken = require('jsonwebtoken');
 var config = require('../config');
 
 var s3;
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
+
+var site_log_processor = require('../utils/site_log_processor');
 
 var Sites = {
     findById: function (site_id, callback) {
@@ -264,30 +267,37 @@ var Sites = {
             s3 = new AWS.S3();
         }
         
+        var dbconn;
+        
         var key = ('project_' + (site.project_id | 0) + 
                   '/site_'  + (site.site_id | 0) + 
                   '/logs/recorder_' + (log.recorder + '') +
                   '/' + (log.from | 0) + '-' + (log.to | 0) + '.txt');
-        
-        s3.putObject({
+        return q.ninvoke(s3, 'putObject', {
             Bucket : config('aws').bucketName,
             Key    : key,
             Body   : log.file
-        }, function(err, data){
-            if(err) { 
-                callback(err);
-            } else {
-                queryHandler(
-                    "INSERT INTO site_log_files(site_id, log_start, log_end, uri) \n" + 
-                    "VALUES ("+
-                        (site.site_id|0)+", " +
-                        "FROM_UNIXTIME("+Math.abs(log.from/1000.0)+"), " +
-                        "FROM_UNIXTIME("+Math.abs(log.to  /1000.0)+"), " + 
-                        mysql.escape(key) +
-                    ")", 
-                callback);
-            }
-        });        
+        }).then(function(data){
+            return q.nfcall(queryHandler, 
+                "INSERT INTO site_log_files(site_id, log_start, log_end, uri) \n" + 
+                "VALUES ("+
+                    (site.site_id|0)+", " +
+                    "FROM_UNIXTIME("+Math.abs(log.from/1000.0)+"), " +
+                    "FROM_UNIXTIME("+Math.abs(log.to  /1000.0)+"), " + 
+                    mysql.escape(key) +
+                ")"
+            );
+        }).then(function(){
+            return q.ninvoke(dbpool, 'getConnection');
+        }).then(function(dbconn){
+            return site_log_processor.process_site_logs(
+                {file:log.filepath},
+                site.site_id | 0,
+                dbconn
+            ).finally(function(){
+                dbconn.release();
+            });
+        }).nodeify(callback);
     },
 
     /** Returns the site's data log.
@@ -403,6 +413,148 @@ var Sites = {
             });
         });
     },
+
+    /** Returns the site's upload stats.
+     * @param {Object}  site - an object representing the site.
+     * @param {Integer} site.site_id - id of the given site.
+     * @param {Object}  options - options object.
+     * @param {String}  options.quantize - aggregate entries by the specified time interval. 
+     *                    Format is a number plus an unit (min(s), hour(s), day(s) or week(s))
+     * @param {Date}  options.from - limit returned data to entries after or at this date
+     * @param {Date}  options.to   - limit returned data to entries before or at this date
+     * @param {Callback} callback    - callback function
+     */
+    getUploadStats: function(site, options, callback){
+        dbpool.getConnection(function(err, dbconn){
+            var m;
+            if(err){
+                callback(err);
+                return;
+            }
+            var site_id = site.site_id | 0;
+            
+            var sql, params=[site_id];
+            var group_clause;
+            
+            if(options.quantize && (m=/^(\d+)\s?(min|hour|day|week)s?$/.exec(options.quantize))){
+                var scale=m[1]|0, qfunc = {
+                    min   : 'FLOOR(UNIX_TIMESTAMP(R.upload_time)/60)',
+                    hour  : 'FLOOR(UNIX_TIMESTAMP(R.upload_time)/3600)',
+                    day   : 'FLOOR(UNIX_TIMESTAMP(R.upload_time)/86400)',
+                    week  : 'FLOOR(UNIX_TIMESTAMP(R.upload_time)/604800)',
+                }[m[2]];
+                if(scale != 1){
+                    qfunc = 'FLOOR('+qfunc+'/'+scale+')*'+scale;
+                }
+                group_clause = qfunc;
+            }
+            
+            sql = "SELECT R.upload_time AS datetime, COUNT(*) AS uploads \n" + 
+            "FROM recordings R\n" +
+            "WHERE site_id = ?";
+            if (options.dates) {
+                sql += " AND DATE(R.upload_time) IN (?)";
+                params.push(options.dates);
+            }
+            if (options.from) {
+                if(options.to){
+                    sql += " AND R.upload_time BETWEEN ? AND ?";
+                    params.push(options.from, options.to);
+                } else {
+                    sql += " AND R.upload_time >= ?";
+                    params.push(options.from);
+                }
+            } else if(options.to){
+                sql += " AND R.upload_time <= ?";
+                params.push(options.to);
+            }
+            if(group_clause){
+                sql += " \nGROUP BY " + group_clause;
+            }
+            
+            var resultstream = dbconn.query(sql, params).stream({highWaterMark:5});
+            resultstream.on('error', function(err) {
+                callback(err);
+            });
+            resultstream.on('fields',function(fields,i) {
+              callback(null, resultstream, fields);
+            });
+            resultstream.on('end', function(){
+                dbconn.release();
+            });
+        });
+    },
+    
+        /** Returns the site's upload stats.
+         * @param {Object}  site - an object representing the site.
+         * @param {Integer} site.site_id - id of the given site.
+         * @param {Object}  options - options object.
+         * @param {String}  options.quantize - aggregate entries by the specified time interval. 
+         *                    Format is a number plus an unit (min(s), hour(s), day(s) or week(s))
+         * @param {Date}  options.from - limit returned data to entries after or at this date
+         * @param {Date}  options.to   - limit returned data to entries before or at this date
+         * @param {Callback} callback    - callback function
+         */
+    getRecordingStats: function(site, options, callback){
+            dbpool.getConnection(function(err, dbconn){
+                var m;
+                if(err){
+                    callback(err);
+                    return;
+                }
+                var site_id = site.site_id | 0;
+                
+                var sql, params=[site_id];
+                var group_clause;
+                
+                if(options.quantize && (m=/^(\d+)\s?(min|hour|day|week)s?$/.exec(options.quantize))){
+                    var scale=m[1]|0, qfunc = {
+                        min   : 'FLOOR(UNIX_TIMESTAMP(R.datetime)/60)',
+                        hour  : 'FLOOR(UNIX_TIMESTAMP(R.datetime)/3600)',
+                        day   : 'FLOOR(UNIX_TIMESTAMP(R.datetime)/86400)',
+                        week  : 'FLOOR(UNIX_TIMESTAMP(R.datetime)/604800)',
+                    }[m[2]];
+                    if(scale != 1){
+                        qfunc = 'FLOOR('+qfunc+'/'+scale+')*'+scale;
+                    }
+                    group_clause = qfunc;
+                }
+                
+                sql = "SELECT R.datetime AS datetime, COUNT(*) AS count \n" + 
+                "FROM recordings R\n" +
+                "WHERE site_id = ?";
+                if (options.dates) {
+                    sql += " AND DATE(R.datetime) IN (?)";
+                    params.push(options.dates);
+                }
+                if (options.from) {
+                    if(options.to){
+                        sql += " AND R.datetime BETWEEN ? AND ?";
+                        params.push(options.from, options.to);
+                    } else {
+                        sql += " AND R.datetime >= ?";
+                        params.push(options.from);
+                    }
+                } else if(options.to){
+                    sql += " AND R.datetime <= ?";
+                    params.push(options.to);
+                }
+                if(group_clause){
+                    sql += " \nGROUP BY " + group_clause;
+                }
+                
+                var resultstream = dbconn.query(sql, params).stream({highWaterMark:5});
+                resultstream.on('error', function(err) {
+                    callback(err);
+                });
+                resultstream.on('fields',function(fields,i) {
+                  callback(null, resultstream, fields);
+                });
+                resultstream.on('end', function(){
+                    dbconn.release();
+                });
+            });
+        },
 
     
     /** Returns the list of uploaded log files.

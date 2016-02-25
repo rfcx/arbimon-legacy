@@ -21,3 +21,25 @@
     text-align: center;
     width: 1em;
 }
+
+.add-swag(@swag; @content; @color; @shadow){
+    &.swag-@{swag}::after {
+        bottom: 0;
+        color: @color;
+        content: @content;
+        position: absolute;
+        right: 0;
+        text-shadow: 1px 1px 3px @shadow, 1px 1px 3px @shadow, 1px 1px 3px @shadow;
+    }
+}
+
+.fa.user-avatar {
+    background-size: 30px 30px;
+    height: 30px;
+    margin-bottom: -30px;
+    transform: translateY(-19px);
+    width: 30px;
+
+    .add-swag(super; "\f13b"; purple; white);
+    .add-swag(admin; "A"; lightsalmon; black);
+}

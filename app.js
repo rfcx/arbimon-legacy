@@ -27,6 +27,7 @@ AWS.config.update({
 
 var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');
+var APIError = require('./utils/apierror');
 var model = require('./model');
 var uploadQueue = require('./utils/upload-queue');
 
@@ -47,6 +48,10 @@ if (app.get('env') === 'production') {
     app.enable('trust proxy');
 }
 
+if (app.get('env') === 'development') {
+    require('q').longStackSupport = true;
+}
+
 // middleware
 // ------------------------------------------------------------------
 
@@ -55,11 +60,15 @@ app.use(favicon(path.join(__dirname, '/public/images/favicon.ico')));
 
 logger.token('tag', function(req, res){ return 'arbimon2:request'; });
 
-if(app.get('env') === 'production') {
-    app.use(logger(':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"'));
-} else {
-    app.use(logger('dev'));
-}
+app.use(logger(
+    app.get('env') === 'production' ? 
+    ':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"' :
+    'dev', {
+    skip: function(req, res){
+        return /\/jobs\/progress/.test(req.originalUrl);
+    }
+}));
+
 
 app.use(function(req, res, next) {
     if(req.app.get('env') === 'production') {
@@ -138,20 +147,32 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-    console.error(err.stack);
-    
     res.status(err.status || 500);
-    if(app.get('env') === 'development') {
-        res.render('error', {
-            message: err.message,
-            error: err
-        });
-    }
-    else {
-        res.render('error', {
-            message: "Something went wrong",
-            error: {}
-        });
+
+    // json APIs have more error-handling possibilities
+    if(
+        /application\/json/.test(res.getHeader('Content-Type'))
+    ){
+        if(err instanceof APIError){
+            res.json(err.message);
+        } else {
+            console.error(err.stack);
+            res.json('Server error');
+        }
+    } else {
+        console.error(err.stack);
+        if(app.get('env') === 'development') {
+            res.render('error', {
+                message: err.message,
+                error: err
+            });
+        }
+        else {
+            res.render('error', {
+                message: "Something went wrong",
+                error: {}
+            });
+        }
     }
 });
 

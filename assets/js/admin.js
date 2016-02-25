@@ -7,6 +7,7 @@ angular.module('a2.admin', [
     'templates-arbimon2',
     'humane',
     'ui.select',
+    'a2.admin.projects',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/dashboard");
@@ -213,60 +214,7 @@ angular.module('a2.admin', [
     //     // $interval.cancel($scope.jobsLoop);
     // });
 })
-// .controller('AdminProjectsCtrl', function($scope, $http, notify) {
-//     $scope.loadProject = function() {
-//         $http.get('/admin/projects')
-//             .success(function(data) {
-//                 $scope.projects = data;
-//             });
-//     };
-//         
-//     $scope.getProjectInfo = function(project) {
-//         $http.get('/api/project/'+project.url+'/info')
-//             .success(function(data) {
-//                 
-//                 data.is_enabled = !!data.is_enabled;
-//                 $scope.currentProject = data;
-//                 
-//             });
-//             
-//         $http.get('/api/project/'+project.url+'/sites')
-//             .success(function(data) {
-//                 $scope.sites = data;
-//             });
-//             
-//         $http.get('/api/project/'+project.url+'/recordings/count')
-//             .success(function(data) {
-//                 $scope.recCount = data.count;
-//             });
-//         
-//     };
-//     
-//     $scope.updateProject = function() {
-//         $http.put('/admin/projects/' + $scope.currentProject.project_id, {
-//                 project: $scope.currentProject
-//             })
-//             .success(function(data) {
-//                 $scope.loadProject();
-//                 notify.log('project updated');
-//             })
-//             .error(function(data) {
-//                 notify.error(data);
-//             });
-//     };
-//     
-//     $scope.closeProjectInfo = function() {
-//         $scope.currentProject = null;
-//     };
-//     
-//     $scope.loadProject();
-// })
-// .controller('AdminUsersCtrl', function($scope, $http) {
-//     $http.get('/admin/users')
-//         .success(function(data) {
-//             $scope.users = data;
-//         });
-// })
+
 .service('AdminDashboardDataService', function($q){
     return {
         getPlotData: function(series, from, to, period){
@@ -418,5 +366,4 @@ angular.module('a2.admin', [
 
     $q.when().then(this.refresh_logs.bind(this));
 })
-
 ;

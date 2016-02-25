@@ -1,5 +1,5 @@
 angular.module('a2.srv.project', [])
-.factory('Project', function($location, $http) {
+.factory('Project', function($location, $http, $q) {
         
         var nameRe = /\/?project\/([\w\_\-]+)/;
         var nrm = nameRe.exec($location.absUrl());
@@ -39,11 +39,13 @@ angular.module('a2.srv.project', [])
                     options = {};
                 }
                 
-                $http.get('/api/project/'+url+'/classes', {
+                return $q.when($http.get('/api/project/'+url+'/classes', {
                         params: options
-                    })
-                    .success(function(data) {
-                        callback(data);
+                    })).then(function(response){
+                        if(callback){
+                            callback(response.data);
+                        }
+                        return response.data;
                     });
             },
             // TODO should rename getRecs to findRecs
