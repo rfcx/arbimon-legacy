@@ -31,14 +31,16 @@ angular.module('a2.orders.create-project', [
             console.log(order);
             // if user added recorders to paid order show shipping address form
             if(order.hasCoupon){
-                ProjectOrderService.placeOrder(order.data);
+                return ProjectOrderService.placeOrder(order.data).then(function(){
+                    return $modalInstance.close();
+                });
             } else if(order.isPaidProject && order.data.recorderQty > 0) {
                 a2order.enterShippingAddress(order.data);
+                $modalInstance.dismiss();
             } else {
                 a2order.reviewOrder(order.data);
+                $modalInstance.dismiss();
             }
-            
-            $modalInstance.dismiss();
         });
     };
 })
