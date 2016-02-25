@@ -37,7 +37,9 @@ angular.module('a2.home', [
         var modalInstance = a2order.createProject({});
         
         modalInstance.result.then(function(message) {
-            notify.log(message);
+            if(message){
+                notify.log(message);
+            }
             $scope.loadProjectList();
         });
     };
