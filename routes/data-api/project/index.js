@@ -350,11 +350,9 @@ router.get('/:projectUrl/validations/count', function(req, res, next) {
 });
 
 router.get('/:projectUrl/usage', function(req, res, next) {
-    model.projects.getStorageUsage(req.project.project_id, function(err, result) {
-        if(err) return next(err);
-        
-        res.json({ min_usage: result[0].min_usage });
-    });
+    model.projects.getStorageUsage(req.project.project_id).then(function(result) {
+        res.json({ min_usage: result.min_usage });
+    }).catch(next);
 });
 
 
