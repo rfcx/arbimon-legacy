@@ -5,6 +5,7 @@ var router = express.Router();
 var async = require('async');
 var util = require('util');
 var _ = require('lodash');
+var q = require('q');
 
 
 var model = require('../model');
@@ -100,19 +101,12 @@ var verifySite = function(req, res, next) {
 
 var receiveUpload = function(req, res, next) {
     
-    async.parallel({
-        getProjectInfo: function(callback) {
-            model.projects.findById(req.upload.projectId, callback);
-        },
-        getUsage: function(callback) {
-            model.projects.getStorageUsage(req.upload.projectId, callback);
-        }
-    }, 
-    function(err, results) {
-        if(err) return next(err);
-        
-        var project = results.getProjectInfo[0][0];
-        var minsUsage = results.getUsage[0][0].min_usage;
+    q.all([
+        model.projects.findById(req.upload.projectId),
+        model.projects.getStorageUsage(req.upload.projectId)
+    ]).then(function(results) {
+        var project = results[0];
+        var minsUsage = results[1].min_usage;
         
         debug('limit', project.storage_limit);
         debug('usage', minsUsage);
@@ -275,7 +269,7 @@ var receiveUpload = function(req, res, next) {
         });
         
         req.pipe(req.busboy);
-    });
+    }).catch(next);
 };
 
 var receiveSiteLogUpload = function(req, res, next) {    
