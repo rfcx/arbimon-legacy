@@ -64,7 +64,7 @@ router.get('/user-settings', function(req, res) {
 
 router.use('/api', dataApi);
 router.use('/project', project);
-
+router.use('/', require('./access-token'));
 
 
 module.exports = router;
