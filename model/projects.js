@@ -32,6 +32,8 @@ var Projects = {
     
     find: function (query, callback) {
         var whereExp = [], data=[];
+        var selectExtra = '';
+        var joinExtra = '';
         
         if(query.hasOwnProperty("id")) {
             whereExp.push("p.project_id = ?");
@@ -50,16 +52,19 @@ var Projects = {
             return q.reject(new Error('no query params'));
         }
         
+        if(!query.basicInfo){
+            selectExtra = "   pp.tier, \n"+
+                          "   pp.storage AS storage_limit, \n"+
+                          "   pp.processing AS processing_limit, \n"+
+                          "   pp.created_on AS plan_created, \n"+
+                          "   pp.activation AS plan_activated, \n"+
+                          "   pp.duration_period AS plan_period \n";
+            joinExtra   = "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
+        }
+        
         return dbpool.query(
-            "SELECT p.*, \n"+
-            "   pp.tier, \n"+
-            "   pp.storage AS storage_limit, \n"+
-            "   pp.processing AS processing_limit, \n"+
-            "   pp.created_on AS plan_created, \n"+
-            "   pp.activation AS plan_activated, \n"+
-            "   pp.duration_period AS plan_period \n"+
-            "FROM projects AS p \n"+
-            "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+            "SELECT p.*" + (selectExtra ? ", \n" + selectExtra : "\n") +
+            "FROM projects AS p \n" + joinExtra +
             "WHERE (" + whereExp.join(") \n" +
             "  AND (") + ")", data
         ).nodeify(callback);
