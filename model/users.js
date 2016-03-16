@@ -184,6 +184,30 @@ var Users = {
         });
     },
 
+    /** Return whether a given user has access to a given project.
+     * @param {Number} userId - id of the user.
+     * @param {Number} projectId - id of the project.
+     * @param {Boolean} options - options
+     * @param {Boolean} options.required - if user has no access, then an error should be thrown.
+     * @return {Promise<Boolean>}  value indicating wether the user has access to a project or not.
+     */
+    hasProjectAccess: function(userId, projectId, options){
+        return dbpool.query(
+            "SELECT U.is_super, P.is_private, UPR.role_id\n" +
+            "FROM users U\n" +
+            "JOIN projects P\n" +
+            "LEFT JOIN user_project_role UPR ON U.user_id = UPR.user_id AND P.project_id = UPR.project_id\n" +
+            "WHERE U.user_id = ? AND P.project_id = ?", [
+            userId, projectId
+        ]).get(0).then(function(results){
+            var hasAccess = results.is_super || !results.is_private || !!results.role_id;
+            if(!hasAccess && options && options.required){
+                throw new APIError("You cannot access this project.", 404);
+            }
+            return hasAccess;
+        });
+    },
+    
     getPermissions : function(user_id, project_id, callback) {
         var q = 'SELECT p.permission_id AS id, p.name \n'+
                 'FROM user_project_role AS upr \n'+
