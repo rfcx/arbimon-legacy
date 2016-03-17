@@ -188,6 +188,8 @@ var AccessTokens = {
      * @param {String} scope - the scope against which to compare the token.
      * @param {Object} options - options object, allowed options include those in resolveAccessToken().
      * @param {Boolean} options.allowEmptyScope - wether an empty scope is allowed in the query or not.
+     * @param {Boolean|Number} options.requireSite - required id of the site for this token. If === true, then any site passes.
+     * @param {Boolean|Number} options.requireProject - required id of the project for this token. If === true, then any project passes.
      *
      * @returns {Promise} resolving to resolved token, if the token is valid and includes the required scope.
      */
@@ -204,6 +206,10 @@ var AccessTokens = {
             }, true);
             if(!isTokenScopeSubset){
                 throw new Error("Token does not include given scope.");
+            } else if(options.requireSite && (options.requireSite === true ? !decodedToken.site : options.requireSite != decodedToken.site)){
+                throw new Error(options.requireSite === true ? "Token does not include a site" : "Token is not for the given site.");
+            } else if(options.requireProject && (options.requireProject === true ? !decodedToken.project : options.requireProject != decodedToken.project)){
+                throw new Error(options.requireProject === true ? "Token does not include a project" : "Token is not for the given project.");
             } else {
                 return decodedToken;
             }
