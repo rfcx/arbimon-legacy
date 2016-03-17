@@ -60,6 +60,8 @@ var Projects = {
                           "   pp.activation AS plan_activated, \n"+
                           "   pp.duration_period AS plan_period \n";
             joinExtra   = "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
+        } else {
+            selectExtra = "p.project_id as id \n";
         }
         
         return dbpool.query(
