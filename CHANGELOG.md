@@ -49,3 +49,5 @@
     - added admin activity plot
 - v1.4.1
     - fixed upload bug.
+- v1.5.0
+    - Added access token support and primary routes for uploading using access tokens.
