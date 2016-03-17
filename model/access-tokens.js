@@ -75,7 +75,7 @@ var AccessTokens = {
      * @returns {Promise} resolving to a challenge result containing the user or token that passed the challenge,
      *                    or rejecting with an error if the challenge failed.
      */
-     challengeAccessTokenRequest: function(options){
+    challengeAccessTokenRequest: function(options){
         options = options || {};
         var challengeResult;
         return (
