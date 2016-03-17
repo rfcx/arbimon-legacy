@@ -42,6 +42,9 @@ var AccessTokens = {
         } else {
             payload.user = auth.user;
         }
+        if(auth.mustBeShortLived){
+            payload.expires = new Date().getTime() + 3600000;
+        }
         
         return jsonwebtoken.sign(payload, config('tokens').secret, config('tokens').options);
     },
@@ -71,30 +74,45 @@ var AccessTokens = {
             if(challengeResult.user && (options.project || options.site)){
                 throw new APIError("Cannot request project or site access token without a parent access token.");
             } else if(challengeResult.token){
-                if(options.project){
-                    if(challengeResult.token.project && challengeResult.token.project != options.project){
-                        throw new APIError("Cannot use a project access token to request access for another project.");
-                    } else {
-                        return models.users.queryPermission(challengeResult.token.user, options.project, 'manage project').then(function(hasPermission){
-                            if(!hasPermission){
-                                throw new APIError("You do not have permission to access this project.");
-                            }
-                        });
+                challengeResult.mustBeShortLived = true;
+                return q.resolve().then(function(){
+                    if(options.project){
+                        if(challengeResult.token.project && challengeResult.token.project != options.project){
+                            throw new APIError("Cannot use a project access token to request access for another project.");
+                        } else {
+                            return models.users.queryPermission(challengeResult.token.user, options.project, 'manage project').then(function(hasPermission){
+                                if(!hasPermission){
+                                    throw new APIError("You do not have permission to access this project.");
+                                } else {
+                                    challengeResult.token.project = options.project | 0;
+                                }
+                            });
+                        }
+                    } else if(challengeResult.token.project){
+                        throw new APIError("Cannot use a project access token to request a non-project access token.");
                     }
-                } else if(challengeResult.token.project){
-                    throw new APIError("Cannot use a project access token to request a non-project access token.");
-                }
-                if(options.site){
-                    if(!options.project){
-                        throw new APIError("Cannot request site token without project info.");
-                    } else if(challengeResult.token.site && challengeResult.token.site != options.site){
-                        throw new APIError("Cannot use a site access token to request access for another site.");
+                }).then(function(){
+                    if(options.site){
+                        if(!challengeResult.token.project){
+                            throw new APIError("Cannot request site token without project info.");
+                        } else if(challengeResult.token.site && challengeResult.token.site != options.site){
+                            throw new APIError("Cannot use a site access token to request access for another site.");
+                        } else {
+                            return models.projects.determineIfSiteInProject(challengeResult.token.project, options.site, {ignoreImported:true}).then(function(isInProject){
+                                if(!isInProject){
+                                    throw new APIError("The given site is not accessible from the given project.");
+                                } else {
+                                    challengeResult.token.site = options.site | 0;
+                                }
+                            });
+                        }
+                    } else if(challengeResult.token.site){
+                        throw new APIError("Cannot use a site access token to request a non-site access token.");
                     }
-                } else if(challengeResult.token.site){
-                    throw new APIError("Cannot use a site access token to request a non-site access token.");
-                }
+                });
             }
         }).then(function(){
+            console.log("challengeResult   ", challengeResult);
             return challengeResult;
         });
     },
@@ -106,6 +124,9 @@ var AccessTokens = {
             console.log("decodedToken", decodedToken);
             if(!decodedToken.a2at){
                 throw new Error("Token is not a valid Access Token.");
+            }
+            if(decodedToken.expires && decodedToken.expires < new Date().getTime()){
+                throw new Error("Token has expired.");
             }
             if(options.resolveIds){
                 return q.all([
