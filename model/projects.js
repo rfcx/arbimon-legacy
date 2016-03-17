@@ -32,6 +32,8 @@ var Projects = {
     
     find: function (query, callback) {
         var whereExp = [], data=[];
+        var selectExtra = '';
+        var joinExtra = '';
         
         if(query.hasOwnProperty("id")) {
             whereExp.push("p.project_id = ?");
@@ -50,16 +52,19 @@ var Projects = {
             return q.reject(new Error('no query params'));
         }
         
+        if(!query.basicInfo){
+            selectExtra = "   pp.tier, \n"+
+                          "   pp.storage AS storage_limit, \n"+
+                          "   pp.processing AS processing_limit, \n"+
+                          "   pp.created_on AS plan_created, \n"+
+                          "   pp.activation AS plan_activated, \n"+
+                          "   pp.duration_period AS plan_period \n";
+            joinExtra   = "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
+        }
+        
         return dbpool.query(
-            "SELECT p.*, \n"+
-            "   pp.tier, \n"+
-            "   pp.storage AS storage_limit, \n"+
-            "   pp.processing AS processing_limit, \n"+
-            "   pp.created_on AS plan_created, \n"+
-            "   pp.activation AS plan_activated, \n"+
-            "   pp.duration_period AS plan_period \n"+
-            "FROM projects AS p \n"+
-            "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n"+
+            "SELECT p.*" + (selectExtra ? ", \n" + selectExtra : "\n") +
+            "FROM projects AS p \n" + joinExtra +
             "WHERE (" + whereExp.join(") \n" +
             "  AND (") + ")", data
         ).nodeify(callback);
@@ -148,6 +153,30 @@ var Projects = {
                 });
             }
             return sites;
+        });
+    },
+
+    /** Returns wether the given site is from the given project.
+     * @param {Integer} project_id - the id of the project.
+     * @param {Integer} site_id - the id of the site.
+     * @param {Object} options - options object.
+     * @param {Boolean} options.ignoreImported - wether to ignore imported sites (default false).
+     * @return {Promise} promise resolving to wether the given site is from the given project..
+     */
+    determineIfSiteInProject: function(project_id, site_id, options){
+        options = options || {};
+        var queries=[
+            "SELECT s.site_id as id FROM sites AS s WHERE s.project_id = ? AND s.site_id = ?"
+        ], data = [project_id, site_id];
+        if(!options.ignoreImported){
+            queries.push("SELECT pis.site_id as id FROM project_imported_sites as pis WHERE pis.project_id = ? AND pis.site_id = ?");
+            data.push([project_id, site_id]);
+        }
+        return dbpool.query(
+            queries.length == 1 ? queries[0] : (
+                "(\n    " + queries.join("\n) UNION (\n    ") + "\n)"
+            ), data).then(function(sites){
+            return sites.length;
         });
     },
     
