@@ -155,6 +155,30 @@ var Projects = {
             return sites;
         });
     },
+
+    /** Returns wether the given site is from the given project.
+     * @param {Integer} project_id - the id of the project.
+     * @param {Integer} site_id - the id of the site.
+     * @param {Object} options - options object.
+     * @param {Boolean} options.ignoreImported - wether to ignore imported sites (default false).
+     * @return {Promise} promise resolving to wether the given site is from the given project..
+     */
+    determineIfSiteInProject: function(project_id, site_id, options){
+        options = options || {};
+        var queries=[
+            "SELECT s.site_id as id FROM sites AS s WHERE s.project_id = ? AND s.site_id = ?"
+        ], data = [project_id, site_id];
+        if(!options.ignoreImported){
+            queries.push("SELECT pis.site_id as id FROM project_imported_sites as pis WHERE pis.project_id = ? AND pis.site_id = ?");
+            data.push([project_id, site_id]);
+        }
+        return dbpool.query(
+            queries.length == 1 ? queries[0] : (
+                "(\n    " + queries.join("\n) UNION (\n    ") + "\n)"
+            ), data).then(function(sites){
+            return sites.length;
+        });
+    },
     
     /**
      * creates a project and its plan, and adds the creator to the project as 
