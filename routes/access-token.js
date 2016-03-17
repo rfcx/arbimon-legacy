@@ -5,6 +5,7 @@
 var express = require('express');
 var router = express.Router();
 var model = require('../model/');
+var formatParse = require('../utils/format-parse');
 
 
 router.post('/request-token', function(req, res, next) {
@@ -67,9 +68,16 @@ router.post('/at/recording/check-exists', function(req, res, next) {
     model.AccessTokens.verifyTokenAccess(req.body.token, null, {allowEmptyScope:true}).then(function(resolvedToken){
         return model.users.hasProjectAccess(resolvedToken.user, req.body.project, {required:true});
     }).then(function(){
+        var filename = req.body.filename;
+        try {
+            filename = formatParse("any", filename).filename;
+        } catch(e) {
+            // ignore if cannot parse
+        }
+
         return model.recordings.exists({
             site_id: req.body.site,
-            filename: req.body.filename,
+            filename: filename,
         });
     }).then(function(result){
         res.json({exists: result});
