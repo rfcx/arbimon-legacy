@@ -17,6 +17,8 @@ var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 var sha256 = require('../utils/sha256');
 
+var models = require('./index');
+
 function hashPassword(password){
     return sha256(password);
 }
@@ -168,6 +170,44 @@ var Users = {
         queryHandler(q, callback);
     },
 
+    getProjectList: function(userId){
+        return dbpool.query(
+            "SELECT is_super FROM users WHERE user_id = ?", [
+            userId
+        ]).get(0).then(function(user){
+            if(user.is_super){
+                console.log("models.projects", models.projects);
+                return q.ninvoke(models.projects, 'listAll').get(0);
+            } else {
+                return q.ninvoke(Users.projectList, userId).get(0);
+            }
+        });
+    },
+
+    /** Return whether a given user has access to a given project.
+     * @param {Number} userId - id of the user.
+     * @param {Number} projectId - id of the project.
+     * @param {Boolean} options - options
+     * @param {Boolean} options.required - if user has no access, then an error should be thrown.
+     * @return {Promise<Boolean>}  value indicating wether the user has access to a project or not.
+     */
+    hasProjectAccess: function(userId, projectId, options){
+        return dbpool.query(
+            "SELECT U.is_super, P.is_private, UPR.role_id\n" +
+            "FROM users U\n" +
+            "JOIN projects P\n" +
+            "LEFT JOIN user_project_role UPR ON U.user_id = UPR.user_id AND P.project_id = UPR.project_id\n" +
+            "WHERE U.user_id = ? AND P.project_id = ?", [
+            userId, projectId
+        ]).get(0).then(function(results){
+            var hasAccess = results.is_super || !results.is_private || !!results.role_id;
+            if(!hasAccess && options && options.required){
+                throw new APIError("You cannot access this project.", 404);
+            }
+            return hasAccess;
+        });
+    },
+    
     getPermissions : function(user_id, project_id, callback) {
         var q = 'SELECT p.permission_id AS id, p.name \n'+
                 'FROM user_project_role AS upr \n'+
@@ -486,7 +526,7 @@ var Users = {
             // set session
             req.session.loggedIn = true; 
             req.session.isAnonymousGuest = false;
-            req.session.user = Users.makeUserObject(user, {secure: req.secure});
+            req.session.user = Users.makeUserObject(user, {secure: req.secure, all:true});
             
             return {
                 success: true,
@@ -497,20 +537,24 @@ var Users = {
     },
 
     makeUserObject: function(user, options){
-        return {
+        options = options || {};
+        var userObj = {
             id: user.user_id,
             username: user.login,
-            email: user.email,
-            firstname: user.firstname,
-            lastname: user.lastname,
+            imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, !!(options && options.secure)),
             isSuper: user.is_super,
-            oauth: {
+        };
+        if(options.all){
+            userObj.isAnonymousGuest = false;
+            userObj.firstname = user.firstname;
+            userObj.lastname = user.lastname;
+            userObj.email = user.email;
+            userObj.oauth = {
                 google: user.oauth_google,
                 facebook: user.oauth_facebook
-            },
-            imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, !!(options && options.secure)),
-            isAnonymousGuest: false,
-        };
+            };
+        }
+        return userObj;
     },
     
     /** Attempts to log in the user using validated oauth credentials.
@@ -565,12 +609,35 @@ var Users = {
                 // set session
                 req.session.loggedIn = true; 
                 req.session.isAnonymousGuest = false;
-                req.session.user = Users.makeUserObject(authenticatedUser, {secure: req.secure});
+                req.session.user = Users.makeUserObject(authenticatedUser, {secure: req.secure, all:true});
                 
                 return authenticatedUser;
             });
         });
     },
+
+    queryPermission: function(user_id, project_id, permission_name) {
+        return dbpool.query(
+            "(" + 
+            "   SELECT 0 as is_super, UPR.role_id as role\n" + 
+            "   FROM user_project_role UPR\n" + 
+            "   JOIN role_permissions RP ON UPR.role_id = RP.role_id\n" +
+            "   JOIN permissions P ON RP.permission_id = P.permission_id\n" +
+            "   WHERE UPR.user_id = ? AND UPR.project_id = ?\n" +
+            ") UNION (" + 
+            "   SELECT U.is_super, 0 as role\n" + 
+            "   FROM users U\n" + 
+            "   WHERE U.user_id = ?\n" +
+            "     AND U.is_super = 1\n" +
+            ")", [
+                (user_id | 0), (project_id | 0),
+                (user_id | 0)
+            ]
+        ).then(function(permissions){
+            return permissions.length > 0;
+        });
+    }
+
 
 };
 

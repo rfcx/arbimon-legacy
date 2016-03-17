@@ -27,6 +27,8 @@ var authorize = function(authtype){
             return res.status(503).json({ error: 'uploads are unavailable, try again later' });
         }
         
+        var accessToken = req.get('X-X-access-token-X-X') || req.body.token;
+        
         if(authtype.session && req.session && req.session.loggedIn) { 
             if(!req.query.project || !req.query.site || !req.query.nameformat) {
                 return res.status(400).json({ error: "missing parameters" });
@@ -69,6 +71,21 @@ var authorize = function(authtype){
             
             next();
         }
+        
+        // verify access token
+        else if(authtype.access_token && accessToken) {
+            res.type('json');
+            return model.AccessTokens.verifyTokenAccess(accessToken, "manage project recordings", {requireScope:true, requireProject:true}).then(function(resolvedToken){
+                return model.users.hasProjectAccess(resolvedToken.user, resolvedToken.project, {required:true}).then(function(){
+                    req.upload = {
+                        userId: resolvedToken.user,
+                        projectId: Number(resolvedToken.project),
+                        siteId: Number(resolvedToken.site),
+                        nameFormat: resolvedToken.nameFormat || "any",
+                    };
+                });
+            }).finally(next);
+        }
         else {
             // error not logged user nor site token
             return res.sendStatus(401);
@@ -87,6 +104,7 @@ var verifySite = function(req, res, next) {
         var site = rows[0];
         
         // verify token is valid to the system
+        // note this is for site token validation, not for access token validation
         if(req.token && (site.token_created_on !== req.token.iat)) {
             return res.status(400).json({ error: "can not use revoked token" });
         }
@@ -102,7 +120,7 @@ var verifySite = function(req, res, next) {
 var receiveUpload = function(req, res, next) {
     
     q.all([
-        model.projects.findById(req.upload.projectId),
+        model.projects.find({id:req.upload.projectId}).get(0),
         model.projects.getStorageUsage(req.upload.projectId)
     ]).then(function(results) {
         var project = results[0];
@@ -335,7 +353,7 @@ var receiveSiteLogUpload = function(req, res, next) {
     req.pipe(req.busboy);
 };
 
-router.post('/audio', authorize({session:true, token:true}), verifySite, receiveUpload);
+router.post('/audio', authorize({session:true, token:true, access_token:true}), verifySite, receiveUpload);
 
 router.post('/site-log', authorize({token:true}), verifySite, receiveSiteLogUpload);
 
