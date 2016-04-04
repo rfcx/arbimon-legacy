@@ -58,6 +58,20 @@ angular.module('a2.admin.projects.codes', [
             loader.load(this, 'codes', AdminProjectsCodesService.loadCodes());
         }).bind(this));
     };
+    this.showHash = function(code){
+        return $modal.open({
+            templateUrl: '/partials/admin/projects/view-hash.html',
+            resolve: {
+                code: function(){
+                    return code;
+                }
+            },
+            controller: function(code) {
+                this.code=code;
+            },
+            controllerAs: 'popup'
+        });
+    };
     // editSelectedCode
     // deleteSelectedCode
 
