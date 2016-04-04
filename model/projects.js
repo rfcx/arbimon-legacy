@@ -589,7 +589,8 @@ var Projects = {
     },
 
     modelList: function(project_url, callback) {
-        var q = "SELECT m.model_id, \n"+
+        var q = "(\n" +
+                "SELECT m.model_id, \n"+
                 "   CONCAT(UCASE(LEFT(m.name, 1)), \n"+
                 "   SUBSTRING(m.name, 2)) as mname, \n"+
                 "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n"+
@@ -599,7 +600,8 @@ var Projects = {
                 "       CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) \n"+
                 "   ) as muser, \n" + 
                 "   mt.name as mtname, \n"+
-                "   mt.enabled \n"+
+                "   mt.enabled, \n"+
+                "   0 as imported\n" +
                 "FROM `models` as m,  \n"+
                 "   `model_types` as mt,  \n"+
                 "   `users` as u , `projects` as p \n"+
@@ -607,7 +609,30 @@ var Projects = {
                 "AND m.`model_type_id` = mt.`model_type_id` \n"+
                 "AND m.user_id = u.user_id \n"+
                 "AND p.project_id = m.project_id \n"+
-                "AND m.deleted = 0";
+                "AND m.deleted = 0\n" +
+                ") UNION(\n" +
+                "SELECT m.model_id, \n"+
+                "   CONCAT(UCASE(LEFT(m.name, 1)), \n"+
+                "   SUBSTRING(m.name, 2)) as mname, \n"+
+                "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n"+
+                "   CONCAT( \n"+
+                "       CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)), \n"+
+                "       ' ', \n"+
+                "       CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) \n"+
+                "   ) as muser, \n" + 
+                "   mt.name as mtname, \n"+
+                "   mt.enabled, \n"+
+                "   1 as imported\n" +
+                "FROM `project_imported_models` as pim,  \n"+
+                "   `models` as m,  \n"+
+                "   `model_types` as mt,  \n"+
+                "   `users` as u , `projects` as p \n"+
+                "WHERE p.url = " + mysql.escape(project_url)+
+                "AND m.`model_type_id` = mt.`model_type_id` \n"+
+                "AND m.user_id = u.user_id \n"+
+                "AND pim.model_id = m.model_id \n"+
+                "AND pim.project_id = p.project_id \n"+
+                ")\n";
 
             queryHandler(q, callback);
     },
