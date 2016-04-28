@@ -86,13 +86,14 @@ angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
         },
         find_local : function(recording){
             var self = this;
-            var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
-            console.log(":: find : %s : %s", recording, id);
-            d.resolve(this.append_extras(this.list && this.list.filter(function(r){
-                if(r.id == id){console.log("  :: ", r.id, r);}
+            var id = (recording && recording.id) || (recording | 0);
+            // console.log(":: find : ", id);
+            return $q.resolve(this.append_extras(this.list && this.list.filter(function(r){
+                // if(r.id == id){
+                    // console.log("     :: found", r.id, r);
+                // }
                 return r.id == id;
             }).shift()));
-            return d.promise;            
         },
         find : function(recording){
             var self = this;
@@ -228,21 +229,20 @@ angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
     this.lovo = null;
     this.auto = {};
     this.activate = function(){
-        var defer = $q.defer();
         self.loading.playlists = true;
-        a2Playlists.getList(function(playlists){
+        this.getPlaylists = a2Playlists.getList().then(function(playlists){
             self.playlists = playlists;
             self.loading.playlists = false;
-            $timeout(function(){
-                self.active=true;
-                defer.resolve(playlists);
-                if(self.resolve.pld){
-                    self.resolve.pld.resolve(playlists);
-                    delete self.resolve.pld;
-                }
-            });
+        }).then(function(){
+            self.active=true;
+            if(self.resolve.pld){
+                self.resolve.pld.resolve(playlists);
+                delete self.resolve.pld;
+            }
+        }).then(function(){
+            return self.playlists;
         });
-        return defer.promise;
+        return this.getPlaylists;
     };
     this.deactivate = function(){
         self.active = false;
@@ -257,16 +257,9 @@ angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
 
     this.resolve_location = function(location){
         var m = /(\d+)(\/(\d+))?/.exec(location);
-        var defer = $q.defer();
-        if(m){
+        return (m) ? $q.resolve().then(function(){
             var plid = m[1]|0, recid=m[3]|0;
-            var pld = $q.defer();
-            if(self.loading.playlists){
-                self.resolve = { pld : pld };
-            } else {
-                pld.resolve(self.playlists);
-            }
-            pld.promise.then(function(playlists){
+            return self.getPlaylists.then(function(playlists){
                 var playlist = self.playlists.filter(function(playlist){
                     return playlist.id == plid;
                 }).shift();
@@ -274,24 +267,16 @@ angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
                 if(playlist){
                     self.playlist = playlist;
                     self.lovo = new a2PlaylistLOVO(playlist);
-                    self.lovo.initialize()
-                        .then(function(){
-                            return a2Browser.setLOVO(self.lovo);
-                        })
-                        .then(function(){
-                            return self.lovo.find(recid);
-                        })
-                        .then(function(recording){
-                            defer.resolve(recording);
-                        });
-                } else {
-                    defer.resolve();
+                    return self.lovo.initialize().then(function(){
+                        return a2Browser.setLOVO(self.lovo);
+                    }).then(function(){
+                        return self.lovo.find(recid);
+                    }).then(function(recording){
+                        return recording;
+                    });
                 }
             });
-        } else {
-            defer.resolve();
-        }
-        return defer.promise;
+        }) : $q.resolve();
     };
     this.get_location = function(recording){
         return 'playlist/' + (this.lovo ? this.lovo.playlist.id + (recording ? "/" + recording.id : '') : '');

@@ -83,7 +83,7 @@ angular.module('a2.visualizer', [
             // console.log(".state('visualizer.rec', { controller: function($state, $scope){ $state.params: ", $state.params);
             
             $scope.location.whenBrowserIsAvailable(function(){
-                $scope.$parent.$broadcast('set-browser-location', [l]);
+                $scope.$parent.$broadcast('set-browser-location', l);
             });
         }
     })
@@ -112,7 +112,7 @@ angular.module('a2.visualizer', [
                 return;
             }
             this.__expected = this.current;
-            this.scope.$broadcast('set-browser-location', [this.current]);
+            this.scope.$broadcast('set-browser-location', this.current);
         },
         update_path : function(){
             this.set(this.current);
@@ -166,6 +166,7 @@ angular.module('a2.visualizer', [
 })
 .controller('VisualizerCtrl', function (
     a2VisualizerLayers, 
+    $q,
     $location, $state, 
     $scope, 
     $timeout, 
@@ -235,24 +236,26 @@ angular.module('a2.visualizer', [
     };
     
     $scope.setVisObject = function(visobject, type, location){
-        if (visobject) {
-            $scope.visobject_location = location;
-            $scope.location.set(location, true);
-            var typedef = VisualizerObjectTypes[type];
-            $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);
-            typedef.load(visobject, $scope).then(function (visobject){
-                
-                console.log('VisObject loaded : ', visobject);
-                
-                $scope.loading_visobject = false;
-                $scope.visobject = visobject;
-                $scope.visobject_type = visobject.type;
-                events.emit('visobject', visobject);
-            });
-        } else {
-            $scope.visobject = null;
-            events.emit('visobject', null);
-        }
+        console.log("$scope.setVisObject :: ", visobject, type, location);
+        return $q.resolve().then(function(){
+            if (visobject) {
+                $scope.visobject_location = location;
+                $scope.location.set(location, true);
+                var typedef = VisualizerObjectTypes[type];
+                $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);
+                return typedef.load(visobject, $scope).then(function (visobject){                    
+                    console.log('VisObject loaded : ', visobject);
+                                        
+                    $scope.loading_visobject = false;
+                    $scope.visobject = visobject;
+                    $scope.visobject_type = visobject.type;
+                });
+            } else {
+                $scope.visobject = null;
+            }
+        }).then(function(){
+            events.emit('visobject', $scope.visobject);
+        });
     };
     
     $scope.audio_player = new a2AudioPlayer($scope, initial_state_params);    
