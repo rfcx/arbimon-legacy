@@ -6,10 +6,12 @@ angular.module('a2.srv.playlists', [
     
     return {
         getList: function(callback) {
-            $http.get('/api/project/'+projectName+'/playlists/')
-                .success(function(data) {
-                    callback(data);
-                });
+            return $http.get('/api/project/'+projectName+'/playlists/').then(function(response) {
+                if(callback){
+                    callback(response.data);
+                }
+                return response.data;
+            });
         },
 
         create: function(playlistParams, callback) {
