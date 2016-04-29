@@ -62,14 +62,7 @@
             <h3>Projects feed <i class="fa fa-newspaper-o"></i></h3>
             <div class="list-group">
                 <ul class="list-group">
-                    <li class="list-group-item" ng-repeat="news in newsFeed track by $index">
-                        <p>
-                            <img class="user-avatar" ng-src="{{ news.imageUrl }}" alt="user avatar">
-                            <strong>{{ news.username }}</strong>
-                            {{ news.message }} 
-                        </p>
-                        <p>{{ displayTime(news.timestamp) }}</p>
-                    </li>
+                    <li class="list-group-item" ng-repeat="news in newsFeed track by $index" news-feed-item="news"></li>
                 </ul>
             </div>
             <button class="btn btn-default btn-block more-btn" ng-click="loadNewsPage() | trackEvent:'Home':'loadNewsPage'">More</button>

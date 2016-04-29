@@ -178,7 +178,11 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
             news_type_id: 5, // class added
             user_id: req.session.user.id,
             project_id: req.project.project_id,
-            data: JSON.stringify({ species: projectClass.species, song: projectClass.songtype })
+            data: JSON.stringify({ 
+                class: [result.class],
+                species: [result.species, projectClass.species], 
+                song: [result.songtype, projectClass.songtype] 
+            })
         });
         
         debug("class added:", result);

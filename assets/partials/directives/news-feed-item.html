@@ -1,0 +1,7 @@
+<div class="pull-right" title="{{ news.timestamp | moment:'lll' }}">{{ news.timestamp | timeFromNow }}</div>
+<div>
+    <img class="user-avatar" ng-src="{{ news.imageUrl }}" alt="user avatar">
+    <strong>{{ news.username }}</strong>
+    <span class="message">{{ news.message }}</span>
+</div>
+

@@ -495,7 +495,11 @@ var Projects = {
                     queryHandler(q , function(err, row) {
                         if(err) return cb(err);
 
-                        cb(null, row);
+                        cb(null, {
+                            class: row.insertId,
+                            species: species_id,
+                            songtype: songtype_id 
+                        });
                     });
                 }]
             },

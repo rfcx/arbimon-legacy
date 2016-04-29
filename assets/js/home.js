@@ -5,8 +5,10 @@ angular.module('a2.home', [
     'a2.forms',
     'a2.orders',
     'a2.login',
+    'a2.srv.news',
     'humane',
     'angularytics', 
+    'a2.directive.news-feed-item',
 ])
 .config(function(AngularyticsProvider) {
         AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
@@ -14,7 +16,11 @@ angular.module('a2.home', [
 .run(function(Angularytics) {
     Angularytics.init();
 })
-.controller('HomeCtrl', function($scope, $http, $modal, notify, a2order) {
+.controller('HomeCtrl', function(
+    $scope, $http, $modal, 
+    a2NewsService,
+    notify, a2order
+) {
     
     $scope.loadProjectList = function() {
         $http.get('/api/user/projectlist')
@@ -23,11 +29,10 @@ angular.module('a2.home', [
         });
     };
     $scope.loadNewsPage = function() {
-        $http.get('/api/user/feed/'+ nextNewsPage)
-            .success(function(data) {
-                $scope.newsFeed = $scope.newsFeed.concat(data);
-                nextNewsPage++;
-            });
+        a2NewsService.loadPage(nextNewsPage).then(function(data) {
+            $scope.newsFeed = $scope.newsFeed.concat(data);
+            nextNewsPage++;
+        });
     };
     $scope.displayTime = function(d) {
         return moment(d).fromNow();
