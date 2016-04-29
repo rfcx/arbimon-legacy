@@ -209,16 +209,17 @@ var Users = {
     },
     
     getPermissions : function(user_id, project_id, callback) {
-        var q = 'SELECT p.permission_id AS id, p.name \n'+
-                'FROM user_project_role AS upr \n'+
-                'JOIN roles AS r ON upr.role_id = r.role_id \n'+
-                'JOIN role_permissions AS rp ON rp.role_id = upr.role_id \n'+
-                'JOIN permissions AS p ON p.permission_id = rp.permission_id \n'+
-                'WHERE upr.user_id = %s \n'+
-                'AND upr.project_id = %s';
-        
-        q = util.format(q, mysql.escape(user_id), mysql.escape(project_id));
-        queryHandler(q, callback);
+        return dbpool.query(
+            'SELECT p.permission_id AS id, p.name \n'+
+            'FROM user_project_role AS upr \n'+
+            'JOIN roles AS r ON upr.role_id = r.role_id \n'+
+            'JOIN role_permissions AS rp ON rp.role_id = upr.role_id \n'+
+            'JOIN permissions AS p ON p.permission_id = rp.permission_id \n'+
+            'WHERE upr.user_id = ? \n'+
+            'AND upr.project_id = ?', [
+            user_id, 
+            project_id
+        ]).nodeify(callback);
     },
     
     findOwnedProjects: function(user_id, query) {
