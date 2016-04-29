@@ -1,24 +1,41 @@
 angular.module('a2.srv.api', [])
-.factory('a2APIService', function($location, $q, $http){
+.factory('a2APIServiceClass', function($location, $q, $http){
+    var a2APIServiceClass = function(prefix){
+        this.prefix = prefix;
+    };
+    
+    function returnData(response){
+        return response.data;
+    }
+    
+    a2APIServiceClass.prototype = {
+        get : function(apiRoute){
+            return $q.when($http.get(this.prefix + apiRoute)).then(returnData);
+        },
+        post : function(apiRoute, data){
+            return $q.when($http.post(this.prefix + apiRoute, data)).then(returnData);
+        },
+        delete : function(apiRoute, data){
+            return $q.when($http.delete(this.prefix + apiRoute)).then(returnData);
+        },
+        put : function(apiRoute, data){
+            return $q.when($http.put(this.prefix + apiRoute, data)).then(returnData);
+        }
+    };
+    
+    return a2APIServiceClass;
+})
+.factory('a2APIService', function($location, $q, a2APIServiceClass){
     var nrm = /\/?project\/([\w\_\-]+)/.exec($location.absUrl());
     var projectName = nrm ? nrm[1] : '';
     var apiURLPrefix = '/api/project/'+projectName;
     function returnData(response){
         return response.data;
     }
-    return {
-        get : function(apiRoute){
-            return $q.when($http.get(apiURLPrefix + apiRoute)).then(returnData);
-        },
-        post : function(apiRoute, data){
-            return $q.when($http.post(apiURLPrefix + apiRoute, data)).then(returnData);
-        },
-        delete : function(apiRoute, data){
-            return $q.when($http.delete(apiURLPrefix + apiRoute)).then(returnData);
-        },
-        put : function(apiRoute, data){
-            return $q.when($http.put(apiURLPrefix + apiRoute, data)).then(returnData);
-        }
-    };
+    
+    var a2APIService = new a2APIServiceClass(apiURLPrefix);
+    a2APIService.api = new a2APIServiceClass('/api');
+    
+    return a2APIService;
 })
 ;
