@@ -79,7 +79,6 @@ angular.module('a2.visobjectsbrowser', [
     // Set of available lovo types
     this.types = browser_lovos.$grouping;
     // currently selected lovo type
-    this.type  = browser_lovos.$list.filter(function(lovo){return lovo.default;}).shift();
     // container for loading flags
     this.loading = {
         sites: false,
@@ -99,6 +98,12 @@ angular.module('a2.visobjectsbrowser', [
     
     var waitForInitializedDefer = $q.defer();
     this.waitForInitialized = waitForInitializedDefer.promise;
+    
+    this.waitForInitialized.then((function(){
+        if(!this.type){
+            this.setBrowserType(browser_lovos.$list.filter(function(lovo){return lovo.default;}).shift());
+        }
+    }).bind(this));
     
     /** (Re)-Activates the browser controller.
      * Sets the browser controller into an active state. On the first time,
