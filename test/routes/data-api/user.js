@@ -94,7 +94,7 @@ describe('routes/data-api/user.js', function(){
         
         it('Should return a feed of events for the user.', function(done){
             var time = new Date();
-            mock.model.news.newsTypesFormat = function(cb){cb(null, [{id:1, message_format:"mf1"}]);};
+            mock.model.news.getNewsTypeFormats = function(cb){cb(null, [{id:1, message_format:"mf1"}]);};
             mock.model.news.userFeed = function(uid, page, cb) {
                 cb(null, [{
                     data: '{}',
@@ -121,7 +121,7 @@ describe('routes/data-api/user.js', function(){
         
         it('Should fail if getting the news fail.', function(done){
             var time = new Date();
-            mock.model.news.newsTypesFormat = function(cb){cb(new Error('I am error'));};
+            mock.model.news.getNewsTypeFormats = function(cb){cb(new Error('I am error'));};
             mock.model.news.userFeed = function(uid, page, cb) {
                 cb(null, [{
                     data: '{}',
@@ -138,7 +138,7 @@ describe('routes/data-api/user.js', function(){
         });
         
         it('Should fail if getting the news type formats fail.', function(done){
-            mock.model.news.newsTypesFormat = function(cb){cb(null, [{id:1, message_format:"mf1"}]);};
+            mock.model.news.getNewsTypeFormats = function(cb){cb(null, [{id:1, message_format:"mf1"}]);};
             mock.model.news.userFeed = function(uid, page, cb){cb(new Error('I am error'));};
             
             var res = { next: [new Error('I am error')] };

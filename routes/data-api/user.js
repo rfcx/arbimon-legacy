@@ -27,60 +27,35 @@ router.get('/projectlist', function(req, res, next) {
     }
 });
 
+router.get('/feed/formats', function(req, res, next) {
+    model.news.getNewsTypeFormats().then(function(newsTypeFormats) {
+        res.json(newsTypeFormats.reduce(function(_, format){
+            _[format.id] = format.message_format;
+            return _;
+        }, {}));
+    }).catch(next);
+});
+
 router.get('/feed/:page', function(req, res, next) {
     
     var page = req.params.page || 0;
     
-    async.parallel({
-        formats: function(callback) {
-            model.news.newsTypesFormat(function(err, rows) {
-                if(err) return callback(err);
-                
-                formats = {};
-                
-                rows.forEach(function(row){
-                    formats[row.id] = row.message_format;
-                });
-                
-                callback(null, formats);
-            });
-        },
-        news: function(callback) {
-            if(req.session.user.isSuper === 1) {
-                // super user can see news from all projects
-                model.news.list(page, function(err, rows) {
-                    if(err) return callback(err);
-                    
-                    callback(null, rows);
-                });
-            }
-            else {
-                model.news.userFeed(req.session.user.id, page, function(err, rows) {
-                    if(err) return callback(err);
-                    
-                    callback(null, rows);
-                });
-            }
-        }
-    },
-    function(err, results) {
-        if(err) return next(err);
-        
-        var feed = results.news.map(function(row) {
-            var data = JSON.parse(row.data);
-            
-            data.project = row.project;
-            
+    ( (req.session.user.isSuper === 1) ? 
+        model.news.list(page) :
+        model.news.userFeed(req.session.user.id, page)
+    ).then(function(news) {
+        res.json(news.map(function(newsItem) {
+            var data = JSON.parse(newsItem.data);
+            data.project = [newsItem.project_id, newsItem.project];
             return {
-                message: sprintf(results.formats[row.type], data),
-                username: row.username,
-                timestamp: row.timestamp,
-                imageUrl: gravatar.url(row.email, { d: 'monsterid', s: 30 }, req.secure)
+                type: newsItem.type,
+                data: data,
+                username: newsItem.username,
+                timestamp: newsItem.timestamp,
+                imageUrl: gravatar.url(newsItem.email, { d: 'monsterid', s: 30 }, req.secure)
             };
-        });
-        
-        res.json(feed);
-    });
+        }));
+    }).catch(next);
 });
 
 router.get('/info', function(req, res) {
