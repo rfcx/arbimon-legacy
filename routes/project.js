@@ -32,7 +32,26 @@ router.use('/', function(req, res, next){
 
 router.get('/:projecturl?/', function(req, res, next) {
     var project_url = req.params.projecturl;
-
+    var project_id = req.query.id;
+    
+    if(project_id && !project_url){
+        var project;
+        return model.projects.find({ id: project_id }).get(0).then(function(_project) {
+            project = _project;
+            if(project){
+                return model.users.getPermissions(req.session.user.id, project.project_id);
+            }
+            return res.redirect('/home'); 
+        }).then(function(rows) {
+            if(!project || (project.is_private && !rows.length && req.session.user.isSuper === 0)){
+                // if not authorized to see project send 404
+                return next();
+            } else {
+                return res.redirect('/project/' + project.url + '/'); 
+            }
+        }).catch(next);
+    }
+    
     debug('project_url:', project_url);
     
     // redirect to home if no project is given
