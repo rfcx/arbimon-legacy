@@ -2,7 +2,7 @@
 
 var a2TagsModule = angular.module('a2.directive.a2-tags', [
     'templates-arbimon2'
-])
+]);
 
 var a2TagTypes = [
     'classi',

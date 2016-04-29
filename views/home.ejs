@@ -61,11 +61,9 @@
         <div class="col-md-7" ng-show="newsFeed.length">
             <h3>Projects feed <i class="fa fa-newspaper-o"></i></h3>
             <div class="list-group">
-                <ul class="list-group">
-                    <li class="list-group-item" ng-repeat="news in newsFeed track by $index" news-feed-item="news"></li>
-                </ul>
+                <div class="list-group-item" ng-repeat="news in newsFeed track by $index" news-feed-item="news"></div>
+                <button class="btn btn-default btn-block more-btn" ng-click="loadNewsPage() | trackEvent:'Home':'loadNewsPage'">More</button>
             </div>
-            <button class="btn btn-default btn-block more-btn" ng-click="loadNewsPage() | trackEvent:'Home':'loadNewsPage'">More</button>
         </div>
     </div>
 </div>
