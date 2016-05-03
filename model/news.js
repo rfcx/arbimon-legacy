@@ -50,16 +50,12 @@ var News = {
 
     
     userFeed: function(user_id, page, callback) {
-        return q.ninvoke(Users, "projectList", user_id).then(function(projects){
-            if(!projects.length){
-                return [];
-            }
-            
-            var project_ids = projects.map(function(row) {
+        return Users.projectList(user_id).then(function(projects){
+            return projects.map(function(row) {
                 return row.id;
             });
-            
-            return News.getFor({project:project_ids, page:page, pageCount:10});
+        }).then(function(project_ids){
+            return project_ids.length ? News.getFor({project:project_ids, page:page, pageCount:10}) : [];
         }).nodeify(callback);
     },
     

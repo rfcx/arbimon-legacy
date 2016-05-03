@@ -41,7 +41,7 @@ router.get('/feed/:page', function(req, res, next) {
     var page = req.params.page || 0;
     
     ( (req.session.user.isSuper === 1) ? 
-        model.news.list(page) :
+        model.news.getFor({page:page, pageCount:10}) :
         model.news.userFeed(req.session.user.id, page)
     ).then(function(news) {
         res.json(news.map(function(newsItem) {
