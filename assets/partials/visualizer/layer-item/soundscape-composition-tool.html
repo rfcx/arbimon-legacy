@@ -1,0 +1,43 @@
+<div class="layer">
+    <h5 class="collapse-title"  ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Soundscape-Composition':'toggle layer'"
+    ng-init="layer.is_open = true"
+    >
+        <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+        Soundscape Composition
+    </h5>
+    <div class="content">
+        <accordion close-others="false" class="accordion-group">
+            <accordion-group is-open="classType.open" ng-repeat="classType in layer.controller.classTypes" class="accordion-table">
+                <accordion-heading>
+                    <i class="fa" ng-class="classType.open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                    {{ classType.type }}
+                </accordion-heading>
+                <table class="table table-condensed">
+                    <tr ng-repeat="cls in classType.list" 
+                        ng-click="layer.controller.select(classType, cls, $event) | trackEvent:'Visualizer-Soundscape-Composition':'select class'" 
+                        ng-class="layer.controller.is_selected[cls.id] ? 'active' : ''"
+                    >
+                            <td class="no-select"> {{ cls.name }}</td>
+                            <td class="no-select">
+                                <div class="dropdown" dropdown>
+                                    <button class="btn-a2-validate btn btn-default btn-xs btn-block " role="button" dropdown-toggle>
+                                        <i class="fa"  ng-class="'val-'+layer.controller.val_state(cls.id).val"></i>
+                                        {{ layer.controller.val_state(cls.id).label || "---"}}
+                                        <i class="fa fa-caret-down"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-height-7" role="menu">
+                                        <li ng-repeat="option in layer.controller.val_options">
+                                            <a ng-click="layer.controller.annotate(option.val) | trackEvent:'Visualizer-Soundscape-Composition':'annotate'">
+                                                <i class="fa" ng-class="'val-'+option.val"></i> 
+                                                {{ option.label }}
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                    </tr>
+                </table>
+            </accordion-group>
+        </accordion>
+    </div>
+</div>

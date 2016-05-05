@@ -18,6 +18,7 @@ angular.module('a2.visualizer', [
     'visualizer-layers', 
     'a2.visualizer.recordings',
     'a2.visualizer.layer.recording-tags',
+    'a2.visualizer.layer.soundscape-composition-tool',
     'visualizer-spectrogram', 
     'visualizer-training-sets', 
     'visualizer-training-sets-roi_set',
@@ -210,6 +211,7 @@ angular.module('a2.visualizer', [
         'recording-soundscape-region-tags',
         'species-presence',
         'training-data',
+        'soundscape-composition-tool',
         'zoom-input-layer'
     );    
     
