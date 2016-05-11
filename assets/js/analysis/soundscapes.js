@@ -506,17 +506,18 @@
                                 
                 
                 var data = [0.7,1.0,0.1,0.55,0.1,0.6,0.9,0.01,0.15,0.1,0.4,0.1];
+                var data_scale = 0.5;
                 var lineData = [];
                 for(var i= 0 ; i < data.length ; i++) {
-                    lineData.push({x:(i+1),y:data[i]});
+                    lineData.push({x:(i+1),y:data[i] * data_scale});
                 }
                 
                 var peaks = [
-                    {x:2.6 , y:1.0 ,  d:999999},
-                    {x:4.4 , y:0.55 , d:210},
-                    {x:7 ,   y:0.9 ,  d:520},
-                    {x:9 ,   y:0.15,  d:750},
-                    {x:11 ,  y:0.4,   d:950}
+                    {x:2.6 , y:1.0  * data_scale , d:999999},
+                    {x:4.4 , y:0.55 * data_scale , d:210},
+                    {x:7 ,   y:0.9  * data_scale , d:520},
+                    {x:9 ,   y:0.15 * data_scale , d:750},
+                    {x:11 ,  y:0.4  * data_scale , d:950}
                 ];
                 
                 var WIDTH = 250,
