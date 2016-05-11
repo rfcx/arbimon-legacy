@@ -487,7 +487,8 @@
                 
                 $scope.$watch('thresholdInvPercent', function(n, o) {
                     console.log('thresholdInvPercent', n, o);
-                    $scope.threshold = Math.round(100-$scope.thresholdInvPercent)/100;
+                    var precision = 0.1;
+                    $scope.threshold = Math.round((100-$scope.thresholdInvPercent) / precision)/(100/precision);
                 });
                 
             }
