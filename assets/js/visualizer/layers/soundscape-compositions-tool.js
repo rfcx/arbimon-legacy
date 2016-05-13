@@ -1,5 +1,6 @@
 angular.module('a2.visualizer.layer.soundscape-composition-tool', [
-    'a2.srv.soundscape-composition'
+    'a2.srv.soundscape-composition',
+    'arbimon2.directive.validation-dropdown'
 ])
 .config(function(layer_typesProvider){
     /**
@@ -50,11 +51,6 @@ angular.module('a2.visualizer.layer.soundscape-composition-tool', [
             }, {});
         }).bind(this));
         
-        this.val_options = [
-            { label: "Clear",   val: 2 },
-            { label: "Present", val: 1 }, 
-            { label: "Absent",  val: 0 }, 
-        ];
         this.is_selected = {};
         this.annotations = {};
     };
@@ -115,19 +111,6 @@ angular.module('a2.visualizer.layer.soundscape-composition-tool', [
             }).bind(this));
         }
     };
-
-    this.val_state = function(cls, val_options){
-        val_options = val_options || this.val_options;
-        
-        var key = cls.id, val = this.annotations[key];
-        
-        if(typeof val === 'undefined') {
-            return;
-        } else{
-            return val_options.filter(function(v) { return v.val == val; })[0];
-        }
-    };
-    
     
     this.setVisobject = function(visobject){
         this.visobject = visobject;
