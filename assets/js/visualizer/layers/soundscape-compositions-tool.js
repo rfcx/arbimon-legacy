@@ -103,9 +103,9 @@ angular.module('a2.visualizer.layer.soundscape-composition-tool', [
             }).then((function(annotations) {
                 annotations.forEach((function(annotation) {
                     if(annotation.present == 2) {
-                        delete this.annotations[annotation.classId];
+                        delete this.annotations[annotation.scclassId];
                     } else {
-                        this.annotations[annotation.classId] = annotation.present;
+                        this.annotations[annotation.scclassId] = annotation.present;
                     }
                 }).bind(this));
             }).bind(this));
