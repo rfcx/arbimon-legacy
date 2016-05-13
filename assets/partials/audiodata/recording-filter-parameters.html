@@ -144,6 +144,31 @@
         </div>
         <div class="a2-filter-row">
             <div class="a2-filter a2-filter-text">
+                Soundscape Composition:
+            </div>
+            <div class="a2-filter">
+                <ui-select multiple ng-model="controller.params.soundscape_composition" theme="bootstrap" style="width: 300px;">
+                    <ui-select-match placeholder="Audio Classes...">
+                        {{$item.type}}/{{$item.name}} 
+                    </ui-select-match>
+                    <ui-select-choices class="has-badges" repeat="item in controller.options.soundscape_composition | filter:$select.search" group-by="'type'">
+                        {{item.name }}
+                    </ui-select-choices>
+                </ui-select>
+            </div>
+            <div class="a2-filter">
+                <ui-select multiple ng-model="controller.params.soundscape_composition_annotation" theme="bootstrap" style="width: 150px;">
+                    <ui-select-match allow-clear="true" placeholder="annotation">
+                        <i ng-class="'fa a2-' + $item"></i> {{ $item | wordCaps}}
+                    </ui-select-match>
+                    <ui-select-choices class="has-badges" repeat="item in controller.options.soundscape_composition_annotation | filter:$select.search">
+                        <i ng-class="'fa a2-' + item"></i> {{ item | wordCaps}}
+                    </ui-select-choices>
+                </ui-select>
+            </div>
+        </div>
+        <div class="a2-filter-row">
+            <div class="a2-filter a2-filter-text">
                 Tags:
             </div>
             <div class="a2-filter">

@@ -204,7 +204,13 @@ angular.module('a2.audiodata.recordings', [
         }
     };
 })
-.controller('recordingFilterParametersController', function($scope, Project, a2Classi, $http, $modal, notify, a2UserPermit, a2Tags, $window) {
+.controller('recordingFilterParametersController', function(
+    $scope, 
+    Project, a2Classi, 
+    a2SoundscapeCompositionService,
+    $http, $modal, notify, a2UserPermit, a2Tags, 
+    $window
+) {
     function _1_get(attribute){
         return function(_1){
             return _1[attribute];
@@ -250,7 +256,9 @@ angular.module('a2.audiodata.recordings', [
         hours : [],
         tags : [],
         classifications:[],
-        classification_results: classification_results.model_only
+        classification_results: classification_results.model_only,
+        soundscape_composition:[],
+        soundscape_composition_annotation : ['present', 'absent'],
     };
     this.params={};
     
@@ -273,7 +281,9 @@ angular.module('a2.audiodata.recordings', [
         {name:"tags"                  , map: _1_get_tag_id_mapper},
         {name:"presence"},
         {name:"classifications"       , map: _1_get_id_mapper},
-        {name:"classification_results", map: _1_get_flags_mapper}
+        {name:"classification_results", map: _1_get_flags_mapper},
+        {name:"soundscape_composition", map: _1_get_id_mapper},
+        {name:"soundscape_composition_annotation"},
     ];
 
     this.getFilters = function() {
@@ -403,6 +413,9 @@ angular.module('a2.audiodata.recordings', [
                 delete c.cname;
                 return c;
             });
+        }).bind(this));
+        a2SoundscapeCompositionService.getClassList().then((function(classes){
+            options.soundscape_composition = classes;
         }).bind(this));
     };
     
