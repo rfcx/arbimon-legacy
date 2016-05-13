@@ -812,6 +812,8 @@ var Recordings = {
             hours:  arrayOrSingle(joi.number()),
             validations:  arrayOrSingle(joi.number()),
             presence:  arrayOrSingle(joi.string().valid('absent', 'present')),
+            soundscape_composition:  arrayOrSingle(joi.number()),
+            soundscape_composition_annotation:  arrayOrSingle(joi.string().valid('absent', 'present')),
             tags: arrayOrSingle(joi.number()),
             classifications: arrayOrSingle(joi.number()),
             classification_results: arrayOrSingle(joi.object().keys({
@@ -904,6 +906,19 @@ var Recordings = {
                 if(parameters.presence && !(parameters.presence instanceof Array && parameters.presence.length >= 2)){
                     constraints.push('rv.present = ?');
                     data.push(parameters.presence == 'present' ? '1' : '0');
+                }
+            }
+            
+            if(parameters.soundscape_composition) {
+                tables.push(                    
+                    "LEFT JOIN recording_soundscape_composition_annotations as RSCA ON r.recording_id = RSCA.recordingId"
+                );
+                constraints.push('RSCA.scclassId IN (?)');
+                data.push(parameters.soundscape_composition);
+                
+                if(parameters.soundscape_composition_annotation && !(parameters.soundscape_composition_annotation instanceof Array && parameters.soundscape_composition_annotation.length >= 2)){
+                    constraints.push('RSCA.present = ?');
+                    data.push(parameters.soundscape_composition_annotation == 'present' ? '1' : '0');
                 }
             }
             
