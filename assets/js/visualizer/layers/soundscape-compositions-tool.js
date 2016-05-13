@@ -56,7 +56,7 @@ angular.module('a2.visualizer.layer.soundscape-composition-tool', [
     };
     
     this.select = function(classType, cls, $event) {
-        if($($event.target).is('a')){
+        if($($event.target).is('a, button, button *')){
             return;
         }
         
@@ -101,6 +101,7 @@ angular.module('a2.visualizer.layer.soundscape-composition-tool', [
                 'class': keys.join(','),
                 val: val
             }).then((function(annotations) {
+                this.is_selected = {};
                 annotations.forEach((function(annotation) {
                     if(annotation.present == 2) {
                         delete this.annotations[annotation.scclassId];
