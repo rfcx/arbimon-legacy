@@ -75,16 +75,16 @@ var SoundscapeComposition = {
                     present     : options.annotation.val | 0
                 };
 
-                if (annotation.val < 0 || annotation.val > 2) {
-                    return q.reject(new Error("Invalid annotation value " + annotation.val));
+                if (annotation.present < 0 || annotation.present > 2) {
+                    return q.reject(new Error("Invalid annotation value " + annotation.present));
                 }
                 
                 // 0 is not present , 1 is present and 2 is clear
-                return ((annotation.val == 2) ?
+                return ((annotation.present == 2) ?
                     dbpool.query(
                         "DELETE FROM `recording_soundscape_composition_annotations`\n"+
                         " WHERE `recordingId` = ? AND `scclassId` = ?\n", [
-                        annotation.recording,
+                        annotation.recordingId,
                         scclassId
                     ]) :
                     dbpool.query(
