@@ -1,16 +1,33 @@
 <div>
-    <div class="row thresholdtext">
-        <span class="col-sm-5" tooltip="Only peaks above this threshold will be considered.">
-            Amplitude:{{ threshold }}
-        </span>
-        <span class="col-sm-7" tooltip-placement="bottom" 
-            tooltip="If the frequency difference of two successive peaks is less than this threshold, then the peak of highest amplitude will be kept only.">
-            Frequency:{{ bandwidth }}Hz
-        </span>
-    </div>
+    <label class="row no-gutter thresholdtext no-bold"
+        tooltip="Only peaks above this threshold will be considered."
+        tooltip-append-to-body="true" 
+    >
+        <div class="col-sm-5 control-label">
+            Amplitude:
+        </div>
+        <div class="col-sm-5">
+            <input class="form-control input-sm" step="0.001" max="1" min="0" type="number" ng-model="threshold" />
+        </div>
+        <div class="col-sm-2"></div>
+    </label>
+    <label class="row no-gutter thresholdtext no-bold"
+        tooltip="If the frequency difference of two successive peaks is less than this threshold, then the peak of highest amplitude will be kept only."
+        tooltip-append-to-body="true" 
+    >
+        <div class="col-sm-5 control-label">
+            Frequency:
+        </div>
+        <div class="col-sm-5">
+            <input class="form-control input-sm" type="number" max="1000" min="0" ng-model="bandwidth" />
+        </div>
+        <div class="col-sm-2">
+            Hz
+        </div>
+    </label>
     <div class="row" height="70" >
         <div class="col-sm-1 thresslider">
-            <div orientation="vertical" range-slider min="0" max="100" model-min="thresholdInvPercent" pin-handle="max" show-values="false"></div>
+            <div orientation="vertical" range-slider min="0" step="0.001" max="100" model-min="thresholdInvPercent" pin-handle="max" show-values="false"></div>
         </div>
         <div class="col-sm-9 margin-left-8">
             <a2-draw-peak-threshold threshold="threshold" bandwidth="bandwidth"></a2-draw-peak-threshold>

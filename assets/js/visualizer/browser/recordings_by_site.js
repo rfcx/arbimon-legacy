@@ -20,7 +20,7 @@ angular.module('a2.browser_recordings_by_site', [])
                 d.resolve(true);
             } else {
                 var site=this.site, date=this.date;
-                var key = [site.name, date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
+                var key = ['!q:'+site.id, date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
                 Project.getRecordings(key, {show:'thumbnail-path'},(function(recordings){
                     recordings = $filter('orderBy')(recordings, 'datetime');
                     recordings.forEach(function(recording){
@@ -75,12 +75,12 @@ angular.module('a2.browser_recordings_by_site', [])
         cache : rbDateAvailabilityCache,
         get_counts_for : function(year){
             var site = self.site;
-            var site_name = site && site.name;
-            if(!site_name) {
+            var site_id = site && site.id;
+            if(!site_id) {
                 return true;
             }
 
-            var key = [site_name, year, '[1:12]'].join('-');
+            var key = ['!q:'+site_id, year, '[1:12]'].join('-');
 
             var availability = self.dates.cache.get(key);
             if(!availability) {
@@ -117,11 +117,11 @@ angular.module('a2.browser_recordings_by_site', [])
             });
         },
         fetch_year_range : function(site, callback){
-            var site_name = site && site.name;
-            if(!site_name) {
+            var site_id = site && site.id;
+            if(!site_id) {
                 return;
             }
-            Project.getRecordingAvailability(site_name, function(data){
+            Project.getRecordingAvailability('!q:'+site_id, function(data){
                 $timeout(function(){
                     var range={max:-1/0, min:1/0, count:0};
                     for(var site in data){
