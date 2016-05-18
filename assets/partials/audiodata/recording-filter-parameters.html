@@ -1,10 +1,14 @@
-<accordion>
-    <accordion-group is-open="isOpen" class="a2-filters-box">
-        <accordion-heading>
-            <i class="fa" ng-class="isOpen ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
-            Filters <i class="fa fa-filter"></i>
-            <small><em>Filter recordings and save as playlists</em></small> 
-        </accordion-heading>
+<div class="dropdown a2-filters-box"
+    dropdown 
+    dropdown-append-to-body="true" 
+    auto-close="disabled"
+    is-open="isOpen">
+    <button class="btn btn-block btn-default" dropdown-toggle>
+        <i class="fa" ng-class="isOpen ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+        Filters <i class="fa fa-filter"></i>
+        <small><em>Filter recordings and save as playlists</em></small> 
+    </button>
+    <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
         <div class="a2-filter-row">
             <div class="a2-filter a2-filter-text">
                 Range:
@@ -198,5 +202,5 @@
                 <i class="fa fa-list-alt"></i>
             </button>
         </div>
-    </accordion-group>
-</accordion>
+    </div>
+</div>
