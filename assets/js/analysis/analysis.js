@@ -41,7 +41,7 @@
         })
         .state('analysis.soundscapes', {
             url: '/soundscapes',
-            controller: 'SoundscapesCtrl',
+            controller: 'SoundscapesCtrl as controller',
             templateUrl: '/partials/soundscapes/list.html'
         });
     });
