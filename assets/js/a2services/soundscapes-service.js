@@ -96,10 +96,18 @@ angular.module('a2.srv.soundscapes', [
                     callback(data);
                 });
         },
-        getExportUrl: function(soundscapeId){
+        getExportUrl: function(options){
+            var soundscapeId = options.soundscape.soundscape_id;
             var d = $q.defer();
             var projectName = Project.getUrl();
-            d.resolve('/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/export-list');
+            var args = [];
+            if(options.raw){
+                args.push('raw=1');
+            }
+            d.resolve(
+                '/api/project/'+projectName+'/soundscapes/' + soundscapeId + '/export-list' +
+                ( args.length ? '?'+args.join('&')  : '')
+            );
             return d.promise;
         },
         getRegion: function(soundscapeId, region, callback) {

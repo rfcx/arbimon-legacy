@@ -4,6 +4,7 @@ var sprintf = require("sprintf-js").sprintf;
 var csv_stringify = require("csv-stringify");
 var async = require('async');
 var AWS = require('aws-sdk');
+var q = require('q');
 
 var config = require('../../../config');
 var model = require('../../../model');
@@ -135,57 +136,116 @@ router.get('/:soundscape/norm-vector', function(req, res, next) {
 
 router.get('/:soundscape/export-list', function(req, res, next) {
     var soundscape = req.soundscape;
-    var filename = soundscape.name.replace(/[^a-zA-Z0-9-_]/g, '_').replace(/_+/g,'_')  + '.csv';
-    model.soundscapes.fetchSCIDX(req.soundscape, function(err, scidx){
-        if(err){
-            next(err);
-        } else {
-            var cols = ["site", "recording", "time index", "frequency", "amplitude"];
-            var recdata={};
-            var stringifier = csv_stringify({header:true, columns:cols});
-            res.setHeader('Content-disposition', 'attachment; filename='+filename);
-            stringifier.pipe(res);
-            async.eachSeries(Object.keys(scidx.index), function(freq_bin, next_row){
-                var row = scidx.index[freq_bin];
-                var freq = freq_bin * soundscape.bin_size;
-                async.eachSeries(Object.keys(row), function(time, next_cell){
-                    var recs = row[time][0];
-                    var amps = row[time][1];
-                    var c_idxs=[]; for(var ri=0,re=recs.length; ri<re;++ri){ c_idxs.push(ri); }
-                    async.eachSeries(c_idxs, function(c_idx, next_rec){
-                        var rec_idx = recs[c_idx];
-                        var amp = amps && amps[c_idx] || '-';
-                        var recId = scidx.recordings[rec_idx];
-                        async.waterfall([
-                            function(next_step){
-                                if(recdata[recId]){
-                                    next_step();
-                                } else {
-                                    model.recordings.findByUrlMatch(recId, null, next_step);
-                                }
-                            },
-                            function(recordings){
-                                var next_step = arguments[arguments.length - 1];
-                                if(!recdata[recId] && recordings && recordings.length > 0){
-                                    recdata[recId] = recordings[0];
-                                }
-                                next_step(null, recdata[recId]);
-                            }
-                        ], function(err, recording){
-                            if(err || !recording){
-                                stringifier.write(["-", "id:"+recId, time, freq, amp]);
-                            } else {
-                                stringifier.write([recording.site, recording.file, time, freq, amp]);
-                            }
-                            next_rec();
-                        });
-                    }, next_cell);
-                }, next_row);
-            }, function(){
-                stringifier.end();
-            });
+    var raw = !!(req.query.raw|0);
+
+    function dumpRawCsv(scidx){
+        var filename = soundscape.name.replace(/[^a-zA-Z0-9-_]/g, '_').replace(/_+/g,'_')  + '.raw.csv';
+        var cols = ["site", "recording", "time index", "frequency", "amplitude"];
+        var recdata={};
+        var stringifier = csv_stringify({header:true, columns:cols});
+        res.setHeader('Content-disposition', 'attachment; filename='+filename);
+        stringifier.pipe(res);
+        return q.ninvoke(async, 'eachSeries', Object.keys(scidx.index), function(freq_bin, next_row){
+            var row = scidx.index[freq_bin];
+            var freq = freq_bin * soundscape.bin_size;
+            return q.ninvoke(async, 'eachSeries', Object.keys(row), function(time, next_cell){
+                var recs = row[time][0];
+                var amps = row[time][1];
+                var c_idxs=[]; for(var ri=0,re=recs.length; ri<re;++ri){ c_idxs.push(ri); }
+                return q.ninvoke(async, 'eachSeries', c_idxs, function(c_idx, next_rec){
+                    var rec_idx = recs[c_idx];
+                    var amp = amps && amps[c_idx] || '-';
+                    var recId = scidx.recordings[rec_idx];
+                    return q.resolve().then(function(){
+                        if(!recdata[recId]){
+                            return q.ninvoke(model.recordings, 'findByUrlMatch', recId, null);
+                        }
+                    }).then(function(recordings){
+                        if(!recdata[recId] && recordings && recordings.length > 0){
+                            recdata[recId] = recordings[0];
+                        }
+                        return recdata[recId];
+                    }).catch(function(err){
+                        // ignore err, return no recording
+                    }).then(function(recording){
+                        if(!recording){
+                            stringifier.write(["-", "id:"+recId, time, freq, amp]);
+                        } else {
+                            stringifier.write([recording.site, recording.file, time, freq, amp]);
+                        }
+                    }).nodeify(next_rec);
+                }).nodeify(next_cell);
+            }).nodeify(next_row);
+        }).then(function(){
+            stringifier.end();
+        });
+    }
+    
+    function dumpSCIDXMatrix(scidx){
+        var filename = soundscape.name.replace(/[^a-zA-Z0-9-_]/g, '_').replace(/_+/g,'_')  + '.csv';
+        var cols = [];
+        var matrix = [];
+        var x,y;
+        for(x=0; x < scidx.width; ++x){
+            cols.push(scidx.offsetx + x);
         }
-    });
+        for(y=0; y < scidx.height; ++y){
+            var row = [];
+            for(x=0; x < scidx.width; ++x){
+                row.push(0);
+            }
+            matrix.push(row);
+        }
+        // res.setHeader('Content-disposition', 'attachment; filename='+filename);
+        
+        var recdata={};
+        var threshold = soundscape.threshold;
+        Object.keys(scidx.index).forEach(function(freq_bin){
+            var row = scidx.index[freq_bin];
+            var freq = freq_bin * soundscape.bin_size;
+            Object.keys(row).forEach(function(time){
+                var recs = row[time][0];
+                var amps = row[time][1];
+                var c_idxs=[]; for(var ri=0,re=recs.length; ri<re;++ri){ c_idxs.push(ri); }
+                c_idxs.forEach(function(c_idx){
+                    var rec_idx = recs[c_idx];
+                    var amp = amps && amps[c_idx];
+                    if(!threshold || (amp && threshold <= amp)){
+                        matrix[freq_bin - scidx.offsety][time - scidx.offsetx]++;
+                    }
+                });
+            });
+        });
+
+        return q.resolve().then(function(){
+            if(soundscape.normalized || 1){
+                return model.soundscapes.fetchNormVector(soundscape).then(function(normvec){
+                    for(x=0; x < scidx.width; ++x){
+                        key = '' + (x + scidx.offsetx);
+                        if(key in normvec){
+                            var val = normvec[key];
+                            console.log(key, val);
+                            for(y=0; y < scidx.height; ++y){
+                                matrix[y][x] = matrix[y][x] * 1.0 / val;
+                            }
+                        }
+                    }
+                });
+            }
+        }).then(function(){
+            var stringifier = csv_stringify({header:true, columns:['freq-min','freq-max'].concat(cols)});
+            stringifier.pipe(res);
+            matrix.forEach(function(row, y){
+                var freq = (scidx.offsety + y) * soundscape.bin_size;
+                stringifier.write([freq, freq + soundscape.bin_size].concat(row));
+            });
+            stringifier.end();
+        });
+    }
+    
+    model.soundscapes.fetchSCIDX(req.soundscape).then(
+        raw ? dumpRawCsv : dumpSCIDXMatrix
+    ).catch(next);
 });
 
 
