@@ -1,4 +1,5 @@
 angular.module('a2.audiodata.recordings', [
+    'a2.directive.a2-auto-close-on-outside-click',
     'a2.services', 
     'a2.directives', 
     'ui.bootstrap',
@@ -199,49 +200,7 @@ angular.module('a2.audiodata.recordings', [
             scope.createPlaylist = function() {
                 scope.onCreatePlaylist({filters: controller.getFilters()});
             };
-            
-            function findInAncestors(element){
-                var ancestors = [];
-                element = element;
-                while(element){
-                    ancestors.push(element);
-                    element = element.parentElement;
-                }
-                return ancestors;
-            }
-            
-            function closeDropdown(evt){
-                if(!evt || !scope.isOpen){
-                    return;
-                }
-                
-                
-                var ancestors = findInAncestors(evt.target);
-                var htmlIdx = ancestors.indexOf($document[0].documentElement);
-                var elementIdx = ancestors.reduce(function(_, ancestor, idx){
-                    if(idx != -1 && (ancestor == element[0] || /a2-filters-box-dropdown/.test(ancestor.className))){
-                        _ = idx;
-                    }
-                    return _;
-                }, -1);
 
-                if(elementIdx != -1 || htmlIdx == -1){
-                    return;
-                }
-                
-
-                scope.isOpen = false;
-                if(!$rootScope.$$phase){
-                    scope.$apply();
-                }
-            }
-            
-            $document.bind('click', closeDropdown);
-            
-            scope.$on('$destroy', function(){
-                $document.unbind('click', closeDropdown);
-            });
-            
             controller.fetchOptions();
         }
     };
