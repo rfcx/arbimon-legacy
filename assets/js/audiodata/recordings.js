@@ -8,14 +8,20 @@ angular.module('a2.audiodata.recordings', [
 ])
 .controller('RecsCtrl', function($scope, Project, a2Classi, $http, $modal, notify, a2UserPermit, $window) {
     
-    var searchRecs = function(output) {
-        var params = $scope.params;
+    this.getSearchParameters = function(output){
+        var params = angular.merge({}, $scope.params);
         output = output || ['list'];
         params.output = output;
         params.limit = $scope.limitPerPage;
         params.offset = output.indexOf('list') >= 0 ? ($scope.currentPage-1) * $scope.limitPerPage : 0;
         params.sortBy = $scope.sortKey;
         params.sortRev = $scope.reverse;
+        return params;
+    };
+    
+    this.searchRecs = function(output) {
+        output = output || ['list'];
+        var params = this.getSearchParameters(output);
         var expect = output.reduce(function(obj, a){
             obj[a] = true;
             return obj;
@@ -46,20 +52,20 @@ angular.module('a2.audiodata.recordings', [
         });
     };
     
-    $scope.sortRecs = function(sortKey, reverse) {
+    this.sortRecs = function(sortKey, reverse) {
         $scope.sortKey = sortKey;
         $scope.reverse = reverse;
-        searchRecs();
+        this.searchRecs();
     };
-    $scope.applyFilters = function(filters) {
+    this.applyFilters = function(filters) {
         $scope.currentPage = 1;
         $scope.params = filters;
-        searchRecs(['count', 'list']);
+        this.searchRecs(['count', 'list']);
     };
-    $scope.reloadList = function() {
-        searchRecs(['count', 'list']);
+    this.reloadList = function() {
+        this.searchRecs(['count', 'list']);
     };
-    $scope.createPlaylist = function(filters) {
+    this.createPlaylist = function(filters) {
         var listParams = filters;
         
         if(!Object.keys(listParams).length)
@@ -85,7 +91,7 @@ angular.module('a2.audiodata.recordings', [
         });
     };
     
-    $scope.del = function() {
+    this.deleteRecordings = function() {
         if(!a2UserPermit.can('manage project recordings')) {
             notify.log('You do not have permission to delete recordings');
             return;
@@ -95,50 +101,43 @@ angular.module('a2.audiodata.recordings', [
                 return !rec.imported; 
             });
             
-        if(!recs || !recs.length)
+        if(!recs || !recs.length){
             return notify.log('Recordings from imported sites can not be deleted');
-        
-        var recCount = {};
-        
-        for(var i = 0; i < recs.length; i++) {
-            recCount[recs[i].site] = recCount[recs[i].site] + 1 || 1;
         }
         
-        var sites = Object.keys(recCount).map(function(site) {
-            var s = recCount[site] > 1 ? 's' : '';
-            
+        var recCount = recs.reduce(function(_, rec){
+            _[rec.site] = _[rec.site] + 1 || 1;
+            return _;
+        }, {});
+        
+        var messages = [];
+        messages.push("You are about to delete: ");
+        messages.push.apply(message, Object.keys(recCount).map(function(site) {
+            var s = recCount[site] > 1 ? 's' : '';            
             return recCount[site] + ' recording'+s+' from "' + site + '"';
-        });
+        }));
+        messages.push("Are you sure??");
         
-        
-        var msg = ["You are about to delete: "];
-        msg = msg.concat(sites);
-        msg.push("Are you sure??");
-        
-        var modalInstance = $modal.open({
+        return $modal.open({
             templateUrl: '/partials/pop-up.html',
             controller: function() {
-                this.messages = msg;
+                this.messages = messages;
                 this.btnOk =  "Yes";
                 this.btnCancel =  "No, cancel";
             },
             controllerAs: 'popup'
-        });
-        
-        modalInstance.result.then(function() {
-            
+        }).result.then(function() {
             var recIds = recs.map(function(rec) { return rec.id; });
+            return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete', { recs: recs });
+        }).then((function(response){
+            if(response.data.error){
+                return notify.error(response.data.error);
+            }
             
-            $http.post('/api/project/'+Project.getUrl()+'/recordings/delete', { recs: recs })
-                .success(function(data) {
-                    if(data.error)
-                        return notify.error(data.error);
-                    
-                    searchRecs(['count', 'list']);
-                    
-                    notify.log(data.msg);
-                });
-        });
+            this.searchRecs(['count', 'list']);
+            
+            notify.log(response.data.msg);
+        }).bind(this));
     };
     
     $scope.loading = true;
@@ -147,15 +146,16 @@ angular.module('a2.audiodata.recordings', [
     $scope.currentPage  = 1;
     $scope.limitPerPage = 10;
 
-    searchRecs(['count', 'date_range', 'list']);
+    this.searchRecs(['count', 'date_range', 'list']);
     
     this.setCurrentPage = function(currentPage){
         $scope.currentPage = currentPage;
-        searchRecs();
+        this.searchRecs();
     };
     this.setLimitPerPage = function(limitPerPage){
         $scope.limitPerPage = limitPerPage;
-        searchRecs();
+        this.searchRecs();
+    };
     };
     
 })
