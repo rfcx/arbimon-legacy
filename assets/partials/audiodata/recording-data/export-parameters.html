@@ -1,0 +1,36 @@
+<div class="panel panel-dropdown">
+    <div class="panel-heading panel-default text-muted text-center">
+        Fields to include in Export
+    </div>
+    
+    <ul class="list-group">
+        <li class="list-group-item" ng-repeat="parameter_set in controller.parameter_set_list">
+            <div>
+                {{parameter_set.title}}:
+            </div>
+            <div class="a2-filter" ng-init="parameter_set.index=$index">
+                <ui-select multiple ng-model="controller.selected[parameter_set.index]" theme="bootstrap" style="width:300px;">
+                    <ui-select-match placeholder="{{parameter_set.placeholder}}">
+                        <span tooltip="{{$item.tooltip}}" tooltip-append-to-body="true">{{($item.group ? $item.group + ' / ' : '') + $item.caption}}</span>
+                    </ui-select-match>
+                    <ui-select-choices class="has-badges" repeat="$item in controller.lists[parameter_set.index] | filter:$select.search" group-by="'group'">
+                        <span tooltip="{{$item.tooltip}}" tooltip-append-to-body="true">{{$item.caption}}</span>
+                        <span class="badge" ng-if="$item.badges">
+                            <span ng-repeat="badge in $item.badges">
+                                <span ng-if="$index"> / </span>
+                                <i class="fa" ng-class="badge.icon"></i> {{ badge.value }}
+                            </span>
+                        </span>
+                    </ui-select-choices>
+                </ui-select>
+            </div>
+        </li>
+    </ul>
+    
+    <div class="panel-footer">
+        <button class="btn btn-block btn-primary" ng-click="controller.exportData() | trackEvent:'Audiodata-Recordings-Export':'export'">
+            <i class="fa fa-download"></i>
+            Export Data
+        </button>
+    </div>
+</div>
