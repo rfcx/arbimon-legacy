@@ -1,11 +1,14 @@
 <div class="row">
     <div class="col-sm-12 toolbar">
-        <recording-filter-parameters on-apply-filters="applyFilters(filters)" on-create-playlist="createPlaylist(filters)"
-        max-date="maxDate" min-date="minDate"
-        ></recording-filter-parameters>
-        <div class="btn-group padding-left" dropdown dropdown-append-to-body="true" auto-close="outsideClick" >
-            <button class="btn btn-default"><i class="fa fa-download"></i> Export</button>
-            <button class="btn btn-default" dropdown-toggle><i class="fa fa-caret-down"></i></button>
+        <span class="dropdown a2-filters-box" dropdown  dropdown-append-to-body="true" a2-auto-close-on-outside-click>
+            <button class="btn btn-default" dropdown-toggle><i class="fa fa-filter"></i> Filters <i class="fa fa-caret-down"></i></button>
+            <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
+                <recording-filter-parameters on-apply-filters="applyFilters(filters)" on-create-playlist="createPlaylist(filters)"
+                    max-date="maxDate" min-date="minDate"
+                ></recording-filter-parameters>
+            </div>
+        </span>
+
             <div class="dropdown-form dropdown-menu" role="menu">
                 :-)
             </div>
