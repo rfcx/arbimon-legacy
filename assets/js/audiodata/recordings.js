@@ -1,5 +1,6 @@
 angular.module('a2.audiodata.recordings', [
     'a2.directive.a2-auto-close-on-outside-click',
+    'a2.audiodata.recordings.data-export-parameters',
     'a2.services', 
     'a2.directives', 
     'ui.bootstrap',
