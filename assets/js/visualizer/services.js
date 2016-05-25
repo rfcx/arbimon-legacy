@@ -162,6 +162,8 @@ angular.module('visualizer-services', ['a2.services'])
                     var layer_type = a[i];
                     if (layer_types[layer_type]) {
                         this.list.push(this.__new_layer__(layer_type));
+                    } else {
+                        console.warn("Unknown layer of type " + layer_type + ".");
                     }
                 }
             },

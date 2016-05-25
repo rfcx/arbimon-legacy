@@ -12,6 +12,7 @@ var AWS = require('aws-sdk');
 
 
 var config = require('../config');
+var SQLBuilder = require('../utils/sqlbuilder');
 var dbpool = require('../utils/dbpool');
 var sqlutil = require('../utils/sqlutil');
 var queryHandler = dbpool.queryHandler;
@@ -27,27 +28,55 @@ var songtypes = require('./songtypes');
 var Classifications = {
     // classifications -> list
     list: function(projectId, callback) {
-        var q = (
-            "SELECT UNIX_TIMESTAMP( j.`date_created` )*1000  as `date`, \n"+
-            "    j.`job_id`, \n"+
-            "    pl.`name` as playlist_name,\n"+
-            "    pl.`playlist_id`,\n"+
-            "    m.name as modname, \n"+
-            "    m.`threshold`, \n"+
-            "    m.model_id, \n"+
-            "    jpc.name as cname, \n"+
-            "    u.login as muser\n"+
-            "FROM `jobs` as j\n"+
-            "JOIN `job_params_classification` as jpc ON j.`job_id` = jpc.`job_id` \n"+
-            "JOIN `playlists` as pl ON pl.`playlist_id` = jpc.`playlist_id` \n"+
-            "JOIN `models` as m ON m.`model_id` = jpc.`model_id` \n"+
-            "JOIN `users` as u ON u.`user_id` = j.`user_id` \n"+
-            "WHERE j.`job_type_id` = 2 \n"+
-            "AND j.`completed` = 1 \n"+
-            "AND j.`project_id` = ? "
+        return Classifications.getFor({
+            project: projectId,
+            completed: true,
+            showUser: true,
+            showPlaylist: true,
+            showModel: true,
+        }).nodeify(callback);
+    },
+    
+    getFor: function(options) {
+        options = options || {};
+        var builder = new SQLBuilder();
+        builder.addProjection(
+            "UNIX_TIMESTAMP( J.`date_created` )*1000  as `date`",
+            "J.`job_id`",
+            "JPC.name as cname"
         );
+        builder.addTable("`jobs`", "J");
+        builder.addTable("JOIN `job_params_classification`", "JPC", "J.`job_id` = JPC.`job_id`");
+        builder.addConstraint('J.`job_type_id` = 2');
 
-        queryHandler(mysql.format(q, [projectId]), callback);
+        if(options.showUser){
+            builder.addTable("JOIN `users`", "U", "U.`user_id` = J.`user_id`");
+            builder.addProjection("U.login as muser");
+        }
+
+        if(options.showPlaylist){
+            builder.addTable("JOIN `playlists`", "PL", "PL.`playlist_id` = JPC.`playlist_id`");
+            builder.addProjection("PL.`name` as playlist_name", "PL.`playlist_id`");
+        }
+
+        if(options.showModel){
+            builder.addTable("JOIN `models`", "M", "M.`model_id` = JPC.`model_id`");
+            builder.addProjection("M.name as modname", "M.`threshold`", "M.model_id");
+        }
+        
+        if(options.hasOwnProperty("completed")){
+            builder.addConstraint("J.`completed` = ?", [!!options.completed]);
+        }
+        
+        if(options.hasOwnProperty("project")){
+            builder.addConstraint("J.`project_id` = ?", [options.project]);
+        }
+        
+        if(options.hasOwnProperty("id")){
+            builder.addConstraint("J.`job_id` IN (?)", [options.id]);
+        }
+
+        return dbpool.query(builder.getSQL());
     },
     
     // classificationName

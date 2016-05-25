@@ -12,9 +12,12 @@ angular.module('a2.srv.classi', [
             return saveData;
         },
         list: function(callback) {
-            $http.get('/api/project/'+Project.getUrl()+'/classifications')
-                .success(callback)
-                .error(notify.serverError);
+            return $http.get('/api/project/'+Project.getUrl()+'/classifications').then(function(response){
+                if(callback){
+                    callback(response.data);
+                }
+                return response.data;                
+            }).catch(notify.serverError);
         },
         getDetails: function(classificationId, callback) {
             $http.get('/api/project/' + Project.getUrl() + '/classifications/' + classificationId)

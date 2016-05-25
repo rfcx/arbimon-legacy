@@ -1,20 +1,31 @@
-<div class="row toolbar">
-    <div class="col-sm-12">
-        <recording-filter-parameters on-apply-filters="applyFilters(filters)" on-create-playlist="createPlaylist(filters)"
-        max-date="maxDate" min-date="minDate"
-        >
-        </recording-filter-parameters>
-    </div>
-</div>
 <div class="row">
-    <div class="col-sm-3">
-        <button class="btn btn-danger" 
-            ng-click="del()" 
+    <div class="col-sm-12 toolbar">
+        <span class="dropdown a2-filters-box" dropdown  dropdown-append-to-body="true" a2-auto-close-on-outside-click>
+            <button class="btn btn-default" dropdown-toggle><i class="fa fa-filter"></i> Filters <i class="fa fa-caret-down"></i></button>
+            <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
+                <recording-filter-parameters on-apply-filters="controller.applyFilters(filters)" on-create-playlist="controller.createPlaylist(filters)"
+                    max-date="maxDate" min-date="minDate"
+                ></recording-filter-parameters>
+            </div>
+        </span>
+
+
+        <div class="btn-group padding-left" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
+            <button class="btn btn-default" dropdown-toggle><i class="fa fa-download"></i> Export <i class="fa fa-caret-down"></i></button>
+            <div class="dropdown-form dropdown-menu" role="menu">
+                <recording-data-export-parameters on-export="controller.exportRecordings(parameters)"
+                ></recording-data-export-parameters>
+            </div>
+        </div>
+        <div class="btn-group padding-leftx2">
+            <button class="btn btn-danger" 
+            ng-click="controller.deleteRecordings()" 
             ng-class="{ disabled: !checked || !checked.length }"
             tooltip="Delete recording(s)"
             tooltip-trigger="mouseenter">
-            <i class="fa fa-trash"></i>
-        </button>
+                <i class="fa fa-trash"></i>
+            </button>
+        </div>
     </div>
 </div>
 <div class="row">
@@ -38,7 +49,7 @@
                 <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="50">50</button>
                 <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="100">100</button>
             </div>
-            <button class="btn btn-default btn-sm" tooltip="Reload list" ng-click="reloadList()">
+            <button class="btn btn-default btn-sm" tooltip="Reload list" ng-click="controller.reloadList()">
                 <i class="fa fa-refresh"></i>
             </button>
         </div>
@@ -46,7 +57,7 @@
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <a2-table class="table-hide-btns" rows="recs" data-checked="checked" ext-sort="sortRecs(sortBy, reverse)" default-sort="site" no-select>
+        <a2-table class="table-hide-btns" rows="recs" data-checked="checked" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site" no-select>
             <field title="">
                 <a class="btn btn-default btn-xs" 
                     ng-href="#/visualizer/rec/{{row.id}}"
