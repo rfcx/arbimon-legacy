@@ -38,6 +38,11 @@ var getUTC = function (date) {
 var fileExtPattern = /\.(wav|flac)$/;
 var freqFilterPrecision = 100;
 
+function arrayOrSingle(x){
+    return joi.alternatives(x, joi.array().items(x));
+}
+
+
 // exports
 var Recordings = {
     QUERY_FIELDS : {
@@ -796,36 +801,7 @@ var Recordings = {
     },
     
     findProjectRecordings: function(params, callback) {
-        function arrayOrSingle(x){
-            return joi.alternatives(x, joi.array().items(x));
-        }
-        var schema = {
-            project_id: joi.number().required(),
-            range: joi.object().keys({
-                from: joi.date(),
-                to: joi.date()
-            }).and('from', 'to'),
-            sites:  arrayOrSingle(joi.string()),
-            years:  arrayOrSingle(joi.number()),
-            months: arrayOrSingle(joi.number()),
-            days:   arrayOrSingle(joi.number()),
-            hours:  arrayOrSingle(joi.number()),
-            validations:  arrayOrSingle(joi.number()),
-            presence:  arrayOrSingle(joi.string().valid('absent', 'present')),
-            soundscape_composition:  arrayOrSingle(joi.number()),
-            soundscape_composition_annotation:  arrayOrSingle(joi.string().valid('absent', 'present')),
-            tags: arrayOrSingle(joi.number()),
-            classifications: arrayOrSingle(joi.number()),
-            classification_results: arrayOrSingle(joi.object().keys({
-                model: joi.number(),
-                th: joi.number()
-            }).optionalKeys('th')),
-            limit:  joi.number(),
-            offset: joi.number(),
-            sortBy: joi.string(),
-            sortRev: joi.boolean(), 
-            output:  arrayOrSingle(joi.string().valid('count','list','date_range')).default('list')
-        };
+        var schema = Recordings.SCHEMAS.searchFilters;
         
         joi.validate(params, schema, function(err, parameters) {
             if(err) return callback(err);
@@ -999,6 +975,36 @@ var Recordings = {
                 }
             }).nodeify(callback);            
         });
+    },
+
+    SCHEMAS:{
+        searchFilters : {
+            project_id: joi.number().required(),
+            range: joi.object().keys({
+                from: joi.date(),
+                to: joi.date()
+            }).and('from', 'to'),
+            sites:  arrayOrSingle(joi.string()),
+            years:  arrayOrSingle(joi.number()),
+            months: arrayOrSingle(joi.number()),
+            days:   arrayOrSingle(joi.number()),
+            hours:  arrayOrSingle(joi.number()),
+            validations:  arrayOrSingle(joi.number()),
+            presence:  arrayOrSingle(joi.string().valid('absent', 'present')),
+            soundscape_composition:  arrayOrSingle(joi.number()),
+            soundscape_composition_annotation:  arrayOrSingle(joi.string().valid('absent', 'present')),
+            tags: arrayOrSingle(joi.number()),
+            classifications: arrayOrSingle(joi.number()),
+            classification_results: arrayOrSingle(joi.object().keys({
+                model: joi.number(),
+                th: joi.number()
+            }).optionalKeys('th')),
+            limit:  joi.number(),
+            offset: joi.number(),
+            sortBy: joi.string(),
+            sortRev: joi.boolean(),
+            output:  arrayOrSingle(joi.string().valid('count','list','date_range')).default('list')
+        },
     },
     
     delete: function(recs, project_id, callback) {
