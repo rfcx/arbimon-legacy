@@ -15,6 +15,11 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
         controller:'recordingDataExportParametersController as controller',
         requires:'^RecsCtrl', 
         link: function(scope, element, attrs, controller) {
+            controller.initialize({
+                onExport: function(parameters){
+                    scope.onExport({parameters: parameters});
+                }
+            });
         }
     };
 })
@@ -90,44 +95,65 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
     $q,
     $injector,
     $scope, 
-    recordingDataFieldTypes,
-    Project, a2Classi, 
-    a2SoundscapeCompositionService,
-    $http, $modal, notify, a2UserPermit, a2Tags, 
-    $window
-) {
-    this.parameter_set_list = recordingDataFieldTypes;
+    recordingDataFieldTypes
+){
     
-    function getList(parameter_set){
-        return $q.resolve(parameter_set.getList ? 
-            $injector.invoke(parameter_set.getList) :
-            (parameter_set.list || [])
-        );
-    }
-    
-    this.lists = this.parameter_set_list.map(function(){
-        return [];
-    });
-    
-    $q.all(this.parameter_set_list.map(getList)).then((function(allLists){
-        this.lists = allLists;
-        this.selected = this.parameter_set_list.map(function(parameter_set, idx){
-            if(parameter_set.preselected){
-                var listByValue = allLists[idx].reduce(function(_, item){
-                    _[item.value] = item;
-                    return _;
-                }, {});
-                
-                return (parameter_set.preselected || []).map(function(value){
-                    return listByValue[value];
-                }).filter(function(_){
-                    return !!_;
+    this.initialize = function(options){
+        options = options || {};
+        
+        if(options.onExport){
+            this.onExport = options.onExport;
+        }
+        
+        this.parameter_set_list = recordingDataFieldTypes;
+        this.selected = [];
+        this.lists = this.parameter_set_list.map(function(){
+            return [];
+        });
+        
+        function getList(parameter_set){
+            return $q.resolve(parameter_set.getList ? 
+                $injector.invoke(parameter_set.getList) :
+                (parameter_set.list || [])
+            );
+        }
+        
+        
+        $q.all(this.parameter_set_list.map(getList)).then((function(allLists){
+            this.lists = allLists;
+            this.selected = this.parameter_set_list.map(function(parameter_set, idx){
+                if(parameter_set.preselected){
+                    var listByValue = allLists[idx].reduce(function(_, item){
+                        _[item.value] = item;
+                        return _;
+                    }, {});
+                    
+                    return (parameter_set.preselected || []).map(function(value){
+                        return listByValue[value];
+                    }).filter(function(_){
+                        return !!_;
+                    });
+                } else {
+                    return [];
+                }
+            });        
+        }).bind(this));
+    };
+
+    this.exportData = function(){
+        var selected = this.selected;
+        this.onExport(this.parameter_set_list.reduce(function(_, parameter_set, index){
+            if(selected[index] && selected[index].length){
+                _[parameter_set.identifier] = selected[index].map(function(item){
+                    return item.value;
                 });
-            } else {
-                return [];
             }
-        });        
-    }).bind(this));
+            return _;
+        }, {}));
+    };
     
+    this.onExport = function(parameters){
+        console.log("export parameters : ", parameters);
+    };
 })
 ;
