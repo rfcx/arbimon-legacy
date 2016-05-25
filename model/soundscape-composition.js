@@ -11,10 +11,15 @@ var APIError = require('../utils/apierror');
 var SoundscapeComposition = {
     getClassesFor:function(options){
         options = options || {};
+        var select=["SCC.id, SCC.name, SCC.isSystemClass as system, SCC.typeId, SCCT.type"];
         var tables = [
             "soundscape_composition_classes SCC",
             "JOIN soundscape_composition_class_types SCCT ON SCC.typeId = SCCT.id",
         ], where = [], data = [], order = ["SCC.typeId, SCC.isSystemClass"];
+        
+        if(options.tally){
+            select.push("(SELECT COUNT(*) FROM recording_soundscape_composition_annotations RSCA WHERE RSCA.scclassId = SCC.id) as tally");
+        }
         
         if(options.project){
             tables.push("LEFT JOIN project_soundscape_composition_classes PSCC ON PSCC.scclassId = SCC.id");
@@ -29,7 +34,7 @@ var SoundscapeComposition = {
         }
         
         return dbpool.query(
-            "SELECT SCC.id, SCC.name, SCC.isSystemClass as system, SCCT.type\n" +
+            "SELECT " + select.join(", ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
             (where.length ? "WHERE (" + where.join(")\n AND (") + ")\n" : "") +
             "ORDER BY " + order.join(", "),

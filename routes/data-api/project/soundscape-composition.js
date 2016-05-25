@@ -5,7 +5,8 @@ var model = require('../../../model');
 
 router.get('/classes', function(req, res, next){
     model.SoundscapeComposition.getClassesFor({
-        project: req.project.project_id
+        project: req.project.project_id,
+        tally: !!req.query.tally,
     }).then(function(classes){
         res.json(classes);
     }).catch(next);
