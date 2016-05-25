@@ -15,7 +15,10 @@ var joi   = require('joi');
 var _     = require('lodash');
 var sprintf = require("sprintf-js").sprintf;
 
+var models = require("./index");
+
 var config       = require('../config'); 
+var SQLBuilder  = require('../utils/sqlbuilder');
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
 var audioTools   = require('../utils/audiotool');
@@ -37,6 +40,11 @@ var getUTC = function (date) {
 
 var fileExtPattern = /\.(wav|flac)$/;
 var freqFilterPrecision = 100;
+
+function arrayOrSingle(x){
+    return joi.alternatives(x, joi.array().items(x));
+}
+
 
 // exports
 var Recordings = {
@@ -796,34 +804,7 @@ var Recordings = {
     },
     
     findProjectRecordings: function(params, callback) {
-        function arrayOrSingle(x){
-            return joi.alternatives(x, joi.array().items(x));
-        }
-        var schema = {
-            project_id: joi.number().required(),
-            range: joi.object().keys({
-                from: joi.date(),
-                to: joi.date()
-            }).and('from', 'to'),
-            sites:  arrayOrSingle(joi.string()),
-            years:  arrayOrSingle(joi.number()),
-            months: arrayOrSingle(joi.number()),
-            days:   arrayOrSingle(joi.number()),
-            hours:  arrayOrSingle(joi.number()),
-            validations:  arrayOrSingle(joi.number()),
-            presence:  arrayOrSingle(joi.string().valid('absent', 'present')),
-            tags: arrayOrSingle(joi.number()),
-            classifications: arrayOrSingle(joi.number()),
-            classification_results: arrayOrSingle(joi.object().keys({
-                model: joi.number(),
-                th: joi.number()
-            }).optionalKeys('th')),
-            limit:  joi.number(),
-            offset: joi.number(),
-            sortBy: joi.string(),
-            sortRev: joi.boolean(), 
-            output:  arrayOrSingle(joi.string().valid('count','list','date_range')).default('list')
-        };
+        var schema = Recordings.SCHEMAS.searchFilters;
         
         joi.validate(params, schema, function(err, parameters) {
             if(err) return callback(err);
@@ -907,6 +888,19 @@ var Recordings = {
                 }
             }
             
+            if(parameters.soundscape_composition) {
+                tables.push(                    
+                    "LEFT JOIN recording_soundscape_composition_annotations as RSCA ON r.recording_id = RSCA.recordingId"
+                );
+                constraints.push('RSCA.scclassId IN (?)');
+                data.push(parameters.soundscape_composition);
+                
+                if(parameters.soundscape_composition_annotation && !(parameters.soundscape_composition_annotation instanceof Array && parameters.soundscape_composition_annotation.length >= 2)){
+                    constraints.push('RSCA.present = ?');
+                    data.push(parameters.soundscape_composition_annotation == 'present' ? '1' : '0');
+                }
+            }
+            
             if(parameters.tags) {
                 tables.push(
                     "LEFT JOIN recording_tags as RT ON r.recording_id = RT.recording_id"
@@ -983,6 +977,240 @@ var Recordings = {
                     return results[outputs[0]];
                 }
             }).nodeify(callback);            
+        });
+    },
+
+    SCHEMAS:{
+        searchFilters : {
+            project_id: joi.number().required(),
+            range: joi.object().keys({
+                from: joi.date(),
+                to: joi.date()
+            }).and('from', 'to'),
+            sites:  arrayOrSingle(joi.string()),
+            years:  arrayOrSingle(joi.number()),
+            months: arrayOrSingle(joi.number()),
+            days:   arrayOrSingle(joi.number()),
+            hours:  arrayOrSingle(joi.number()),
+            validations:  arrayOrSingle(joi.number()),
+            presence:  arrayOrSingle(joi.string().valid('absent', 'present')),
+            soundscape_composition:  arrayOrSingle(joi.number()),
+            soundscape_composition_annotation:  arrayOrSingle(joi.string().valid('absent', 'present')),
+            tags: arrayOrSingle(joi.number()),
+            classifications: arrayOrSingle(joi.number()),
+            classification_results: arrayOrSingle(joi.object().keys({
+                model: joi.number(),
+                th: joi.number()
+            }).optionalKeys('th')),
+            limit:  joi.number(),
+            offset: joi.number(),
+            sortBy: joi.string(),
+            sortRev: joi.boolean(),
+            output:  arrayOrSingle(joi.string().valid('count','list','date_range')).default('list')
+        },
+        exportProjections: {
+            recording:arrayOrSingle(joi.string().valid(
+                'filename', 'site', 'time', 'recorder', 'microphone', 'software'
+            )),
+            validation:  arrayOrSingle(joi.number()),
+            classification:  arrayOrSingle(joi.number()),
+            soundscapeComposition:  arrayOrSingle(joi.number()),
+            tag:  arrayOrSingle(joi.number()),
+        }
+    },
+    
+    buildSearchQuery: function(searchParameters){
+        var builder = new SQLBuilder();
+        return Q.ninvoke(joi, 'validate', searchParameters, Recordings.SCHEMAS.searchFilters).then(function(parameters){
+            var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
+                
+            var projection=[];
+            
+            builder.addTable("recordings", "r");
+            builder.addTable("JOIN sites", "s", "s.site_id = r.site_id");
+            builder.addTable("LEFT JOIN project_imported_sites", "pis", "s.site_id = pis.site_id AND pis.project_id = ?", parameters.project_id);
+            
+            builder.addConstraint("(s.project_id = ? OR pis.project_id = ?)",[
+                parameters.project_id,
+                parameters.project_id
+            ]);
+                    
+            if(parameters.range) {
+                builder.addConstraint('r.datetime BETWEEN ? AND ?',[
+                    getUTC(parameters.range.from), getUTC(parameters.range.to)
+                ]);
+            }
+            
+            if(parameters.sites) {
+                builder.addConstraint('s.name IN (?)', [parameters.sites]);
+            }
+            
+            if(parameters.years) {
+                builder.addConstraint('YEAR(r.datetime) IN (?)', [parameters.years]);
+            }
+            
+            if(parameters.months) {
+                builder.addConstraint('MONTH(r.datetime) IN (?)', [
+                    (parameters.months instanceof Array) ?
+                        parameters.months.map(function(m) { return parseInt(m)+1; }) :
+                        parseInt(parameters.months)+1
+                ]);
+            }
+            
+            if(parameters.days) {
+                builder.addConstraint('DAY(r.datetime) IN (?)', [parameters.days]);
+            }
+            
+            if(parameters.hours) {
+                builder.addConstraint('HOUR(r.datetime) IN (?)', [parameters.hours]);
+            }
+            
+            if(parameters.validations) {
+                builder.addTable("LEFT JOIN recording_validations", "rv", "r.recording_id = rv.recording_id");
+                builder.addTable("LEFT JOIN project_classes", "pc", "pc.species_id = rv.species_id AND pc.songtype_id = rv.songtype_id");
+                
+                builder.addConstraint('pc.project_class_id IN (?)', [parameters.validations]);
+                
+                if(parameters.presence && !(parameters.presence instanceof Array && parameters.presence.length >= 2)){
+                    builder.addConstraint('rv.present = ?', [parameters.presence == 'present' ? '1' : '0']);
+                }
+            }
+            
+            if(parameters.soundscape_composition) {
+                builder.addTable("LEFT JOIN recording_soundscape_composition_annotations", "RSCA", "r.recording_id = RSCA.recordingId");
+                builder.addConstraint('RSCA.scclassId IN (?)', [parameters.soundscape_composition]);
+                
+                if(parameters.soundscape_composition_annotation && !(parameters.soundscape_composition_annotation instanceof Array && parameters.soundscape_composition_annotation.length >= 2)){
+                    builder.addConstraint('RSCA.present = ?', [parameters.soundscape_composition_annotation == 'present' ? '1' : '0']);
+                }
+            }
+            
+            if(parameters.tags) {
+                builder.addTable("LEFT JOIN recording_tags", "RT", "r.recording_id = RT.recording_id");
+                builder.addConstraint('RT.tag_id IN (?)', [parameters.tags]);
+            }
+            
+            if(parameters.classifications) {
+                builder.addTable("LEFT JOIN classification_results", "CR", "r.recording_id = CR.recording_id");
+                builder.addTable("LEFT JOIN job_params_classification", "CRjp", "CRjp.job_id = CR.job_id");
+                builder.addTable("LEFT JOIN models", "CRm", "CRjp.model_id = CRm.model_id");
+                builder.addConstraint('CR.job_id IN (?)', [parameters.classifications]);
+                
+                if(parameters.classification_results) {
+                    if(!(parameters.classification_results instanceof Array)){
+                        parameters.classification_results = [parameters.classification_results];
+                    }
+                    var crflag = {
+                        'model':['CR.present = 0', 'CR.present = 1'],
+                        'th':['CR.max_vector_value < CRm.threshold', 'CR.max_vector_value >= CRm.threshold']
+                    };
+                    builder.addConstraint(
+                        '(('+ parameters.classification_results.map(function(cr){
+                            return Object.keys(cr).map(function(crk){
+                                return crflag[crk][1 * (!!cr[crk])];
+                            }).join(' AND ');
+                        }).join(') OR (') +'))'
+                    );
+                }
+            }
+            
+            builder.setOrderBy(parameters.sortBy || 'site', !parameters.sortRev);
+            
+            if(parameters.limit){
+                builder.setLimit(parameters.offset || 0, parameters.limit);
+            }
+            
+            return builder;
+        });
+    },
+    
+    exportRecordingData: function(projection, filters){
+        var builder;
+        
+        return Q.all([
+            this.buildSearchQuery(filters),
+            Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
+        ]).then(function(all){
+            builder = all[0];
+            var projection_parameters = all[1];
+            var promises=[];
+            
+            if(projection_parameters.recording){
+                var recParamMap = {
+                    'filename' : "SUBSTRING_INDEX(r.uri,'/',-1) as filename",
+                    'site' : 's.name as site',
+                    'time' : 'r.datetime as time',
+                    'recorder' : 'r.recorder',
+                    'microphone' : 'r.mic as microphone',
+                    'software' : 'r.version as software',
+                };
+                builder.addProjection.apply(builder, projection_parameters.recording.map(function(recParam){
+                    console.log("recParam", recParam, recParamMap[recParam]);
+                    return recParamMap[recParam];
+                }));
+            }
+            
+            if(projection_parameters.validation){
+                promises.push(models.projects.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(function(classes){
+                    classes.forEach(function(cls, idx){
+                        var clsid = "p_PVAL_" + idx;
+                        builder.addTable("LEFT JOIN recording_validations", clsid, 
+                            "r.recording_id = " + clsid + ".recording_id " +
+                            "AND " + clsid + ".songtype_id = ? " +
+                            "AND " + clsid + ".species_id = ? " +
+                            "AND " + clsid + ".project_id = ? ", [
+                            cls.songtype,
+                            cls.species,
+                            cls.project,
+                        ]);
+                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + mysql.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                    });
+                }));
+            }
+            if(projection_parameters.classification){
+                promises.push(models.classifications.getFor({id:projection_parameters.classification, showModel:true}).then(function(classifications){
+                    classifications.forEach(function(classification, idx){
+                        var clsid = "p_CR_" + idx;
+                        builder.addTable("LEFT JOIN classification_results", clsid, 
+                            "r.recording_id = " + clsid + ".recording_id " +
+                            "AND " + clsid + ".job_id = ?", [
+                            classification.job_id
+                        ]);
+                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + mysql.escapeId("cr<" + classification.cname + ">"));
+                        if(classification.threshold){
+                            builder.addProjection("IF(ISNULL("+clsid+".max_vector_value), '---', "+clsid+".max_vector_value > " + mysql.escape(classification.threshold) + ")  AS " + mysql.escapeId("cr<" + classification.cname + "> threshold (" + classification.threshold + ")"));
+                        }
+                    });
+                }));
+            }
+            if(projection_parameters.soundscapeComposition){
+                promises.push(models.SoundscapeComposition.getClassesFor({id:projection_parameters.soundscapeComposition}).then(function(classes){
+                    classes.forEach(function(cls, idx){
+                        var clsid = "p_SCC_" + idx;
+                        builder.addTable("LEFT JOIN recording_soundscape_composition_annotations", clsid, 
+                            "r.recording_id = " + clsid + ".recordingId " +
+                            "AND " + clsid + ".scclassId = ?", [
+                            cls.id
+                        ]);
+                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + mysql.escapeId("scc<" + cls.type + "/" + cls.name + ">"));
+                    });
+                }));
+            }
+            if(projection_parameters.tag){
+                promises.push(models.tags.getFor({id:projection_parameters.tag}).then(function(tags){
+                    tags.forEach(function(tag, idx){
+                        var prtid = "p_RT_" + idx;
+                        builder.addProjection("(SELECT COUNT(*) FROM recording_tags AS " + prtid + " WHERE r.recording_id = " + prtid + ".recording_id AND " + prtid + ".tag_id = " + mysql.escape(tag.id)+ "  ) AS " + mysql.escapeId("tag<" + tag.tag + ">"));
+                    });
+                }));
+            }
+            
+            return Q.all(promises);
+        }).then(function(){            
+            return dbpool.streamQuery({
+                sql: builder.getSQL(),
+                typeCast: sqlutil.parseUtcDatetime,
+            });
         });
     },
     

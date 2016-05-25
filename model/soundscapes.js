@@ -3,6 +3,7 @@ var mysql        = require('mysql');
 var AWS          = require('aws-sdk');
 var async        = require('async');
 var joi          = require('joi');
+var q          = require('q');
 var child_process = require('child_process');
 var scidx        = require('../utils/scidx');
 var sqlutil      = require('../utils/sqlutil');
@@ -103,7 +104,7 @@ var Soundscapes = {
      */
     fetchSCIDXFile: function(soundscape, callback){
         var scidx_uri = "project_"+(soundscape.project|0)+"/soundscapes/"+(soundscape.id|0)+"/index.scidx";
-        tmpfilecache.fetch(scidx_uri, function(cache_miss){
+        return q.ninvoke(tmpfilecache, 'fetch', scidx_uri, function(cache_miss){
             if(!s3){
                 s3 = new AWS.S3();
             }
@@ -111,10 +112,10 @@ var Soundscapes = {
                 Bucket : config('aws').bucketName,
                 Key    : scidx_uri
             }, function(err, data){
-                if(err) { callback(err); return; }
+                if(err) { cache_miss.deferred.reject(err); return; }
                 cache_miss.set_file_data(data.Body);
             });
-        }, callback);
+        }).nodeify(callback);
     },
     
     /** Fetches and reads the soundscape index file.
@@ -123,11 +124,10 @@ var Soundscapes = {
      * @param {Function} callback     called back with the index file.
      */
     fetchSCIDX : function(soundscape, filters, callback){
-        Soundscapes.fetchSCIDXFile(soundscape, function(err, scidx_path){
-            if(err) { callback(err); return; }
+        return Soundscapes.fetchSCIDXFile(soundscape).then(function(scidx_path){
             var idx = new scidx();
-            idx.read(scidx_path.path, filters, callback);
-        });                
+            return q.ninvoke(idx, 'read', scidx_path.path, filters);
+        }).nodeify(callback);
     },
 
 
@@ -172,7 +172,7 @@ var Soundscapes = {
             return 'DATE_FORMAT(R.datetime, "'+datepart+'")';
         });
         
-        queryHandler(
+        return dbpool.query(
             "SELECT " + dateparts.map(function(dp, i){
                 return dp + " as dp_"+i;
             }).join(", ") + ", COUNT(*) as count\n" +
@@ -180,18 +180,18 @@ var Soundscapes = {
             "JOIN `playlist_recordings` PR ON S.playlist_id = PR.playlist_id\n" +
             "JOIN `recordings` R ON R.recording_id = PR.recording_id\n" +
             "WHERE S.soundscape_id = " + mysql.escape(soundscape.id) + "\n" +
-            "GROUP BY " + dateparts.join(", "), function(err, rows){
-                if(err){ callback(err); return; }
-                var normvec = {};
-                rows.forEach(function(row){
-                    var date=0;
-                    for(var i=0; i < proylen; ++i){
-                        date += proy[i] * row['dp_' + i];
-                    }
-                    normvec[date] = row.count;
-                });
-                callback(null, normvec);
-        });
+            "GROUP BY " + dateparts.join(", ")
+        ).then(function(rows){
+            var normvec = {};
+            rows.forEach(function(row){
+                var date=0;
+                for(var i=0; i < proylen; ++i){
+                    date += proy[i] * row['dp_' + i];
+                }
+                normvec[date] = row.count;
+            });
+            return normvec;
+        }).nodeify(callback);
     },
 
     region_schema : joi.object().keys({

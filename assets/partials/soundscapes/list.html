@@ -32,14 +32,26 @@
                         {{soundscape.playlist}}
                     </td>
                     <td>
-                        <a class="btn btn-default btn-xs" ng-href="#/visualizer/soundscape/{{soundscape.soundscape_id}}"
+                        <a class="btn btn-default btn-xs" ui-sref="visualizer.view({type:'soundscape', idA:soundscape.soundscape_id})"
                         ><i class="fa fa-cubes"></i> View</a>
 
                         <button class="btn btn-default btn-xs" ng-click="showDetails(soundscape.soundscape_id) | trackEvent:'Analysis-Soundscapes-List':' show soundscapes details'"
                         ><i class="fa fa-list-alt"></i> Show details</button>
 
-                        <button class="btn btn-default btn-xs" ng-click="exportSoundscape(soundscape.soundscape_id) | trackEvent:'Analysis-Soundscapes list':'export soundscape'"
-                        ><i class="fa fa-download"></i> Export</button>
+                        <span class="btn-group" dropdown dropdown-append-to-body="true">
+                            <button class="btn btn-default btn-xs" 
+                                ng-click="controller.exportSoundscape({soundscape:soundscape}) | trackEvent:'Analysis-Soundscapes list':'export soundscape'"
+                            ><i class="fa fa-download"></i> Export</button>
+                            <button class="btn btn-default btn-xs" dropdown-toggle><i class="fa fa-caret-down"></i></button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a ng-click="controller.exportSoundscape({soundscape:soundscape}) | trackEvent:'Analysis-Soundscapes list':'export soundscape'">
+                                    Export Matrix
+                                </a></li>
+                                <li><a ng-click="controller.exportSoundscape({soundscape:soundscape, raw:true}) | trackEvent:'Analysis-Soundscapes list':'export soundscape raw'">
+                                    Export Raw Data
+                                </a></li>
+                            </ul>
+                        </span>
                         
                         <button class="btn btn-default btn-xs" ng-click="deleteSoundscape(soundscape.soundscape_id,soundscape.name) | trackEvent:'Analysis-Soundscapes list':'delete soundscape'"
                         ><i class="fa fa-trash"></i> Delete</button>

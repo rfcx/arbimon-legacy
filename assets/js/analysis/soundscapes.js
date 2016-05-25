@@ -266,13 +266,13 @@
         };
 
 
-        $scope.exportSoundscape = function(soundscape_id) {
+        this.exportSoundscape = function(options) {
             if(!a2UserPermit.can('manage soundscapes')) {
                 notify.log('You do not have permission to export soundscapes data');
                 return;
             }
             
-            a2Soundscapes.getExportUrl(soundscape_id).then(function(export_url){
+            a2Soundscapes.getExportUrl(options).then(function(export_url){
                 var a = $('<a></a>').attr('target', '_blank').attr('href', export_url).appendTo('body');
                 $window.setTimeout(function(){
                     a[0].click();

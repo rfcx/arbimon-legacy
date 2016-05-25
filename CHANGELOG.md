@@ -51,3 +51,7 @@
     - fixed upload bug.
 - v1.5.0
     - Added access token support and primary routes for uploading using access tokens.
+- v1.6.0
+    - Added soundscape composition tool
+    - Soundscapes are now exported as raw data (previous export format) and the matrix as a csv (new default).
+    - Recording-associated data can now be exported to a csv file.
