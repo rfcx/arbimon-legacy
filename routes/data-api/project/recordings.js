@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var AWS = require('aws-sdk');
+var csv_stringify = require("csv-stringify");
 
 var model = require('../../../model');
 
@@ -35,6 +36,38 @@ router.get('/search', function(req, res, next) {
         res.json(rows);
     });
 });
+
+router.get('/recordings-export.csv', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+    var filters = req.query.filters || {};
+    filters.project_id = req.project.project_id | 0;
+    console.log(JSON.stringify(filters));
+    var projection = req.query.show;
+    
+    model.recordings.exportRecordingData(projection, filters).then(function(results) {
+        var datastream = results[0];
+        var fields = results[1].map(function(f){return f.name;});
+        var colOrder={filename:-3,site:-2,time:-1};        
+        fields.sort(function(a, b){
+            var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
+            return ca < cb ? -1 : (
+                   ca > cb ?  1 : (
+                    a <  b ? -1 : (
+                    a >  b ?  1 :
+                    0
+            )));
+        });
+
+        datastream
+            .pipe(csv_stringify({header:true, columns:fields}))
+            .pipe(res);
+    }).catch(next);
+});
+
 
 router.get('/count', function(req, res, next) {
     model.projects.totalRecordings(req.project.project_id, function(err, rows) {
