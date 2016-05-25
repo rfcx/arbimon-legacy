@@ -12,13 +12,14 @@ angular.module('a2.srv.soundscape-composition', [
             return a2APIService.get('/soundscape-composition/classes', {params:params}).then(function(classList){
                 if(options.groupByType){
                     return classList.reduce(function(_, item){
-                        if(!_.index[item.type]){
-                            _.list.push(_.index[item.type] = {
+                        if(!_.index[item.typeId]){
+                            _.list.push(_.index[item.typeId] = {
                                 type: item.type,
+                                typeId: item.typeId,
                                 list: []
                             });
                         }
-                        _.index[item.type].list.push(item);
+                        _.index[item.typeId].list.push(item);
                         return _;
                     }, {list:[], index:{}}).list;
                 } else {
