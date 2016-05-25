@@ -42,6 +42,55 @@ var SoundscapeComposition = {
         );
     },
     
+    addClass: function(name, type, project){
+        var scClass;
+        return dbpool.query(
+            "SELECT SCC.id\n"+
+            "FROM soundscape_composition_classes SCC\n"+
+            "WHERE SCC.name=?", [
+                name
+        ]).get(0).then(function(foundClass){
+            if(foundClass){
+                return foundClass.id;
+            } else {
+                return dbpool.query(
+                    "INSERT INTO soundscape_composition_classes(typeId, name, isSystemClass)\n"+
+                    "VALUES (?, ?, 0)",[
+                    type, name
+                ]).get('insertId');
+            }            
+        }).then(function(scClassId){
+            return SoundscapeComposition.getClassesFor({id:scClassId}).get(0);
+        }).then(function(_scClass){
+            scClass = _scClass;
+            console.log("scClass", scClass);
+        }).then(function(){
+            if(!scClass.isSystemClass){
+                return dbpool.query(
+                    "INSERT INTO project_soundscape_composition_classes(projectId, scclassId, `order`)\n"+
+                    "VALUES (?, ?, ?)",[
+                        project, scClass.id, 0
+                    ]).catch(function(err){
+                        if(err.code == 'ER_DUP_ENTRY'){
+                            throw new APIError("Soundscape composition class already in project.");
+                        } else {
+                            throw err;
+                        }
+                    });
+            }
+        }).then(function(_scClass){
+            return scClass;
+        });
+    },
+        
+    removeClassFrom: function(scClassId, project){
+        return dbpool.query(
+            "DELETE FROM project_soundscape_composition_classes\n"+
+            "WHERE projectId = ? AND scclassId = ?",[
+                project, scClassId
+            ]);
+    },
+    
     getAnnotationsFor: function(options){
         options = options || {};
         return dbpool.query(
