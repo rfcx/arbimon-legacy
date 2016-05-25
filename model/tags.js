@@ -79,6 +79,29 @@ var tags = {
     },
         
     /** Searches for tags matching the given query.
+     *  @param {Object} options - options object.
+     *  @param {Object} options.id - tag ids to match
+     *  @returns {Promise} Promise resolving to matching tags, or rejecting if 
+     *     any error occurred.
+     */
+    getFor: function(options){
+        options = options || {};
+        var where = [], data = [];
+        
+        if(options.id){
+            where.push("T.tag_id IN (?)");
+            data.push(options.id);
+        }
+        
+        return q.ninvoke(dbpool, 'queryHandler', 
+            "SELECT T.tag_id, T.tag, 'tag' as type\n" +
+            "FROM tags T\n" +
+            (where.length ? "WHERE (" + where.join(") AND (") + ")" : ""),
+            data
+        ).get(0);
+    },
+        
+    /** Searches for tags matching the given query.
      *  @param {Object} query - query object.
      *  @param {Object} query.q - text to match.
      *  @param {Object} query.offset - offset of results.
