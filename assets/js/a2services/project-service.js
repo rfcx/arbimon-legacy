@@ -1,5 +1,5 @@
 angular.module('a2.srv.project', [])
-.factory('Project', function($location, $http, $q) {
+.factory('Project', function($location, $http, $q, $httpParamSerializer) {
         
         var nameRe = /\/?project\/([\w\_\-]+)/;
         var nrm = nameRe.exec($location.absUrl());
@@ -61,6 +61,19 @@ angular.module('a2.srv.project', [])
                     .success(function(data) {
                         callback(data);
                     });
+            },
+            getRecordingDataUrl: function(filters, projection){
+                var params={filters:filters, show:projection};
+                
+                Object.keys(params).forEach(function(param){
+                    if(!Object.keys(params[param] || {}).length){
+                        delete params[param];
+                    }
+                });
+                
+                var serializedParams = $httpParamSerializer(params);
+                
+                return '/api/project/'+url+'/recordings/recordings-export.csv' + (serializedParams.length ? '?'+serializedParams : '');
             },
             getRecTotalQty: function(callback) {
                 $http.get('/api/project/'+url+'/recordings/count')
