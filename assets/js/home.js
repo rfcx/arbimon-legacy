@@ -24,9 +24,28 @@ angular.module('a2.home', [
     a2NewsService,
     notify, a2order
 ) {
-    
+    function getProjectSelectCache(){
+        try{
+            return JSON.parse($localStorage.getItem('home.project.select.cache')) || {};
+        } catch(e){
+            return {};
+        }
+    }
+
+    function setProjectSelectCache(psCache){
+        try{
+            $localStorage.setItem('home.project.select.cache', JSON.stringify(psCache));
+        } catch(e){
+            // meh..
+        }
+    }
+        
     this.loadProjectList = function() {
+        var psCache = getProjectSelectCache();
         $http.get('/api/user/projectlist').success((function(data) {
+            data.forEach(function(p, $index){
+                p.lastAccessed = psCache[p.id] || 0;
+            });
             this.projects = data;
         }).bind(this));
     };
@@ -50,8 +69,45 @@ angular.module('a2.home', [
     };
 
     this.selectProject = function(project) {
+        var psCache = getProjectSelectCache();
+        psCache[project.id] = new Date().getTime();
+        setProjectSelectCache(psCache);
         $window.location.assign("/project/" + project.url + "/");
     };
+
+    this.sortProjects = function(sortingKey){
+        console.log("sortProjects", sortingKey);
+        var sorting = projectSorts[sortingKey];
+        if(!sorting){
+            if(this.projectSort.type == sortingKey){
+                if(projectSorts[this.projectSort.toggle]){
+                    sorting = projectSorts[this.projectSort.toggle];
+                }
+            } else if(projectSorts[sortingKey + '-down']){
+                sorting = projectSorts[sortingKey + '-down'];
+            }
+        }
+        this.projectSort = sorting || projectSorts.default;
+    };
+
+    
+    var projectSorts = [
+        {key:'alpha-down', sort:'+name'},
+        {key:'alpha-up', sort:'-name'},
+        {key:'history-down', sort:['-lastAccessed', '+name'], default:true},
+        {key:'history-up', sort:['+lastAccessed', '+name']}
+    ].reduce(function(_, sorting){
+        var m = /(\w+)-(\w+)/.exec(sorting.key);
+        sorting.type = m[1];
+        sorting.toggle = m[1] + '-' + (m[2] == 'up' ? 'down' : 'up');
+        _[sorting.key] = sorting;
+        if(sorting.default){
+            _.default = sorting;
+        }
+        return _;
+    }, {});
+    
+    this.projectSort = projectSorts['history-down'];
     
     
     this.currentPage = 1;
