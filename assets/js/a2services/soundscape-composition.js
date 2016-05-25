@@ -27,6 +27,16 @@ angular.module('a2.srv.soundscape-composition', [
                 }
             });
         },
+        addClass: function(name, typeId){
+            return a2APIService.post('/soundscape-composition/add-class', {
+                name: name, type:typeId
+            });
+        },
+        removeClass: function(scClassid){
+            return a2APIService.post('/soundscape-composition/remove-class', {
+                id: scClassid
+            });
+        },
         getAnnotationsFor: function(visobject){
             if(visobject && /^recording$/.test(visobject.type)){
                 return a2APIService.get('/soundscape-composition/annotations/' + (visobject.id|0));
