@@ -1,11 +1,9 @@
 <div class="layer">
-    <h5 class="collapse-title"  ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Soundscape-Composition':'toggle layer'"
-    ng-init="layer.is_open = true"
-    >
+    <h5 class="collapse-title"  ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Soundscape-Composition':'toggle layer'">
         <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
         Soundscape Composition
     </h5>
-    <div class="content">
+    <div class="content" ng-show="layer.is_open">
         <accordion close-others="false" class="accordion-group">
             <accordion-group is-open="classType.open" ng-repeat="classType in layer.controller.classTypes" class="accordion-table">
                 <accordion-heading>
