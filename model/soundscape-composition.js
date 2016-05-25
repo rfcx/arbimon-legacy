@@ -14,19 +14,25 @@ var SoundscapeComposition = {
         var tables = [
             "soundscape_composition_classes SCC",
             "JOIN soundscape_composition_class_types SCCT ON SCC.typeId = SCCT.id",
-        ], where = [], data = [];
+        ], where = [], data = [], order = ["SCC.typeId, SCC.isSystemClass"];
         
         if(options.project){
             tables.push("LEFT JOIN project_soundscape_composition_classes PSCC ON PSCC.scclassId = SCC.id");
             where.push("PSCC.projectId = ? OR (PSCC.projectId IS NULL AND SCC.isSystemClass)");
             data.push(options.project);
+            order.push("PSCC.`order`");
+        }
+
+        if(options.id){
+            where.push("SCC.id IN (?)");
+            data.push(options.id);
         }
         
         return dbpool.query(
             "SELECT SCC.id, SCC.name, SCC.isSystemClass as system, SCCT.type\n" +
             "FROM " + tables.join("\n") + "\n" +
             (where.length ? "WHERE (" + where.join(")\n AND (") + ")\n" : "") +
-            "ORDER BY SCC.typeId, SCC.isSystemClass, PSCC.`order`",
+            "ORDER BY " + order.join(", "),
             data
         );
     },
