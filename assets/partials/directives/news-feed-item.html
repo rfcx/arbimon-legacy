@@ -1,4 +1,4 @@
-<div class="pull-right" title="{{ news.timestamp | moment:'lll' }}">{{ news.timestamp | timeFromNow }}</div>
+<div class="last-accessed pull-right" title="{{ news.timestamp | moment:'lll' }}">{{ news.timestamp | timeFromNow }}</div>
 <div>
     <img class="user-avatar" ng-src="{{ news.imageUrl }}" alt="user avatar">
     <strong>{{ news.username }}</strong>
