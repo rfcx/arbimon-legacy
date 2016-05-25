@@ -15,7 +15,7 @@ var SoundscapeComposition = {
         var tables = [
             "soundscape_composition_classes SCC",
             "JOIN soundscape_composition_class_types SCCT ON SCC.typeId = SCCT.id",
-        ], where = [], data = [], order = ["SCC.typeId, SCC.isSystemClass"];
+        ], where = [], data = [], order = ["SCC.typeId, SCC.isSystemClass DESC"];
         
         if(options.tally){
             select.push("(SELECT COUNT(*) FROM recording_soundscape_composition_annotations RSCA WHERE RSCA.scclassId = SCC.id) as tally");
