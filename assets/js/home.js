@@ -9,6 +9,7 @@ angular.module('a2.home', [
     'humane',
     'angularytics', 
     'a2.srv.local-storage',
+    'a2.filter.time-from-now',
     'a2.directive.news-feed-item',
 ])
 .config(function(AngularyticsProvider) {
