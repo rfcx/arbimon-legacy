@@ -5,7 +5,11 @@ angular.module('a2.srv.soundscape-composition', [
     return {
         getClassList: function(options){
             options = options || {};
-            return a2APIService.get('/soundscape-composition/classes').then(function(classList){
+            var params = {};
+            if(options.tally){
+                params.tally=1;
+            }
+            return a2APIService.get('/soundscape-composition/classes', {params:params}).then(function(classList){
                 if(options.groupByType){
                     return classList.reduce(function(_, item){
                         if(!_.index[item.type]){
