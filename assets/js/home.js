@@ -8,6 +8,7 @@ angular.module('a2.home', [
     'a2.srv.news',
     'humane',
     'angularytics', 
+    'a2.srv.local-storage',
     'a2.directive.news-feed-item',
 ])
 .config(function(AngularyticsProvider) {
@@ -17,50 +18,108 @@ angular.module('a2.home', [
     Angularytics.init();
 })
 .controller('HomeCtrl', function(
-    $scope, $http, $modal, 
+    $http, $modal, 
+    $window,
+    $localStorage,
     a2NewsService,
     notify, a2order
 ) {
+    function getProjectSelectCache(){
+        try{
+            return JSON.parse($localStorage.getItem('home.project.select.cache')) || {};
+        } catch(e){
+            return {};
+        }
+    }
+
+    function setProjectSelectCache(psCache){
+        try{
+            $localStorage.setItem('home.project.select.cache', JSON.stringify(psCache));
+        } catch(e){
+            // meh..
+        }
+    }
+        
+    this.loadProjectList = function() {
+        var psCache = getProjectSelectCache();
+        $http.get('/api/user/projectlist').success((function(data) {
+            data.forEach(function(p, $index){
+                p.lastAccessed = psCache[p.id] || 0;
+            });
+            this.projects = data;
+        }).bind(this));
+    };
     
-    $scope.loadProjectList = function() {
-        $http.get('/api/user/projectlist')
-        .success(function(data) {
-            $scope.projects = data;
-        });
-    };
-    $scope.loadNewsPage = function() {
-        a2NewsService.loadPage(nextNewsPage).then(function(data) {
-            $scope.newsFeed = $scope.newsFeed.concat(data);
+    this.loadNewsPage = function() {
+        a2NewsService.loadPage(nextNewsPage).then((function(data) {
+            this.newsFeed = this.newsFeed.concat(data);
             nextNewsPage++;
-        });
-    };
-    $scope.displayTime = function(d) {
-        return moment(d).fromNow();
+        }).bind(this));
     };
         
-    $scope.createProject = function() {
+    this.createProject = function() {
         var modalInstance = a2order.createProject({});
         
-        modalInstance.result.then(function(message) {
+        modalInstance.result.then((function(message) {
             if(message){
                 notify.log(message);
             }
-            $scope.loadProjectList();
-        });
+            this.loadProjectList();
+        }).bind(this));
     };
+
+    this.selectProject = function(project) {
+        var psCache = getProjectSelectCache();
+        psCache[project.id] = new Date().getTime();
+        setProjectSelectCache(psCache);
+        $window.location.assign("/project/" + project.url + "/");
+    };
+
+    this.sortProjects = function(sortingKey){
+        console.log("sortProjects", sortingKey);
+        var sorting = projectSorts[sortingKey];
+        if(!sorting){
+            if(this.projectSort.type == sortingKey){
+                if(projectSorts[this.projectSort.toggle]){
+                    sorting = projectSorts[this.projectSort.toggle];
+                }
+            } else if(projectSorts[sortingKey + '-down']){
+                sorting = projectSorts[sortingKey + '-down'];
+            }
+        }
+        this.projectSort = sorting || projectSorts.default;
+    };
+
+    
+    var projectSorts = [
+        {key:'alpha-down', sort:'+name'},
+        {key:'alpha-up', sort:'-name'},
+        {key:'history-down', sort:['-lastAccessed', '+name'], default:true},
+        {key:'history-up', sort:['+lastAccessed', '+name']}
+    ].reduce(function(_, sorting){
+        var m = /(\w+)-(\w+)/.exec(sorting.key);
+        sorting.type = m[1];
+        sorting.toggle = m[1] + '-' + (m[2] == 'up' ? 'down' : 'up');
+        _[sorting.key] = sorting;
+        if(sorting.default){
+            _.default = sorting;
+        }
+        return _;
+    }, {});
+    
+    this.projectSort = projectSorts['history-down'];
     
     
-    $scope.currentPage = 1;
-    $scope.isAnonymousGuest = true;
+    this.currentPage = 1;
+    this.isAnonymousGuest = true;
     var nextNewsPage = 0;
-    $scope.newsFeed = [];
-    $scope.loadProjectList();
-    $scope.loadNewsPage();
+    this.newsFeed = [];
+    this.loadProjectList();
+    this.loadNewsPage();
     
-    $http.get('/api/user/info')
-        .success(function(data) {
-            $scope.isAnonymousGuest = data.isAnonymousGuest;
-        });
+    $http.get('/api/user/info').success((function(data) {
+        this.isAnonymousGuest = data.isAnonymousGuest;
+    }).bind(this));
 })
 
 ;
