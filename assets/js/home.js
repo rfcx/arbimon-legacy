@@ -17,50 +17,51 @@ angular.module('a2.home', [
     Angularytics.init();
 })
 .controller('HomeCtrl', function(
-    $scope, $http, $modal, 
+    $http, $modal, 
+    $window,
     a2NewsService,
     notify, a2order
 ) {
     
-    $scope.loadProjectList = function() {
-        $http.get('/api/user/projectlist')
-        .success(function(data) {
-            $scope.projects = data;
-        });
+    this.loadProjectList = function() {
+        $http.get('/api/user/projectlist').success((function(data) {
+            this.projects = data;
+        }).bind(this));
     };
-    $scope.loadNewsPage = function() {
-        a2NewsService.loadPage(nextNewsPage).then(function(data) {
-            $scope.newsFeed = $scope.newsFeed.concat(data);
+    
+    this.loadNewsPage = function() {
+        a2NewsService.loadPage(nextNewsPage).then((function(data) {
+            this.newsFeed = this.newsFeed.concat(data);
             nextNewsPage++;
-        });
-    };
-    $scope.displayTime = function(d) {
-        return moment(d).fromNow();
+        }).bind(this));
     };
         
-    $scope.createProject = function() {
+    this.createProject = function() {
         var modalInstance = a2order.createProject({});
         
-        modalInstance.result.then(function(message) {
+        modalInstance.result.then((function(message) {
             if(message){
                 notify.log(message);
             }
-            $scope.loadProjectList();
-        });
+            this.loadProjectList();
+        }).bind(this));
+    };
+
+    this.selectProject = function(project) {
+        $window.location.assign("/project/" + project.url + "/");
     };
     
     
-    $scope.currentPage = 1;
-    $scope.isAnonymousGuest = true;
+    this.currentPage = 1;
+    this.isAnonymousGuest = true;
     var nextNewsPage = 0;
-    $scope.newsFeed = [];
-    $scope.loadProjectList();
-    $scope.loadNewsPage();
+    this.newsFeed = [];
+    this.loadProjectList();
+    this.loadNewsPage();
     
-    $http.get('/api/user/info')
-        .success(function(data) {
-            $scope.isAnonymousGuest = data.isAnonymousGuest;
-        });
+    $http.get('/api/user/info').success((function(data) {
+        this.isAnonymousGuest = data.isAnonymousGuest;
+    }).bind(this));
 })
 
 ;
