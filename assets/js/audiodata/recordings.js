@@ -1,12 +1,19 @@
 angular.module('a2.audiodata.recordings', [
     'a2.directive.a2-auto-close-on-outside-click',
+    'a2.service.download-resource',
     'a2.audiodata.recordings.data-export-parameters',
     'a2.services', 
     'a2.directives', 
     'ui.bootstrap',
     'humane'
 ])
-.controller('RecsCtrl', function($scope, Project, a2Classi, $http, $modal, notify, a2UserPermit, $window) {
+.controller('RecsCtrl', function(
+    $scope, 
+    Project, 
+    a2Classi, $http, $modal, notify, a2UserPermit, 
+    $downloadResource,
+    $window
+) {
     
     this.getSearchParameters = function(output){
         var params = angular.merge({}, $scope.params);
@@ -156,6 +163,9 @@ angular.module('a2.audiodata.recordings', [
         $scope.limitPerPage = limitPerPage;
         this.searchRecs();
     };
+    
+    this.exportRecordings = function(parameters){
+        $downloadResource(Project.getRecordingDataUrl($scope.params, parameters));
     };
     
 })
