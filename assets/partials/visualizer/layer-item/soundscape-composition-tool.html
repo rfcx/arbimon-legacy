@@ -3,7 +3,7 @@
         <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
         Soundscape Composition
     </h5>
-    <div class="content" ng-if="layer.is_open">
+    <div class="content" ng-show="layer.is_open">
         <accordion close-others="false" class="accordion-group">
             <accordion-group is-open="classType.open" ng-repeat="classType in layer.controller.classTypes" class="accordion-table">
                 <accordion-heading>
