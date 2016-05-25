@@ -8,6 +8,7 @@ angular.module('a2.home', [
     'a2.srv.news',
     'humane',
     'angularytics', 
+    'a2.srv.local-storage',
     'a2.directive.news-feed-item',
 ])
 .config(function(AngularyticsProvider) {
@@ -19,6 +20,7 @@ angular.module('a2.home', [
 .controller('HomeCtrl', function(
     $http, $modal, 
     $window,
+    $localStorage,
     a2NewsService,
     notify, a2order
 ) {
