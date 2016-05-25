@@ -383,6 +383,7 @@ var Projects = {
         var params = [projectId];
         var select_clause = [
             "pc.project_class_id as id",
+            "pc.project_id as project",
             "pc.species_id as species",
             "pc.songtype_id as songtype",
             "st.taxon",
@@ -398,9 +399,17 @@ var Projects = {
         var where_clause = ['pc.project_id = ?'];
         var groupby_clause = [];
         
+        
         if(classId) {
             where_clause.push("pc.project_class_id = ?");
             params.push(classId);
+        } else if(options.ids){
+            if(options.noProject){
+                params = [];
+                where_clause = [];
+            }
+            where_clause.push("pc.project_class_id IN (?)");
+            params.push(options.ids);
         }
 
         if(options && options.countValidations) {
