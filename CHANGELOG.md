@@ -55,3 +55,5 @@
     - Added soundscape composition tool
     - Soundscapes are now exported as raw data (previous export format) and the matrix as a csv (new default).
     - Recording-associated data can now be exported to a csv file.
+- v1.6.0
+    - Fixed deleting recordings in audiodata bug

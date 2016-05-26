@@ -119,7 +119,7 @@ angular.module('a2.audiodata.recordings', [
         
         var messages = [];
         messages.push("You are about to delete: ");
-        messages.push.apply(message, Object.keys(recCount).map(function(site) {
+        messages.push.apply(messages, Object.keys(recCount).map(function(site) {
             var s = recCount[site] > 1 ? 's' : '';            
             return recCount[site] + ' recording'+s+' from "' + site + '"';
         }));
