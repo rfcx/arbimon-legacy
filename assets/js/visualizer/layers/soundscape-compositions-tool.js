@@ -51,50 +51,28 @@ angular.module('a2.visualizer.layer.soundscape-composition-tool', [
             }, {});
         }).bind(this));
         
-        this.is_selected = {};
         this.annotations = {};
-    };
-    
-    this.select = function(classType, cls, $event) {
-        if($($event.target).is('a, button, button *')){
-            return;
-        }
+
+        this.annotationToolbar = [
+            [
+                {value:1, caption:"Annotate as Present"},
+                {value:0, caption:"Annotate as Absent"},
+            ],
+            [
+                {value:2, caption:"Clear Annotation"},
+            ]
+        ];
         
-        if($event.shiftKey){
-            this.is_selected[cls.id] = true;
-            
-            var sel_range = this.classesByType[classType.type].list.reduce((function(_, pc, idx){
-                if(this.is_selected[pc.id]){
-                    _.from = Math.min(_.from, idx);
-                    _.to   = Math.max(_.to  , idx);
-                }
-                return _;
-            }).bind(this), {
-                from: Infinity, 
-                to: -Infinity,
-            });
-            
-            var classTypes = this.classesByType[classType.type].list;
-            for(var si = sel_range.from, se = sel_range.to + 1; si < se; ++si){
-                this.is_selected[classTypes[si].id] = true;
-            }
-        } else if($event.ctrlKey){
-            this.is_selected[cls.id] = !this.is_selected[cls.id];
-        } else {
-            this.is_selected = {};
-            this.is_selected[cls.id] = true;
-        }
+
     };
     
-    this.annotate = function(val) {
+    this.annotate = function(val, classId) {
         if(!a2UserPermit.can('validate species')) {
             notify.log('You do not have permission to add soundscape composition annotations.');
             return;
         }
         
-        var keys = Object.keys(this.is_selected).filter((function(class_id){
-            return this.is_selected[class_id];
-        }).bind(this));
+        var keys = [classId];
 
         if (keys.length > 0) {
             a2SoundscapeCompositionService.annotate(this.visobject, {

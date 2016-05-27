@@ -5,21 +5,36 @@ angular.module('a2.srv.soundscape-composition', [
     return {
         getClassList: function(options){
             options = options || {};
-            return a2APIService.get('/soundscape-composition/classes').then(function(classList){
+            var params = {};
+            if(options.tally){
+                params.tally=1;
+            }
+            return a2APIService.get('/soundscape-composition/classes', {params:params}).then(function(classList){
                 if(options.groupByType){
                     return classList.reduce(function(_, item){
-                        if(!_.index[item.type]){
-                            _.list.push(_.index[item.type] = {
+                        if(!_.index[item.typeId]){
+                            _.list.push(_.index[item.typeId] = {
                                 type: item.type,
+                                typeId: item.typeId,
                                 list: []
                             });
                         }
-                        _.index[item.type].list.push(item);
+                        _.index[item.typeId].list.push(item);
                         return _;
                     }, {list:[], index:{}}).list;
                 } else {
                     return classList;
                 }
+            });
+        },
+        addClass: function(name, typeId){
+            return a2APIService.post('/soundscape-composition/add-class', {
+                name: name, type:typeId
+            });
+        },
+        removeClass: function(scClassid){
+            return a2APIService.post('/soundscape-composition/remove-class', {
+                id: scClassid
             });
         },
         getAnnotationsFor: function(visobject){

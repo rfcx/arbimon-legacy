@@ -5,9 +5,43 @@ var model = require('../../../model');
 
 router.get('/classes', function(req, res, next){
     model.SoundscapeComposition.getClassesFor({
-        project: req.project.project_id
+        project: req.project.project_id,
+        tally: !!req.query.tally,
     }).then(function(classes){
         res.json(classes);
+    }).catch(next);
+});
+
+router.post('/add-class', function(req, res, next) {
+    res.type('json');
+
+    if(!req.haveAccess(req.project.project_id, "manage project species")) {
+        next(new APIError("You don't have permission to 'add soundscape composition classes'"));
+        return;
+    }
+    
+    model.SoundscapeComposition.addClass(
+        req.body.name,
+        req.body.type,
+        req.project.project_id
+    ).then(function(new_class){
+        res.json(new_class);
+    }).catch(next);
+});
+
+router.post('/remove-class', function(req, res, next) {
+    res.type('json');
+    
+    if(!req.haveAccess(req.project.project_id, "manage project species")) {
+        next(new APIError("You don't have permission to 'remove soundscape composition classes'"));
+        return;
+    }
+    
+    model.SoundscapeComposition.removeClassFrom(
+        req.body.id,
+        req.project.project_id
+    ).then(function(){
+        res.json({result:'success'});
     }).catch(next);
 });
 

@@ -531,6 +531,16 @@
     color: @brand-danger;
 }
 
+.btn.btn-fade-inactive:not(.active) {
+    .fa.val-1, .fa.a2-present{
+        color: lighten(@brand-success, 25%);
+    }
+
+    .fa.val-0, .fa.a2-absent{
+        color: lighten(@brand-danger, 25%);
+    }
+}
+
 
 .control-point{
     position:absolute;

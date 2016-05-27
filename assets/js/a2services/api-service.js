@@ -9,8 +9,8 @@ angular.module('a2.srv.api', [])
     }
     
     a2APIServiceClass.prototype = {
-        get : function(apiRoute){
-            return $q.when($http.get(this.prefix + apiRoute)).then(returnData);
+        get : function(apiRoute, params){
+            return $q.when($http.get(this.prefix + apiRoute, params)).then(returnData);
         },
         post : function(apiRoute, data){
             return $q.when($http.post(this.prefix + apiRoute, data)).then(returnData);

@@ -57,3 +57,7 @@
     - Recording-associated data can now be exported to a csv file.
 - v1.6.0
     - Fixed deleting recordings in audiodata bug
+- v1.7.0
+    - Changed layout in soundscape composition tool
+    - Fixed Soundscape export not setting content disposition header
+    - Soundscape matrix is now promisified, no longer runs uninterrupted.
