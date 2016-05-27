@@ -196,7 +196,7 @@ router.get('/:soundscape/export-list', function(req, res, next) {
             }
             matrix.push(row);
         }
-        // res.setHeader('Content-disposition', 'attachment; filename='+filename);
+        res.setHeader('Content-disposition', 'attachment; filename='+filename);
         
         var recdata={};
         var threshold = soundscape.threshold;
