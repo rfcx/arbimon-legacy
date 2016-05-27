@@ -196,28 +196,25 @@ router.get('/:soundscape/export-list', function(req, res, next) {
             }
             matrix.push(row);
         }
-        // res.setHeader('Content-disposition', 'attachment; filename='+filename);
+        res.setHeader('Content-disposition', 'attachment; filename='+filename);
         
         var recdata={};
         var threshold = soundscape.threshold;
-        Object.keys(scidx.index).forEach(function(freq_bin){
+        return q.all(Object.keys(scidx.index).map(function(freq_bin){
             var row = scidx.index[freq_bin];
             var freq = freq_bin * soundscape.bin_size;
-            Object.keys(row).forEach(function(time){
+            return q.all(Object.keys(row).map(function(time){
                 var recs = row[time][0];
                 var amps = row[time][1];
-                var c_idxs=[]; for(var ri=0,re=recs.length; ri<re;++ri){ c_idxs.push(ri); }
-                c_idxs.forEach(function(c_idx){
-                    var rec_idx = recs[c_idx];
+                return q.all(recs.map(function(rec_idx, c_idx){
                     var amp = amps && amps[c_idx];
                     if(!threshold || (amp && threshold <= amp)){
                         matrix[freq_bin - scidx.offsety][time - scidx.offsetx]++;
                     }
-                });
-            });
-        });
-
-        return q.resolve().then(function(){
+                    return q.resolve();
+                }));
+            }));
+        })).then(function(){
             if(soundscape.normalized || 1){
                 return model.soundscapes.fetchNormVector(soundscape).then(function(normvec){
                     for(x=0; x < scidx.width; ++x){
