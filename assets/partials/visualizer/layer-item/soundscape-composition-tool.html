@@ -4,27 +4,26 @@
         Soundscape Composition
     </h5>
     <div class="content" ng-show="layer.is_open">
-        <accordion close-others="false" class="accordion-group">
-            <accordion-group is-open="classType.open" ng-repeat="classType in layer.controller.classTypes" class="accordion-table">
-                <accordion-heading>
-                    <i class="fa" ng-class="classType.open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
-                    {{ classType.type }}
-                </accordion-heading>
-                <table class="table table-condensed">
-                    <tr ng-repeat="cls in classType.list" 
-                        ng-click="layer.controller.select(classType, cls, $event) | trackEvent:'Visualizer-Soundscape-Composition':'select class'" 
-                        ng-class="layer.controller.is_selected[cls.id] ? 'active' : ''"
-                    >
-                            <td class="no-select"> {{ cls.name }}</td>
-                            <td class="no-select">
-                                <validation-dropdown 
-                                    ng-model="layer.controller.annotations[cls.id]" 
-                                    ng-change="layer.controller.annotate(layer.controller.annotations[cls.id]) | trackEvent:'Visualizer-Soundscape-Composition':'annotate'"
-                                ></validation-dropdown>
-                            </td>
-                    </tr>
-                </table>
-            </accordion-group>
-        </accordion>
+        <div ng-repeat="classType in layer.controller.classTypes">
+            <div class="row">
+                <div class="col-sm-12">
+                    <b>{{ classType.type }}</b>
+                </div>
+            </div>
+            <div class="row no-gutter" ng-repeat="cls in classType.list" >
+                    <div class="no-select col-sm-8">
+                        {{ cls.name }}
+                    </div>
+                    <div class="col-sm-3 text-center btn-toolbar">
+                        <div class="btn-group btn-group-xs" ng-repeat="btnGroup in layer.controller.annotationToolbar">
+                            <button class="btn btn-default btn-fade-inactive" ng-repeat="btn in btnGroup"
+                            ng-class="layer.controller.annotations[cls.id] == btn.value ? 'active': ''"
+                            ng-click="layer.controller.annotate(btn.value, cls.id)"
+                            title="{{btn.caption}}"
+                            ><i class="fa" ng-class="'val-' + btn.value"></i></button>
+                        </div>
+                    </div>
+            </div>
+        </div>
     </div>
 </div>
