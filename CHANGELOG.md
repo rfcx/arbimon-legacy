@@ -61,3 +61,5 @@
     - Changed layout in soundscape composition tool
     - Fixed Soundscape export not setting content disposition header
     - Soundscape matrix is now promisified, no longer runs uninterrupted.
+- v1.8.0
+    - Added maximum-relative thresholds to soundscapes.
