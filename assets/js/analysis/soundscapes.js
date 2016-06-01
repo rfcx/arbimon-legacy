@@ -204,6 +204,9 @@
                 templateUrl: template_root + 'createnewsoundscape.html',
                 controller: 'CreateNewSoundscapeInstanceCtrl',
                 resolve: {
+                    amplitudeReferences : function(a2Soundscapes){
+                        return a2Soundscapes.getAmplitudeReferences();
+                    },                    
                     playlists:function()
                     {
                         return $scope.playlists;
@@ -309,6 +312,7 @@
                 playlist: '',
                 aggregation : '',
                 threshold : 0,
+                thresholdReference: 'absolute',
                 bin : 86,
                 bandwidth : 0,
                 normalize:false
@@ -331,6 +335,7 @@
                         p: $scope.datasubmit.playlist,
                         a: $scope.datasubmit.aggregation,
                         t: $scope.datasubmit.threshold,
+                        tr: $scope.datasubmit.thresholdReference,
                         m: 22050,
                         b: $scope.datasubmit.bin,
                         f: $scope.datasubmit.bandwidth,
