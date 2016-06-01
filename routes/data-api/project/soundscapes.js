@@ -303,6 +303,7 @@ router.post('/:soundscape/scale', function(req, res, next) {
         palette : (req.body.palette | 0),
         normalized : !!req.body.normalized,
         amplitude : req.body.amplitude,
+        amplitudeReference : req.body.amplitudeReference,
     }, function(err, soundscape){
         if(err){
             next(err);

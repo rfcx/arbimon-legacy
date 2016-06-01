@@ -14,6 +14,7 @@ USAGE = """
     normalized - wether to normalize the the image by the
                 number of recordings in analized per column.
     amplitude  - threshold the image using the given amplitude.
+    amplitudeReference  - type of threshold to use (absolute or relative-to-peak-maximum).
 """.format(
     prog=sys.argv[0]
 )
@@ -31,7 +32,8 @@ def main(argv):
             len(a2pyutils.palette.palette))
         normalized = int(argv[4] if len(argv) > 4 else 0) != 0
         amplitude_th = float(argv[5] if len(argv) > 5 else 0)
-        run(soundscapeId, clipMax, paletteId, normalized, amplitude_th)
+        amplitude_th_type = len(argv) > 6 and argv[6]
+        run(soundscapeId, clipMax, paletteId, normalized, amplitude_th, amplitude_th_type)
         print 'end'
 
 if __name__ == '__main__':

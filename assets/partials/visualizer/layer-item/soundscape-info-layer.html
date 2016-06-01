@@ -21,7 +21,10 @@
                     <i class="fa fa-wrench"></i>
                 </button>
             </td></tr>
-            <tr><td>Amplitude Threshold</td><td>{{visobject.threshold}}</td></tr>
+            <tr><td>Amplitude Threshold</td><td>
+                {{visobject.threshold}} <br />
+                {{layer.info.amplitudeReferences[visobject.threshold_type].caption}}
+            </td></tr>
         </table>
     </div>
 </div>

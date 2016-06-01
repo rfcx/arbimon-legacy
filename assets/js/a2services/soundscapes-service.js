@@ -13,6 +13,12 @@ angular.module('a2.srv.soundscapes', [
         {
             return saveData;
         },
+        getAmplitudeReferences: function(){
+            return $q.resolve([
+                {value:'absolute'                , caption:"Absolute", description:"The threshold is taken as an absolute value of the amplitude of each peak."},
+                {value:'relative-to-peak-maximum', caption:"Relative to maximum", description:"The threshold is taken as a relative proportion of the maximum amplitude of the peaks in the soundscape."},
+            ]);
+        },
         get: function(soundscapeId, callback) {
             var projectName = Project.getUrl();
             $http.get('/api/project/'+projectName+'/soundscapes/' + soundscapeId)
