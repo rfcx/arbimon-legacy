@@ -407,7 +407,6 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
                 if(!pal || !pal.length){return;}
                 var pallen1 = 1.0 * (pal.length-1);
                 var color = function(v){
-                    console.log('the other one');
                     var i = Math.max(0, Math.min(((v * pallen1 / vmax) | 0), pallen1));
                     return pal[i];
                 };
@@ -441,7 +440,6 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
                             ctx.fillStyle = color(act, j);
                         } 
                         else {
-                            console.log('this one',cell[0], j,"=",color(cell[0], j));
                             ctx.fillStyle = color(cell[0], j);                            
                         }
                         ctx.fillRect(j, h - i - 1, 1, 1);
