@@ -272,9 +272,12 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
         
         $modal.open({
             templateUrl : '/partials/visualizer/modal/edit_soundscape_visual_scale.html',
-            controller  : 'a2VisualizerSampleSoundscapeInfoEditVisualScaleModalController',
+            controller  : 'a2VisualizerSampleSoundscapeInfoEditVisualScaleModalController as controller',
             // size        : 'sm',
             resolve     : {
+                amplitudeReferences : function(a2Soundscapes){
+                    return a2Soundscapes.getAmplitudeReferences();
+                },
                 data : function(){ return {
                     soundscape : soundscape
                 }; }
@@ -300,7 +303,12 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
     ];
 })
 .controller('a2VisualizerSampleSoundscapeInfoEditVisualScaleModalController', 
-    function($scope, $modalInstance, a2Soundscapes, data, a2UrlUpdate, a2VisualizerSoundscapeGradients){
+    function(
+        $scope, $modalInstance, 
+        a2Soundscapes, 
+        amplitudeReferences,
+        data, a2UrlUpdate, a2VisualizerSoundscapeGradients
+    ){
         var soundscape = data.soundscape;
         $scope.soundscape = soundscape;
         $scope.palettes = a2VisualizerSoundscapeGradients;
@@ -309,15 +317,21 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
             palette : soundscape.visual_palette,
             visual_max : soundscape.visual_max_value || soundscape.max_value,
             normalized : !!soundscape.normalized,
-            amplitudeThreshold : soundscape.threshold
+            amplitudeThreshold : soundscape.threshold,
+            amplitudeReference : amplitudeReferences.reduce(function(_, item){
+                return _ || (item.value == soundscape.threshold_type ? item : null);
+            }, null)
         };
+        
+        this.amplitudeReferences = amplitudeReferences;
         
         $scope.ok = function(){
             a2Soundscapes.setVisualizationOptions(soundscape.id, {
                 max: $scope.data.visual_max,
                 palette: $scope.data.palette,
                 normalized: $scope.data.normalized,
-                amplitude: $scope.data.amplitudeThreshold
+                amplitude: $scope.data.amplitudeThreshold,
+                amplitudeReference: $scope.data.amplitudeReference.value
             }, function(sc){
                 if(soundscape.update){
                     soundscape.update(sc);
