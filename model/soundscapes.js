@@ -610,15 +610,18 @@ var Soundscapes = {
         var palette = options.palette === undefined ?  soundscape.visual_palette : (options.palette | 0);
         var normalized = options.normalized | 0;
         var amplitude = +options.amplitude;
+        var amplitudeReference = options.amplitudeReference;
         var cmd;
         var script = child_process.spawn(
             '.env/bin/python', cmd=[
-                'scripts/Soundscapes/set_visual_scale.py', (soundscape.id|0), max == '-' ? '-' : (max|0), palette, normalized, amplitude]
+                'scripts/Soundscapes/set_visual_scale.py', 
+                (soundscape.id|0), max == '-' ? '-' : (max|0), palette, 
+                normalized, 
+                amplitude, 
+                amplitudeReference
+            ], {stdio:'inherit'}
         );
         console.log(cmd);
-        script.stdout.on('data', function(data){
-            console.log(data);
-        });        
         script.on('close', function(code){
             Soundscapes.find({id:soundscape.id}, callback);
         });        
