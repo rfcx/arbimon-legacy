@@ -264,6 +264,14 @@ angular.module('visualizer-soundscape-info', [
 .controller('a2VisualizerSoundscapeInfoLayerController', 
 function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
     var self = this;
+    
+    a2Soundscapes.getAmplitudeReferences().then((function(amplitudeReferences){
+        this.amplitudeReferences = amplitudeReferences.reduce(function(_, item){
+            _[item.value] = item;
+            return _;
+        }, {});
+    }).bind(this));
+    
     this.edit_visual_scale = function(soundscape){
         if(!a2UserPermit.can('manage soundscapes')) {
             notify.log('You do not have permission to edit soundscapes');
