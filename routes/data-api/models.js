@@ -344,6 +344,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
                 playlist    : (req.body.p.id),
                 aggregation : (req.body.a),
                 threshold   : (req.body.t),
+                threshold_type : (req.body.tr),
                 bin         : (req.body.b),
                 maxhertz    : (req.body.m),
                 frequency   : (req.body.f),
@@ -378,7 +379,7 @@ router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
             pokeDaMonkey();
             next();
         }
-    ], function(err, job_id){
+    ], function(err){
         if(err){
             if(!response_already_sent){
                 res.json({ err:"Could not create soundscape job"});
