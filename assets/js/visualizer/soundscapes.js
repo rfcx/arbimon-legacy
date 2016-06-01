@@ -363,6 +363,7 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
             soundscape : '&',
             normalized : '&',
             amplitudeThreshold : '&',
+            amplitudeThresholdType : '&',
             palette    : '&',
             visualMax  : '&'
         },
@@ -375,6 +376,10 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
                 if(!soundscape || !scidx){return;}
                 var vmax = $scope.visualMax() || soundscape.max_value;
                 var ampTh = ($scope.amplitudeThreshold && $scope.amplitudeThreshold()) || 0;
+                if($scope.amplitudeThresholdType() == 'relative-to-peak-maximum'){
+                    var maxAmp = getMaxAmplitude();
+                    ampTh *= maxAmp;
+                }
                 
                 var pal = $scope.palette();
                 if(!pal || !pal.length){return;}
@@ -422,6 +427,22 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
                 }
             };
             
+            var getMaxAmplitude = function(){
+                if(scidx.__maxAmplitude === undefined){
+                    scidx.__maxAmplitude = Object.keys(scidx.index).reduce(function(maxAmp, i){
+                        var row = scidx.index[i];
+                        return Object.keys(row).reduce(function(maxAmp, j){
+                            var cellMax = Math.max.apply(Math, row[j][1] || [0]);
+                            return Math.max(cellMax, maxAmp);
+                        }, maxAmp);
+                    }, 0);
+                    console.log("scidx.__maxAmplitude", scidx.__maxAmplitude);
+                }
+                
+                return scidx.__maxAmplitude;
+                
+            };
+            
             $scope.$watch('soundscape()', function(_soundscape){
                 soundscape = _soundscape;
                 if(soundscape) a2Soundscapes.getSCIdx(soundscape.id, {count:1}).then(function(_scidx){
@@ -446,6 +467,7 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
             });
             $scope.$watch('palette()', draw);
             $scope.$watch('amplitudeThreshold()', draw);
+            $scope.$watch('amplitudeThresholdType()', draw);
             $scope.$watch('visualMax()', draw);
 
         }
