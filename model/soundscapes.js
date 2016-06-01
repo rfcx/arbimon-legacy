@@ -66,6 +66,7 @@ var Soundscapes = {
             "       SC.max_f, \n"+
             "       SC.bin_size, \n"+
             "       SC.threshold, \n"+
+            "       SC.threshold_type, \n"+
             "       SC.frequency, \n"+
             "       SC.normalized, \n"+
             "       SCAT.identifier as aggregation, \n" +
