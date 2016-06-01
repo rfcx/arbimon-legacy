@@ -204,6 +204,9 @@
                 templateUrl: template_root + 'createnewsoundscape.html',
                 controller: 'CreateNewSoundscapeInstanceCtrl',
                 resolve: {
+                    amplitudeReferences : function(a2Soundscapes){
+                        return a2Soundscapes.getAmplitudeReferences();
+                    },                    
                     playlists:function()
                     {
                         return $scope.playlists;
@@ -309,6 +312,7 @@
                 playlist: '',
                 aggregation : '',
                 threshold : 0,
+                thresholdReference: 'absolute',
                 bin : 86,
                 bandwidth : 0,
                 normalize:false
@@ -331,6 +335,7 @@
                         p: $scope.datasubmit.playlist,
                         a: $scope.datasubmit.aggregation,
                         t: $scope.datasubmit.threshold,
+                        tr: $scope.datasubmit.thresholdReference,
                         m: 22050,
                         b: $scope.datasubmit.bin,
                         f: $scope.datasubmit.bandwidth,
@@ -471,15 +476,35 @@
             }
         };
     })
-    .directive('a2ThresholdSelector', function() {
+    .directive('a2ThresholdSelector', function(a2Soundscapes) {
         return {    
             restrict : 'E',
             scope: {
                 "threshold": "=" ,
+                "thresholdReference": "=" ,
                 "bandwidth": "=" 
             },
             templateUrl: template_root + 'thresholdselector.html',
             link : function($scope) {
+                $scope.amplitudeReferences = [];
+                var afterGetAmplitudeReferences = a2Soundscapes.getAmplitudeReferences().then(function(amplitudeReferences){
+                    $scope.amplitudeReferences = amplitudeReferences;
+                });
+                
+                $scope.setAmplitudeReference = function(amplitudeReference){
+                    console.log("amplitudeReference", amplitudeReference);
+                    $scope.thresholdReference = amplitudeReference.value;
+                };
+                
+                $scope.$watch('thresholdReference', function(thresholdReference) {
+                    afterGetAmplitudeReferences.then(function(){
+                        console.log("thresholdReference", thresholdReference, $scope.amplitudeReferences);
+                        $scope.amplitudeReference = $scope.amplitudeReferences.reduce(function(_, item){
+                            return _ || (item.value == thresholdReference ? item : null);
+                        });
+                    });
+                });
+                
                 $scope.$watch('threshold', function(n, o) {
                     console.log('threshold', n, o);
                     $scope.thresholdInvPercent = (1-$scope.threshold)*100;

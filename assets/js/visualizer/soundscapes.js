@@ -264,6 +264,14 @@ angular.module('visualizer-soundscape-info', [
 .controller('a2VisualizerSoundscapeInfoLayerController', 
 function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
     var self = this;
+    
+    a2Soundscapes.getAmplitudeReferences().then((function(amplitudeReferences){
+        this.amplitudeReferences = amplitudeReferences.reduce(function(_, item){
+            _[item.value] = item;
+            return _;
+        }, {});
+    }).bind(this));
+    
     this.edit_visual_scale = function(soundscape){
         if(!a2UserPermit.can('manage soundscapes')) {
             notify.log('You do not have permission to edit soundscapes');
@@ -272,9 +280,12 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
         
         $modal.open({
             templateUrl : '/partials/visualizer/modal/edit_soundscape_visual_scale.html',
-            controller  : 'a2VisualizerSampleSoundscapeInfoEditVisualScaleModalController',
+            controller  : 'a2VisualizerSampleSoundscapeInfoEditVisualScaleModalController as controller',
             // size        : 'sm',
             resolve     : {
+                amplitudeReferences : function(a2Soundscapes){
+                    return a2Soundscapes.getAmplitudeReferences();
+                },
                 data : function(){ return {
                     soundscape : soundscape
                 }; }
@@ -300,7 +311,12 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
     ];
 })
 .controller('a2VisualizerSampleSoundscapeInfoEditVisualScaleModalController', 
-    function($scope, $modalInstance, a2Soundscapes, data, a2UrlUpdate, a2VisualizerSoundscapeGradients){
+    function(
+        $scope, $modalInstance, 
+        a2Soundscapes, 
+        amplitudeReferences,
+        data, a2UrlUpdate, a2VisualizerSoundscapeGradients
+    ){
         var soundscape = data.soundscape;
         $scope.soundscape = soundscape;
         $scope.palettes = a2VisualizerSoundscapeGradients;
@@ -309,15 +325,21 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
             palette : soundscape.visual_palette,
             visual_max : soundscape.visual_max_value || soundscape.max_value,
             normalized : !!soundscape.normalized,
-            amplitudeThreshold : soundscape.threshold
+            amplitudeThreshold : soundscape.threshold,
+            amplitudeReference : amplitudeReferences.reduce(function(_, item){
+                return _ || (item.value == soundscape.threshold_type ? item : null);
+            }, null)
         };
+        
+        this.amplitudeReferences = amplitudeReferences;
         
         $scope.ok = function(){
             a2Soundscapes.setVisualizationOptions(soundscape.id, {
                 max: $scope.data.visual_max,
                 palette: $scope.data.palette,
                 normalized: $scope.data.normalized,
-                amplitude: $scope.data.amplitudeThreshold
+                amplitude: $scope.data.amplitudeThreshold,
+                amplitudeReference: $scope.data.amplitudeReference.value
             }, function(sc){
                 if(soundscape.update){
                     soundscape.update(sc);
@@ -363,6 +385,7 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
             soundscape : '&',
             normalized : '&',
             amplitudeThreshold : '&',
+            amplitudeThresholdType : '&',
             palette    : '&',
             visualMax  : '&'
         },
@@ -375,12 +398,15 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
                 if(!soundscape || !scidx){return;}
                 var vmax = $scope.visualMax() || soundscape.max_value;
                 var ampTh = ($scope.amplitudeThreshold && $scope.amplitudeThreshold()) || 0;
+                if($scope.amplitudeThresholdType() == 'relative-to-peak-maximum'){
+                    var maxAmp = getMaxAmplitude();
+                    ampTh *= maxAmp;
+                }
                 
                 var pal = $scope.palette();
                 if(!pal || !pal.length){return;}
                 var pallen1 = 1.0 * (pal.length-1);
                 var color = function(v){
-                    console.log('the other one');
                     var i = Math.max(0, Math.min(((v * pallen1 / vmax) | 0), pallen1));
                     return pal[i];
                 };
@@ -414,12 +440,27 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
                             ctx.fillStyle = color(act, j);
                         } 
                         else {
-                            console.log('this one',cell[0], j,"=",color(cell[0], j));
                             ctx.fillStyle = color(cell[0], j);                            
                         }
                         ctx.fillRect(j, h - i - 1, 1, 1);
                     }
                 }
+            };
+            
+            var getMaxAmplitude = function(){
+                if(scidx.__maxAmplitude === undefined){
+                    scidx.__maxAmplitude = Object.keys(scidx.index).reduce(function(maxAmp, i){
+                        var row = scidx.index[i];
+                        return Object.keys(row).reduce(function(maxAmp, j){
+                            var cellMax = Math.max.apply(Math, row[j][1] || [0]);
+                            return Math.max(cellMax, maxAmp);
+                        }, maxAmp);
+                    }, 0);
+                    console.log("scidx.__maxAmplitude", scidx.__maxAmplitude);
+                }
+                
+                return scidx.__maxAmplitude;
+                
             };
             
             $scope.$watch('soundscape()', function(_soundscape){
@@ -446,6 +487,7 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
             });
             $scope.$watch('palette()', draw);
             $scope.$watch('amplitudeThreshold()', draw);
+            $scope.$watch('amplitudeThresholdType()', draw);
             $scope.$watch('visualMax()', draw);
 
         }
