@@ -155,7 +155,7 @@ class Soundscape():
             if bin and x in bin:
                 cell = bin[x]
                 if amp_th:
-                    v = len([x for x in cell if cell[x] > amp_th])
+                    v = reduce(lambda _, amp: _ + (1 if amp > amp_th else 0), cell.values(), 0)
                 else:
                     v = len(cell) if cell else 0
             else:
@@ -201,7 +201,6 @@ class Soundscape():
             def nv_scalefn(x, col):
                 nv = float(self.norm_vector.get(col, 1) or 1)
                 v = sfn(x / nv, col)
-                #print v
                 return v
             scalefn = nv_scalefn
             
