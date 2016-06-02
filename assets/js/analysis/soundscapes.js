@@ -250,7 +250,7 @@
                 a2Playlists.getInfo(soundscape.playlist_id, function(plist) {
                     
                     var modalInstance = $modal.open({
-                        controller: 'SoundscapesDetailsCtrl',
+                        controller: 'SoundscapesDetailsCtrl as controller',
                         templateUrl: '/partials/soundscapes/details.html',
                         resolve: {
                             soundscape: function() {
@@ -714,6 +714,13 @@
                 width: 400, 
                 height: 400 
             };
+            
+            a2Soundscapes.getAmplitudeReferences().then((function(amplitudeReferences){
+                this.amplitudeReferences = amplitudeReferences.reduce(function(_, _1){
+                    _[_1.value] = _1;
+                    return _;
+                }, {});
+            }).bind(this));
             
             
             a2Soundscapes.findIndices(soundscape.id, function(result) {

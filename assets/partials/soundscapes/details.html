@@ -19,7 +19,12 @@
         <div class="col-xs-6" ng-show="soundscape.threshold || soundscape.frequency">
             <h4>Peak Filtering</h4>
             <ul class="list-unstyled details-list">
-                <li><strong>Amplitude:</strong> {{ soundscape.threshold }} </li>
+                <li><strong>Amplitude:</strong> {{ soundscape.threshold }} 
+                    <span tooltip="{{controller.amplitudeReferences[soundscape.threshold_type].description}}" tooltip-append-to-body="true">
+                        {{controller.amplitudeReferences[soundscape.threshold_type].caption}}
+                        <i class="fa fa-question-circle"></i>
+                    </span>
+                </li>
                 <li><strong>Frequency:</strong> {{ soundscape.frequency }}Hz </li>
             </ul>
             <a2-draw-peak-threshold threshold="soundscape.threshold" bandwidth="soundscape.frequency"></a2-draw-peak-threshold>

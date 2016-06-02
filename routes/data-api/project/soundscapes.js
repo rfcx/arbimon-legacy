@@ -200,21 +200,43 @@ router.get('/:soundscape/export-list', function(req, res, next) {
         
         var recdata={};
         var threshold = soundscape.threshold;
-        return q.all(Object.keys(scidx.index).map(function(freq_bin){
-            var row = scidx.index[freq_bin];
-            var freq = freq_bin * soundscape.bin_size;
-            return q.all(Object.keys(row).map(function(time){
-                var recs = row[time][0];
-                var amps = row[time][1];
-                return q.all(recs.map(function(rec_idx, c_idx){
-                    var amp = amps && amps[c_idx];
-                    if(!threshold || (amp && threshold <= amp)){
-                        matrix[freq_bin - scidx.offsety][time - scidx.offsetx]++;
-                    }
-                    return q.resolve();
+
+        return q.resolve().then(function(){
+            if(soundscape.threshold_type == 'relative-to-peak-maximum'){
+                var maxAmp=0;
+                return q.all(Object.keys(scidx.index).map(function(freq_bin){
+                    var row = scidx.index[freq_bin];
+                    return q.all(Object.keys(row).map(function(time){
+                        var recs = row[time][0];
+                        var amps = row[time][1];
+                        return q.all(recs.map(function(rec_idx, c_idx){
+                            var amp = amps && amps[c_idx];
+                            if(maxAmp <= amp){
+                                maxAmp = amp;
+                            }
+                        }));
+                    }));
+                })).then(function(){
+                    threshold /= maxAmp;
+                });
+            }
+        }).then(function(){
+            return q.all(Object.keys(scidx.index).map(function(freq_bin){
+                var row = scidx.index[freq_bin];
+                var freq = freq_bin * soundscape.bin_size;
+                return q.all(Object.keys(row).map(function(time){
+                    var recs = row[time][0];
+                    var amps = row[time][1];
+                    return q.all(recs.map(function(rec_idx, c_idx){
+                        var amp = amps && amps[c_idx];
+                        if(!threshold || (amp && threshold <= amp)){
+                            matrix[freq_bin - scidx.offsety][time - scidx.offsetx]++;
+                        }
+                        return q.resolve();
+                    }));
                 }));
             }));
-        })).then(function(){
+        }).then(function(){
             if(soundscape.normalized || 1){
                 return model.soundscapes.fetchNormVector(soundscape).then(function(normvec){
                     for(x=0; x < scidx.width; ++x){
