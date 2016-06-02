@@ -63,3 +63,7 @@
     - Soundscape matrix is now promisified, no longer runs uninterrupted.
 - v1.8.0
     - Added maximum-relative thresholds to soundscapes.
+- v1.8.1
+    - Fixed soundscape image drawing bug.
+    - Fixed soundscape matrix export not using amplitude reference bug.
+    - Added amplitude reference to soundscape details.
