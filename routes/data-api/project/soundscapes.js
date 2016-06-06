@@ -237,7 +237,7 @@ router.get('/:soundscape/export-list', function(req, res, next) {
                 }));
             }));
         }).then(function(){
-            if(soundscape.normalized || 1){
+            if(soundscape.normalized){
                 return model.soundscapes.fetchNormVector(soundscape).then(function(normvec){
                     for(x=0; x < scidx.width; ++x){
                         key = '' + (x + scidx.offsetx);
