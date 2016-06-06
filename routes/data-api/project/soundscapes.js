@@ -217,33 +217,35 @@ router.get('/:soundscape/export-list', function(req, res, next) {
                         }));
                     }));
                 })).then(function(){
-                    threshold /= maxAmp;
+                    threshold *= maxAmp;
                 });
             }
         }).then(function(){
-            return q.all(Object.keys(scidx.index).map(function(freq_bin){
+            Object.keys(scidx.index).map(function(freq_bin){
                 var row = scidx.index[freq_bin];
                 var freq = freq_bin * soundscape.bin_size;
-                return q.all(Object.keys(row).map(function(time){
+                Object.keys(row).map(function(time){
                     var recs = row[time][0];
                     var amps = row[time][1];
-                    return q.all(recs.map(function(rec_idx, c_idx){
-                        var amp = amps && amps[c_idx];
-                        if(!threshold || (amp && threshold <= amp)){
-                            matrix[freq_bin - scidx.offsety][time - scidx.offsetx]++;
-                        }
-                        return q.resolve();
-                    }));
-                }));
-            }));
+                    if(!threshold){
+                        matrix[freq_bin - scidx.offsety][time - scidx.offsetx] += recs.length;
+                    } else {
+                        recs.map(function(rec_idx, c_idx){
+                            var amp = amps && amps[c_idx];
+                            if(amp && amp > threshold){
+                                matrix[freq_bin - scidx.offsety][time - scidx.offsetx]++;
+                            }
+                        });
+                    }
+                });
+            });
         }).then(function(){
-            if(soundscape.normalized || 1){
+            if(soundscape.normalized){
                 return model.soundscapes.fetchNormVector(soundscape).then(function(normvec){
                     for(x=0; x < scidx.width; ++x){
                         key = '' + (x + scidx.offsetx);
                         if(key in normvec){
                             var val = normvec[key];
-                            console.log(key, val);
                             for(y=0; y < scidx.height; ++y){
                                 matrix[y][x] = matrix[y][x] * 1.0 / val;
                             }
@@ -254,10 +256,11 @@ router.get('/:soundscape/export-list', function(req, res, next) {
         }).then(function(){
             var stringifier = csv_stringify({header:true, columns:['freq-min','freq-max'].concat(cols)});
             stringifier.pipe(res);
-            matrix.forEach(function(row, y){
+            for(y=matrix.length-1; y > -1; --y){
+                var row = matrix[y];
                 var freq = (scidx.offsety + y) * soundscape.bin_size;
                 stringifier.write([freq, freq + soundscape.bin_size].concat(row));
-            });
+            }
             stringifier.end();
         });
     }
