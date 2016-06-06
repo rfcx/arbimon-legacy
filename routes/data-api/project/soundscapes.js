@@ -221,21 +221,24 @@ router.get('/:soundscape/export-list', function(req, res, next) {
                 });
             }
         }).then(function(){
-            return q.all(Object.keys(scidx.index).map(function(freq_bin){
+            Object.keys(scidx.index).map(function(freq_bin){
                 var row = scidx.index[freq_bin];
                 var freq = freq_bin * soundscape.bin_size;
-                return q.all(Object.keys(row).map(function(time){
+                Object.keys(row).map(function(time){
                     var recs = row[time][0];
                     var amps = row[time][1];
-                    return q.all(recs.map(function(rec_idx, c_idx){
-                        var amp = amps && amps[c_idx];
-                        if(!threshold || (amp && threshold <= amp)){
-                            matrix[freq_bin - scidx.offsety][time - scidx.offsetx]++;
-                        }
-                        return q.resolve();
-                    }));
-                }));
-            }));
+                    if(!threshold){
+                        matrix[freq_bin - scidx.offsety][time - scidx.offsetx] += recs.length;
+                    } else {
+                        recs.map(function(rec_idx, c_idx){
+                            var amp = amps && amps[c_idx];
+                            if(amp && amp > threshold){
+                                matrix[freq_bin - scidx.offsety][time - scidx.offsetx]++;
+                            }
+                        });
+                    }
+                });
+            });
         }).then(function(){
             if(soundscape.normalized){
                 return model.soundscapes.fetchNormVector(soundscape).then(function(normvec){
