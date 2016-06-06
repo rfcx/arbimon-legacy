@@ -243,7 +243,6 @@ router.get('/:soundscape/export-list', function(req, res, next) {
                         key = '' + (x + scidx.offsetx);
                         if(key in normvec){
                             var val = normvec[key];
-                            console.log(key, val);
                             for(y=0; y < scidx.height; ++y){
                                 matrix[y][x] = matrix[y][x] * 1.0 / val;
                             }
