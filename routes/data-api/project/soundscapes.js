@@ -253,10 +253,11 @@ router.get('/:soundscape/export-list', function(req, res, next) {
         }).then(function(){
             var stringifier = csv_stringify({header:true, columns:['freq-min','freq-max'].concat(cols)});
             stringifier.pipe(res);
-            matrix.forEach(function(row, y){
+            for(y=matrix.length-1; y > -1; --y){
+                var row = matrix[y];
                 var freq = (scidx.offsety + y) * soundscape.bin_size;
                 stringifier.write([freq, freq + soundscape.bin_size].concat(row));
-            });
+            }
             stringifier.end();
         });
     }
