@@ -217,7 +217,7 @@ router.get('/:soundscape/export-list', function(req, res, next) {
                         }));
                     }));
                 })).then(function(){
-                    threshold /= maxAmp;
+                    threshold *= maxAmp;
                 });
             }
         }).then(function(){
