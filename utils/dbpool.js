@@ -31,21 +31,23 @@ var dbpool = {
                 debug('- values: ', values);
             }
             if(cb){
+                var startTime = new Date().getTime();
                 query_fn.call(connection, sql, values, function(err, rows, fields) {
+                    var deltaTxt = "(" + (new Date().getTime() - startTime) + "ms)";
                     if(err) {
-                        debug('  failed :| ', err+"");
+                        debug('  failed :| ', err+"", deltaTxt);
                     } else if (rows) {
                         if(rows.length !== undefined) {
-                            debug('  returned :', rows.length , " rows.");
+                            debug('  returned :', rows.length , " rows.", deltaTxt);
                         }
                         if(rows.affectedRows) {
-                            debug('  affected :', rows.affectedRows , " rows.");
+                            debug('  affected :', rows.affectedRows , " rows.", deltaTxt);
                         }
                         if(rows.changedRows) {
-                            debug('  changed  :', rows.changedRows , " rows.");
+                            debug('  changed  :', rows.changedRows , " rows.", deltaTxt);
                         }
                         if(rows.insertId) {
-                            debug('  insert id :', rows.insertId);
+                            debug('  insert id :', rows.insertId, deltaTxt);
                         }
                     }
                     cb(err, rows, fields);
@@ -101,24 +103,26 @@ var dbpool = {
                 if(options){
                     debug('  values : -|', options);
                 }
+                var startTime = new Date().getTime();
                 connection.query(query, options, function(err, rows, fields) {
+                    var deltaTxt = "(" + (new Date().getTime() - startTime) + "ms)";
                     connection.release();
                     // for debugging
                     if(err) {
-                        debug('  failed :| ', err+"");
+                        debug('  failed :| ', err+"", deltaTxt);
                     }
                     else if (rows) {
                         if(rows.length !== undefined) {
-                            debug('  returned :', rows.length , " rows.");
+                            debug('  returned :', rows.length , " rows.", deltaTxt);
                         }
                         if(rows.affectedRows !== undefined) {
-                            debug('  affected :', rows.affectedRows , " rows.");
+                            debug('  affected :', rows.affectedRows , " rows.", deltaTxt);
                         }
                         if(rows.changedRows !== undefined) {
-                            debug('  changed  :', rows.changedRows , " rows.");
+                            debug('  changed  :', rows.changedRows , " rows.", deltaTxt);
                         }
                         if(rows.insertId !== undefined) {
-                            debug('  insert id :', rows.insertId);
+                            debug('  insert id :', rows.insertId, deltaTxt);
                         }
                     }
                     callback(err, rows, fields);
