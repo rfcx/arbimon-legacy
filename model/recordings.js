@@ -833,13 +833,22 @@ var Recordings = {
             
             var tables = [
                 "recordings AS r",
-                "JOIN sites AS s ON s.site_id = r.site_id",
-                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = " + parameters.project_id
+                "JOIN sites AS s ON s.site_id = r.site_id"
             ];
-            var constraints = [
-                "(s.project_id = ? OR pis.project_id = ?)"
-            ];
-            var data = [parameters.project_id, parameters.project_id];
+            
+            var constraints = [];
+            var data = [];
+            
+            steps.push(dbpool.query("(\n" + 
+            "   SELECT site_id FROM sites WHERE project_id = ?\n" +
+            ") UNION (\n" + 
+            "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" + 
+            ")", [parameters.project_id, parameters.project_id]).then(function(sites){
+                constraints.push("s.site_id IN (?)");
+                data.push(sites.map(function(site){
+                    return site.site_id;
+                }));
+            }));
                     
             if(parameters.range) {
                 console.log(parameters.range);
@@ -1304,3 +1313,4 @@ var Recordings = {
 
 module.exports = Recordings;
     
+
