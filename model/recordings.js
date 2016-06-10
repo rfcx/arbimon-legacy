@@ -240,7 +240,7 @@ var Recordings = {
         
         var group_by, query;
 
-        var promise = this.parseUrlQuery(recording_url).then(function(urlquery){            
+        return this.parseUrlQuery(recording_url).then(function(urlquery){            
             if(urlquery.special){
                 limit_clause = " LIMIT 1";
                 order_clause = " ORDER BY S.name ASC, R.datetime " + (urlquery.special == 'first' ? 'ASC' : 'DESC');
@@ -286,16 +286,7 @@ var Recordings = {
                     return data;
                 }
             }
-        });
-        
-        if(callback){
-            promise.then(function(data){
-                callback(null, data);
-                return data;
-            }, callback);
-        }
-        
-        return promise;
+        }).nodeify(callback);
     },
     
     fetchNext: function (recording, callback) {
