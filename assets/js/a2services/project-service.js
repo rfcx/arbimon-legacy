@@ -28,9 +28,11 @@ angular.module('a2.srv.project', [])
                 return $http.get('/api/project/'+url+'/usage');
             },
             getSites: function(callback) {
-                $http.get('/api/project/'+url+'/sites')
+                return $http.get('/api/project/'+url+'/sites')
                     .success(function(data) {
-                        callback(data);
+                        if(callback){
+                            callback(data);
+                        }
                     });
             },
             getClasses: function(options, callback) {
@@ -94,9 +96,11 @@ angular.module('a2.srv.project', [])
                     });
             },
             getRecordingAvailability: function(key, callback) {
-                $http.get('/api/project/'+url+'/recordings/available/'+key)
+                return $http.get('/api/project/'+url+'/recordings/available/'+key)
                     .success(function(data) {
-                        callback(data);
+                        if(callback){
+                            callback(data);
+                        }
                     });
             },
             getOneRecording: function(rec_id, callback) {
