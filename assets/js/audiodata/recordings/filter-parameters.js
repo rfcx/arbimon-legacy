@@ -40,6 +40,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
     $scope, 
     Project, a2Classi, 
     a2SoundscapeCompositionService,
+    $q,
     $http, $modal, notify, a2UserPermit, a2Tags, 
     $window
 ) {
@@ -139,9 +140,15 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         }
         
         var options = this.options;
-        
-        Project.getRecordingAvailability('---[1:31]', function(data) {
-            
+        Project.getSites().then(function(sites){
+            return $q.all(sites.map(function(site){
+                return Project.getRecordingAvailability('!q:' + site.id + '---[1:31]');
+            })).then(function(data){
+                return data.reduce(function(_, recAv){
+                    return angular.merge(_, recAv);
+                }, {});
+            });
+        }).then(function(data) {
             var lists = {
                 sites: [], // sitesList
                 years: [], // yearsList
