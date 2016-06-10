@@ -239,40 +239,47 @@ var Recordings = {
         }
         
         var group_by, query;
+        var constraints, data=[];
 
-        var promise = this.parseUrlQuery(recording_url).then(function(urlquery){            
+        return this.parseUrlQuery(recording_url).then(function(urlquery){
             if(urlquery.special){
                 limit_clause = " LIMIT 1";
                 order_clause = " ORDER BY S.name ASC, R.datetime " + (urlquery.special == 'first' ? 'ASC' : 'DESC');
             }
 
-            var constraints = sqlutil.compile_query_constraints(urlquery, fields);
+            constraints = sqlutil.compile_query_constraints(urlquery, fields);
             
             if(!urlquery.id) {
-                var pid = mysql.escape(project_id);
-                constraints.unshift('(S.project_id = ' + pid + ' OR PIS.project_id = ' + pid +')');
+                // var pid = mysql.escape(project_id);
+                // constraints.unshift('(S.project_id = ' + pid + ' OR PIS.project_id = ' + pid +')');
             }
-            
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
                 count_only : options.count_only
             });
             
-            
-            var sql = "SELECT " + group_by.project_part + projection + " \n" +
-                "FROM recordings R \n" +
-                "JOIN sites S ON S.site_id = R.site_id \n" +
-                "LEFT JOIN project_imported_sites PIS ON S.site_id = PIS.site_id AND PIS.project_id = " + mysql.escape(project_id) + "\n"+
-                "WHERE (" + constraints.join(") AND (") + ")" +
-                group_by.clause +
-                order_clause +
-                limit_clause;
-                
-            query = {
-                sql: sql,
+        }).then(function(){
+            return dbpool.query("(\n" + 
+            "   SELECT site_id FROM sites WHERE project_id = ?\n" +
+            ") UNION (\n" + 
+            "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" + 
+            ")", [project_id, project_id]).then(function(sites){
+                constraints.push("S.site_id IN (?)");
+                data.push(sites.map(function(site){
+                    return site.site_id;
+                }));
+            });
+        }).then(function(){
+            return Q.nfcall(queryHandler, {
+                sql: 
+                    "SELECT " + group_by.project_part + projection + " \n" +
+                    "FROM recordings R \n" +
+                    "JOIN sites S ON S.site_id = R.site_id \n" +
+                    "WHERE (" + constraints.join(") AND (") + ")" +
+                    group_by.clause +
+                    order_clause +
+                    limit_clause,
                 typeCast: sqlutil.parseUtcDatetime,
-            };
-            
-            return Q.nfcall(queryHandler, query);
+            }, data);
         }).then(function(query_results){
             var data = query_results.shift();
             if(data){
@@ -286,16 +293,7 @@ var Recordings = {
                     return data;
                 }
             }
-        });
-        
-        if(callback){
-            promise.then(function(data){
-                callback(null, data);
-                return data;
-            }, callback);
-        }
-        
-        return promise;
+        }).nodeify(callback);
     },
     
     fetchNext: function (recording, callback) {
@@ -812,6 +810,7 @@ var Recordings = {
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
                 
             var projection=[];
+            var steps=[];
             
             var select_clause = {
                 list: "SELECT DISTINCT r.recording_id AS id, \n"+
@@ -832,13 +831,22 @@ var Recordings = {
             
             var tables = [
                 "recordings AS r",
-                "JOIN sites AS s ON s.site_id = r.site_id",
-                "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = " + parameters.project_id
+                "JOIN sites AS s ON s.site_id = r.site_id"
             ];
-            var constraints = [
-                "(s.project_id = ? OR pis.project_id = ?)"
-            ];
-            var data = [parameters.project_id, parameters.project_id];
+            
+            var constraints = [];
+            var data = [];
+            
+            steps.push(dbpool.query("(\n" + 
+            "   SELECT site_id FROM sites WHERE project_id = ?\n" +
+            ") UNION (\n" + 
+            "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" + 
+            ")", [parameters.project_id, parameters.project_id]).then(function(sites){
+                constraints.push("s.site_id IN (?)");
+                data.push(sites.map(function(site){
+                    return site.site_id;
+                }));
+            }));
                     
             if(parameters.range) {
                 console.log(parameters.range);
@@ -935,32 +943,35 @@ var Recordings = {
                 }
             }
 
-            var from_clause  = "FROM " + tables.join('\n');
-            var where_clause = mysql.format("WHERE " + constraints.join('\n AND '), data);
-            var order_clause = 'ORDER BY ' + mysql.escapeId(parameters.sortBy || 'site') + ' ' + (parameters.sortRev ? 'DESC' : '');
-            var limit_clause = (parameters.limit) ? mysql.escape(parameters.offset || 0) + ', ' + mysql.escape(parameters.limit) : '';
-            
             console.log(outputs);
-            return Q.all(outputs.map(function(output){
-                var query=[
-                    select_clause[output],
-                    from_clause,
-                    where_clause
-                ];
-                if(output === 'list') {
-                    var sortBy = parameters.sortBy || 'site';
-                    var sortRev = parameters.sortRev ? 'DESC' : '';
-                    query.push('ORDER BY ' + mysql.escapeId(sortBy) + ' ' + sortRev);
-                    if(limit_clause){
-                        query.push("LIMIT " + limit_clause);
+            return Q.all(steps).then(function(){
+
+                var from_clause  = "FROM " + tables.join('\n');
+                var where_clause = mysql.format("WHERE " + constraints.join('\n AND '), data);
+                var order_clause = 'ORDER BY ' + mysql.escapeId(parameters.sortBy || 'site') + ' ' + (parameters.sortRev ? 'DESC' : '');
+                var limit_clause = (parameters.limit) ? mysql.escape(parameters.offset || 0) + ', ' + mysql.escape(parameters.limit) : '';
+
+                return Q.all(outputs.map(function(output){
+                    var query=[
+                        select_clause[output],
+                        from_clause,
+                        where_clause
+                    ];
+                    if(output === 'list') {
+                        var sortBy = parameters.sortBy || 'site';
+                        var sortRev = parameters.sortRev ? 'DESC' : '';
+                        query.push('ORDER BY ' + mysql.escapeId(sortBy) + ' ' + sortRev);
+                        if(limit_clause){
+                            query.push("LIMIT " + limit_clause);
+                        }
                     }
-                }
-                
-                return Q.nfcall(queryHandler, {
-                    sql: query.join('\n'),
-                    typeCast: sqlutil.parseUtcDatetime,
-                });
-            })).then(function(results){
+                    
+                    return Q.nfcall(queryHandler, {
+                        sql: query.join('\n'),
+                        typeCast: sqlutil.parseUtcDatetime,
+                    });
+                }));
+            }).then(function(results){
                 results = outputs.reduce(function(obj, output, i){
                     var r = results[i][0];
                     if(output == "count"){
@@ -1300,3 +1311,4 @@ var Recordings = {
 
 module.exports = Recordings;
     
+
