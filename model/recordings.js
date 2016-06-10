@@ -812,6 +812,7 @@ var Recordings = {
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
                 
             var projection=[];
+            var steps=[];
             
             var select_clause = {
                 list: "SELECT DISTINCT r.recording_id AS id, \n"+
@@ -935,32 +936,35 @@ var Recordings = {
                 }
             }
 
-            var from_clause  = "FROM " + tables.join('\n');
-            var where_clause = mysql.format("WHERE " + constraints.join('\n AND '), data);
-            var order_clause = 'ORDER BY ' + mysql.escapeId(parameters.sortBy || 'site') + ' ' + (parameters.sortRev ? 'DESC' : '');
-            var limit_clause = (parameters.limit) ? mysql.escape(parameters.offset || 0) + ', ' + mysql.escape(parameters.limit) : '';
-            
             console.log(outputs);
-            return Q.all(outputs.map(function(output){
-                var query=[
-                    select_clause[output],
-                    from_clause,
-                    where_clause
-                ];
-                if(output === 'list') {
-                    var sortBy = parameters.sortBy || 'site';
-                    var sortRev = parameters.sortRev ? 'DESC' : '';
-                    query.push('ORDER BY ' + mysql.escapeId(sortBy) + ' ' + sortRev);
-                    if(limit_clause){
-                        query.push("LIMIT " + limit_clause);
+            return Q.all(steps).then(function(){
+
+                var from_clause  = "FROM " + tables.join('\n');
+                var where_clause = mysql.format("WHERE " + constraints.join('\n AND '), data);
+                var order_clause = 'ORDER BY ' + mysql.escapeId(parameters.sortBy || 'site') + ' ' + (parameters.sortRev ? 'DESC' : '');
+                var limit_clause = (parameters.limit) ? mysql.escape(parameters.offset || 0) + ', ' + mysql.escape(parameters.limit) : '';
+
+                return Q.all(outputs.map(function(output){
+                    var query=[
+                        select_clause[output],
+                        from_clause,
+                        where_clause
+                    ];
+                    if(output === 'list') {
+                        var sortBy = parameters.sortBy || 'site';
+                        var sortRev = parameters.sortRev ? 'DESC' : '';
+                        query.push('ORDER BY ' + mysql.escapeId(sortBy) + ' ' + sortRev);
+                        if(limit_clause){
+                            query.push("LIMIT " + limit_clause);
+                        }
                     }
-                }
-                
-                return Q.nfcall(queryHandler, {
-                    sql: query.join('\n'),
-                    typeCast: sqlutil.parseUtcDatetime,
-                });
-            })).then(function(results){
+                    
+                    return Q.nfcall(queryHandler, {
+                        sql: query.join('\n'),
+                        typeCast: sqlutil.parseUtcDatetime,
+                    });
+                }));
+            }).then(function(results){
                 results = outputs.reduce(function(obj, output, i){
                     var r = results[i][0];
                     if(output == "count"){
