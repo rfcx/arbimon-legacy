@@ -1,5 +1,10 @@
-angular.module('a2.srv.project', [])
-.factory('Project', function($location, $http, $q, $httpParamSerializer) {
+angular.module('a2.srv.project', [
+    'a2.srv.api'
+])
+.factory('Project', function(
+    $location, $http, $q, $httpParamSerializer,
+    a2APIService
+) {
         
         var nameRe = /\/?project\/([\w\_\-]+)/;
         var nrm = nameRe.exec($location.absUrl());
@@ -28,12 +33,12 @@ angular.module('a2.srv.project', [])
                 return $http.get('/api/project/'+url+'/usage');
             },
             getSites: function(callback) {
-                return $http.get('/api/project/'+url+'/sites')
-                    .success(function(data) {
-                        if(callback){
-                            callback(data);
-                        }
-                    });
+                return a2APIService.get('/sites').then(function(data) {
+                    if(callback){
+                        callback(data);
+                    }
+                    return data;
+                });
             },
             getClasses: function(options, callback) {
                 if(typeof options == 'function') {
@@ -96,12 +101,12 @@ angular.module('a2.srv.project', [])
                     });
             },
             getRecordingAvailability: function(key, callback) {
-                return $http.get('/api/project/'+url+'/recordings/available/'+key)
-                    .success(function(data) {
-                        if(callback){
-                            callback(data);
-                        }
-                    });
+                return a2APIService.get('/recordings/available/'+key).then(function(data) {
+                    if(callback){
+                        callback(data);
+                    }
+                    return data;
+                });
             },
             getOneRecording: function(rec_id, callback) {
                 $http.get('/api/project/'+url+'/recordings/find/'+rec_id)
