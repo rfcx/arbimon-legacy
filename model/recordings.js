@@ -239,40 +239,47 @@ var Recordings = {
         }
         
         var group_by, query;
+        var constraints, data=[];
 
-        return this.parseUrlQuery(recording_url).then(function(urlquery){            
+        return this.parseUrlQuery(recording_url).then(function(urlquery){
             if(urlquery.special){
                 limit_clause = " LIMIT 1";
                 order_clause = " ORDER BY S.name ASC, R.datetime " + (urlquery.special == 'first' ? 'ASC' : 'DESC');
             }
 
-            var constraints = sqlutil.compile_query_constraints(urlquery, fields);
+            constraints = sqlutil.compile_query_constraints(urlquery, fields);
             
             if(!urlquery.id) {
-                var pid = mysql.escape(project_id);
-                constraints.unshift('(S.project_id = ' + pid + ' OR PIS.project_id = ' + pid +')');
+                // var pid = mysql.escape(project_id);
+                // constraints.unshift('(S.project_id = ' + pid + ' OR PIS.project_id = ' + pid +')');
             }
-            
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
                 count_only : options.count_only
             });
             
-            
-            var sql = "SELECT " + group_by.project_part + projection + " \n" +
-                "FROM recordings R \n" +
-                "JOIN sites S ON S.site_id = R.site_id \n" +
-                "LEFT JOIN project_imported_sites PIS ON S.site_id = PIS.site_id AND PIS.project_id = " + mysql.escape(project_id) + "\n"+
-                "WHERE (" + constraints.join(") AND (") + ")" +
-                group_by.clause +
-                order_clause +
-                limit_clause;
-                
-            query = {
-                sql: sql,
+        }).then(function(){
+            return dbpool.query("(\n" + 
+            "   SELECT site_id FROM sites WHERE project_id = ?\n" +
+            ") UNION (\n" + 
+            "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" + 
+            ")", [project_id, project_id]).then(function(sites){
+                constraints.push("S.site_id IN (?)");
+                data.push(sites.map(function(site){
+                    return site.site_id;
+                }));
+            });
+        }).then(function(){
+            return Q.nfcall(queryHandler, {
+                sql: 
+                    "SELECT " + group_by.project_part + projection + " \n" +
+                    "FROM recordings R \n" +
+                    "JOIN sites S ON S.site_id = R.site_id \n" +
+                    "WHERE (" + constraints.join(") AND (") + ")" +
+                    group_by.clause +
+                    order_clause +
+                    limit_clause,
                 typeCast: sqlutil.parseUtcDatetime,
-            };
-            
-            return Q.nfcall(queryHandler, query);
+            }, data);
         }).then(function(query_results){
             var data = query_results.shift();
             if(data){
