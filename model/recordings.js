@@ -240,6 +240,7 @@ var Recordings = {
         
         var group_by, query;
         var constraints, data=[];
+        var steps=[];
 
         return this.parseUrlQuery(recording_url).then(function(urlquery){
             if(urlquery.special){
@@ -249,25 +250,24 @@ var Recordings = {
 
             constraints = sqlutil.compile_query_constraints(urlquery, fields);
             
-            if(!urlquery.id) {
-                // var pid = mysql.escape(project_id);
-                // constraints.unshift('(S.project_id = ' + pid + ' OR PIS.project_id = ' + pid +')');
-            }
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
                 count_only : options.count_only
             });
             
-        }).then(function(){
-            return dbpool.query("(\n" + 
-            "   SELECT site_id FROM sites WHERE project_id = ?\n" +
-            ") UNION (\n" + 
-            "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" + 
-            ")", [project_id, project_id]).then(function(sites){
-                constraints.push("S.site_id IN (?)");
-                data.push(sites.map(function(site){
-                    return site.site_id;
+            if(!urlquery.id) {
+                steps.push(dbpool.query("(\n" + 
+                "   SELECT site_id FROM sites WHERE project_id = ?\n" +
+                ") UNION (\n" + 
+                "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" + 
+                ")", [project_id, project_id]).then(function(sites){
+                    constraints.push("S.site_id IN (?)");
+                    data.push(sites.length ? sites.map(function(site){
+                        return site.site_id;
+                    }) : [0]);
                 }));
-            });
+            }
+        }).then(function(){
+            return Q.all(steps);
         }).then(function(){
             return Q.nfcall(queryHandler, {
                 sql: 
