@@ -70,4 +70,6 @@
 - v1.8.2
     - Fixed soundscape export bug.
 - v1.8.3
-    - Fixing site count query scalability
+    - Fixing site count query scalability.
+- v1.8.4
+    - Fixing recording query bug with using id only.
