@@ -36,6 +36,15 @@ mock_mysql_connection.prototype = {
             callback(new Error("Query not in cache : "+sql));
         }
     },
+    beginTransaction: function(callback){
+        callback();
+    },
+    rollback: function(callback){
+        callback();
+    },
+    commit: function(callback){
+        callback();
+    },
     release:function(){
         if(this.pool){
             this.pool = null;
@@ -68,6 +77,7 @@ module.exports = {
         pool: mock_mysql_pool,
         connection : mock_mysql_connection
     },
+    format: mysql.format.bind(mysql),
     escape: mysql.escape.bind(mysql),
     escapeId: mysql.escapeId.bind(mysql)
 };
