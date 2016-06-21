@@ -4,6 +4,7 @@
 "use strict";
 
 
+var q = require('q');
 var chai = require('chai'), 
     should = chai.should(), 
     expect = chai.expect;
@@ -100,6 +101,9 @@ describe('routes/uploads.js', function(){
             
             it('should call next() if valid user session with permission to upload', function() {
                 request = {
+                    systemSettings: sinon.stub().returns(''),
+                    get: sinon.stub().returns(''),
+                    body:{},
                     session: {
                         loggedIn: true,
                         user: {
@@ -114,7 +118,7 @@ describe('routes/uploads.js', function(){
                     haveAccess: sinon.stub().returns(true)
                 };
                 
-                authorize(request, response, next);
+                authorize({session:true, token:true, access_token:true})(request, response, next);
                 
                 expect(next.callCount).to.equal(1);
                 response.verify();
@@ -129,6 +133,9 @@ describe('routes/uploads.js', function(){
             
             it('should respond "400 Bad Request" if missing query parameters', function() {
                 request = {
+                    systemSettings: sinon.stub().returns(''),
+                    get: sinon.stub().returns(''),
+                    body:{},
                     session: {
                         loggedIn: true,
                         user: {
@@ -139,7 +146,7 @@ describe('routes/uploads.js', function(){
                     haveAccess: sinon.stub().returns(true)
                 };
                 
-                authorize(request, response, next);
+                authorize({session:true, token:true, access_token:true})(request, response, next);
                 
                 response.expect.status(400).json({ error: "missing parameters" });
                 response.verify();
@@ -150,6 +157,9 @@ describe('routes/uploads.js', function(){
             
             it('should respond "401 Unauthorized" if user session with NO permission to upload', function() {
                 request = {
+                    systemSettings: sinon.stub().returns(''),
+                    get: sinon.stub().returns(''),
+                    body:{},
                     session: {
                         loggedIn: true,
                         user: {
@@ -164,7 +174,7 @@ describe('routes/uploads.js', function(){
                     haveAccess: sinon.stub().returns(false)
                 };
                 
-                authorize(request, response, next);
+                authorize({session:true, token:true, access_token:true})(request, response, next);
                 
                 response.expect.status(401).json({
                     error: "you dont have permission to 'manage project recordings'"
@@ -176,13 +186,16 @@ describe('routes/uploads.js', function(){
             
             it('should call next() if valid token', function() {
                 request = {
+                    systemSettings: sinon.stub().returns(''),
+                    get: sinon.stub().returns(''),
+                    body:{},
                     token: {
                         project: 10,
                         site: 200,
                     },
                 };
                 
-                authorize(request, response, next);
+                authorize({session:true, token:true, access_token:true})(request, response, next);
                 
                 response.verify({});
                 expect(next.callCount).to.equal(1);
@@ -196,9 +209,13 @@ describe('routes/uploads.js', function(){
             });
             
             it('should respond "401 Unauthorized" if NO valid token and NO user session', function() {
-                request = {};
+                request = {
+                    systemSettings: sinon.stub().returns(''),
+                    get: sinon.stub().returns(''),
+                    body:{},
+                };
                 
-                authorize(request, response, next);
+                authorize({session:true, token:true, access_token:true})(request, response, next);
                 
                 expect(next.callCount).to.equal(0, 'unexpected call next()');
                 response.expect.sendStatus(401);
@@ -300,7 +317,7 @@ describe('routes/uploads.js', function(){
         
         describe('receiveUpload', function() {
             var receiveUpload;
-            var findProjectById;
+            var findProject;
             var getStorageUsage;
             var projectInfo;
             var metadata;
@@ -322,17 +339,17 @@ describe('routes/uploads.js', function(){
             
             beforeEach(function() {
                 projectInfo = { 
-                    recording_limit: 100 
+                    storage_limit: 100 
                 };
                 
-                findProjectById = sinon.stub();
-                findProjectById.callsArgWith(1, null, [projectInfo], []);
+                findProject = sinon.stub();
+                findProject.returns(q.resolve([projectInfo]));
                 
                 getStorageUsage = sinon.stub();
-                getStorageUsage.callsArgWith(1, null, [{ min_usage: 5 }], []);
+                getStorageUsage.returns(q.resolve({ min_usage: 5 }));
                 
                 mock.model.projects = {
-                    findById: findProjectById,
+                    find: findProject,
                     getStorageUsage: getStorageUsage
                 };
                 
@@ -421,25 +438,26 @@ describe('routes/uploads.js', function(){
             });
             
             it('should respond "401 Unauthorized" if project have reached the storage limit', function() {
-                getStorageUsage.callsArgWith(1, null, [{ min_usage: 100 }], []);
+                getStorageUsage.returns(q.resolve({ min_usage: 100 }));
                 
-                receiveUpload(request, response, next);
+                receiveUpload(request, response, next).then(function(){
+                    response.expect.status(401).json({ error: "Project Recording limit reached"});
+                    response.verify();
+                    
+                    expect(next.callCount).to.equal(0, 'Unexpected call to next');
+                });
                 
-                response.expect.status(401).json({ error: "Project Recording limit reached"});
-                response.verify();
-                
-                expect(next.callCount).to.equal(0, 'Unexpected call to next');
             });
             
             it('should respond "400 Bad Request" if no files', function() {
                 delete request.busboy;
                 
-                receiveUpload(request, response, next);
-                
-                response.expect.status(400).json({ error: "no data" });
-                response.verify();
-                
-                expect(next.callCount).to.equal(0, 'Unexpected call to next');
+                receiveUpload(request, response, next).then(function(){
+                    response.expect.status(400).json({ error: "no data" });
+                    response.verify();
+                    
+                    expect(next.callCount).to.equal(0, 'Unexpected call to next');
+                });
             });
             
             it('should respond "400 Bad Request" if no basic metadata', function() {
@@ -449,12 +467,12 @@ describe('routes/uploads.js', function(){
                     busboy.finish();
                 };
                 
-                receiveUpload(request, response, next);
-                
-                response.expect.status(400).json({ error: "missing basic metadata" });
-                response.verify();
-                
-                expect(next.callCount).to.equal(0, 'Unexpected call to next');
+                receiveUpload(request, response, next).then(function(){
+                    response.expect.status(400).json({ error: "missing basic metadata" });
+                    response.verify();
+                    
+                    expect(next.callCount).to.equal(0, 'Unexpected call to next');
+                });
             });
             
             it('should respond "400 Bad Request" if invalid metadata JSON', function() {
@@ -464,12 +482,12 @@ describe('routes/uploads.js', function(){
                     busboy.finish();
                 };
                 
-                receiveUpload(request, response, next);
-                
-                response.expect.status(400).json({ error: "Unexpected token a" });
-                response.verify();
-                
-                expect(next.callCount).to.equal(0, 'Unexpected call to next');
+                receiveUpload(request, response, next).then(function(){
+                    response.expect.status(400).json({ error: "Unexpected token a" });
+                    response.verify();
+                    
+                    expect(next.callCount).to.equal(0, 'Unexpected call to next');
+                });
             });
             
             it('should respond "400 Bad Request" if bad filename format', function() {
@@ -486,15 +504,15 @@ describe('routes/uploads.js', function(){
                     busboy.finish();
                 };
                 
-                receiveUpload(request, response, next);
-                
-                response.expect.status(400).json({ error: "formatParse error" });
-                response.verify();
-                
-                expect(next.callCount).to.equal(0, 'Unexpected call to next');
-                
-                expect(file.resume.callCount).to.equal(1);
-                expect(file.pipe.callCount).to.equal(0);
+                receiveUpload(request, response, next).then(function(){
+                    response.expect.status(400).json({ error: "formatParse error" });
+                    response.verify();
+                    
+                    expect(next.callCount).to.equal(0, 'Unexpected call to next');
+                    
+                    expect(file.resume.callCount).to.equal(1);
+                    expect(file.pipe.callCount).to.equal(0);
+                });
             });
             
             it('should respond "400 Bad Request" if incomplete form data', function() {
@@ -502,12 +520,12 @@ describe('routes/uploads.js', function(){
                     busboy.finish();
                 };
                 
-                receiveUpload(request, response, next);
-                
-                response.expect.status(400).json({ error: "form data not complete" });
-                response.verify();
-                
-                expect(next.callCount).to.equal(0, 'Unexpected call to next');
+                receiveUpload(request, response, next).then(function(){
+                    response.expect.status(400).json({ error: "form data not complete" });
+                    response.verify();
+                    
+                    expect(next.callCount).to.equal(0, 'Unexpected call to next');
+                });
             });
             
             it('should respond "403 Forbidden" if file is already on the system', function(done) {
@@ -571,7 +589,7 @@ describe('routes/uploads.js', function(){
             });
             
             it('Should respond "401 Unauthorized" if project will over the storage limit with the file uploaded', function(done) {
-                getStorageUsage.callsArgWith(1, null, [{ min_usage: 99.5 }], []);
+                getStorageUsage.returns(q.resolve({ min_usage: 99.5 }));
                 
                 response = new TestResponse(function respondFinished() {
                     
