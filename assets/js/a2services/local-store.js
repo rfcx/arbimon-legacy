@@ -14,3 +14,4 @@ angular.module('a2.srv.local-storage', [
         },
     };
 })
+;

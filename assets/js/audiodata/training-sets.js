@@ -94,7 +94,7 @@ angular.module('a2.audiodata.training-sets', [
     this.setROISet = function(rois){
         this.rois = rois;
         a2TrainingSetHistory.setLastRoiSet(this.rois);
-    }
+    };
     
     this.nextROI = function(step) {
         return this.setROI(this.selected.roi_index + (step || 1));
