@@ -119,7 +119,7 @@ var verifySite = function(req, res, next) {
 
 var receiveUpload = function(req, res, next) {
     
-    q.all([
+    return q.all([
         model.projects.find({id:req.upload.projectId}).get(0),
         model.projects.getStorageUsage(req.upload.projectId)
     ]).then(function(results) {
