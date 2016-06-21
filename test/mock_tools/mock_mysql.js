@@ -4,6 +4,7 @@ var mock_mysql_connection = function(pool){
     this.pool = pool;
     if(pool){
         pool.connections++;
+        this.json_errors = pool.json_errors;
     }
     this.cache = (pool && pool.cache) || {};
 };
@@ -33,6 +34,9 @@ mock_mysql_connection.prototype = {
                 callback(null, entry.no_value ? null : (entry.value || [[]]), entry.fields || [[]]);
             }
         } else {
+            if(this.json_errors){
+                sql = JSON.stringify(sql);
+            }
             callback(new Error("Query not in cache : "+sql));
         }
     },
