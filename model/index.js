@@ -8,6 +8,7 @@ exports.trainingSets    = require('./training_sets');
 exports.species         = require('./species');
 exports.songtypes       = require('./songtypes');
 exports.models          = require('./models');
+exports.AppListings     = require('./app-listings');
 exports.jobs            = require('./jobs');
 exports.news            = require('./news');
 exports.playlists       = require('./playlists');
