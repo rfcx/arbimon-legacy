@@ -73,3 +73,6 @@
     - Fixing site count query scalability.
 - v1.8.4
     - Fixing recording query bug with using id only.
+- v1.8.5
+    - Support for listing of associated apps.
+    - Adding uploader desktop app links for download.
