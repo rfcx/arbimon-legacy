@@ -3,16 +3,24 @@ angular.module('a2.audiodata.uploads.upload', [
     'a2.directives', 
     'ui.bootstrap', 
     'angularFileUpload',
+    'a2.srv.app-listings',
+    'a2.filter.caps',
     'humane'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('audiodata.uploads.upload', {
         url: '/',
-        controller: 'A2AudioDataUploadsUploadCtrl',
+        controller: 'A2AudioDataUploadsUploadCtrl as controller',
         templateUrl: '/partials/audiodata/uploads/upload.html'
     });
 })
-.controller('A2AudioDataUploadsUploadCtrl', function($scope, uploads, Project, $modal, $window, a2UserPermit, notify) { 
+.controller('A2AudioDataUploadsUploadCtrl', function(
+    $scope, 
+    uploads, Project, 
+    AppListingsService, 
+    $modal, $window, a2UserPermit, 
+    notify
+) { 
     
     $scope.prettyBytes = function(bytes) {
         
@@ -84,7 +92,10 @@ angular.module('a2.audiodata.uploads.upload', [
         
         _verifyAndUpload();
     };
-      
+    
+    AppListingsService.getFor('arbimon2-desktop-uploader').then((function(uploaderAppListing){
+        this.uploaderAppListing = uploaderAppListing;
+    }).bind(this));
     
     $scope.stopQueue = function() {
         $scope.uploading = false;
@@ -179,9 +190,15 @@ angular.module('a2.audiodata.uploads.upload', [
     };
     
     
-    $scope.displayHelp = function() {
+    this.displayHelp = function() {
         $modal.open({
             templateUrl: '/partials/audiodata/uploader-help.html',
+            controller: 'UploaderHelpDisplayCtrl as controller',
+            resolve: {
+                uploaderAppListing: (function(){
+                    return this.uploaderAppListing;
+                }).bind(this)
+            },
             size: 'lg'
         });
     };
@@ -219,6 +236,10 @@ angular.module('a2.audiodata.uploads.upload', [
         
         notify.error('all fields are required');
     };
+})
+.controller('UploaderHelpDisplayCtrl', function(uploaderAppListing) {
+    this.a="q";
+    this.uploaderAppListing = uploaderAppListing;
 })
 .factory('uploads', function(FileUploader){
     
