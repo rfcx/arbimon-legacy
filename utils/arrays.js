@@ -13,15 +13,15 @@ module.exports = {
      * @return Promise with the row_set with its properties computed.
      */
     compute_row_properties : function(row_set, property_set, method_getter, callback){
-        var deferred = Q.defer();
-        var promise = deferred.promise;
         if(!property_set || !row_set){
-            deferred.resolve();
-            return;
-        } else {
+            return Q.resolve().nodeify(callback);
+        }
+        
+        return Q.Promise(function(resolve, reject){
             if(typeof(property_set) == 'string'){
                 property_set = property_set.split(',');
             }
+            console.log("property_set", property_set);
             async.eachLimit(property_set, 10, function(property, next_property){
                 var method = method_getter(property);
                 if(method){
@@ -33,18 +33,12 @@ module.exports = {
                 }
             }, function(err){
                 if(err){
-                    deferred.reject(err);
+                    reject(err);
                 } else {
-                    deferred.resolve(row_set);                
+                    resolve(row_set);                
                 }
             });
-        }
-        if(callback){
-            promise = deferred.promise.then(function(row_set){
-                callback(null, row_set);
-            }, callback);
-        }
-        return promise;
+        }).nodeify(callback);
     },
 
     sample_without_replacement: function(array, count){
