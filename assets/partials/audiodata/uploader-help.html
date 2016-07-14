@@ -35,6 +35,20 @@
             longer recordings.
         </li>
     </ul>
+    <br>
+    <div ng-if="controller.uploaderAppListing.length">
+        <h4>Desktop App</h4>
+        If you need to upload a lot of recordings (more than 1 or 2K) or if the 
+        internet connection is not good, then try our desktop uploader app.
+        <ul class="list">
+            <li ng-repeat="listing in controller.uploaderAppListing">
+                <i class="fa" ng-class="'fa-' + listing.type"></i>
+                <a ng-href="{{listing.url}}">
+                    {{listing.type | caps:'title-case'}}
+                </a>
+            </li>
+        </ul>
+    </div>
     <p class="text-muted">
         <small>Click <b>Help</b> button to see this window again</small>
     </p>
