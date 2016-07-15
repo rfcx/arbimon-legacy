@@ -601,14 +601,14 @@ describe('Module: utils/uploader, Uploader', function() {
         });
     });
     
-    describe('prototype.cleanUpAfter', function() {
-        var cleanUpAfter;
+    describe('prototype.cleanUpTempFiles', function() {
+        var cleanUpTempFiles;
         var removeFromList;
         var deleteFile, restoreDeleteFile;
         var deleteBucketObject, restoreDeleteBucketObject;
         
         before(function() {
-            cleanUpAfter = Uploader.prototype.cleanUpAfter;
+            cleanUpTempFiles = Uploader.prototype.cleanUpTempFiles;
         });
         
         beforeEach(function() {
@@ -638,19 +638,16 @@ describe('Module: utils/uploader, Uploader', function() {
             delete mock.model.uploads;
         });
         
-        it('Should delete temp file and remove upload from uploads_processing', function() {
-            cleanUpAfter.call(data);
+        it('Should delete temp file and remove upload from uploads_processing', function(done) {
+            cleanUpTempFiles.call(data, function(){
+                expect(deleteFile.callCount).to.equal(3);
+                expect(deleteFile.firstCall.args[0]).to.equal(data.thumbnail);
+                expect(deleteFile.secondCall.args[0]).to.equal(data.inFile);
+                expect(deleteFile.thirdCall.args[0]).to.equal(data.outFile);
+                
+                done();
+            });
             
-            expect(deleteFile.callCount).to.equal(3);
-            expect(deleteFile.firstCall.args[0]).to.equal(data.thumbnail);
-            expect(deleteFile.secondCall.args[0]).to.equal(data.inFile);
-            expect(deleteFile.thirdCall.args[0]).to.equal(data.outFile);
-            
-            expect(deleteBucketObject.callCount).to.equal(1);
-            expect(deleteBucketObject.firstCall.args[0]).to.equal(fileUpload.tempFileUri);
-            
-            expect(removeFromList.callCount).to.equal(1);
-            expect(removeFromList.firstCall.args[0]).to.equal(fileUpload.id);
         });
     });
     
@@ -769,9 +766,15 @@ describe('Module: utils/uploader, Uploader', function() {
         var uploadFlac;
         var uploadThumbnail;
         var insertOnDB;
-        var cleanUpAfter;
+        var cleanUpTempFiles;
+        var finishProcessing;
+        var restoreDeleteBucketObject, deleteBucketObject;
+        var restoreModel, model;
         
         beforeEach(function() {
+            restoreDeleteBucketObject = Uploader.__set__('deleteBucketObject', deleteBucketObject=sinon.stub());
+            restoreModel = Uploader.__set__('model', model={uploads:{updateStateAndComment:sinon.stub().yieldsAsync()}});
+
             dataPrep = sinon.stub(Uploader.prototype, 'dataPrep');
             dataPrep.callsArgAsync(0);
             
@@ -799,10 +802,14 @@ describe('Module: utils/uploader, Uploader', function() {
             uploadThumbnail = sinon.stub(Uploader.prototype, 'uploadThumbnail');
             uploadThumbnail.callsArgAsync(0);
             
+            finishProcessing = sinon.stub(Uploader.prototype, 'finishProcessing');
+            finishProcessing.yieldsAsync();
+            
             insertOnDB = sinon.stub(Uploader.prototype, 'insertOnDB');
             insertOnDB.callsArgAsync(0);
             
-            cleanUpAfter = sinon.stub(Uploader.prototype, 'cleanUpAfter');
+            cleanUpTempFiles = sinon.stub(Uploader.prototype, 'cleanUpTempFiles');
+            cleanUpTempFiles.yieldsAsync();
         });
         
         afterEach(function() {
@@ -816,7 +823,9 @@ describe('Module: utils/uploader, Uploader', function() {
             uploadFlac.restore();
             uploadThumbnail.restore();
             insertOnDB.restore();
-            cleanUpAfter.restore();
+            cleanUpTempFiles.restore();
+            finishProcessing.restore();
+            restoreDeleteBucketObject();
         });
         
         it('Should process upload and call callback with results', function(done) {
@@ -831,6 +840,8 @@ describe('Module: utils/uploader, Uploader', function() {
                     'insertUploadRecs',
                     'convertMonoFlac',
                     'updateAudioInfo',
+                    'getInitialAudioInfo',
+                    'finishProcessing',
                     'updateFileSize',
                     'genThumbnail',
                     'uploadFlac',
@@ -868,7 +879,7 @@ describe('Module: utils/uploader, Uploader', function() {
                 expect(insertOnDB.calledAfter(uploadThumbnail))
                     .to.equal(true, 'Expected insertOnDB to be called after uploadThumbnail');
                 
-                expect(cleanUpAfter.callCount).to.equal(1);
+                expect(cleanUpTempFiles.callCount).to.equal(1);
                 
                 done();
             });
@@ -885,7 +896,7 @@ describe('Module: utils/uploader, Uploader', function() {
             uploader.process(fileUpload, function(err, results) {
                 expect(err).to.be.an.instanceof(Error);
                 
-                expect(cleanUpAfter.callCount).to.equal(1);
+                expect(cleanUpTempFiles.callCount).to.equal(1);
                 
                 console.error.restore();
                 done();

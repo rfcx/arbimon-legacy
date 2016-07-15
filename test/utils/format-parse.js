@@ -51,7 +51,7 @@ describe('format-parse', function(){
         
         (function() { 
             formatParse(invalidFormat, 'default-2014-08-25_17-30.flac');
-        }).should.Throw(/invalid_format:/);
+        }).should.Throw(/invalid_filename:/);
         
     });
     
