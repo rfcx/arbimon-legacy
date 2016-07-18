@@ -21,15 +21,17 @@ router.get('/', function(req, res, next) {
 });
 
 router.put('/:projectId', function(req, res, next) {
+    res.type('json');
+    
     var project = req.body.project;
     
     project.project_id = req.params.projectId;
     
-    model.projects.update(project, function(err, rows) {
-        if(err) return next(err);
-        
-        res.json(rows);
-    });
+    model.projects.update(project).then(function() {
+        return model.projects.find({ id: req.params.projectId }).get(0);
+    }).then(function(project){
+        res.json(project);
+    }).catch(next);
 });
 
 

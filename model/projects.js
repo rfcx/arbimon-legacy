@@ -287,6 +287,23 @@ var Projects = {
         });
     },
 
+    /**
+     * updates a project.
+     * @param {Object} project 
+     * @param {Number} project.project_id
+     * @param {String} project.name
+     * @param {String} project.url
+     * @param {String} project.description
+     * @param {Number} project.project_type_id
+     * @param {Boolean} project.is_private
+     * @param {Boolean} project.is_enabled
+     * @param {String} project.current_plan
+     * @param {Number} project.storage_usage
+     * @param {Number} project.processing_usage
+     * @param {Function} callback(err, projectId)
+     *
+     * @return {Promise} resolved after the update.
+    */
     update: function(project, callback) {
         
         var schema = {
@@ -298,23 +315,41 @@ var Projects = {
             is_private: [joi.number().valid(0,1), joi.boolean()],
             is_enabled: [joi.number().valid(0,1), joi.boolean()],
             current_plan: joi.number(),
-            storage_usage: joi.number(),
-            processing_usage: joi.number(),
+            storage_usage: joi.number().allow(null),
+            processing_usage: joi.number().allow(null),
+            plan: joi.object().keys({
+                tier: joi.string(),
+                storage: joi.number(),
+                processing: joi.number(),
+                activation: joi.date().allow(null).optional(),
+                duration_period: joi.number().allow(null).optional(),
+            }).optional()
         };
         
-        joi.validate(project, schema, function(err, projectInfo){
-            if(err) return callback(err);
-            
+        return q.ninvoke(joi, 'validate', project, schema).then(function(projectInfo){
             var projectId = projectInfo.project_id;
             delete projectInfo.project_id;
             
-            var q = 'UPDATE projects \n'+
-                    'SET ? \n'+
-                    'WHERE project_id = ?';
-
-            q = mysql.format(q, [projectInfo, projectId]);
-            queryHandler(q, callback);
-        });
+            var projectInfoPlan = projectInfo.plan;
+            delete projectInfo.plan;
+            
+            return q.all([
+                dbpool.query(
+                    'UPDATE projects\n'+
+                    'SET ?\n'+
+                    'WHERE project_id = ?', [
+                    projectInfo, projectId
+                ]),
+                projectInfoPlan && dbpool.query(
+                    "UPDATE project_plans\n"+
+                    "SET ?\n" + 
+                    "WHERE project_id=?", [
+                        projectInfoPlan,
+                        projectId
+                    ]
+                )
+            ]);
+        }).nodeify(callback);
     },
     
     insertNews: function(news, callback) {
