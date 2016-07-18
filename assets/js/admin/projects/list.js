@@ -80,6 +80,7 @@ angular.module('a2.admin.projects.list', [
     this.save = function(){
         return AdminProjectsListService.updateProject(this.project).then((function(project){
             this.project = project;
+            notify.log("Project " + project.name + " info updated.");
         }).bind(this)).catch(function(err){
             notify.error(err);
         });
