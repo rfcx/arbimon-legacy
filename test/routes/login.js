@@ -9,7 +9,7 @@ var sinon = require('sinon');
 var rewire= require('rewire');
 var dd = console.log;
 
-var login = rewire('../../routes/login');
+var login = rewire('../../app/routes/login');
 
 var mock_config={
     mailchimp:{listId:1},

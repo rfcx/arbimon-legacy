@@ -19,12 +19,12 @@ var mock_config = {
         "timezone" : "Z"
     }
 };
-var dbpool = pre_wire('../../utils/dbpool', {
-    '../../config' : function (key){ return mock_config[key]; },
+var dbpool = pre_wire('../../app/utils/dbpool', {
+    '../../app/config' : function (key){ return mock_config[key]; },
     'mysql' : mock_mysql
 });
-var users = pre_wire('../../model/users', {
-    '../../utils/dbpool' :  dbpool,
+var users = pre_wire('../../app/model/users', {
+    '../../app/utils/dbpool' :  dbpool,
     'mysql' : mock_mysql
 });
 

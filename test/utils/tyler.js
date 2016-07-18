@@ -9,7 +9,7 @@ var async = require('async');
 var sinon = require('sinon');
 var rewire = require('rewire');
 
-var tyler = rewire('../../utils/tyler');
+var tyler = rewire('../../app/utils/tyler');
 var mock_fs = require('../mock_tools/mock_fs');
 
 var mock_config = {

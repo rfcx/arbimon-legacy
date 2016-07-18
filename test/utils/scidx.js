@@ -10,7 +10,7 @@ var sinon = require('sinon');
 var path = require('path');
 
 var rewire = require('rewire');
-var scidx = rewire('../../utils/scidx');
+var scidx = rewire('../../app/utils/scidx');
 
 var real_file = scidx.__get__('file');
 var mocks = {

@@ -22,8 +22,8 @@ var mock_config = {
 };
 
 
-var dbpool = pre_wire('../../utils/dbpool', {
-    '../../config' : function (key){
+var dbpool = pre_wire('../../app/utils/dbpool', {
+    '../../app/config' : function (key){
         return mock_config[key];
     },
     'mysql' : mock_mysql

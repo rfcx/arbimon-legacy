@@ -2,7 +2,7 @@
 /*jshint mocha:true */
 /*jshint expr:true */
 "use strict";
-// node_modules/.bin/istanbul cover node_modules/.bin/_mocha test/utils/sqlutil.js
+// node_modules/.bin/istanbul cover node_modules/.bin/_mocha test/app/utils/sqlutil.js
 
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
@@ -15,7 +15,7 @@ var mock_mysql = require('../mock_tools/mock_mysql');
 var scrub_object = require('../mock_tools/scrub_object');
 
 
-var sqlutil = rewire('../../utils/sqlutil');
+var sqlutil = rewire('../../app/utils/sqlutil');
 sqlutil.__set__({mysql: mock_mysql});
 
 describe('sqlutil', function(){

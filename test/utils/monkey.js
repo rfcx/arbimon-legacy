@@ -8,7 +8,7 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
 var rewire = require('rewire');
-var pokeDaMonkey = rewire('../../utils/monkey');
+var pokeDaMonkey = rewire('../../app/utils/monkey');
 var mock_ec2 = new (require('../mock_tools/mock_ec2'))();
 
 var mock_config = {

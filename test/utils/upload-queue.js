@@ -11,8 +11,8 @@ var sinon = require('sinon');
 var rewire= require('rewire');
 
 var robTheBuilder = require('../mock_tools/rob-the-builder');
-var uploadQueue = rewire('../../utils/upload-queue');
-var Uploader = require('../../utils/uploader');
+var uploadQueue = rewire('../../app/utils/upload-queue');
+var Uploader = require('../../app/utils/uploader');
 
 var mock = {
     model:{

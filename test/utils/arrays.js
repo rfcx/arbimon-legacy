@@ -7,7 +7,7 @@
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 
-var arrays = require('../../utils/arrays');
+var arrays = require('../../app/utils/arrays');
 
 
 describe('arrays', function(){

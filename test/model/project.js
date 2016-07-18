@@ -24,13 +24,13 @@ var mock_config = {
     }
 };
 
-var dbpool = pre_wire('../../utils/dbpool', {
-    '../../config' : function (key){ return mock_config[key]; },
+var dbpool = pre_wire('../../app/utils/dbpool', {
+    '../../app/config' : function (key){ return mock_config[key]; },
     'mysql' : mock_mysql
 });
-var projects = pre_wire('../../model/projects', {
-    '../../config' : function (key){ return mock_config[key]; },
-    '../../utils/dbpool' :  dbpool,
+var projects = pre_wire('../../app/model/projects', {
+    '../../app/config' : function (key){ return mock_config[key]; },
+    '../../app/utils/dbpool' :  dbpool,
     'mysql' : mock_mysql,
 });
 

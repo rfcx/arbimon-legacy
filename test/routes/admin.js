@@ -11,7 +11,7 @@ var events = require('events');
 var router_expect = require('../mock_tools/router_expect');
 var dd = console.log;
 
-var admin = rewire('../../routes/admin');
+var admin = rewire('../../app/routes/admin');
 
 var mock_config={
     hosts:{jobqueue:'host://jobqueue/'}

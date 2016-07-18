@@ -2,7 +2,7 @@ var chai = require('chai'),
     expect = chai.expect, 
     should = chai.should();
     
-var root = '../../';
+var root = '../../app/';
 
 var formatParse = require(root + 'utils/format-parse');
 

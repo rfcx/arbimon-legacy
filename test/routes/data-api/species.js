@@ -10,7 +10,7 @@ var rewire= require('rewire');
 var events = require('events');
 var router_expect = require('../../mock_tools/router_expect');
 var dd=console.log;
-var species = rewire('../../../routes/data-api/species');
+var species = rewire('../../../app/routes/data-api/species');
 
 var mock = {
     model:{

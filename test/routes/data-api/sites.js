@@ -9,7 +9,7 @@ var sinon = require('sinon');
 var rewire= require('rewire');
 var router_expect = require('../../mock_tools/router_expect');
 
-var sites = rewire('../../../routes/data-api/sites');
+var sites = rewire('../../../app/routes/data-api/sites');
 
 var mock = {
     model:{
