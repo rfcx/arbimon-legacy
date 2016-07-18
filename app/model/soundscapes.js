@@ -3,6 +3,7 @@ var mysql        = require('mysql');
 var AWS          = require('aws-sdk');
 var async        = require('async');
 var joi          = require('joi');
+var path          = require('path');
 var q          = require('q');
 var child_process = require('child_process');
 var scidx        = require('../utils/scidx');
@@ -15,6 +16,8 @@ var tmpfilecache = require('../utils/tmpfilecache');
 // local variables
 var s3;
 var queryHandler = dbpool.queryHandler;
+
+var set_visual_scale_path = path.resolve(__dirname, '..', '..', 'scripts', 'Soundscapes', 'set_visual_scale.py');
 
 // exports
 var Soundscapes = {
@@ -614,7 +617,7 @@ var Soundscapes = {
         var cmd;
         var script = child_process.spawn(
             '.env/bin/python', cmd=[
-                'scripts/Soundscapes/set_visual_scale.py', 
+                set_visual_scale_path, 
                 (soundscape.id|0), max == '-' ? '-' : (max|0), palette, 
                 normalized, 
                 amplitude, 

@@ -14,6 +14,7 @@ var validator = require('validator');
 var request = require('request');
 var ejs = require('ejs');
 var fs = require('fs');
+var path = require('path');
 var dd = console.log;
 
 var config = require('../config');
@@ -23,8 +24,8 @@ var sha256 = require('../utils/sha256');
 var mc = new mcapi.Mailchimp(config('mailchimp').key);
 
 var mailTemplates = {
-    activate: ejs.compile(fs.readFileSync('./views/mail/activate-account.ejs').toString()),
-    resetPass: ejs.compile(fs.readFileSync('./views/mail/reset-password.ejs').toString())
+    activate: ejs.compile(fs.readFileSync(path.resolve(__dirname, '../views/mail/activate-account.ejs')).toString()),
+    resetPass: ejs.compile(fs.readFileSync(path.resolve(__dirname, '../views/mail/reset-password.ejs')).toString())
 };
 
 var transport = nodemailer.createTransport({

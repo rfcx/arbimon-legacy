@@ -31,6 +31,8 @@ var APIError = require('./utils/apierror');
 var model = require('./model');
 var uploadQueue = require('./utils/upload-queue');
 
+var www_root_path = path.resolve(__dirname, '..', 'public');
+
 paypal.configure(config('paypal'));
 var app = express();
 
@@ -41,7 +43,7 @@ var app = express();
 app.disable('x-powered-by');
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.resolve(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 if (app.get('env') === 'production') {
@@ -56,7 +58,7 @@ if (app.get('env') === 'development') {
 // ------------------------------------------------------------------
 
 
-app.use(favicon(path.join(__dirname, '/public/images/favicon.ico')));
+app.use(favicon(path.join(www_root_path, '/images/favicon.ico')));
 
 logger.token('tag', function(req, res){ return 'arbimon2:request'; });
 
@@ -95,7 +97,7 @@ app.use(busboy({
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(www_root_path));
 if(app.get('env') === 'development') {
     app.use('/docs', express.static(path.join(__dirname, 'docs')));
 }

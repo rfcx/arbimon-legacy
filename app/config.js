@@ -7,7 +7,7 @@ var debug = require('debug')('arbimon2:config');
 
 
 // config folder 
-var config_folder = __dirname;
+var config_folder = path.resolve(__dirname, '..', 'config');
 // cache
 var cache = {};
 
