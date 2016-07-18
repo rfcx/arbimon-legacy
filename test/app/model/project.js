@@ -364,13 +364,13 @@ describe('Project', function(){
         
         it('Should update a project given the data', function(done){
             dbpool.pool.cache[
-                "UPDATE projects \n" +
-                "SET `url` = 'project/url', `name` = 'project', `description` = 'description', `project_type_id` = 1, `is_private` = 1 \n" +
-                "WHERE project_id = 1"
+                "UPDATE projects\n" +
+                "SET ?\n" +
+                "WHERE project_id = ?"
             ]={value:{affectedRows:1}};
             projects.update(project, function(err, results){
                 should.not.exist(err);
-                results.should.deep.equal({affectedRows:1});
+                results.should.deep.equal([{affectedRows:1},undefined]);
                 done();
             });
         });
