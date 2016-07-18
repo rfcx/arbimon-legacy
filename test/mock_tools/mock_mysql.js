@@ -4,6 +4,7 @@ var mock_mysql_connection = function(pool){
     this.pool = pool;
     if(pool){
         pool.connections++;
+        this.json_errors = pool.json_errors;
     }
     this.cache = (pool && pool.cache) || {};
 };
@@ -33,8 +34,20 @@ mock_mysql_connection.prototype = {
                 callback(null, entry.no_value ? null : (entry.value || [[]]), entry.fields || [[]]);
             }
         } else {
+            if(this.json_errors){
+                sql = JSON.stringify(sql);
+            }
             callback(new Error("Query not in cache : "+sql));
         }
+    },
+    beginTransaction: function(callback){
+        callback();
+    },
+    rollback: function(callback){
+        callback();
+    },
+    commit: function(callback){
+        callback();
     },
     release:function(){
         if(this.pool){
@@ -68,6 +81,7 @@ module.exports = {
         pool: mock_mysql_pool,
         connection : mock_mysql_connection
     },
+    format: mysql.format.bind(mysql),
     escape: mysql.escape.bind(mysql),
     escapeId: mysql.escapeId.bind(mysql)
 };

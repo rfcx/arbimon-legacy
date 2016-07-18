@@ -114,7 +114,7 @@ describe('Project', function(){
     describe('listAll', function(){
         it('Should return the list of all projects.', function(done){
             dbpool.pool.cache[
-                "SELECT name, url, description, is_private, is_enabled \n" +
+                "SELECT project_id as id, name, url, description, is_private, is_enabled \n" +
                 "FROM projects"
             ]={value:[project]};
             projects.listAll(function(err, results){
@@ -129,7 +129,16 @@ describe('Project', function(){
          
         it('Should return a project given its id.', function(done){
             dbpool.pool.cache[
-                "SELECT * FROM projects WHERE project_id = 1"
+                "SELECT p.*, \n" +
+                "   pp.tier, \n" +
+                "   pp.storage AS storage_limit, \n" +
+                "   pp.processing AS processing_limit, \n" +
+                "   pp.created_on AS plan_created, \n" +
+                "   pp.activation AS plan_activated, \n" +
+                "   pp.duration_period AS plan_period \n" +
+                "FROM projects AS p \n" +
+                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n" +
+                "WHERE (p.project_id = ?)"
             ]={value:[project]};
             projects.findById(1, function(err, results){
                 should.not.exist(err);
@@ -143,7 +152,16 @@ describe('Project', function(){
          
         it('Should return a project given its url.', function(done){
             dbpool.pool.cache[
-                "SELECT * FROM projects WHERE url = 'project-url'"
+                "SELECT p.*, \n" +
+                "   pp.tier, \n" +
+                "   pp.storage AS storage_limit, \n" +
+                "   pp.processing AS processing_limit, \n" +
+                "   pp.created_on AS plan_created, \n" +
+                "   pp.activation AS plan_activated, \n" +
+                "   pp.duration_period AS plan_period \n" +
+                "FROM projects AS p \n" +
+                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n" +
+                "WHERE (p.url = ?)"
             ]={value:[project]};
             projects.findByUrl('project-url', function(err, results){
                 should.not.exist(err);
@@ -157,7 +175,16 @@ describe('Project', function(){
          
         it('Should return a project given its name.', function(done){
             dbpool.pool.cache[
-                "SELECT * FROM projects WHERE name = 'project'"
+                "SELECT p.*, \n" +
+                "   pp.tier, \n" +
+                "   pp.storage AS storage_limit, \n" +
+                "   pp.processing AS processing_limit, \n" +
+                "   pp.created_on AS plan_created, \n" +
+                "   pp.activation AS plan_activated, \n" +
+                "   pp.duration_period AS plan_period \n" +
+                "FROM projects AS p \n" +
+                "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n" +
+                "WHERE (p.name = ?)"
             ]={value:[project]};
             projects.findByName('project', function(err, results){
                 should.not.exist(err);
@@ -250,31 +277,47 @@ describe('Project', function(){
     });
     
     describe('create', function(){
-        var pdata;
+        var pdata, powner;
         
         beforeEach(function() {
+            powner = 9393;
             pdata = {
                 url: 'project-url', 
                 name: 'project', 
                 description: 'description', 
-                owner_id: 9393, 
                 project_type_id: 1, 
-                is_private: true
+                is_private: true,
+                plan: {
+                    tier: 'free',
+                    storage: 100,
+                    processing: 10000
+                }
             };
         });
         
         it('Should insert a project given the data', function(done){
             dbpool.pool.cache[
                 "INSERT INTO projects \n" +
-                "SET `url` = 'project-url', `name` = 'project', `description` = 'description', `owner_id` = 9393, `project_type_id` = 1, `is_private` = true"
+                "SET ?"
             ]={ value:{ insertId: 101 } };
             
             dbpool.pool.cache[
                 'INSERT INTO user_project_role \n'+
-                'SET user_id = 9393, role_id = 4, project_id = 101'
+                'SET ?'
             ]={ value:{ insertId: 102 } };
             
-            projects.create(pdata, function(err, projectId){
+            dbpool.pool.cache[
+                'INSERT INTO project_plans \n'+
+                'SET ?'
+            ]={ value:{ insertId: 103 } };
+            
+            dbpool.pool.cache[
+                'UPDATE projects \n' +
+                'SET current_plan = ? \n' +
+                'WHERE project_id = ?'
+            ]={ value:{ insertId: 103 } };
+            
+            projects.create(pdata, powner, function(err, projectId){
                 should.not.exist(err);
                 projectId.should.deep.equal(101);
                 done();
@@ -286,7 +329,7 @@ describe('Project', function(){
             'url', 
             'name', 
             'description', 
-            'owner_id', 
+            'plan', 
             'project_type_id', 
             'is_private'
         ];
@@ -295,7 +338,7 @@ describe('Project', function(){
             it('Should fail if '+key+' is not given', function(done){
                 delete pdata[key];
                 
-                projects.create(pdata, function(err, results){
+                projects.create(pdata, powner, function(err, results){
                     should.exist(err);
                     err.message.should.have.string(key);
                     should.not.exist(results);
@@ -306,17 +349,28 @@ describe('Project', function(){
     });
     
     describe('update', function(){
-         
+        var project;
+                
+        beforeEach(function(){
+            project = {
+                project_id: 1,
+                url: 'project/url',
+                name: 'project',
+                description: 'description',
+                project_type_id: 1,
+                is_private: 1
+            };
+        });         
         
         it('Should update a project given the data', function(done){
             dbpool.pool.cache[
-                "UPDATE projects \n" +
-                "SET `url` = 'project/url', `name` = 'project', `description` = 'description', `owner_id` = 9393, `project_type_id` = 1, `is_private` = 1 \n" +
-                "WHERE project_id = 1"
+                "UPDATE projects\n" +
+                "SET ?\n" +
+                "WHERE project_id = ?"
             ]={value:{affectedRows:1}};
             projects.update(project, function(err, results){
                 should.not.exist(err);
-                results.should.deep.equal({affectedRows:1});
+                results.should.deep.equal([{affectedRows:1},undefined]);
                 done();
             });
         });
@@ -430,7 +484,7 @@ describe('Project', function(){
             console.error.__spy__ = function(msg){
                 arguments.length.should.equal(1);
                 should.exist(msg);
-                msg.message.should.equal("Query not in cache : INSERT INTO project_news \nSET user_id = 9393, project_id = 1, data = 'news #5', news_type_id = 1");
+                msg.split(/\bat\b/)[0].should.equal("Error: Query not in cache : INSERT INTO project_news \nSET user_id = 9393, project_id = 1, data = \'news #5\', news_type_id = 1\n    ");
                 done();
             };
             projects.insertNews(news);
@@ -441,19 +495,20 @@ describe('Project', function(){
             mock_mysql.pool.cache = {};
         });
         
-        it('Should return the list of all the class in the project.', function(done){
+        it('Should return the list of all the classes in the project.', function(done){
             dbpool.pool.cache[
                 "SELECT pc.project_class_id as id, \n" +
-                "       pc.species_id as species, \n" +
-                "       pc.songtype_id as songtype, \n" +
-                "       st.taxon, \n"+
-                "       sp.scientific_name as species_name, \n" +
-                "       so.songtype as songtype_name \n" +
-                "FROM project_classes AS pc \n" +
-                "JOIN species AS sp on sp.species_id = pc.species_id \n" +
-                "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
-                "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id \n" +
-                "WHERE pc.project_id = 1 ORDER BY st.taxon, sp.scientific_name"
+                "pc.project_id as project, \n" +
+                "pc.species_id as species, \n" +
+                "pc.songtype_id as songtype, \n" +
+                "st.taxon, \n" +
+                "sp.scientific_name as species_name, \n" +
+                "so.songtype as songtype_name\n" +
+                "FROM project_classes AS pc\n" +
+                "JOIN species AS sp ON sp.species_id = pc.species_id\n" +
+                "JOIN songtypes AS so ON so.songtype_id = pc.songtype_id\n" +
+                "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id\n" +
+                "WHERE (pc.project_id = 1)"
             ]={value:['class1','class2']};
             projects.getProjectClasses(1, function(err, results){
                 should.not.exist(err);
@@ -464,17 +519,17 @@ describe('Project', function(){
         it('Query can be narrowed down to a specific class in the project.', function(done){
             dbpool.pool.cache[
                 "SELECT pc.project_class_id as id, \n" +
-                "       pc.species_id as species, \n" +
-                "       pc.songtype_id as songtype, \n" +
-                "       st.taxon, \n"+
-                "       sp.scientific_name as species_name, \n" +
-                "       so.songtype as songtype_name \n" +
-                "FROM project_classes AS pc \n" +
-                "JOIN species AS sp on sp.species_id = pc.species_id \n" +
-                "JOIN songtypes AS so on so.songtype_id = pc.songtype_id \n" +
-                "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id \n" +
-                "WHERE pc.project_id = 1\n" +
-                "  AND pc.project_class_id = 1 ORDER BY st.taxon, sp.scientific_name"
+                "pc.project_id as project, \n" +
+                "pc.species_id as species, \n" +
+                "pc.songtype_id as songtype, \n" +
+                "st.taxon, \n" +
+                "sp.scientific_name as species_name, \n" +
+                "so.songtype as songtype_name\n" +
+                "FROM project_classes AS pc\n" +
+                "JOIN species AS sp ON sp.species_id = pc.species_id\n" +
+                "JOIN songtypes AS so ON so.songtype_id = pc.songtype_id\n" +
+                "JOIN species_taxons AS st ON st.taxon_id = sp.taxon_id\n" +
+                "WHERE (pc.project_id = 1) AND (pc.project_class_id = 1)"
             ]={value:['class1']};
             projects.getProjectClasses(1, 1, function(err, results){
                 should.not.exist(err);
@@ -500,7 +555,7 @@ describe('Project', function(){
             var project_class = {species:'Specius exemplus', songtype: 'Common Song', project_id: 1};
             projects.insertClass(project_class, function(err, results){
                 should.not.exist(err);
-                results.should.deep.equal({insertId:1});
+                results.should.deep.equal({class:1, songtype:5036, species:59335});
                 done();
             });
         });
@@ -725,7 +780,49 @@ describe('Project', function(){
          
         it('Should return a list of models in a project given its url.', function(done){
             dbpool.pool.cache[
-                "SELECT m.model_id, CONCAT(UCASE(LEFT(m.name, 1)), SUBSTRING(m.name, 2)) as mname  ,UNIX_TIMESTAMP( m.`date_created` )*1000 as date  , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser  , mt.name as mtname  FROM `models` as m,`model_types` as mt , `users` as u , `projects` as p  WHERE p.url  = '/project_1/' and m.`model_type_id` = mt.`model_type_id` and m.user_id = u.user_id  and p.project_id = m.project_id and m.deleted = 0"
+                "(\n" + 
+                "SELECT m.model_id, \n" + 
+                "   CONCAT(UCASE(LEFT(m.name, 1)), \n" + 
+                "   SUBSTRING(m.name, 2)) as mname, \n" + 
+                "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n" + 
+                "   CONCAT( \n" + 
+                "       CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)), \n" + 
+                "       ' ', \n" + 
+                "       CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) \n" + 
+                "   ) as muser, \n" + 
+                "   mt.name as mtname, \n" + 
+                "   mt.enabled, \n" + 
+                "   0 as imported\n" + 
+                "FROM `models` as m,  \n" + 
+                "   `model_types` as mt,  \n" + 
+                "   `users` as u , `projects` as p \n" + 
+                "WHERE p.url = '/project_1/'AND m.`model_type_id` = mt.`model_type_id` \n" + 
+                "AND m.user_id = u.user_id \n" + 
+                "AND p.project_id = m.project_id \n" + 
+                "AND m.deleted = 0\n" + 
+                ") UNION(\n" + 
+                "SELECT m.model_id, \n" + 
+                "   CONCAT(UCASE(LEFT(m.name, 1)), \n" + 
+                "   SUBSTRING(m.name, 2)) as mname, \n" + 
+                "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n" + 
+                "   CONCAT( \n" + 
+                "       CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)), \n" + 
+                "       ' ', \n" + 
+                "       CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) \n" + 
+                "   ) as muser, \n" + 
+                "   mt.name as mtname, \n" + 
+                "   mt.enabled, \n" + 
+                "   1 as imported\n" + 
+                "FROM `project_imported_models` as pim,  \n" + 
+                "   `models` as m,  \n" + 
+                "   `model_types` as mt,  \n" + 
+                "   `users` as u , `projects` as p \n" + 
+                "WHERE p.url = '/project_1/'AND m.`model_type_id` = mt.`model_type_id` \n" + 
+                "AND m.user_id = u.user_id \n" + 
+                "AND pim.model_id = m.model_id \n" + 
+                "AND pim.project_id = p.project_id \n" + 
+                ")\n" + 
+                ""
             ]={value:['model1', 'model2']};
             projects.modelList('/project_1/', function(err, results){
                 should.not.exist(err);
@@ -734,305 +831,33 @@ describe('Project', function(){
             });
         });
     });
-    describe('classifications', function(){
-         
-        it('Should return a list of classifications in a project given its url.', function(done){
-            dbpool.pool.cache[
-                "SELECT UNIX_TIMESTAMP( j.`date_created` )*1000  as date   , j.`job_id`  , pl.`name` as playlistName, CONCAT(UCASE(LEFT(mode.`name`, 1)), SUBSTRING(mode.`name`, 2))  as modname   , CONCAT(UCASE(LEFT(jpc.`name`, 1)), SUBSTRING(jpc.`name`, 2))  as cname   , CONCAT(CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)) ,  ' ', CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) ) as muser  from  `playlists`  as pl, `models` as mode , `jobs` as j ,`job_params_classification` as jpc , `projects` as p , `users` as u  WHERE pl.`playlist_id` = jpc.`playlist_id` and mode.`model_id` = jpc.`model_id` and p.url  = '/project_1/' and j.`project_id` = p.`project_id`  and  j.`job_id` = jpc.`job_id` and j.`job_type_id` = 2 and j.`completed` = 1 and u.`user_id` = j.`user_id`"
-            ]={value:['c1', 'c2']};
-            projects.classifications('/project_1/', function(err, results){
-                should.not.exist(err);
-                results.should.deep.equal(['c1', 'c2']);
-                done();
-            });
-        });
-    });
-    describe('classificationName', function(){
-         
-        it('Should return the name and project of a classification given its id.', function(done){
-            dbpool.pool.cache[
-                "select  REPLACE(lower(c.`name`),' ','_')  as name , j.`project_id` as pid   from   `job_params_classification`  c , `jobs` j where c.`job_id` = j.`job_id` and c.`job_id` = 1"
-            ]={value:[{name:'cl1', project_id:1}]};
-            projects.classificationName(1, function(err, results){
-                should.not.exist(err);
-                results.should.deep.equal([{name:'cl1', project_id:1}]);
-                done();
-            });
-        });
-    });
-    
-    describe('classificationDelete', function(){
-        var queries;
-        
-        
-        beforeEach(function(){
-            queries = {
-                getModelUri: "SELECT `uri` FROM `models` WHERE `model_id` = "+
-                    "(SELECT `model_id` FROM `job_params_classification` WHERE `job_id` = 1)",
-                getRecs: "SELECT `uri` FROM `recordings` WHERE `recording_id` in "+
-                    "(SELECT `recording_id` FROM `classification_results` WHERE `job_id` = 1)",
-                deleteResults: "DELETE FROM `classification_results` WHERE `job_id` = 1",
-                deleteStats: "DELETE FROM `classification_stats` WHERE `job_id` = 1",
-                deleteClassiParams: "DELETE FROM `job_params_classification` WHERE `job_id` = 1"
-            };
-            mock_mysql.pool.cache = {};
-            delete mock_aws.S3.buckets.kfc_bucket;
-        });
-        
-        it('Should remove a classification given its id.', function(done){
-            dbpool.pool.cache[queries.getModelUri] = {
-                value:[{ uri:'project_1/models/model_1.mod' }]
-            };
-            
-            dbpool.pool.cache[queries.getRecs] = { value:[] };
-            
-            dbpool.pool.cache[queries.deleteResults] = {
-                value:{affectedRows:1}
-            };
-            
-            dbpool.pool.cache[queries.deleteStats] = {
-                value:{affectedRows:1}
-            };
-            
-            dbpool.pool.cache[queries.deleteClassiParams] = {
-                value:{affectedRows:1}
-            };
-            
-            projects.classificationDelete(1, function(err, results){
-                should.not.exist(err);
-                results.should.deep.equal({data:"Classification deleted succesfully"});
-                done();
-            });
-        });
-        
-        it('Should fail if model query fails', function(done){
-            projects.classificationDelete(1, function(err, results){
-                should.exist(err);
-                done();
-            });
-        });
-        
-        it('Should fail if recordings query fails', function(done){
-            dbpool.pool.cache[queries.getModelUri]={
-                value:[{uri:'project_1/models/model_1.mod'}]
-            };
-            
-            projects.classificationDelete(1, function(err, results){
-                should.exist(err);
-                done();
-            });
-        });
-        
-        it('Should fail if delete classification_results query fails', function(done){
-            dbpool.pool.cache[queries.getModelUri]={
-                value:[{uri:'project_1/models/model_1.mod'}]
-            };
-            
-            dbpool.pool.cache[queries.getRecs] = { value:[] };
-            
-            projects.classificationDelete(1, function(err, results){
-                should.exist(err);
-                done();
-            });
-        });
-        
-        it('Should fail if delete classification_stats query fails', function(done){
-            dbpool.pool.cache[queries.getModelUri]={
-                value:[{uri:'project_1/models/model_1.mod'}]
-            };
-            
-            dbpool.pool.cache[queries.getRecs] = { value:[] };
-            
-            dbpool.pool.cache[queries.deleteResults] = {
-                value:{affectedRows:1}
-            };
-            
-            projects.classificationDelete(1, function(err, results){
-                should.exist(err);
-                done();
-            });
-        });
-        
-        it('Should fail if delete job_params_classification query fails', function(done){
-            dbpool.pool.cache[queries.getModelUri] = {
-                value:[{ uri:'project_1/models/model_1.mod' }]
-            };
-            
-            dbpool.pool.cache[queries.getRecs] = { value:[] };
-            
-            dbpool.pool.cache[queries.deleteResults] = {
-                value:{affectedRows:1}
-            };
-            
-            dbpool.pool.cache[queries.deleteStats] = {
-                value:{affectedRows:1}
-            };
-            
-            projects.classificationDelete(1, function(err, results){
-                should.exist(err);
-                done();
-            });
-        });
-        
-        it('Should remove the vector files from any associated recordings.', function(done){
-            mock_aws.S3.buckets.kfc_bucket = {
-                'project_1/models/model_1/classification_1_site_1-1-1-1-1-1.wav.vector' : {}
-            };
-            
-            dbpool.pool.cache[queries.getModelUri] = {
-                value:[{ uri:'project_1/models/model_1.mod' }]
-            };
-            
-            dbpool.pool.cache[queries.getRecs] = { 
-                value:[{uri:'project_1/recordings/site_1/site_1-1-1-1-1-1.wav'}]
-            };
-            
-            dbpool.pool.cache[queries.deleteResults] = {
-                value:{affectedRows:1}
-            };
-            
-            dbpool.pool.cache[queries.deleteStats] = {
-                value:{affectedRows:1}
-            };
-            
-            dbpool.pool.cache[queries.deleteClassiParams] = {
-                value:{affectedRows:1}
-            };
-            
-            projects.classificationDelete(1, function(err, results){
-                should.not.exist(err);
-                results.should.deep.equal({data:'Classification deleted succesfully'});
-                done();
-            });
-        });
-        
-        it('Should fail if bucket operations fail', function(done){
-            dbpool.pool.cache[queries.getModelUri] = {
-                value:[{ uri:'project_1/models/model_1.mod' }]
-            };
-            
-            dbpool.pool.cache[queries.getRecs] = { 
-                value:[{uri:'project_1/recordings/site_1/site_1-1-1-1-1-1.wav'}]
-            };
-            
-            projects.classificationDelete(1, function(err, results){
-                should.exist(err);
-                done();
-            });
-        });
-    });
-    describe('classificationCsvData', function(){
-         
-        it('Should return the results of a classification given its id.', function(done){
-            dbpool.pool.cache[
-                "SELECT extract(year from r.`datetime`) year , extract(month from r.`datetime`) month , extract(day from r.`datetime`) day , extract(hour from r.`datetime`) hour , extract(minute from r.`datetime`) min ,   m.`threshold` ,  m.`uri` ,  r.`uri` ruri  ,  cr.`max_vector_value` as mvv ,SUBSTRING_INDEX(r.`uri` ,'/',-1 ) rec , cr.`present` , s.`name` , sp.`scientific_name` , st.`songtype` FROM `models` m , `job_params_classification`  jpc, `species` sp, `classification_results` cr, `recordings` r, `sites` s, `songtypes` st WHERE cr.`job_id` =1 AND jpc.`job_id` = cr.`job_id` AND jpc.`model_id` = m.`model_id` AND cr.`recording_id` = r.`recording_id` AND s.`site_id` = r.`site_id` AND sp.`species_id` = cr.`species_id` AND cr.`songtype_id` = st.`songtype_id`  "
-            ]={value:['c1', 'c2']};
-            projects.classificationCsvData(1, function(err, results){
-                should.not.exist(err);
-                results.should.deep.equal(['c1', 'c2']);
-                done();
-            });
-        });
-    });
-    describe('classificationErrorsCount', function(){
-         
-        it('Should return the errors of a classification given its id.', function(done){
-            
-            dbpool.pool.cache[
-                "SELECT count(*) AS count \nFROM recordings_errors \nWHERE job_id = 1"
-            ]={value:[{count:1}]};
-            
-            projects.classificationErrorsCount('/project_1/', 1, function(err, results){
-                should.not.exist(err);
-                results.should.deep.equal([{count:1}]);
-                done();
-            });
-        });
-    });
-    describe('classificationDetail', function(){
-         
-        it('Should return the details of a classification given its id.', function(done){
-            dbpool.pool.cache[
-                "SELECT c.`species_id`, \n"+
-                "       c.`songtype_id`, \n"+
-                "       c.`present`, \n"+
-                "       CONCAT( \n"+
-                "           UCASE(LEFT(st.`songtype`, 1)), \n"+
-                "           SUBSTRING(st.`songtype`, 2) \n"+
-                "       ) as songtype, \n"+
-                "       CONCAT( \n"+
-                "           UCASE(LEFT(s.`scientific_name`, 1)), \n"+
-                "           SUBSTRING(s.`scientific_name`, 2) \n"+
-                "       ) as scientific_name, \n"+
-                "       mm.`threshold` as th \n"+
-                "FROM  `models` mm, \n"+
-                "      `job_params_classification`jpc, \n"+
-                "      `classification_results` c, \n"+
-                "      `species` as s , \n"+
-                "      `songtypes` as st \n"+
-                "WHERE c.`job_id` = 1\n"+
-                "AND c.`species_id` = s.`species_id` \n"+
-                "AND c.`songtype_id` = st.`songtype_id` \n"+
-                "AND jpc.`job_id` = c.`job_id` \n"+
-                "AND mm.`model_id` = jpc.`model_id`"
-            ]={value:[{count:1}]};
-            projects.classificationDetail('/project_1/', 1, function(err, results){
-                should.not.exist(err);
-                results.should.deep.equal([{count:1}]);
-                done();
-            });
-        });
-    });
-    describe('classificationDetailMore', function(){
-         
-        it('Should return more details about a classification given its id.', function(done){
-            dbpool.pool.cache[
-                "SELECT cs.`json_stats`, \n"+
-                "       c.`species_id`, \n"+
-                "       c.`songtype_id`, \n"+
-                "       c.`present` as present, \n"+
-                "       c.`recording_id`, \n"+
-                "       SUBSTRING_INDEX( \n"+
-                "           SUBSTRING_INDEX( r.`uri` , '.', 1 ), \n"+
-                "           '/', \n"+
-                "           -1  \n"+
-                "        ) as recname, \n"+
-                "       CONCAT( \n"+
-                "           SUBSTRING_INDEX( r.`uri` , '.', 1 ), \n"+
-                "           '.thumbnail.png' \n"+
-                "       ) as uri, \n"+
-                "       CONCAT( \n"+
-                "           UCASE(LEFT(st.`songtype`, 1)), \n"+
-                "           SUBSTRING(st.`songtype`, 2) \n"+
-                "        ) as songtype , \n"+
-                "       CONCAT( \n"+
-                "           UCASE(LEFT(s.`scientific_name`, 1)), \n"+
-                "           SUBSTRING(s.`scientific_name`, 2) \n"+
-                "       ) as scientific_name \n"+
-                "FROM `classification_stats`  cs , \n"+
-                "     `recordings` r, \n"+
-                "     `classification_results` c, \n"+
-                "     `species` as s , \n"+
-                "     `songtypes` as st \n"+
-                "WHERE c.`job_id` = 1\n"+
-                "AND c.`job_id` = cs.`job_id` \n"+
-                "AND c.`species_id` = s.`species_id` \n"+
-                "AND c.`songtype_id` = st.`songtype_id` \n"+
-                "AND r.`recording_id` = c.`recording_id` \n"+
-                "ORDER BY present DESC LIMIT 0,10"
-            ]={value:[{count:1}]};
-            projects.classificationDetailMore('/project_1/', 1, '0', '10', function(err, results){
-                should.not.exist(err);
-                results.should.deep.equal([{count:1}]);
-                done();
-            });
-        });
-    });
+
     describe('trainingSets', function(){
          
         it('Should return the training set data associated to a project given its url.', function(done){
             dbpool.pool.cache[
-                "SELECT (select count(x1) from  `training_set_roi_set_data` tsrsd where tsrsd.`training_set_id` = ts.`training_set_id`) as count , ts.`training_set_id` , CONCAT(UCASE(LEFT(ts.`name`, 1)), SUBSTRING(ts.`name`, 2)) as name  , ts.`date_created` , CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype  , CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name  , tsrs.`species_id` , tsrs.`songtype_id`  FROM `training_sets` ts, `projects` p ,`training_sets_roi_set` tsrs , `songtypes` st , `species` s where ts.`training_set_id` = tsrs.`training_set_id` and  st.`songtype_id` = tsrs.`songtype_id` and s.`species_id`  = tsrs.`species_id`  and ts.`project_id` = p.`project_id` and p.`url` = '/project_1/'"
+                "SELECT ( \n" + 
+                "        SELECT count(x1) \n" + 
+                "        FROM `training_set_roi_set_data` tsrsd \n" + 
+                "        WHERE tsrsd.`training_set_id` = ts.`training_set_id` \n" + 
+                "    ) as count, \n" + 
+                "    ts.`training_set_id`, \n" + 
+                "    CONCAT(UCASE(LEFT(ts.`name`, 1)), SUBSTRING(ts.`name`, 2)) as name, \n" + 
+                "    ts.`date_created`,  \n" + 
+                "    CONCAT(UCASE(LEFT(st.`songtype`, 1)), SUBSTRING(st.`songtype`, 2)) as songtype, \n" + 
+                "    CONCAT(UCASE(LEFT(s.`scientific_name`, 1)), SUBSTRING(s.`scientific_name`, 2)) as scientific_name, \n" + 
+                "    tsrs.`species_id`, \n" + 
+                "    tsrs.`songtype_id` \n" + 
+                "FROM `training_sets` ts, \n" + 
+                "    `projects` p, \n" + 
+                "    `training_sets_roi_set` tsrs, \n" + 
+                "    `songtypes` st, \n" + 
+                "    `species` s \n" + 
+                "WHERE ts.`training_set_id` = tsrs.`training_set_id` \n" + 
+                "AND st.`songtype_id` = tsrs.`songtype_id` \n" + 
+                "AND s.`species_id`  = tsrs.`species_id` \n" + 
+                "AND ts.`project_id` = p.`project_id` \n" + 
+                "AND p.`url` = '/project_1/'"
             ]={value:[{count:1}]};
             projects.trainingSets('/project_1/', function(err, results){
                 should.not.exist(err);
@@ -1061,11 +886,20 @@ describe('Project', function(){
          
         it('Should return the validation stats of a given (species, songtype) pair class in a project given its url.', function(done){
             dbpool.pool.cache[
-                "select * from  (SELECT count(*) as total FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = '/project_1/' and `species_id` = 1 and `songtype_id` = 2 ) a,  (SELECT count(*) as present FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = '/project_1/' and `species_id` = 1 and `songtype_id` = 2  and present = 1) b ,  (SELECT count(*) as absent FROM `recording_validations` rv,`projects` p  WHERE rv.`project_id` = p.`project_id` and p.`url` = '/project_1/' and `species_id` = 1and `songtype_id` = 2  and present = 0) c "
+                "SELECT SUM( present ) AS present, \n" + 
+                "    (COUNT( present ) - SUM( present )) AS absent, \n" + 
+                "    COUNT( present ) AS total \n" + 
+                "FROM `recording_validations` rv, \n" + 
+                "    `projects` p \n" + 
+                "WHERE rv.`project_id` = p.`project_id` \n" + 
+                "AND p.`url` = '/project_1/' \n" + 
+                "AND `species_id` = 1 \n" + 
+                "AND `songtype_id` = 2 \n" + 
+                "GROUP BY species_id, songtype_id"
             ]={value:[{count:1}]};
             projects.validationsStats('/project_1/', 1, 2, function(err, results){
                 should.not.exist(err);
-                results.should.deep.equal([{count:1}]);
+                results.should.deep.equal({count:1});
                 done();
             });
         });
@@ -1089,8 +923,9 @@ describe('Project', function(){
          
         it('Should return validation uri of a model given its id.', function(done){
             dbpool.pool.cache[
-                "SELECT vs.`uri` FROM `validation_set` vs, `models` m \n"+
-                "WHERE m.`validation_set_id` = vs.`validation_set_id` \n"+
+                "SELECT vs.`uri` \n" + 
+                "FROM `validation_set` vs, `models` m \n" + 
+                "WHERE m.`validation_set_id` = vs.`validation_set_id` \n" + 
                 "AND m.`model_id` = 1"
             ]={value:[{count:1}]};
             projects.modelValidationUri(1, function(err, results){
@@ -1148,7 +983,7 @@ describe('Project', function(){
                 "FROM ( \n" +
                 "    (SELECT upload_id as id \n" +
                 "    FROM uploads_processing  \n" +
-                "    WHERE project_id = 1) \n" +
+                "    WHERE project_id = 1 AND state != 'uploaded') \n" +
                 "    UNION \n" +
                 "    (SELECT recording_id as id \n" +
                 "    FROM recordings AS r \n" +

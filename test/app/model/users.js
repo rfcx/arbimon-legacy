@@ -72,7 +72,11 @@ describe('Users', function(){
     describe('#findById()', function(){
         beforeEach(function(){mock_mysql.pool.cache = {};});
         it('Should find a user, given its id', function(done){
-            dbpool.pool.cache["SELECT * \nFROM users \nWHERE user_id = 9393"]={value:[pepe]};
+            dbpool.pool.cache[
+                "SELECT * \n" + 
+                "FROM users \n" + 
+                "WHERE user_id = ?"
+            ]={value:[pepe]};
             users.findById(9393, function(err, results){
                 should.not.exist(err);
                 results.should.deep.equal([pepe]);
@@ -83,7 +87,7 @@ describe('Users', function(){
             var bobby = "80881'; DROP TABLE users", clean_bobby=mock_mysql.escape(bobby);
             users.findById(bobby, function(err, results){
                 should.exist(err);
-                err.message.should.equal("Query not in cache : SELECT * \nFROM users \nWHERE user_id = "+clean_bobby);
+                err.message.should.equal("Query not in cache : SELECT * \nFROM users \nWHERE user_id = ?");
                 done();
             });
         });
@@ -158,16 +162,16 @@ describe('Users', function(){
         beforeEach(function(){mock_mysql.pool.cache = {};});
         it('Should update the database with the given user data', function(done){
             dbpool.pool.cache[
-                "UPDATE users \n" +
-                "SET `email` = 'new-email@site.com' \n" +
-                "WHERE user_id=9393"
+                "UPDATE users \n" + 
+                "SET `email` = ? \n" + 
+                "WHERE user_id=?"
             ]={value:{affectedRows:1}};
             users.update({
                 user_id: 9393,
                 email: 'new-email@site.com'
             }, function(err, results){
                 should.not.exist(err);
-                results.should.deep.equal({affectedRows:1});
+                results.should.deep.equal([{affectedRows:1}, [[]]]);
                 done();
             });
         });        
@@ -221,11 +225,19 @@ describe('Users', function(){
         beforeEach(function(){mock_mysql.pool.cache = {};});
         it('Should return the list of project available to the given user', function(done){
             dbpool.pool.cache[
-                "SELECT p.project_id AS id, name, url, description, is_private, is_enabled \n" +
-                "FROM projects as p \n" +
-                "LEFT JOIN user_project_role as upr on (p.project_id = upr.project_id) \n" +
-                "WHERE p.is_private = 0 \n" +
-                "OR upr.user_id = 9393 \n" +
+                "SELECT p.project_id AS id, \n" + 
+                "    name, \n" + 
+                "    url, \n" + 
+                "    description, \n" + 
+                "    is_private, \n" + 
+                "    is_enabled, \n" + 
+                "    u.login AS `owner` \n" + 
+                "FROM projects AS p \n" + 
+                "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n" + 
+                "JOIN user_project_role AS upr2 ON (p.project_id = upr2.project_id) \n" + 
+                "JOIN users AS u ON (upr.user_id = u.user_id) \n" + 
+                "WHERE upr2.user_id = ? \n" + 
+                "OR p.is_private = 0 \n" + 
                 "GROUP BY p.project_id"
             ]={value:[project1]};
             users.projectList(9393, function(err, results){
@@ -239,13 +251,13 @@ describe('Users', function(){
         beforeEach(function(){mock_mysql.pool.cache = {};});
         it('Should return the list of permissions of a given user in a given project', function(done){
             dbpool.pool.cache[
-                "SELECT p.permission_id AS id, p.name \n" +
-                "FROM user_project_role AS upr \n" +
-                "JOIN roles AS r ON upr.role_id = r.role_id \n" +
-                "JOIN role_permissions AS rp ON rp.role_id = upr.role_id \n" +
-                "JOIN permissions AS p ON p.permission_id = rp.permission_id \n" +
-                "WHERE upr.user_id = 9393 \n" +
-                "AND upr.project_id = 1"
+                "SELECT p.permission_id AS id, p.name \n" + 
+                "FROM user_project_role AS upr \n" + 
+                "JOIN roles AS r ON upr.role_id = r.role_id \n" + 
+                "JOIN role_permissions AS rp ON rp.role_id = upr.role_id \n" + 
+                "JOIN permissions AS p ON p.permission_id = rp.permission_id \n" + 
+                "WHERE upr.user_id = ? \n" + 
+                "AND upr.project_id = ?"
             ]={value:[project1]};
             users.getPermissions(9393, 1, function(err, results){
                 should.not.exist(err);
@@ -254,21 +266,21 @@ describe('Users', function(){
             });
         });        
     });
-    describe('#ownedProjectsQty()', function(){
-        beforeEach(function(){mock_mysql.pool.cache = {};});
-        it('Should return number of projects owned by the given user', function(done){
-            dbpool.pool.cache[
-                "SELECT COUNT(p.project_id) as count \n" +
-                "FROM projects as p \n" +
-                "WHERE p.owner_id = 9393"
-            ]={value:[{count:1}]};
-            users.ownedProjectsQty(9393, function(err, results){
-                should.not.exist(err);
-                results.should.deep.equal([{count:1}]);
-                done();
-            });
-        });        
-    });
+    // describe.skip('#ownedProjectsQty()', function(){
+    //     beforeEach(function(){mock_mysql.pool.cache = {};});
+    //     it('Should return number of projects owned by the given user', function(done){
+    //         dbpool.pool.cache[
+    //             "SELECT COUNT(p.project_id) as count \n" +
+    //             "FROM projects as p \n" +
+    //             "WHERE p.owner_id = 9393"
+    //         ]={value:[{count:1}]};
+    //         users.ownedProjectsQty(9393, function(err, results){
+    //             should.not.exist(err);
+    //             results.should.deep.equal([{count:1}]);
+    //             done();
+    //         });
+    //     });        
+    // });
     describe('#newAccountRequest()', function(){
         beforeEach(function(){mock_mysql.pool.cache = {};});
         it('Should insert a new account support request into the database', function(done){

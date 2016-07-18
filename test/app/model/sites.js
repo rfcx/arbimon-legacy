@@ -36,6 +36,8 @@ var mock_config = {
         "timezone" : "Z"
     }
 };
+
+mock_config['trash-project'] = {id:1};
 var dbpool = pre_wire('../../app/utils/dbpool', {
     '../../app/config' : function (key){ return mock_config[key]; },
     'mysql' : mock_mysql

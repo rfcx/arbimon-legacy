@@ -105,22 +105,23 @@ module.exports = {
                 tables_in_set[tableId] = true;
                 tables_added = true;
             }
-        }
+        };
         fields.forEach(function(s){
             add_table_to_set(s[2]);
         });
         while(tables_added){
             tables_added = false;
-            tables.forEach(function(tkey){
+            for(var i=0, e=tables.length; i < e; ++i){
+                var tkey = tables[i];
                 var table = table_set[tkey];
                 if(table.requires){
                     table.requires.forEach(add_table_to_set);
                 }
-            });
+            }
         }
         return tables.map(function(tkey){
             return table_set[tkey];
-        })
+        });
     },
     
     
