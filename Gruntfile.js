@@ -296,13 +296,9 @@ module.exports = function(grunt) {
             },
             backendjs: {
                 files: [
-                    'app.js',
-                    'routes/**/*.js',
-                    'model/**/*.js',
-                    'utils/**/*.js',
-                    'config/**/*.js',
-                    'config/**/*.json',
-                    'views/**/*.ejs'
+                    'app/**/*.js',
+                    'app/**/*.ejs',
+                    'app/**/*.json'
                 ],
                 tasks: ['express:dev'],
                 options: {
