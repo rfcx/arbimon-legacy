@@ -10,8 +10,8 @@ var sinon = require('sinon');
 var rewire = require('rewire');
 var debug = console.log;
 
-var audioTools= rewire('../../app/utils/audiotool');
-var mock_childProcess = require('../mock_tools/mock_child_process');
+var audioTools= rewire('../../../app/utils/audiotool');
+var mock_childProcess = require('../../mock_tools/mock_child_process');
 
 var mocks = {
     childProcess : mock_childProcess

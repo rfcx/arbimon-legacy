@@ -8,8 +8,8 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
 var rewire = require('rewire');
-var file = rewire('../../app/utils/file');
-var mock_fs = require('../mock_tools/mock_fs');
+var file = rewire('../../../app/utils/file');
+var mock_fs = require('../../mock_tools/mock_fs');
 
 file.__set__({
     fs : mock_fs

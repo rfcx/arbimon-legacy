@@ -7,7 +7,7 @@
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var sinon = require('sinon');
 
-var routes = require('../../app/routes');
+var routes = require('../../../app/routes');
 
 describe('index.js', function(){
     describe('GET /terms', function(){

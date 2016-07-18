@@ -7,7 +7,7 @@
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var supertest = require('supertest');
 
-var redirect_http = require('../../app/utils/redirect-http');
+var redirect_http = require('../../../app/utils/redirect-http');
 
 
 describe('redirect-http', function(){

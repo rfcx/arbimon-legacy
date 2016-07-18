@@ -11,7 +11,7 @@ chai.use(require('chai-subset'));
 var sinon = require('sinon');
 var rewire= require('rewire');
 
-var Uploader = rewire('../../app/utils/uploader');
+var Uploader = rewire('../../../app/utils/uploader');
 
 describe('Module: utils/uploader, Uploader', function() {
     var fileUpload;

@@ -8,10 +8,10 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var sinon = require('sinon');
 var rewire= require('rewire');
 var events = require('events');
-var sha256 = require('../../../app/utils/sha256');
-var router_expect = require('../../mock_tools/router_expect');
-var router_expect2 = require('../../mock_tools/router_expect2');
-var user = rewire('../../../app/routes/data-api/user');
+var sha256 = require('../../../../app/utils/sha256');
+var router_expect = require('../../../mock_tools/router_expect');
+var router_expect2 = require('../../../mock_tools/router_expect2');
+var user = rewire('../../../../app/routes/data-api/user');
 
 var mock = {
     gravatar:{

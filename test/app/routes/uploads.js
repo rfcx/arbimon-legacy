@@ -10,7 +10,7 @@ var chai = require('chai'),
 var sinon = require('sinon');
 var rewire = require('rewire');
 
-var uploadsRouter = rewire('../../app/routes/uploads');
+var uploadsRouter = rewire('../../../app/routes/uploads');
 
 var TestResponse = function(done) {
     var self = this;

@@ -10,7 +10,7 @@ var sinon = require('sinon');
 var path = require('path');
 
 var rewire = require('rewire');
-var scidx = rewire('../../app/utils/scidx');
+var scidx = rewire('../../../app/utils/scidx');
 
 var real_file = scidx.__get__('file');
 var mocks = {
@@ -25,10 +25,10 @@ var mocks = {
 mocks.file.prototype = real_file.prototype;
 scidx.__set__(mocks);
 
-var datafile = path.resolve(__dirname, '../data/indexout.scidx');
-var datafilev2 = path.resolve(__dirname, '../data/index-v2.scidx');
-var brokendatafile = path.resolve(__dirname, '../data/indexincomplete.scidx');
-var invaliddatafile = path.resolve(__dirname, '../data/paletteout.png');
+var datafile = path.resolve(__dirname, '../../data/indexout.scidx');
+var datafilev2 = path.resolve(__dirname, '../../data/index-v2.scidx');
+var brokendatafile = path.resolve(__dirname, '../../data/indexincomplete.scidx');
+var invaliddatafile = path.resolve(__dirname, '../../data/paletteout.png');
 
 var getBounds = function(index){
     var minx=1/0, maxx=-1/0, miny=1/0, maxy=-1/0;

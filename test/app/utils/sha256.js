@@ -8,7 +8,7 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
 
-var sha256 = require('../../app/utils/sha256');
+var sha256 = require('../../../app/utils/sha256');
 
 describe('sha256()', function(){
     it('Should return the sha256 digest of any given string.', function(){

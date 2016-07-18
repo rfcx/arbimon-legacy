@@ -9,8 +9,8 @@ var async = require('async');
 var sinon = require('sinon');
 var rewire = require('rewire');
 
-var tyler = rewire('../../app/utils/tyler');
-var mock_fs = require('../mock_tools/mock_fs');
+var tyler = rewire('../../../app/utils/tyler');
+var mock_fs = require('../../mock_tools/mock_fs');
 
 var mock_config = {
     spectrograms : { spectrograms: { tiles:{ max_width: 100, max_height:100}}}

@@ -18,7 +18,7 @@ var mock = {
     }},
 };
 
-var AppListings = rewire('../../app/model/app-listings');
+var AppListings = rewire('../../../app/model/app-listings');
 AppListings.__set__(mock);
 
 describe('AppListings', function(){

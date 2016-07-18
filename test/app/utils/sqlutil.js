@@ -11,11 +11,11 @@ var sinon = require('sinon');
 
 var rewire = require('rewire');
 
-var mock_mysql = require('../mock_tools/mock_mysql');
-var scrub_object = require('../mock_tools/scrub_object');
+var mock_mysql = require('../../mock_tools/mock_mysql');
+var scrub_object = require('../../mock_tools/scrub_object');
 
 
-var sqlutil = rewire('../../app/utils/sqlutil');
+var sqlutil = rewire('../../../app/utils/sqlutil');
 sqlutil.__set__({mysql: mock_mysql});
 
 describe('sqlutil', function(){

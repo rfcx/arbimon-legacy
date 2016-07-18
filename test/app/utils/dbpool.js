@@ -8,9 +8,9 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
 // var rewire = require('rewire');
-var pre_wire = require('../mock_tools/pre_wire');
+var pre_wire = require('../../mock_tools/pre_wire');
 
-var mock_mysql = require('../mock_tools/mock_mysql');
+var mock_mysql = require('../../mock_tools/mock_mysql');
 var mock_config = {
     db: {
         "host" : "1.2.3.4",
@@ -21,9 +21,9 @@ var mock_config = {
     }
 };
 
-
 var dbpool = pre_wire('../../app/utils/dbpool', {
     '../../app/config' : function (key){
+
         return mock_config[key];
     },
     'mysql' : mock_mysql

@@ -7,9 +7,9 @@ var q = require('q');
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var sinon = require('sinon');
 var rewire= require('rewire');
-var router_expect = require('../../mock_tools/router_expect');
+var router_expect = require('../../../mock_tools/router_expect');
 
-var AppListings = rewire('../../../app/routes/data-api/app-listings');
+var AppListings = rewire('../../../../app/routes/data-api/app-listings');
 
 var mock = {
     models:{

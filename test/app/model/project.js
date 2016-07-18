@@ -6,10 +6,10 @@
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
-var mock_mysql = require('../mock_tools/mock_mysql');
-var mock_aws = require('../mock_tools/mock_aws');
+var mock_mysql = require('../../mock_tools/mock_mysql');
+var mock_aws = require('../../mock_tools/mock_aws');
 
-var pre_wire = require('../mock_tools/pre_wire');
+var pre_wire = require('../../mock_tools/pre_wire');
 
 var mock_config = {
     aws: {
