@@ -24,7 +24,7 @@ angular.module('a2.forms',['templates-arbimon2'])
             validation: '=', // validation object
             userInputs: '=?', // array of strings to test password (username, name, lastname, etc)
         },
-        templateUrl: '/partials/directives/password-input.html',
+        templateUrl: '/directives/password-input.html',
         controller: function($scope) {
             
             $scope.requiredScore = 2;
@@ -144,7 +144,7 @@ angular.module('a2.forms',['templates-arbimon2'])
             project: '=ngModel', // password
             valid: '=', // validation object
         },
-        templateUrl: '/partials/directives/project-form.html',
+        templateUrl: '/directives/project-form.html',
         controllerAs:'controller',
         controller: function($scope) {
             var urlPattern = /^[a-z0-9]+([-_][a-z0-9]+)*$/i;

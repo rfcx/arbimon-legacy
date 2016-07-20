@@ -37,7 +37,7 @@ angular.module('a2.directive.news-feed-item', [
         scope:{
             news: '=newsFeedItem'
         },
-        templateUrl: '/partials/directives/news-feed-item.html',
+        templateUrl: '/directives/news-feed-item.html',
         link: function(scope, element, attrs){
             var message = element.find('.message');
             scope.$watch('news', function(news){

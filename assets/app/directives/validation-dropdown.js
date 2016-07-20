@@ -12,7 +12,7 @@ angular.module('arbimon2.directive.validation-dropdown', [])
     }, {});
 
     return {
-        templateUrl: '/partials/directives/validation-dropdown.html',
+        templateUrl: '/directives/validation-dropdown.html',
         require:'ngModel',
         scope:{
         }, 

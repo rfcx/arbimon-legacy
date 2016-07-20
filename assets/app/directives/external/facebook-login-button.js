@@ -16,7 +16,7 @@ angular.module('a2.utils.facebook-login-button', [
 .directive('a2FacebookLoginButton', function($window, $q, $timeout, a2InjectedData, externalApiLoader){
     return {
         restrict: 'E',
-        templateUrl : '/partials/utils/facebook-login-button.html',
+        templateUrl : '/directives/external/facebook-login-button.html',
         scope:{
             onSignedIn:'&?',
             onError:'&?'

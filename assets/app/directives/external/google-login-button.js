@@ -33,7 +33,7 @@ angular.module('a2.utils.google-login-button', [
 .directive('a2GoogleLoginButton', function($window, $q, $timeout, globalAnonymousFunction, a2InjectedData, externalApiLoader){
     return {
         restrict: 'E',
-        templateUrl : '/partials/utils/google-login-button.html',
+        templateUrl : '/directives/external/google-login-button.html',
         scope:{
             onSignedIn:'&?',
             onError:'&?'

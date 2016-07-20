@@ -174,7 +174,7 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
                     scope.$watch('rows', scope.updateChecked, true);
                 }
                 
-                element.html($templateCache.get('/partials/directives/table2.html'));
+                element.html($templateCache.get('/directives/table2.html'));
                 
                 $compile(element.contents())(scope);
             };
@@ -373,7 +373,7 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
              hideText : '@',
              text : '@'
          },
-         templateUrl: '/partials/directives/loader.html'
+         templateUrl: '/directives/loader.html'
      };
 })
 /**   yearpick - complete year date picker
