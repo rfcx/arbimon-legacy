@@ -7,7 +7,7 @@
         'ngCsv'
     ]);
     
-    var template_root = '/partials/soundscapes/';
+    var template_root = '/analysis/soundscapes/';
     
     soundscapes.controller('SoundscapesCtrl', 
     function(
@@ -251,7 +251,7 @@
                     
                     var modalInstance = $modal.open({
                         controller: 'SoundscapesDetailsCtrl as controller',
-                        templateUrl: '/partials/soundscapes/details.html',
+                        templateUrl: '/analysis/soundscapes/details.html',
                         resolve: {
                             soundscape: function() {
                                 return soundscape;

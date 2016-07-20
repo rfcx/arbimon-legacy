@@ -11,7 +11,7 @@
         'ngCsv',
         'humane'
     ]);
-    var template_root = '/partials/models/';
+    var template_root = '/analysis/models/';
 
     models.controller('ModelsCtrl', 
         function($scope, $modal, $filter, ngTableParams, Project, a2Models, JobsData, $location, notify, a2UserPermit) {

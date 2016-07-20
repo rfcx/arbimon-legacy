@@ -6,7 +6,7 @@
         'humane',
         'c3-charts',
     ]);
-    var template_root = '/partials/classification/';
+    var template_root = '/analysis/classification/';
 
     classification.controller('ClassificationCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2Classi, a2UserPermit) {
         var initTable = function(p,c,s,f,t) {

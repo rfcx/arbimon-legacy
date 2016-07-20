@@ -33,7 +33,7 @@
             <span ng-hide="trainings.length" value="-1" class="red">
                 <em>No training sets found. <a ng-click="cancel('/audiodata/training-sets') | trackEvent:'Analysis-Newmodel':'cancel goto training-sets'">Create one.</a></em>
             </span>
-            <ui-select ng-model="data.training" theme="/partials/a2-ui-select" ng-disabled="disabled">
+            <ui-select ng-model="data.training" theme="/a2-ui-select" ng-disabled="disabled">
                 <ui-select-match placeholder="Search and select a training set">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="train in trainings | filter: $select.search" value="train.training_set_id">
                     {{train.name}}
