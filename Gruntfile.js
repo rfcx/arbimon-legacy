@@ -22,7 +22,7 @@ module.exports = function(grunt) {
         html2js: {
             options: {
                 module: 'templates-arbimon2',
-                base : 'assets',
+                base : 'assets/app',
                 rename: function (moduleName) {
                     return '/' + moduleName;
                 }
@@ -37,11 +37,11 @@ module.exports = function(grunt) {
                         keepClosingSlash: true
                     }
                 },
-                src: ['assets/partials/**/*.html'],
+                src: ['assets/app/**/*.html'],
                 dest: 'public/assets/js/arbimon2-templates.js',
             },
             dev: {
-                src: ['assets/partials/**/*.html'],
+                src: ['assets/app/**/*.html'],
                 dest: 'public/assets/js/arbimon2-templates.js',
             }
         },
@@ -52,7 +52,7 @@ module.exports = function(grunt) {
                 dest:'docs/front-end',
                 html5Mode: false
             },
-            all:['assets/js/**/*.js'],
+            all:['assets/app/**/*.js'],
         },
         
         //backend documentation
@@ -238,7 +238,7 @@ module.exports = function(grunt) {
                     add: true
                 },
                 files: [{
-                    'public/assets/js/arbimon2.js': 'assets/js/**/*.js'
+                    'public/assets/js/arbimon2.js': 'assets/app/**/*.js'
                 }],
             },
             // remove DI on code
@@ -284,13 +284,13 @@ module.exports = function(grunt) {
             },
             frontendjs: {
                 files: [
-                    'assets/js/**/*.js'
+                    'assets/app/**/*.js'
                 ],
                 tasks: ['ngAnnotate:main']
             },
             html2js: {
                 files: [
-                    'assets/partials/**/*.html'
+                    'assets/app/**/*.html'
                 ],
                 tasks: ['html2js:dev']
             },
@@ -316,7 +316,7 @@ module.exports = function(grunt) {
         },
         
         jshint: {
-            frontEnd: ['assets/js/**/*.js', 'assets/test/**/*.js'],
+            frontEnd: ['assets/app/**/*.js', 'assets/test/**/*.js'],
             backEnd: [
                 'Gruntfile.js',
                 'bin/www',
@@ -377,7 +377,7 @@ module.exports = function(grunt) {
             diagram: {
                 files: {
                     "angular-depends": [
-                        "assets/js/**/*.js"
+                        "assets/app/**/*.js"
                     ]
                 }
             }
