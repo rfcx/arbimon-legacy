@@ -25,7 +25,7 @@ angular.module('a2.orders.orders', [
     return {
         createProject: function(orderData) {
             var modalInstance = formOpener(orderData, {
-                templateUrl: '/partials/orders/create-project.html',
+                templateUrl: '/orders/create-project.html',
                 controller: 'CreateProjectCtrl'
             });
             
@@ -33,7 +33,7 @@ angular.module('a2.orders.orders', [
         },
         changePlan: function(orderData) {
             var modalInstance = formOpener(orderData, {
-                templateUrl: '/partials/orders/change-plan.html',
+                templateUrl: '/orders/change-plan.html',
                 controller: 'ChangeProjectPlanCtrl'
             });
             
@@ -41,7 +41,7 @@ angular.module('a2.orders.orders', [
         },
         enterShippingAddress: function(orderData) {
             var modalInstance = formOpener(orderData, {
-                templateUrl: '/partials/orders/shipping-address.html',
+                templateUrl: '/orders/shipping-address.html',
                 controller: 'ShippingFormCtrl'
             });
             
@@ -49,7 +49,7 @@ angular.module('a2.orders.orders', [
         },
         reviewOrder: function(orderData) {
             var modalInstance = formOpener(orderData, {
-                templateUrl: '/partials/orders/order-summary.html',
+                templateUrl: '/orders/order-summary.html',
                 controller: 'OrderSummaryCtrl'
             });
             

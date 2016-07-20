@@ -43,7 +43,7 @@ angular.module('a2.visualizer', [
         views: {
             'visualizer': {
                 controller : 'VisualizerCtrl',
-                templateUrl: '/partials/visualizer/main.html'
+                templateUrl: '/visualizer/main.html'
             }
         },
         deepStateRedirect: true,
@@ -96,7 +96,7 @@ angular.module('a2.visualizer', [
         replace:true, 
         scope : {},
         controller : 'VisualizerCtrl',
-        templateUrl: '/partials/visualizer/main.html'
+        templateUrl: '/visualizer/main.html'
     };
 })
 .service('a2VisualizerLocationManager', function($location){

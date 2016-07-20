@@ -60,7 +60,7 @@ angular.module('a2-visualizer-spectrogram-click2zoom', ['a2.classy'])
         scope : {
             'level' : '='
         },
-        templateUrl : '/partials/directives/zoom-ctrl.html',
+        templateUrl : '/directives/zoom-ctrl.html',
         replace  : true,
         link : function($scope, $element, $attrs) {
             var delta = (+$attrs.delta) || 0.1;

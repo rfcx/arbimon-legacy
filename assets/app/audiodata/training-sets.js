@@ -133,7 +133,7 @@ angular.module('a2.audiodata.training-sets', [
         }
         
         var modalInstance = $modal.open({
-            templateUrl: '/partials/pop-up.html',
+            templateUrl: '/pop-up.html',
             controller: function() {
                 this.messages = ["You are about to delete a ROI. Are you sure??"];
                 this.btnOk = "Yes, do it!";
@@ -190,7 +190,7 @@ angular.module('a2.audiodata.training-sets', [
         }
         
         $modal.open({
-            templateUrl : '/partials/visualizer/modal/add_tset.html',
+            templateUrl : '/visualizer/modal/add_tset.html',
             controller  : 'a2VisualizerAddTrainingSetModalController'
         }).result.then(
             this.getTrainingSetList.bind(this)
@@ -300,7 +300,7 @@ angular.module('a2.audiodata.training-sets', [
         }
         
         $modal.open({
-            templateUrl: '/partials/pop-up.html',
+            templateUrl: '/pop-up.html',
             controller: function() {
                 this.messages = ["You are about to delete a the training set \"" + trainingSet.name + "\". Are you sure??"];
                 this.btnOk = "Yes, do it!";

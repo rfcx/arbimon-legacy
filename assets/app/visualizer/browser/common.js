@@ -9,7 +9,7 @@ angular.module('a2.browser_common', [])
             icon       : 'fa fa-map-marker',
             tooltip    : 'Browse Recordings by Site',
             controller : 'a2BrowserRecordingsBySiteController',
-            template   : '/partials/visualizer/browser/recordings-by-site.html'
+            template   : '/visualizer/browser/recordings-by-site.html'
         },
         {   name       : 'playlist',
             group       : 'recordings',
@@ -17,7 +17,7 @@ angular.module('a2.browser_common', [])
             icon       : 'fa fa-list',
             tooltip    : "Browse Recordings by Playlist",
             controller : 'a2BrowserRecordingsByPlaylistController',
-            template   : '/partials/visualizer/browser/recordings-by-playlist.html'
+            template   : '/visualizer/browser/recordings-by-playlist.html'
         },
         {   name       : 'soundscape',
             group       : 'soundscapes',
@@ -25,7 +25,7 @@ angular.module('a2.browser_common', [])
             icon       : 'fa fa-area-chart',
             tooltip    : "Show Soundscapes",
             controller : 'a2BrowserSoundscapesController',
-            template   : '/partials/visualizer/browser/soundscapes.html'
+            template   : '/visualizer/browser/soundscapes.html'
         }
     ]).forEach(function(lovodef){
         var group = lovodef.group || '';

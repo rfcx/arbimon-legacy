@@ -60,7 +60,7 @@ angular.module('a2.soundscapeRegionTags', ['a2.infotags'])
             onClose : '&'
         },
         replace : true,
-        templateUrl : '/partials/visualizer/soundscape-region-tag.html',
+        templateUrl : '/visualizer/soundscape-region-tag.html',
         link     : function(scope, element, $attrs){
             scope.$watch('tag', function(tag){
                 resolve_tag(scope, element, tag);

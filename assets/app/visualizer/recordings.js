@@ -14,7 +14,7 @@ function($scope, $modal, $location){
             return;
         }
         $modal.open({
-            templateUrl : '/partials/visualizer/modal/frequency_filter_modal.html',
+            templateUrl : '/visualizer/modal/frequency_filter_modal.html',
             controller  : 'a2VisualizerFrequencyFilterModalController',
             size        : 'sm',
             resolve     : {
@@ -50,7 +50,7 @@ function($scope, $modal, $location){
 .directive('a2VisualizerFrequencyFilterRangeControl', function(){
     return {
         restrict:'E',
-        templateUrl:'/partials/directives/frequency_filter_range_control.html',
+        templateUrl:'/directives/frequency_filter_range_control.html',
         scope: {
             imgSrc:"=",
             filterMin:"=",

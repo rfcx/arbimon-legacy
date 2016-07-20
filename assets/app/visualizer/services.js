@@ -227,8 +227,8 @@ angular.module('visualizer-services', ['a2.services'])
             'roi_set': {
                 has_layout: true,
                 templates: {
-                    layer_item: '/partials/visualizer/layer-item/training-sets/roi_set.html',
-                    new_modal: '/partials/visualizer/modal/new_roi_set_tset_partial.html'
+                    layer_item: '/visualizer/layer-item/training-sets/roi_set.html',
+                    new_modal: '/visualizer/modal/new_roi_set_tset_partial.html'
                 },
                 action: {
                     collect_new_tset_data: function(sdata, tset_data, sval) {

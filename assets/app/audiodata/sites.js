@@ -110,7 +110,7 @@ angular.module('a2.audiodata.sites', [
         }
         
         var modalInstance = $modal.open({
-            templateUrl: '/partials/pop-up.html',
+            templateUrl: '/pop-up.html',
             controller: function() {
                 this.messages = [
                     "You are about to delete: ",
@@ -355,7 +355,7 @@ angular.module('a2.audiodata.sites', [
         
         var confirmRevoke = function(title, btnOk) {
             var modalInstance = $modal.open({
-                templateUrl: '/partials/pop-up.html',
+                templateUrl: '/pop-up.html',
                 controller : function(){
                     this.title = title;
                     this.messages = [

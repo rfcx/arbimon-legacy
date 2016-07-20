@@ -18,19 +18,19 @@ angular.module('a2.settings',[
     
     $stateProvider.state('settings', {
         url: '/settings',
-        templateUrl: '/partials/settings/index.html',
+        templateUrl: '/settings/index.html',
         allowAccess: accessCheck
     })
     .state('settings.details', {
         url: '/details',
         controller:'SettingsDetailsCtrl',
-        templateUrl: '/partials/settings/details.html',
+        templateUrl: '/settings/details.html',
         allowAccess: accessCheck
     })
     .state('settings.users', {
         url: '/users',
         controller:'SettingsUsersCtrl',
-        templateUrl: '/partials/settings/users.html',
+        templateUrl: '/settings/users.html',
         allowAccess: accessCheck
     });
 })
@@ -172,7 +172,7 @@ angular.module('a2.settings',[
         };
         
         var modalInstance = $modal.open({
-            templateUrl: '/partials/pop-up.html',
+            templateUrl: '/pop-up.html',
             scope: $scope
         });
         

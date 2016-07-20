@@ -12,7 +12,7 @@ angular.module('a2.dashboard',[
     $stateProvider.state('dashboard', {
         url: '/dashboard',
         controller:'SummaryCtrl',
-        templateUrl: '/partials/dashboard/index.html',
+        templateUrl: '/dashboard/index.html',
     });
 })
 .controller('SummaryCtrl', function($scope, Project, a2GoogleMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {

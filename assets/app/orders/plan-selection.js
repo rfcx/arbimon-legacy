@@ -163,7 +163,7 @@ angular.module('a2.orders.plan-selection', [
             'currentPlan':'=?',
             'usage': '=?',
         },
-        templateUrl: '/partials/orders/select-plan.html',
+        templateUrl: '/orders/select-plan.html',
         controller: 'PlanSelectionCtrl as controller',
         link: function(scope, element, attrs, controller){
             scope.$watch('project', function(project){

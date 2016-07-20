@@ -79,7 +79,7 @@ angular.module('a2.audiodata.species', [
         };
         
         var modalInstance = $modal.open({
-            templateUrl: '/partials/pop-up.html',
+            templateUrl: '/pop-up.html',
             scope: $scope
         });
         

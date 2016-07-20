@@ -62,7 +62,7 @@ function($scope, $modal, $location, a2Soundscapes, a22PointBBoxEditor, a2UserPer
         }
         
         $modal.open({
-            templateUrl : '/partials/visualizer/modal/sample_soundscape_region.html',
+            templateUrl : '/visualizer/modal/sample_soundscape_region.html',
             controller  : 'a2VisualizerSampleSoundscapeRegionModalController',
             size        : 'sm',
             resolve     : {
@@ -279,7 +279,7 @@ function($scope, $modal, $location, a2Soundscapes, a2UserPermit, notify) {
         }
         
         $modal.open({
-            templateUrl : '/partials/visualizer/modal/edit_soundscape_visual_scale.html',
+            templateUrl : '/visualizer/modal/edit_soundscape_visual_scale.html',
             controller  : 'a2VisualizerSampleSoundscapeInfoEditVisualScaleModalController as controller',
             // size        : 'sm',
             resolve     : {

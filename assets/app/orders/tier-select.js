@@ -7,7 +7,7 @@ angular.module('a2.orders.directives.tier-select', [
             'tier': '=',
             'disableFree': '=',
         },
-        templateUrl: '/partials/orders/tier-select.html',
+        templateUrl: '/orders/tier-select.html',
     };
 })
 ;

@@ -6,7 +6,7 @@ angular.module('a2.jobs', [
     $stateProvider.state('jobs', {
         url: '/jobs',
         controller: 'StatusBarNavController',
-        templateUrl: '/partials/jobs/index.html'
+        templateUrl: '/jobs/index.html'
     });
 })
 .controller('StatusBarNavIndexController',function($scope, $http, $timeout, JobsData) {
@@ -123,7 +123,7 @@ angular.module('a2.jobs', [
 
     var confirm = function(titlen, action, cb, vl) {
             var modalInstance = $modal.open({
-                templateUrl: '/partials/pop-up.html',
+                templateUrl: '/pop-up.html',
                 controller: function() {
                     this.title = titlen+"running job";
                     this.messages = ["This job has not finished yet. Are you sure?"];

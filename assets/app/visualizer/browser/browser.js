@@ -22,7 +22,7 @@ angular.module('a2.visobjectsbrowser', [
             location    : '=?',
             onVisObject : '&'
         },
-        templateUrl : '/partials/visualizer/browser/main.html',
+        templateUrl : '/visualizer/browser/main.html',
         // require: 'ngModel',
         controller  : 'a2VisObjectBrowserController as browser',
         link : function(scope, element, attrs, browser){

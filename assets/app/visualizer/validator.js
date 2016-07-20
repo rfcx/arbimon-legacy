@@ -6,7 +6,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
         scope : {
             recording : '=recording'
         },
-        templateUrl: '/partials/visualizer/validator-main.html',
+        templateUrl: '/visualizer/validator-main.html',
         link: function($scope, $element, $attrs){
             var class2key = function(project_class){
                 var cls;

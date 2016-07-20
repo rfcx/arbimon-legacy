@@ -48,7 +48,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2.utils'])
 .directive('a2VisualizerSpectrogram', function(a2BrowserMetrics, a2AffixCompute){
     return {
         restrict : 'E',
-        templateUrl : '/partials/visualizer/visualizer-spectrogram.html',
+        templateUrl : '/visualizer/visualizer-spectrogram.html',
         replace  : true,
         link     : function($scope, $element, $attrs) {
             var layout_tmp = $scope.layout.tmp;
@@ -266,7 +266,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2.utils'])
 .directive('a2VisualizerSpectrogramLayer', function(layer_types, $compile, $templateFetch){
     return {
         restrict : 'E',
-        templateUrl : '/partials/visualizer/spectrogram-layer/default.html',
+        templateUrl : '/visualizer/spectrogram-layer/default.html',
         replace  : true,
         link     : function(scope, element, attrs){
             //console.log("link     : function(scope, element, attrs){", scope, element, attrs);
@@ -274,7 +274,7 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2.utils'])
             var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
             element.addClass(layer_type);
             if(layer_key && layer_key != 'default') {
-                var layer_url  = '/partials/visualizer/spectrogram-layer/' + layer_key + '.html';
+                var layer_url  = '/visualizer/spectrogram-layer/' + layer_key + '.html';
                 var layer_tmp  = $templateFetch(layer_url, function(layer_tmp){
                     var layer_el   = $compile(layer_tmp)(scope);
                     element.append(layer_el);

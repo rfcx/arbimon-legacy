@@ -127,7 +127,7 @@ angular.module('a2.audiodata.recordings', [
         messages.push("Are you sure??");
         
         return $modal.open({
-            templateUrl: '/partials/pop-up.html',
+            templateUrl: '/pop-up.html',
             controller: function() {
                 this.messages = messages;
                 this.btnOk =  "Yes";

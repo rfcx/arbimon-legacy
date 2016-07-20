@@ -4,13 +4,13 @@ angular.module('visualizer-layers', ['visualizer-services', 'a2.utils'])
     return {
         restrict : 'E',
         replace  : true,
-        templateUrl : '/partials/visualizer/layer-item/default.html',
+        templateUrl : '/visualizer/layer-item/default.html',
         link: function(scope, element, attrs){
             var layer_type = layer_types[scope.layer.type] ? scope.layer.type : false;
             var layer_key  = layer_types[layer_type] ? layer_types[layer_type].type : null;
             
             if(layer_key && layer_key != 'default') {
-                var layer_url  = '/partials/visualizer/layer-item/' + layer_key + '.html';
+                var layer_url  = '/visualizer/layer-item/' + layer_key + '.html';
                 var layer_tmp  = $templateFetch(layer_url, function(layer_tmp){
                     var layer_el   = $compile(layer_tmp)(scope);
                     element.append(layer_el.children().unwrap());

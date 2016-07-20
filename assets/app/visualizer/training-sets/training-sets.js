@@ -25,7 +25,7 @@ function($scope, $modal, $controller, $timeout, a2TrainingSets, a2UserPermit, no
         }
         
         $modal.open({
-            templateUrl : '/partials/visualizer/modal/add_tset.html',
+            templateUrl : '/visualizer/modal/add_tset.html',
             controller  : 'a2VisualizerAddTrainingSetModalController'
         }).result.then(function (new_tset) {
             if(new_tset && new_tset.id) {
@@ -65,7 +65,7 @@ function($scope, $modal, $controller, $timeout, a2TrainingSets, a2UserPermit, no
                 element.attr('data-tset-type', tset_type);
                 if(type_def) {
                     if(type_def.has_layout){
-                        var tmp_url  = '/partials/visualizer/spectrogram-layer/training-sets/' + tset_type + '.html';
+                        var tmp_url  = '/visualizer/spectrogram-layer/training-sets/' + tset_type + '.html';
                         $templateFetch(tmp_url, function(tmp){
                             element.empty().append($compile(tmp)(scope));
                         });
