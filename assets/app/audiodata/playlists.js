@@ -25,7 +25,7 @@ angular.module('a2.audiodata.playlists', [
         var playlist_id = $scope.selected.id;
         
         var modalInstance = $modal.open({
-            templateUrl: '/partials/audiodata/edit-playlist.html',
+            templateUrl: '/audiodata/edit-playlist.html',
             scope: $scope
         });
         

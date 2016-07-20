@@ -166,7 +166,7 @@ angular.module('a2.audiodata.sites', [
     };
     // $scope.browseShared = function() {
     //     var modalInstance = $modal.open({
-    //         templateUrl: '/partials/audiodata/browse-published-sites.html',
+    //         templateUrl: '/audiodata/browse-published-sites.html',
     //         controller: 'PublishedSitesBrowserCtrl',
     //         size: 'lg',
     //         resolve: {
@@ -262,7 +262,7 @@ angular.module('a2.audiodata.sites', [
         }
         
         var modalInstance = $modal.open({
-            templateUrl: '/partials/audiodata/site-tokens-popup.html',
+            templateUrl: '/audiodata/site-tokens-popup.html',
             controller: 'SitesTokenGenaratorCtrl',
             scope: $scope
         });

@@ -16,7 +16,7 @@ angular.module('a2.audiodata', [
         url: '/audiodata',
         views: {
             'audiodata': {
-                templateUrl: '/partials/audiodata/index.html'
+                templateUrl: '/audiodata/index.html'
             }
         },
         deepStateRedirect: true, 
@@ -25,27 +25,27 @@ angular.module('a2.audiodata', [
     .state('audiodata.sites', {
         url: '/sites?site&show',
         controller:'SitesCtrl',
-        templateUrl: '/partials/audiodata/sites.html'
+        templateUrl: '/audiodata/sites.html'
     })
     .state('audiodata.recordings', {
         url: '/recordings',
         controller: 'RecsCtrl as controller',
-        templateUrl: '/partials/audiodata/recordings.html'
+        templateUrl: '/audiodata/recordings.html'
     })
     .state('audiodata.species', {
         url: '/species',
         controller:'SpeciesCtrl',
-        templateUrl: '/partials/audiodata/species.html'
+        templateUrl: '/audiodata/species.html'
     })
     .state('audiodata.trainingSets', {
         url: '/training-sets?set&show',
         controller: 'TrainingSetsCtrl as controller',
-        templateUrl: '/partials/audiodata/training-sets.html'
+        templateUrl: '/audiodata/training-sets.html'
     })
     .state('audiodata.playlists', {
         url: '/playlists',
         controller: 'PlaylistCtrl',
-        templateUrl: '/partials/audiodata/playlists.html'
+        templateUrl: '/audiodata/playlists.html'
     });
 })
 ;

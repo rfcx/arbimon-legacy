@@ -11,7 +11,7 @@ angular.module('a2.audiodata.uploads.upload', [
     $stateProvider.state('audiodata.uploads.upload', {
         url: '/',
         controller: 'A2AudioDataUploadsUploadCtrl as controller',
-        templateUrl: '/partials/audiodata/uploads/upload.html'
+        templateUrl: '/audiodata/uploads/upload.html'
     });
 })
 .controller('A2AudioDataUploadsUploadCtrl', function(
@@ -112,7 +112,7 @@ angular.module('a2.audiodata.uploads.upload', [
         }
         
         var modalInstance = $modal.open({
-            templateUrl: '/partials/audiodata/batch-info.html',
+            templateUrl: '/audiodata/batch-info.html',
             controller: 'BatchInfoCtrl',
             resolve: {
                 info: function() {
@@ -192,7 +192,7 @@ angular.module('a2.audiodata.uploads.upload', [
     
     this.displayHelp = function() {
         $modal.open({
-            templateUrl: '/partials/audiodata/uploader-help.html',
+            templateUrl: '/audiodata/uploader-help.html',
             controller: 'UploaderHelpDisplayCtrl as controller',
             resolve: {
                 uploaderAppListing: (function(){

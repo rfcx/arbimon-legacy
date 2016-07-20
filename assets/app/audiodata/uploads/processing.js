@@ -10,7 +10,7 @@ angular.module('a2.audiodata.uploads.processing', [
     $stateProvider.state('audiodata.uploads.processing', {
         url: '/processing',
         controller: 'A2AudioDataUploadsProcessingCtrl as controller',
-        templateUrl: '/partials/audiodata/uploads/processing.html'
+        templateUrl: '/audiodata/uploads/processing.html'
     });
 })
 .controller('A2AudioDataUploadsProcessingCtrl', function($scope, a2UploadsService) { 

@@ -8,7 +8,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
 .directive('recordingFilterParameters', function($document, $rootScope){
     return {
         restrict:'E',
-        templateUrl:'/partials/audiodata/recording-filter-parameters.html',
+        templateUrl:'/audiodata/recording-filter-parameters.html',
         scope:{
             isOpen : '=',
             maxDate : '=',

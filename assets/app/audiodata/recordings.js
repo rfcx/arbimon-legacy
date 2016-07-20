@@ -86,7 +86,7 @@ angular.module('a2.audiodata.recordings', [
         
         var modalInstance = $modal.open({
             controller: 'SavePlaylistModalInstanceCtrl',
-            templateUrl: '/partials/audiodata/create-playlist.html',
+            templateUrl: '/audiodata/create-playlist.html',
             resolve: {
                 listParams: function() {
                     return listParams;

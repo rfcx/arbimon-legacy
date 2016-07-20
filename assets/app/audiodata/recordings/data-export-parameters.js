@@ -8,7 +8,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
 .directive('recordingDataExportParameters', function($document, $rootScope){
     return {
         restrict:'E',
-        templateUrl:'/partials/audiodata/recording-data/export-parameters.html',
+        templateUrl:'/audiodata/recording-data/export-parameters.html',
         scope:{
             onExport : '&'
         },

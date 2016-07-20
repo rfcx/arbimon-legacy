@@ -26,7 +26,7 @@ angular.module('a2.audiodata.species', [
         }
         
         var modalInstance = $modal.open({
-            templateUrl: '/partials/audiodata/select-species.html',
+            templateUrl: '/audiodata/select-species.html',
             controller: 'SelectSpeciesCtrl',
             size: 'lg',
         });

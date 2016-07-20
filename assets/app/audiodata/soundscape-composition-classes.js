@@ -8,7 +8,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
     $stateProvider.state('audiodata.scAnnotationClasses', {
         url: '/soundscape-annotation-classes',
         controller:'SoundscapeCompositionClassesScreenCtrl as controller',
-        templateUrl: '/partials/audiodata/soundscape-composition-classes.html'
+        templateUrl: '/audiodata/soundscape-composition-classes.html'
     });
 })
 .controller('SoundscapeCompositionClassesScreenCtrl', function(
@@ -75,7 +75,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
         }
         
         var modalInstance = $modal.open({
-            templateUrl: '/partials/audiodata/select-species.html',
+            templateUrl: '/audiodata/select-species.html',
             controller: 'SelectSoundscapeCompositionClassesScreenCtrl',
             size: 'lg',
         });
