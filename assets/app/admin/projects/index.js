@@ -11,7 +11,7 @@ angular.module('a2.admin.projects', [
         .state('projects', {
             url: '/projects',
             abstract:true,
-            templateUrl: '/partials/admin/projects/index.html'
+            templateUrl: '/admin/projects/index.html'
         });
 })
 ;

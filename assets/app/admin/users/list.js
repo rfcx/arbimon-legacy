@@ -12,7 +12,7 @@ angular.module('a2.admin.users.list', [
 //         .state('users.list', {
 //             url: '',
 //             controller:'AdminUsersListCtrl',
-//             templateUrl: '/partials/admin/users/list.html'
+//             templateUrl: '/admin/users/list.html'
 //         });
 // 
 // })

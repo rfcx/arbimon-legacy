@@ -15,7 +15,7 @@ angular.module('a2.admin.projects.codes', [
         .state('projects.codes', {
             url: '/codes',
             controller:'AdminProjectsCodesCtrl as controller',
-            templateUrl: '/partials/admin/projects/codes.html'
+            templateUrl: '/admin/projects/codes.html'
         });
 })
 .controller('AdminProjectsCodesCtrl', function($modal, notify, LoaderFactory, AdminProjectsCodesService) {
@@ -24,7 +24,7 @@ angular.module('a2.admin.projects.codes', [
     
     this.createNewCode = function(){
         return $modal.open({
-            templateUrl: '/partials/admin/projects/new-code-modal.html',
+            templateUrl: '/admin/projects/new-code-modal.html',
             resolve: {
                 projectsList: function(AdminProjectsListService){
                     return AdminProjectsListService.getList();
@@ -60,7 +60,7 @@ angular.module('a2.admin.projects.codes', [
     };
     this.showHash = function(code){
         return $modal.open({
-            templateUrl: '/partials/admin/projects/view-hash.html',
+            templateUrl: '/admin/projects/view-hash.html',
             resolve: {
                 code: function(){
                     return code;

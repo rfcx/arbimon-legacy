@@ -16,23 +16,23 @@ angular.module('a2.admin', [
         .state('dashboard', {
             url: '/dashboard',
             controller:'AdminDashboardCtrl',
-            templateUrl: '/partials/admin/dashboard.html'
+            templateUrl: '/admin/dashboard.html'
         })
         // TODO complete projects and users sections
         // .state('projects', {
         //     url: '/projects',
         //     controller:'AdminProjectsCtrl',
-        //     templateUrl: '/partials/admin/projects.html'
+        //     templateUrl: '/admin/projects.html'
         // })
         // .state('users', {
         //     url: '/users',
         //     controller:'AdminUsersCtrl',
-        //     templateUrl: '/partials/admin/users.html'
+        //     templateUrl: '/admin/users.html'
         // })
         .state('jobs', {
             url: '/jobs',
             controller:'AdminJobsCtrl',
-            templateUrl: '/partials/admin/jobs.html'
+            templateUrl: '/admin/jobs.html'
         });
 })
 .controller('AdminDashboardCtrl', function($scope, $http, $q, $controller) {

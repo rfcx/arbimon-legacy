@@ -13,13 +13,13 @@ angular.module('a2.admin.projects.list', [
         .state('projects.list', {
             url: '',
             controller:'AdminProjectsListCtrl as controller',
-            templateUrl: '/partials/admin/projects/list.html'
+            templateUrl: '/admin/projects/list.html'
         })
         .state('projects.list.detail', {
             url: '/:url',
             views: {
                 'detail': {
-                    templateUrl: '/partials/admin/projects/list-detail.html',
+                    templateUrl: '/admin/projects/list-detail.html',
                     controller: 'AdminProjectsListDetailCtrl as controller'
                 }
             },
