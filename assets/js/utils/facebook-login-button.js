@@ -1,39 +1,19 @@
 angular.module('a2.utils.facebook-login-button', [
     'a2.utils',
     'a2.utils.global-anonymous-function',
+    'a2.utils.external-api-loader',
     'a2.injected.data',
 ])
-.service('a2FacebookAPIClient', function($q, $window, $timeout, a2InjectedData){
-    var APIURL = "//connect.facebook.net/en_US/sdk.js";
-    // var APIURL = "https://www.facebook.com/dialog/oauth?";
-    function loadAPI(){
-        if($window.gapi){
-            return $q.resolve($window.FB);
-        } else {
-            if(!loadAPI.promise){
-                loadAPI.promise = $q(function(resolve, reject){
-                    var script = $window.document.createElement('script');
-                    angular.element($window.document.head).append(script);
-                    script.onload = function(){
-                        $window.FB.init(a2InjectedData.facebook_api);
-                        resolve($window.FB);
-                    };
-                    script.onerror = function(){
-                        reject();
-                    };
-                    script.src=APIURL;
-                });
-            }
-            return loadAPI.promise;
-        }
-    }
-    return {
-        get: function(){
-            return loadAPI();
-        }
-    };
+.config(function(externalApiLoaderProvider){
+    externalApiLoaderProvider.addApi('facebook', {
+        url: "//connect.facebook.net/en_US/sdk.js",
+        namespace: 'FB',
+        onload: ["a2InjectedData", function(a2InjectedData){
+            this.module.init(a2InjectedData.facebook_api);
+        }]
+    });
 })
-.directive('a2FacebookLoginButton', function($window, $q, $timeout, a2InjectedData, a2FacebookAPIClient){
+.directive('a2FacebookLoginButton', function($window, $q, $timeout, a2InjectedData, externalApiLoader){
     return {
         restrict: 'E',
         templateUrl : '/partials/utils/facebook-login-button.html',
@@ -46,7 +26,7 @@ angular.module('a2.utils.facebook-login-button', [
             element[0].className = '';
             
             scope.signIn = function(){
-                a2FacebookAPIClient.get().then(function(FB){
+                externalApiLoader.load('facebook').then(function(FB){
                     FB.login(function(response){
                         if(response.status === 'connected') {
                             console.log(response);
