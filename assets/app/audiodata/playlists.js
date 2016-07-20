@@ -66,7 +66,7 @@ angular.module('a2.audiodata.playlists', [
         
         
         var modalInstance = $modal.open({
-            templateUrl: '/pop-up.html',
+            templateUrl: '/common/templates/pop-up.html',
             scope: $scope
         });
         

@@ -128,7 +128,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
         };
         
         var modalInstance = $modal.open({
-            templateUrl: '/pop-up.html',
+            templateUrl: '/common/templates/pop-up.html',
             scope: this
         });
         

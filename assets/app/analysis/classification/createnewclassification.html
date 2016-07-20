@@ -15,7 +15,7 @@
                     <a ng-click="cancel('/analysis/models') | trackEvent:'Analysis-Classification-new classification modal':'Cancel-Go to models'">Create one.</a>
                 </em>
             </span>
-            <ui-select ng-disabled="disabled" ng-model="datas.classifier" theme="/a2-ui-select">
+            <ui-select ng-disabled="disabled" ng-model="datas.classifier" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a model...">{{$select.selected.mname}}</ui-select-match>
                 <ui-select-choices repeat="m in data | filter: $select.search">
                     {{m.mname}} <span ng-if="!m.enabled" class="pull-right text-danger"><i>unavailable</i></span>
@@ -49,7 +49,7 @@
                     </a>
                 </em>
             </span>
-            <ui-select ng-disabled="disabled" ng-model="datas.playlist" theme="/a2-ui-select">
+            <ui-select ng-disabled="disabled" ng-model="datas.playlist" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="playlist in playlists | filter: $select.search">
                     {{playlist.name}}

@@ -133,7 +133,7 @@ angular.module('a2.audiodata.training-sets', [
         }
         
         var modalInstance = $modal.open({
-            templateUrl: '/pop-up.html',
+            templateUrl: '/common/templates/pop-up.html',
             controller: function() {
                 this.messages = ["You are about to delete a ROI. Are you sure??"];
                 this.btnOk = "Yes, do it!";
@@ -300,7 +300,7 @@ angular.module('a2.audiodata.training-sets', [
         }
         
         $modal.open({
-            templateUrl: '/pop-up.html',
+            templateUrl: '/common/templates/pop-up.html',
             controller: function() {
                 this.messages = ["You are about to delete a the training set \"" + trainingSet.name + "\". Are you sure??"];
                 this.btnOk = "Yes, do it!";

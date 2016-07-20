@@ -95,7 +95,7 @@ angular.module('a2.login', [
     this.showEnableOAuthModal = function(oauthData){
         var modalData={};
         $modal.open({
-            templateUrl: '/authorize-enter-credentials-pop-up.html',
+            templateUrl: '/common/templates/authorize-enter-credentials-pop-up.html',
             controller: function() {
                 this.title = "User Authorization Required";
                 this.data = modalData;

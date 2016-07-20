@@ -172,7 +172,7 @@ angular.module('a2.settings',[
         };
         
         var modalInstance = $modal.open({
-            templateUrl: '/pop-up.html',
+            templateUrl: '/common/templates/pop-up.html',
             scope: $scope
         });
         

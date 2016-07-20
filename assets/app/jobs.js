@@ -123,7 +123,7 @@ angular.module('a2.jobs', [
 
     var confirm = function(titlen, action, cb, vl) {
             var modalInstance = $modal.open({
-                templateUrl: '/pop-up.html',
+                templateUrl: '/common/templates/pop-up.html',
                 controller: function() {
                     this.title = titlen+"running job";
                     this.messages = ["This job has not finished yet. Are you sure?"];
