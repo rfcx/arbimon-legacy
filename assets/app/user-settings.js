@@ -26,7 +26,7 @@ angular.module('a2.user-settings', [
     
     var confirmPass = function() {
         return $modal.open({
-            templateUrl: '/settings/confirm-password.html'
+            templateUrl: '/user-settings/confirm-password.html'
         }).result;
     };
     
