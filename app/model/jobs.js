@@ -3,6 +3,7 @@
 
 var util = require('util');
 var mysql = require('mysql');
+var q = require('q');
 var async = require('async');
 var debug = require('debug')('arbimon2:models:jobs');
 var joi   = require('joi');
@@ -20,8 +21,8 @@ var Jobs = {
     job_types : {
         training_job : {
             type_id : 1,
-            new : function(params, db, callback) {
-                db.query(
+            new : function(params, db) {
+                return q.ninvoke(db, 'query', 
                     "INSERT INTO `job_params_training` (`job_id`, `model_type_id`, \n" +
                     " `training_set_id`, `validation_set_id`, `trained_model_id`, \n" +
                     " `use_in_training_present`,`use_in_training_notpresent`,`use_in_validation_present`,`use_in_validation_notpresent` ,`name` \n" +
@@ -30,7 +31,7 @@ var Jobs = {
                             params.train, null, null, 
                             params.upt, params.unt, params.upv, params.unv, params.name
                         ]) + "\n" +
-                    ")", callback
+                    ")"
                 );
             },
             sql : {
@@ -42,13 +43,13 @@ var Jobs = {
         },
         classification_job : {
             type_id : 2,
-            new: function(params, db, callback) {
-                db.query(
+            new: function(params, db) {
+                return q.ninvoke(db, 'query',
                     "INSERT INTO `job_params_classification` (\n" +
                     "   `job_id`, `model_id`, `playlist_id` ,`name` \n" +
                     ") VALUES ( \n" + 
                     "   " + mysql.escape([params.job_id, params.classifier, params.playlist, params.name]) + "\n" +
-                    ")", callback
+                    ")"
                 );
             },
             sql : {
@@ -60,21 +61,49 @@ var Jobs = {
         },
         soundscape_job: {
             type_id : 4,
-            new: function(params, db, callback) {
-                db.query(
+            new: function(params, db) {
+                return q.ninvoke(db, 'query',
                     "INSERT INTO `job_params_soundscape`( \n"+
                     "   `job_id`, `playlist_id`, `max_hertz`, `bin_size`, `soundscape_aggregation_type_id`, `name`, `threshold` , `threshold_type` , `frequency` , `normalize` \n" +
                     ") VALUES ( \n" + 
                     "    " + mysql.escape([params.job_id, params.playlist, params.maxhertz, params.bin]) + ", \n"+
                     "    (SELECT `soundscape_aggregation_type_id` FROM `soundscape_aggregation_types` WHERE `identifier` = " + mysql.escape(params.aggregation) + "), \n" +
                     "    " + mysql.escape([params.name, params.threshold, params.threshold_type, params.frequency , params.normalize]) + " \n" +
-                    ")", callback
+                    ")"
                 );
             },
             sql : {
                 report : {
                     projections : ['CONCAT(UCASE(LEFT( JPT.`name`, 1)), SUBSTRING( JPT.`name`, 2)) as name'],
                     tables      : ['JOIN `job_params_soundscape` as JPT ON J.job_id = JPT.job_id'],
+                }
+            }
+        },
+        audio_event_detection_job: {
+            type_id : 5,
+            schema : joi.object().keys({
+                project : joi.number().integer(),
+                user : joi.number().integer(),
+                name       : joi.string(),
+                playlist   : joi.number().integer(),
+                algorithm  : joi.number().integer(),
+                params     : joi.object(),
+                statistics : joi.array().items(joi.string()),
+            }),
+            new: function(params, db) {
+                console.log("new", params);
+                return q.ninvoke(db, 'query',
+                    "INSERT INTO `job_params_audio_event_detection`( \n"+
+                    "   `job_id`, `name`, `playlist_id`, `algorithm_id`, `params`, `statistics`\n" +
+                    ") VALUES (?, ?, ?, ?, ?, ?)", [
+                        params.job_id, params.name, params.playlist, params.algorithm, JSON.stringify(params.params), JSON.stringify(params.statistics)
+                    ]
+                );
+            },
+            sql : {
+                report : {
+                    projections : ['CONCAT(UCASE(LEFT( JPT.`name`, 1)), SUBSTRING( JPT.`name`, 2)) as name'],
+                    tables      : ['JOIN `job_params_audio_event_detection` as JPT ON J.job_id = JPT.job_id'],
                 }
             }
         },
@@ -89,63 +118,40 @@ var Jobs = {
         
         var db;
         var job_id;
-        var tx = new sqlutil.transaction();
-
-        async.waterfall([
-            function(next) {
-                var q = "SELECT enabled FROM job_types WHERE job_type_id = ?";
-                q = mysql.format(q, [job_type.type_id]);
-                queryHandler(q, function(err, rows) {
-                    if(err) return next(err);
-                    
-                    if(!rows.length) {
-                        return next(new Error('Job type not found on DB'));
-                    }
-                    
-                    if(!rows[0].enabled) {
-                        return next(new Error('Job type not enable'));
-                    }
-                    next();
-                });
-            },
-            dbpool.getConnection,
-            function start_transaction(connection, next){
-                tx.connection = db = connection;
-                tx.begin(next);
-            },
-            function insert_job_entry(){
-                var next = arguments[arguments.length - 1];
-                db.query(
+        return dbpool.query(
+            "SELECT enabled FROM job_types WHERE job_type_id = ?", [
+            job_type.type_id
+        ]).then(function(rows) {
+            if(!rows.length) {
+                throw new Error('Job type not found on DB');
+            } else if(!rows[0].enabled) {
+                throw new Error('Job type not enabled');
+            }
+        }).then(function(){
+                if(job_type.schema){
+                    return q.ninvoke(joi, 'validate', params, job_type.schema);
+                }
+        }).then(function(){
+            return q.ninvoke(dbpool, 'getConnection');
+        }).then(function start_transaction(connection){
+            var tx = new sqlutil.transaction(db = connection);
+            return tx.perform(function(){
+                return q.ninvoke(db, 'query', 
                     "INSERT INTO `jobs` ( \n" +
                     "   `job_type_id`, `date_created`, `last_update`, `project_id`, `user_id`, `uri`, `remarks` \n" +
-                    ") VALUES (" + 
-                        job_type.type_id + ", now(), now()," + mysql.escape(params.project) + "," + mysql.escape(params.user) + ",'',''" +
-                    ")", next
-                );
-            },
-            function get_job_id(result){
-                var next = arguments[arguments.length - 1];
-                params.job_id = job_id = result.insertId;
-                next();
-            },
-            function insert_job_parameters(next){
-                job_type.new(params, db, next);
-            },
-            tx.mark_success.bind(tx)
-        ], function(err){
-            if(db){
-                db.release();
-            }
-            tx.end(function(err2){
-                if(err){
-                    callback(err);
-                } else if(err2){
-                    callback(err2);
-                } else {
-                    callback(null, job_id);
-                }
+                    ") VALUES (?, now(), now(), ?, ?,'',''" +
+                    ")", [
+                        job_type.type_id, params.project, params.user
+                    ]
+                ).get(0).then(function get_job_id(result){
+                    params.job_id = job_id = result.insertId;
+                    
+                    return job_type.new(params, db);
+                }).then(function(){
+                    return job_id;
+                });
             });
-        });
+        }).nodeify(callback);
     },
     
     

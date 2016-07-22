@@ -1,4 +1,5 @@
 var mysql = require('mysql');
+var q = require('q');
 
 
 var transaction = function(connection){
@@ -6,56 +7,44 @@ var transaction = function(connection){
 };
 
 transaction.prototype = {
+    perform: function(transactionFn){
+        var dbconn = this.connection;
+        return this.begin().then(transactionFn).then(function(value){
+            return q.ninvoke(dbconn, 'query', "COMMIT").then(function(){
+                return value;
+            });
+        }, function(err){
+            return q.ninvoke(dbconn, 'query', "ROLLBACK").then(function(){
+                throw err;
+            });
+        });
+    },
     begin : function(callback){
         if(!this.connection){
             callback(new Error("Transaction begin called without a connection."));
             return;
         }
-        this.connection.query("BEGIN", (function(err){
-            if(err){
-                callback(err);
-            } else {
-                this.in_tx = true;
-                callback();
-            }
-        }).bind(this));        
+        
+        return q.ninvoke(this.connection, 'query', "BEGIN").then((function(){
+            this.in_tx = true;
+        }).bind(this)).nodeify(callback);
     },
     mark_failed  : function(){
-        var callback = arguments.length > 0 && arguments[arguments.length - 1];
         this.success = false;
-        if(callback){
-            callback();
-        }
+        return q.resolve().nodeify(arguments.length > 0 && arguments[arguments.length - 1]);
     },
     mark_success : function(){
-        var callback = arguments.length > 0 && arguments[arguments.length - 1];
         this.success = true;
-        if(callback){
-            callback();
-        }
+        return q.resolve().nodeify(arguments.length > 0 && arguments[arguments.length - 1]);
     },
     end : function(callback){
-        if(!this.in_tx || !this.connection){
-            callback();
-        } else if(this.success){
-            this.connection.query("COMMIT", (function(err){
-                if(err){
-                    callback(err);
-                } else {
-                    this.in_tx = false;
-                    callback();
-                }
-            }).bind(this));
-        } else {
-            this.connection.query("ROLLBACK", (function(err){
-                if(err){
-                    callback(err);
-                } else {
-                    this.in_tx = false;
-                    callback();
-                }
-            }).bind(this));
-        }
+        return (
+            (!this.in_tx || !this.connection) ? 
+            q.resolve() : 
+            q.ninvoke(this.connection, 'query', this.success ? "COMMIT" : "ROLLBACK").then((function(){
+                this.in_tx = false;
+            }).bind(this))
+        ).nodeify(callback);
     }
 };
 
