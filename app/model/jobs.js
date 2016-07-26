@@ -86,17 +86,16 @@ var Jobs = {
                 user : joi.number().integer(),
                 name       : joi.string(),
                 playlist   : joi.number().integer(),
-                algorithm  : joi.number().integer(),
-                params     : joi.object(),
+                configuration : joi.number().integer(),
                 statistics : joi.array().items(joi.string()),
             }),
             new: function(params, db) {
                 console.log("new", params);
                 return q.ninvoke(db, 'query',
                     "INSERT INTO `job_params_audio_event_detection`( \n"+
-                    "   `job_id`, `name`, `playlist_id`, `algorithm_id`, `params`, `statistics`\n" +
-                    ") VALUES (?, ?, ?, ?, ?, ?)", [
-                        params.job_id, params.name, params.playlist, params.algorithm, JSON.stringify(params.params), JSON.stringify(params.statistics)
+                    "   `job_id`, `name`, `playlist_id`, `configuration_id`, `statistics`\n" +
+                    ") VALUES (?, ?, ?, ?, ?)", [
+                        params.job_id, params.name, params.playlist, params.configuration, JSON.stringify(params.statistics)
                     ]
                 );
             },

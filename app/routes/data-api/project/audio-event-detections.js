@@ -29,16 +29,6 @@ router.post('/new', function(req, res, next) {
     res.type('json');
     
     var project_id = req.project.project_id;
-    var params = {
-        project    : project_id,
-        user       : req.session.user.id,
-        name       : req.body.name,
-        playlist   : req.body.playlist,
-        algorithm  : req.body.algorithm,
-        params     : req.body.parameters,
-        statistics : req.body.statistics,
-
-    };
     
     q.resolve().then(function(){
         if(!req.haveAccess(project_id, "manage soundscapes")){
@@ -46,8 +36,21 @@ router.post('/new', function(req, res, next) {
                 error: "You don't have permission to run audio event detections" 
             });
         }
-        
-        return model.jobs.newJob(params, 'audio_event_detection_job');
+    }).then(function(){
+        return model.AudioEventDetections.newConfiguration({
+            algorithm  : req.body.algorithm,
+            params     : req.body.parameters,
+        });
+    }).then(function(aedc){
+        debug("AED configuration", aedc);
+        return model.jobs.newJob({
+            project    : project_id,
+            user       : req.session.user.id,
+            name       : req.body.name,
+            playlist   : req.body.playlist,
+            configuration: aedc.aedc_id,
+            statistics : req.body.statistics,
+        }, 'audio_event_detection_job');
     }).then(function get_job_id(job_id){
         pokeDaMonkey(); // this happens in 'parallel'
         return job_id;
