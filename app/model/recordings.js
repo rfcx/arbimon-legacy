@@ -1150,7 +1150,7 @@ var Recordings = {
                 var recParamMap = {
                     'filename' : "SUBSTRING_INDEX(r.uri,'/',-1) as filename",
                     'site' : 's.name as site',
-                    'time' : 'r.datetime as time',
+                    'time' : 'DATE_FORMAT(r.datetime, "%Y/%m/%d %T") as time',
                     'recorder' : 'r.recorder',
                     'microphone' : 'r.mic as microphone',
                     'software' : 'r.version as software',
