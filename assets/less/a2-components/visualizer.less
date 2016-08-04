@@ -59,15 +59,24 @@
 .sidebar {
     min-height: 1px;
     position: absolute;
+    max-width: @sidebar-width;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
     @media (min-width: @screen-md-min) {
+        > .thumb{
+            display: none;
+        }
+        >.scroller{
+            margin-top:0;
+        }
         position: absolute;
         left: 0;
-        width: @sidebar-width;
+        right: auto;
         top: 0;
         bottom: 0;
     }
-    overflow-y: auto;
-    overflow-x: hidden;
+
     &.has-footer{
         padding-bottom:46px;
         > .footer{
@@ -76,62 +85,31 @@
             width: 100%;
         }
     }
-    // @media (min-width: @grid-float-breakpoint) {
-    //     .drawer {
-    //         display: none;
-    //     }
-    // }
-    // @media (max-width: @grid-float-breakpoint) {
-    //     right: 100%;
-    //     z-index: 910;
-    //     &.show {
-    //         min-height: 1px;
-    //         position: absolute;
-    //         @media (min-width: @screen-md-min) {
-    //             position: absolute;
-    //             left: 0;
-    //             right: @sidebar-width;
-    //             top: 0;
-    //             bottom: 0;
-    //         }
-    //         left: 0;
-    //         width: 100%;
-    //         right: auto;
-    //         .drawer {
-    //             right: 0;
-    //             &:before {
-    //                 content: "\f053";
-    //             }
-    //         }
-    //     }
-    //     .drawer {
-    //         // bootstrap-depend
-    //         // .button-variant(@btn-default-color; @btn-default-bg; @btn-default-border);
-    //         position: absolute;
-    //         top: 100px;
-    //         height: 100px;
-    //         right: -20px;
-    //         width: 20px;
-    //         border: 1px solid @btn-default-border;
-    //         z-index: 10;
-    //         &:before {
-    //             content: "\f054";
-    //             position: absolute;
-    //             top: 50%;
-    //         }
-    //     }
-    // }
+    >.scroller{
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        max-height: 100%;
+        @media (max-width: @screen-md-min) {
+            margin-top:34px;
+            max-height: 80%;
+            box-shadow: black 2px 2px 7px;
+        }
+        &.collapsed{
+            display: none;
+        }
+    }
 }
 .app-content {
     min-height: 1px;
     padding-left: (@grid-gutter-width / 2);
     padding-right: (@grid-gutter-width / 2);
     position: absolute;
-    @media (min-width: @screen-sm-min) {
+    @media (min-width: @screen-md-min) {
         left: @sidebar-width;
-        right: 0;
-        top: 0;
-        bottom: 0;
     }
     border-left: 1px solid #d0d0d0;
     left: 0;
