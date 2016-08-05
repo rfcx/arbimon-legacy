@@ -22,7 +22,7 @@ angular.module('a2.utils', [])
         }
     };
 })
-.factory('a2EventEmitter', function(){
+.factory('a2EventEmitter', function($q){
     function a2EventEmitter(){
         this.list={};
     }
@@ -49,6 +49,7 @@ angular.module('a2.utils', [])
                     list[i].apply(null, args);
                 }
             }
+            return $q.resolve();
         }
     };
     return a2EventEmitter;

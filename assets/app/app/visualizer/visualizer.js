@@ -16,6 +16,7 @@ angular.module('a2.visualizer', [
     'a2.visobjectsbrowser', 
     'a2.speciesValidator', 
     'visualizer-layers', 
+    'a2.visualizer.directive.sidebar', 
     'a2.visualizer.recordings',
     'a2.visualizer.layer.recording-tags',
     'a2.visualizer.layer.soundscape-composition-tool',

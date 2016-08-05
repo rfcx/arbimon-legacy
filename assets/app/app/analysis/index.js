@@ -3,6 +3,7 @@
     var analysis = angular.module('a2.analysis', [ 
         'a2.analysis.models',
         'a2.analysis.classification',
+        'a2.directive.sidenav-bar',
         'a2.analysis.soundscapes',
         'ui.router', 
         'ct.ui.router.extras'
