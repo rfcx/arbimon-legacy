@@ -3,7 +3,7 @@ angular.module('a2.analysis', [
     'a2.analysis.classification',
     'a2.analysis.soundscapes',
     'a2.analysis.audio-event-detection',
-    'ui.router', 
+    'ui.router',
     'ct.ui.router.extras'
 ]).config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.when("/analysis", "/analysis/models");
@@ -14,7 +14,7 @@ angular.module('a2.analysis', [
                 templateUrl: '/app/analysis/index.html'
             }
         },
-        deepStateRedirect: true, 
+        deepStateRedirect: true,
         sticky: true,
     });
 })
