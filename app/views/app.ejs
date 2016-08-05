@@ -29,11 +29,12 @@
                             <span class="visible-lg-inline visible-xs-inline">Dashboard</span>
                         </a>
                     </li>
-                    <li ui-sref-active="active" tooltip="Data" tooltip-placement="bottom">
+                    <li ui-sref-active="open" tooltip="Data" tooltip-placement="bottom">
                         <a ui-sref="audiodata">
                             <i class="fa fa-cloud-upload"></i> 
                             <span class="visible-lg-inline visible-xs-inline">Data</span>
                         </a>
+                        <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="audiodata"></ul>
                     </li>
                     <li ui-sref-active="active" tooltip="Visualizer" tooltip-placement="bottom">
                         <a ui-sref="visualizer">
@@ -41,11 +42,12 @@
                             <span class="visible-lg-inline visible-xs-inline">Visualizer</span>
                         </a>
                     </li>
-                    <li ui-sref-active="active" tooltip="Analysis" tooltip-placement="bottom">
+                    <li ui-sref-active="open" tooltip="Analysis" tooltip-placement="bottom">
                         <a ui-sref="analysis">
                             <i class="fa fa-send-o"></i> 
                             <span class="visible-lg-inline visible-xs-inline">Analysis</span>
                         </a>
+                        <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="analysis"></ul>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav hide-tooltip-lg" ng-controller="StatusBarNavIndexController">
@@ -58,11 +60,12 @@
                     </li>
                 </ul>
                 <ul class="nav navbar-nav hide-tooltip-lg">
-                    <li ui-sref-active="active">
+                    <li ui-sref-active="open">
                         <a ui-sref="settings" tooltip="Settings" tooltip-placement="bottom">
                             <i class="fa fa-wrench"></i> 
                             <span class="visible-lg-inline visible-xs-inline">Settings</span> 
                         </a>
+                        <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="settings"></ul>
                     </li>
                     <li tooltip-placement="bottom" tooltip="Forum">
                         <a target="_blank" href="https://forum.sieve-analytics.com/arbimon/">

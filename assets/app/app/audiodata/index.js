@@ -1,6 +1,7 @@
 angular.module('a2.audiodata', [
     'ui.router', 
     'ct.ui.router.extras',
+    'a2.directive.sidenav-bar',
     'a2.audiodata.sites',
     'a2.audiodata.species',
     'a2.audiodata.uploads',

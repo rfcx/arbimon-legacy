@@ -4,6 +4,7 @@ angular.module('a2.settings',[
     'a2.forms',
     'a2.orders',
     'a2.permissions',
+    'a2.directive.sidenav-bar',
     'ui.bootstrap',
     'ui.router',
     'ct.ui.router.extras',
