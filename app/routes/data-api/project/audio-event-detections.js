@@ -10,7 +10,8 @@ var pokeDaMonkey = require('../../../utils/monkey');
 router.get('/', function(req, res, next) {
     model.AudioEventDetections.getFor({
         project: req.project.project_id,
-        showAlgorithm: true 
+        showAlgorithm: true,
+        showPlaylist: true,
     }).then(function(aeds) {
         res.json(aeds);
     }).catch(next);

@@ -1,5 +1,6 @@
 var q     = require('q');
 var joi     = require('joi');
+var model     = require('./index');
 var dbpool = require('../utils/dbpool');
 var sha256 = require('../utils/sha256');
 
@@ -16,6 +17,7 @@ var AudioEventDetections = {
      * @param {Object} options.id - match aeds with the given id (or id array).
      * @param {Object} options.project - match aeds on projects with the given id (or id array).
      * @param {Object} options.showAlgorithm - show the algorithm details for this aed.
+     * @param {Object} options.showPlaylist - show the playlist details for this aed.
      * @return {Promise} resolving to the queried aeds.
      */
     getFor: function(options){
@@ -36,6 +38,18 @@ var AudioEventDetections = {
         if(options.project){
             where.push("AED.project_id IN (?)");
             data.push(options.project);
+        }
+
+        if(options.showPlaylist){
+            select.push('AED.playlist_id');
+            postprocess.push(function(aeds){
+                return q.all(aeds.map(function(aed){
+                    return q.ninvoke(model.playlists, 'find', {id: aed.playlist_id}).get(0).get(0).then(function(playlist){
+                        aed.playlist = playlist;
+                        delete aed.playlist_id;
+                    });
+                }));
+            });
         }
         
         if(options.showAlgorithm){
