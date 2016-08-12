@@ -204,7 +204,7 @@ angular.module('a2.audiodata.uploads.upload', [
     };
     
     if($window.localStorage.getItem('data.uploads.help.viewed') === null) {
-        $scope.displayHelp();
+        this.displayHelp();
         $window.localStorage.setItem('data.uploads.help.viewed', true);
     }
     
