@@ -1,7 +1,7 @@
 angular.module('a2.audiodata.uploads.upload', [
-    'a2.services', 
-    'a2.directives', 
-    'ui.bootstrap', 
+    'a2.services',
+    'a2.directives',
+    'ui.bootstrap',
     'angularFileUpload',
     'a2.srv.app-listings',
     'a2.filter.caps',
@@ -14,15 +14,8 @@ angular.module('a2.audiodata.uploads.upload', [
         templateUrl: '/app/audiodata/uploads/upload.html'
     });
 })
-.controller('A2AudioDataUploadsUploadCtrl', function(
-    $scope, 
-    uploads, Project, 
-    AppListingsService, 
-    $modal, $window, a2UserPermit, 
-    notify
-) { 
-    
-    $scope.prettyBytes = function(bytes) {
+.filter('prettyBytes', function(){
+    return function(bytes) {
         
         var labels = ['B', 'kB', 'MB', 'GB'];
         
@@ -36,7 +29,15 @@ angular.module('a2.audiodata.uploads.upload', [
         newBytes = Math.round(newBytes*100)/100;
         
         return String(newBytes) + ' ' + labels[p-1];
-    }; 
+    };
+})
+.controller('A2AudioDataUploadsUploadCtrl', function(
+    $scope,
+    uploads, Project,
+    AppListingsService,
+    $modal, $window, a2UserPermit,
+    notify
+) {
     
     $scope.verifyAndUpload = function() {
         if(!a2UserPermit.can('manage project recordings')) {
@@ -72,7 +73,7 @@ angular.module('a2.audiodata.uploads.upload', [
                     return next();
                 }
                 
-                item.formData.push({ 
+                item.formData.push({
                     info: JSON.stringify({
                         recorder: $scope.info.recorder,
                         mic: $scope.info.mic,
@@ -99,7 +100,7 @@ angular.module('a2.audiodata.uploads.upload', [
     
     $scope.stopQueue = function() {
         $scope.uploading = false;
-        angular.forEach($scope.uploader.queue, function(item) { 
+        angular.forEach($scope.uploader.queue, function(item) {
             item.cancel();
         });
     };
@@ -156,7 +157,7 @@ angular.module('a2.audiodata.uploads.upload', [
         fn: function(item) {
             
             var duplicate = $scope.uploader.queue.filter(function(qItem) {
-               return qItem.file.name === item.name; 
+               return qItem.file.name === item.name;
             });
                         
             return !duplicate.length;
@@ -204,7 +205,8 @@ angular.module('a2.audiodata.uploads.upload', [
     };
     
     if($window.localStorage.getItem('data.uploads.help.viewed') === null) {
-        $scope.displayHelp();
+        this.displayHelp();
+        
         $window.localStorage.setItem('data.uploads.help.viewed', true);
     }
     

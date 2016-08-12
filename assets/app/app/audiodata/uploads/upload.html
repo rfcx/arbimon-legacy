@@ -24,23 +24,23 @@
     <div class="col-sm-12">
         <div class="btn btn-primary btn-file">
             <i class="fa fa-plus"></i> Add files
-            <input accept="audio/*,.flac" 
+            <input accept="audio/*,.flac"
                 nv-file-select uploader="uploader" type="file" multiple>
         </div>
-        <button type="button" class="btn btn-success" 
-            ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'" 
+        <button type="button" class="btn btn-success"
+            ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'"
             ng-disabled="!uploader.getNotUploadedItems().length || !info || uploading">
             <i class="fa fa-cloud-upload"></i> Start
         </button>
-        <button type="button" class="btn btn-warning" 
-            ng-click="stopQueue() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'" 
+        <button type="button" class="btn btn-warning"
+            ng-click="stopQueue() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'"
             ng-disabled="!uploading">
             <i class="fa fa-ban"></i> Stop all
         </button>
         <div class="btn-group" dropdown>
             <button type="button" class="btn btn-danger dropdown-toggle"
                 dropdown-toggle>
-                <i class="fa fa-trash"></i> Remove 
+                <i class="fa fa-trash"></i> Remove
                 <i class="fa fa-caret-down"></i>
             </button>
             <ul class="dropdown-menu" role="menu">
@@ -88,7 +88,7 @@
                 <tbody >
                     <tr ng-repeat="item in uploader.queue">
                         <td><strong>{{ item.file.name }}</strong></td>
-                        <td ng-show="uploader.isHTML5" nowrap>{{ prettyBytes(item.file.size) }}</td>
+                        <td ng-show="uploader.isHTML5" nowrap>{{ item.file.size | prettyBytes }}</td>
                         <td ng-show="uploader.isHTML5">
                             <div class="progress" style="margin-bottom: 0;">
                                 <div class="progress-bar" role="progressbar" ng-style="{ 'width': item.progress + '%' }"></div>
@@ -98,8 +98,8 @@
                             <span ng-show="item.isUploading"><i class="fa fa-cloud-upload"></i> Uploading</span>
                             <span ng-show="item.isSuccess"><i class="fa fa-check"></i> Success</span>
                             <span ng-show="item.isError">
-                                Error 
-                                <i ng-show="item.errorMsg" 
+                                Error
+                                <i ng-show="item.errorMsg"
                                     class="fa fa-exclamation-circle"
                                     tooltip="{{ item.errorMsg }}"></i>
                             </span>
