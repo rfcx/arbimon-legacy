@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html ng-app="a2.app">
+    <%if(url_base){%><base href="<%= url_base %>"/><%}%>
+    <% include head %>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <% include ng-permissions %>
+    <title>Arbimon II - <%= project.name %><% if(card && card.name){ %> - <%= card.name %><%} %></title>
+</head>
+<body ng-controller="MainCtrl">
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="/home" class="navbar-brand">
+                    <img src="/images/logo.svg">
+                </a>
+            </div>
+        
+            <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
+                <ul class="nav navbar-nav hide-tooltip-lg">
+                    <li ui-sref-active="active">
+                        <a ui-sref="dashboard" tooltip="Dashboard" tooltip-placement="bottom">
+                            <i class="fa fa-dashboard"></i> 
+                            <span class="visible-lg-inline visible-xs-inline">Dashboard</span>
+                        </a>
+                    </li>
+                    <li ui-sref-active="open" tooltip="Data" tooltip-placement="bottom">
+                        <a ui-sref="audiodata">
+                            <i class="fa fa-cloud-upload"></i> 
+                            <span class="visible-lg-inline visible-xs-inline">Data</span>
+                        </a>
+                        <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="audiodata"></ul>
+                    </li>
+                    <li ui-sref-active="active" tooltip="Visualizer" tooltip-placement="bottom">
+                        <a ui-sref="visualizer">
+                            <i class="fa fa-cubes"></i> 
+                            <span class="visible-lg-inline visible-xs-inline">Visualizer</span>
+                        </a>
+                    </li>
+                    <li ui-sref-active="open" tooltip="Analysis" tooltip-placement="bottom">
+                        <a ui-sref="analysis">
+                            <i class="fa fa-send-o"></i> 
+                            <span class="visible-lg-inline visible-xs-inline">Analysis</span>
+                        </a>
+                        <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="analysis"></ul>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav hide-tooltip-lg" ng-controller="StatusBarNavIndexController">
+                    <li ui-sref-active="active">
+                        <a ui-sref="jobs" tooltip="Active Jobs" tooltip-placement="bottom">
+                            <i class="fa fa-cogs"></i> 
+                            <span class="visible-lg-inline visible-xs-inline">Jobs</span> 
+                            <span ng-show="jobslength" class="badge" ng-bind="jobslength"></span>
+                        </a>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav hide-tooltip-lg">
+                    <li ui-sref-active="open">
+                        <a ui-sref="settings" tooltip="Settings" tooltip-placement="bottom">
+                            <i class="fa fa-wrench"></i> 
+                            <span class="visible-lg-inline visible-xs-inline">Settings</span> 
+                        </a>
+                        <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="settings"></ul>
+                    </li>
+                    <li tooltip-placement="bottom" tooltip="Forum">
+                        <a target="_blank" href="https://forum.sieve-analytics.com/arbimon/">
+                            <i class="fa fa-comments-o"></i>
+                            <span class="visible-lg-inline visible-xs-inline">Forum</span>
+                        </a>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right hide-tooltip-lg">
+                    <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
+                        <a class="dropdown-toggle" dropdown-toggle>
+                            <i class="fa fa-sitemap"></i> 
+                            <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>                            
+                        </a>
+                    </li>
+
+                    <% include user-dropdown %>
+                    
+                    <% include help-dropdown %>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <% if(planAlert == 'expired') { %>
+        <div class="alert-bar alert-danger" ng-hide="hideAlertBar" ng-click="hideAlertBar = true">
+            Your project data plan have expired, please renew your plan. 
+            If a new plan is not selected after 30 days of the 
+            due date, the project will be disable. (click to dismiss)
+            <button class="close" ng-click="hideAlertBar = true">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+    <% } %>
+    <div id="body">
+        <div ui-view="audiodata"  ng-show="$state.includes('audiodata')"></div>
+        <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
+        <div ui-view="analysis"   ng-show="$state.includes('analysis')"></div>
+        <div ui-view></div>
+    </div>
+
+</body>
+</html>

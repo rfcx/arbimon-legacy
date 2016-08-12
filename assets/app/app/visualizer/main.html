@@ -1,0 +1,22 @@
+<div class="visualizer">
+    <div>
+        <visualizer-sidebar closed="sidebarClosed">
+            <div class="layers" >
+                <div class="layer hide-btns">
+                    <a2-vis-object-browser name="browser" on-vis-object="setVisObject(visobject, type, location)" location="location.current" ></a2-vis-object-browser>
+                </div>
+            </div>
+            <div class="layers" >
+                <a2-visualizer-layer-item 
+                    class="layer" 
+                    ng-show="isSidebarVisible(layer)" 
+                    ng-repeat="layer in layers | filter: canDisplayInSidebar"
+                ></a2-visualizer-layer-item>
+            </div>
+        </visualizer-sidebar>
+        <div class="app-content" ng-class="sidebarClosed ? 'expand' : ''">
+            <a2-visualizer-spectrogram></a2-visualizer-spectrogram>
+        </div>
+    </div>
+    <div ui-view></div>
+</div>

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 var debug = require('debug')('arbimon2');
 var app = require('../app');
-var redirectHttp = require('../utils/redirect-http');
+var redirectHttp = require('../app/utils/redirect-http');
 
 app.set('app-port', process.env.APP_PORT || 3000);
 

@@ -1,0 +1,14 @@
+<div>
+    <a2-sidenav-bar name="analysis" enabled="('analysis' | includedByState)">
+        <li ui-sref="analysis.models" ui-sref-active="active"><a>Models</a></li>
+        <li ui-sref="analysis.classification" ui-sref-active="active"><a>Classifications</a></li>
+        <li ui-sref="analysis.soundscapes" ui-sref-active="active"><a>Soundscapes</a></li>
+    </a2-sidenav-bar>
+    <div class="container-fluid container-sidenav">
+        <div class="row">
+            <div class="col-sm-12">
+                <div ui-view></div>
+            </div>
+        </div>
+    </div>
+</div>
