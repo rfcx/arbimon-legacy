@@ -288,7 +288,6 @@ Uploader.prototype.ensureFileIsLocallyAvailable = function(callback) {
 };
 
 Uploader.prototype.dataPrep = function(callback) {
-    debug('----------1-----------');
     this.inFile = this.upload.path;
     this.outFile = tmpFileCache.key2File(this.upload.FFI.filename + '.out.flac');
     this.thumbnail = tmpFileCache.key2File(this.upload.FFI.filename + '.thumbnail.png');
