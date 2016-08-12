@@ -14,15 +14,8 @@ angular.module('a2.audiodata.uploads.upload', [
         templateUrl: '/app/audiodata/uploads/upload.html'
     });
 })
-.controller('A2AudioDataUploadsUploadCtrl', function(
-    $scope,
-    uploads, Project,
-    AppListingsService,
-    $modal, $window, a2UserPermit,
-    notify
-) {
-    
-    $scope.prettyBytes = function(bytes) {
+.filter('prettyBytes', function(){
+    return function(bytes) {
         
         var labels = ['B', 'kB', 'MB', 'GB'];
         
@@ -37,6 +30,14 @@ angular.module('a2.audiodata.uploads.upload', [
         
         return String(newBytes) + ' ' + labels[p-1];
     };
+})
+.controller('A2AudioDataUploadsUploadCtrl', function(
+    $scope,
+    uploads, Project,
+    AppListingsService,
+    $modal, $window, a2UserPermit,
+    notify
+) {
     
     $scope.verifyAndUpload = function() {
         if(!a2UserPermit.can('manage project recordings')) {
