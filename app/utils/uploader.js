@@ -3,7 +3,7 @@
 
 /**
     @module utils/uploader
-    @description 
+    @description
     exports class for upload processor
  */
 
@@ -36,24 +36,24 @@ var deleteBucketObject = function(key) {
 
 
 AWS.config.update({
-    accessKeyId: config('aws').accessKeyId, 
+    accessKeyId: config('aws').accessKeyId,
     secretAccessKey: config('aws').secretAccessKey,
     region: config('aws').region
 });
 
-var s3 = new AWS.S3({ 
+var s3 = new AWS.S3({
     httpOptions: {
         timeout: 30000,
     }
-}); 
+});
 
-/** 
+/**
  * Creates an upload processor
  * @class Uploader
  */
 var Uploader = function() {};
 
-/** 
+/**
  * Checks if upload is registered on db and update state to processing
  */
 Uploader.prototype.insertUploadRecs = function(callback) {
@@ -67,7 +67,7 @@ Uploader.prototype.insertUploadRecs = function(callback) {
             site_id: this.upload.siteId,
             user_id: this.upload.userId,
             state: 'processing',
-        }, 
+        },
         (function(err, result) {
             if(err) return callback(err);
             
@@ -112,7 +112,7 @@ Uploader.prototype.convertMonoFlac = function(callback) {
 
 /**
  * Fetches initial audio info if it wasnt provided or is incomplete.
- */ 
+ */
 Uploader.prototype.getInitialAudioInfo = function(callback) {
     debug('getInitialAudioInfo:', this.upload.name);
     if(this.upload.info && this.upload.info.channels){
@@ -131,7 +131,7 @@ Uploader.prototype.getInitialAudioInfo = function(callback) {
 
 /**
  * Updates audio info in case file was splitted and duration is different
- */ 
+ */
 Uploader.prototype.updateAudioInfo = function(callback) {
     debug('updateAudioInfo:', this.upload.name);
     audioTools.info(this.outFile, (function(code, info) {
@@ -146,7 +146,7 @@ Uploader.prototype.updateAudioInfo = function(callback) {
 
 /**
  * Updates file size using fs.stat to have real file size in bytes
- */ 
+ */
 Uploader.prototype.updateFileSize = function(callback) {
     debug('updateFilesize:', this.upload.name);
     fs.stat(this.outFile, (function(err, stats) {
@@ -159,16 +159,16 @@ Uploader.prototype.updateFileSize = function(callback) {
 
 /**
  * Generates audio spectrogram thumbnail of the file
- */ 
+ */
 Uploader.prototype.genThumbnail = function(callback) {
     debug('gen thumbnail:', this.upload.name);
     
-    audioTools.spectrogram(this.outFile, this.thumbnail, 
-        { 
+    audioTools.spectrogram(this.outFile, this.thumbnail,
+        {
             maxfreq : 15000,
             pixPerSec : (7),
             height : (153)
-        },  
+        },
         function(code, stdout, stderr){
             if(code !== 0)
                 return callback(new Error("error generating spectrogram: \n" + stderr));
@@ -180,19 +180,19 @@ Uploader.prototype.genThumbnail = function(callback) {
 
 /**
  * Uploads audio file to AWS S3 Bucket
- */ 
+ */
 Uploader.prototype.uploadFlac = function(callback) {
     debug('uploadFlac:', this.upload.name);
-    
-    var params = { 
-        Bucket: config('aws').bucketName, 
+    debug('outfile:', this);
+    var params = {
+        Bucket: config('aws').bucketName,
         Key: this.fileUri,
         ACL: 'public-read',
         Body: fs.createReadStream(this.outFile)
     };
 
     s3.putObject(params, (function(err, data) {
-        if (err)       
+        if (err)
             return callback(err);
             
         debug("Successfully uploaded flac", this.upload.FFI.filename);
@@ -206,15 +206,15 @@ Uploader.prototype.uploadFlac = function(callback) {
 Uploader.prototype.uploadThumbnail = function(callback) {
     debug('uploadThumbnail:', this.upload.name);
     
-    var params = { 
-        Bucket: config('aws').bucketName, 
+    var params = {
+        Bucket: config('aws').bucketName,
         Key: this.thumbnailUri,
         ACL: 'public-read',
         Body: fs.createReadStream(this.thumbnail)
     };
 
     s3.putObject(params, (function(err, data) {
-        if (err)       
+        if (err)
             return callback(err);
             
         debug("Successfully uploaded thumbnail:", this.upload.FFI.filename);
@@ -225,7 +225,7 @@ Uploader.prototype.uploadThumbnail = function(callback) {
 
 /**
  * Inserts the recording to the recordings table on the database
- */ 
+ */
 Uploader.prototype.insertOnDB = function(callback) {
     debug("inserting to DB", this.upload.name);
     
@@ -250,7 +250,7 @@ Uploader.prototype.insertOnDB = function(callback) {
 
 /**
  * Removes all the local and temporary files.
- */ 
+ */
 Uploader.prototype.cleanUpTempFiles = function(callback) {
     // delete temp files
     deleteFile(this.thumbnail);
@@ -264,7 +264,7 @@ Uploader.prototype.cleanUpTempFiles = function(callback) {
 };
 /**
  * Finish the upload by updating the state to uploaded and deleting the bucket object.
- */ 
+ */
 Uploader.prototype.finishProcessing = function(callback) {
     model.uploads.updateState(this.upload.id, 'uploaded', (function(err){
         deleteBucketObject(this.upload.tempFileUri);
@@ -288,12 +288,12 @@ Uploader.prototype.ensureFileIsLocallyAvailable = function(callback) {
 };
 
 Uploader.prototype.dataPrep = function(callback) {
-    
+    debug('----------1-----------');
     this.inFile = this.upload.path;
     this.outFile = tmpFileCache.key2File(this.upload.FFI.filename + '.out.flac');
     this.thumbnail = tmpFileCache.key2File(this.upload.FFI.filename + '.thumbnail.png');
     
-    var uri = util.format('project_%d/site_%d/%d/%d/%s', 
+    var uri = util.format('project_%d/site_%d/%d/%d/%s',
         this.upload.projectId,
         this.upload.siteId,
         this.upload.FFI.datetime.getFullYear(),
@@ -310,7 +310,7 @@ Uploader.prototype.dataPrep = function(callback) {
 };
 
 
-/** 
+/**
  * Process recording
  * @param {Object}  upload - object containing upload info
  * @param {Object}  upload.metadata - recording metadata
@@ -385,7 +385,7 @@ Uploader.prototype.process = function(upload, done) {
 };
 
 Uploader.computeTempAreaPath = function(upload){
-    return util.format('uploading/project_%d/site_%d/%d/%d/%s%s', 
+    return util.format('uploading/project_%d/site_%d/%d/%d/%s%s',
         upload.projectId,
         upload.siteId,
         upload.FFI.datetime.getFullYear(),
@@ -400,8 +400,8 @@ Uploader.moveToTempArea = function(upload, callback){
         upload.tempFileUri = Uploader.computeTempAreaPath(upload);
     }
     
-    var params = { 
-        Bucket: config('aws').bucketName, 
+    var params = {
+        Bucket: config('aws').bucketName,
         Key: upload.tempFileUri,
         Body: fs.createReadStream(upload.path)
     };
