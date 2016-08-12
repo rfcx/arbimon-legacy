@@ -9,6 +9,7 @@
 
 var fs = require('fs');
 var util = require('util');
+var q = require('q');
 var debug = require('debug')('arbimon2:upload-queue');
 var async = require('async');
 var AWS = require('aws-sdk');
@@ -335,53 +336,52 @@ Uploader.prototype.process = function(upload, done) {
     debug("process:", upload.name);
     self.upload = upload;
     
-    async.auto({
-        prepInfo: self.dataPrep.bind(self),
-        
-        ensureFileIsLocallyAvailable: ['prepInfo', self.ensureFileIsLocallyAvailable.bind(self)],
-        
-        insertUploadRecs: ['ensureFileIsLocallyAvailable', self.insertUploadRecs.bind(self)],
-        // run initial audio file info, just in case that data is missing, before deciding if conversion is needed
-        getInitialAudioInfo: ['insertUploadRecs', self.getInitialAudioInfo.bind(self)],
-        
-        convertMonoFlac: ['getInitialAudioInfo', self.convertMonoFlac.bind(self)],
-        // update audio file info after conversion
-        updateAudioInfo: ['convertMonoFlac', self.updateAudioInfo.bind(self)],
-        
-        updateFileSize: ['updateAudioInfo', self.updateFileSize.bind(self)],
-        
-        genThumbnail: ['updateFileSize', self.genThumbnail.bind(self)],
-        
-        uploadFlac: ['genThumbnail', async.retry(self.uploadFlac.bind(self))],
-        
-        uploadThumbnail: ['genThumbnail', async.retry(self.uploadThumbnail.bind(self))],
-        
-        insertOnDB: ['uploadFlac', 'uploadThumbnail', self.insertOnDB.bind(self)],
-        
-        finishProcessing: ['insertOnDB', self.finishProcessing.bind(self)]
-    },
-    function(err, results) {
-        self.cleanUpTempFiles(function(err2){
-            if(err) {
-                console.error("Error while processing upload.", err.stack);
-                model.uploads.updateStateAndComment(self.upload.id, 'error', JSON.stringify(err), function(){
-                    done(err);
-                });
-                return;
-            }
-            // silently ignoring cleanup problems.......
-            // if(err2) {
-            //     console.error(err2.stack);
-            //     return done(err2);
-            // }
-            
+    var results={};
+    function step(method){
+        return function stepfn(){
+            return q.ninvoke(self, method).then(function(val){
+                results[method] = val;
+                return val;
+            });
+        };
+    }
+    return q.resolve()
+    .then(step('dataPrep'))
+    .then(step('ensureFileIsLocallyAvailable'))
+    .then(step('insertUploadRecs'))
+    .then(step('getInitialAudioInfo')) // run initial audio file info, just in case that data is missing, before deciding if conversion is needed
+    .then(step('convertMonoFlac'))
+    .then(step('updateAudioInfo')) // update audio file info after conversion
+    .then(step('updateFileSize'))
+    .then(step('genThumbnail'))
+    .then(function(){
+        return q.all([
+            step('uploadThumbnail')(),
+            step('uploadFlac')(),
+        ]);
+    }).then(step('insertOnDB'))
+    .then(step('finishProcessing'))
+    .catch(function(err){
+        return q.ninvoke(self, 'cleanUpTempFiles').catch(function(){
+            // silently ignore cleanup problems
+        }).then(function(){
+            console.error("Error while processing upload.", err.stack);
+            return q.ninvoke(model.uploads, 'updateStateAndComment', self.upload.id, 'error', JSON.stringify(err)).catch(function(){
+                // silently ignore error update problems
+            }).then(function(){
+                throw err;
+            });
+        });
+    }).then(function(){
+        return q.ninvoke(self, 'cleanUpTempFiles').catch(function(){
+            // silently ignore cleanup problems
+        }).then(function(){
             debug('upload processing results:', results);
             debug('done processing %s for site %s', self.upload.name, self.upload.siteId);
             debug('elapse:', ((new Date()) - self.start)/1000 + 's');
-            
-            done(null, results);
+            return results;
         });
-    });
+    }).nodeify(done);
 };
 
 Uploader.computeTempAreaPath = function(upload){
