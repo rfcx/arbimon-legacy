@@ -11,8 +11,60 @@ var AudioEventDetections = {
         })
     },
     
+    /** Fetches a set of audio event detections optionally matching a given query.
+     * @param {Object} options - options object.
+     * @param {Object} options.id - match aeds with the given id (or id array).
+     * @param {Object} options.project - match aeds on projects with the given id (or id array).
+     * @param {Object} options.showAlgorithm - show the algorithm details for this aed.
+     * @return {Promise} resolving to the queried aeds.
+     */
     getFor: function(options){
-        return q.resolve([]);
+        options = options || {};
+        var select=["AED.`aed_id` as id, AED.`project_id`, AED.`name`, AED.date_created as date"];
+        var from=[
+            "audio_event_detections AED",
+            "JOIN audio_event_detection_algorithm_configurations AEDC ON AED.configuration_id = AEDC.aedc_id"
+        ];
+        var where=[], data=[];
+        var postprocess=[];
+        
+        if(options.id){
+            where.push("AED.aed_id IN (?)");
+            data.push(options.id);
+        }
+        
+        if(options.project){
+            where.push("AED.project_id IN (?)");
+            data.push(options.project);
+        }
+        
+        if(options.showAlgorithm){
+            select.push('AEDA.name as algorithm, AEDC.parameters, AED.`statistics`');
+            from.push("JOIN audio_event_detection_algorithms AEDA ON AEDC.algorithm_id = AEDA.id");
+            postprocess.push(function(aeds){
+                aeds.forEach(function(aed){
+                    aed.algorithm = {
+                        name: aed.algorithm,
+                        parameters: JSON.parse(aed.parameters)
+                    };
+                    aed.statistics = JSON.parse(aed.statistics);
+                    delete aed.parameters;
+                });
+            });
+        }
+        
+        return dbpool.query(
+            "SELECT " + select.join(", ") + "\n" +
+            "FROM " + from.join("\n")+ "\n" +
+            (where.length ? "WHERE (" + where.join(") AND (") + ")" : ""),
+            data
+        ).then(function(aeds){
+            return postprocess.length ? q.all(postprocess.map(function(ppfn){
+                return q.resolve(aeds).then(ppfn);
+            })).then(function(){
+                return aeds;
+            }) : aeds;
+        });
     },
     getAlgorithms: function(){
         return dbpool.query(
@@ -35,7 +87,7 @@ var AudioEventDetections = {
     getConfiguration: function(aedc_id){
         return dbpool.query(
             "SELECT aedc_id, algorithm_id, parameters\n" +
-            "FROM audio_event_detection_algorithm_configurations\n" + 
+            "FROM audio_event_detection_algorithm_configurations\n" +
             "WHERE aedc_id = ?", [aedc_id]
         ).get(0);
     },
@@ -49,7 +101,7 @@ var AudioEventDetections = {
             
             return dbpool.query(
                 "SELECT aedc_id\n" +
-                "FROM audio_event_detection_algorithm_configurations\n" + 
+                "FROM audio_event_detection_algorithm_configurations\n" +
                 "WHERE hash = ?", [hash]
             ).get(0);
         }).then(function(aedc){

@@ -8,7 +8,10 @@ var model = require('../../../model');
 var pokeDaMonkey = require('../../../utils/monkey');
 
 router.get('/', function(req, res, next) {
-    model.AudioEventDetections.getFor({project: req.project.project_id}).then(function(aeds) {
+    model.AudioEventDetections.getFor({
+        project: req.project.project_id,
+        showAlgorithm: true 
+    }).then(function(aeds) {
         res.json(aeds);
     }).catch(next);
 });
@@ -32,8 +35,8 @@ router.post('/new', function(req, res, next) {
     
     q.resolve().then(function(){
         if(!req.haveAccess(project_id, "manage soundscapes")){
-            throw new Error({ 
-                error: "You don't have permission to run audio event detections" 
+            throw new Error({
+                error: "You don't have permission to run audio event detections"
             });
         }
     }).then(function(){

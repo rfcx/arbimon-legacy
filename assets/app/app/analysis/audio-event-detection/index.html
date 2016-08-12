@@ -2,9 +2,9 @@
     <div class="col-sm-12 col-lg-11 padded-view-div" >
         <h3>
             Audio Event Detections
-            <a class="btn btn-sm btn-default"  
-                tooltip="Create New Audio Event Detection" 
-                tooltip-placement="right"  
+            <a class="btn btn-sm btn-default"
+                tooltip="Create New Audio Event Detection"
+                tooltip-placement="right"
                 ng-click="controller.new()" >
                 <i class="fa fa-plus" ></i>
             </a>
@@ -13,17 +13,20 @@
                 ng-click="controller.reload()">
                     <i class="fa fa-refresh"></i>
             </button>
-        </h3> 
+        </h3>
         <loader ng-show="controller.loading"></loader>
             
         <div ng-hide="controller.loading || !controller.audioEventDetectionsList.length">
             <table ng-table="tableParams" class="table table-hide-btns" show-filter="true" >
                 <tr ng-repeat="audioEventDetection in controller.audioEventDetectionsList" >
                     <td data-title="'Date'" class="no-wrap-table-cell" data-sortable="'date'" >
-                        {{audioEventDetection.date | moment : 'lll' }} 
-                    </td> 
+                        {{audioEventDetection.date | moment : 'lll' }}
+                    </td>
+                    <td data-title="'Name'" class="no-wrap-table-cell hidelongtext widthtd" data-sortable="'name'" filter="{'name':'text'}">
+                        {{audioEventDetection.name}}
+                    </td>
                     <td data-title="'Algorithm'" class="no-wrap-table-cell hidelongtext widthtd" >
-                        {{audioEventDetection.algorithm.name}}({{audioEventDetection.algorithm.params | asCSV}})
+                        {{audioEventDetection.algorithm.name}}({{audioEventDetection.algorithm.parameters | asCSV}})
                     </td>
                     <td data-title="'Playlist'" class="no-wrap-table-cell hidelongtext widthtd" data-sortable="'playlist'"  filter="{ 'playlist': 'text' }">
                         {{audioEventDetection.playlist.name}}
@@ -39,7 +42,7 @@
                         ><i class="fa fa-list-alt"></i> Show details</button>
 
                         <span class="btn-group" dropdown dropdown-append-to-body="true">
-                            <button class="btn btn-default btn-xs" 
+                            <button class="btn btn-default btn-xs"
                                 ng-click="controller.exportAudioEventDetection({audioEventDetection:audioEventDetection}) | trackEvent:'Analysis-AudioEventDetections list':'export audio event detection'"
                             ><i class="fa fa-download"></i> Export</button>
                             <button class="btn btn-default btn-xs" dropdown-toggle><i class="fa fa-caret-down"></i></button>
@@ -61,7 +64,7 @@
         </div>
         <div class="jumbotron" ng-show="!controller.audioEventDetectionsList.length && !controller.loading">
             <h3>
-                {{ infopanedata }} 
+                {{ infopanedata }}
                 <a ng-click="controller.new() | trackEvent:'Analysis-AudioEventDetections':'Create new audio event detection'" >
                     Create a audio event detection
                 </a>
