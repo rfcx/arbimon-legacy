@@ -7,6 +7,7 @@ var less = require('gulp-less');
 var gzip = require('gulp-gzip');
 var ngAnnotate = require('gulp-ng-annotate');
 var rename = require('gulp-rename');
+var ngdocs = require('gulp-ngdocs');
 var sourcemaps = require('gulp-sourcemaps');
 var templateCache = require('gulp-angular-templatecache');
 var pump = require('pump');
@@ -164,6 +165,16 @@ gulp.task('app:dependencies', function(done){
         app.dependencies.dest,
         app.dependencies.deps
     ).nodeify(done);
+});
+
+gulp.task('app:ngdocs', function(done){
+    pump([
+        gulp.src(app.code.src),
+        ngdocs.process({
+            html5Node: true
+        }),
+        gulp.dest('./docs/front-end'),
+    ], done);
 });
 
 var server_process;
