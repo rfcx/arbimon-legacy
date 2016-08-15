@@ -48,7 +48,7 @@
     "chai-as-promised": "~5.3.0",
     "chai-subset": "^1.0.0",
     "gulp": "^3.9.1",
-    "gulp-angular-templates": "0.0.2",
+    "gulp-angular-templatecache": "^2.0.0",
     "gulp-clean-css": "^2.0.12",
     "gulp-concat": "^2.6.0",
     "gulp-gzip": "^1.4.0",
