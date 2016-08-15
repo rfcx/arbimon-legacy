@@ -76,3 +76,10 @@
 - v1.8.5
     - Support for listing of associated apps.
     - Adding uploader desktop app links for download.
+- v1.8.6
+    - Fixing broken uploader stuff
+    - file structure is more organized
+    - fixed recording time-date format in recordings export
+    - updated npm dependencies
+    - improving visualizer responsive layout
+    - misc.
