@@ -95,7 +95,7 @@ gulp.task('app:code', function(done){
         sourcemaps.init(),
         ngAnnotate(),
         concat(app.code.name),
-        // gulp.dest(app.code.dest),
+        gulp.dest(app.code.dest),
         uglify(),
         rename({suffix:'.min'}),
         sourcemaps.write('.'),
