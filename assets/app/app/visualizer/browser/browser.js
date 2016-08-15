@@ -1,7 +1,7 @@
 angular.module('a2.visobjectsbrowser', [
-    'a2.utils', 
+    'a2.utils',
     'a2.browser_common',
-    'a2.browser_recordings_by_site', 
+    'a2.browser_recordings_by_site',
     'a2.browser_recordings_by_playlist',
     'a2.browser_soundscapes',
 ])
@@ -13,7 +13,7 @@ angular.module('a2.visobjectsbrowser', [
  *
  * @event browser-available Emmited when the browser controller gets initialized
  * @event browser-vobject-type Emmited when the selected visualizer object type changes
- * 
+ *
  */
 .directive('a2VisObjectBrowser', function ($window, $timeout) {
     return {
@@ -69,15 +69,15 @@ angular.module('a2.visobjectsbrowser', [
  *
  * @event browser-available Emmited when the browser controller gets initialized
  * @event browser-vobject-type Emmited when the selected visualizer object type changes
- * 
+ *
  */
-.controller('a2VisObjectBrowserController', function($scope, $controller, $q, browser_lovos, itemSelection, Project, EventlistManager){
+.controller('a2VisObjectBrowserController', function($scope, $controller, $q, BrowserLOVOs, itemSelection, Project, EventlistManager){
     // var self = $scope.browser = this;
     var self = this;
-    var project = Project;    
+    var project = Project;
     
     // Set of available lovo types
-    this.types = browser_lovos.$grouping;
+    this.types = BrowserLOVOs.$grouping;
     // currently selected lovo type
     // container for loading flags
     this.loading = {
@@ -101,14 +101,14 @@ angular.module('a2.visobjectsbrowser', [
     
     this.waitForInitialized.then((function(){
         if(!this.type){
-            this.setBrowserType(browser_lovos.$list.filter(function(lovo){return lovo.default;}).shift());
+            this.setBrowserType(BrowserLOVOs.$list.filter(function(lovo){return lovo.default;}).shift());
         }
     }).bind(this));
     
     /** (Re)-Activates the browser controller.
      * Sets the browser controller into an active state. On the first time,
-     * the browse gets initialized and sends a 'browser-available' event 
-     * asynchronously. This activation cascades into the currently selected 
+     * the browse gets initialized and sends a 'browser-available' event
+     * asynchronously. This activation cascades into the currently selected
      * type.
      *
      * @event browser-available Emmited when the browser controller gets initialized
@@ -118,10 +118,10 @@ angular.module('a2.visobjectsbrowser', [
 // console.log("this.activate = function(){", "location : ", location);
         var $type = this.$type;
         return (
-            ($type && $type.activate) ? 
+            ($type && $type.activate) ?
             $type.activate().then((function(){
                 return this.setLOVO($type.lovo);
-            }).bind(this)) : 
+            }).bind(this)) :
             $q.resolve()
         ).then((function(){
             if(!initialized){
@@ -151,7 +151,7 @@ angular.module('a2.visobjectsbrowser', [
                 }).then(function(){
                     return lovo;
                 });
-            } 
+            }
         });
     };
     
@@ -242,9 +242,9 @@ console.log("this.setBrowserLocation :: ", location, this.cachedLocation);
         this.cachedLocation = location;
         
         
-        if(m && browser_lovos[m[1]]){
+        if(m && BrowserLOVOs[m[1]]){
             var loc = m[3];
-            var lovos_def = browser_lovos[m[1]];
+            var lovos_def = BrowserLOVOs[m[1]];
             this.setBrowserType(lovos_def).then(function(){
                     return lovos_def.$controller.resolve_location(loc);
             }).then(function(visobject){
@@ -269,7 +269,7 @@ console.log("this.setBrowserLocation :: ", location, this.cachedLocation);
         var midh = $el.height() * 0.5;
         var hit_pt = $el.scrollTop() + midh;
         var $pointed_el = $lovoels.filter(function(i,el){
-            var $el =$(el), t=$el.position().top, h2=$el.height()*0.5; 
+            var $el =$(el), t=$el.position().top, h2=$el.height()*0.5;
             return Math.abs(hit_pt - t - h2) <= h2;
         });
         // console.log("onLovoScroll = ", $pointed_el);

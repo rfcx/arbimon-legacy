@@ -1,5 +1,5 @@
 angular.module('a2.browser_common', [])
-.service('browser_lovos', function(){
+.service('BrowserLOVOs', function(){
     var g=[], i={}, lovos = {$grouping : g};
     (lovos.$list = [
         {   name       : 'rec',
