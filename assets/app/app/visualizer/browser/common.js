@@ -1,43 +1,27 @@
 angular.module('a2.browser_common', [])
-.service('BrowserLOVOs', function(){
-    var g=[], i={}, lovos = {$grouping : g};
-    (lovos.$list = [
-        {   name       : 'rec',
-            group       : 'recordings',
-            vobject_type: 'recording',
-            default    : true,
-            icon       : 'fa fa-map-marker',
-            tooltip    : 'Browse Recordings by Site',
-            controller : 'a2BrowserRecordingsBySiteController',
-            template   : '/app/visualizer/browser/recordings-by-site.html'
+.provider('BrowserLOVOs', function(){
+    var lovos = {$grouping : [], $list:[]};
+    
+    return {
+        add: function(lovo){
+            lovos.$list.push(lovo);
         },
-        {   name       : 'playlist',
-            group       : 'recordings',
-            vobject_type: 'recording',
-            icon       : 'fa fa-list',
-            tooltip    : "Browse Recordings by Playlist",
-            controller : 'a2BrowserRecordingsByPlaylistController',
-            template   : '/app/visualizer/browser/recordings-by-playlist.html'
-        },
-        {   name       : 'soundscape',
-            group       : 'soundscapes',
-            vobject_type: 'soundscape',
-            icon       : 'fa fa-area-chart',
-            tooltip    : "Show Soundscapes",
-            controller : 'a2BrowserSoundscapesController',
-            template   : '/app/visualizer/browser/soundscapes.html'
+        $get: function(){
+            lovos.$grouping = lovos.$list.reduce(function(_, lovodef){
+                var group = lovodef.group || '';
+
+                if(!_.$index[group]){
+                    _.groups.push(_.$index[group] = []);
+                }
+
+                _.$index[group].push(lovos[lovodef.name] = lovodef);
+
+                return _;
+            }, {groups:[], $index:{}}).groups;
+            
+            return lovos;
         }
-    ]).forEach(function(lovodef){
-        var group = lovodef.group || '';
-
-        if(!i[group]){
-            g.push(i[group] = []);
-        }
-
-        i[group].push(lovos[lovodef.name] = lovodef);
-    });
-
-    return lovos;
+    };
 })
 .service('a2ArrayLOVO', function($q){
     var lovo = function(list, object_type){

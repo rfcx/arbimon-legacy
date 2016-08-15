@@ -1,4 +1,17 @@
-angular.module('a2.browser_soundscapes', [])
+angular.module('a2.browser_soundscapes', [
+    'a2.browser_common',
+])
+.config(function(BrowserLOVOsProvider){
+    BrowserLOVOsProvider.add({
+        name       : 'soundscape',
+        group       : 'soundscapes',
+        vobject_type: 'soundscape',
+        icon       : 'fa fa-area-chart',
+        tooltip    : "Show Soundscapes",
+        controller : 'a2BrowserSoundscapesController',
+        template   : '/app/visualizer/browser/soundscapes.html'
+    });
+})
 .controller('a2BrowserSoundscapesController', function(a2Browser, a2Soundscapes, a2ArrayLOVO, $timeout, $q){
     var self = this;
     this.soundscapes = [];
