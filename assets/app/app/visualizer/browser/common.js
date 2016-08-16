@@ -1,4 +1,18 @@
 angular.module('a2.browser_common', [])
+.provider('BrowserVisObjects', function(){
+    var visobjects={};
+    return {
+        add: function(visobject){
+            visobjects[visobject.type] = angular.extend(
+                visobjects[visobject.type] || {},
+                visobject
+            );
+        },
+        $get: function(){
+            return visobjects;
+        }
+    };
+})
 .provider('BrowserLOVOs', function(){
     var lovos = {$grouping : [], $list:[]};
     

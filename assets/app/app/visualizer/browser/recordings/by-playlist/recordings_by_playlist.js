@@ -10,7 +10,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         icon       : 'fa fa-list',
         tooltip    : "Browse Recordings by Playlist",
         controller : 'a2BrowserRecordingsByPlaylistController',
-        template   : '/app/visualizer/browser/recordings-by-playlist.html'
+        template   : '/app/visualizer/browser/recordings/by-playlist/recordings-by-playlist.html'
     });
 })
 .service('a2PlaylistLOVO', function($q, makeClass, a2Playlists, a2Pager){

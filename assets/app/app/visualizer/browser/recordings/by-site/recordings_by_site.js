@@ -10,7 +10,7 @@ angular.module('a2.browser_recordings_by_site', [
         icon       : 'fa fa-map-marker',
         tooltip    : 'Browse Recordings by Site',
         controller : 'a2BrowserRecordingsBySiteController',
-        template   : '/app/visualizer/browser/recordings-by-site.html'
+        template   : '/app/visualizer/browser/recordings/by-site/recordings-by-site.html'
     });
 })
 .factory('rbDateAvailabilityCache', function ($cacheFactory) {

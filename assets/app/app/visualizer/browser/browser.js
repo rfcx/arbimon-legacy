@@ -1,9 +1,9 @@
 angular.module('a2.visobjectsbrowser', [
     'a2.utils',
     'a2.browser_common',
-    'a2.browser_recordings_by_site',
-    'a2.browser_recordings_by_playlist',
+    'a2.browser_recordings',
     'a2.browser_soundscapes',
+    'a2.browser_audio-event-detections',
 ])
 /**
  * @ngdoc directive
@@ -71,13 +71,21 @@ angular.module('a2.visobjectsbrowser', [
  * @event browser-vobject-type Emmited when the selected visualizer object type changes
  *
  */
-.controller('a2VisObjectBrowserController', function($scope, $controller, $q, BrowserLOVOs, itemSelection, Project, EventlistManager){
+.controller('a2VisObjectBrowserController', function(
+    $scope, $controller, $q,
+    BrowserLOVOs,
+    BrowserVisObjects,
+    itemSelection,
+    Project,
+    EventlistManager
+){
     // var self = $scope.browser = this;
     var self = this;
     var project = Project;
     
     // Set of available lovo types
     this.types = BrowserLOVOs.$grouping;
+    this.visobjectTypes = BrowserVisObjects;
     // currently selected lovo type
     // container for loading flags
     this.loading = {
