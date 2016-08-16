@@ -3,7 +3,7 @@ angular.module('a2.analysis.audio-event-detection', [
     'a2.filter.time-from-now',
     'a2.srv.resolve',
     'a2.srv.open-modal',
-    'a2.analysis.audio-event-detection.service',
+    'a2.service.audio-event-detection',
     'a2.analysis.audio-event-detection.new-modal',
 ])
 .config(function($stateProvider, $urlRouterProvider) {

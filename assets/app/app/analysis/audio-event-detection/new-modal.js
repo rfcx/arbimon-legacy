@@ -4,7 +4,7 @@ angular.module('a2.analysis.audio-event-detection.new-modal', [
     'a2.srv.playlists',
     'humane',
     'a2.directive.require-non-empty',
-    'a2.analysis.audio-event-detection.service',
+    'a2.service.audio-event-detection',
 ])
 .config(function($openModalProvider){
     $openModalProvider.define('audio-event-detection.new-modal', {

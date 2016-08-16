@@ -1,4 +1,4 @@
-angular.module('a2.analysis.audio-event-detection.service', [
+angular.module('a2.service.audio-event-detection', [
     'a2.srv.api'
 ])
 .factory('AudioEventDetectionService', function(a2APIService){
