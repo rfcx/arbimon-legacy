@@ -3,15 +3,22 @@ angular.module('a2.audiodata.recordings', [
     'a2.service.download-resource',
     'a2.audiodata.recordings.data-export-parameters',
     'a2.audiodata.recordings.filter-parameters',
-    'a2.services', 
-    'a2.directives', 
+    'a2.services',
+    'a2.directives',
     'ui.bootstrap',
     'humane'
 ])
+.config(function($stateProvider) {
+    $stateProvider.state('audiodata.recordings', {
+        url: '/recordings',
+        controller: 'RecsCtrl as controller',
+        templateUrl: '/app/audiodata/recordings/recordings.html'
+    });
+})
 .controller('RecsCtrl', function(
-    $scope, 
-    Project, 
-    a2Classi, $http, $modal, notify, a2UserPermit, 
+    $scope,
+    Project,
+    a2Classi, $http, $modal, notify, a2UserPermit,
     $downloadResource,
     $window
 ) {
@@ -105,8 +112,8 @@ angular.module('a2.audiodata.recordings', [
             return;
         }
         
-        var recs = $scope.checked.filter(function(rec){ 
-                return !rec.imported; 
+        var recs = $scope.checked.filter(function(rec){
+                return !rec.imported;
             });
             
         if(!recs || !recs.length){
@@ -121,7 +128,7 @@ angular.module('a2.audiodata.recordings', [
         var messages = [];
         messages.push("You are about to delete: ");
         messages.push.apply(messages, Object.keys(recCount).map(function(site) {
-            var s = recCount[site] > 1 ? 's' : '';            
+            var s = recCount[site] > 1 ? 's' : '';
             return recCount[site] + ' recording'+s+' from "' + site + '"';
         }));
         messages.push("Are you sure??");

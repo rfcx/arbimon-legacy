@@ -17,7 +17,7 @@ var sprintf = require("sprintf-js").sprintf;
 
 var models = require("./index");
 
-var config       = require('../config'); 
+var config       = require('../config');
 var SQLBuilder  = require('../utils/sqlbuilder');
 var arrays_util  = require('../utils/arrays');
 var tmpfilecache = require('../utils/tmpfilecache');
@@ -136,7 +136,7 @@ var Recordings = {
     },
     parseQueryItem: function(item, allow_range){
         if(item){
-            var t_item = typeof item;  
+            var t_item = typeof item;
             if(/string|number/.test(t_item) && !/^[_*?]$/.test(item)){
                 var m = /^\[([^\]]*)\]$/.exec(item);
                 if(m) {
@@ -200,7 +200,7 @@ var Recordings = {
      * @param {Boolean} options.count_only Whether to return the queried recordings, or to just count them
      * @param {String} options.compute other (computed) attributes to show on returned recordings
      * @param {String} options.group_by Level in wich to group recordings (valid items : site, year, month, day, hour, auto, next)
-     * @callback {Function} callback called back with the queried results. 
+     * @callback {Function} callback called back with the queried results.
      **/
     findByUrlMatch: function (recording_url, project_id, options, callback) {
         if(options instanceof Function){
@@ -255,10 +255,10 @@ var Recordings = {
             });
             
             if(!urlquery.id) {
-                steps.push(dbpool.query("(\n" + 
+                steps.push(dbpool.query("(\n" +
                 "   SELECT site_id FROM sites WHERE project_id = ?\n" +
-                ") UNION (\n" + 
-                "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" + 
+                ") UNION (\n" +
+                "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" +
                 ")", [project_id, project_id]).then(function(sites){
                     constraints.push("S.site_id IN (?)");
                     data.push(sites.length ? sites.map(function(site){
@@ -270,7 +270,7 @@ var Recordings = {
             return Q.all(steps);
         }).then(function(){
             return Q.nfcall(queryHandler, {
-                sql: 
+                sql:
                     "SELECT " + group_by.project_part + projection + " \n" +
                     "FROM recordings R \n" +
                     "JOIN sites S ON S.site_id = R.site_id \n" +
@@ -309,7 +309,7 @@ var Recordings = {
         return queryHandler(query, function(err, rows){
             if(err) { callback(err); return; }
             if(!rows || !rows.length) { callback(null, [recording]); return; }
-            Recordings.findByUrlMatch(rows[0].id, 0, {limit:1}, callback);                
+            Recordings.findByUrlMatch(rows[0].id, 0, {limit:1}, callback);
         });
     },
     fetchPrevious: function (recording, callback) {
@@ -325,7 +325,7 @@ var Recordings = {
         return queryHandler(query, function(err, rows){
             if(err) { callback(err); return; }
             if(!rows || !rows.length) { callback(null, [recording]); return; }
-            Recordings.findByUrlMatch(rows[0].id, 0, {limit:1}, callback);                
+            Recordings.findByUrlMatch(rows[0].id, 0, {limit:1}, callback);
         });
     },
             
@@ -368,7 +368,7 @@ var Recordings = {
     /** Fetches the validations for a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.id integer that uniquely identifies the recording in the database.
-     * @param {Function} callback(err, validations) function called back with the queried results. 
+     * @param {Function} callback(err, validations) function called back with the queried results.
      */
     fetchValidations: function (recording, callback) {
         var query = "SELECT recording_validation_id as id, user_id as user, species_id as species, songtype_id as songtype, present \n" +
@@ -444,11 +444,11 @@ var Recordings = {
         var ifMissedGetFile = function(cache_miss) {
             debug('mp3 not found');
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
-                if(err) return callback(err); 
+                if(err) return callback(err);
 
                 var transcode_args = {
-                    sample_rate: 44100, 
-                    format: 'mp3', 
+                    sample_rate: 44100,
+                    format: 'mp3',
                     channels: 1
                 };
                 
@@ -464,8 +464,8 @@ var Recordings = {
                 debug(transcode_args);
                 
                 audioTools.transcode(
-                    recording_path.path, 
-                    cache_miss.file, 
+                    recording_path.path,
+                    cache_miss.file,
                     transcode_args,
                     function(status_code){
                         debug('done transcoding');
@@ -531,7 +531,7 @@ var Recordings = {
                 var pixels2Hz = maxFreq / specTiles.height;
                 
                 
-                async.map(specTiles.set, 
+                async.map(specTiles.set,
                     function(t, cb) {
                         
                         var h = t.y1-t.y0;
@@ -562,7 +562,7 @@ var Recordings = {
                     }
                 );
             }
-        ], 
+        ],
         callback);
     },
     
@@ -655,7 +655,7 @@ var Recordings = {
             var validationClass = /(\d+)(-(\d+))?/.exec(val_class);
             if(!validationClass) {
                 next(new Error("validation class is missing."));
-            } 
+            }
             else if(!validationClass[2]){
                 var project_class = validationClass[1] | 0;
                 
@@ -667,16 +667,16 @@ var Recordings = {
                 queryHandler(mysql.format(q, [project_class, project_id]), function(err, rows){
                     if(err) return  next(err);
                     
-                    if(!rows.length) { 
-                        next(new Error("project class " + project_class + " not found")); 
-                        return; 
+                    if(!rows.length) {
+                        next(new Error("project class " + project_class + " not found"));
+                        return;
                     }
                     
                     var validation = rows[0];
                     
                     add_one_validation(validation.species_id, validation.songtype_id, next);
                 });
-            } 
+            }
             else {
                 add_one_validation(validationClass[1] | 0, validationClass[3] | 0, next);
             }
@@ -747,8 +747,8 @@ var Recordings = {
         
             for( var j in rec) {
                 if(j !== "recording_id") {
-                    values.push(util.format('%s = %s', 
-                        mysql.escapeId(j), 
+                    values.push(util.format('%s = %s',
+                        mysql.escapeId(j),
                         mysql.escape(rec[j])
                     ));
                 }
@@ -788,7 +788,7 @@ var Recordings = {
     },
     __compute_spectrogram_tiles : function(recording, callback){
         Recordings.fetchSpectrogramTiles(recording, callback);
-    },    
+    },
     
     recordingInfoGivenUri : function(uri, callback){
         var q = "SELECT r.`recording_id` AS id, \n " +
@@ -801,12 +801,15 @@ var Recordings = {
         queryHandler(q, callback);
     },
     
+    /** finds a set of recordings given some search criteria.
+     * @param {Object} params - search parameters
+     * @param {Function} callback - callback function (optional)
+     * @return {Promise} resolving to the recordings mathing the given search parameters.
+     */
     findProjectRecordings: function(params, callback) {
         var schema = Recordings.SCHEMAS.searchFilters;
         
-        joi.validate(params, schema, function(err, parameters) {
-            if(err) return callback(err);
-            
+        return Q.ninvoke(joi, 'validate', params, schema).then(function(parameters) {
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
                 
             var projection=[];
@@ -837,10 +840,10 @@ var Recordings = {
             var constraints = [];
             var data = [];
             
-            steps.push(dbpool.query("(\n" + 
+            steps.push(dbpool.query("(\n" +
             "   SELECT site_id FROM sites WHERE project_id = ?\n" +
-            ") UNION (\n" + 
-            "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" + 
+            ") UNION (\n" +
+            "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" +
             ")", [parameters.project_id, parameters.project_id]).then(function(sites){
                 constraints.push("s.site_id IN (?)");
                 data.push(sites.map(function(site){
@@ -883,7 +886,7 @@ var Recordings = {
             }
             
             if(parameters.validations) {
-                tables.push(                    
+                tables.push(
                     "LEFT JOIN recording_validations as rv ON r.recording_id = rv.recording_id",
                     "LEFT JOIN project_classes as pc ON pc.species_id = rv.species_id AND pc.songtype_id = rv.songtype_id"
                 );
@@ -897,7 +900,7 @@ var Recordings = {
             }
             
             if(parameters.soundscape_composition) {
-                tables.push(                    
+                tables.push(
                     "LEFT JOIN recording_soundscape_composition_annotations as RSCA ON r.recording_id = RSCA.recordingId"
                 );
                 constraints.push('RSCA.scclassId IN (?)');
@@ -930,7 +933,7 @@ var Recordings = {
                         parameters.classification_results = [parameters.classification_results];
                     }
                     var crflag = {
-                        'model':['CR.present = 0', 'CR.present = 1'], 
+                        'model':['CR.present = 0', 'CR.present = 1'],
                         'th':['CR.max_vector_value < CRm.threshold', 'CR.max_vector_value >= CRm.threshold']
                     };
                     constraints.push(
@@ -943,7 +946,7 @@ var Recordings = {
                 }
             }
 
-            console.log(outputs);
+            // console.log(outputs);
             return Q.all(steps).then(function(){
 
                 var from_clause  = "FROM " + tables.join('\n');
@@ -987,8 +990,8 @@ var Recordings = {
                 } else {
                     return results[outputs[0]];
                 }
-            }).nodeify(callback);            
-        });
+            });
+        }).nodeify(callback);
     },
 
     SCHEMAS:{
@@ -1165,7 +1168,7 @@ var Recordings = {
                 promises.push(models.projects.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(function(classes){
                     classes.forEach(function(cls, idx){
                         var clsid = "p_PVAL_" + idx;
-                        builder.addTable("LEFT JOIN recording_validations", clsid, 
+                        builder.addTable("LEFT JOIN recording_validations", clsid,
                             "r.recording_id = " + clsid + ".recording_id " +
                             "AND " + clsid + ".songtype_id = ? " +
                             "AND " + clsid + ".species_id = ? " +
@@ -1182,7 +1185,7 @@ var Recordings = {
                 promises.push(models.classifications.getFor({id:projection_parameters.classification, showModel:true}).then(function(classifications){
                     classifications.forEach(function(classification, idx){
                         var clsid = "p_CR_" + idx;
-                        builder.addTable("LEFT JOIN classification_results", clsid, 
+                        builder.addTable("LEFT JOIN classification_results", clsid,
                             "r.recording_id = " + clsid + ".recording_id " +
                             "AND " + clsid + ".job_id = ?", [
                             classification.job_id
@@ -1198,7 +1201,7 @@ var Recordings = {
                 promises.push(models.SoundscapeComposition.getClassesFor({id:projection_parameters.soundscapeComposition}).then(function(classes){
                     classes.forEach(function(cls, idx){
                         var clsid = "p_SCC_" + idx;
-                        builder.addTable("LEFT JOIN recording_soundscape_composition_annotations", clsid, 
+                        builder.addTable("LEFT JOIN recording_soundscape_composition_annotations", clsid,
                             "r.recording_id = " + clsid + ".recordingId " +
                             "AND " + clsid + ".scclassId = ?", [
                             cls.id
@@ -1217,7 +1220,7 @@ var Recordings = {
             }
             
             return Q.all(promises);
-        }).then(function(){            
+        }).then(function(){
             return dbpool.streamQuery({
                 sql: builder.getSQL(),
                 typeCast: sqlutil.parseUtcDatetime,
@@ -1231,7 +1234,7 @@ var Recordings = {
             return rec.id;
         });
         
-        var sqlFilterImported = 
+        var sqlFilterImported =
             "SELECT r.recording_id AS id, \n"+
             "       r.uri \n"+
             "FROM recordings AS r  \n"+
@@ -1242,15 +1245,15 @@ var Recordings = {
         queryHandler(mysql.format(sqlFilterImported, [recIds, project_id]), function(err, rows) {
             
             if(!rows.length) {
-                return callback(null, { 
-                    deleted: [], 
-                    msg: 'No recordings were deleted' 
+                return callback(null, {
+                    deleted: [],
+                    msg: 'No recordings were deleted'
                 });
             }
             
             var deleted = [];
             
-            async.eachSeries(rows, 
+            async.eachSeries(rows,
                 function loop(rec, next) {
                     var ext = path.extname(rec.uri);
                     var thumbnailUri = rec.uri.replace(ext, '.thumbnail.png');
@@ -1284,13 +1287,13 @@ var Recordings = {
                             next();
                         });
                     });
-                }, 
+                },
                 function done(err) {
                     if(err) {
                         if(!deleted.length) return callback(err);
                         
-                        return callback(err, { 
-                            deleted: deleted, 
+                        return callback(err, {
+                            deleted: deleted,
                             msg: 'some recordings where deleted but an error ocurred'
                         });
                     }
@@ -1299,9 +1302,9 @@ var Recordings = {
                     
                     var s = deleted.length > 1 ? 's' : '';
                     
-                    callback(null, { 
-                        deleted: deleted, 
-                        msg: 'recording'+s+' deleted successfully' 
+                    callback(null, {
+                        deleted: deleted,
+                        msg: 'recording'+s+' deleted successfully'
                     });
                 }
             );
