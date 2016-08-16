@@ -1,14 +1,14 @@
 angular.module('a2.audiodata.recordings.filter-parameters', [
     'a2.directive.a2-auto-close-on-outside-click',
-    'a2.services', 
-    'a2.directives', 
+    'a2.services',
+    'a2.directives',
     'ui.bootstrap',
     'humane',
 ])
 .directive('recordingFilterParameters', function($document, $rootScope){
     return {
         restrict:'E',
-        templateUrl:'/app/audiodata/recording-filter-parameters.html',
+        templateUrl:'/app/audiodata/recordings/filter-parameters.html',
         scope:{
             isOpen : '=',
             maxDate : '=',
@@ -17,7 +17,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             onCreatePlaylist : '&',
         },
         controller:'recordingFilterParametersController as controller',
-        requires:'^RecsCtrl', 
+        requires:'^RecsCtrl',
         link: function(scope, element, attrs) {
             var controller = scope.controller;
             
@@ -37,11 +37,11 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
     };
 })
 .controller('recordingFilterParametersController', function(
-    $scope, 
-    Project, a2Classi, 
+    $scope,
+    Project, a2Classi,
     a2SoundscapeCompositionService,
     $q,
-    $http, $modal, notify, a2UserPermit, a2Tags, 
+    $http, $modal, notify, a2UserPermit, a2Tags,
     $window
 ) {
     function _1_get(attribute){
@@ -165,8 +165,8 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 
                 for(var child in obj) {
                     if(
-                        Object.keys(filters).length && 
-                        filters[currentLevel] && 
+                        Object.keys(filters).length &&
+                        filters[currentLevel] &&
                         filters[currentLevel].indexOf(child) === -1
                     ) { // skip if filter is define and the value is not in it
                         continue;
@@ -203,9 +203,9 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             options.months = lists.months.map(function(month) {
                 month.value = parseInt(month.value);
                 month.value--;
-                return { 
-                    value: month.value, 
-                    string: $window.moment().month(month.value).format('MMM'), 
+                return {
+                    value: month.value,
+                    string: $window.moment().month(month.value).format('MMM'),
                     count: month.count
                 };
             });
@@ -217,9 +217,9 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             
             options.hours = lists.hours.map(function(hour) {
                 hour.value = parseInt(hour.value);
-                return { 
-                    value: hour.value, 
-                    string: $window.moment().hour(hour.value).minute(0).format('HH:mm'), 
+                return {
+                    value: hour.value,
+                    string: $window.moment().hour(hour.value).minute(0).format('HH:mm'),
                     count: hour.count
                 };
             });

@@ -18,8 +18,8 @@ router.param('playlist', function(req, res, next, playlist){
     model.playlists.find({
         id      : playlist,
         project : req.project.project_id
-    }, 
-    { count:true }, 
+    },
+    { count:true },
     function(err, playlists) {
         if(err) return next(err);
 
@@ -63,20 +63,20 @@ router.get('/:playlist/:recid/position', function(req, res, next) {
 
 router.get('/:playlist/:recid/next', function(req, res, next) {
     model.playlists.fetchNextRecording(req.playlist, req.params.recid, function(err, data) {
-        if(err) return next(err);        
+        if(err) return next(err);
         res.json(data);
     });
 });
 
 router.get('/:playlist/:recid/previous', function(req, res, next) {
     model.playlists.fetchPreviousRecording(req.playlist, req.params.recid, function(err, data) {
-        if(err) return next(err);        
+        if(err) return next(err);
         res.json(data);
     });
 });
 
 
-router.use(function(req, res, next) { 
+router.use(function(req, res, next) {
     if(!req.haveAccess(req.project.project_id, "manage playlists"))
         return res.json({ error: "you dont have permission to 'manage playlists'" });
     
@@ -91,7 +91,7 @@ router.post('/create', function(req, res, next) {
     if(!req.body.playlist_name || !req.body.params)
         return res.json({ error: "missing parameters"});
         
-    model.playlists.find({ 
+    model.playlists.find({
         name: req.body.playlist_name,
         project: req.project.project_id
     },
@@ -104,21 +104,18 @@ router.post('/create', function(req, res, next) {
             project_id: req.project.project_id,
             name:    req.body.playlist_name,
             params:  req.body.params,
-        },
-        function(err, new_tset) {
-            if(err) return next(err);
-            
+        }).then(function(new_tset) {
             debug("playlist added", new_tset);
             
             model.projects.insertNews({
                 news_type_id: 10, // playlist created
                 user_id: req.session.user.id,
                 project_id: req.project.project_id,
-                data: JSON.stringify({ playlist: req.body.playlist_name })
+                data: JSON.stringify({ playlist: req.body.playlist_name, playlist_id:new_tset.id })
             });
             
             res.json({ success: true });
-        });
+        }).catch(next);
     });
 });
 
