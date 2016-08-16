@@ -8,20 +8,20 @@
  * This is the main visualizer module.
  */
 angular.module('a2.visualizer', [
-    'ui.router', 
-    'ct.ui.router.extras', 
-    'a2.services', 
-    'a2.utils', 
-    'a2.visobjects', 
-    'a2.visobjectsbrowser', 
-    'a2.speciesValidator', 
-    'visualizer-layers', 
-    'a2.visualizer.directive.sidebar', 
+    'ui.router',
+    'ct.ui.router.extras',
+    'a2.services',
+    'a2.utils',
+    'a2.visobjects',
+    'a2.visobjectsbrowser',
+    'a2.speciesValidator',
+    'visualizer-layers',
+    'a2.visualizer.directive.sidebar',
     'a2.visualizer.recordings',
     'a2.visualizer.layer.recording-tags',
     'a2.visualizer.layer.soundscape-composition-tool',
-    'visualizer-spectrogram', 
-    'visualizer-training-sets', 
+    'visualizer-spectrogram',
+    'visualizer-training-sets',
     'visualizer-training-sets-roi_set',
     'visualizer-soundscapes',
     'visualizer-services',
@@ -52,20 +52,20 @@ angular.module('a2.visualizer', [
     })
     .state('visualizer.view', {
         url: '/:type/:idA/:idB/:idC?gain&filter',
-        params:{ 
-            type:'', 
+        params:{
+            type:'',
             gain:'',
             filter:'',
             idA: {
-                value:'', 
+                value:'',
                 squash:true
-            }, 
+            },
             idB:{
-                value:'', 
+                value:'',
                 squash:true
-            }, 
+            },
             idC:{
-                value:'', 
+                value:'',
                 squash:true
             }
         },
@@ -92,9 +92,9 @@ angular.module('a2.visualizer', [
     ;
 })
 .directive('a2Visualizer', function(){
-    return { 
-        restrict : 'E', 
-        replace:true, 
+    return {
+        restrict : 'E',
+        replace:true,
         scope : {},
         controller : 'VisualizerCtrl',
         templateUrl: '/app/visualizer/main.html'
@@ -167,19 +167,19 @@ angular.module('a2.visualizer', [
     return locman;
 })
 .controller('VisualizerCtrl', function (
-    a2VisualizerLayers, 
+    a2VisualizerLayers,
     $q,
-    $location, $state, 
-    $scope, 
-    $timeout, 
-    itemSelection, 
-    Project, 
-    $controller, 
+    $location, $state,
+    $scope,
+    $timeout,
+    itemSelection,
+    Project,
+    $controller,
     a2SpectrogramClick2Zoom,
     $rootScope,
-    VisualizerObjectTypes, 
-    VisualizerLayout, 
-    a2AudioPlayer, 
+    VisualizerObjectTypes,
+    VisualizerLayout,
+    a2AudioPlayer,
     a2VisualizerLocationManager,
     a2EventEmitter
 ) {
@@ -214,7 +214,7 @@ angular.module('a2.visualizer', [
         'training-data',
         'soundscape-composition-tool',
         'zoom-input-layer'
-    );    
+    );
     
     $scope.visobject = null;
     
@@ -244,9 +244,9 @@ angular.module('a2.visualizer', [
             if (visobject) {
                 $scope.visobject_location = location;
                 $scope.location.set(location, true);
-                var typedef = VisualizerObjectTypes[type];
-                $scope.loading_visobject = typedef.prototype.getCaption.call(visobject);
-                return typedef.load(visobject, $scope).then(function (visobject){                    
+                var visobject_loader = VisualizerObjectTypes.getLoader(type);
+                $scope.loading_visobject = visobject_loader.getCaptionFor(visobject);
+                return visobject_loader.load(visobject, $scope).then(function (visobject){
                     console.log('VisObject loaded : ', visobject);
                                         
                     $scope.loading_visobject = false;
@@ -261,7 +261,7 @@ angular.module('a2.visualizer', [
         });
     };
     
-    $scope.audio_player = new a2AudioPlayer($scope, initial_state_params);    
+    $scope.audio_player = new a2AudioPlayer($scope, initial_state_params);
     
     $scope.$on('browser-vobject-type', function(evt, type){
         $scope.visobject_type = type;
@@ -444,7 +444,7 @@ angular.module('a2-visualizer-spectrogram-Layout',['a2.classy'])
                 width  : spec_w,
                 height : spec_h,
             }};
-            l.y_axis = { scale : scaley, 
+            l.y_axis = { scale : scaley,
                 css:{
                     top    : 0,
                     left   : container.scrollLeft()
@@ -453,7 +453,7 @@ angular.module('a2-visualizer-spectrogram-Layout',['a2.classy'])
                     height : spec_h + layout_tmp.axis_lead + layout_tmp.axis_sizeh
                 }
             };
-            l.x_axis = { scale : scalex,  
+            l.x_axis = { scale : scalex,
                 css:{
                     left : layout_tmp.axis_sizew -  layout_tmp.axis_lead,
                     // left : layout_tmp.axis_sizew -  layout_tmp.axis_lead,
@@ -467,7 +467,7 @@ angular.module('a2-visualizer-spectrogram-Layout',['a2.classy'])
             this.has_legend = $scope.has_legend = !!domain.legend;
             
             if(domain.legend){
-                l.legend = { scale : scalelegend, 
+                l.legend = { scale : scalelegend,
                     css:{
                         top  : 0,
                         left : container.scrollLeft() + width - a2BrowserMetrics.scrollSize.width - layout_tmp.legend_width - layout_tmp.legend_gutter

@@ -1,78 +1,16 @@
-angular.module('a2.visobjects', [
-    'a2.services'
+angular.module('a2.visobjects.audio-event-detection', [
+    'a2.services',
+    'a2.visobjects.common',
 ])
-.service('VisualizerObjectTypes', function ($q, Project, $injector) {
-    var type_list = ["recording", "soundscape"];
-    var types = {};
-    var inject = type_list.map(function(type){return "VisualizerObject" + type.replace(/^(\w)/, function(x){return x.toUpperCase();}) + "Type";});
-    inject.push(function(){ 
-        for(var a=arguments, t=type_list, i=0, e=t.length; i < e; ++i){
-            types[t[i]] = a[i];
-        }
+.config(function(VisualizerObjectTypesProvider){
+    VisualizerObjectTypesProvider.add({
+        type: 'audio-event-detection',
+        $loader: ['VisualizerObjectAudioEventDetectionTypeLoader', function(VisualizerObjectAudioEventDetectionTypeLoader){
+            return VisualizerObjectAudioEventDetectionTypeLoader;
+        }]
     });
-    $injector.invoke(inject);    
-    return types;
 })
-.service('VisualizerObjectRecordingType', function ($q, Project, $injector) {
-    var khz_format = function(v){return (v/1000) | 0; };
-    
-    var recording = function(data, extra){
-        for(var i in data){ this[i] = data[i]; }
-        this.sampling_rate = this.sample_rate;
-        this.extra  = extra;
-        // fix up some stuff
-        this.max_freq = this.sampling_rate / 2;
-        // setup the domains
-        this.domain = {
-            x : {
-                from : 0,
-                to   : this.duration,
-                span : this.duration,
-                unit : 'Time ( s )',
-                ticks : 60
-            },
-            y : {
-                from : 0,
-                to   : this.max_freq,
-                span : this.max_freq,
-                unit : 'Frequency ( kHz )',
-                tick_format : khz_format
-            }
-        };
-        // set it to the scope
-        this.tiles.set.forEach((function(tile){
-            tile.src="/api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j;
-        }).bind(this));
-    };
-    recording.layers=[
-    
-    ];
-    recording.fetch = function(visobject){
-        var d = $q.defer();
-        Project.getRecordingInfo(visobject.id, function(data){
-            visobject = new recording(data, visobject.extra);
-            d.resolve(visobject);
-        });
-        return d.promise;
-    };
-    recording.load = function(visobject, $scope){
-        return recording.fetch(visobject).then(function(visobject){
-            if(visobject.audioUrl) {
-                $scope.audio_player.load(visobject.audioUrl);
-            }
-            return visobject;
-        });
-    };
-    recording.prototype = {
-        type : "recording",
-        zoomable : true,
-        getCaption : function(){
-            return this.file;
-        }
-    };
-    return recording;
-})
-.service('VisualizerObjectSoundscapeType', function ($q, Project, $injector) {
+.service('VisualizerObjectAudioEventDetectionTypeLoader', function ($q, Project) {
     var khz_format = function(v){ return (v/1000) | 0; };
     var khz_unit_fmt = function(v){ return (Math.floor(v/10.0)/100.0) + " kHz"; };
     var aggregations = {
@@ -106,20 +44,31 @@ angular.module('a2.visobjects', [
         },
     };
     
-    var soundscape = function(data){
+    var AudioEventDetection = function(data){
         this.update(data);
     };
-    soundscape.fetch = function(visobject){
+    AudioEventDetection.fetch = function(visobject){
         var d = $q.defer();
-        visobject = new soundscape(visobject);
+        visobject = new AudioEventDetection(visobject);
         d.resolve(visobject);
         return d.promise;
     };
-    soundscape.load = function(visobject, $scope){
-        return soundscape.fetch(visobject);
+    AudioEventDetection.load = function(visobject, $scope){
+        return AudioEventDetection.fetch(visobject);
     };
-    soundscape.prototype = {
-        type : "soundscape",
+    AudioEventDetection.getCaptionFor = function(visobject){
+        var agg = {
+            'time_of_day'   : 'Time of day',
+            'day_of_month'  : 'Day of Month',
+            'day_of_year'   : 'Day of Year',
+            'month_in_year' : 'Month in year',
+            'day_of_week'   : 'Day of week',
+            'year'          : 'Year '
+        };
+        return visobject.name + " (" + agg[visobject.aggregation] + ")";
+    };
+    AudioEventDetection.prototype = {
+        type : "audio-event-detection",
         zoomable : true,
         update : function(data){
             for(var i in data){ this[i] = data[i]; }
@@ -141,7 +90,7 @@ angular.module('a2.visobjects', [
                 x : {
                     // from : t0, to : t1 + 1, span : dt + 1, ticks : dt + 1,
                     from : t0, to : t1, span : dt, ticks : dt,
-                    ordinal : true, 
+                    ordinal : true,
                     unit_interval : 1,
                     unit_format : aggregation.unit_fmt,
                     unit : time_unit || 'Time ( s )'
@@ -166,7 +115,7 @@ angular.module('a2.visobjects', [
             }
             // set it to the scope
             this.tiles = { x:1, y:1, set : [{
-                i:0, j:0, 
+                i:0, j:0,
                 s : 0, hz : f1, ds  : dt, dhz : df,
                 src : this.thumbnail,
                 crisp : true
@@ -177,17 +126,9 @@ angular.module('a2.visobjects', [
             
         },
         getCaption : function(){
-            var agg = {
-                'time_of_day'   : 'Time of day',
-                'day_of_month'  : 'Day of Month',
-                'day_of_year'   : 'Day of Year',
-                'month_in_year' : 'Month in year',
-                'day_of_week'   : 'Day of week',
-                'year'          : 'Year '
-            };
-            return this.name + " (" + agg[this.aggregation] + ")";
+            return AudioEventDetection.getCaptionFor(this);
         }
     };
-    return soundscape;
+    return AudioEventDetection;
 })
 ;
