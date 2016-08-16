@@ -18,8 +18,8 @@
             </div>
         </div>
         <div class="btn-group padding-leftx2">
-            <button class="btn btn-danger" 
-            ng-click="controller.deleteRecordings()" 
+            <button class="btn btn-danger"
+            ng-click="controller.deleteRecordings()"
             ng-class="{ disabled: !checked || !checked.length }"
             tooltip="Delete recording(s)"
             tooltip-trigger="mouseenter">
@@ -29,37 +29,35 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-sm-12">
-        <div class="reclist-pagination-row">
-            <pagination total-items="totalRecs" 
-                ng-model="currentPage" ng-change="controller.setCurrentPage(currentPage)"
-                class="pagination-sm" 
-                boundary-links="true" 
-                max-size="10" 
-                rotate="false"
-                num-pages="totalPages"
-                items-per-page="limitPerPage">
-            </pagination> 
+    <div class="col-sm-4 reclist-pagination-row">
+        <pagination total-items="totalRecs"
+            ng-model="currentPage" ng-change="controller.setCurrentPage(currentPage)"
+            class="pagination-sm"
+            boundary-links="true"
+            max-size="10"
+            rotate="false"
+            num-pages="totalPages"
+            items-per-page="limitPerPage">
+        </pagination>
+    </div>
+    <div class="col-sm-4 reclist-total text-center">{{ totalRecs }} Recordings</div>
+    <div class="col-sm-4 reclist-pagelimit text-right">
+        <div class="btn-group">
+            <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="10">10</button>
+            <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="25">25</button>
+            <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="50">50</button>
+            <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="100">100</button>
         </div>
-        <div class="reclist-total">{{ totalRecs }} Recordings</div>
-        <div class="reclist-pagelimit">
-            <div class="btn-group">
-                <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="10">10</button>
-                <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="25">25</button>
-                <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="50">50</button>
-                <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="100">100</button>
-            </div>
-            <button class="btn btn-default btn-sm" tooltip="Reload list" ng-click="controller.reloadList()">
-                <i class="fa fa-refresh"></i>
-            </button>
-        </div>
+        <button class="btn btn-default btn-sm" tooltip="Reload list" ng-click="controller.reloadList()">
+            <i class="fa fa-refresh"></i>
+        </button>
     </div>
 </div>
 <div class="row">
     <div class="col-sm-12">
         <a2-table class="table-hide-btns" rows="recs" data-checked="checked" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site" no-select>
             <field title="">
-                <a class="btn btn-default btn-xs" 
+                <a class="btn btn-default btn-xs"
                     ng-href="#/visualizer/rec/{{row.id}}"
                     title="View in Visualizer">
                     <i class="fa fa-cubes"></i>
@@ -84,15 +82,15 @@
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <pagination total-items="totalRecs" 
+        <pagination total-items="totalRecs"
             ng-model="currentPage" ng-change="controller.setCurrentPage(currentPage)"
-            class="pagination-sm" 
-            boundary-links="true" 
-            max-size="10" 
+            class="pagination-sm"
+            boundary-links="true"
+            max-size="10"
             rotate="false"
             num-pages="totalPages"
             items-per-page="limitPerPage">
-        </pagination> 
+        </pagination>
         
     </div>
 </div>
