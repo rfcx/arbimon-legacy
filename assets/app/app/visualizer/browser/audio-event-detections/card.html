@@ -1,0 +1,10 @@
+<div>
+    <div class="clearfix">
+        {{ visobj.name }}
+    </div>
+    {{visobj.statistics | asCSV}}
+    <!-- <div class="thumbnail-viewer" ng-class="{'has-vaxis': visobj.vaxis}">
+        <axis type="v" class="v-axis" data="visobj.vaxis" ng-if="visobj.vaxis"></axis>
+        <div class="img-holder" ng-class="'visobj-'+browser.lovo.object_type"><img ng-src="{{visobj.thumbnail | a2UpdatedUrl}}"></div>
+    </div> -->
+</div>
