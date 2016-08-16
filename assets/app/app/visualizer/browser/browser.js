@@ -241,8 +241,7 @@ console.log("this.selectNextVisObject = function(){");
     };
     this.setBrowserLocation = function(evt, location){
 console.log("this.setBrowserLocation :: ", location, this.cachedLocation);
-        var m = /([\w+]+)(\/(.+))?/.exec(location);
-        
+        var m = /([\w-+]+)(\/(.+))?/.exec(location);
         // console.log(" same loc :: ", this.cachedLocation && location && this.cachedLocation[0] == location[0]);
         if(this.cachedLocation == location){
             return $q.resolve();
