@@ -79,6 +79,7 @@ var app={
 gulp.task('default', ['app:code', 'app:templates', 'app:less', 'app:dependencies']);
 
 gulp.task('watch', ['livereload', 'app:server', 'app:watch']);
+gulp.task('build+watch', ['default', 'watch']);
 
 gulp.task('livereload', function(){
     livereload.listen();
