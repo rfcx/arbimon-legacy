@@ -1,12 +1,15 @@
 <div class="visualizer-root show-spectrogram" a2-scroll="onScrolling()" ng-mousemove="onMouseMove($event)">
-    <div class="on-empty" ng-hide="visobject || loading_visobject">
-        Please select a {{visobject_type}}.
-    </div>
-    
     <div a2-visualizer-spectrogram-affixed="{'align-h':.5, 'align-v':.5, container:'viewport'}"
-        class="loader" ng-show="loading_visobject"
+        ng-show="loading_visobject || !visobject"
     >
-        <loader class="blocky big" text="Loading {{loading_visobject}}"></loader>        
+        <div class="on-empty" ng-if="!loading_visobject">
+            Please select a {{visobject_type}}.
+        </div>
+        <div class="loader" ng-if="loading_visobject">
+            <loader class="blocky big" 
+            text="Loading {{loading_visobject}}"
+            ></loader>        
+        </div>
     </div>
     
     <div class="zoom-control-group ghost-like" a2-visualizer-spectrogram-affixed="{top:3, right:3, container:'viewport'}" ng-show="visobject && visobject.zoomable">
