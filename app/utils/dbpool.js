@@ -1,6 +1,7 @@
 var debug = require('debug')('arbimon2:dbpool');
 var mysql = require('mysql');
 var config = require('../config');
+var sqlutil = require('./sqlutil');
 var q = require('q');
 var showQueriesInConsole = true;
 var dbpool = {
@@ -56,6 +57,9 @@ var dbpool = {
                 return query_fn.call(connection, sql, values);
             }
         };
+        connection.promisedQuery = function(sql, values){
+            return q.ninvoke(this, 'query', sql, values).get(0);
+        };
         connection.release = function(){
             debug('Connection released.');
             release_fn.apply(this, Array.prototype.slice.call(arguments));
@@ -65,11 +69,18 @@ var dbpool = {
 
     getConnection : function(callback){
         debug('getConnection : fetching db connection.');
-        dbpool.pool.getConnection(function(err, connection){
-            if (err) return callback(err);
-            
+        return q.ninvoke(dbpool.pool, 'getConnection').then(function (connection){
             dbpool.enable_query_debugging(connection);
-            callback(null, connection);
+            return connection;
+        }).nodeify(callback);
+    },
+    
+    performTransaction: function(transactionFn){
+        return dbpool.getConnection().then(function(connection){
+            var tx = new sqlutil.transaction(connection);
+            return tx.perform(transactionFn).finally(function(){
+                connection.release();
+            });
         });
     },
 
