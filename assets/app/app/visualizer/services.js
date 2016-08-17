@@ -2,15 +2,6 @@ angular.module('visualizer-services', ['a2.services'])
     .provider('layer_types', function(){
 
         var type_array = [{
-                type: "browser-layer",
-                title: "",
-                visible: true,
-                display: {
-                    spectrogram: false
-                },
-                sidebar_only: true,
-                hide_visibility: true
-            }, {
                 type: "recording-layer",
                 title: "",
                 controller: 'a2VisualizerRecordingLayerController as controller',
