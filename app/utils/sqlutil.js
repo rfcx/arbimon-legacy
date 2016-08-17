@@ -9,7 +9,7 @@ var transaction = function(connection){
 transaction.prototype = {
     perform: function(transactionFn){
         var dbconn = this.connection;
-        return this.begin().then(transactionFn).then(function(value){
+        return this.begin().thenResolve(this).then(transactionFn).then(function(value){
             return q.ninvoke(dbconn, 'query', "COMMIT").then(function(){
                 return value;
             });
