@@ -69,7 +69,7 @@ angular.module('a2.visobjects.audio-event-detection', [
     };
     AudioEventDetection.prototype = {
         type : "audio-event-detection",
-        zoomable : true,
+        zoomable : false,
         update : function(data){
             for(var i in data){ this[i] = data[i]; }
 

@@ -2,7 +2,7 @@ angular.module('a2.audiodata.training-sets', [
     'a2.services', 
     'a2.directives', 
     'ui.bootstrap',
-    'visualizer-training-sets',
+    'a2.visualizer.layers.training-sets',
     'humane'
 ])
 .factory('a2TrainingSetHistory',
