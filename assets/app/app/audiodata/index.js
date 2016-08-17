@@ -1,5 +1,5 @@
 angular.module('a2.audiodata', [
-    'ui.router', 
+    'ui.router',
     'ct.ui.router.extras',
     'a2.directive.sidenav-bar',
     'a2.audiodata.sites',
@@ -20,18 +20,13 @@ angular.module('a2.audiodata', [
                 templateUrl: '/app/audiodata/index.html'
             }
         },
-        deepStateRedirect: true, 
+        deepStateRedirect: true,
         sticky: true,
     })
     .state('audiodata.sites', {
         url: '/sites?site&show',
         controller:'SitesCtrl',
         templateUrl: '/app/audiodata/sites.html'
-    })
-    .state('audiodata.recordings', {
-        url: '/recordings',
-        controller: 'RecsCtrl as controller',
-        templateUrl: '/app/audiodata/recordings.html'
     })
     .state('audiodata.species', {
         url: '/species',

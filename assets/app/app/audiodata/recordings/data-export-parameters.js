@@ -1,19 +1,19 @@
 angular.module('a2.audiodata.recordings.data-export-parameters', [
     'a2.directive.a2-auto-close-on-outside-click',
-    'a2.services', 
-    'a2.directives', 
+    'a2.services',
+    'a2.directives',
     'ui.bootstrap',
     'humane',
 ])
 .directive('recordingDataExportParameters', function($document, $rootScope){
     return {
         restrict:'E',
-        templateUrl:'/app/audiodata/recording-data/export-parameters.html',
+        templateUrl:'/app/audiodata/recordings/export-parameters.html',
         scope:{
             onExport : '&'
         },
         controller:'recordingDataExportParametersController as controller',
-        requires:'^RecsCtrl', 
+        requires:'^RecsCtrl',
         link: function(scope, element, attrs, controller) {
             controller.initialize({
                 onExport: function(parameters){
@@ -94,7 +94,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
 .controller('recordingDataExportParametersController', function(
     $q,
     $injector,
-    $scope, 
+    $scope,
     recordingDataFieldTypes
 ){
     
@@ -112,7 +112,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
         });
         
         function getList(parameter_set){
-            return $q.resolve(parameter_set.getList ? 
+            return $q.resolve(parameter_set.getList ?
                 $injector.invoke(parameter_set.getList) :
                 (parameter_set.list || [])
             );
@@ -136,7 +136,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                 } else {
                     return [];
                 }
-            });        
+            });
         }).bind(this));
     };
 
