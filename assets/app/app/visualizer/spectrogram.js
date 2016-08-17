@@ -1,5 +1,9 @@
 
-angular.module('visualizer-spectrogram', ['visualizer-services', 'a2.utils'])
+angular.module('visualizer-spectrogram', [
+    'visualizer-services', 
+    'a2.filter.round',
+    'a2.utils',
+])
 .service('a2AffixCompute', function(){
     return function($viewport, $el, layout){
         var v;
@@ -229,9 +233,11 @@ angular.module('visualizer-spectrogram', ['visualizer-services', 'a2.utils'])
                 $scope.layout.apply($element, $scope, newValue.w, newValue.h, true);
             }, true);
             
-            $scope.$watch($scope.getRecordingPlaybackTime, function (newValue, oldValue) {
+            $scope.$watch(function(){
+                return ($scope.layout.scale.sec2px * $scope.getRecordingPlaybackTime()) | 0;
+            }, function (newValue, oldValue) {
                 if($scope.audio_player.is_playing) {
-                    var pbh = layout_tmp.axis_sizew + $scope.layout.scale.sec2px * newValue;
+                    var pbh = layout_tmp.axis_sizew + newValue;
                     var sl  = $element.scrollLeft(), slw = sl + $element.width()/2;
                     var dx  =  pbh - slw ;
                     if (dx > 0) {
