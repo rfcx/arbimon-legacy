@@ -135,27 +135,52 @@ angular.module('visualizer-spectrogram', [
             };
 
             $scope.layout.listeners.push(function(layout, container, $scope, width, height, fix_scroll_center){
-                var d3_x_axis = d3.select($element.children('.axis-x').empty()[0]);
-                var d3_y_axis = d3.select($element.children('.axis-y').empty()[0]);
-                var d3_legend = d3.select($element.children('.legend').empty()[0]);
-                var spec_h = layout.spectrogram.height;
-                var spec_w = layout.spectrogram.width;
-                var domain = layout.l.domain;
-                var scalex = layout.l.scale.x;
-                var scaley = layout.l.scale.y;
+                doLayout(layout, container, $scope, width, height, fix_scroll_center);
+            });
+            
+            function doLayout(layout, container, $scope, width, height, fix_scroll_center){
+                var domain = layout.l.domain || {};
                 
                 var components = {
-                    spectrogram : '.spectrogram-container',
-                    y_axis      : '.axis-y',
-                    x_axis      : '.axis-x',
-                    legend      : '.legend',
+                    spectrogram : container.children('.spectrogram-container'),
+                    y_axis      : domain.y && container.children('.axis-y'),
+                    x_axis      : domain.x && container.children('.axis-x'),
+                    legend      : domain.legend && container.children('.legend'),
                 };
                 
-                for(var i in components){
-                    var li = layout.l[i], $li = container.children(components[i]);
-                    if(li.css ){ $li.css( li.css ); }
-                    if(li.attr){ $li.attr(li.attr); }
+                Object.keys(components).forEach(function(i){
+                    var component = components[i];
+                    if(component){
+                        var $li = component;
+                        var li = layout.l[i];
+                        if(li.css ){ $li.css( li.css ); }
+                        if(li.attr){ $li.attr(li.attr); }
+                    }
+                });
+                
+                if(domain.x){
+                    doXAxisLayout(layout);
                 }
+                if(domain.y){
+                    doYAxisLayout(layout);
+                }
+
+                if(domain.legend){
+                    doLegendLayout(layout);
+                }
+
+                if(fix_scroll_center){
+                    $element.scrollTop( Math.min(layout.l.scroll_center.top , layout.l.spectrogram.css.height - layout.viewport.height));
+                    $element.scrollLeft(Math.min(layout.l.scroll_center.left, layout.l.spectrogram.css.width  - layout.viewport.width ));
+                }
+
+                $scope.onScrolling();
+            }
+            function doXAxisLayout(layout){
+                var d3_x_axis = d3.select($element.children('.axis-x').empty()[0]);
+                var spec_h = layout.spectrogram.height;
+                var domain = layout.l.domain;
+                var scalex = layout.l.scale.x;
                 
                 d3_x_axis.append("rect").attr({
                     class : 'bg',
@@ -167,6 +192,12 @@ angular.module('visualizer-spectrogram', [
                     attr('class', 'axis').
                     attr('transform', 'translate('+ layout_tmp.axis_lead +', 1)').
                     call(make_axis(domain.x, scalex, "bottom"));
+            }
+            function doYAxisLayout(layout){
+                var d3_y_axis = d3.select($element.children('.axis-y').empty()[0]);
+                var spec_h = layout.spectrogram.height;
+                var domain = layout.l.domain;
+                var scaley = layout.l.scale.y;
                 
                 d3_y_axis.style('width', 61);
                 d3_y_axis.append("rect").attr({
@@ -185,41 +216,37 @@ angular.module('visualizer-spectrogram', [
                     attr('class', 'axis').
                     attr('transform', 'translate('+ (layout_tmp.axis_sizew) +', '+ layout_tmp.axis_lead +')').
                     call(make_axis(domain.y, scaley, "left"));
-                    
-                if(domain.legend){
-                    d3_legend.append("rect").attr({
-                        class : 'bg',
-                        x : layout_tmp.axis_lead, y : 0,
-                        width : layout.l.legend.attr.width,
-                        height: layout.l.legend.attr.height
-                    });
-                    d3_legend.append("image").attr({
-                        class : 'legend-image',
-                        x : layout_tmp.legend_axis_w, y : layout_tmp.axis_lead,
-                        width : layout_tmp.legend_width - layout_tmp.legend_axis_w,
-                        height: spec_h,
-                        preserveAspectRatio : 'none',
-                        'xlink:href' : domain.legend.src
-                    });
-                    d3_legend.append("rect").attr({
-                        class : 'border',
-                        x : layout_tmp.legend_axis_w, y : layout_tmp.axis_lead,
-                        width : layout_tmp.legend_width - layout_tmp.legend_axis_w,
-                        height: spec_h,
-                    });
-                    d3_legend.append("g").
-                        attr('class', 'axis').
-                        attr('transform', 'translate('+ layout_tmp.legend_axis_w +', '+(layout_tmp.axis_lead+1)+')').
-                        call(make_axis(domain.legend, layout.l.scale.legend, "left"));
-                }
-
-                if(fix_scroll_center){
-                    $element.scrollTop( Math.min(layout.l.scroll_center.top , layout.l.spectrogram.css.height - layout.viewport.height));
-                    $element.scrollLeft(Math.min(layout.l.scroll_center.left, layout.l.spectrogram.css.width  - layout.viewport.width ));
-                }
-
-                $scope.onScrolling();
-            });          
+            }
+            function doLegendLayout(layout){
+                var d3_legend = d3.select($element.children('.legend').empty()[0]);
+                var spec_h = layout.spectrogram.height;
+                var domain = layout.l.domain;
+                
+                d3_legend.append("rect").attr({
+                    class : 'bg',
+                    x : layout_tmp.axis_lead, y : 0,
+                    width : layout.l.legend.attr.width,
+                    height: layout.l.legend.attr.height
+                });
+                d3_legend.append("image").attr({
+                    class : 'legend-image',
+                    x : layout_tmp.legend_axis_w, y : layout_tmp.axis_lead,
+                    width : layout_tmp.legend_width - layout_tmp.legend_axis_w,
+                    height: spec_h,
+                    preserveAspectRatio : 'none',
+                    'xlink:href' : domain.legend.src
+                });
+                d3_legend.append("rect").attr({
+                    class : 'border',
+                    x : layout_tmp.legend_axis_w, y : layout_tmp.axis_lead,
+                    width : layout_tmp.legend_width - layout_tmp.legend_axis_w,
+                    height: spec_h,
+                });
+                d3_legend.append("g").
+                    attr('class', 'axis').
+                    attr('transform', 'translate('+ layout_tmp.legend_axis_w +', '+(layout_tmp.axis_lead+1)+')').
+                    call(make_axis(domain.legend, layout.l.scale.legend, "left"));                
+            }
 
             $scope.getRecordingPlaybackTime = function () {
                 return $scope.audio_player.getCurrentTime();
