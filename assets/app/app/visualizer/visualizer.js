@@ -412,8 +412,20 @@ angular.module('a2-visualizer-spectrogram-Layout',['a2.classy'])
             return round ? (h|0) : +h;
         },
         apply : function(container, $scope, width, height, fix_scroll_center){
+            var layout = $scope.visobject && $scope.visobject.layout;
+            this.type = layout || 'spectrogram';
+            this[('apply_' + this.type)](container, $scope, width, height, fix_scroll_center);
+
+            for(var eh=this.listeners, ehi=0, ehe=eh.length; ehi < ehe; ++ehi){
+                eh[ehi](this, container, $scope, width, height, fix_scroll_center);
+            }
+
+        },
+        
+        apply_spectrogram : function(container, $scope, width, height, fix_scroll_center){
             var layout_tmp = this.tmp;
             var visobject = $scope.visobject;
+            
             var domain = this.domain = get_domain(visobject);
             
             var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
@@ -440,7 +452,8 @@ angular.module('a2-visualizer-spectrogram-Layout',['a2.classy'])
             var scalex = make_scale(domain.x, [0, spec_w]);
             var scaley = make_scale(domain.y, [spec_h, 0]);
             var scalelegend;
-            var l = this.l = {};
+            var l = this.l = {
+            };
             l.spectrogram = { css:{
                 top    : layout_tmp.axis_lead,
                 left   : layout_tmp.axis_sizew,
@@ -533,13 +546,36 @@ angular.module('a2-visualizer-spectrogram-Layout',['a2.classy'])
                 y : scaley,
                 legend : scalelegend
             };
-            
-            
-            for(var eh=this.listeners, ehi=0, ehe=eh.length; ehi < ehe; ++ehi){
-                eh[ehi](this, container, $scope, width, height, fix_scroll_center);
-            }
+        },
 
+        apply_plotted : function(container, $scope, width, height, fix_scroll_center){
+            var layout_tmp = this.tmp;
+            var visobject = $scope.visobject;
+            
+            var avail_w = width;
+            var avail_h = height;
+            var cheight = container[0].clientHeight;
+            
+            this.has_legend = $scope.has_legend = false;
+            var l = this.l = {
+            };
+            l.spectrogram = { css:{
+                top    : 0,
+                left   : 0,
+                width  : avail_w,
+                height : avail_h,
+            }};
+            l.scroll_center = {left: 0, top: 0};
+            this.spectrogram = l.spectrogram.css;
+            this.viewport = angular.extend(l.spectrogram.css);
+            this.root = {
+                left : 0,
+                top  : 0,
+                width  : width,
+                height : height
+            };
         }
+
     });
 })
 ;
