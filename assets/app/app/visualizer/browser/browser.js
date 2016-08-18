@@ -4,6 +4,7 @@ angular.module('a2.visobjectsbrowser', [
     'a2.browser_recordings',
     'a2.browser_soundscapes',
     'a2.browser_audio-event-detections',
+    'a2.service.serialize-promised-fn',
 ])
 /**
  * @ngdoc directive
@@ -73,6 +74,7 @@ angular.module('a2.visobjectsbrowser', [
  */
 .controller('a2VisObjectBrowserController', function(
     $scope, $controller, $q,
+    serializePromisedFn,
     BrowserLOVOs,
     BrowserVisObjects,
     itemSelection,
@@ -170,7 +172,7 @@ angular.module('a2.visobjectsbrowser', [
     };
 
 
-    this.setBrowserType = function(type){
+    this.setBrowserType = serializePromisedFn(function(type){
 // console.log("this.setBrowserType :: ", type && type.name);
         var new_$type, old_$type = self.$type;
         if(type && type.controller){
@@ -197,7 +199,7 @@ angular.module('a2.visobjectsbrowser', [
         }) : $q.resolve()).then(function(){
             self.events.send({'event':'browser-vobject-type', context:self}, type.vobject_type);
         });
-    };
+    });
 
     this.setVisObj = function(newValue){
 // console.log("this.setVisObj :: ", newValue && newValue.id);
