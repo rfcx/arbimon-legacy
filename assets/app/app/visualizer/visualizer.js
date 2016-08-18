@@ -19,6 +19,7 @@ angular.module('a2.visualizer', [
     'a2.visualizer.directive.sidebar',
     'a2.visualizer.layers.base-image-layer',
     'a2.visualizer.layers.zoom-input-layer',
+    'a2.visualizer.layers.data-plot-layer',    
     'a2.visualizer.layers.recordings',
     'a2.visualizer.layers.recording-soundscape-region-tags',
     'a2.visualizer.layers.recording-tags',
@@ -208,6 +209,7 @@ angular.module('a2.visualizer', [
 
     layers.add(
         'base-image-layer',
+        'data-plot-layer',
         'recording-layer',
         'recording-tags-layer',
         'soundscape-info-layer',
