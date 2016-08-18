@@ -142,6 +142,7 @@ angular.module('visualizer-spectrogram', [
                 var domain = layout.l.domain || {};
                 
                 var components = {
+                    visualizer_root: container,
                     spectrogram : container.children('.spectrogram-container'),
                     y_axis      : domain.y && container.children('.axis-y'),
                     x_axis      : domain.x && container.children('.axis-x'),

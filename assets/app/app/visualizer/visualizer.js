@@ -453,6 +453,7 @@ angular.module('a2-visualizer-spectrogram-Layout',['a2.classy'])
             var scaley = make_scale(domain.y, [spec_h, 0]);
             var scalelegend;
             var l = this.l = {
+                visualizer_root:{css:{'overflow':''}}
             };
             l.spectrogram = { css:{
                 top    : layout_tmp.axis_lead,
@@ -558,6 +559,7 @@ angular.module('a2-visualizer-spectrogram-Layout',['a2.classy'])
             
             this.has_legend = $scope.has_legend = false;
             var l = this.l = {
+                visualizer_root:{css:{'overflow':'hidden'}}
             };
             l.spectrogram = { css:{
                 top    : 0,
