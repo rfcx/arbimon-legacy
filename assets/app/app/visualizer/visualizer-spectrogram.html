@@ -14,7 +14,7 @@
     
     <div class="zoom-control-group ghost-like" 
         a2-visualizer-spectrogram-affixed="{top:3, right:3, container:'viewport'}" 
-        ng-show="visobject && visobject.zoomable"
+        ng-if="visobject && visobject.zoomable"
     >
         <a2-zoom-control level="layout.scale.zoom.x" horizontal="true"></a2-zoom-control>
         <a2-zoom-control level="layout.scale.zoom.y"></a2-zoom-control>
