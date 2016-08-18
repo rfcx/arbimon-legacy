@@ -57,15 +57,15 @@
     <div class="mask-panel" a2-visualizer-spectrogram-affixed="{container:'root', bottom:0, }" ng-style="{height : layout.root.height - (layout.viewport.top + layout.viewport.height), left : layout.spectrogram.left , width  : layout.root.width }"></div>
 
     
-    <svg class="axis-y" ng-show="visobject" ></svg>
-    <svg class="axis-x" ng-show="visobject" ></svg>
+    <svg class="axis-y" ng-show="visobject.domain.y" ></svg>
+    <svg class="axis-x" ng-show="visobject.domain.x" ></svg>
     <svg class="legend" ng-show="visobject && has_legend" ></svg>
 
-    <div a2-visualizer-spectrogram-affixed="{bottom:20, 'align-h':.5}" ng-show="visobject" class="no-wrap">
+    <div a2-visualizer-spectrogram-affixed="{bottom:20, 'align-h':.5}" ng-show="visobject.domain.x" class="no-wrap">
         {{ visobject.domain.x.unit || 'Time ( s )'}}
     </div>
 
-    <div a2-visualizer-spectrogram-affixed="{left:10, 'align-v':.5}" ng-show="visobject">
+    <div a2-visualizer-spectrogram-affixed="{left:10, 'align-v':.5}" ng-show="visobject.domain.y">
         <div class="vertical-text">{{ visobject.domain.y.unit || 'Frequency ( kHz )'}}</div>
     </div>
 
