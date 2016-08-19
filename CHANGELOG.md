@@ -87,3 +87,5 @@
     - fixed Playlist creation bug
 - v1.8.8
     - recording name in recording thumbnail urls is now escaped.
+- v1.8.9
+    - Fixing bug in axis parameters hash computation.
