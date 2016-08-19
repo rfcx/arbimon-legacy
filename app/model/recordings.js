@@ -783,7 +783,7 @@ var Recordings = {
     },
     
     __compute_thumbnail_path : function(recording, callback){
-        recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png');
+        recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
         callback();
     },
     __compute_spectrogram_tiles : function(recording, callback){
