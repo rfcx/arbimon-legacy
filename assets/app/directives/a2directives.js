@@ -1161,7 +1161,7 @@ angular.module('a2.directives', ['a2.services', 'templates-arbimon2'])
     var promiseCache = {};
     var canvas = angular.element('<canvas></canvas>')[0];
     function computeHash(w, h, type, data){
-        return [w, h, type, data].join("--");
+        return JSON.stringify([w, h, type, data]);
     }
     
     function createAxisData(canvas, w, h, type, data){
