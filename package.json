@@ -1,6 +1,6 @@
 {
   "name": "arbimon2",
-  "version": "1.8.8",
+  "version": "1.8.9",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
