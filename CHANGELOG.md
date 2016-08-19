@@ -83,3 +83,7 @@
     - updated npm dependencies
     - improving visualizer responsive layout
     - misc.
+- v1.8.7 (belated version bump)
+    - fixed Playlist creation bug
+- v1.8.8
+    - recording name in recording thumbnail urls is now escaped.
