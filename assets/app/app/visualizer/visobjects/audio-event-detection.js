@@ -10,7 +10,9 @@ angular.module('a2.visobjects.audio-event-detection', [
         }]
     });
 })
-.service('VisualizerObjectAudioEventDetectionTypeLoader', function ($q, Project) {
+.service('VisualizerObjectAudioEventDetectionTypeLoader', function (
+    $q, AudioEventDetectionService
+){
     var AudioEventDetection = function(data){
         this.update(data);
     };
