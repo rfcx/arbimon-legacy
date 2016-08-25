@@ -43,6 +43,7 @@ router.get('/data/:aed/:x/:y/:z', function(req, res, next) {
         x : req.params.x,
         y : req.params.y,
         z : req.params.z,
+        rows: req.query.rows,
         bins : req.query.bins,
         binsx : req.query.binsx,
         binsy : req.query.binsy,

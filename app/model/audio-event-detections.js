@@ -342,7 +342,7 @@ var AudioEventDetections = {
                 "GROUP BY " + groupby.join(", "), [
                 aed_id
             ]).then(function(rows){
-                if(isPunctualData){
+                if(isPunctualData || params.rows){
                     data.rows = rows;
                 } else {
                     data.matrix = generateDataMatrix(
