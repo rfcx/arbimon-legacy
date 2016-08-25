@@ -13,6 +13,15 @@ angular.module('a2.service.audio-event-detection', [
             return a2APIService.get('/audio-event-detections/statistics');
         },
         
+        getDataFor: function(aed, x, y, z){
+            var args=[];
+            
+            return a2APIService.get('/audio-event-detections/data/' + [
+                aed, x.statistic, y.statistic, z.statistic
+            ].map(encodeURIComponent).join('/') + '?' + args.join('&'));
+            
+        },
+        
         new: function(aed){
             aed = aed || {};
             var params = {
