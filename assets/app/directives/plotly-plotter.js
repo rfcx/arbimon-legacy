@@ -38,8 +38,9 @@ angular.module('a2.directive.plotly-plotter', [
             if(attrs.data){
                 scope.$watch('data', function(data, old){
                     if(data && data != old){
-                        element[0].data = mergeData(data);
-                        Plotly.redraw(element[0]);
+                        // Plotly.purge(element[0]);
+                        console.log("Plotly plot data ::", data, scope.layout);
+                        Plotly.newPlot(element[0], mergeData(scope.data), mergeLayout(scope.layout), config);
                     }
                 });
             }
