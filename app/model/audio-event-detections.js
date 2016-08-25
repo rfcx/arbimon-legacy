@@ -4,6 +4,43 @@ var model     = require('./index');
 var dbpool = require('../utils/dbpool');
 var sha256 = require('../utils/sha256');
 
+function generateDataMatrix(N, M, data, statistic){
+    var m = [], r;
+    var zreducer = statistic.fn;
+    for(var j=0; j < N; ++j){
+        m.push(r = []);
+        for(var i=0; i < M; ++i){
+            r.push(0);
+        }
+    }
+    
+    data.forEach(function(datum){
+        var x0 = Math.max(0, Math.min(datum.x_0 || datum.x, M));
+        var x1 = Math.max(0, Math.min(datum.x_1 || datum.x, M));
+        var y0 = Math.max(0, Math.min(datum.y_0 || datum.y, N));
+        var y1 = Math.max(0, Math.min(datum.y_1 || datum.y, N));
+        var z  = datum.z || 1;
+        for(var y = y0; y <= y1; ++y){
+            var row = m[y];
+            if(row){
+                for(var x = x0; x <= x1; ++x){
+                    row[x] += z;
+                }
+            }
+        }
+    });
+    
+    if(zreducer){
+        m.forEach(function(r){
+            r.forEach(function(v, j){
+                r[j] = zreducer(v);
+            });
+        });
+    }
+    
+    return m;
+}
+
 var AudioEventDetections = {
     schema: {
         configuration: joi.object().keys({
@@ -96,6 +133,204 @@ var AudioEventDetections = {
             "SELECT id, name, description\n" +
             "FROM audio_event_detection_statistics"
         );
+    },
+
+
+    independentStatisticParams: {
+        "area" : {select:'RAE.area', range:{min:0}},
+        "bw"   : {select:'RAE.bw', range:{min:0}},
+        "cov"  : {select:'RAE.coverage', range:{min:0, max:1}},
+        "dur"  : {select:'RAE.dur', range:{min:0}},
+        "todsec"  : {select:'HOUR(R.datetime) * 60 + RAE.t0', 
+            table:'JOIN recordings R ON R.recording_id = RAE.recording_id', 
+            range:{min:0, max:(24 * 60) - 1}, 
+            defBins: 24 * 60,
+            maxBins: 24 * 60
+        },
+        "todsecspan"  : {select:[
+                'HOUR(R.datetime) * 60 + RAE.t0',
+                'HOUR(R.datetime) * 60 + RAE.t1'
+            ], 
+            table:'JOIN recordings R ON R.recording_id = RAE.recording_id', 
+            range:{min:0, max:(24 * 60) - 1}, 
+            defBins: 24 * 60,
+            maxBins: 24 * 60
+        },
+        "tod"  : {select:'HOUR(R.datetime)', 
+            table:'JOIN recordings R ON R.recording_id = RAE.recording_id', 
+            range:{min:0, max:23}, 
+            maxBins:24
+        },
+        "y_max": {select:'RAE.max_y', range:{min:0}},
+        "freqspan": {select:['RAE.f0', 'RAE.f1'], range:{min:0}},
+    },
+    dependentStatisticParams: {
+        "count": {select:"COUNT(*)"},
+        "log count": {select:"LOG(COUNT(*) + 1)", fn:function(x){
+            return Math.log(x + 1);
+        }},
+        "recordings": {select:"COUNT(DISTINCT RAE.recording_id)"}
+    },
+
+
+    /** Fetches data related to the given aed.
+     * @param {Object} params - parameter object.
+     * @param {Integer} params.aed_id - id of aed to query for data
+     * @param {String} params.x - x variable from aed statistics
+     * @param {String} params.y - y variable from aed statistics
+     * @param {String} params.z - summary statistic use to show the data (Count, etc.)
+     * @return {Promise} resolving to the queried data.
+     */
+    getData: function(params){
+        params = params || {};
+        var aed_id = params.aed;
+        var x = params.x;
+        var y = params.y;
+        var z = ('' + params.z).toLowerCase();
+        var bins = {
+            x : params.binsx || params.bins,
+            y : params.binsy || params.bins,
+        };
+        var prepSteps = [], postSteps = [];
+
+        
+        var dependentStatistic = AudioEventDetections.dependentStatisticParams[z] || 
+            AudioEventDetections.dependentStatisticParams.count;
+        
+        var axes = [{name:"x", statistic:x, params:AudioEventDetections.independentStatisticParams[x]}];
+        if(x != y){
+            axes.push({name:"y", statistic:y, params:AudioEventDetections.independentStatisticParams[y]});
+        }        
+        
+        var select = [], tables = [
+            "recording_audio_events RAE"
+        ], groupby=[];
+        
+        var data = {
+            aed : aed_id,
+            axes: axes.map(function($){ return $.name; }),
+            value: 'z',
+            rows : null
+        };
+        
+        var isPunctualData = true;
+        
+        axes.forEach(function(axis){
+            if(axis.params.table && tables.indexOf(axis.params.table) == -1){
+                tables.push(axis.params.table);
+            }
+            
+            var axisBins = Math.min(+bins[axis.name] || axis.params.defBins || 100, axis.params.maxBins || 200);
+            var axisData;
+            console.log(axisBins, +bins[axis.name], axis.params.defBins, Infinity, axis.name, axis.params.maxBins);
+            
+            prepSteps.push(
+                (
+                    (axis.range && ("max" in axis.range) && ("min" in axis.range)) ? 
+                    q.resolve(axis.range) : 
+                    AudioEventDetections.getDataRange({
+                        aed:aed_id, 
+                        statistic:axis.statistic
+                    })
+                ).then(function(range){
+                    axisData = data[axis.name] = {
+                        statistic: axis.statistic, 
+                        min: +range.min,
+                        max: +range.max,
+                        step: (range.max - range.min) / ((axisBins - 1) || 1),
+                        bins : axisBins
+                    };
+                }).then(function(){
+                    if(axis.params.select instanceof Array){
+                        isPunctualData = false;
+                        axis.params.select.forEach(function(axis_select, i){
+                            var name = axis.name + "_" + i;
+                            select.push(
+                                "FLOOR(" + 
+                                "((" + axis_select + ") - " + axisData.min + ") / " + 
+                                axisData.step + 
+                                ") AS " + name
+                            );
+                            groupby.push(name);
+                        });
+                    } else {
+                        select.push(
+                            "FLOOR(" + 
+                            "((" + axis.params.select + ") - " + axisData.min + ") / " + 
+                            axisData.step + 
+                            ") AS " + axis.name
+                        );
+                        
+                        groupby.push(axis.name);
+                    }
+                })
+            );
+        });
+        
+        if(dependentStatistic.preProcess){
+            prepSteps = [q.all(prepSteps).then(function(){
+                return dependentStatistic.preProcess(data, select, tables, groupby);
+            })];
+        }
+        
+        if(dependentStatistic.select){
+            select.push("(" + dependentStatistic.select + ") AS z");
+        }
+        
+        if(dependentStatistic.postProcess){
+            postSteps.push(dependentStatistic.postProcess);
+        }
+
+        return q.all(prepSteps).then(function(){
+            return dbpool.query("SELECT " + select.join(", ") + "\n" +
+                "FROM " + tables.join("\n") + "\n" +
+                "WHERE RAE.aed_id = ?\n" + 
+                "GROUP BY " + groupby.join(", "), [
+                aed_id
+            ]).then(function(rows){
+                if(isPunctualData){
+                    data.rows = rows;
+                } else {
+                    data.matrix = generateDataMatrix(
+                        (data.y || {bins:1}).bins, 
+                        data.x.bins, 
+                        rows,
+                        dependentStatistic
+                    );
+                }
+            }).then(function(){
+                return data;
+            });
+        });
+        
+    },
+    
+    /** Fetches the range of the data related to the given aed for a given statistic.
+    * @param {Object} params - parameter object.
+    * @param {Integer} params.aed_id - id of aed to query for data
+    * @param {String} params.statistic - statistic being queried
+     * @return {Promise} resolving to the range of the given data's statistics.
+     */
+     getDataRange: function(params){
+         params = params || {};
+         var aed_id = params.aed;
+         var statistic = AudioEventDetections.independentStatisticParams[params.statistic];
+
+         var select = statistic.select;
+         var tables = [
+             "recording_audio_events RAE"
+         ];
+         if(statistic.table){
+             tables.push(statistic.table);
+         }   
+               
+         return dbpool.query(
+             "SELECT MIN(" + (select instanceof Array ? ("LEAST(" + select.join(", ") + ")") : select) + ") as `min`, \n"+
+             "       MAX(" + (select instanceof Array ? ("GREATEST(" + select.join(", ") + ")") : select) + ") as `max` \n" +
+             "FROM " + tables.join("\n") + "\n" +
+             "WHERE RAE.aed_id = ?", [
+             aed_id
+         ]).get(0);
     },
 
     getConfiguration: function(aedc_id){
