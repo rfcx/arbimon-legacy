@@ -61,12 +61,73 @@
     <svg class="axis-x" ng-show="visobject.domain.x" ></svg>
     <svg class="legend" ng-show="visobject && has_legend" ></svg>
 
-    <div a2-visualizer-spectrogram-affixed="{bottom:20, 'align-h':.5}" ng-show="visobject.domain.x" class="no-wrap">
-        {{ visobject.domain.x.unit || 'Time ( s )'}}
+    <div a2-visualizer-spectrogram-affixed="{bottom:20, 'align-h':.5}" ng-show="visobject.domain.x || visobject.data_selection.x" class="no-wrap">
+        <div ng-if="visobject.domain.x">
+            {{ visobject.domain.x.unit || 'Time ( s )'}}
+        </div>
+        <div class="dropup" dropdown ng-if="visobject.data_selection.x">
+            <button class="btn btn-block btn-default w-8 dropdown-toggle" dropdown-toggle>
+                {{ visobject.data_selection.current.x.title }}
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <ul class="dropdown-menu dropup" role="menu">
+                <li ng-show="visobject.data_selection.loading.x">
+                    <a><i class="fa fa-spinner fa-spin"></i> Loading</a>
+                </li>
+                <li ng-hide="visobject.data_selection.loading.x" 
+                    ng-repeat="x in visobject.data_selection.x" 
+                    ng-class="{active: visobject.data_selection.current.x == x}">
+                    <a ng-click="visobject.selectData({x:x})">
+                        {{ x.title }}
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
 
-    <div a2-visualizer-spectrogram-affixed="{left:10, 'align-v':.5}" ng-show="visobject.domain.y">
-        <div class="vertical-text">{{ visobject.domain.y.unit || 'Frequency ( kHz )'}}</div>
+    <div a2-visualizer-spectrogram-affixed="{left:10, 'align-v':.5}" ng-show="visobject.domain.y || visobject.data_selection.y">
+        <div ng-if="visobject.domain.y" class="vertical-text">
+            {{ visobject.domain.y.unit || 'Frequency ( kHz )'}}
+        </div>
+        <div class="dropup" dropdown ng-if="visobject.data_selection.y">
+            <button class="btn btn-block btn-default dropdown-toggle w-8 vertical-text" dropdown-toggle>
+                {{ visobject.data_selection.current.y.title }}
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <ul class="dropdown-menu dropup" role="menu">
+                <li ng-show="visobject.data_selection.loading.y">
+                    <a><i class="fa fa-spinner fa-spin"></i> Loading</a>
+                </li>
+                <li ng-hide="visobject.data_selection.loading.y" 
+                    ng-repeat="y in visobject.data_selection.y" 
+                    ng-class="{active: visobject.data_selection.current.y == y}">
+                    <a ng-click="visobject.selectData({y:y})">
+                        {{ y.title }}
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div a2-visualizer-spectrogram-affixed="{top:60, 'align-h':1}" ng-show="visobject.data_selection.z">
+        <div class="dropu" dropdown>
+            <button class="btn btn-block btn-default w-8 dropdown-toggle" dropdown-toggle>
+                {{ visobject.data_selection.current.z.title }}
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-right dropup" role="menu">
+                <li ng-show="visobject.data_selection.loading.z">
+                    <a><i class="fa fa-spinner fa-spin"></i> Loading</a>
+                </li>
+                <li ng-hide="visobject.data_selection.loading.z" 
+                    ng-repeat="z in visobject.data_selection.z" 
+                    ng-class="{active: visobject.data_selection.current.z == z}">
+                    <a ng-click="visobject.selectData({z:z})">
+                        {{ z.title }}
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
 
 
