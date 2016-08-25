@@ -17,8 +17,8 @@ function generateDataMatrix(N, M, data, statistic){
     data.forEach(function(datum){
         var x0 = Math.max(0, Math.min(datum.x_0 || datum.x, M));
         var x1 = Math.max(0, Math.min(datum.x_1 || datum.x, M));
-        var y0 = Math.max(0, Math.min(datum.y_0 || datum.y, N));
-        var y1 = Math.max(0, Math.min(datum.y_1 || datum.y, N));
+        var y0 = Math.max(0, Math.min(datum.y_0 || datum.y || 0, N));
+        var y1 = Math.max(0, Math.min(datum.y_1 || datum.y || 0, N));
         var z  = datum.z || 1;
         for(var y = y0; y <= y1; ++y){
             var row = m[y];
