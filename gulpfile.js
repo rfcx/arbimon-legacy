@@ -45,7 +45,7 @@ var app={
             moment               :{'min/moment.min.js': '', },
             'ng-csv'             :{'build/ng-csv.min.js': '', },
             'ng-table'           :{'ng-table.*': '', },
-            'plotlyjs'           :{'plotly.js': '', },
+            'plotly.js'          :{'dist/plotly.js': '', },
             'qr-js'              :{'qr.min.*': '', },
             'roboto-fontface'    :{'css/*': 'css/', 'fonts/*' : 'fonts/', },
             'selectize'          :{'dist/css/selectize.default.css': '../angular-ui-select/', },
