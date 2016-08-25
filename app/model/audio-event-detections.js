@@ -136,18 +136,43 @@ var AudioEventDetections = {
     },
 
 
-    independentStatisticParams: {
-        "area" : {select:'RAE.area', range:{min:0}},
-        "bw"   : {select:'RAE.bw', range:{min:0}},
-        "cov"  : {select:'RAE.coverage', range:{min:0, max:1}},
-        "dur"  : {select:'RAE.dur', range:{min:0}},
-        "todsec"  : {select:'HOUR(R.datetime) * 60 + RAE.t0', 
+    independentStatisticParams: [
+        {   statistic: "area",
+            title: "Area",
+            select:'RAE.area', range:{min:0}
+        },
+        {   statistic: "bw",
+            title: "Bandwidth",
+            select:'RAE.bw', range:{min:0}
+        },
+        {   statistic: "cov",
+            title: "% Coverage",
+            select:'RAE.coverage', range:{min:0, max:1}
+        },
+        {   statistic: "dur",
+            title: "Duration",
+            select:'RAE.dur', range:{min:0}
+        },
+        {   statistic: "tod",
+            title: "Time of Day",
+            select:'HOUR(R.datetime)', 
+            table:'JOIN recordings R ON R.recording_id = RAE.recording_id', 
+            range:{min:0, max:23}, 
+            maxBins:24
+        
+        },
+        {   statistic: "todsec",
+            title: "Time of Day (w/seconds)",
+            select:'HOUR(R.datetime) * 60 + RAE.t0', 
             table:'JOIN recordings R ON R.recording_id = RAE.recording_id', 
             range:{min:0, max:(24 * 60) - 1}, 
             defBins: 24 * 60,
             maxBins: 24 * 60
+            
         },
-        "todsecspan"  : {select:[
+        {   statistic: "todsecspan",
+            title: "Time of Day (w/seconds, event time spans)",
+            select:[
                 'HOUR(R.datetime) * 60 + RAE.t0',
                 'HOUR(R.datetime) * 60 + RAE.t1'
             ], 
@@ -155,21 +180,50 @@ var AudioEventDetections = {
             range:{min:0, max:(24 * 60) - 1}, 
             defBins: 24 * 60,
             maxBins: 24 * 60
+            
         },
-        "tod"  : {select:'HOUR(R.datetime)', 
-            table:'JOIN recordings R ON R.recording_id = RAE.recording_id', 
-            range:{min:0, max:23}, 
-            maxBins:24
+        {   statistic: "y_max",
+            title: "Dominant Frequency",
+            select:'RAE.max_y', range:{min:0}
         },
-        "y_max": {select:'RAE.max_y', range:{min:0}},
-        "freqspan": {select:['RAE.f0', 'RAE.f1'], range:{min:0}},
+        {   statistic: "freqspan",
+            title: "Frequency Spans",
+            select:['RAE.f0', 'RAE.f1'], range:{min:0}
+        },
+    ].reduce(function(_, $){
+        return _.list.push($), _.index[$.statistic]=$, _;
+    }, {list:[], index:{}}),
+    
+    dependentStatisticParams: [
+        {   statistic: "count",
+            title: "# Events",
+            select:"COUNT(*)"
+        },
+        {   statistic: "log count",
+            title: "Log # Events",
+            select:"LOG(COUNT(*) + 1)", 
+            fn:function(x){
+                return Math.log(x + 1);
+            }
+        },
+        {   statistic: "recordings",
+            title: "Log # Recordings",
+            select:"COUNT(DISTINCT RAE.recording_id)"
+        }
+    ].reduce(function(_, $){
+        return _.list.push($), _.index[$.statistic]=$, _;
+    }, {list:[], index:{}}),
+    
+    getDataStatistics: function(){
+        return AudioEventDetections.independentStatisticParams.list.map(function(idp){
+            return {title:idp.title, statistic:idp.statistic};
+        });
     },
-    dependentStatisticParams: {
-        "count": {select:"COUNT(*)"},
-        "log count": {select:"LOG(COUNT(*) + 1)", fn:function(x){
-            return Math.log(x + 1);
-        }},
-        "recordings": {select:"COUNT(DISTINCT RAE.recording_id)"}
+    
+    getDataAggregates: function(){
+        return AudioEventDetections.dependentStatisticParams.list.map(function(dp){
+            return {title:dp.title, statistic:dp.statistic};
+        });
     },
 
 
@@ -194,12 +248,12 @@ var AudioEventDetections = {
         var prepSteps = [], postSteps = [];
 
         
-        var dependentStatistic = AudioEventDetections.dependentStatisticParams[z] || 
-            AudioEventDetections.dependentStatisticParams.count;
+        var dependentStatistic = AudioEventDetections.dependentStatisticParams.index[z] || 
+            AudioEventDetections.dependentStatisticParams.index.count;
         
-        var axes = [{name:"x", statistic:x, params:AudioEventDetections.independentStatisticParams[x]}];
+        var axes = [{name:"x", statistic:x, params:AudioEventDetections.independentStatisticParams.index[x]}];
         if(x != y){
-            axes.push({name:"y", statistic:y, params:AudioEventDetections.independentStatisticParams[y]});
+            axes.push({name:"y", statistic:y, params:AudioEventDetections.independentStatisticParams.index[y]});
         }        
         
         var select = [], tables = [
@@ -314,7 +368,7 @@ var AudioEventDetections = {
      getDataRange: function(params){
          params = params || {};
          var aed_id = params.aed;
-         var statistic = AudioEventDetections.independentStatisticParams[params.statistic];
+         var statistic = AudioEventDetections.independentStatisticParams.index[params.statistic];
 
          var select = statistic.select;
          var tables = [

@@ -29,6 +29,14 @@ router.get('/statistics', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/data/statistics', function(req, res, next) {
+    res.json(model.AudioEventDetections.getDataStatistics());
+});
+
+router.get('/data/aggregates', function(req, res, next) {
+    res.json(model.AudioEventDetections.getDataAggregates());
+});
+
 router.get('/data/:aed/:x/:y/:z', function(req, res, next) {
     model.AudioEventDetections.getData({
         aed : req.params.aed,
