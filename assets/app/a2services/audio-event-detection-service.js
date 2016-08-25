@@ -12,6 +12,12 @@ angular.module('a2.service.audio-event-detection', [
         getStatisticsList: function(){
             return a2APIService.get('/audio-event-detections/statistics');
         },
+        getDataStatisticsList: function(){
+            return a2APIService.get('/audio-event-detections/data/statistics');
+        },
+        getDataAggregatesList: function(){
+            return a2APIService.get('/audio-event-detections/data/aggregates');
+        },
         
         getDataFor: function(aed, x, y, z){
             var args=[];
