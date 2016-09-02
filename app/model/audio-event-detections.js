@@ -12,12 +12,19 @@ var s3;
 
 function generateDataMatrix(N, M, data, statistic){
     var m = [], r;
+    var zaggregator = statistic.aggregate;
     var zreducer = statistic.fn;
     for(var j=0; j < N; ++j){
         m.push(r = []);
         for(var i=0; i < M; ++i){
-            r.push(0);
+            r.push(null);
         }
+    }
+    
+    if(!zaggregator){
+        zaggregator = function(value, z){
+            return (value || 0) + z;
+        };
     }
     
     data.forEach(function(datum){
@@ -30,7 +37,7 @@ function generateDataMatrix(N, M, data, statistic){
             var row = m[y];
             if(row){
                 for(var x = x0; x <= x1; ++x){
-                    row[x] += z;
+                    row[x] = zaggregator(row[x], z);
                 }
             }
         }
