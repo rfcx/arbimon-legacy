@@ -12,6 +12,7 @@ router.get('/', function(req, res, next) {
         project: req.project.project_id,
         showAlgorithm: true,
         showPlaylist: true,
+        showThumbnail: true,
     }).then(function(aeds) {
         res.json(aeds);
     }).catch(next);

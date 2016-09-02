@@ -3,6 +3,7 @@ var joi     = require('joi');
 var model     = require('./index');
 var dbpool = require('../utils/dbpool');
 var sha256 = require('../utils/sha256');
+var config = require('../config');
 
 function generateDataMatrix(N, M, data, statistic){
     var m = [], r;
@@ -89,6 +90,14 @@ var AudioEventDetections = {
             });
         }
         
+        if(options.showThumbnail){
+            postprocess.push(function(aeds){
+                aeds.forEach(function(aed){
+                    aed.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/aed/' + aed.id + '.png';
+                });
+            });
+        }
+                
         if(options.showAlgorithm){
             select.push('AEDA.name as algorithm, AEDC.parameters, AED.`statistics`');
             from.push("JOIN audio_event_detection_algorithms AEDA ON AEDC.algorithm_id = AEDA.id");
