@@ -1,5 +1,6 @@
 angular.module('a2.visualizer.layers.data-plot-layer', [
-    'a2.directive.plotly-plotter'
+    'a2.directive.plotly-plotter',
+    'arbimon2.directive.a2-dropdown',
 ])
 .config(function(layer_typesProvider){
     /**
