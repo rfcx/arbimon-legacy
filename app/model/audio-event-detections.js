@@ -230,8 +230,8 @@ var AudioEventDetections = {
             }
         },
         {   statistic: "recordings",
-            title: "Log # Recordings",
-            select:"COUNT(DISTINCT RAE.recording_id)"
+            title: "# Recordings",
+            select:"COUNT(DISTINCT RAE.recording_id)",
         }
     ].reduce(function(_, $){
         return _.list.push($), _.index[$.statistic]=$, _;
