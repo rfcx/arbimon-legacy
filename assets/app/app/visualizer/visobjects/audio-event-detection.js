@@ -1,6 +1,7 @@
 angular.module('a2.visobjects.audio-event-detection', [
     'a2.services',
     'a2.visobjects.common',
+    'a2.service.plotly-plot-maker',
 ])
 .config(function(VisualizerObjectTypesProvider){
     VisualizerObjectTypesProvider.add({
@@ -11,7 +12,7 @@ angular.module('a2.visobjects.audio-event-detection', [
     });
 })
 .service('VisualizerObjectAudioEventDetectionTypeLoader', function (
-    $q, AudioEventDetectionService
+    $q, AudioEventDetectionService, plotlyPlotMaker, a2UrlUpdate
 ){
     var aggregates;
     var statisticsInfo;
@@ -97,57 +98,11 @@ angular.module('a2.visobjects.audio-event-detection', [
             return AudioEventDetectionService.getDataFor(
                 this.id, x, y, z
             ).then((function(data){
-                function range(start, count, step){
-                    var _=[];
-                    for(var i=0, x=start; i < count; ++i, x += step){
-                        _.push(x);
-                    }
-                    return _;
-                }
-                
-                var plotdata;
-
-                if(x == y){
-                    plotdata = {
-                        orientation:'v',
-                        type:'bar',
-                    };
-
-                    if(data.rows){
-                        plotdata.x = data.rows.map(function(_){ return data.x.min + data.x.step * _.x;});
-                        plotdata.y = data.rows.map(function(_){ return _.z;});
-                    } else if(data.matrix){
-                        plotdata.x = range(data.x.min, data.x.bins, data.x.step);
-                        plotdata.y = data.matrix[0];
-                    }
-                    
-                    this.plot.data = [plotdata];
-                    this.plot.layout = {
-                        xaxis: {boundsmode: 'auto'},
-                        yaxis: {boundsmode: 'auto'},
-                    };
-                } else {
-                    plotdata = {
-                        type:'heatmap',
-                        hoverinfo:'x+y+z'
-                    };
-                    
-                    if(data.rows){
-                        plotdata.x = data.rows.map(function(_){ return data.x.min + data.x.step * _.x;});
-                        plotdata.y = data.rows.map(function(_){ return data.y.min + data.y.step * _.y;});
-                        plotdata.z = data.rows.map(function(_){ return _.z;});
-                    } else if(data.matrix){
-                        plotdata.x = range(data.x.min, data.x.bins, data.x.step);
-                        plotdata.y = range(data.y.min, data.y.bins, data.y.step);
-                        plotdata.z = data.matrix;
-                    }
-                    
-                    this.plot.data = [plotdata];
-                    this.plot.layout = {
-                        xaxis: {boundsmode: 'auto'},
-                        yaxis: {boundsmode: 'auto'},
-                    };
-                }
+                var plot = (x == y) ? 
+                    plotlyPlotMaker.makeBarPlot(x, z, data, this.name) : 
+                    plotlyPlotMaker.makeHeatmapPlot(x, y, z, data, this.name);
+                this.plot.data = [plot.data];
+                this.plot.layout = plot.layout;
             }).bind(this));
         },
         getCaption : function(){
