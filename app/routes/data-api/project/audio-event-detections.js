@@ -53,6 +53,23 @@ router.get('/data/:aed/:x/:y/:z', function(req, res, next) {
     }).catch(next);
 });
 
+router.post('/default-plot/:aed', function(req, res, next) {
+    model.AudioEventDetections.setDefaultPlot({
+        aed : req.params.aed,
+        x : req.body.x,
+        y : req.body.y,
+        z : req.body.z,
+        rows: req.body.rows,
+        bins : req.body.bins,
+        binsx : req.body.binsx,
+        binsy : req.body.binsy,
+    }).then(function(plotUrl) {
+        return res.json({
+            url:plotUrl
+        });
+    }).catch(next);
+});
+
 router.post('/new', function(req, res, next) {
     res.type('json');
     

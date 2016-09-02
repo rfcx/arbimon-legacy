@@ -105,6 +105,17 @@ angular.module('a2.visobjects.audio-event-detection', [
                 this.plot.layout = plot.layout;
             }).bind(this));
         },
+
+        savePlot: function(){
+            var x = this.data_selection.current.x,
+                y = this.data_selection.current.y,
+                z = this.data_selection.current.z;
+            return AudioEventDetectionService.savePlotFor(
+                this.id, x, y, z
+            ).then(function(data){
+                a2UrlUpdate.update(data.url);
+            });
+        },
         getCaption : function(){
             return AudioEventDetection.getCaptionFor(this);
         }

@@ -1,9 +1,14 @@
 var q     = require('q');
 var joi     = require('joi');
+var fs     = require('fs');
+var offlinePlotter = require('../utils/offline-plotter');
+var tmpfilecache = require('../utils/tmpfilecache');
 var model     = require('./index');
+var AWS   = require('aws-sdk');
 var dbpool = require('../utils/dbpool');
 var sha256 = require('../utils/sha256');
 var config = require('../config');
+var s3;
 
 function generateDataMatrix(N, M, data, statistic){
     var m = [], r;
@@ -395,6 +400,32 @@ var AudioEventDetections = {
              aed_id
          ]).get(0);
     },
+    
+    setDefaultPlot: function(params){
+        var aed = params.aed | 0;
+        var plotkey = 'aed/' + aed + '.png';
+        var plotfilename = tmpfilecache.key2File(plotkey);
+        var data={};
+        return AudioEventDetections.getData(params).then(function(data){
+            return offlinePlotter.plot(data, plotfilename);
+        }).then(function(){
+            if(!s3){
+                s3 = new AWS.S3();
+            }
+            return q.ninvoke(s3, 'putObject', {
+                Bucket : config('aws').bucketName,
+                Key    : plotkey,
+                ACL: 'public-read',
+                Body: fs.createReadStream(plotfilename),
+            }).then(function(){
+                return 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURI(plotkey);
+            });
+            
+        });
+    },
+    
+    
+    /** Sets the AED's default plot. */
 
     getConfiguration: function(aedc_id){
         return dbpool.query(

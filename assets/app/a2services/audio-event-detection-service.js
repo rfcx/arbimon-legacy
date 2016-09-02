@@ -28,6 +28,19 @@ angular.module('a2.service.audio-event-detection', [
             
         },
         
+        savePlotFor: function(aed, x, y, z){
+            var params={
+                x:x.statistic, 
+                y:y.statistic, 
+                z:z.statistic
+            };
+            
+            return a2APIService.post('/audio-event-detections/default-plot/' + [
+                aed
+            ].map(encodeURIComponent).join('/'), params);
+            
+        },
+        
         new: function(aed){
             aed = aed || {};
             var params = {
