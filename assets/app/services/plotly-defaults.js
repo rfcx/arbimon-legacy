@@ -29,10 +29,15 @@ angular.module('a2.service.plotly-defaults', [
         titlefont: {family:'"Helvetica Neue", Helvetica, Arial, sans-serif', size:'14px'},
         tickfont : {family:'sans-serif', size:'11px'},
     };
+    defaults.config = {
+        showLink:false, sendData:false, displaylogo:false, displayModeBar:true, scrollZoom:true,
+        modeBarButtonsToRemove:['sendDataToCloud', 'autoScale2d']
+    };
     defaults.layout = {
         xaxis:{titlefont: defaults.titlefont, tickfont: defaults.tickfont},
         yaxis:{titlefont: defaults.titlefont, tickfont: defaults.tickfont},
         // margin:{l:70 + 25,r:0,b:25,t:50, pad:0},
+        dragmode:'pan'
     };
     defaults.colorbar = {
         tickfont: defaults.tickfont,
