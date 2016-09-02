@@ -395,7 +395,7 @@ var AudioEventDetections = {
     * @param {String} params.statistic - statistic being queried
      * @return {Promise} resolving to the range of the given data's statistics.
      */
-     getDataRange: function(params){
+    getDataRange: function(params){
          params = params || {};
          var aed_id = params.aed;
          var statistic = AudioEventDetections.independentStatisticParams.index[params.statistic];
