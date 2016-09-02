@@ -15,14 +15,15 @@ angular.module('a2.visualizer.layers.data-plot-layer', [
     layer_typesProvider.addLayerType({
         type: "data-plot-layer",
         title: "",
+        controller: 'a2VisualizerDataPlotLayerController as controller',
         require: {
             type: ['audio-event-detection'],
             selection: true
         },
-        display: {
-            sidebar: false
-        },
         visible: true,
+        hide_visibility: true
     });
+})
+.controller('a2VisualizerDataPlotLayerController', function($scope){
 })
 ;
