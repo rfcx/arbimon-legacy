@@ -153,22 +153,27 @@ var AudioEventDetections = {
     independentStatisticParams: [
         {   statistic: "area",
             title: "Area",
+            units: "Hz s",
             select:'RAE.area', range:{min:0}
         },
         {   statistic: "bw",
             title: "Bandwidth",
+            units: "Hz",
             select:'RAE.bw', range:{min:0}
         },
         {   statistic: "cov",
             title: "% Coverage",
+            units: "%",
             select:'RAE.coverage', range:{min:0, max:1}
         },
         {   statistic: "dur",
             title: "Duration",
+            units: "s",
             select:'RAE.dur', range:{min:0}
         },
         {   statistic: "tod",
             title: "Time of Day",
+            units: "h",
             select:'HOUR(R.datetime)', 
             table:'JOIN recordings R ON R.recording_id = RAE.recording_id', 
             range:{min:0, max:23}, 
@@ -180,6 +185,7 @@ var AudioEventDetections = {
             select:'HOUR(R.datetime) * 60 + RAE.t0', 
             table:'JOIN recordings R ON R.recording_id = RAE.recording_id', 
             range:{min:0, max:(24 * 60) - 1}, 
+            units: "h",
             defBins: 24 * 60,
             maxBins: 24 * 60
             
@@ -192,16 +198,19 @@ var AudioEventDetections = {
             ], 
             table:'JOIN recordings R ON R.recording_id = RAE.recording_id', 
             range:{min:0, max:(24 * 60) - 1}, 
+            units: "h",
             defBins: 24 * 60,
             maxBins: 24 * 60
             
         },
         {   statistic: "y_max",
             title: "Dominant Frequency",
+            units: "Hz",
             select:'RAE.max_y', range:{min:0}
         },
         {   statistic: "freqspan",
             title: "Frequency Spans",
+            units: "Hz",
             select:['RAE.f0', 'RAE.f1'], range:{min:0}
         },
     ].reduce(function(_, $){
@@ -230,7 +239,7 @@ var AudioEventDetections = {
     
     getDataStatistics: function(){
         return AudioEventDetections.independentStatisticParams.list.map(function(idp){
-            return {title:idp.title, statistic:idp.statistic};
+            return {title:idp.title, statistic:idp.statistic, units:idp.units};
         });
     },
     
