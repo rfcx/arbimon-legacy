@@ -1,6 +1,10 @@
 # nodejs
 node_modules
+node_modules-*
 npm-debug.log
+
+#mac (meh.)
+.DS_Store
 
 # gedit backup files
 *~

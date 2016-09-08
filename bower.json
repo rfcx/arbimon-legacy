@@ -25,12 +25,14 @@
     "selectize": "~0.8.5",
     "ui-router-extras": "~0.0.10",
     "zxcvbn": "~3.2.0",
-    "roboto-fontface": "~0.4.3"
+    "roboto-fontface": "~0.4.3",
+    "plotly.js": "https://github.com/g-i-o-/plotly.js.git#local-stable"
   },
   "devDependencies": {
     "angular-mocks": "~1.4.5"
   },
   "resolutions": {
-    "d3": "~3.5.3"
+    "d3": "~3.5.3",
+    "plotly.js": "local-stable"
   }
 }

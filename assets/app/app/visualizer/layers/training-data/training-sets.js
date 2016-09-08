@@ -1,9 +1,29 @@
-angular.module('visualizer-training-sets', [
+angular.module('a2.visualizer.layers.training-sets', [
     'visualizer-services', 
-    'a2.utils'
+    'a2.visualizer.layers.training-sets.roi_set',
+    'a2.utils',
 ])
-.controller('a2VisualizerTrainingSetLayerController', 
-function($scope, $modal, $controller, $timeout, a2TrainingSets, a2UserPermit, notify) {
+.config(function(layer_typesProvider){
+    /**
+     * @ngdoc object
+     * @name a2.visualizer.layers.training-sets.object:training-data
+     * @description Training Data layer. 
+     * adds the training-data layer_type to layer_types. This layer uses
+     * a2.visualizer.layers.training-sets.controller:a2VisualizerTrainingSetLayerController as controller,
+     * and requires a visobject of type recording to be selected.
+     */
+    layer_typesProvider.addLayerType({
+        type: "training-data",
+        title: "",
+        controller: 'a2VisualizerTrainingSetLayerController as training_data',
+        require: {
+            type: 'recording',
+            selection: true
+        },
+        visible: true,
+    });
+})
+.controller('a2VisualizerTrainingSetLayerController', function($scope, $modal, $controller, $timeout, a2TrainingSets, a2UserPermit, notify) {
     var self=this;
     self.tset      = null;
     self.tset_type = null;
@@ -25,7 +45,7 @@ function($scope, $modal, $controller, $timeout, a2TrainingSets, a2UserPermit, no
         }
         
         $modal.open({
-            templateUrl : '/app/visualizer/modal/add_tset.html',
+            templateUrl : '/app/visualizer/layers/training-data/add_tset_modal.html',
             controller  : 'a2VisualizerAddTrainingSetModalController'
         }).result.then(function (new_tset) {
             if(new_tset && new_tset.id) {

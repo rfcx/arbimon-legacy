@@ -1,4 +1,4 @@
-angular.module('a2.visualizer.layer.recording-tags', ['a2.srv.tags'])
+angular.module('a2.visualizer.layers.recording-tags', ['a2.srv.tags'])
 .config(function(layer_typesProvider){
     /**
      * @ngdoc object

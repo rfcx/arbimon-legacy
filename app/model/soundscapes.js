@@ -306,6 +306,7 @@ var Soundscapes = {
      * @param {Object}  params  [optional]
      * @param {Integer} param.count  number of recording to sample (default: all the recordings in the region).
      * @param {Function} callback called back with the results.
+     * @return {Promise} resolved after the region has been sampled.
      */
     sampleRegion: function(soundscape, region, params, callback){
         if(!params){
@@ -313,85 +314,59 @@ var Soundscapes = {
         }
         
         var count = (params.count) | 0;
-        var tx = new sqlutil.transaction();
         var db;
         var playlist_id, rercordings;
-        async.waterfall([
-            function fetch_scidx(next){
-                var filters = {
-                    ignore_offsets : true,
-                    minx : ((region.x1 - soundscape.min_t)) | 0,
-                    maxx : ((region.x2 - soundscape.min_t)) | 0,
-                    miny : ((region.y1 - soundscape.min_f) / soundscape.bin_size) | 0,
-                    maxy : ((region.y2 - soundscape.min_f) / soundscape.bin_size - 1) | 0
-                };
-                Soundscapes.fetchSCIDX(soundscape, filters, next);
-            },
-            function flatten_recordings_list(scidx, next){
-                next(null, scidx.flatten());
-            },
-            function random_sort_and_sample(idx_recs, next){
-                recordings = arrays.sample_without_replacement(idx_recs, count);
-                next();
-            },            
-            dbpool.getConnection,
-            function got_connection(connection, next){
-                db = connection;
-                tx.connection = db;
-                next();
-            },
-            tx.begin.bind(tx),
-            function make_region_playlist(next){
-                if(region.playlist){
-                    playlist_id = region.playlist;
-                    next();
-                    return;
-                }
-                var name = soundscape.name + ', ' + region.name + ' recordings sample';
-                db.query(
-                    "INSERT INTO playlists(project_id, name, playlist_type_id, uri) \n" + 
-                    " VALUES ("+mysql.escape([
+        
+        var filters = {
+            ignore_offsets : true,
+            minx : ((region.x1 - soundscape.min_t)) | 0,
+            maxx : ((region.x2 - soundscape.min_t)) | 0,
+            miny : ((region.y1 - soundscape.min_f) / soundscape.bin_size) | 0,
+            maxy : ((region.y2 - soundscape.min_f) / soundscape.bin_size - 1) | 0
+        };
+
+        return Soundscapes.fetchSCIDX(soundscape, filters).then(function (scidx){
+            recordings = arrays.sample_without_replacement(scidx.flatten(), count);
+        }).then(function(){
+            return dbpool.performTransaction(function(tx){
+                var db = tx.connection;
+                
+                return q.resolve().then(function (){
+                    if(region.playlist){
+                        playlist_id = region.playlist;
+                        return;
+                    }
+                    
+                    var name = soundscape.name + ', ' + region.name + ' recordings sample';
+                    return db.promisedQuery(
+                        "INSERT INTO playlists(project_id, name, playlist_type_id, uri) \n" + 
+                        " VALUES (?, ?, ?, ?)",[
                         soundscape.project, name, Soundscapes.PLAYLIST_TYPE, null
-                    ])+");", function(err, results){
-                        if(err){next(err); return;}
+                    ]).then(function(results){
                         region.playlist = results.insertId;
                         playlist_id = region.playlist;
-                        db.query(
+                        return db.promisedQuery(
                             "UPDATE soundscape_regions \n" +
-                            "SET sample_playlist_id = " + results.insertId + " \n" +
-                            "WHERE soundscape_region_id = " + mysql.escape(region.id), 
-                            next
-                        );
-                    }
-                );
-            },
-            function add_recordings_randomly(){
-                var next = arguments[arguments.length-1];
-                var values = recordings.map(function(r){
-                    return mysql.escape([playlist_id, r]);
+                            "SET sample_playlist_id = ? \n" +
+                            "WHERE soundscape_region_id = ?", [
+                            results.insertId, 
+                            region.id
+                        ]);
+                    });
+                }).then(function (){
+                    return db.promisedQuery( 
+                        "INSERT IGNORE INTO playlist_recordings(playlist_id, recording_id)\n VALUES \n" + 
+                        recordings.map(function(){
+                            return '   (?, ?)';
+                        }).join(", \n") + ";",
+                        recordings.reduce(function(_, r){
+                            _.push(playlist_id, r);
+                            return _;
+                        }, [])
+                    );
                 });
-                db.query(
-                    "INSERT IGNORE INTO playlist_recordings(playlist_id, recording_id) VALUES (\n" + 
-                    "    " + values.join("), \n    (") +
-                     ")", next
-                );
-            }, 
-            tx.mark_success.bind(tx)
-        ], function(err){
-            tx.end(function(err2){
-                if(tx.connection){
-                    tx.connection.release();
-                }
-                if(err){ 
-                    callback(err); 
-                } else if(err2){ 
-                    callback(err2); 
-                } else {
-                    callback(null, region);
-                }
             });
-        });
-        
+        }).thenResolve(region).nodeify(callback);
     },
 
     /** Fetches soundscape region tags.
