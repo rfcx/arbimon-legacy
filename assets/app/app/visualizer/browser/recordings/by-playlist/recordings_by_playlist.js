@@ -1,4 +1,18 @@
-angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
+angular.module('a2.browser_recordings_by_playlist', [
+    'a2.classy',
+    'a2.browser_common',
+])
+.config(function(BrowserLOVOsProvider){
+    BrowserLOVOsProvider.add({
+        name       : 'playlist',
+        group       : 'recordings',
+        vobject_type: 'recording',
+        icon       : 'fa fa-list',
+        tooltip    : "Browse Recordings by Playlist",
+        controller : 'a2BrowserRecordingsByPlaylistController',
+        template   : '/app/visualizer/browser/recordings/by-playlist/recordings-by-playlist.html'
+    });
+})
 .service('a2PlaylistLOVO', function($q, makeClass, a2Playlists, a2Pager){
     return makeClass({
         static: {
@@ -39,7 +53,7 @@ angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
                     switch(self.playlist.type){
                         case "soundscape region":
                             self.links = [
-                                {icon:"a2-soundscape-region", tooltip:"View Soundscape Region", 
+                                {icon:"a2-soundscape-region", tooltip:"View Soundscape Region",
                                 location:"soundscape/" + playlist_info.soundscape + "/" + playlist_info.region}
                             ];
                         break;
@@ -183,13 +197,13 @@ angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
             if(this.on_page instanceof Function){
                 var offset = this.current_page*this.page_size;
                 return this.on_page({
-                    page   : this.current_page, 
-                    offset : offset, 
+                    page   : this.current_page,
+                    offset : offset,
                     count  : Math.min(this.page_size, this.item_count - offset + 1)
                 });
             }
             
-        },        
+        },
         update : function(){
             this.is_at_first_page = this.current_page <= 0;
             this.last_page        = ((this.item_count-1) / this.page_size) | 0;
@@ -204,14 +218,14 @@ angular.module('a2.browser_recordings_by_playlist', ['a2.classy'])
                 this.current_page_block = this.resolve_value(block, this.current_page_block, 0, this.last_page_block) | 0;
             }
             this.is_at_first_page_block = this.current_page_block <= 0;
-            this.is_at_last_page_block  = this.current_page_block >= this.last_page_block;            
+            this.is_at_last_page_block  = this.current_page_block >= this.last_page_block;
             
             this.current_page_block_first_page = (this.current_page_block * this.block_size)|0;
             this.current_page_block_last_page  = Math.min(((this.current_page_block+1) * this.block_size - 1)|0, this.last_page);
             this.block = [];
             for(var i=this.current_page_block_first_page, e=this.current_page_block_last_page; i <= e; ++i){
                 this.block.push(i);
-            }            
+            }
         },
         has_page : function(page){
             return 0 <= page && page <= this.last_page;

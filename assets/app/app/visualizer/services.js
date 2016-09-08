@@ -1,116 +1,7 @@
 angular.module('visualizer-services', ['a2.services'])
     .provider('layer_types', function(){
 
-        var type_array = [{
-                type: "browser-layer",
-                title: "",
-                visible: true,
-                display: {
-                    spectrogram: false
-                },
-                sidebar_only: true,
-                hide_visibility: true
-            }, {
-                type: "recording-layer",
-                title: "",
-                controller: 'a2VisualizerRecordingLayerController as controller',
-                require: {
-                    type: 'recording',
-                    selection: true
-                },
-                visible: true,
-                hide_visibility: true
-            }, {
-                type: "soundscape-regions-layer",
-                title: "",
-                controller: 'a2VisualizerSoundscapeRegionsLayerController as soundscape',
-                require: {
-                    type: 'soundscape',
-                    browsetype: 'soundscape',
-                    selection: true
-                },
-                visible: true,
-                // hide_visibility : true
-            }, {
-                type: "soundscape-info-layer",
-                title: "",
-                controller: 'a2VisualizerSoundscapeInfoLayerController as info',
-                require: {
-                    type: 'soundscape',
-                    browsetype: 'soundscape',
-                    selection: true
-                },
-                display: {
-                    spectrogram: false
-                },
-                visible: true,
-                hide_visibility: true
-            }, {
-                type: "base-image-layer",
-                title: "",
-                require: {
-                    type: ['recording', 'soundscape'],
-                    selection: true
-                },
-                display: {
-                    sidebar: false
-                },
-                visible: true,
-            }, {
-                type: "zoom-input-layer",
-                title: "",
-                require: {
-                    type: ['recording', 'soundscape'],
-                    selection: true,
-                    that: function(scope) {
-                        return scope.visobject && scope.visobject.zoomable;
-                    }
-                },
-                display: {
-                    sidebar: false
-                },
-                visible: true
-            },
-            //{  type    :'frequency-adjust-layer'},
-            {
-                type: "recording-soundscape-region-tags",
-                title: "",
-                controller: 'a2VisualizerRecordingSoundscapeRegionTagsLayerController as ctrl',
-                require: {
-                    type: 'recording',
-                    selection: true,
-                    that: function(scope) {
-                        var pl = scope.visobject && scope.visobject.extra && scope.visobject.extra.playlist;
-                        return pl && pl.soundscape && pl.region;
-                    }
-                },
-                sidebar_only: true,
-                visible: true,
-                hide_visibility: false
-            }, {
-                type: "species-presence",
-                title: "",
-                require: {
-                    type: 'recording',
-                    selection: true
-                },
-                display: {
-                    spectrogram: false
-                },
-                sidebar_only: true,
-                visible: false,
-                hide_visibility: true,
-            }, {
-                type: "training-data",
-                title: "",
-                controller: 'a2VisualizerTrainingSetLayerController as training_data',
-                require: {
-                    type: 'recording',
-                    selection: true
-                },
-                visible: true,
-            }
-        ];
+        var type_array = [];
         
         return {
             addLayerType: function(layerType){
@@ -222,28 +113,22 @@ angular.module('visualizer-services', ['a2.services'])
 
         return layers;
     })
-    .service('training_set_types', function(Project) {
+    .provider('training_set_types', function() {
+        var training_set_types = [];
+
         return {
-            'roi_set': {
-                has_layout: true,
-                templates: {
-                    layer_item: '/app/visualizer/layer-item/training-sets/roi_set.html',
-                    new_modal: '/app/visualizer/modal/new_roi_set_tset_partial.html'
-                },
-                action: {
-                    collect_new_tset_data: function(sdata, tset_data, sval) {
-                        if (sdata.class) {
-                            tset_data.class = sdata.class.id;
-                        }
-                        else {
-                            sval.class = "Please select a project class.";
-                            sval.count++;
-                        }
-                    }
-                },
-                controller: 'a2VisualizerSpectrogramTrainingSetRoiSetData'
+            add: function(type){
+                training_set_types.push(type);
+                return this;
+            },
+            $get : function(){
+                return training_set_types.reduce(function(_, tst) {
+                    _[tst.type] = tst;
+                    return _;
+                }, {});
             }
         };
+
     })
     .controller('a2ProjectClasses', function(Project) {
         var self = this;

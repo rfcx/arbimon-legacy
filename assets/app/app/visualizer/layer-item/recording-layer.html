@@ -2,7 +2,7 @@
     <div class="row">
         <div class="col-sm-8">
             <div class="audio-seek-bar clickable" ng-click="audio_player.setCurrentTime(($event|consoleLog|mouseEventContainerPercent|consoleLog).x * visobject.duration)">
-                <div class="bar" ng-style="{width: (100*audio_player.getCurrentTime()/visobject.duration)+'%'}"></div>
+                <div class="bar" ng-style="{width: ((100*audio_player.getCurrentTime()/visobject.duration) | round)+'%'}"></div>
             </div>
             <div class="col-sm-12 center-block">
                 <div class="btn-toolbar" >

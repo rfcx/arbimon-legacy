@@ -19,6 +19,7 @@ exports.plans           = require('./plans');
 exports.settings        = require('./system-settings');
 exports.classifications = require('./classifications');
 exports.oauth           = require('./oauth');
+exports.AudioEventDetections = require('./audio-event-detections');
 exports.ActivationCodes = require('./activation-codes');
 exports.AdminPlots      = require('./admin-plots');
 exports.AccessTokens    = require('./access-tokens');

@@ -33,7 +33,7 @@ var app={
             'angular-ui-router'  :{'release/angular-ui-router.min.js': '' },
             'angular-ui-select'  :{'dist/select.min.*': '', },
             angularytics         :{'dist/angularytics.min.js': '', },
-            bootstrap            :{'dist/**' : '', },
+            bootstrap            :{'dist/**' : '', 'dist/fonts/*': '../fonts/'},
             c3                   :{'*': '', },
             d3                   :{'d3.min.js': '', },
             'esri-leaflet'       :{'dist/**': '', },
@@ -45,6 +45,7 @@ var app={
             moment               :{'min/moment.min.js': '', },
             'ng-csv'             :{'build/ng-csv.min.js': '', },
             'ng-table'           :{'ng-table.*': '', },
+            'plotly.js'          :{'dist/plotly.js': '', },
             'qr-js'              :{'qr.min.*': '', },
             'roboto-fontface'    :{'css/*': 'css/', 'fonts/*' : 'fonts/', },
             'selectize'          :{'dist/css/selectize.default.css': '../angular-ui-select/', },
@@ -75,9 +76,11 @@ var app={
     clean : './public/assets',
 };
 
-gulp.task('default', ['app:code', 'app:templates', 'app:less', 'app:dependencies']);
+gulp.task('default', ['build']);
 
+gulp.task('build', ['app:code', 'app:templates', 'app:less', 'app:dependencies']);
 gulp.task('watch', ['livereload', 'app:server', 'app:watch']);
+gulp.task('build+watch', ['default', 'watch']);
 
 gulp.task('livereload', function(){
     livereload.listen();
@@ -87,7 +90,7 @@ gulp.task('app:watch', function(){
     gulp.watch(app.code.src, ['app:code']);
     gulp.watch(app.templates.src, ['app:templates']);
     gulp.watch(app.less.watch, ['app:less']);
-    gulp.watch(app.server.watch, ['app:server']);
+    gulp.watch(app.server.src, ['app:server']);
 });
 
 gulp.task('app:code', function(done){
@@ -177,21 +180,46 @@ gulp.task('app:ngdocs', function(done){
     ], done);
 });
 
-var server_process;
-gulp.task('app:server', function(){
-    if(server_process){
-        server_process.kill();
-    }
-    server_process = childProcess.spawn(app.server.bin, [], {
-        stdio: 'inherit'
-    });
-    server_process.on('close', function(code){
-        gutil.log("Server exited with code " + code);
-    });
+var server;
+gulp.task('app:server', function(done){
+    q.resolve().then(function(){
+        if(server){
+            gutil.log("Restarting server...");
+            server.expectKill = true;
+            server.process.kill();
+            return server.waitProcessEnd;
+        }
+    }).then(function(){
+        var newServer = {
+            process: childProcess.spawn(app.server.bin, [], {
+                stdio: 'inherit'
+            })
+        };
+        gutil.log("Starting server process " + gutil.colors.magenta(app.server.bin) + "  (pid: #" + gutil.colors.yellow(newServer.process.pid) + ").");
+
+        newServer.waitProcessEnd = q.Promise(function(resolve, reject){
+            newServer.process.on('close', function(code, signal){
+                var status = 
+                ((code !== null) ? " with code " + code : "") + 
+                (signal ? " due to signal " + signal : "") + 
+                (newServer.expectKill ? " (expected)" : "")
+                ;
+                gutil.log("Server process (pid: #" + gutil.colors.yellow(newServer.process.pid) + ") exited" + status + ".");
+                resolve({code:code, signal:signal});
+            });
+            newServer.process.on('error', function(err){
+                gutil.log("Error ocurred with server process (pid: #" + gutil.colors.yellow(newServer.process.pid) + ").");
+                gutil.error(err);
+                reject(err);
+            });
+        });
+        
+        server = newServer;
+    }).nodeify(done);
 });
 
 process.on('exit', function(){
-    if(server_process){
-        server_process.kill();
+    if(server){
+        server.process.kill();
     }
 });

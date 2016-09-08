@@ -1,4 +1,4 @@
-angular.module('a2.visualizer.layer.soundscape-composition-tool', [
+angular.module('a2.visualizer.layers.soundscape-composition-tool', [
     'a2.srv.soundscape-composition',
     'arbimon2.directive.validation-dropdown'
 ])

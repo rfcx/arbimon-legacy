@@ -1,0 +1,39 @@
+<div class="layer">
+    <h5 class="collapse-title"  ng-click="layer.is_closed = !layer.is_closed  | trackEvent:'Soundscape Info':'open soundscape info layer'">
+        <i class="fa" ng-class="(!layer.is_closed) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+        {{visobject.data_selection.current.x.title}}
+        {{visobject.data_selection.current.y != visobject.data_selection.current.x ? 
+            " vs. " + visobject.data_selection.current.y.title : ""
+        }}
+        ({{visobject.data_selection.current.z.title}})
+    </h5>
+    <div ng-show="!layer.is_closed">
+        <table class="bg table table-condensed">
+            <tr>
+                <th class="text-right">Axis</th><th></th>
+                <th>Statistic</th>
+                <th class="text-right">
+                    <button class="btn btn-default" ng-click="visobject.savePlot()"><i class="fa fa-save"></i></button>
+                </th>
+            </tr>
+            <tr><td class="text-right">x</td><td>:</td><td colspan="2">
+                <a2-dropdown ng-model="visobject.data_selection.current.x" 
+                    list="visobject.data_selection.x"
+                    ng-change="visobject.selectData({x:visobject.data_selection.current.x})"
+                >{{$item.title}}</a2-dropdown>
+            </td></tr>
+            <tr><td class="text-right">y</td><td>:</td><td colspan="2">
+                <a2-dropdown ng-model="visobject.data_selection.current.y" 
+                    list="visobject.data_selection.y"
+                    ng-change="visobject.selectData({y:visobject.data_selection.current.y})"
+                >{{$item.title}}</a2-dropdown>
+            </td></tr>
+            <tr><td class="text-right">z</td><td>:</td><td colspan="2">
+                <a2-dropdown ng-model="visobject.data_selection.current.z" 
+                    list="visobject.data_selection.z"
+                    ng-change="visobject.selectData({z:visobject.data_selection.current.z})"
+                >{{$item.title}}</a2-dropdown>
+            </td></tr>
+        </table>
+    </div>
+</div>

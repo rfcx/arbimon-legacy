@@ -36,6 +36,7 @@
     "nodemailer": "~2.5.0",
     "nodemailer-smtp-transport": "~2.6.0",
     "paypal-rest-sdk": "^1.5.3",
+    "phantom": "^2.1.20",
     "prompt": "~1.0.0",
     "q": "^1.4.1",
     "request": "~2.74.0",

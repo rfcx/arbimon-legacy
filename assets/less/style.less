@@ -48,6 +48,7 @@
 @import "a2-components/orders.less";
 @import "a2-icons.less";
 @import "a2-tags.less";
+@import "cards.less";
 /*
  * general styles
 */
@@ -332,6 +333,14 @@ textarea.fixed-width {
     transform: rotate(-90deg);
     white-space: nowrap;
     width: 0;
+    
+    &.w-8{
+        transform: translateX(-25%) rotate(-90deg);
+    }
+}
+
+.w-8{
+    min-width: 8em;
 }
 
 // -> visualizer-spectrogram.html
@@ -909,4 +918,8 @@ body .ngrs-range-slider{
 
 label.row{
     display:block;
+}
+
+.em{
+    font-style: italic;
 }

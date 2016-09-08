@@ -1,4 +1,18 @@
-angular.module('a2.browser_recordings_by_site', [])
+angular.module('a2.browser_recordings_by_site', [
+    'a2.browser_common'
+])
+.config(function(BrowserLOVOsProvider){
+    BrowserLOVOsProvider.add({
+        name       : 'rec',
+        group       : 'recordings',
+        vobject_type: 'recording',
+        default    : true,
+        icon       : 'fa fa-map-marker',
+        tooltip    : 'Browse Recordings by Site',
+        controller : 'a2BrowserRecordingsBySiteController',
+        template   : '/app/visualizer/browser/recordings/by-site/recordings-by-site.html'
+    });
+})
 .factory('rbDateAvailabilityCache', function ($cacheFactory) {
     return $cacheFactory('recordingsBrowserDateAvailabilityCache');
 })
@@ -85,7 +99,7 @@ angular.module('a2.browser_recordings_by_site', [])
             var availability = self.dates.cache.get(key);
             if(!availability) {
                 self.dates.fetch_counts(key);
-            } 
+            }
             else if(availability.data){
                 self.dates.date_counts = availability.data;
             }
@@ -206,7 +220,7 @@ angular.module('a2.browser_recordings_by_site', [])
                         defer.resolve(recordings && recordings.pop());
                     }).bind(this));
                 } else {
-                    defer.resolve();                    
+                    defer.resolve();
                 }
             } else {
                 Project.getOneRecording(location, function(recording){
@@ -269,9 +283,9 @@ angular.module('a2.browser_recordings_by_site', [])
         if(site && date) {
             var isNewSiteAndDate = function() {
                 return (
-                    this.lovo && 
-                    date && 
-                    this.lovo.date && 
+                    this.lovo &&
+                    date &&
+                    this.lovo.date &&
                     date.getTime() === this.lovo.date.getTime() &&
                     site.id === this.lovo.site.id
                 );
@@ -279,7 +293,7 @@ angular.module('a2.browser_recordings_by_site', [])
             
             if(isNewSiteAndDate()){
                 a2Browser.setLOVO(self.lovo);
-            } 
+            }
             else {
                 a2Browser.setLOVO(make_lovo());
             }
