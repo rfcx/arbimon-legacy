@@ -18,12 +18,13 @@ var Songtypes = {
     },
 
     findByName: function (songtype, callback) {
-        var query = "SELECT  \n" +
+        return dbpool.query(
+            "SELECT  \n" +
             'St.songtype_id as id, St.songtype as name, St.description \n' +
             "FROM songtypes St \n" +
-            "WHERE songtype = " + mysql.escape(songtype);
-
-        return queryHandler(query, callback);
+            "WHERE songtype = ?",[
+            songtype
+        ]).nodeify(callback);
     },
 
     listAll: function(callback) {

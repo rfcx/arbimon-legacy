@@ -29,7 +29,8 @@ var Species = {
     },
 
     findByName: function (scientific_name, callback) {
-        var q = "SELECT S.species_id as id, \n"+
+        return dbpool.query(
+                "SELECT S.species_id as id, \n"+
                         "S.scientific_name, \n"+
                         "S.code_name, \n"+
                         "T.taxon, \n"+
@@ -41,9 +42,9 @@ var Species = {
                 "FROM species S \n" +
                 "JOIN species_families F ON F.family_id = S.family_id \n" +
                 "JOIN species_taxons   T ON T.taxon_id = S.taxon_id \n" +
-                "WHERE S.scientific_name = " + mysql.escape(scientific_name);
-
-        queryHandler(q, callback);
+                "WHERE S.scientific_name = ?", [
+                scientific_name
+        ]).nodeify(callback);
     },
 
     list: function(limit, callback) {
