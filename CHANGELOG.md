@@ -89,3 +89,6 @@
     - recording name in recording thumbnail urls is now escaped.
 - v1.8.9
     - Fixing bug in axis parameters hash computation.
+- v1.9.0
+    - added Audio event detections.
+    - fixed bug preventing add species
