@@ -477,82 +477,58 @@ var Projects = {
             songtype: joi.string().required(),
             project_id: joi.number().required() 
         };
-
-        joi.validate(project_class, schema, function(err, value) {
-            if(err) return callback(err);
-
-            async.auto({
-                findSpecies: function(cb) {
-                    species.findByName(value.species, function(err, rows) {
-                        if(err) return cb(err);
-
-                        if(!rows.length)
-                            return cb(new Error(util.format("species '%s' not in system", value.species)));
-
-                        cb(null, rows);
-                    });
-                },
-                findSong: function(cb) {
-                    songtypes.findByName(value.songtype, function(err, rows) {
-                        if(err) return cb(err);
-
-                        if(!rows.length)
-                            return cb(new Error(util.format("songtype '%s' not in system", value.songtype)));
-
-                        cb(null, rows);
-                    });
-                },
-
-                classExists: ['findSpecies', 'findSong', function(cb, results){
-                    
-                    var q = "SELECT count(*) as count \n"+
-                            "FROM project_classes \n"+
-                            "WHERE project_id = %s \n"+
-                            "AND species_id = %s \n"+
-                            "AND songtype_id = %s";
-
-                    var species_id = results.findSpecies[0].id;
-                    var songtype_id = results.findSong[0].id;
-                    var project_id = value.project_id;
-
-                    q = util.format(q, project_id, species_id, songtype_id);
-                    queryHandler(q , function(err, rows) {
-                        if(err) return cb(err);
-
-                        cb(null, rows[0].count > 0);
-                    });
-                }],
-
-                insert: ['classExists', function(cb, results){
-
-                    if(results.classExists)
-                        return cb(null, { error: "class already in project" });
-                    
-                    var q = 'INSERT INTO project_classes \n'+
-                            'SET project_id = %s, species_id = %s, songtype_id = %s';
-
-                    var species_id = results.findSpecies[0].id;
-                    var songtype_id = results.findSong[0].id;
-                    var project_id = value.project_id;
-
-                    q = util.format(q, project_id, species_id, songtype_id);
-                    queryHandler(q , function(err, row) {
-                        if(err) return cb(err);
-
-                        cb(null, {
-                            class: row.insertId,
-                            species: species_id,
-                            songtype: songtype_id 
-                        });
-                    });
-                }]
-            },
-            function(err, results) {
-                if(err) return callback(err);
-
-                callback(null, results.insert);
+        var value, classSpecies, classSong;
+        
+        return q.ninvoke(joi, 'validate', project_class, schema).then(function(_value){
+            value = _value;
+            return q.all([
+                species.findByName(value.species).get(0),
+                songtypes.findByName(value.songtype).get(0),
+            ]);
+        }).then(function (all){
+            classSpecies = all[0];
+            classSong = all[1];
+            console.log("classSpecies", classSpecies, "classSong", classSong);
+            
+            if(!classSpecies){
+                throw new Error(util.format("species '%s' not in system", value.species));
+            }
+            
+            if(!classSong){
+                throw new Error(util.format("songtype '%s' not in system", value.songtype));
+            }
+        }).then(function (){
+            return dbpool.query(
+                "SELECT count(*) as count \n"+
+                "FROM project_classes \n"+
+                "WHERE project_id = ?\n"+
+                "  AND species_id = ?\n"+
+                "  AND songtype_id = ?", [
+                value.project_id,
+                classSpecies.id,
+                classSong.id,
+            ]).get(0).get('count').then(function(count){
+                return count > 0;
             });
-        });
+        }).then(function insert(classExists){
+            if(classExists){
+                return { error: "class already in project" };
+            }
+            
+            return dbpool.query(
+                'INSERT INTO project_classes(project_id, species_id, songtype_id) \n'+
+                'VALUES (?, ?, ?)', [
+                value.project_id,
+                classSpecies.id,
+                classSong.id      
+            ]).then(function(result){
+                return {
+                    class: result.insertId,
+                    species: classSpecies.id,
+                    songtype: classSong.id
+                };
+            });
+        }).nodeify(callback);
     },
 
     removeClasses: function(project_classes, callback) {

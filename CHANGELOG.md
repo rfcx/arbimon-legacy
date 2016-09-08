@@ -91,4 +91,5 @@
     - Fixing bug in axis parameters hash computation.
 - v1.9.0
     - added Audio event detections.
+- v1.9.1
     - fixed bug preventing add species
