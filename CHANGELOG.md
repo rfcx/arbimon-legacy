@@ -93,3 +93,5 @@
     - added Audio event detections.
 - v1.9.1
     - fixed bug preventing add species
+- v1.9.2
+    - fixed bug in counting a projects scc tallys
