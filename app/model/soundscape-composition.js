@@ -1,6 +1,7 @@
 var q = require('q');
 var joi = require('joi');
 var mysql = require('mysql');
+var models = require('./index');
 var dbpool = require('../utils/dbpool');
 var APIError = require('../utils/apierror');
 
@@ -16,9 +17,34 @@ var SoundscapeComposition = {
             "soundscape_composition_classes SCC",
             "JOIN soundscape_composition_class_types SCCT ON SCC.typeId = SCCT.id",
         ], where = [], data = [], order = ["SCC.typeId, SCC.isSystemClass DESC"];
+        var selectdata=[];
+        var presteps = [];
         
         if(options.tally){
-            select.push("(SELECT COUNT(*) FROM recording_soundscape_composition_annotations RSCA WHERE RSCA.scclassId = SCC.id) as tally");
+            if(options.project){
+                presteps.push(models.projects.getProjectSites(options.project).then(function(sites){
+                    if(sites.length){
+                        select.push("(" + 
+                        "SELECT COUNT(*) " +
+                        "FROM recording_soundscape_composition_annotations RSCA " +
+                        "JOIN recordings R ON R.recording_id = RSCA.recordingId " +
+                        "WHERE RSCA.scclassId = SCC.id " +
+                        "AND R.site_id IN (?)" +
+                        ") as tally");
+                        selectdata.push(sites.map(function(site){
+                            return site.id;
+                        }));
+                    } else {
+                        select.push("0 as tally");
+                    }
+                }));
+            } else {
+                select.push("(" + 
+                    "SELECT COUNT(*) " +
+                    "FROM recording_soundscape_composition_annotations RSCA " +
+                    "WHERE RSCA.scclassId = SCC.id" +
+                ") as tally");
+            }
         }
         
         if(options.project){
@@ -33,13 +59,16 @@ var SoundscapeComposition = {
             data.push(options.id);
         }
         
-        return dbpool.query(
-            "SELECT " + select.join(", ") + "\n" +
-            "FROM " + tables.join("\n") + "\n" +
-            (where.length ? "WHERE (" + where.join(")\n AND (") + ")\n" : "") +
-            "ORDER BY " + order.join(", "),
-            data
-        );
+        return q.all(presteps).then(function(){
+            data.unshift.apply(data, selectdata);
+            return dbpool.query(
+                "SELECT " + select.join(", ") + "\n" +
+                "FROM " + tables.join("\n") + "\n" +
+                (where.length ? "WHERE (" + where.join(")\n AND (") + ")\n" : "") +
+                "ORDER BY " + order.join(", "),
+                data
+            );
+        });
     },
     
     addClass: function(name, type, project){
