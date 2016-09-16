@@ -66,10 +66,10 @@ module.exports.plot = function plot(data, file){
             );
         }, plotSize, data);
     }).then(function(){
-        return page.property('content');
-    }).then(function(pagecontent){
-        console.log(pagecontent);
-    }).then(function(){
+    //     return page.property('content');
+    // }).then(function(pagecontent){
+    //     console.log(pagecontent);
+    // }).then(function(){
         return page.invokeMethod('render', file);
     }).then(function(){
         if(instance){
