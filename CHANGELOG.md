@@ -95,3 +95,5 @@
     - fixed bug preventing add species
 - v1.9.2
     - fixed bug in counting a projects scc tallys
+- v1.9.3
+    - added default default plot to aeds.
