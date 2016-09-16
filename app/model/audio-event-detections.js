@@ -102,6 +102,28 @@ var AudioEventDetections = {
             });
         }
         
+        if(options.showPlotParams || options.ensureDefaultPlot){
+            select.push('AED.plot_params');
+            postprocess.push(function(aeds){
+                aeds.forEach(function(aed){
+                    aed.plot_params = JSON.parse(aed.plot_params);
+                });
+                if(options.ensureDefaultPlot){
+                    return q.all(aeds.map(function(aed){
+                        if(!aed.plot_params){
+                            return AudioEventDetections.setDefaultPlot({
+                                aed:aed.id, x:'tod', y:'y_max', z:'count'
+                            }).then(function(){
+                                aed.plot_params = {
+                                    x:'tod', y:'y_max', z:'count'
+                                };
+                            });
+                        }
+                    }));
+                }
+            });
+        }
+        
         if(options.showThumbnail){
             postprocess.push(function(aeds){
                 aeds.forEach(function(aed){
@@ -433,6 +455,14 @@ var AudioEventDetections = {
                 Key    : plotkey,
                 ACL: 'public-read',
                 Body: fs.createReadStream(plotfilename),
+            }).then(function(){
+                return dbpool.query(
+                    "UPDATE audio_event_detections\n" +
+                    "SET plot_params = ?\n" +
+                    "WHERE aed_id = ?", [
+                    JSON.stringify({x: params.x, y: params.y, z: params.z}),
+                    params.aed
+                ]);
             }).then(function(){
                 return 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURI(plotkey);
             });
