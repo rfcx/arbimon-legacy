@@ -13,6 +13,7 @@ router.get('/', function(req, res, next) {
         showAlgorithm: true,
         showPlaylist: true,
         showThumbnail: true,
+        ensureDefaultPlot: true
     }).then(function(aeds) {
         res.json(aeds);
     }).catch(next);
