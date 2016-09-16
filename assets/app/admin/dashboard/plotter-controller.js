@@ -1,8 +1,9 @@
 angular.module('a2.admin.dashboard.plotter-controller', [
     'templates-arbimon2',
     'a2.admin.dashboard.data-service',
+    'a2.directive.plotly-plotter',
 ])
-.controller('AdminDashboardPlotterController', function($scope, $q, AdminDashboardDataService){
+.controller('AdminDashboardPlotterController', function($scope, $window, $q, AdminDashboardDataService){
     function mk_time_range_fn(from, delta){
         return function(){
             var fromdt = (from == 'now' ? new Date() : new Date(from));
@@ -90,19 +91,35 @@ angular.module('a2.admin.dashboard.plotter-controller', [
     };
     
     this.make_chart_struct = function(data){
-        this.chart = {
-            data: data,
-            
-            axes : {
-                x : {
-                    tick: {
-                        format: function (x) { 
-                            return moment(new Date(x)).utc().format('MM-DD-YYYY HH:mm'); 
-                        }
-                    }
+        return $q(function(resolve, reject){
+            $window.Plotly.d3.csv(data.url, function(err, data){
+                if(err){reject(err);}
+                else if(data){resolve(data);}
+            });
+        }).then((function(data){
+            this.chart = {
+                data: [{
+                    type:'scatter',
+                    mode:'lines',
+                    x : data.map(function(_){ return new Date(+_.datetime).toString(); }),
+                    y : data.map(function(_){ return +_.activity; }),
+                }],
+                layout:{
+                    xaxis: {boundsmode: 'auto'},
+                    yaxis: {boundsmode: 'auto'},
                 }
-            }
-        };
+                // axes : {
+                //     x : {
+                //         tick: {
+                //             format: function (x) { 
+                //                 return moment(new Date(x)).utc().format('MM-DD-YYYY HH:mm'); 
+                //             }
+                //         }
+                //     }
+                // }
+            };
+            console.log(this.chart);
+        }).bind(this));
     };
 
     

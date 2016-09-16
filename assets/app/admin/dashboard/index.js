@@ -16,7 +16,7 @@ angular.module('a2.admin.dashboard', [
     $stateProvider
         .state('dashboard', {
             url: '/dashboard',
-            controller:'AdminDashboardCtrl',
+            controller:'AdminDashboardCtrl as controller',
             templateUrl: '/admin/dashboard/index.html'
         });
 })
