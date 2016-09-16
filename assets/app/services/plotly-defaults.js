@@ -1,4 +1,6 @@
 angular.module('a2.service.plotly-defaults', [
+    'a2-plot-specs',
+    'a2.service.colorscale-gradients',
 ])
 .provider('PlotlyDefaults', function(){
     
@@ -22,7 +24,7 @@ angular.module('a2.service.plotly-defaults', [
     return PlotlyDefaults;    
 })
 .service('PlotlyDefaultDefaults', function(
-    VisualizerLayoutSpecs,
+    PlotSpecs,
     ColorscaleGradients
 ){
     var defaults = {
@@ -41,7 +43,7 @@ angular.module('a2.service.plotly-defaults', [
     };
     defaults.colorbar = {
         tickfont: defaults.tickfont,
-        thickness: VisualizerLayoutSpecs.legend_width - VisualizerLayoutSpecs.legend_axis_w
+        thickness: PlotSpecs.legend_width - PlotSpecs.legend_axis_w
     };
     defaults.heatmap = {
         colorscale: ColorscaleGradients.normalize(0),
