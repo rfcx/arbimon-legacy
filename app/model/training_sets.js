@@ -203,7 +203,7 @@ var TrainingSets = {
                 return typedef_action.validate(trainingSet, data);
             }
         }).then(function get_connection(){
-            return q.ninvoke(dbpool, 'getConnection').then(function(_connection){
+            return dbpool.getConnection().then(function(_connection){ // released
                 connection = _connection;
             });
         }).then(function begin_transaction(){
