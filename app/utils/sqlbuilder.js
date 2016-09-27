@@ -1,4 +1,4 @@
-
+var dbpool = require('./dbpool');
 
 function SQLBuilder(){
     this.reset();
