@@ -43,9 +43,9 @@ var Soundscapes = {
 
         if (query) {
             if (query.id) {
-                constraints.push('SC.soundscape_id = ' + mysql.escape(query.id));
+                constraints.push('SC.soundscape_id = ' + dbpool.escape(query.id));
             } else if (query.project) {
-                constraints.push('SC.project_id = ' + mysql.escape(query.project));
+                constraints.push('SC.project_id = ' + dbpool.escape(query.project));
             }
         }
 
@@ -98,7 +98,7 @@ var Soundscapes = {
                 " UNIX_TIMESTAMP( S.`date_created` )*1000 as date , "+
                 " CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2))  ,' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) user " +
                 " FROM `soundscapes` S ,`users` U , `playlists` P  " +
-                " WHERE S.`project_id` = "+mysql.escape(project)+" and S.`user_id` = U.`user_id` and P.`playlist_id`  =S.`playlist_id` ";
+                " WHERE S.`project_id` = "+dbpool.escape(project)+" and S.`user_id` = U.`user_id` and P.`playlist_id`  =S.`playlist_id` ";
 
         queryHandler(q, callback);
     },
@@ -183,7 +183,7 @@ var Soundscapes = {
             "FROM `soundscapes` S\n" +
             "JOIN `playlist_recordings` PR ON S.playlist_id = PR.playlist_id\n" +
             "JOIN `recordings` R ON R.recording_id = PR.recording_id\n" +
-            "WHERE S.soundscape_id = " + mysql.escape(soundscape.id) + "\n" +
+            "WHERE S.soundscape_id = " + dbpool.escape(soundscape.id) + "\n" +
             "GROUP BY " + dateparts.join(", ")
         ).then(function(rows){
             var normvec = {};
@@ -245,7 +245,7 @@ var Soundscapes = {
             function(next){
                 dbpool.queryHandler(
                     "INSERT INTO soundscape_regions(soundscape_id, name, x1, y1, x2, y2, count) \n" +
-                    "VALUES (" + mysql.escape([soundscape.id, data.name, x1, y1, x2, y2, count]) + ")\n", 
+                    "VALUES (" + dbpool.escape([soundscape.id, data.name, x1, y1, x2, y2, count]) + ")\n", 
                     next
                 );
             },
@@ -280,7 +280,7 @@ var Soundscapes = {
             'SCR.soundscape_id = ' + (soundscape.id | 0)
         ];
         if(params.region){
-            constraints.push('SCR.soundscape_region_id = ' + mysql.escape(params.region));
+            constraints.push('SCR.soundscape_region_id = ' + dbpool.escape(params.region));
         }
         
         return dbpool.queryHandler(
@@ -393,13 +393,13 @@ var Soundscapes = {
         groupby.push('SRT.soundscape_region_id');
 
         if(params.id){
-            constraints.push('SRT.soundscape_region_tag_id = ' + mysql.escape(params.id));
+            constraints.push('SRT.soundscape_region_tag_id = ' + dbpool.escape(params.id));
             project.push('SRT.user_id as user', 'SRT.timestamp');
             if(params.recording){
-                constraints.push('SRT.recording_id = ' + mysql.escape(params.recording));
+                constraints.push('SRT.recording_id = ' + dbpool.escape(params.recording));
             }
         } else if(params.recording){
-            constraints.push('SRT.recording_id = ' + mysql.escape(params.recording));
+            constraints.push('SRT.recording_id = ' + dbpool.escape(params.recording));
             project.push('SRT.user_id as user', 'SRT.timestamp');
             groupby.push('SRT.recording_id');
         }
@@ -443,8 +443,8 @@ var Soundscapes = {
                 dbpool.queryHandler(
                     "SELECT ST.soundscape_tag_id as id\n" +
                     "FROM soundscape_tags ST \n" +
-                    "WHERE tag  = "+mysql.escape(data.tag)+"\n" +
-                    "  AND type = "+mysql.escape(data.type), next
+                    "WHERE tag  = "+dbpool.escape(data.tag)+"\n" +
+                    "  AND type = "+dbpool.escape(data.type), next
                 );
             },
             function or_make_tag_id(result){
@@ -455,7 +455,7 @@ var Soundscapes = {
                 }
                 dbpool.queryHandler(
                     "INSERT INTO soundscape_tags(tag, type) \n"+
-                    "VALUES ("+mysql.escape([data.tag, data.type])+")", 
+                    "VALUES ("+dbpool.escape([data.tag, data.type])+")", 
                     function(err, result){
                         if(err){ next(err); } else { next(null, result.insertId); }
                     }
@@ -465,7 +465,7 @@ var Soundscapes = {
                 var next = arguments[arguments.length-1];
                 dbpool.queryHandler(
                     "INSERT INTO soundscape_region_tags(soundscape_region_id, recording_id, soundscape_tag_id, user_id, timestamp) \n"+
-                    "VALUES ("+mysql.escape([region.id, recording, tag_id, user])+", NOW())", next
+                    "VALUES ("+dbpool.escape([region.id, recording, tag_id, user])+", NOW())", next
                 );
             },
             function get_tag(result){
@@ -561,7 +561,7 @@ var Soundscapes = {
             function(next){
                 dbpool.queryHandler(
                     "DELETE FROM soundscape_region_tags \n"+
-                    "WHERE  soundscape_region_tag_id = " + mysql.escape(tagobj.id) + "\n",
+                    "WHERE  soundscape_region_tag_id = " + dbpool.escape(tagobj.id) + "\n",
                     next
                 );
             },

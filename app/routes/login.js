@@ -5,7 +5,6 @@ var debug = require('debug')('arbimon2:route:login');
 var express = require('express');
 var router = express.Router();
 var gravatar = require('gravatar');
-var mysql = require('mysql');
 var mcapi = require('mailchimp-api');
 var nodemailer = require('nodemailer');
 var smtpTransport = require('nodemailer-smtp-transport');

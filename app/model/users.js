@@ -6,7 +6,6 @@ var debug = require('debug')('arbimon2:model:users');
 var request = require('request');
 var config = require('../config');
 var util = require('util');
-var mysql = require('mysql');
 var joi = require('joi');
 var q = require('q');
 var APIError = require('../utils/apierror');
@@ -30,7 +29,7 @@ var Users = {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
                 'WHERE login = %s';
-        q = util.format(q, mysql.escape(username));
+        q = util.format(q, dbpool.escape(username));
         queryHandler(q, callback);
     },
     
@@ -38,7 +37,7 @@ var Users = {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
                 'WHERE email = %s';
-        q = util.format(q, mysql.escape(email));
+        q = util.format(q, dbpool.escape(email));
         queryHandler(q, callback);
     },
     
@@ -56,9 +55,9 @@ var Users = {
         
         var q = 'INSERT INTO invalid_logins(`ip`, `user`, `reason`) \n'+
                 'VALUES ('+
-                mysql.escape(ip) +',' + 
-                mysql.escape(user) + ',' + 
-                mysql.escape(msg) + ')';
+                dbpool.escape(ip) +',' + 
+                dbpool.escape(user) + ',' + 
+                dbpool.escape(msg) + ')';
                 
         queryHandler(q, callback);
     },
@@ -68,7 +67,7 @@ var Users = {
                 'FROM invalid_logins \n'+
                 'WHERE ip = %s \n'+
                 'AND `time` BETWEEN (NOW() - interval 1 hour) and NOW()';
-        q = util.format(q, mysql.escape(ip));
+        q = util.format(q, dbpool.escape(ip));
         queryHandler(q, callback);
     },
     
@@ -76,12 +75,12 @@ var Users = {
         var q = 'DELETE ' +
                 'FROM `invalid_logins` ' +
                 'WHERE ip = %s';
-        q = util.format(q, mysql.escape(ip));
+        q = util.format(q, dbpool.escape(ip));
         queryHandler(q, callback);
     },
     
     search: function(query, callback) {
-        query = mysql.escape('%'+query+'%');
+        query = dbpool.escape('%'+query+'%');
         
         var q = "SELECT user_id AS id, \n"+
                 "       email, \n"+
@@ -105,7 +104,7 @@ var Users = {
         // process values to be updated
         for( var i in userData) {
             if(i !== 'user_id' && userData[i] !== undefined) {
-                values.push(mysql.escapeId(i) + ' = ?');
+                values.push(dbpool.escapeId(i) + ' = ?');
                 data.push(userData[i]);
             }
         }
@@ -137,8 +136,8 @@ var Users = {
         for(i in userData) {
             if(i !== 'user_id') {
                 values.push(util.format('%s = %s', 
-                    mysql.escapeId(i), 
-                    mysql.escape(userData[i])
+                    dbpool.escapeId(i), 
+                    dbpool.escape(userData[i])
                 ));
             }
         }
@@ -240,8 +239,8 @@ var Users = {
         var q = 'INSERT INTO user_account_support_request'+
                 '(support_type_id, hash, params, expires) \n'+
                 'VALUES (1,' + 
-                mysql.escape(hash) + ','+ 
-                mysql.escape(JSON.stringify(params))+ ','+
+                dbpool.escape(hash) + ','+ 
+                dbpool.escape(JSON.stringify(params))+ ','+
                 '(\n'+
                 '    SELECT FROM_UNIXTIME( \n'+
                 '        UNIX_TIMESTAMP(now()) +\n' +
@@ -258,8 +257,8 @@ var Users = {
         var q = 'INSERT INTO user_account_support_request'+
                 '(support_type_id, user_id, hash, expires) \n'+
                 'VALUES (2,' + 
-                mysql.escape(user_id) + ','+
-                mysql.escape(hash) + ','+
+                dbpool.escape(user_id) + ','+
+                dbpool.escape(hash) + ','+
                 '(\n'+
                 '    SELECT FROM_UNIXTIME( \n'+
                 '        UNIX_TIMESTAMP(now()) +\n' +
@@ -274,7 +273,7 @@ var Users = {
     
     removeRequest : function(id, callback) {
         var q = 'DELETE FROM user_account_support_request \n'+ 
-                'WHERE support_request_id = '+ mysql.escape(id);
+                'WHERE support_request_id = '+ dbpool.escape(id);
         
         queryHandler(q, callback);
     },
@@ -282,7 +281,7 @@ var Users = {
     findAccountSupportReq: function(hash, callback) {
         var q = 'SELECT * \n'+
                 'FROM user_account_support_request \n'+
-                'WHERE hash = ' + mysql.escape(hash);
+                'WHERE hash = ' + dbpool.escape(hash);
         
         queryHandler(q, callback);
     },
@@ -295,7 +294,7 @@ var Users = {
             "FROM users AS u \n"+
             "WHERE login = %2$s) as count";
         
-        q = sprintf(q, mysql.escape('%"'+username+'"%'), mysql.escape(username));
+        q = sprintf(q, dbpool.escape('%"'+username+'"%'), dbpool.escape(username));
         queryHandler(q, function(err, rows){
             if(err) return callback(err);
             
@@ -311,7 +310,7 @@ var Users = {
             "FROM users AS u \n"+
             "WHERE email = %2$s) as count";
         
-        q = sprintf(q, mysql.escape('%"'+username+'"%'), mysql.escape(username));
+        q = sprintf(q, dbpool.escape('%"'+username+'"%'), dbpool.escape(username));
         queryHandler(q, function(err, rows){
             if(err) return callback(err);
             
@@ -345,13 +344,13 @@ var Users = {
     getAddress: function(userId, callback) {
         var q = "SELECT * FROM addresses WHERE user_id = ?";
         
-        queryHandler(mysql.format(q, [userId]), callback);
+        queryHandler(dbpool.format(q, [userId]), callback);
     },
     
     updateAddress: function(userAddressData, callback) {
         var q = "REPLACE INTO addresses SET ?";
         
-        queryHandler(mysql.format(q, userAddressData), callback);
+        queryHandler(dbpool.format(q, userAddressData), callback);
     },
 
     challengeOAuth: function(credentials){

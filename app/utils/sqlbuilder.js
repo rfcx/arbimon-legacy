@@ -1,12 +1,11 @@
-var mysql = require('mysql');
-
+var dbpool = require('./dbpool');
 
 function SQLBuilder(){
     this.reset();
 }
 
 function stringifyConstraint(expression, data){
-    return data ? mysql.format(expression, data) : expression;
+    return data ? dbpool.format(expression, data) : expression;
 }
 
 SQLBuilder.prototype = {
@@ -60,7 +59,7 @@ SQLBuilder.prototype = {
     },
 
     getOrderBy: function(){
-        return this.orderBy ? (mysql.escapeId(this.orderBy[0]) + ' ' + (this.orderBy[1] ? 'ASC' : 'DESC')) : '';
+        return this.orderBy ? (dbpool.escapeId(this.orderBy[0]) + ' ' + (this.orderBy[1] ? 'ASC' : 'DESC')) : '';
     },
 
     getProjection: function(){

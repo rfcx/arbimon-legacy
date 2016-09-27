@@ -8,7 +8,6 @@ var util = require('util');
 
 // 3rd party dependencies
 var debug = require('debug')('arbimon2:model:training_sets');
-var mysql = require('mysql');
 var async = require('async');
 var joi = require('joi');
 var lwip = require('lwip');
@@ -42,7 +41,7 @@ var TrainingSets = {
     findName: function(set_id, callback) {
         var q = "SELECT name \n"+
                 "FROM training_sets \n"+
-                "WHERE training_set_id = " + mysql.escape(set_id) + " AND removed=0";
+                "WHERE training_set_id = " + dbpool.escape(set_id) + " AND removed=0";
                 
             queryHandler(q, callback);
     },
@@ -52,13 +51,13 @@ var TrainingSets = {
 
         if(query) {
             if (query.id) {
-                constraints.push('TS.training_set_id = ' + mysql.escape(query.id));
+                constraints.push('TS.training_set_id = ' + dbpool.escape(query.id));
             } 
             else if (query.project) {
-                constraints.push('TS.project_id = ' + mysql.escape(query.project));
+                constraints.push('TS.project_id = ' + dbpool.escape(query.project));
                 
                 if (query.name) {
-                    constraints.push('TS.name = ' + mysql.escape(query.name));
+                    constraints.push('TS.name = ' + dbpool.escape(query.name));
                 }
             }
         }
@@ -88,7 +87,7 @@ var TrainingSets = {
                 "WHERE name = %s \n" + 
                 "AND project_id = %s AND removed=0";
         
-        sql = util.format(sql, mysql.escape(set_name), mysql.escape(project_id));
+        sql = util.format(sql, dbpool.escape(set_name), dbpool.escape(project_id));
         return q.nfcall(queryHandler, sql).get(0).get(0).get('count').then(function(count){
             return (count | 0) > 0;
         }).nodeify(callback);
@@ -134,7 +133,7 @@ var TrainingSets = {
             scope.in_transaction = true;
             scope.connection.query(
                 "INSERT INTO training_sets (project_id, name, date_created, training_set_type_id) \n" +
-                "VALUES ("+mysql.escape(data.project_id)+", "+mysql.escape(data.name)+", NOW(), "+ mysql.escape(typedef.id)+")",
+                "VALUES ("+dbpool.escape(data.project_id)+", "+dbpool.escape(data.name)+", NOW(), "+ dbpool.escape(typedef.id)+")",
             cb);
         });
         tasks.push(function get_insert_id(result){
@@ -252,7 +251,7 @@ var TrainingSets = {
             return q.reject(new APIError("Training set not given.", 422));
         }
         
-        return q.nfcall(queryHandler, mysql.format(
+        return q.nfcall(queryHandler, dbpool.format(
             "UPDATE training_sets\n" +
             "SET removed = 1 \n" +
             "WHERE training_set_id = ?",
@@ -374,7 +373,7 @@ TrainingSets.types.roi_set = {
         extras   : function(connection, tset_id, data, callback){
             connection.query(
                 "INSERT INTO training_sets_roi_set (training_set_id, species_id, songtype_id) \n" +
-                "VALUES ("+mysql.escape([tset_id, data.species, data.songtype])+")",
+                "VALUES ("+dbpool.escape([tset_id, data.species, data.songtype])+")",
             callback);
         }
     },
@@ -497,7 +496,7 @@ TrainingSets.types.roi_set = {
                 var q = "UPDATE training_set_roi_set_data \n"+
                         "SET uri = ? \n"+
                         "WHERE roi_set_data_id = ?";
-                dbpool.queryHandler(mysql.format(q, [s3key, rdata.id]), next);
+                dbpool.queryHandler(dbpool.format(q, [s3key, rdata.id]), next);
             },
             function return_updated_roi(){
                 debug('return_updated_roi');
@@ -554,13 +553,13 @@ TrainingSets.types.roi_set = {
             "ROUND(TSD.y2-TSD.y1,1) as bw"
         );
         if(!options || !options.noURI){
-            fields.push("CONCAT(" + mysql.escape(uri_prefix) + ",TSD.uri) as uri");
+            fields.push("CONCAT(" + dbpool.escape(uri_prefix) + ",TSD.uri) as uri");
         }
         
         return queryHandler(
             'SELECT ' + fields.join(',') + '\n' +
             'FROM ' + tables.join('\n') + '\n' +
-            'WHERE TSD.training_set_id = ' + mysql.escape(training_set.id),
+            'WHERE TSD.training_set_id = ' + dbpool.escape(training_set.id),
             options,
             callback
         );
@@ -573,7 +572,7 @@ TrainingSets.types.roi_set = {
                 "JOIN species AS S ON TRS.species_id = S.species_id \n"+
                 "WHERE TRS.training_set_id = ?";
         
-        queryHandler(mysql.format(q, [training_set.id]), callback);
+        queryHandler(dbpool.format(q, [training_set.id]), callback);
     },
     remove_roi : function(roi_id, callback) {
         return queryHandler(
@@ -589,11 +588,11 @@ TrainingSets.types.roi_set = {
      * @param {Function} callback(err, path) function to call back with the results.
      */
     get_data : function(training_set, query, callback) {
-        var constraints = ['TSD.training_set_id = ' + mysql.escape(training_set.id)];
+        var constraints = ['TSD.training_set_id = ' + dbpool.escape(training_set.id)];
         var tables = ['training_set_roi_set_data TSD'];
 
         if(query.id){
-            constraints.push('TSD.roi_set_data_id = ' + mysql.escape(query.id));
+            constraints.push('TSD.roi_set_data_id = ' + dbpool.escape(query.id));
             return queryHandler(
                 "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
                 "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
@@ -642,7 +641,7 @@ TrainingSets.types.roi_set = {
                                 
                 dbpool.queryHandler(
                     "INSERT INTO training_set_roi_set_data(training_set_id, recording_id, species_id, songtype_id, x1, y1, x2, y2) \n" +
-                    "VALUES ("+mysql.escape([
+                    "VALUES ("+dbpool.escape([
                         training_set.id, vdata.recording, vdata.species, vdata.songtype, 
                         x1, y1, x2, y2
                     ])+")",

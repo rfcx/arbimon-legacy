@@ -10,7 +10,6 @@ var fs = require('fs');
 var debug = require('debug')('arbimon2:model:recordings');
 var async = require('async');
 var AWS   = require('aws-sdk');
-var mysql = require('mysql');
 var joi   = require('joi');
 var _     = require('lodash');
 var sprintf = require("sprintf-js").sprintf;
@@ -174,11 +173,11 @@ var Recordings = {
     applyQueryItem: function(subject, query){
         if(query){
             if (query['=']) {
-                return subject + ' = ' + mysql.escape(query['=']);
+                return subject + ' = ' + dbpool.escape(query['=']);
             } else if (query.IN) {
-                return subject + ' IN (' + mysql.escape(query.IN) + ')';
+                return subject + ' IN (' + dbpool.escape(query.IN) + ')';
             } else if (query.BETWEEN) {
-                return subject + ' BETWEEN ' + mysql.escape(query.BETWEEN[0]) + ' AND ' + mysql.escape(query.BETWEEN[1]);
+                return subject + ' BETWEEN ' + dbpool.escape(query.BETWEEN[0]) + ' AND ' + dbpool.escape(query.BETWEEN[1]);
             }
         }
         return undefined;
@@ -189,7 +188,7 @@ var Recordings = {
                 "FROM recordings \n"+
                 "WHERE recording_id = ?";
         
-        q = mysql.format(q, [recId]);
+        q = dbpool.format(q, [recId]);
         queryHandler(q, callback);
     },
     
@@ -302,7 +301,7 @@ var Recordings = {
             "JOIN recordings R2 ON " +
                 "R.site_id = R2.site_id " +
                 "AND R.datetime < R2.datetime \n" +
-            "WHERE R.recording_id = " + mysql.escape(recording.id) + "\n" +
+            "WHERE R.recording_id = " + dbpool.escape(recording.id) + "\n" +
             "ORDER BY R2.datetime ASC \n" +
             "LIMIT 1";
             
@@ -318,7 +317,7 @@ var Recordings = {
             "JOIN recordings R2 ON " +
                 "R.site_id = R2.site_id " +
                 "AND R.datetime > R2.datetime \n" +
-            "WHERE R.recording_id = " + mysql.escape(recording.id) + "\n" +
+            "WHERE R.recording_id = " + dbpool.escape(recording.id) + "\n" +
             "ORDER BY R2.datetime DESC \n" +
             "LIMIT 1";
             
@@ -373,7 +372,7 @@ var Recordings = {
     fetchValidations: function (recording, callback) {
         var query = "SELECT recording_validation_id as id, user_id as user, species_id as species, songtype_id as songtype, present \n" +
             "FROM recording_validations \n" +
-            "WHERE recording_id = " + mysql.escape(recording.id);
+            "WHERE recording_id = " + dbpool.escape(recording.id);
         return queryHandler(query, callback);
     },
     
@@ -631,8 +630,8 @@ var Recordings = {
             if (valobj.val == 2) {
                 queryHandler(
                     "DELETE FROM `recording_validations` "+
-                    " WHERE `recording_id` = "+mysql.escape(valobj.recording)+" and `project_id` = "+mysql.escape(valobj.project_id)+"  " +
-                    " and `species_id` = "+mysql.escape(valobj.species)+" and `songtype_id` = "+mysql.escape(valobj.songtype)+" ",
+                    " WHERE `recording_id` = "+dbpool.escape(valobj.recording)+" and `project_id` = "+dbpool.escape(valobj.project_id)+"  " +
+                    " and `species_id` = "+dbpool.escape(valobj.species)+" and `songtype_id` = "+dbpool.escape(valobj.songtype)+" ",
                     function(err, data){
                     if (err) { callback(err); return; }
                     callback(null, valobj);
@@ -641,7 +640,7 @@ var Recordings = {
             else {
                 queryHandler(
                     "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id) \n" +
-                    " VALUES (" + mysql.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id]) + ") \n" +
+                    " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id]) + ") \n" +
                     " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
                     if (err) { callback(err); return; }
                     callback(null, valobj);
@@ -664,7 +663,7 @@ var Recordings = {
                         "WHERE project_class_id = ? \n"+
                         "AND project_id = ?";
                 
-                queryHandler(mysql.format(q, [project_class, project_id]), function(err, rows){
+                queryHandler(dbpool.format(q, [project_class, project_id]), function(err, rows){
                     if(err) return  next(err);
                     
                     if(!rows.length) {
@@ -748,8 +747,8 @@ var Recordings = {
             for( var j in rec) {
                 if(j !== "recording_id") {
                     values.push(util.format('%s = %s',
-                        mysql.escapeId(j),
-                        mysql.escape(rec[j])
+                        dbpool.escapeId(j),
+                        dbpool.escape(rec[j])
                     ));
                 }
             }
@@ -773,8 +772,8 @@ var Recordings = {
                 "WHERE site_id = %s \n"+
                 "AND uri LIKE %s";
         
-        var uri = mysql.escape('%' + recording.filename + '%');
-        var site_id = mysql.escape(Number(recording.site_id));
+        var uri = dbpool.escape('%' + recording.filename + '%');
+        var site_id = dbpool.escape(Number(recording.site_id));
         q = util.format(q, site_id, uri);
         
         return dbpool.query(q).then(function(rows){
@@ -797,7 +796,7 @@ var Recordings = {
                 "       r.`uri` \n" +
                 "FROM `recordings` r\n"+
                 "JOIN `sites` s ON s.`site_id` = r.`site_id`\n"+
-                "WHERE r.`uri` = " + mysql.escape(uri);
+                "WHERE r.`uri` = " + dbpool.escape(uri);
         queryHandler(q, callback);
     },
     
@@ -950,9 +949,9 @@ var Recordings = {
             return Q.all(steps).then(function(){
 
                 var from_clause  = "FROM " + tables.join('\n');
-                var where_clause = mysql.format("WHERE " + constraints.join('\n AND '), data);
-                var order_clause = 'ORDER BY ' + mysql.escapeId(parameters.sortBy || 'site') + ' ' + (parameters.sortRev ? 'DESC' : '');
-                var limit_clause = (parameters.limit) ? mysql.escape(parameters.offset || 0) + ', ' + mysql.escape(parameters.limit) : '';
+                var where_clause = dbpool.format("WHERE " + constraints.join('\n AND '), data);
+                var order_clause = 'ORDER BY ' + dbpool.escapeId(parameters.sortBy || 'site') + ' ' + (parameters.sortRev ? 'DESC' : '');
+                var limit_clause = (parameters.limit) ? dbpool.escape(parameters.offset || 0) + ', ' + dbpool.escape(parameters.limit) : '';
 
                 return Q.all(outputs.map(function(output){
                     var query=[
@@ -963,7 +962,7 @@ var Recordings = {
                     if(output === 'list') {
                         var sortBy = parameters.sortBy || 'site';
                         var sortRev = parameters.sortRev ? 'DESC' : '';
-                        query.push('ORDER BY ' + mysql.escapeId(sortBy) + ' ' + sortRev);
+                        query.push('ORDER BY ' + dbpool.escapeId(sortBy) + ' ' + sortRev);
                         if(limit_clause){
                             query.push("LIMIT " + limit_clause);
                         }
@@ -1177,7 +1176,7 @@ var Recordings = {
                             cls.species,
                             cls.project,
                         ]);
-                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + mysql.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
                     });
                 }));
             }
@@ -1190,9 +1189,9 @@ var Recordings = {
                             "AND " + clsid + ".job_id = ?", [
                             classification.job_id
                         ]);
-                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + mysql.escapeId("cr<" + classification.cname + ">"));
+                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("cr<" + classification.cname + ">"));
                         if(classification.threshold){
-                            builder.addProjection("IF(ISNULL("+clsid+".max_vector_value), '---', "+clsid+".max_vector_value > " + mysql.escape(classification.threshold) + ")  AS " + mysql.escapeId("cr<" + classification.cname + "> threshold (" + classification.threshold + ")"));
+                            builder.addProjection("IF(ISNULL("+clsid+".max_vector_value), '---', "+clsid+".max_vector_value > " + dbpool.escape(classification.threshold) + ")  AS " + dbpool.escapeId("cr<" + classification.cname + "> threshold (" + classification.threshold + ")"));
                         }
                     });
                 }));
@@ -1206,7 +1205,7 @@ var Recordings = {
                             "AND " + clsid + ".scclassId = ?", [
                             cls.id
                         ]);
-                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + mysql.escapeId("scc<" + cls.type + "/" + cls.name + ">"));
+                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("scc<" + cls.type + "/" + cls.name + ">"));
                     });
                 }));
             }
@@ -1214,7 +1213,7 @@ var Recordings = {
                 promises.push(models.tags.getFor({id:projection_parameters.tag}).then(function(tags){
                     tags.forEach(function(tag, idx){
                         var prtid = "p_RT_" + idx;
-                        builder.addProjection("(SELECT COUNT(*) FROM recording_tags AS " + prtid + " WHERE r.recording_id = " + prtid + ".recording_id AND " + prtid + ".tag_id = " + mysql.escape(tag.id)+ "  ) AS " + mysql.escapeId("tag<" + tag.tag + ">"));
+                        builder.addProjection("(SELECT COUNT(*) FROM recording_tags AS " + prtid + " WHERE r.recording_id = " + prtid + ".recording_id AND " + prtid + ".tag_id = " + dbpool.escape(tag.id)+ "  ) AS " + dbpool.escapeId("tag<" + tag.tag + ">"));
                     });
                 }));
             }
@@ -1242,7 +1241,7 @@ var Recordings = {
             "WHERE r.recording_id IN (?) \n"+
             "AND s.project_id = ?";
         
-        queryHandler(mysql.format(sqlFilterImported, [recIds, project_id]), function(err, rows) {
+        queryHandler(dbpool.format(sqlFilterImported, [recIds, project_id]), function(err, rows) {
             
             if(!rows.length) {
                 return callback(null, {
@@ -1280,7 +1279,7 @@ var Recordings = {
                         var sqlDelete = "DELETE FROM recordings \n"+
                                         "WHERE recording_id = ?";
                         
-                        queryHandler(mysql.format(sqlDelete, [rec.id]), function(err, results) {
+                        queryHandler(dbpool.format(sqlDelete, [rec.id]), function(err, results) {
                             if(err) next(err);
                             
                             deleted.push(rec.id);

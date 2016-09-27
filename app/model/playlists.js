@@ -1,6 +1,5 @@
 // dependencies
 var debug = require('debug')('arbimon2:model:playlists');
-var mysql = require('mysql');
 var async = require('async');
 var q = require('q');
 var Joi   = require('joi');
@@ -38,13 +37,13 @@ var Playlists = {
         }
 
         if (query.id) {
-            constraints.push('PL.playlist_id = ' + mysql.escape(query.id));
+            constraints.push('PL.playlist_id = ' + dbpool.escape(query.id));
         }
         if (query.project) {
-            constraints.push('PL.project_id = ' + mysql.escape(query.project));
+            constraints.push('PL.project_id = ' + dbpool.escape(query.project));
         }
         if(query.name) {
-            constraints.push('PL.name = ' + mysql.escape(query.name));
+            constraints.push('PL.name = ' + dbpool.escape(query.name));
         }
 
         if(constraints.length === 0){
@@ -120,7 +119,7 @@ var Playlists = {
 
         // if (query.id) {
         // } else if (query.project) {
-        //     constraints.push('PL.project_id = ' + mysql.escape(query.project));
+        //     constraints.push('PL.project_id = ' + dbpool.escape(query.project));
         // }
         
         var limit_clause = '';
@@ -174,9 +173,9 @@ var Playlists = {
                     "FROM (\n"+
                     "   SELECT @rownum:=@rownum+1 row, PLR.*  \n" +
                     "   FROM playlist_recordings PLR, (SELECT @rownum:=0) r \n" +
-                    "   WHERE PLR.playlist_id = " + mysql.escape(playlist.id) + " \n"+
+                    "   WHERE PLR.playlist_id = " + dbpool.escape(playlist.id) + " \n"+
                     ") as rPLR \n" +
-                    "WHERE rPLR.recording_id = " + mysql.escape(recording),
+                    "WHERE rPLR.recording_id = " + dbpool.escape(recording),
                 next);
             }).bind(this),
             function(rows){
@@ -209,9 +208,9 @@ var Playlists = {
                     "FROM (\n"+
                     "   SELECT @rownum:=@rownum+1 row, PLR.*  \n" +
                     "   FROM playlist_recordings PLR, (SELECT @rownum:=0) r \n" +
-                    "   WHERE PLR.playlist_id = " + mysql.escape(playlist.id) + " \n"+
+                    "   WHERE PLR.playlist_id = " + dbpool.escape(playlist.id) + " \n"+
                     ") as rPLR \n" +
-                    "WHERE rPLR.recording_id = " + mysql.escape(recording),
+                    "WHERE rPLR.recording_id = " + dbpool.escape(recording),
                 next);
             },
             function(rows){
@@ -299,7 +298,7 @@ var Playlists = {
                     "SET name = %s \n"+
                     "WHERE playlist_id = %s";
                     
-            q = util.format(q, mysql.escape(pls.name), mysql.escape(pls.id));
+            q = util.format(q, dbpool.escape(pls.name), dbpool.escape(pls.id));
             queryHandler(q, callback);
         });
     },
@@ -311,7 +310,7 @@ var Playlists = {
             var q = "DELETE FROM playlists \n"+
                     "WHERE playlist_id IN (%s)";
                     
-            q = util.format(q, mysql.escape(ids));
+            q = util.format(q, dbpool.escape(ids));
             queryHandler(q, callback);
         });
     }

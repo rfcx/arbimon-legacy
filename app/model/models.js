@@ -1,5 +1,4 @@
 var util = require('util');
-var mysql = require('mysql');
 var async = require('async');
 var validator = require('validator');
 var AWS = require('aws-sdk');
@@ -17,7 +16,7 @@ module.exports = {
     findName: function(model_id, callback) {
         var q = "SELECT name \n"+
                 "FROM models \n"+
-                "WHERE model_id = " + mysql.escape(model_id);
+                "WHERE model_id = " + dbpool.escape(model_id);
 
         queryHandler(q, callback);
     },
@@ -31,7 +30,7 @@ module.exports = {
                         "FROM models AS m \n"+
                         "JOIN job_params_training AS jpt ON m.model_id = jpt.trained_model_id \n"+
                         "WHERE m.model_id = ?";
-                q = mysql.format(q, [modelId]);
+                q = dbpool.format(q, [modelId]);
                 queryHandler(q, cb);
             },
             rec: function getRecInfo(cb) {
@@ -98,7 +97,7 @@ module.exports = {
                 "AND ms.`model_id` = m.`model_id` \n" +
                 "AND jpt.`training_set_id` = ts.`training_set_id`";
         
-        q = mysql.format(q, [model_id]);
+        q = dbpool.format(q, [model_id]);
         queryHandler(q, function(err, rows) {
             if(err) return callback(err);
             
@@ -215,8 +214,8 @@ module.exports = {
     },
 
     savethreshold: function(m,t,callback) {
-        var q = "UPDATE `models` SET `threshold` = "+mysql.escape(t)+
-                " WHERE `models`.`model_id` ="+mysql.escape(m)+";";
+        var q = "UPDATE `models` SET `threshold` = "+dbpool.escape(t)+
+                " WHERE `models`.`model_id` ="+dbpool.escape(m)+";";
 
         queryHandler(q, callback);
     }

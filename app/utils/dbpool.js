@@ -5,14 +5,23 @@ var sqlutil = require('./sqlutil');
 var q = require('q');
 var showQueriesInConsole = true;
 var dbpool = {
-    pool: mysql.createPool({
-        host : config('db').host,
-        user : config('db').user,
-        password : config('db').password,
-        database : config('db').database
-    }),
+    pool: undefined,
+    getPool: function(){
+        var pool = dbpool.pool;
+        if(!pool){
+            pool = dbpool.pool = mysql.createPool({
+                host : config('db').host,
+                user : config('db').user,
+                password : config('db').password,
+                database : config('db').database
+            });
+        }
+        return pool;
+    },
     
+    format: mysql.format.bind(mysql),
     escape: mysql.escape.bind(mysql),
+    escapeId: mysql.escapeId.bind(mysql),
 
     enable_query_debugging : function(connection){
         if(connection.$_qd_enabled_$){
@@ -69,7 +78,7 @@ var dbpool = {
 
     getConnection : function(callback){
         debug('getConnection : fetching db connection.');
-        return q.ninvoke(dbpool.pool, 'getConnection').then(function (connection){
+        return q.ninvoke(dbpool.getPool(), 'getConnection').then(function (connection){
             dbpool.enable_query_debugging(connection);
             return connection;
         }).nodeify(callback);
@@ -90,7 +99,7 @@ var dbpool = {
             options = undefined;
         }
         debug('queryHandler : fetching db connection.');
-        dbpool.pool.getConnection(function(err, connection) {
+        dbpool.getPool().getConnection(function(err, connection) {
             if(err) return callback(err);
             
             var padding = '\n        ';

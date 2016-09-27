@@ -1,5 +1,4 @@
 var util = require('util');
-var mysql = require('mysql');
 var AWS   = require('aws-sdk');
 var joi = require('joi');
 var q = require('q');
@@ -14,7 +13,7 @@ var site_log_processor = require('../utils/site_log_processor');
 
 var Sites = {
     findById: function (site_id, callback) {
-        var query = "SELECT * FROM sites WHERE site_id = " + mysql.escape(site_id);
+        var query = "SELECT * FROM sites WHERE site_id = " + dbpool.escape(site_id);
 
         return queryHandler(query , callback);
     },
@@ -45,8 +44,8 @@ var Sites = {
         for(var j in site) {
             if(j !== 'id') {
                 values.push(util.format('%s = %s', 
-                    mysql.escapeId(j), 
-                    mysql.escape(site[j])
+                    dbpool.escapeId(j), 
+                    dbpool.escape(site[j])
                 ));
             }
         }
@@ -84,8 +83,8 @@ var Sites = {
                 var value = site[key]; 
 
                 values.push(util.format('%s = %s', 
-                    mysql.escapeId(key), 
-                    mysql.escape(value)
+                    dbpool.escapeId(key), 
+                    dbpool.escape(value)
                 ));
             }
         }
@@ -106,8 +105,8 @@ var Sites = {
                 'AND project_id = %s';
         
         q = util.format(q, 
-            mysql.escape(site_name),
-            mysql.escape(project_id)
+            dbpool.escape(site_name),
+            dbpool.escape(project_id)
         );
         
         queryHandler(q, function(err, rows){
@@ -141,7 +140,7 @@ var Sites = {
                         var q = 'DELETE FROM sites \n'+
                                 'WHERE site_id = %s';
                                 
-                        q = util.format(q, mysql.escape(site_id));
+                        q = util.format(q, dbpool.escape(site_id));
                         queryHandler(q, callback);
                     }
                 });
@@ -151,7 +150,7 @@ var Sites = {
                         'WHERE site_id = %s \n'+
                         'AND project_id = %s';
                         
-                q = util.format(q, mysql.escape(site_id), mysql.escape(project_id));
+                q = util.format(q, dbpool.escape(site_id), dbpool.escape(project_id));
                 queryHandler(q, callback);
             }
         });
@@ -183,7 +182,7 @@ var Sites = {
                 "WHERE s.site_id = %s\n"+
                 "GROUP BY s.site_id";
                 
-        q = util.format(q, mysql.escape(site_id));
+        q = util.format(q, dbpool.escape(site_id));
         
         queryHandler(q, function(err, rows) {
             if(err) return callback(err);
@@ -210,7 +209,7 @@ var Sites = {
             var q = "INSERT INTO project_imported_sites(site_id, project_id) \n"+
                     "VALUES (%s,%s)";
                     
-            q = util.format(q, mysql.escape(site_id), mysql.escape(project_id));
+            q = util.format(q, dbpool.escape(site_id), dbpool.escape(project_id));
             queryHandler(q, callback);
         });
     },
@@ -225,8 +224,8 @@ var Sites = {
 
         queryHandler(
             "UPDATE sites \n" + 
-            "SET token_created_on = "+mysql.escape(iat)+" \n" + 
-            "WHERE site_id = " + mysql.escape(site.site_id), 
+            "SET token_created_on = "+dbpool.escape(iat)+" \n" + 
+            "WHERE site_id = " + dbpool.escape(site.site_id), 
             function(err){
                 if(err){
                     callback(err);
@@ -247,7 +246,7 @@ var Sites = {
         queryHandler(
             "UPDATE sites \n" + 
             "SET token_created_on = NULL \n" + 
-            "WHERE site_id = " + mysql.escape(site.site_id), 
+            "WHERE site_id = " + dbpool.escape(site.site_id), 
         callback);
     },
     
@@ -284,7 +283,7 @@ var Sites = {
                     (site.site_id|0)+", " +
                     "FROM_UNIXTIME("+Math.abs(log.from/1000.0)+"), " +
                     "FROM_UNIXTIME("+Math.abs(log.to  /1000.0)+"), " + 
-                    mysql.escape(key) +
+                    dbpool.escape(key) +
                 ")"
             );
         }).then(function(){
