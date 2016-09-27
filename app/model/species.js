@@ -23,7 +23,7 @@ var Species = {
                     "FROM species S \n" +
                     "JOIN species_families F ON F.family_id = S.family_id \n" +
                     "JOIN species_taxons   T ON T.taxon_id = S.taxon_id \n" +
-                    "WHERE S.species_id = " + mysql.escape(species_id);
+                    "WHERE S.species_id = " + dbpool.escape(species_id);
 
         queryHandler(query, callback);
     },
@@ -56,7 +56,7 @@ var Species = {
                 'GROUP BY s.species_id \n'+
                 'LIMIT %s';
 
-        q = util.format(q, mysql.escape(limit));
+        q = util.format(q, dbpool.escape(limit));
         queryHandler(q, callback);
     },
 
@@ -72,7 +72,7 @@ var Species = {
                 "OR sa.alias LIKE %s \n"+
                 "GROUP BY s.species_id \n"+
                 "LIMIT 100";
-        var term = mysql.escape('%'+squery+'%');
+        var term = dbpool.escape('%'+squery+'%');
         q = util.format(q,
             term,
             term,

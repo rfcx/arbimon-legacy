@@ -156,7 +156,7 @@ tags.resourceDefs.recording = {
                     'JOIN recordings R ON R.recording_id = RT.recording_id',
                     'JOIN sites S ON S.site_id = R.site_id'
                 );
-                constraints.push('S.site_id IN (' + mysql.escape(sites.map(function(site){
+                constraints.push('S.site_id IN (' + dbpool.escape(sites.map(function(site){
                     return site.id;
                 })) + ')');
             });

@@ -20,7 +20,7 @@ var settings = {
                 "FROM system_settings \n";
         
         if(key) {
-            q += "WHERE `key` = " + mysql.escape(key);
+            q += "WHERE `key` = " + dbpool.escape(key);
         }
         
         queryHandler(q, callback);
@@ -29,7 +29,7 @@ var settings = {
     set: function(key, value, callback) {
         var q = "REPLACE INTO system_settings \n"+
                 "SET `key` = ?, `value` = ?";
-        queryHandler(mysql.format(q, [key, value]), callback);
+        queryHandler(dbpool.format(q, [key, value]), callback);
     }
 };
 

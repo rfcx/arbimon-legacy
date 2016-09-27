@@ -86,7 +86,7 @@ var Classifications = {
                 "FROM `job_params_classification`  c, \n"+
                 "   `jobs` j \n"+
                 "WHERE c.`job_id` = j.`job_id` \n"+
-                "AND c.`job_id` = "+mysql.escape(cid);
+                "AND c.`job_id` = "+dbpool.escape(cid);
 
         queryHandler(q, callback);
     },
@@ -95,7 +95,7 @@ var Classifications = {
     // classificationDelete
     delete: function(classificationId, callback) {
         
-        var cid = mysql.escape(classificationId);
+        var cid = dbpool.escape(classificationId);
         var modUri;
         var q;
         var allToDelete;
@@ -194,14 +194,14 @@ var Classifications = {
                 "AND sp.`species_id` = cr.`species_id` \n"+
                 "AND cr.`songtype_id` = st.`songtype_id` ";
 
-        queryHandler(mysql.format(q, [classiJobId]), callback);
+        queryHandler(dbpool.format(q, [classiJobId]), callback);
     },
     
     // classificationErrorsCount
     errorsCount: function(jobId, callback) {
         var q = "SELECT count(*) AS count \n"+
                 "FROM recordings_errors \n"+ 
-                "WHERE job_id = " + mysql.escape(jobId);
+                "WHERE job_id = " + dbpool.escape(jobId);
 
         queryHandler(q, callback);
     },
@@ -232,7 +232,7 @@ var Classifications = {
             "GROUP BY c.`species_id`, c.`songtype_id`"
         );
 
-        queryHandler(mysql.format(q,[cid]), callback);
+        queryHandler(dbpool.format(q,[cid]), callback);
     },
     
     // classificationDetailMore: function(project_url, cid, from, total, callback) {
@@ -268,7 +268,7 @@ var Classifications = {
                 "AND r.`recording_id` = c.`recording_id` \n"+
                 "ORDER BY present DESC LIMIT ?,?";
         
-        queryHandler(mysql.format(q,[cid, parseInt(from), parseInt(total)]), callback);
+        queryHandler(dbpool.format(q,[cid, parseInt(from), parseInt(total)]), callback);
     },
     
     getRecVector: function(c12nId, recId, callback) {
@@ -287,7 +287,7 @@ var Classifications = {
                 "WHERE cr.job_id = ? \n"+
                 "AND r.recording_id = ? ";
         
-        q = mysql.format(q, [c12nId, recId, callback]);
+        q = dbpool.format(q, [c12nId, recId, callback]);
         
         queryHandler(q, callback);
     },

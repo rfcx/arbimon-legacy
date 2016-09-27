@@ -12,7 +12,7 @@ var Songtypes = {
         var query = "SELECT  \n" +
             'St.songtype_id as id, St.songtype as name, St.description \n' +
             "FROM songtypes St \n" +
-            "WHERE songtype_id = " + mysql.escape(songtype_id);
+            "WHERE songtype_id = " + dbpool.escape(songtype_id);
 
         return queryHandler(query, callback);
     },

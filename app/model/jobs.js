@@ -27,7 +27,7 @@ var Jobs = {
                     " `training_set_id`, `validation_set_id`, `trained_model_id`, \n" +
                     " `use_in_training_present`,`use_in_training_notpresent`,`use_in_validation_present`,`use_in_validation_notpresent` ,`name` \n" +
                     ") VALUES ( \n" +
-                        mysql.escape([params.job_id, params.classifier, 
+                        dbpool.escape([params.job_id, params.classifier, 
                             params.train, null, null, 
                             params.upt, params.unt, params.upv, params.unv, params.name
                         ]) + "\n" +
@@ -48,7 +48,7 @@ var Jobs = {
                     "INSERT INTO `job_params_classification` (\n" +
                     "   `job_id`, `model_id`, `playlist_id` ,`name` \n" +
                     ") VALUES ( \n" + 
-                    "   " + mysql.escape([params.job_id, params.classifier, params.playlist, params.name]) + "\n" +
+                    "   " + dbpool.escape([params.job_id, params.classifier, params.playlist, params.name]) + "\n" +
                     ")"
                 );
             },
@@ -66,9 +66,9 @@ var Jobs = {
                     "INSERT INTO `job_params_soundscape`( \n"+
                     "   `job_id`, `playlist_id`, `max_hertz`, `bin_size`, `soundscape_aggregation_type_id`, `name`, `threshold` , `threshold_type` , `frequency` , `normalize` \n" +
                     ") VALUES ( \n" + 
-                    "    " + mysql.escape([params.job_id, params.playlist, params.maxhertz, params.bin]) + ", \n"+
-                    "    (SELECT `soundscape_aggregation_type_id` FROM `soundscape_aggregation_types` WHERE `identifier` = " + mysql.escape(params.aggregation) + "), \n" +
-                    "    " + mysql.escape([params.name, params.threshold, params.threshold_type, params.frequency , params.normalize]) + " \n" +
+                    "    " + dbpool.escape([params.job_id, params.playlist, params.maxhertz, params.bin]) + ", \n"+
+                    "    (SELECT `soundscape_aggregation_type_id` FROM `soundscape_aggregation_types` WHERE `identifier` = " + dbpool.escape(params.aggregation) + "), \n" +
+                    "    " + dbpool.escape([params.name, params.threshold, params.threshold_type, params.frequency , params.normalize]) + " \n" +
                     ")"
                 );
             },
@@ -174,21 +174,21 @@ var Jobs = {
     },    
     classificationNameExists: function(p, callback) {
         var q = "SELECT count(*) as count FROM `jobs` J ,  `job_params_classification` JPC " +
-            " WHERE `project_id` = " + mysql.escape(p.pid) + " and `job_type_id` = 2 and J.`job_id` = JPC.`job_id` " +
-            " and `name` like " + mysql.escape(p.name) + " ";
+            " WHERE `project_id` = " + dbpool.escape(p.pid) + " and `job_type_id` = 2 and J.`job_id` = JPC.`job_id` " +
+            " and `name` like " + dbpool.escape(p.name) + " ";
 
         queryHandler(q, callback);
     },
     modelNameExists: function(p, callback) {
         var q = "SELECT count(*) as count FROM `jobs` J ,  `job_params_training` JPC " +
-            " WHERE `project_id` = " + mysql.escape(p.pid) + " and `job_type_id` = 1 and J.`job_id` = JPC.`job_id` " +
-            " and `name` like " + mysql.escape(p.name) + " ";
+            " WHERE `project_id` = " + dbpool.escape(p.pid) + " and `job_type_id` = 1 and J.`job_id` = JPC.`job_id` " +
+            " and `name` like " + dbpool.escape(p.name) + " ";
 
         queryHandler(q, callback);
     },
 
     soundscapeNameExists: function(p, callback) {
-        var q = "SELECT count(*) as count FROM `soundscapes` WHERE `project_id` = " + mysql.escape(p.pid) + " and `name` LIKE " + mysql.escape(p.name);
+        var q = "SELECT count(*) as count FROM `soundscapes` WHERE `project_id` = " + dbpool.escape(p.pid) + " and `name` LIKE " + dbpool.escape(p.name);
 
         queryHandler(q, callback);
     },
@@ -212,7 +212,7 @@ var Jobs = {
                 constraints.push('J.project_id = ' + (project.id|0));
             } 
             else if(project.url){
-                constraints.push('P.url = ' + mysql.escape(project.url));
+                constraints.push('P.url = ' + dbpool.escape(project.url));
                 tables.push('JOIN projects P ON J.project_id = P.project_id');
             }
         }
@@ -303,31 +303,31 @@ var Jobs = {
         }
         
         if(query.states) {
-            where.push('j.state IN ('+ mysql.escape(query.states)+')');
+            where.push('j.state IN ('+ dbpool.escape(query.states)+')');
         }
         
         if(query.types) {
-            where.push('j.job_type_id IN ('+ mysql.escape(query.types)+')');
+            where.push('j.job_type_id IN ('+ dbpool.escape(query.types)+')');
         }
         
         if(query.project_id) {
-            where.push('j.project_id IN ('+ mysql.escape(query.project_id)+')');
+            where.push('j.project_id IN ('+ dbpool.escape(query.project_id)+')');
         }
         
         if(query.user_id) {
-            where.push('j.user_id IN ('+ mysql.escape(query.user_id)+')');
+            where.push('j.user_id IN ('+ dbpool.escape(query.user_id)+')');
         }
         
         if(query.project) {
-            where.push('p.name IN ('+ mysql.escape(query.project)+')');
+            where.push('p.name IN ('+ dbpool.escape(query.project)+')');
         }
         
         if(query.user) {
-            where.push('u.login IN ('+ mysql.escape(query.user)+')');
+            where.push('u.login IN ('+ dbpool.escape(query.user)+')');
         }
         
         if(query.job_id) {
-            where.push('j.job_id IN ('+ mysql.escape(query.job_id)+')');
+            where.push('j.job_id IN ('+ dbpool.escape(query.job_id)+')');
         }
         
         
@@ -345,7 +345,7 @@ var Jobs = {
     set_job_state: function(job, new_state, callback){
         queryHandler(
             "UPDATE jobs \n"+
-            "SET state = " + mysql.escape(new_state) + ",\n" +
+            "SET state = " + dbpool.escape(new_state) + ",\n" +
             "    last_update = NOW() \n" +
             "WHERE job_id = " + (job.id | 0), 
         callback);
@@ -374,7 +374,7 @@ var Jobs = {
                     "ORDER BY job_id DESC \n"+
                     "LIMIT 0, 10";
                 
-                getLast5Jobs = mysql.format(getLast5Jobs, [jobType.id]);
+                getLast5Jobs = dbpool.format(getLast5Jobs, [jobType.id]);
                 queryHandler(getLast5Jobs, function(err, rows) {
                     if(err) return next(err);
                     

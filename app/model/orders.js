@@ -39,13 +39,13 @@ var orders = {
         
         var order = result.value;
         
-        queryHandler(mysql.format(q, order), callback);
+        queryHandler(dbpool.format(q, order), callback);
     },
     
     findById: function(orderId, callback) {
         var q = "SELECT * FROM orders WHERE order_id = ?";
         
-        queryHandler(mysql.format(q, [orderId]), callback);
+        queryHandler(dbpool.format(q, [orderId]), callback);
     },
     
     update: function(orderData, callback) {
@@ -61,7 +61,7 @@ var orders = {
         delete order.order_id;
         
         
-        queryHandler(mysql.format(q, [order, orderId]), callback);
+        queryHandler(dbpool.format(q, [order, orderId]), callback);
     },
 };
 

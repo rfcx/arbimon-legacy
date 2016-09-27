@@ -379,10 +379,10 @@ var Projects = {
                     'news_type_id = %s';
 
             q = util.format(q, 
-                mysql.escape(newsVal.user_id), 
-                mysql.escape(newsVal.project_id), 
-                mysql.escape(newsVal.data), 
-                mysql.escape(newsVal.news_type_id)
+                dbpool.escape(newsVal.user_id), 
+                dbpool.escape(newsVal.project_id), 
+                dbpool.escape(newsVal.data), 
+                dbpool.escape(newsVal.news_type_id)
             );
             
             queryHandler(q, function(err, result) {
@@ -463,7 +463,7 @@ var Projects = {
             groupby_clause.push("pc.species_id", "pc.songtype_id");
         }
 
-        return q.nfcall(queryHandler, mysql.format(
+        return q.nfcall(queryHandler, dbpool.format(
             "SELECT " + select_clause.join(", \n") + "\n" +
             "FROM " + from_clause.join("\n") + "\n" +
             "WHERE (" + where_clause.join(") AND (") + ")" + 
@@ -538,7 +538,7 @@ var Projects = {
         joi.validate(project_classes, schema, function(err, value) {
             if(err) return callback(err);
 
-            value = '(' + mysql.escape(value) + ')';
+            value = '(' + dbpool.escape(value) + ')';
 
             var q = "DELETE FROM project_classes \n"+
                     "WHERE project_class_id IN %s";
@@ -576,9 +576,9 @@ var Projects = {
         joi.validate(userProjectRole, schema, function(err, upr){
             if(err) return callback(err);
             
-            var user_id = mysql.escape(upr.user_id);
-            var project_id = mysql.escape(upr.project_id);
-            var role_id = mysql.escape(upr.role_id);
+            var user_id = dbpool.escape(upr.user_id);
+            var project_id = dbpool.escape(upr.project_id);
+            var role_id = dbpool.escape(upr.role_id);
             
             var q = 'INSERT INTO user_project_role \n'+
                     'SET user_id = %s, role_id = %s, project_id = %s';
@@ -599,9 +599,9 @@ var Projects = {
         joi.validate(userProjectRole, schema, function(err, upr){
             if(err) return callback(err);
             
-            var user_id = mysql.escape(upr.user_id);
-            var project_id = mysql.escape(upr.project_id);
-            var role_id = mysql.escape(upr.role_id);
+            var user_id = dbpool.escape(upr.user_id);
+            var project_id = dbpool.escape(upr.project_id);
+            var role_id = dbpool.escape(upr.role_id);
             
             var q = "UPDATE user_project_role \n"+
                     "SET role_id = %s \n"+
@@ -630,7 +630,7 @@ var Projects = {
                 "FROM `models` as m,  \n"+
                 "   `model_types` as mt,  \n"+
                 "   `users` as u , `projects` as p \n"+
-                "WHERE p.url = " + mysql.escape(project_url)+
+                "WHERE p.url = " + dbpool.escape(project_url)+
                 "AND m.`model_type_id` = mt.`model_type_id` \n"+
                 "AND m.user_id = u.user_id \n"+
                 "AND p.project_id = m.project_id \n"+
@@ -652,7 +652,7 @@ var Projects = {
                 "   `models` as m,  \n"+
                 "   `model_types` as mt,  \n"+
                 "   `users` as u , `projects` as p \n"+
-                "WHERE p.url = " + mysql.escape(project_url)+
+                "WHERE p.url = " + dbpool.escape(project_url)+
                 "AND m.`model_type_id` = mt.`model_type_id` \n"+
                 "AND m.user_id = u.user_id \n"+
                 "AND pim.model_id = m.model_id \n"+
@@ -685,7 +685,7 @@ var Projects = {
             "AND st.`songtype_id` = tsrs.`songtype_id` \n"+
             "AND s.`species_id`  = tsrs.`species_id` \n"+
             "AND ts.`project_id` = p.`project_id` \n"+
-            "AND p.`url` = " + mysql.escape(project_url)
+            "AND p.`url` = " + dbpool.escape(project_url)
         );
 
         queryHandler(q, callback);
@@ -695,7 +695,7 @@ var Projects = {
         var q = "SELECT `validation_set_id` , ts.`name` \n" +
                 "FROM `validation_set` ts, `projects` p \n" +
                 "WHERE ts.`project_id` = p.`project_id` \n" +
-                "AND p.`url` = " + mysql.escape(project_url);
+                "AND p.`url` = " + dbpool.escape(project_url);
                 
         queryHandler(q, callback);
     },
@@ -712,7 +712,7 @@ var Projects = {
                 "AND `songtype_id` = ? \n"+
                 "GROUP BY species_id, songtype_id";
         
-        queryHandler(mysql.format(q, [projectUrl, speciesId, songtypeId]), function(err, rows) {
+        queryHandler(dbpool.format(q, [projectUrl, speciesId, songtypeId]), function(err, rows) {
             if(err) return callback(err);
             
             if(!rows.length) {
@@ -733,7 +733,7 @@ var Projects = {
     validationsCount: function(project_id, callback) {
         var q = "SELECT count(*) AS count \n"+
                 "FROM recording_validations AS rv\n"+
-                "WHERE rv.project_id = " + mysql.escape(project_id);
+                "WHERE rv.project_id = " + dbpool.escape(project_id);
         queryHandler(q, callback);
     },
     
@@ -741,7 +741,7 @@ var Projects = {
         var q = "SELECT vs.`uri` \n"+
                 "FROM `validation_set` vs, `models` m \n"+
                 "WHERE m.`validation_set_id` = vs.`validation_set_id` \n"+
-                "AND m.`model_id` = "+ mysql.escape(model_id);
+                "AND m.`model_id` = "+ dbpool.escape(model_id);
         
         queryHandler(q, callback);
     },
@@ -756,7 +756,7 @@ var Projects = {
         var q = "DELETE FROM user_project_role \n"+
                 "WHERE user_id = %s AND project_id = %s";
         
-        q = util.format(q, mysql.escape(user_id), mysql.escape(project_id));
+        q = util.format(q, dbpool.escape(user_id), dbpool.escape(project_id));
         queryHandler(q, callback);
     },
     
@@ -782,7 +782,7 @@ var Projects = {
                 "    WHERE s.project_id = %1$s) \n"+
                 ") as t";
         
-        q = sprintf(q, mysql.escape(project_id));
+        q = sprintf(q, dbpool.escape(project_id));
         queryHandler(q, callback);
     },
     

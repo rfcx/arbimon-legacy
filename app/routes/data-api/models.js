@@ -71,12 +71,12 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
                 return res.json({ error: "you dont have permission to 'manage models and classification'" });
 
             name = (req.body.n);
-            train_id = mysql.escape(req.body.t);
-            classifier_id = mysql.escape(req.body.c);
-            usePresentTraining = mysql.escape(req.body.tp);
-            useNotPresentTraining = mysql.escape(req.body.tn);
-            usePresentValidation = mysql.escape(req.body.vp);
-            useNotPresentValidation  = mysql.escape(req.body.vn);
+            train_id = dbpool.escape(req.body.t);
+            classifier_id = dbpool.escape(req.body.c);
+            usePresentTraining = dbpool.escape(req.body.tp);
+            useNotPresentTraining = dbpool.escape(req.body.tn);
+            usePresentValidation = dbpool.escape(req.body.vp);
+            useNotPresentValidation  = dbpool.escape(req.body.vn);
             user_id = req.session.user.id;
             params = {
                 name: name,
