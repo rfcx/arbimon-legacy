@@ -2,7 +2,6 @@
 "use strict";
 
 var debug = require('debug')('arbimon2:model:orders');
-var mysql = require('mysql');
 var async = require('async');
 var joi = require('joi');
 

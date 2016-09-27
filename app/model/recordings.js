@@ -10,7 +10,6 @@ var fs = require('fs');
 var debug = require('debug')('arbimon2:model:recordings');
 var async = require('async');
 var AWS   = require('aws-sdk');
-var mysql = require('mysql');
 var joi   = require('joi');
 var _     = require('lodash');
 var sprintf = require("sprintf-js").sprintf;

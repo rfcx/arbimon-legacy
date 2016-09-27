@@ -1,5 +1,4 @@
 var util = require('util');
-var mysql = require('mysql');
 var Joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;
 var dbpool       = require('../utils/dbpool');

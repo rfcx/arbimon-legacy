@@ -8,7 +8,6 @@ var config = require('../config');
 var util = require('util');
 var q = require('q');
 var APIError = require('../utils/apierror');
-var dbpool = require('../utils/dbpool');
 var sha256 = require('../utils/sha256');
 var models = require('./index');
 

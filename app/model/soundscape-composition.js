@@ -1,6 +1,5 @@
 var q = require('q');
 var joi = require('joi');
-var mysql = require('mysql');
 var models = require('./index');
 var dbpool = require('../utils/dbpool');
 var APIError = require('../utils/apierror');

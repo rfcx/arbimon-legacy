@@ -1,5 +1,4 @@
 var util = require('util');
-var mysql = require('mysql');
 var async = require('async');
 var validator = require('validator');
 var AWS = require('aws-sdk');

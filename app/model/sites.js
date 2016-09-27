@@ -1,5 +1,4 @@
 var util = require('util');
-var mysql = require('mysql');
 var AWS   = require('aws-sdk');
 var joi = require('joi');
 var q = require('q');

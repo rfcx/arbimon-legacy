@@ -8,7 +8,6 @@ var debug = require('debug')('arbimon2:route:models');
 var express = require('express');
 var request = require('request');
 var async = require('async');
-var mysql = require('mysql');
 var AWS = require('aws-sdk');
 
 var model = require('../../model');

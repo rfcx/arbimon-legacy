@@ -1,5 +1,4 @@
 var q = require('q');
-var mysql = require('mysql');
 var dbpool = require('../utils/dbpool');
 var APIError = require('../utils/apierror');
 var projects = require('./projects');

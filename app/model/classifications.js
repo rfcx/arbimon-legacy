@@ -4,7 +4,6 @@
 var util = require('util');
 
 var debug = require('debug')('arbimon2:model:classifications');
-var mysql = require('mysql');
 var async = require('async');
 var joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;

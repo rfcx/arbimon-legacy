@@ -1,5 +1,4 @@
 var util = require('util');
-var mysql = require('mysql');
 
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;

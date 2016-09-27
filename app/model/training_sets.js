@@ -8,7 +8,6 @@ var util = require('util');
 
 // 3rd party dependencies
 var debug = require('debug')('arbimon2:model:training_sets');
-var mysql = require('mysql');
 var async = require('async');
 var joi = require('joi');
 var lwip = require('lwip');

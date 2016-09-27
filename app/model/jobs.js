@@ -2,7 +2,6 @@
 "use strict";
 
 var util = require('util');
-var mysql = require('mysql');
 var q = require('q');
 var async = require('async');
 var debug = require('debug')('arbimon2:models:jobs');

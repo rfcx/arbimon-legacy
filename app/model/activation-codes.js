@@ -3,7 +3,6 @@
 
 var debug = require('debug')('arbimon2:model:activation-codes');
 var util = require('util');
-var mysql = require('mysql');
 var joi = require('joi');
 var q = require('q');
 var dbpool = require('../utils/dbpool');

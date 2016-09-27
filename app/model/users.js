@@ -6,7 +6,6 @@ var debug = require('debug')('arbimon2:model:users');
 var request = require('request');
 var config = require('../config');
 var util = require('util');
-var mysql = require('mysql');
 var joi = require('joi');
 var q = require('q');
 var APIError = require('../utils/apierror');
