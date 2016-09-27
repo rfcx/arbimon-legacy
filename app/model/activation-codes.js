@@ -6,7 +6,7 @@ var util = require('util');
 var mysql = require('mysql');
 var joi = require('joi');
 var q = require('q');
-var db = require('../utils/dbpool');
+var dbpool = require('../utils/dbpool');
 var sha256 = require('../utils/sha256');
 
 var ActivationCodes = {
@@ -40,7 +40,7 @@ var ActivationCodes = {
             data.push(options.project);
         }
         
-        return db.query(
+        return dbpool.query(
             "SELECT activation_code_id as id, hash, created, creator, payload, consumed, consumer, project\n"+
             "FROM activation_codes" + 
             (where.length ? "\nWHERE (" + where.join(")\n AND (") + ")" : ""),
@@ -63,7 +63,7 @@ var ActivationCodes = {
     },
     createCode: function(creator, data){
         var hash = this.makeHash(data);
-        return db.query(
+        return dbpool.query(
             "INSERT INTO activation_codes(hash, created, creator, payload, consumed, consumer, project)\n"+
             "VALUES (?, NOW(), ?, ?, 0, ?, ?)", [
                 hash, creator.id, JSON.stringify({
@@ -77,7 +77,7 @@ var ActivationCodes = {
         );
     },
     consumeCode: function(code, consumer){
-        return db.query(
+        return dbpool.query(
             "UPDATE activation_codes\n"+
             "SET consumed=1, consumer=?\n"+
             "WHERE activation_code_id=?", [
