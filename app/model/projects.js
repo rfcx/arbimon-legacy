@@ -274,6 +274,7 @@ var Projects = {
                     }
                 ], 
                 function(err) {
+                    db.release();
                     if(err) {
                         db.rollback(function() {
                             callback(err);

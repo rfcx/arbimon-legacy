@@ -149,6 +149,8 @@ var Jobs = {
                 }).then(function(){
                     return job_id;
                 });
+            }).finally(function(){
+                connection.release();
             });
         }).nodeify(callback);
     },
