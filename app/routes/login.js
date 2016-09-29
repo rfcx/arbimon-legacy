@@ -66,8 +66,7 @@ router.use(function(req, res, next) {
         if(req.session.user.isSuper === 1)
             return true;
         
-        var projectPerms = req.session.user.permissions[project_id];
-        console.log(project_id);
+        var projectPerms = req.session.user.permissions && req.session.user.permissions[project_id];
         debug("user permissions:", req.session.user.permissions);
         
         if(!projectPerms)
