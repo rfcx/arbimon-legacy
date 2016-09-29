@@ -71,10 +71,11 @@ mock_mysql_pool.prototype = {
 
 module.exports = {
     pool: null,
-    createPool: function(){
+    createPool: function(json_errors){
         if(!this.pool){
             this.pool = new mock_mysql_pool();
         }
+        this.pool.json_errors = json_errors;
         return this.pool;
     },
     types : {
