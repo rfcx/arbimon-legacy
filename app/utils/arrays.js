@@ -21,7 +21,6 @@ module.exports = {
             if(typeof(property_set) == 'string'){
                 property_set = property_set.split(',');
             }
-            console.log("property_set", property_set);
             async.eachLimit(property_set, 10, function(property, next_property){
                 var method = method_getter(property);
                 if(method){
