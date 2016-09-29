@@ -38,7 +38,7 @@ describe('index.js', function(){
             });
         });
     });
-    describe('GET /alive', function(){
+    describe.skip('GET /alive', function(){
         it('Should return a 200 status.', function(done){
             routes.handle({method:'get', url:'/alive'}, {
                 sendStatus: function(status){
