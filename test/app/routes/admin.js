@@ -57,8 +57,8 @@ describe('admin.js', function(){
         });
 
         it('Should respond 403 to non-superusers.', function(done){
-            admin_router.when({url:'/some_page', session:{user:{isSuper:0}}}, { next:true, sendStatus: function(req, res, status){
-                status.should.equal(403);
+            admin_router.when({url:'/some_page', session:{user:{isSuper:0}}}, { next:true, status: function(req, res, status){
+                status.should.equal(404);
                 done();
             }});
         });

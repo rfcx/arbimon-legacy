@@ -6,10 +6,11 @@
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
+var q = require('q');
 var mock_mysql = require('../../mock_tools/mock_mysql');
 var mock_aws = require('../../mock_tools/mock_aws');
 
-var pre_wire = require('../../mock_tools/pre_wire');
+var rewire = require('rewire');
 
 var mock_config = {
     aws: {
@@ -24,15 +25,19 @@ var mock_config = {
     }
 };
 
-var dbpool = pre_wire('../../app/utils/dbpool', {
-    '../../app/config' : function (key){ return mock_config[key]; },
-    'mysql' : mock_mysql
+var dbpool = rewire('../../../app/utils/dbpool');
+dbpool.__set__({
+    config : function (key){ return mock_config[key]; },
+    mysql : mock_mysql
 });
-var projects = pre_wire('../../app/model/projects', {
-    '../../app/config' : function (key){ return mock_config[key]; },
-    '../../app/utils/dbpool' :  dbpool,
-    'mysql' : mock_mysql,
+dbpool.pool = mock_mysql.createPool();
+var projects = rewire('../../../app/model/projects');
+projects.__set__({
+    config : function (key){ return mock_config[key]; },
+    dbpool :  dbpool,
+    queryHandler :  dbpool.queryHandler,
 });
+
 
 var mock_debug=function(){
     if(mock_debug.__spy__){
@@ -50,15 +55,17 @@ projects.__set__({
             'error' : new Error('I am error')
         },
         findByName: function(name, callback){
-            if(!this.cache[name]){
-                setImmediate(callback, null, []);
-            } else {
-                if(this.cache[name].message){
-                    setImmediate(callback, this.cache[name]);
+            return q.resolve().then((function(){
+                if(!this.cache[name]){
+                    return [];
                 } else {
-                    setImmediate(callback, null, [this.cache[name]]);
-                }                
-            }
+                    if(this.cache[name].message){
+                        throw this.cache[name];
+                    } else {
+                        return [this.cache[name]];
+                    }
+                }
+            }).bind(this)).nodeify(callback);
         }
     },
     songtypes: {
@@ -67,15 +74,17 @@ projects.__set__({
             'error' : new Error('I am error')
         },
         findByName: function(name, callback){
-            if(!this.cache[name]){
-                setImmediate(callback, null, []);
-            } else {
-                if(this.cache[name].message){
-                    setImmediate(callback, this.cache[name]);
+            return q.resolve().then((function(){
+                if(!this.cache[name]){
+                    return [];
                 } else {
-                    setImmediate(callback, null, [this.cache[name]]);
-                }                
-            }
+                    if(this.cache[name].message){
+                        throw this.cache[name];
+                    } else {
+                        return [this.cache[name]];
+                    }
+                }
+            }).bind(this)).nodeify(callback);
         }
     },
     s3: new mock_aws.S3()
@@ -544,28 +553,27 @@ describe('Project', function(){
             dbpool.pool.cache[
                 "SELECT count(*) as count \n" +
                 "FROM project_classes \n" +
-                "WHERE project_id = 1 \n" +
-                "AND species_id = 59335 \n" +
-                "AND songtype_id = 5036"
+                "WHERE project_id = ?\n" +
+                "  AND species_id = ?\n" +
+                "  AND songtype_id = ?"
             ]={value:[{count:0}]};
             dbpool.pool.cache[
-                "INSERT INTO project_classes \n" +
-                "SET project_id = 1, species_id = 59335, songtype_id = 5036"
+                "INSERT INTO project_classes(project_id, species_id, songtype_id) \n"+
+                "VALUES (?, ?, ?)"
             ]={value:{insertId:1}};
             var project_class = {species:'Specius exemplus', songtype: 'Common Song', project_id: 1};
-            projects.insertClass(project_class, function(err, results){
-                should.not.exist(err);
+            projects.insertClass(project_class).then(function(results){
                 results.should.deep.equal({class:1, songtype:5036, species:59335});
                 done();
-            });
+            }).catch(done);
         });
         it('Should callback result with error message is class is already in the project.', function(done){
             dbpool.pool.cache[
                 "SELECT count(*) as count \n" +
                 "FROM project_classes \n" +
-                "WHERE project_id = 1 \n" +
-                "AND species_id = 59335 \n" +
-                "AND songtype_id = 5036"
+                "WHERE project_id = ?\n" +
+                "  AND species_id = ?\n" +
+                "  AND songtype_id = ?"
             ]={value:[{count:1}]};
             var project_class = {species:'Specius exemplus', songtype: 'Common Song', project_id: 1};
             projects.insertClass(project_class, function(err, results){

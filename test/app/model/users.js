@@ -8,7 +8,7 @@ var async = require('async');
 var sinon = require('sinon');
 var mock_mysql = require('../../mock_tools/mock_mysql');
 
-var pre_wire = require('../../mock_tools/pre_wire');
+var rewire = require('rewire');
 
 var mock_config = {
     db: {
@@ -19,13 +19,16 @@ var mock_config = {
         "timezone" : "Z"
     }
 };
-var dbpool = pre_wire('../../app/utils/dbpool', {
-    '../../app/config' : function (key){ return mock_config[key]; },
-    'mysql' : mock_mysql
+var dbpool = rewire('../../../app/utils/dbpool');
+dbpool.__set__({
+    config : function (key){ return mock_config[key]; },
+    mysql : mock_mysql
 });
-var users = pre_wire('../../app/model/users', {
-    '../../app/utils/dbpool' :  dbpool,
-    'mysql' : mock_mysql
+dbpool.pool = mock_mysql.createPool();
+var users = rewire('../../../app/model/users');
+users.__set__({
+    dbpool : dbpool,
+    queryHandler: dbpool.queryHandler,
 });
 
 describe('Users', function(){

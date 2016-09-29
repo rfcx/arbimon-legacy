@@ -13,8 +13,10 @@ describe('index.js', function(){
     describe('GET /terms', function(){
         it('Should show the terms and conditions page.', function(done){
             routes.handle({method:'get', url:'/terms'}, {
-                render: function(page){
-                    page.should.equal('terms');
+                render: function(page, options){
+                    page.should.equal('post-page');
+                    expect(options).to.exist;
+                    options.content.should.equal('terms');
                     done();
                 }
             }, function(err){
@@ -25,8 +27,10 @@ describe('index.js', function(){
     describe('GET /support', function(){
         it('Should show the support page.', function(done){
             routes.handle({ method:'get', url:'/support'}, {
-                render: function(page){
-                    page.should.equal('support');
+                render: function(page, options){
+                    page.should.equal('post-page');
+                    expect(options).to.exist;
+                    options.content.should.equal('support');
                     done();
                 }
             }, function(err){

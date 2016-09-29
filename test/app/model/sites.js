@@ -9,7 +9,7 @@ var sinon = require('sinon');
 var mock_mysql = require('../../mock_tools/mock_mysql');
 var jsonwebtoken = require('jsonwebtoken');
 
-var pre_wire = require('../../mock_tools/pre_wire');
+var rewire = require('rewire');
 
 var mock_jsonwebtoken = {
     token_cache:{},
@@ -38,15 +38,18 @@ var mock_config = {
 };
 
 mock_config['trash-project'] = {id:1};
-var dbpool = pre_wire('../../app/utils/dbpool', {
-    '../../app/config' : function (key){ return mock_config[key]; },
-    'mysql' : mock_mysql
+var dbpool = rewire('../../../app/utils/dbpool');
+dbpool.__set__({
+    config : function (key){ return mock_config[key]; },
+    mysql : mock_mysql
 });
-var sites = pre_wire('../../app/model/sites', {
-    '../../app/config' : function (key){ return mock_config[key]; },
-    '../../app/utils/dbpool' :  dbpool,
-    'mysql' : mock_mysql,
-    'jsonwebtoken' : mock_jsonwebtoken
+dbpool.pool = mock_mysql.createPool();
+var sites = rewire('../../../app/model/sites');
+sites.__set__({
+    config : function (key){ return mock_config[key]; },
+    dbpool :  dbpool,
+    queryHandler: dbpool.queryHandler,
+    jsonwebtoken : mock_jsonwebtoken
 });
 
 describe('Sites', function(){

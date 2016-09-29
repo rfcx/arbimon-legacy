@@ -754,7 +754,7 @@ describe('Module: utils/uploader, Uploader', function() {
         });
     });
     
-        describe('prototype.process', function() {
+    describe('prototype.process', function() {
         var process;
         var dataPrep;
         var ensureFileIsLocallyAvailable;
@@ -835,7 +835,7 @@ describe('Module: utils/uploader, Uploader', function() {
                 
                 expect(err).to.equal(null);
                 expect(results).to.have.all.keys([
-                    'prepInfo',
+                    'dataPrep',
                     'ensureFileIsLocallyAvailable',
                     'insertUploadRecs',
                     'convertMonoFlac',

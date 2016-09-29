@@ -5,12 +5,14 @@
 
 
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
+var q = require('q');
 var sinon = require('sinon');
 var rewire= require('rewire');
 var router_expect = require('../../mock_tools/router_expect');
 
 var project = rewire('../../../app/routes/project');
 var mock = {
+    injected_data:{injected:'data'},
     model:{
         projects:{},
         users:{}
@@ -19,7 +21,12 @@ var mock = {
 project.__set__(mock);
 
 var project_router = router_expect(project, {
-    session:{user:{id:9393, isSuper:0}}
+    session:{user:{id:9393, isSuper:0}},
+    app:{
+        get: function(_){
+            return 'get("' + _ + '")';
+        }
+    }
 });
 
 describe('routes/project.js', function(){
@@ -31,36 +38,64 @@ describe('routes/project.js', function(){
     });
     describe('get /:projecturl?/', function(){
         it('Should show the app page for the given project.', function(done){
-            mock.model.projects.findByUrl = function(url, cb){setImmediate(cb, null, [{project_id:5, name:'project_5', is_private:false, is_enabled:true}]);};
-            mock.model.users.getPermissions= function(userid, projectid, cb){setImmediate(cb, null, [{permission:'die'}]);};
+            mock.model.projects.find = sinon.spy(function(options, cb){ return q.resolve([{project_id:5, name:'project_5', is_private:false, is_enabled:true}]).nodeify(cb);});
+            mock.model.users.getPermissions= function(userid, projectid, cb){ return q.resolve([{permission:'die'}]).nodeify(cb);};
             project_router.when('/project_5/', { render: function(req, res, page, args){
                 page.should.equal('app');
                 should.exist(req.project);
                 req.project.should.deep.equal({id: 5, name: 'project_5'});
-                args.should.deep.equal({ project: req.project, user: req.session.user });
+                args.should.deep.equal({ 
+                    card: undefined,
+                    env: 'get("env")',
+                    url_base: '/project_5/',
+                    inject_data:{injected:'data'},
+                    planAlert:'',
+                    perms: {
+                        authorized: true,
+                        permissions:[undefined],
+                        public:true,
+                        super:false
+                    },
+                    project: req.project, 
+                    user: req.session.user 
+                });
                 done();
             }});
         });
-        it('Should call next() if the project is private, the user has no permissions in the project and is not a super user.', function(done){
-            mock.model.projects.findByUrl = function(url, cb){setImmediate(cb, null, [{project_id:5, name:'project_5', is_private:true, is_enabled:true}]);};
-            project_router.when('/project_5/', { next: function(req, res, err){
-                should.not.exist(err);
+        it('Should redirect to /home if the project is private, the user has no permissions in the project and is not a super user.', function(done){
+            mock.model.projects.find = sinon.spy(function(options, cb){ return q.resolve([{project_id:5, name:'project_5', is_private:true, is_enabled:true}]).nodeify(cb);});
+            project_router.when('/project_5/', { redirect: function(req, res, obj){
+                obj.should.equal('/home');
                 done();
             }});
         });
         it('Should show the app page if the project is private and the user has permisssions.', function(done){
-            mock.model.projects.findByUrl = function(url, cb){setImmediate(cb, null, [{project_id:5, name:'project_5', is_private:true, is_enabled:true}]);};
-            mock.model.users.getPermissions= function(userid, projectid, cb){setImmediate(cb, null, [{permission:'die'}]);};
+            mock.model.projects.find = sinon.spy(function(options, cb){ return q.resolve([{project_id:5, name:'project_5', is_private:true, is_enabled:true}]).nodeify(cb);});
+            mock.model.users.getPermissions= function(userid, projectid, cb){ return q.resolve([{permission:'die'}]).nodeify(cb);};
             project_router.when({url:'/project_5/', session:{user:{permissions:{}}}}, { render: function(req, res, page, args){
                 page.should.equal('app');
                 should.exist(req.project);
                 req.project.should.deep.equal({id: 5, name: 'project_5'});
-                args.should.deep.equal({ project: req.project, user: req.session.user });
+                args.should.deep.equal({ 
+                    card: undefined,
+                    env: 'get("env")',
+                    url_base: '/project_5/',
+                    inject_data:{injected:'data'},
+                    planAlert:'',
+                    perms: {
+                        authorized: true,
+                        permissions:[undefined],
+                        public:false,
+                        super:false
+                    },
+                    project: req.project, 
+                    user: req.session.user 
+                });
                 done();
             }});
         });
         it('Should show the project_disabled page if the project is disabled.', function(done){
-            mock.model.projects.findByUrl = function(url, cb){setImmediate(cb, null, [{project_id:5, name:'project_5', is_private:false, is_enabled:false}]);};
+            mock.model.projects.find = sinon.spy(function(options, cb){ return q.resolve([{project_id:5, name:'project_5', is_private:false, is_enabled:false}]).nodeify(cb);});
             project_router.when('/project_5/', { render: function(req, res, page, args){
                 page.should.equal('project_disabled');
                 args.should.deep.equal({project: {project_id:5, name:'project_5', is_private:false, is_enabled:false}});
@@ -68,14 +103,14 @@ describe('routes/project.js', function(){
             }});
         });
         it('Should next() if the project is not found.', function(done){
-            mock.model.projects.findByUrl = function(url, cb){setImmediate(cb, null, []);};
+            mock.model.projects.find = sinon.spy(function(options, cb){ return q.resolve([]).nodeify(cb);});
             project_router.when('/project_5/', { next: function(req, res, err){
                 should.not.exist(err);
                 done();
             }});
         });
         it('Should fail if failed getting the project.', function(done){
-            mock.model.projects.findByUrl = function(url, cb){setImmediate(cb, new Error('I am error'));};
+            mock.model.projects.find = sinon.spy(function(options, cb){ return q.reject(new Error('I am error')).nodeify(cb);});
             project_router.when('/project_5/', { next: function(req, res, err){
                 should.exist(err);
                 err.message.should.equal('I am error');
