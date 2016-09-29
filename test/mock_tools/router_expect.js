@@ -78,7 +78,7 @@ var expected_response = function(request, expectations){
 };
 
 var expect_functions = {};
-["redirect","render","next","send","status","sendStatus","json", "write"].forEach(function(fn){
+["redirect","render","next","send","status","sendStatus","json", "type","write"].forEach(function(fn){
     expect_functions[fn] = make_expect_fn(fn);
 });
 
