@@ -13,8 +13,36 @@ describe('index.js', function(){
     describe('GET /terms', function(){
         it('Should show the terms and conditions page.', function(done){
             routes.handle({method:'get', url:'/terms'}, {
-                render: function(page){
-                    page.should.equal('terms');
+                render: function(page, options){
+                    page.should.equal('post-page');
+                    expect(options).to.exist;
+                    options.content.should.equal('terms');
+                    done();
+                }
+            }, function(err){
+                done(err || new Error("Request was wrongly handled"));
+            });
+        });
+    });
+    describe('GET /privacy', function(){
+        it('Should show the privacy page.', function(done){
+            routes.handle({ method:'get', url:'/privacy'}, {
+                render: function(page, options){
+                    page.should.equal('post-page');
+                    expect(options).to.exist;
+                    options.content.should.equal('privacy');
+                    done();
+                }
+            }, function(err){
+                done(err || new Error("Request was wrongly handled"));
+            });
+        });
+    });
+    describe('GET /classifiers', function(){
+        it('Should show the classifiers page.', function(done){
+            routes.handle({ method:'get', url:'/classifiers'}, {
+                render: function(page, options){
+                    page.should.equal('classifiers');
                     done();
                 }
             }, function(err){
@@ -25,8 +53,10 @@ describe('index.js', function(){
     describe('GET /support', function(){
         it('Should show the support page.', function(done){
             routes.handle({ method:'get', url:'/support'}, {
-                render: function(page){
-                    page.should.equal('support');
+                render: function(page, options){
+                    page.should.equal('post-page');
+                    expect(options).to.exist;
+                    options.content.should.equal('support');
                     done();
                 }
             }, function(err){
@@ -34,7 +64,7 @@ describe('index.js', function(){
             });
         });
     });
-    describe('GET /alive', function(){
+    describe.skip('GET /alive', function(){
         it('Should return a 200 status.', function(done){
             routes.handle({method:'get', url:'/alive'}, {
                 sendStatus: function(status){

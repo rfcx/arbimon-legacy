@@ -8,7 +8,7 @@ var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
 // var rewire = require('rewire');
-var pre_wire = require('../../mock_tools/pre_wire');
+var rewire = require('rewire');
 
 var mock_mysql = require('../../mock_tools/mock_mysql');
 var mock_config = {
@@ -21,12 +21,12 @@ var mock_config = {
     }
 };
 
-var dbpool = pre_wire('../../app/utils/dbpool', {
-    '../../app/config' : function (key){
-
+var dbpool = rewire('../../../app/utils/dbpool');
+dbpool.__set__({
+    config : function (key){
         return mock_config[key];
     },
-    'mysql' : mock_mysql
+    mysql : mock_mysql
 });
 
 describe('dbpool', function(){
@@ -37,8 +37,8 @@ describe('dbpool', function(){
         mock_mysql.types.pool.prototype.getConnection.restore();
     });
     describe('#pool', function(){
-        it('Should be automatically created.', function(){
-            should.exist(dbpool.pool);
+        it('Should be lazyly created.', function(){
+            should.not.exist(dbpool.pool);
         });
     });
     describe('#enable_query_debugging()', function(){

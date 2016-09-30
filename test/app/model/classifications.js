@@ -6,10 +6,10 @@
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
-var mock_mysql = require('../mock_tools/mock_mysql');
-var mock_aws = require('../mock_tools/mock_aws');
+var mock_mysql = require('../../mock_tools/mock_mysql');
+var mock_aws = require('../../mock_tools/mock_aws');
 
-var pre_wire = require('../mock_tools/pre_wire');
+var rewire = require('rewire');
 
 var mock_config = {
     aws: {
@@ -24,15 +24,18 @@ var mock_config = {
     }
 };
 
-var dbpool = pre_wire('../../utils/dbpool', {
-    '../../config' : function (key){ return mock_config[key]; },
-    'mysql' : mock_mysql
+var dbpool = rewire('../../../app/utils/dbpool');
+dbpool.__set__({
+    config : function (key){ return mock_config[key]; },
+    mysql  : mock_mysql,
 });
+dbpool.pool = mock_mysql.createPool();
 // mock_mysql.pool.json_errors = true;
-var classifications = pre_wire('../../model/classifications', {
-    '../../config' : function (key){ return mock_config[key]; },
-    '../../utils/dbpool' :  dbpool,
-    'mysql' : mock_mysql,
+var classifications = rewire('../../../app/model/classifications');
+classifications.__set__({
+    config : function (key){ return mock_config[key]; },
+    dbpool : dbpool,
+    queryHandler : dbpool.queryHandler,
 });
 
 var mock_debug=function(){

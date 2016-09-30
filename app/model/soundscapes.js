@@ -1,5 +1,4 @@
 // dependencies
-var mysql        = require('mysql');
 var AWS          = require('aws-sdk');
 var async        = require('async');
 var joi          = require('joi');

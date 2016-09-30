@@ -8,6 +8,7 @@ var responseMethods = [
     "render",
     "next",
     "send",
+    "type",
     "status",
     "sendStatus",
     "json"
