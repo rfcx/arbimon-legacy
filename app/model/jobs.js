@@ -172,9 +172,9 @@ var Jobs = {
      *  @param {Function} callback - callback to return after setting the flag.
      */
     hide: function(jId, callback) {
-        var q = "update `jobs` set `hidden`  = 1 where `job_id` = " + jId;
+        var q = "update `jobs` set `hidden`  = 1 where `job_id` = ?";
 
-        queryHandler(q, callback);
+        queryHandler(q, [jId], callback);
     },
     
     /** Sets the cancel_requestted flag for the given job id.
@@ -182,9 +182,9 @@ var Jobs = {
      *  @param {Function} callback - callback to return after setting the flag.
      */
     cancel: function(jId, callback) {
-        var q = "update `jobs` set `cancel_requested`  = 1 where `job_id` = " + jId;
+        var q = "update `jobs` set `cancel_requested`  = 1 where `job_id` = ?";
 
-        queryHandler(q, callback);
+        queryHandler(q, [jId], callback);
     },    
 
     /** Queries the database to search if a given classification name already exists for a given project.
@@ -195,10 +195,12 @@ var Jobs = {
      */
     classificationNameExists: function(p, callback) {
         var q = "SELECT count(*) as count FROM `jobs` J ,  `job_params_classification` JPC " +
-            " WHERE `project_id` = " + dbpool.escape(p.pid) + " and `job_type_id` = 2 and J.`job_id` = JPC.`job_id` " +
-            " and `name` like " + dbpool.escape(p.name) + " ";
+            "WHERE `project_id` = ?\n" +
+            "  AND `job_type_id` = 2\n" +
+            "  AND J.`job_id` = JPC.`job_id`\n" +
+            "  AND `name` like ? ";
 
-        queryHandler(q, callback);
+        queryHandler(q, [p.pid, p.name], callback);
     },
     
     /** Queries the database to search if a given model name already exists for a given project.
@@ -209,10 +211,10 @@ var Jobs = {
      */
     modelNameExists: function(p, callback) {
         var q = "SELECT count(*) as count FROM `jobs` J ,  `job_params_training` JPC " +
-            " WHERE `project_id` = " + dbpool.escape(p.pid) + " and `job_type_id` = 1 and J.`job_id` = JPC.`job_id` " +
-            " and `name` like " + dbpool.escape(p.name) + " ";
+            " WHERE `project_id` = ? and `job_type_id` = 1 and J.`job_id` = JPC.`job_id` " +
+            " and `name` like ? ";
 
-        queryHandler(q, callback);
+        queryHandler(q, [p.pid, p.name], callback);
     },
 
     
@@ -223,9 +225,9 @@ var Jobs = {
      *  @param {Function} callback - callback to return with the search results
      */
     soundscapeNameExists: function(p, callback) {
-        var q = "SELECT count(*) as count FROM `soundscapes` WHERE `project_id` = " + dbpool.escape(p.pid) + " and `name` LIKE " + dbpool.escape(p.name);
+        var q = "SELECT count(*) as count FROM `soundscapes` WHERE `project_id` = ? and `name` LIKE ?";
 
-        queryHandler(q, callback);
+        queryHandler(q, [p.pid, p.name], callback);
     },
 
     /** Queries for the set of currently running jobs in the database for a given project, optionally.
@@ -392,9 +394,12 @@ var Jobs = {
     set_job_state: function(job, new_state, callback){
         queryHandler(
             "UPDATE jobs \n"+
-            "SET state = " + dbpool.escape(new_state) + ",\n" +
+            "SET state = ?,\n" +
             "    last_update = NOW() \n" +
-            "WHERE job_id = " + (job.id | 0), 
+            "WHERE job_id = ?", [
+                new_state,
+                job.id | 0
+            ],
         callback);
     },
     
@@ -429,8 +434,7 @@ var Jobs = {
                     "ORDER BY job_id DESC \n"+
                     "LIMIT 0, 10";
                 
-                getLast5Jobs = dbpool.format(getLast5Jobs, [jobType.id]);
-                queryHandler(getLast5Jobs, function(err, rows) {
+                queryHandler(getLast5Jobs, [jobType.id], function(err, rows) {
                     if(err) return next(err);
                     
                     var result = {};
