@@ -4,6 +4,7 @@ var mock_mysql_connection = function(pool){
     this.pool = pool;
     if(pool){
         pool.connections++;
+        this.pool.__connections__.push(this);
         this.json_errors = pool.json_errors;
     }
     this.cache = (pool && pool.cache) || {};
@@ -51,6 +52,7 @@ mock_mysql_connection.prototype = {
     },
     release:function(){
         if(this.pool){
+            this.pool.__connections__.splice(this.pool.__connections__.indexOf(this), 1);
             this.pool = null;
         }
     }
@@ -58,6 +60,7 @@ mock_mysql_connection.prototype = {
 
 var mock_mysql_pool = function(){
     this.cache={};
+    this.__connections__=[];
 };
 mock_mysql_pool.prototype = {
     getConnection: function(callback){
