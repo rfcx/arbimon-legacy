@@ -24,6 +24,32 @@ describe('index.js', function(){
             });
         });
     });
+    describe('GET /privacy', function(){
+        it('Should show the privacy page.', function(done){
+            routes.handle({ method:'get', url:'/privacy'}, {
+                render: function(page, options){
+                    page.should.equal('post-page');
+                    expect(options).to.exist;
+                    options.content.should.equal('privacy');
+                    done();
+                }
+            }, function(err){
+                done(err || new Error("Request was wrongly handled"));
+            });
+        });
+    });
+    describe('GET /classifiers', function(){
+        it('Should show the classifiers page.', function(done){
+            routes.handle({ method:'get', url:'/classifiers'}, {
+                render: function(page, options){
+                    page.should.equal('classifiers');
+                    done();
+                }
+            }, function(err){
+                done(err || new Error("Request was wrongly handled"));
+            });
+        });
+    });
     describe('GET /support', function(){
         it('Should show the support page.', function(done){
             routes.handle({ method:'get', url:'/support'}, {
