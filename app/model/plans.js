@@ -2,7 +2,6 @@
 "use strict";
 
 var debug = require('debug')('arbimon2:model:plans');
-var mysql = require('mysql');
 var async = require('async');
 var joi = require('joi');
 
@@ -14,7 +13,7 @@ var plans = {
     insert: function(planData, callback) {
         var q = "INSERT INTO project_plans \nSET ?";
         
-        queryHandler(mysql.format(q, planData), callback);
+        queryHandler(dbpool.format(q, planData), callback);
     },
     find: function(params, callback) {
         var q = "SELECT * \nFROM project_plans \nWHERE ";
@@ -34,11 +33,11 @@ var plans = {
         var query = [];
         
         if(params.id) {
-            query.push("plan_id = " + mysql.escape(params.id));
+            query.push("plan_id = " + dbpool.escape(params.id));
         }
         
         if(params.project_id) {
-            query.push("project_id = " + mysql.escape(params.project_id));
+            query.push("project_id = " + dbpool.escape(params.project_id));
         }
         
         q += query.join(' \nAND ');
@@ -49,7 +48,7 @@ var plans = {
     update: function(planId, planData, callback) {
         var q = "UPDATE project_plans \nSET ? WHERE plan_id = ?";
         
-        queryHandler(mysql.format(q, [planData, planId]), callback);
+        queryHandler(dbpool.format(q, [planData, planId]), callback);
     }
 };
 

@@ -1,5 +1,4 @@
 var util = require('util');
-var mysql = require('mysql');
 var Joi = require('joi');
 var sprintf = require("sprintf-js").sprintf;
 var dbpool       = require('../utils/dbpool');
@@ -35,7 +34,7 @@ module.exports = {
             var q = "INSERT INTO uploads_processing \n"+
                     "SET ?";
                     
-            q = mysql.format(q, {
+            q = dbpool.format(q, {
                 filename: upload.filename, 
                 site_id: upload.site_id, 
                 user_id: upload.user_id,
@@ -113,7 +112,7 @@ module.exports = {
         var q = "UPDATE uploads_processing \n"+
                 "SET state = ? \n"+
                 "WHERE upload_id = ?";
-        q = mysql.format(q, [newState, uploadId]);
+        q = dbpool.format(q, [newState, uploadId]);
         queryHandler(q, callback);
     },
     
@@ -121,7 +120,7 @@ module.exports = {
         var q = "UPDATE uploads_processing \n"+
                 "SET state = ?, remark = ? \n"+
                 "WHERE upload_id = ?";
-        q = mysql.format(q, [newState, remark, uploadId]);
+        q = dbpool.format(q, [newState, remark, uploadId]);
         queryHandler(q, callback);
     },
     
@@ -132,7 +131,7 @@ module.exports = {
         var q = "DELETE FROM uploads_processing \n"+
                 "WHERE upload_id = %s";
                 
-        q = util.format(q, mysql.escape(upload_id));
+        q = util.format(q, dbpool.escape(upload_id));
         queryHandler(q, callback);
     },
 };

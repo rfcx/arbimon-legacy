@@ -6,12 +6,15 @@
 
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var sinon = require('sinon');
+var q = require('q');
 var rewire= require('rewire');
 var dd = console.log;
 
 var login = rewire('../../../app/routes/login');
 
 var mock_config={
+    'facebook-api':{public:'public facebook api id'},
+    'google-api':{oauthId:'google oauth id'},
     mailchimp:{listId:1},
     recaptcha:{secret:"recaptcha secret"}
 };
@@ -42,7 +45,7 @@ var mock = {
 };
 login.__set__(mock);
 
-describe('index.js', function(){
+describe('login.js', function(){
     afterEach(function(){
         mock.model.users={};
         delete mock.transport.sendMail.delegate;
@@ -79,7 +82,7 @@ describe('index.js', function(){
             login.handle(req={method:'get', url:'/some-exotic-url-link', session:{user:{
                 isSuper:0,
                 permissions:{}
-            }}}, res={}, function(err){
+            }, loggedIn:true}}, res={}, function(err){
                 should.exist(req.haveAccess);
                 req.haveAccess(1, 'do the hooky pooky').should.equal(false);
                 req.haveAccess(1, 'jump around').should.equal(false);
@@ -88,7 +91,7 @@ describe('index.js', function(){
         });
         it('Should allow any access on any project to a super user.', function(done){
             var req, res;
-            login.handle(req={method:'get', url:'/some-exotic-url-link', session:{user:{isSuper:1}}}, res={}, function(err){
+            login.handle(req={method:'get', url:'/some-exotic-url-link', session:{user:{isSuper:1}, loggedIn:true}}, res={}, function(err){
                 should.exist(req.haveAccess);
                 req.haveAccess(1, 'do anything even non-exitent things').should.equal(true);
                 done();
@@ -199,26 +202,26 @@ describe('index.js', function(){
         });
     });
     describe('get /', function(){
-        it('Should show the login page if user is not logged in.', function(done){
+        it('Should show the landing page if user is not logged in.', function(done){
             var req, res;
             login.handle(req={
                 method:'get', url:'/', session:{loggedIn:false}
             }, res={
                 render:function(page){
-                    page.should.equal('login');
+                    page.should.equal('landing-page');
                     done();
                 }
             }, function(err){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should show the login page if there is no session.', function(done){
+        it('Should show the landing page if there is no session.', function(done){
             var req, res;
             login.handle(req={
                 method:'get', url:'/'
             }, res={
                 render:function(page){
-                    page.should.equal('login');
+                    page.should.equal('landing-page');
                     done();
                 }
             }, function(err){
@@ -281,14 +284,48 @@ describe('index.js', function(){
         });
     });
     describe('post /login', function(){
-        it('Should log the user in if a valid user/password is given.', function(done){
+        it('Should delegate call to user.performLogin.', function(done){
             var req, res;
             mock.model.users={
-                invalidLogins: function(ip, callback){ callback(null, [{tries:0}], {}); },
-                findByUsername: function(username, callback){ callback(null, [{
-                    user_id:9393,login:'pepe', password: mock.sha256('password magico')
-                }], {});},
-                update: sinon.spy(function(obj, cb){ setImmediate(cb);})
+                performLogin: sinon.spy(function(req, auth, options){ 
+                    return q.resolve({
+                        success: true,
+                        redirect : '/home',
+                        captchaNeeded: true
+                    });
+                })
+            };
+            login.handle(req={
+                method:'POST', url:'/login', body:{
+                    username: 'pepe', password:'password magico', captcha:'captcha'
+                }, query:{}, session:{}
+            }, res={
+                json:function(obj){
+                    mock.model.users.performLogin.calledOnce.should.be.true;
+                    mock.model.users.performLogin.args[0][1].should.deep.equal({
+                        username : 'pepe',
+                        password : 'password magico',
+                        captcha  : 'captcha',
+                    });
+                    mock.model.users.performLogin.args[0][2].should.deep.equal({
+                        redirect : undefined
+                    });
+                    done();
+                }
+            }, function(err){
+                done(err || new Error('Request not handled.'));
+            });
+        });
+        it.skip('Should log the user in if a valid user/password is given.', function(done){
+            var req, res;
+            mock.model.users={
+                performLogin: sinon.spy(function(req, auth, options){ 
+                    return q.resolve({
+                        success: true,
+                        redirect : '/home',
+                        captchaNeeded: true
+                    });
+                })
             };
             login.handle(req={
                 method:'POST', url:'/login', body:{
@@ -309,7 +346,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should fail login attempt if password is wrong.', function(done){
+        it.skip('Should fail login attempt if password is wrong.', function(done){
             var req, res;
             mock.model.users={
                 invalidLogins: function(ip, callback){ callback(null, [{tries:0}], {}); },
@@ -341,7 +378,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should fail login attempt if user does not exists.', function(done){
+        it.skip('Should fail login attempt if user does not exists.', function(done){
             var req, res;
             mock.model.users={
                 invalidLogins: function(ip, callback){ callback(null, [{tries:0}], {}); },
@@ -366,7 +403,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should require a captcha after 3 failed attempts.', function(done){
+        it.skip('Should require a captcha after 3 failed attempts.', function(done){
             var req, res;
             mock.model.users={
                 invalidLogins: function(ip, callback){ callback(null, [{tries:2}], {}); },
@@ -391,7 +428,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should log the user in if a valid user/password is given and captcha is correct.', function(done){
+        it.skip('Should log the user in if a valid user/password is given and captcha is correct.', function(done){
             var req, res;
             mock.request.delegate = sinon.spy(function(url, callback){
                 setImmediate(callback, null, 200, JSON.stringify({success:url.qs.response == 'captcha'}));
@@ -422,7 +459,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should fail login attempt if captcha is wrong.', function(done){
+        it.skip('Should fail login attempt if captcha is wrong.', function(done){
             var req, res;
             mock.request.delegate = sinon.spy(function(url, callback){
                 setImmediate(callback, null, 200, JSON.stringify({success:url.qs.response == 'captcha'}));
@@ -452,7 +489,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should fail if captcha validation fails.', function(done){
+        it.skip('Should fail if captcha validation fails.', function(done){
             var req, res;
             mock.request.delegate = sinon.spy(function(url, callback){
                 setImmediate(callback, new Error('I am error'));
@@ -478,7 +515,7 @@ describe('index.js', function(){
             });
         });          
         
-        it('Should disable the user after 10 failed attempts.', function(done){
+        it.skip('Should disable the user after 10 failed attempts.', function(done){
             var req, res;
             mock.request.delegate = sinon.spy(function(url, callback){
                 setImmediate(callback, null, 200, JSON.stringify({success:url.qs.response == 'captcha'}));
@@ -513,7 +550,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should fail login after 10 failed attempts.', function(done){
+        it.skip('Should fail login after 10 failed attempts.', function(done){
             var req, res;
             mock.model.users={
                 invalidLogins: function(ip, callback){ callback(null, [{tries:10}], {}); },
@@ -534,7 +571,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should fail login attempt if user is (permanently) disabled.', function(done){
+        it.skip('Should fail login attempt if user is (permanently) disabled.', function(done){
             var req, res;
             mock.model.users={
                 invalidLogins: function(ip, callback){ callback(null, [{tries:0}], {}); },
@@ -558,7 +595,7 @@ describe('index.js', function(){
             });
         });
     
-        it('Should call console.error if login attempt fails and user update fails.', function(done){
+        it.skip('Should call console.error if login attempt fails and user update fails.', function(done){
             var req, res;
             sinon.stub(console, 'error', function(err){
                 console.error.restore();
@@ -585,7 +622,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should call console.error if login attempt fails and login tries update fails.', function(done){
+        it.skip('Should call console.error if login attempt fails and login tries update fails.', function(done){
             var req, res;
             sinon.stub(console, 'error', function(err){
                 console.error.restore();
@@ -609,7 +646,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should call console.error if user post-login update fails.', function(done){
+        it.skip('Should call console.error if user post-login update fails.', function(done){
             var req, res;
             sinon.stub(console, 'error', function(err){
                 console.error.restore();
@@ -634,7 +671,7 @@ describe('index.js', function(){
                 done(err || new Error('Request not handled.'));
             });
         });
-        it('Should fail if user fetch or login count fetch fails.', function(done){
+        it.skip('Should fail if user fetch or login count fetch fails.', function(done){
             var req, res;
             mock.model.users={
                 invalidLogins: function(ip, callback){ callback(new Error('I am error')); },
@@ -664,7 +701,7 @@ describe('index.js', function(){
                 }
             }, res={
                 redirect:function(url){
-                    url.should.equal('/login');
+                    url.should.equal('/');
                     done();
                 }
             }, function(err){

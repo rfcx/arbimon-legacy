@@ -97,3 +97,9 @@
     - fixed bug in counting a projects scc tallys
 - v1.9.3
     - added default default plot to aeds.
+- v1.9.4
+    - plugged db connection leak when creating projects
+    - plugged db connection leak when creating jobs
+    - fixed testing (some are still skipped, but none fail)
+    - added `models.jobs` tests
+

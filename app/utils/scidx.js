@@ -78,6 +78,7 @@ scidx.prototype = {
             (function set_header_vals(upc, next){
                 if(upc[0] != "SCIDX "){
                     next(new Error("Invalid soundscape index file format."));
+                    return;
                 }
                 this.version   = _.version   = upc[1];
                 this.offsetx   = _.offsetx   = upc[2];

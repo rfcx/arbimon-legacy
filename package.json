@@ -1,12 +1,12 @@
 {
   "name": "arbimon2",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
     "setup": "./scripts/setup/setup.sh",
     "dep-graph": "madge -i backend.png  --config madge.conf.json -M app.js model/ utils/ routes/ config/ bin/",
-    "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -r test"
+    "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -r test/app"
   },
   "dependencies": {
     "async": "~2.0.1",

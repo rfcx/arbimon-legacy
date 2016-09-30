@@ -2,7 +2,7 @@
 "use strict";
 
 var debug = require('debug')('arbimon2:model:admin-plots');
-var db = require('../utils/dbpool');
+var dbpool = require('../utils/dbpool');
 var q = require('q');
 
 var AdminPlots = {
@@ -94,7 +94,7 @@ var AdminPlots = {
     queryStatsData_activity: function(selectFn, clauseFn, groupClauseFn){
         var data = [];
         var clause = clauseFn && clauseFn('timestamp', data);
-        return db.streamQuery(
+        return dbpool.streamQuery(
             "SELECT " + selectFn('timestamp') + " as datetime, COUNT(*) as activity\n" +
             "FROM project_news\n" + 
             (clause ? (

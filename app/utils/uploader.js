@@ -274,7 +274,7 @@ Uploader.prototype.finishProcessing = function(callback) {
 
 Uploader.prototype.ensureFileIsLocallyAvailable = function(callback) {
     if(this.upload.tempFileUri){// it's in the bucket!!!
-        console.log("fetching ", this.upload.tempFileUri, " from ", config('aws').bucketName);
+        debug("fetching ", this.upload.tempFileUri, " from ", config('aws').bucketName);
         s3.getObject({
             Bucket : config('aws').bucketName,
             Key    : this.upload.tempFileUri
