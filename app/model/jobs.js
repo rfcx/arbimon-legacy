@@ -265,18 +265,16 @@ var Jobs = {
             var jt_projections = job_type.sql && job_type.sql.report && job_type.sql.report.projections;
             var jt_tables      = job_type.sql && job_type.sql.report && job_type.sql.report.tables;
             union.push(
-                "SELECT J.`progress`, J.`progress_steps`, J.`job_type_id`, JT.name as type, J.`job_id`, J.state, J.last_update, \n" +
+                "SELECT J.`progress`, J.`progress_steps`, J.`job_type_id`, JT.name as type, J.`job_id`, J.state, J.last_update,\n" +
                 (jt_projections && jt_projections.length ? 
-                    "    "+jt_projections.join(", ")+", \n" : ""
+                    "    "+jt_projections.join(", ")+",\n" : ""
                 ) +
-                "   round(100*(J.`progress`/J.`progress_steps`),1) as percentage \n"+
-                " FROM `jobs` as J " +
+                "    round(100*(J.`progress`/J.`progress_steps`),1) as percentage\n"+
+                "FROM `jobs` as J \n" +
                 (jt_tables && jt_tables.length ? 
                     "    "+jt_tables.join("\n")+"\n" : ""
                 ) +
-                (tables && tables.length ? 
-                    "    "+tables.join("\n")+"\n" : ""
-                ) +
+                "    " + tables.join("\n") + "\n" +
                 "WHERE "+constraints.join(" AND ") + "\n" +
                 "  AND J.job_type_id = " + (job_type.type_id|0)
             );
