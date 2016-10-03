@@ -148,6 +148,7 @@ tags.resourceDefs.recording = {
         var tables = ['tags T', 'JOIN recording_tags RT ON RT.tag_id = T.tag_id'];
         var constraints = [];
         var data = [];
+        var promise;
         
         if(options && options.project){
             promise = projects.getProjectSites(options.project).then(function(sites){

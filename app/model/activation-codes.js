@@ -14,6 +14,8 @@ var ActivationCodes = {
      * @param {Object} options.hash - match by hash.
      * @param {Object} options.consumer - match usable by user.
      * @param {Object} options.project - match usable for project.
+     *
+     * @return {Promise} resolving to a list of the queries activation codes.
      */
     listAll: function(options) {
         options = options || {};
@@ -51,6 +53,14 @@ var ActivationCodes = {
             });
         });
     },
+    /** Returns a hash of the given data.
+     * @param {Object} data - data object.
+     * @param {Integer} data.processing - associated ammount of processing.
+     * @param {Integer} data.recordings - associated ammount of recordings.
+     * @param {Integer} data.user - associated user.
+     * @param {Integer} data.project - associated project.
+     8 @return {String} hash based on the given data parameters.
+     */
     makeHash: function(data){
         var salt = Math.ceil(new Date().getTime() / 1000).toString();
         return sha256(salt + JSON.stringify([
@@ -60,6 +70,16 @@ var ActivationCodes = {
             (data.project | 0),
         ]) + Math.random(), 'base64').replace(/\//g,'-').replace(/=+$/,'');
     },
+    /** Creates an activation code for the given creator and data.
+     * @param {Object} creator - user who created the code.
+     * @param {Object} data - data payload for the access code.
+     * @param {Integer} data.processing - associated ammount of processing.
+     * @param {Integer} data.recordings - associated ammount of recordings.
+     * @param {Integer} data.user - associated user. (optional)
+     * @param {Integer} data.project - associated project. (optional)
+     *
+     * @return {Promise} resolving to the created access code.
+     */
     createCode: function(creator, data){
         var hash = this.makeHash(data);
         return dbpool.query(
@@ -75,7 +95,14 @@ var ActivationCodes = {
             ]
         );
     },
-    consumeCode: function(code, consumer){
+    /** Consumes an activation code.
+     * @param {Object} code - access code.
+     * @param {Integer} code.id - code id
+     * @param {Integer} consumer - consumer id
+     *
+     * @return {Promise} resolving after consuming the code.
+     */
+     consumeCode: function(code, consumer){
         return dbpool.query(
             "UPDATE activation_codes\n"+
             "SET consumed=1, consumer=?\n"+
