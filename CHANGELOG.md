@@ -102,4 +102,8 @@
     - plugged db connection leak when creating jobs
     - fixed testing (some are still skipped, but none fail)
     - added `models.jobs` tests
+- v1.9.5
+    - fixed bug in Users.getProjectList
+    - testing++
+    - docs++
 
