@@ -6,6 +6,7 @@
 var chai = require('chai'), should = chai.should(), expect = chai.expect;
 var async = require('async');
 var sinon = require('sinon');
+var q = require('q');
 var mock_mysql = require('../../mock_tools/mock_mysql');
 
 var rewire = require('rewire');
@@ -34,6 +35,12 @@ users.__set__({
 describe('Users', function(){
     var pepe = {user_id:9393, login:'pepe', email:'pepe@site.com', password:'ABFABAB11ABABADDBA09', firstname:'Pepe', lastname:'User'};
     var project1 = {id:1,name:'p1', url:'project_1/', description:'pr1', is_private:1, is_enabled:1};
+    describe('[private] hashPassword()', function(){
+        it('should produce a hash of the given password', function(){
+            users.__get__('hashPassword')('12345').should.not.equal('12345');
+        });        
+    });
+
     describe('#findByUsername()', function(){
         beforeEach(function(){mock_mysql.pool.cache = {};});
         it('Should find a user, given its username', function(done){
@@ -248,6 +255,36 @@ describe('Users', function(){
                 results.should.deep.equal([project1]);
                 done();
             });
+        });        
+    });
+    describe('#getProjectList()', function(){
+        var modelsProjects = users.__get__('models').projects;
+        beforeEach(function(){
+            mock_mysql.pool.cache = {};
+            sinon.stub(users, 'projectList');
+            users.projectList.returns(q.resolve([1,2,3]));
+            sinon.stub(modelsProjects, 'listAll');
+            modelsProjects.listAll.yields(null, [1,2,3]);
+        });
+        afterEach(function(){
+            users.projectList.restore();
+            modelsProjects.listAll.restore();
+        });
+        it('Should return the list of project available to the given user', function(done){
+            dbpool.pool.cache[
+                "SELECT is_super FROM users WHERE user_id = ?"
+            ]={value:[{is_super:0}]};
+            users.getProjectList(9393).then(function(){
+                users.projectList.callCount.should.equal(1);
+            }).then(done, done);
+        });        
+        it('Should return all the projects is user is super user', function(done){
+            dbpool.pool.cache[
+                "SELECT is_super FROM users WHERE user_id = ?"
+            ]={value:[{is_super:1}]};
+            users.getProjectList(9393).then(function(){
+                modelsProjects.listAll.callCount.should.equal(1);
+            }).then(done, done);
         });        
     });
     describe('#getPermissions()', function(){

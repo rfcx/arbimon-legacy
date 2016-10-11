@@ -175,10 +175,9 @@ var Users = {
             userId
         ]).get(0).then(function(user){
             if(user.is_super){
-                console.log("models.projects", models.projects);
                 return q.ninvoke(models.projects, 'listAll').get(0);
             } else {
-                return q.ninvoke(Users.projectList, userId).get(0);
+                return Users.projectList(userId).get(0);
             }
         });
     },
