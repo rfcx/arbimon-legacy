@@ -178,7 +178,7 @@ var Users = {
                 console.log("models.projects", models.projects);
                 return q.ninvoke(models.projects, 'listAll').get(0);
             } else {
-                return q.ninvoke(Users.projectList, userId).get(0);
+                return Users.projectList(userId).get(0);
             }
         });
     },
