@@ -177,7 +177,7 @@ var Users = {
             if(user.is_super){
                 return q.ninvoke(models.projects, 'listAll').get(0);
             } else {
-                return Users.projectList(userId).get(0);
+                return Users.projectList(userId);
             }
         });
     },
