@@ -106,4 +106,6 @@
     - fixed bug in Users.getProjectList
     - testing++
     - docs++
+- v1.9.6
+    - fixed bug in Users.getProjectList (for reals)
 
