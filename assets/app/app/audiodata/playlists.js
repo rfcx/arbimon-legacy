@@ -7,7 +7,7 @@ angular.module('a2.audiodata.playlists', [
 .controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit) {
     $scope.loading = true;
     
-    a2Playlists.getList(function(data) {
+    a2Playlists.getList({info:true}).then(function(data) {
         $scope.playlists = data;
         $scope.loading = false;
     });
@@ -80,7 +80,7 @@ angular.module('a2.audiodata.playlists', [
                 if(data.error)
                     return notify.log(data.error);
                 
-                a2Playlists.getList(function(data) {
+                a2Playlists.getList().then(function(data) {
                     $scope.playlists = data;
                     $scope.loading = false;
                     notify.log('Playlist deleted');

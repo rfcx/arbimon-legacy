@@ -43,7 +43,7 @@ angular.module('a2.analysis.soundscapes', [
         $scope.url = data.url;
     });
     
-    a2Playlists.getList(function(data) {
+    a2Playlists.getList().then(function(data) {
             $scope.playlists = data;
     });
     

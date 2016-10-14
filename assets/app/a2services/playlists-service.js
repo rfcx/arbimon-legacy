@@ -5,11 +5,12 @@ angular.module('a2.srv.playlists', [
     var projectName = Project.getUrl();
     
     return {
-        getList: function(callback) {
-            return $http.get('/api/project/'+projectName+'/playlists/').then(function(response) {
-                if(callback){
-                    callback(response.data);
-                }
+        getList: function(options) {
+            if(options){
+                options={params:options};
+            }
+            console.log("options", options);
+            return $http.get('/api/project/'+projectName+'/playlists/', options).then(function(response) {
                 return response.data;
             });
         },
