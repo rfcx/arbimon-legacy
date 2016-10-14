@@ -23,6 +23,7 @@ var Playlists = {
      * @param {Integer} query.project find playlists associated to the given project id.
      * @param {Object}  options [optional]
      * @param {Boolean} options.count add the number of recordings in the playlist
+     * @param {Boolean} options.show_info  show the playlist's info
      * @param {Function} callback called back with the queried results.
      * @return {Promise} resolving to array with the matching playlists.
      */
@@ -73,6 +74,11 @@ var Playlists = {
             (agregate ? "\nGROUP BY PL.playlist_id" : ""),
             data
         ).then(function(rows){
+            if(options.show_info){
+                return q.all(rows.map(function(playlist){
+                    return Playlists.getInfo(playlist);
+                }));
+            }
             return rows;
         }).nodeify(callback);
     },
