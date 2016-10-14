@@ -28,6 +28,7 @@ var Playlists = {
      */
     find: function (query, options, callback) {
         var constraints=[], projection=[], joins=[], agregate=false;
+        var data=[];
         if(options instanceof Function){
             callback = options;
             options = null;
@@ -37,13 +38,16 @@ var Playlists = {
         }
 
         if (query.id) {
-            constraints.push('PL.playlist_id = ' + dbpool.escape(query.id));
+            constraints.push('PL.playlist_id = ?');
+            data.push(query.id);
         }
         if (query.project) {
-            constraints.push('PL.project_id = ' + dbpool.escape(query.project));
+            constraints.push('PL.project_id = ?');
+            data.push(query.project);
         }
         if(query.name) {
-            constraints.push('PL.name = ' + dbpool.escape(query.name));
+            constraints.push('PL.name = ?');
+            data.push(query.name);
         }
 
         if(constraints.length === 0){
@@ -60,15 +64,17 @@ var Playlists = {
         joins.push("JOIN playlist_types PLT ON PL.playlist_type_id = PLT.playlist_type_id");
         
 
-        return dbpool.queryHandler(
+        return dbpool.query(
             "SELECT PL.playlist_id as id, PL.name, PL.project_id, PL.uri \n" +
             (projection.length ? ","+projection.join(",")+"\n" : "") +
             "FROM playlists PL \n" +
             (joins.length ? joins.join("\n")+"\n" : "") +
             "WHERE " + constraints.join(" \n  AND ") +
             (agregate ? "\nGROUP BY PL.playlist_id" : ""),
-            callback
-        );
+            data
+        ).then(function(rows){
+            return rows;
+        }).nodeify(callback);
     },
 
 
