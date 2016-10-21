@@ -9,12 +9,14 @@ var express = require('express');
 var request = require('request');
 var async = require('async');
 var AWS = require('aws-sdk');
+var q = require('q');
 
 var model = require('../../model');
 var pokeDaMonkey = require('../../utils/monkey');
 var scriptsFolder = __dirname+'/../../scripts/';
 var config = require('../../config');
-
+var dbpool = require('../../utils/dbpool');
+var APIError = require('../../utils/apierror');
 
 var router = express.Router();
 var s3 = new AWS.S3();
@@ -44,95 +46,64 @@ router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
 });
 
 router.post('/project/:projectUrl/models/new', function(req, res, next) {
+    res.type('application/json');
     var response_already_sent;
     var project_id, name, train_id, classifier_id, usePresentTraining;
     var useNotPresentTraining, usePresentValidation, useNotPresentValidation, user_id;
     var job_id, params;
-
-    async.waterfall([
-        
-        function find_project_by_url(next){
-            model.projects.findByUrl(req.params.projectUrl, next);
-        },
-        function gather_job_params(rows){
-            var next = arguments[arguments.length-1];
-
-            if(!rows.length){
-                res.status(404).json({ err: "project not found"});
-                response_already_sent = true;
-                next(new Error());
-                return;
-            }
-
-            project_id = rows[0].project_id;
-
-            if(!req.haveAccess(project_id, "manage models and classification"))
-                return res.json({ error: "you dont have permission to 'manage models and classification'" });
-
-            name = (req.body.n);
-            train_id = dbpool.escape(req.body.t);
-            classifier_id = dbpool.escape(req.body.c);
-            usePresentTraining = dbpool.escape(req.body.tp);
-            useNotPresentTraining = dbpool.escape(req.body.tn);
-            usePresentValidation = dbpool.escape(req.body.vp);
-            useNotPresentValidation  = dbpool.escape(req.body.vn);
-            user_id = req.session.user.id;
-            params = {
-                name: name,
-                train: train_id,
-                classifier: classifier_id,
-                user: user_id,
-                project: project_id,
-                upt: usePresentTraining,
-                unt: useNotPresentTraining,
-                upv: usePresentValidation,
-                unv: useNotPresentValidation,
-            };
-
-            next();
-        },
-        function check_md_exists(next){
-            model.jobs.modelNameExists({
-                name: name,
-                classifier: classifier_id,
-                user: user_id,
-                pid: project_id
-            }, next);
-        },
-        function abort_if_already_exists(row) {
-            var next = arguments[arguments.length-1];
-            if(row[0].count !== 0){
-                res.json({ name:"repeated"});
-                response_already_sent = true;
-                next(new Error());
-                return;
-            } else {
-                next();
-            }
-        },
-        function add_job(next){
-            model.jobs.newJob(params, 'training_job', next);
-        },
-        function get_job_id(_job_id){
-            var next = arguments[arguments.length -1];
-            job_id = _job_id;
-            next();
-        },
-        function poke_the_monkey(next){
-            pokeDaMonkey();
-            next();
-        },
-    ], function(err, data){
-        if(err){
-            if(!response_already_sent){
-                console.error(err.stack);
-                res.json({ err:"Could not create training job"});
-            }
-            return;
-        } else {
-            res.json({ ok:"job created trainingJob:"+job_id});
+    
+    return model.projects.findByUrl(req.params.projectUrl).then(function gather_job_params(rows){
+        if(!rows.length){
+            throw new APIError({ error: "project not found"}, 404);
         }
-    });
+        
+        project_id = rows[0].project_id;
+        
+        if(!req.haveAccess(project_id, "manage models and classification")){
+            throw new APIError({ error: "you dont have permission to 'manage models and classification'"});
+        }
+        
+        name = (req.body.n);
+        train_id = req.body.t;
+        classifier_id = req.body.c;
+        usePresentTraining = req.body.tp;
+        useNotPresentTraining = req.body.tn;
+        usePresentValidation = req.body.vp;
+        useNotPresentValidation  = req.body.vn;
+        user_id = req.session.user.id;
+        params = {
+            name: name,
+            train: train_id,
+            classifier: classifier_id,
+            user: user_id,
+            project: project_id,
+            upt: usePresentTraining,
+            unt: useNotPresentTraining,
+            upv: usePresentValidation,
+            unv: useNotPresentValidation,
+        };
+        
+        return q.ninvoke(model.jobs, 'modelNameExists', {
+            name: name,
+            classifier: classifier_id,
+            user: user_id,
+            pid: project_id
+        }).get(0);
+    }).then(function abort_if_already_exists(row) {
+        if(row[0].count !== 0){
+            throw new APIError({ error:"Name is repeated"});
+        }
+
+        return model.jobs.newJob(params, 'training_job').catch(function(err){
+            throw new APIError({ name:"Could not create training job"});
+        });
+    }).then(function get_job_id(_job_id){
+        job_id = _job_id;
+
+        pokeDaMonkey(); // parallel promise
+        
+        res.json({ ok:"job created trainingJob:"+job_id});
+    }).catch(next);
 });
 
 router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
