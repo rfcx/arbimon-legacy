@@ -28,6 +28,20 @@
                     <field title="No. of recordings" key="count">
                         {{ row.count }}
                     </field>
+                    <expand-select>
+                        <h4>{{selected.name}}</h4>
+                        <p class="">
+                            Type : {{selected.type}}
+                        </p>
+                        <div ng-if="selected.soundscape">
+                            <img ng-src="{{'https://a2-chino.s3.amazonaws.com/project_' + selected.project_id + '/soundscapes/' + selected.soundscape + '/image.png'}}" alt="" 
+                            class="crisp-image"
+                            width="300"
+                            height="154"
+                            /> <br>
+                            <a class="btn btn-primary" ng-href="{{'/visualizer/soundscape/' + selected.soundscape + '/' + selected.region | projectUrl}}">View Region</a>
+                        </div>
+                    </expand-select>
                 </a2-table>
                 <div class="jumbotron" ng-show="(!playlists || !playlists.length > 0) && !loading">
                     <h3>
