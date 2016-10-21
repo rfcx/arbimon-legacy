@@ -9,6 +9,9 @@ angular.module('a2.srv.api', [])
     }
     
     a2APIServiceClass.prototype = {
+        getUrl: function(apiRoute){
+            return this.prefix + apiRoute;
+        },
         get : function(apiRoute, params){
             return $q.when($http.get(this.prefix + apiRoute, params)).then(returnData);
         },
@@ -35,6 +38,7 @@ angular.module('a2.srv.api', [])
     
     var a2APIService = new a2APIServiceClass(apiURLPrefix);
     a2APIService.api = new a2APIServiceClass('/api');
+    a2APIService.project = new a2APIServiceClass('/project/' + projectName);
     
     return a2APIService;
 })
