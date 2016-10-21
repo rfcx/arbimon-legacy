@@ -4,6 +4,30 @@ angular.module('a2.directive.a2-table', [
 .directive('a2Table', function($window, $filter, $templateCache, $compile) {
     var $ = $window.$;
     
+    function compileFields(element){
+        return element.children('field').toArray().map(function(field){
+            field = angular.element(field);
+            return {
+                title: field.attr('title'),
+                key: field.attr('key'),
+                content: field.html()
+            };
+        });
+    }
+    
+    function compileSelectExpand(element, options){
+        var selectExpand = element.children('expand-select');
+        if(!selectExpand.length){
+            return;
+        }
+        
+        var clone = selectExpand.clone(true);
+        selectExpand.detach();
+        selectExpand = angular.element('<tr ng-show="selected"><td colspan="' + options.fieldCount + '"></td></tr>');
+        selectExpand.find('td').append(clone);
+        return selectExpand;
+    }
+    
     return {
         restrict: 'E',
         scope: {
@@ -18,33 +42,24 @@ angular.module('a2.directive.a2-table', [
             dateFormat: '@',    // moment date format, default: 'lll'
             numberDecimals: '@', // decimal spaces 
         },
-        controller: 'a2TableCtrl',
-        compile: function(tElement, tAttrs) {
-            var detaEle = tElement;
+        controller: 'a2TableCtrl as controller',
+        compile: function(element, attrs) {
+            var options = {};
+            options.fields = compileFields(element);
+            options.hasCheckbox = attrs.noCheckbox === undefined;
+            options.hasSelection = attrs.noSelect === undefined;
+            options.fieldCount = options.fields.length + (options.hasCheckbox?1:0);
+            options.selectExpand = compileSelectExpand(element, options);
             
-            var fields = [];
-            
-            for(var i = 0; i < detaEle[0].children.length; i++) {
-                var child = $(detaEle[0].children[i]);
-                
-                fields.push({
-                    title: child.attr('title'),
-                    key: child.attr('key'),
-                    content: child.html()
-                });
-            }
-            
-            
-            return function(scope, element, attrs) {
-                scope.fields = fields;
-                
-                if(attrs.noCheckbox !== undefined) {
-                    scope.noCheck = true;
+            return function(scope, element, attrs, a2TableCtrl) {
+                scope.fields = options.fields;
+                if(options.selectExpand){
+                    a2TableCtrl.selectExpand = $compile(options.selectExpand)(scope);
                 }
                 
-                if(attrs.noSelect !== undefined) {
-                    scope.noSelect = true;
-                }
+                scope.noCheck = !options.hasCheckbox;
+                scope.noSelect = !options.hasSelection;
+                scope.sortKey = attrs.defaultSort || scope.sortKey;
                 
                 if(attrs.search) {
                     scope.$watch('search', function(value) {
@@ -52,18 +67,15 @@ angular.module('a2.directive.a2-table', [
                         scope.updateChecked();
                     });
                 }
-                
-                if(attrs.defaultSort) { 
-                    scope.sortKey = attrs.defaultSort;
-                }
                     
                 if(attrs.checked) {
                     scope.$watch('rows', scope.updateChecked, true);
                 }
                 
-                element.html($templateCache.get('/directives/a2-table.html'));
+                var template = angular.element($templateCache.get('/directives/a2-table.html'));
                 
-                $compile(element.contents())(scope);
+                
+                element.append($compile(template)(scope));
             };
         }
     };
@@ -123,11 +135,16 @@ angular.module('a2.directive.a2-table', [
             $scope.sel(row, $index);
     };
     
-    $scope.sel = function(row, $index) {
+    this.sel = function(row, $index, $event) {
         if($scope.noSelect)
             return;
             
         $scope.selected = row;
+        if(this.selectExpand){
+            angular.element($event.currentTarget).after(
+                this.selectExpand
+            );
+        }
         if($scope.onSelect)
             $scope.onSelect({ row: row });
     };
@@ -172,7 +189,8 @@ angular.module('a2.directive.a2-table', [
             template: '=',
             row: '='
         },
-        link: function(scope, element, attrs) {
+        requires:'^a2Table',
+        link: function(scope, element, attrs, a2TableCtrl) {
                 element.html(scope.template);
                 $compile(element.contents())(scope);
         }

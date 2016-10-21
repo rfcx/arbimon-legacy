@@ -12,7 +12,7 @@
 </thead>
 <tbody>
     <tr ng-repeat="row in rows | filter: query | orderBy: sort : reverse"
-        ng-click="sel(row, $index)"
+        ng-click="controller.sel(row, $index, $event)"
         ng-class="[selected == row ? 'active':'', userStyle]"
         tabindex="0"
         ng-keypress="keyboardSel(row, $index, $event)">
