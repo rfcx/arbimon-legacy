@@ -40,6 +40,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
     $scope,
     Project, a2Classi,
     a2SoundscapeCompositionService,
+    a2Playlists,
     $q,
     $http, $modal, notify, a2UserPermit, a2Tags,
     $window
@@ -83,6 +84,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         classes : [],
         presence : ['present', 'absent'],
         sites : [],
+        playlists : [],
         years : [],
         months : [],
         days : [],
@@ -110,6 +112,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         {name:"months"                , map: _1_get_value_mapper},
         {name:"years"                 , map: _1_get_value_mapper},
         {name:"days"                  , map: _1_get_value_mapper},
+        {name:"playlists"             , map: _1_get_id_mapper},
         {name:"validations"           , map: _1_get_id_mapper},
         {name:"tags"                  , map: _1_get_tag_id_mapper},
         {name:"presence"},
@@ -242,6 +245,10 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 options.classes = classes;
             }
         );
+        a2Playlists.getList().then(function(playlists){
+            console.log("a2Playlists", playlists);
+            options.playlists = playlists;
+        });
         a2Tags.getForType('recording').then((function(tags){
             options.tags = tags;
         }).bind(this));

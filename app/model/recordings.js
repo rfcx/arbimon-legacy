@@ -918,6 +918,13 @@ var Recordings = {
                 constraints.push('RT.tag_id IN (?)');
                 data.push(parameters.tags);
             }
+            if(parameters.playlists) {
+                tables.push(
+                    "LEFT JOIN playlist_recordings as PR ON r.recording_id = PR.recording_id"
+                );
+                constraints.push('PR.playlist_id IN (?)');
+                data.push(parameters.playlists);
+            }
             if(parameters.classifications) {
                 tables.push(
                     "LEFT JOIN classification_results as CR ON r.recording_id = CR.recording_id",
@@ -1010,6 +1017,7 @@ var Recordings = {
             soundscape_composition:  arrayOrSingle(joi.number()),
             soundscape_composition_annotation:  arrayOrSingle(joi.string().valid('absent', 'present')),
             tags: arrayOrSingle(joi.number()),
+            playlists: arrayOrSingle(joi.number()),
             classifications: arrayOrSingle(joi.number()),
             classification_results: arrayOrSingle(joi.object().keys({
                 model: joi.number(),
@@ -1101,6 +1109,10 @@ var Recordings = {
             if(parameters.tags) {
                 builder.addTable("LEFT JOIN recording_tags", "RT", "r.recording_id = RT.recording_id");
                 builder.addConstraint('RT.tag_id IN (?)', [parameters.tags]);
+            }
+            if(parameters.playlists) {
+                builder.addTable("LEFT JOIN playlist_recordings", "PR", "r.recording_id = PR.recording_id");
+                builder.addConstraint('PR.playlist_id IN (?)', [parameters.playlists]);
             }
             
             if(parameters.classifications) {
