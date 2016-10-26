@@ -7,10 +7,12 @@ angular.module('a2.directive.a2-table', [
     function compileFields(element){
         return element.children('field').toArray().map(function(field){
             field = angular.element(field);
+            var clone = field.clone();
+            field.detach();
             return {
-                title: field.attr('title'),
-                key: field.attr('key'),
-                content: field.html()
+                title: clone.attr('title'),
+                key: clone.attr('key'),
+                content: clone.html()
             };
         });
     }
@@ -34,7 +36,6 @@ angular.module('a2.directive.a2-table', [
             rows: '=',
             selected: '=?',
             onSelect: '&',
-            extSort: '&',
             checked: '=?',
             search: '=?',
             // noCheckbox: '@',    // disable row checkboxes
@@ -44,81 +45,115 @@ angular.module('a2.directive.a2-table', [
         },
         controller: 'a2TableCtrl as controller',
         compile: function(element, attrs) {
+            var template = angular.element($templateCache.get('/directives/a2-table.html'));
+            var tplHead = template.find("thead tr");
+            var tplBody = template.find("tbody tr");
             var options = {};
             options.fields = compileFields(element);
             options.hasCheckbox = attrs.noCheckbox === undefined;
             options.hasSelection = attrs.noSelect === undefined;
             options.fieldCount = options.fields.length + (options.hasCheckbox?1:0);
             options.selectExpand = compileSelectExpand(element, options);
+            options.fields.forEach(function(field, index){
+                tplHead.append(
+                    angular.element('<th ng-click="controller.sortBy(' + index+ ')"></th>').text(field.title).append(
+                        field.key ?
+                        '    <i ng-if="sortKey == ' + index + '" class="fa" ng-class="reverse ? \'fa-chevron-up\': \'fa-chevron-down\'"></i>\n' :
+                        ''
+                    )
+                );
+                tplBody.append(
+                    angular.element('<td>').addClass(field.tdclass).html(field.content)
+                );
+            });
             
             return function(scope, element, attrs, a2TableCtrl) {
-                scope.fields = options.fields;
+                var tableScope = scope.$parent.$new(false, scope);
+                options.scope = scope;
+                options.tableScope = tableScope;
+                options.onSelect = scope.onSelect && function (row){
+                    return scope.onSelect({row:row});
+                };
+                
+                a2TableCtrl.initialize(options);
+                
+                tableScope.controller = a2TableCtrl;
+                a2TableCtrl.fields = options.fields;
                 if(options.selectExpand){
-                    a2TableCtrl.selectExpand = $compile(options.selectExpand)(scope);
+                    a2TableCtrl.selectExpand = $compile(options.selectExpand)(tableScope);
                 }
                 
-                scope.noCheck = !options.hasCheckbox;
-                scope.noSelect = !options.hasSelection;
-                scope.sortKey = attrs.defaultSort || scope.sortKey;
+                a2TableCtrl.noCheck = !options.hasCheckbox;
+                a2TableCtrl.noSelect = !options.hasSelection;
+                tableScope.sortKey = attrs.defaultSort || tableScope.sortKey;
                 
                 if(attrs.search) {
                     scope.$watch('search', function(value) {
-                        scope.query = scope.search;
-                        scope.updateChecked();
+                        tableScope.query = scope.search;
+                        a2TableCtrl.updateChecked();
                     });
                 }
                     
-                if(attrs.checked) {
-                    scope.$watch('rows', scope.updateChecked, true);
-                }
+                a2TableCtrl.setRows(scope.rows);
+                scope.$watch('rows', function(rows){
+                    a2TableCtrl.setRows(rows);
+                }, true);
+
                 
-                var template = angular.element($templateCache.get('/directives/a2-table.html'));
+                element.append($compile(template)(tableScope));
+                console.log("!!!", tableScope);
                 
+                scope.$on('$destroy', function(){
+                    tableScope.$destroy();
+                });
                 
-                element.append($compile(template)(scope));
             };
         }
     };
 })
-.controller('a2TableCtrl', function($scope, $filter) {
-    $scope.updateChecked = function() {
-        if($scope.rows) {
-            var visible = $filter('filter')($scope.rows, $scope.query);
+.controller('a2TableCtrl', function($filter) {
+    var scope, tableScope;
+    this.initialize = function(options){
+        scope = options.scope;
+        tableScope = options.tableScope;
+        this.__onSelect = options.onSelect;
+    };
+    
+    this.setRows = function(rows){
+        this.rows = rows;
+        this.updateChecked();
+    };
+    
+    this.updateChecked = function() {
+        if(this.rows) {
+            var visible = $filter('filter')(this.rows, tableScope.query);
             
-            $scope.checked = visible.filter(function(row) {
+            scope.checked = visible.filter(function(row) {
                 return row.checked | false;
             });
         }
     };
     
-    $scope.toggleAll = function() {
-        var allFalse = true;
+    this.toggleAll = function() {
+        var allFalse = this.rows.reduce(function(_, row){
+            return _ && !row.checked;
+        }, true);
         
-        for(var i in $scope.rows) {
-            if($scope.rows[i].checked) {
-                allFalse = false;
-                break;
-            }
-        }
+        this.rows.forEach(function(row){
+            row.checked = allFalse;
+        });
         
-        for(var j in $scope.rows) {
-            $scope.rows[j].checked = allFalse;
-        }
-        
-        $scope.checkall = allFalse;
-        
+        tableScope.checkall = allFalse;        
     };
     
-    $scope.check = function($event, $index) {
-        
-        if($scope.lastChecked && $event.shiftKey) {
-            if($scope.lastChecked) {
+    this.check = function($event, $index) {        
+        if(this.lastChecked && $event.shiftKey) {
+            if(this.lastChecked) {
                 var rows;
-                if($scope.lastChecked > $index) {
-                    rows = $scope.rows.slice($index, $scope.lastChecked);
-                }
-                else {
-                    rows = $scope.rows.slice($scope.lastChecked, $index);
+                if(this.lastChecked > $index) {
+                    rows = this.rows.slice($index, this.lastChecked);
+                } else {
+                    rows = this.rows.slice(this.lastChecked, $index);
                 }
                     
                 rows.forEach(function(row) {
@@ -127,73 +162,48 @@ angular.module('a2.directive.a2-table', [
             }
         }
                 
-        $scope.lastChecked = $index;
+        this.lastChecked = $index;
     };
     
-    $scope.keyboardSel = function(row, $index, $event) {
-        if($event.key === " " || $event.key === "Enter") 
-            $scope.sel(row, $index);
+    this.keyboardSel = function(row, $index, $event) {
+        if($event.key === " " || $event.key === "Enter"){
+            this.sel(row, $index);
+        }
     };
     
     this.sel = function(row, $index, $event) {
-        if($scope.noSelect)
+        if(this.noSelect){
             return;
+        }
             
-        $scope.selected = row;
+        if(tableScope.selected === row){
+            row = undefined;
+        }
+        
+        tableScope.selected = row;
         if(this.selectExpand){
             angular.element($event.currentTarget).after(
                 this.selectExpand
             );
         }
-        if($scope.onSelect)
-            $scope.onSelect({ row: row });
+        if(this.__onSelect){
+            this.__onSelect(row);
+        }
     };
                         
-    $scope.sortBy = function(field) {
-        if($scope.sortKey !== field.key) {
-            $scope.sortKey = field.key;
-            
-            if($scope.extSort === undefined)
-                $scope.sort = field.key;
-            
-            $scope.reverse = false;
-        }
-        else {
-            $scope.reverse = !$scope.reverse;
-        }
-            
-        if($scope.extSort)
-            $scope.extSort({ sortBy: field.key, reverse: $scope.reverse });
-    };
-            
-    $scope.formatString = function(value) {
-                
-        if(value instanceof Date) {
-            return moment(value).utc().format($scope.dateFormat || 'lll');
-        }
-        else if(typeof value === 'number') {
-            var precision = $scope.numberDecimals || 3;
-            
-            var p =  Math.pow(10, precision);
-            
-            return Math.round(value*p)/p;
-        }
+    this.sortBy = function(fieldIndex) {
+        var field = this.fields[fieldIndex];
         
-        return value;
-    };
-})
-.directive('a2TableContent', function($compile){
-    return {
-        restrict: 'E',
-        scope: {
-            template: '=',
-            row: '='
-        },
-        requires:'^a2Table',
-        link: function(scope, element, attrs, a2TableCtrl) {
-                element.html(scope.template);
-                $compile(element.contents())(scope);
+        if(tableScope.sortKey !== fieldIndex) {
+            tableScope.sortKey = fieldIndex;
+            tableScope.sort = field.key;
+            
+            tableScope.reverse = false;
+        } else {
+            tableScope.reverse = !tableScope.reverse;
         }
+            
     };
+            
 })
 ;
