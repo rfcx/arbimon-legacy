@@ -4,6 +4,13 @@ angular.module('a2.audiodata.playlists', [
     'ui.bootstrap',
     'humane'
 ])
+.config(function($stateProvider) {
+    $stateProvider.state('audiodata.playlists', {
+        url: '/playlists',
+        controller: 'PlaylistCtrl as controller',
+        templateUrl: '/app/audiodata/playlists/playlists.html'
+    });
+})
 .controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit) {
     $scope.loading = true;
     
