@@ -8,6 +8,7 @@ var util  = require('util');
 
 var sqlutil = require('../utils/sqlutil');
 var dbpool = require('../utils/dbpool');
+var APIError = require('../utils/apierror');
 // TODO remove circular dependencies
 var model = require('../model');
 
@@ -109,6 +110,14 @@ var Playlists = {
                         playlist.region     = sr.region;
                         playlist.soundscape = sr.soundscape;
                     }
+                });
+            } else if(/union|intersection|subtraction/.test(playlist.type) && playlist.metadata){
+                return q.all([
+                    playlist.metadata.term1 && Playlists.find({id:playlist.metadata.term1, show_info:true}).get(0),
+                    playlist.metadata.term2 && Playlists.find({id:playlist.metadata.term2, show_info:true}).get(0),
+                ]).then(function(terms){
+                    playlist.term1 = terms[0];
+                    playlist.term2 = terms[1];
                 });
             }
         }).thenResolve(playlist).nodeify(callback);
@@ -285,6 +294,97 @@ var Playlists = {
                 id: playlist_id
             });
         }).nodeify(callback);
+    },
+    
+    /** Combines two playlists (from the same project) into one.
+     * @param {Object} data - object describing playlist to create.
+     * @return {Promise} resolving to created playlists' insert_id
+     */
+    combine: function(data) {
+        var schema = {
+            name: Joi.string().required(),
+            project: Joi.number().required(),
+            operation: Joi.string().required(),
+            term1: Joi.number().required(),
+            term2: Joi.number().required(),
+        };
+        
+        return q.ninvoke(Joi, 'validate', data, schema).catch(function(err){
+            throw new APIError(err.message);
+        }).then(function() {
+            return dbpool.query(
+                "SELECT COUNT(*) as count\n" +
+                "FROM playlists\n" +
+                "WHERE playlist_id IN (?, ?) AND project_id = ?", [
+                data.term1, data.term2,
+                data.project
+            ]).get(0).get('count').then(function(termsInProjectCount){
+                if(termsInProjectCount != 2){
+                    throw new APIError('At least one of the playlists is not form the project.');
+                }
+            });
+        }).then(function(){
+            var operation = Playlists.combineOperations[data.operation];
+            if(!operation){
+                throw new APIError('Invalid playlist operation requested.');
+            }
+            
+            return dbpool.query(
+                "INSERT INTO playlists(project_id, name, playlist_type_id, metadata) \n"+
+                "VALUES (?, ?, ?, ?)", [
+                data.project, data.name, operation.type, JSON.stringify({
+                    term1:data.term1,
+                    term2:data.term2,
+                })
+            ]).get('insertId').then(function(newPlaylistId){
+                return operation.eval(data.term1, data.term2, newPlaylistId);
+            });
+        });
+    },
+    
+    combineOperations: {
+        union: {
+            type: 3,
+            eval: function(term1, term2, result){
+                return dbpool.query(
+                "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
+                "SELECT DISTINCT ?, recording_id\n" +
+                "FROM playlist_recordings\n" + 
+                "WHERE playlist_id IN (?, ?)", [
+                    result, term1, term2
+                ]);
+            }
+        },
+        intersection: {
+            type: 4,
+            eval: function(term1, term2, result){
+                return dbpool.query(
+                "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
+                "SELECT ?, P1.recording_id\n" +
+                "FROM playlist_recordings P1\n" + 
+                "JOIN playlist_recordings P2 ON P1.recording_id = P2.recording_id\n" +
+                "WHERE P1.playlist_id = ? AND P2.playlist_id = ?", [
+                    result, term1, term2
+                ]);
+            }
+        },
+        subtraction: {
+            type: 5,
+            eval: function(term1, term2, result){
+                return dbpool.query(
+                "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
+                "SELECT DISTINCT ?, P1.recording_id\n" +
+                "FROM playlist_recordings P1\n" + 
+                "LEFT JOIN playlist_recordings P2 ON (\n" + 
+                "   P1.recording_id = P2.recording_id\n" +
+                "   AND P2.playlist_id = ?\n" +
+                ")\n" +
+                "WHERE P1.playlist_id = ?\n" +
+                "  AND P2.recording_id IS NULL", [
+                    result, term2, term1
+                ]);
+            }
+        },
     },
     /** Adds recordings to a given playlist.
      * @param {Integer} playlist_id - id of the associated playlist.

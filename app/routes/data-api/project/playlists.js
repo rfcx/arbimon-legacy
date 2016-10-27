@@ -125,6 +125,41 @@ router.post('/create', function(req, res, next) {
 });
 
 
+/** Combine playlists into a new one.
+ */
+router.post('/combine', function(req, res, next) {
+    if(!req.body.name){
+        return res.json({ error: "missing name parameter"});
+    }
+    res.type('json');
+    model.playlists.find({
+        name: req.body.name,
+        project: req.project.project_id
+    }).then(function(rows){
+        if(rows.length > 0){
+            return res.json({ error: "Playlist name in use" });
+        }
+        return model.playlists.combine({
+            name: req.body.name,
+            project: req.project.project_id,
+            operation: req.body.operation,
+            term1: req.body.term1,
+            term2: req.body.term2,
+        });
+    }).then(function(new_tset) {
+            debug("playlists " + req.body.term1 + " and " + req.body.term2 + " combined (" + req.body.operation + ") into ", new_tset);
+            
+            model.projects.insertNews({
+                news_type_id: 10, // playlist created
+                user_id: req.session.user.id,
+                project_id: req.project.project_id,
+                data: JSON.stringify({ playlist: req.body.name, playlist_id:new_tset.id })
+            });
+            
+            res.json({ success: true });
+    }).catch(next);
+});
+
 // /** Add a data to a playlist.
 //  */
 // router.post('/add-data/:playlist', function(req, res, next) {
