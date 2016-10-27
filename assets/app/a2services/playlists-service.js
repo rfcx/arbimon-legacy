@@ -1,7 +1,7 @@
 angular.module('a2.srv.playlists', [
     'a2.srv.project'
 ])
-.factory('a2Playlists', function(Project, $http) {
+.factory('a2Playlists', function(Project, a2APIService, $rootScope, $http) {
     var projectName = Project.getUrl();
     
     return {
@@ -16,10 +16,17 @@ angular.module('a2.srv.playlists', [
         },
 
         create: function(playlistParams, callback) {
-            $http.post('/api/project/'+projectName+'/playlists/create', playlistParams)
-                .success(function(data) {
-                    callback(data);
-                });
+            $http.post('/api/project/'+projectName+'/playlists/create', playlistParams).success(function(data) {
+                $rootScope.$emit('a2Playlists-invalidate-list');
+                callback(data);
+            });
+        },
+        
+        combine: function(expression) {
+            return a2APIService.post('/playlists/combine', expression).then(function(data) {
+                $rootScope.$emit('a2Playlists-invalidate-list');
+                return data;
+            });
         },
         
         getRecordingPosition: function(playlist, recording, callback){
@@ -50,18 +57,17 @@ angular.module('a2.srv.playlists', [
         },
         
         rename: function(playlist, callback) {
-            $http.post('/api/project/'+projectName+'/playlists/rename', playlist)
-            .success(function(data) {
+            $http.post('/api/project/'+projectName+'/playlists/rename', playlist).success(function(data) {
+                $rootScope.$emit('a2Playlists-invalidate-list');
                 callback(data);
             });
         },
         
         remove: function(playlistIds, callback) {
-            $http.post('/api/project/'+projectName+'/playlists/delete', 
-            {
+            $http.post('/api/project/'+projectName+'/playlists/delete', {
                 playlists: playlistIds
-            })
-            .success(function(data) {
+            }).success(function(data) {
+                $rootScope.$emit('a2Playlists-invalidate-list');
                 callback(data);
             });
         },
@@ -84,6 +90,10 @@ angular.module('a2.srv.playlists', [
                 callback(data);
             });
         },
+        
+        $on: function(event, handler){
+            return $rootScope.$on('a2Playlists-' + event, handler);
+        }
     };
 })
 ;
