@@ -181,6 +181,7 @@ angular.module('a2.directive.a2-table', [
         }
         
         tableScope.selected = row;
+        scope.selected = row;
         if(this.selectExpand){
             angular.element($event.currentTarget).after(
                 this.selectExpand
