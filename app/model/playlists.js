@@ -56,9 +56,11 @@ var Playlists = {
         }
         
         if(options.count){
-            agregate = true;
-            projection.push("COUNT(PLR.recording_id) as count");
-            joins.push("JOIN playlist_recordings PLR ON PL.playlist_id = PLR.playlist_id");
+            // agregate = true;
+            projection.push("(\n" +
+            "   SELECT COUNT(*) FROM playlist_recordings PLR WHERE PL.playlist_id = PLR.playlist_id\n" +
+            ") as count");
+            // joins.push("JOIN playlist_recordings PLR ON PL.playlist_id = PLR.playlist_id");
         }
 
         projection.push("PLT.name as type");
