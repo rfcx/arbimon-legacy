@@ -1,0 +1,62 @@
+<div class="bg-primary header">
+    <i class="fa a2-combine"></i>
+    Combine Playlists
+</div>
+<div class="a2-filter-row">
+    <div class="a2-filter">
+        Operation
+        <ui-select ng-model="controller.selected.operation" theme="bootstrap" style="width: 300px;"
+            ng-change="controller.updateNamePlaceholder()"
+        >
+            <ui-select-match placeholder="(select operation)">
+                <i class="fa" ng-class="$select.selected.icon"></i>
+                {{$select.selected.text}}
+            </ui-select-match>
+            <ui-select-choices class="has-badges" repeat="item in controller.operations">
+                <i class="fa" ng-class="item.icon"></i>
+                {{item.text}} 
+            </ui-select-choices>
+        </ui-select>
+    </div>
+</div>
+<div class="a2-filter-row">
+    <div class="a2-filter">
+        Playlist 1
+        <ui-select ng-model="controller.selected.term1" theme="bootstrap" style="width: 300px;"
+            ng-change="controller.updateNamePlaceholder()"        
+        >
+            <ui-select-match placeholder="(select playlist)">{{$select.selected.name}}</ui-select-match>
+            <ui-select-choices class="has-badges" repeat="item in controller.playlists">
+                {{item.name}} 
+                <span class="badge">{{ item.count }}</span>
+            </ui-select-choices>
+        </ui-select>
+    </div>
+</div>
+<div class="a2-filter-row">
+    <div class="a2-filter">
+        Playlist 2
+        <ui-select ng-model="controller.selected.term2" theme="bootstrap" style="width: 300px;"
+            ng-change="controller.updateNamePlaceholder()"
+        >
+            <ui-select-match placeholder="(select playlist)">{{$select.selected.name}}</ui-select-match>
+            <ui-select-choices class="has-badges" repeat="item in controller.playlists">
+                {{item.name}} 
+                <span class="badge">{{ item.count }}</span>
+            </ui-select-choices>
+        </ui-select>
+    </div>
+</div>
+<div class="a2-filter-row">
+    <div class="a2-filter">
+        Resulting Playlist
+        <input type="text" name="name" ng-model="controller.select.name" class="form-control" style="width: 300px"
+        placeholder="{{controller.namePlaceholder}}"
+        >
+    </div>
+</div>
+<div class="a2-filter-row">
+    <button class="btn btn-primary btn-block" ng-click="controller.submit()">
+        Combine Playlists
+    </button>
+</div>
