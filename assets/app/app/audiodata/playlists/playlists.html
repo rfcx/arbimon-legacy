@@ -1,19 +1,28 @@
 <div class="row">
     <div class="col-sm-10 col-md-8">
         <div class="row">
-            <div class="col-sm-8">
+            <div class="col-sm-3">
                 <button class="btn btn-default" 
                     ng-click="edit() | trackEvent:'Audiodata-playlists':'edit clicked'"
                     tooltip="Edit Name"
                     tooltip-trigger="mouseenter">
                     <i class="fa fa-pencil"></i>
                 </button>
+                
                 <button class="btn btn-danger"
                     ng-click="del() | trackEvent:'Audiodata-playlists':'del clicked'"
                     tooltip="Delete"
                     tooltip-trigger="mouseenter">
                     <i class="fa fa-trash"></i>
                 </button>
+            </div>
+            <div class="col-sm-5">
+                <span class="dropdown" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
+                    <button class="btn btn-primary" dropdown-toggle><i class="fa a2-combine"></i> <i class="fa fa-caret-down"></i></button>
+                    <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
+                        <playlist-arithmetic on-expression-selected="controller.operate(expression)"></playlist-arithmetic>
+                    </div>
+                </span>
             </div>
             <div class="col-sm-4">
                 <input class="form-control" type="text" placeholder="Search" ng-model="search.name">
@@ -40,6 +49,12 @@
                             height="154"
                             /> <br>
                             <a class="btn btn-primary" ng-href="{{'/visualizer/soundscape/' + selected.soundscape + '/' + selected.region | projectUrl}}">View Region</a>
+                        </div>
+                        <div ng-if="selected.term1">
+                            Playlist 1 : {{selected.term1.name}}
+                        </div>
+                        <div ng-if="selected.term1">
+                            Playlist 2 : {{selected.term2.name}}
                         </div>
                     </expand-select>
                 </a2-table>

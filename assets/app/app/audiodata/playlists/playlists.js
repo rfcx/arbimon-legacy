@@ -2,6 +2,7 @@ angular.module('a2.audiodata.playlists', [
     'a2.services', 
     'a2.directives', 
     'ui.bootstrap',
+    'a2.audiodata.playlists.playlist-arithmetic',
     'humane'
 ])
 .config(function($stateProvider) {
@@ -12,12 +13,35 @@ angular.module('a2.audiodata.playlists', [
     });
 })
 .controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit) {
-    $scope.loading = true;
+    this.initialize = function(){
+        removeOnInvalidateHandler = a2Playlists.$on('invalidate-list', (function(){
+            this.reset();
+        }).bind(this));
+        this.reset();
+    };
     
-    a2Playlists.getList({info:true}).then(function(data) {
-        $scope.playlists = data;
-        $scope.loading = false;
-    });
+    this.reset = function(){
+        $scope.loading = true;
+        a2Playlists.getList({info:true}).then(function(data) {
+            $scope.playlists = data;
+            $scope.loading = false;
+        });
+    };
+    
+    
+    this.operate = function(expression){
+        if(!a2UserPermit.can('manage playlists')) {
+            notify.log('You do not have permission to combine playlists');
+            return;
+        }
+
+        return a2Playlists.combine(expression).then(function(){
+            notify.log('Playlist created');            
+        }).catch(function(err){
+            err = err || {};
+            notify.error(err.message || err.data || 'Server error');
+        });
+    };
     
     $scope.edit = function() {
         if(!$scope.selected)
@@ -95,5 +119,8 @@ angular.module('a2.audiodata.playlists', [
             });
         });
     };
+
+    this.initialize();
+
 })
 ;
