@@ -68,7 +68,7 @@ var Playlists = {
         
 
         return dbpool.query(
-            "SELECT PL.playlist_id as id, PL.name, PL.project_id, PL.uri \n" +
+            "SELECT PL.playlist_id as id, PL.name, PL.project_id, PL.uri, PL.metadata \n" +
             (projection.length ? ","+projection.join(",")+"\n" : "") +
             "FROM playlists PL \n" +
             (joins.length ? joins.join("\n")+"\n" : "") +
@@ -76,6 +76,10 @@ var Playlists = {
             (agregate ? "\nGROUP BY PL.playlist_id" : ""),
             data
         ).then(function(rows){
+            rows.forEach(function(row){
+                row.metadata = row.metadata ? JSON.parse(row.metadata) : null;
+            });
+            
             if(options.show_info){
                 return q.all(rows.map(function(playlist){
                     return Playlists.getInfo(playlist);
