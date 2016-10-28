@@ -69,6 +69,9 @@ angular.module('a2.srv.project', [
                         callback(data);
                     });
             },
+            getRecCounts: function(query) { 
+                return a2APIService.get('/recordings/search-count', {params:query || {}});
+            },
             getRecordingDataUrl: function(filters, projection){
                 var params={filters:filters, show:projection};
                 
