@@ -154,6 +154,58 @@ angular.module('a2.audiodata.recordings', [
             notify.log(response.data.msg);
         }).bind(this));
     };
+
+    this.deleteMatchingRecordings = function() {
+        var filters = $scope.params;
+
+        if(!a2UserPermit.can('manage project recordings')) {
+            notify.log('You do not have permission to delete recordings');
+            return;
+        }
+        
+        return Project.getRecCounts(filters).then(function(recCount) {
+            // var recCount = recs.reduce(function(_, rec){
+            //     _[rec.site] = _[rec.site] + 1 || 1;
+            //     return _;
+            // }, {});
+            
+            var messages = [], importedCount = 0, importedSites = [];
+            messages.push("You are about to delete: ");
+            recCount.forEach(function(entry) {
+                var s = entry.count > 1 ? 's' : '';
+                if(!entry.imported){
+                    messages.push(entry.count + ' recording'+s+' from "' + entry.site + '"');
+                } else {
+                    importedCount += entry.count;
+                    importedSites.push('"' + entry.site + '"');
+                }
+            });
+            messages.push("Are you sure??");
+            if(importedCount){
+                messages.push("(The filters matched " + importedCount + " recordings wich come from " + importedSites.join(", ") + ". You cannot delete these from your project, they can only be removed from their original project.)");
+            }
+            
+            return $modal.open({
+                templateUrl: '/common/templates/pop-up.html',
+                controller: function() {
+                    this.messages = messages;
+                    this.btnOk =  "Yes";
+                    this.btnCancel =  "No, cancel";
+                },
+                controllerAs: 'popup'
+            }).result;
+        }).then(function() {
+            return $http.post('/api/project/'+Project.getUrl()+'/recordings/delete-matching', filters);
+        }).then((function(response){
+            if(response.data.error){
+                return notify.error(response.data.error);
+            }
+            
+            this.searchRecs(['count', 'list']);
+            
+            notify.log(response.data.msg);
+        }).bind(this));
+    };
     
     $scope.loading = true;
     $scope.params = {};
