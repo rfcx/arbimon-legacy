@@ -1247,6 +1247,36 @@ var Recordings = {
             });
         });
     },
+
+    
+    /* fetch count of project recordings.
+    */
+    countProjectRecordings: function(filters){
+        return this.buildSearchQuery(filters).then(function(builder){
+            builder.addProjection.apply(builder, [
+                's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
+                'COUNT(*) as count'
+            ]);
+            delete builder.orderBy;
+            builder.setGroupBy('s.site_id');
+            return dbpool.query(builder.getSQL());
+        });
+    },
+    
+    /* fetch count of project recordings.
+    */
+    deleteMatching: function(filters, project_id){
+        return this.buildSearchQuery(filters).then(function(builder){
+            builder.addProjection.apply(builder, [
+                'r.recording_id as id'
+            ]);
+            delete builder.orderBy;
+            
+            return dbpool.query(builder.getSQL()).then(function(rows){
+                return Q.ninvoke(Recordings, 'delete', rows, project_id);
+            });
+        });
+    },
     
     delete: function(recs, project_id, callback) {
         

@@ -37,6 +37,17 @@ router.get('/search', function(req, res, next) {
     });
 });
 
+router.get('/search-count', function(req, res, next) {
+    res.type('json');
+    var params = req.query;
+    
+    params.project_id = req.project.project_id;
+    
+    model.recordings.countProjectRecordings(params).then(function(rows) {
+        res.json(rows);
+    }).catch(next);
+});
+
 router.get('/recordings-export.csv', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
@@ -223,6 +234,23 @@ router.post('/delete', function(req, res, next) {
         
         res.json(result);
     });
+});
+
+
+router.post('/delete-matching', function(req, res, next) {
+    res.type('json');
+    var params = req.body;
+
+    if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
+        return res.json({ error: "you dont have permission to manage project recordings" });
+    }
+
+    
+    params.project_id = req.project.project_id;
+    
+    model.recordings.deleteMatching(params, req.project.project_id).then(function(result) {
+        res.json(result);
+    }).catch(next);
 });
 
 module.exports = router;
