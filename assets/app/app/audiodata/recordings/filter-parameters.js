@@ -129,7 +129,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         filterDefs.forEach(function(filterDef){
             var param = params[filterDef.name];
             var value = (param && filterDef.map) ? filterDef.map(param) : param;
-            if(value){
+            if(value instanceof Array ? value.length : value){
                 filters[filterDef.name] = value;
             }
         });
