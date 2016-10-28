@@ -34,6 +34,10 @@ SQLBuilder.prototype = {
         this.orderBy=[term, isAscending];
     },
     
+    setGroupBy: function(term, isAscending){
+        this.groupBy=[term, isAscending];
+    },
+    
     setLimit: function(limit, offset){
         this.limit=[limit, offset];
     },
@@ -43,23 +47,29 @@ SQLBuilder.prototype = {
         var tables = this.getTables();
         var constraints = this.getConstraints();
         var order = this.getOrderBy();
+        var group = this.getGroupBy();
         var limit = this.getLimit();
         
         return "SELECT " + projection + "\n" +
             (tables.length ? "FROM " + tables.join("\n") + "\n" : "") +
             (constraints.length ? "WHERE (" + constraints.join(")\n AND (") + ")\n" : "") +
             (order ? "ORDER BY " + order + "\n" : "") +
+            (group ? "GROUP BY " + group + "\n" : "") +
             (limit ? "LIMIT " + limit + "\n" : "") +
             "\n;"
         ;
     },
-
+    
     getLimit: function(){
         return this.limit ? this.limit.map(parseInt).join(', ') : '';
     },
 
     getOrderBy: function(){
         return this.orderBy ? (dbpool.escapeId(this.orderBy[0]) + ' ' + (this.orderBy[1] ? 'ASC' : 'DESC')) : '';
+    },
+    
+    getGroupBy: function(){
+        return this.groupBy ? (dbpool.escapeId(this.groupBy[0]) + ' ' + (this.groupBy[1] ? 'ASC' : 'DESC')) : '';
     },
 
     getProjection: function(){
