@@ -155,7 +155,7 @@ angular.module('a2.analysis.classification', [
                 },
                 playlists:function($q){
                     var d = $q.defer();
-                    a2Playlists.getList(function(data) {
+                    a2Playlists.getList().then(function(data) {
                         d.resolve(data || []);
                     });
                     return d.promise;

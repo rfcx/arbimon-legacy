@@ -83,6 +83,20 @@
 </div>
 <div class="a2-filter-row">
     <div class="a2-filter a2-filter-text">
+        Playlists:
+    </div>
+    <div class="a2-filter">
+        <ui-select multiple ng-model="controller.params.playlists" theme="bootstrap" style="width: 300px;">
+            <ui-select-match placeholder="Playlist1, Playlist2, ...">{{$item.name}}</ui-select-match>
+            <ui-select-choices class="has-badges" repeat="item in controller.options.playlists | filter:$select.search">
+                {{item.name}} 
+                <span class="badge">{{ item.count }}</span>
+            </ui-select-choices>
+        </ui-select>
+    </div>
+</div>
+<div class="a2-filter-row">
+    <div class="a2-filter a2-filter-text">
         Validations:
     </div>
     <div class="a2-filter">

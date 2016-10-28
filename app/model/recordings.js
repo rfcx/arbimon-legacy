@@ -918,6 +918,13 @@ var Recordings = {
                 constraints.push('RT.tag_id IN (?)');
                 data.push(parameters.tags);
             }
+            if(parameters.playlists) {
+                tables.push(
+                    "LEFT JOIN playlist_recordings as PR ON r.recording_id = PR.recording_id"
+                );
+                constraints.push('PR.playlist_id IN (?)');
+                data.push(parameters.playlists);
+            }
             if(parameters.classifications) {
                 tables.push(
                     "LEFT JOIN classification_results as CR ON r.recording_id = CR.recording_id",
@@ -1001,6 +1008,7 @@ var Recordings = {
                 to: joi.date()
             }).and('from', 'to'),
             sites:  arrayOrSingle(joi.string()),
+            imported: joi.boolean(),
             years:  arrayOrSingle(joi.number()),
             months: arrayOrSingle(joi.number()),
             days:   arrayOrSingle(joi.number()),
@@ -1010,6 +1018,7 @@ var Recordings = {
             soundscape_composition:  arrayOrSingle(joi.number()),
             soundscape_composition_annotation:  arrayOrSingle(joi.string().valid('absent', 'present')),
             tags: arrayOrSingle(joi.number()),
+            playlists: arrayOrSingle(joi.number()),
             classifications: arrayOrSingle(joi.number()),
             classification_results: arrayOrSingle(joi.object().keys({
                 model: joi.number(),
@@ -1058,6 +1067,14 @@ var Recordings = {
                 builder.addConstraint('s.name IN (?)', [parameters.sites]);
             }
             
+            if(parameters.imported !== undefined){
+                builder.addConstraint(
+                    parameters.imported ?
+                    'pis.site_id IS NOT NULL' :
+                    'pis.site_id IS NULL'
+                );
+            }
+            
             if(parameters.years) {
                 builder.addConstraint('YEAR(r.datetime) IN (?)', [parameters.years]);
             }
@@ -1101,6 +1118,10 @@ var Recordings = {
             if(parameters.tags) {
                 builder.addTable("LEFT JOIN recording_tags", "RT", "r.recording_id = RT.recording_id");
                 builder.addConstraint('RT.tag_id IN (?)', [parameters.tags]);
+            }
+            if(parameters.playlists) {
+                builder.addTable("LEFT JOIN playlist_recordings", "PR", "r.recording_id = PR.recording_id");
+                builder.addConstraint('PR.playlist_id IN (?)', [parameters.playlists]);
             }
             
             if(parameters.classifications) {
@@ -1223,6 +1244,36 @@ var Recordings = {
             return dbpool.streamQuery({
                 sql: builder.getSQL(),
                 typeCast: sqlutil.parseUtcDatetime,
+            });
+        });
+    },
+
+    
+    /* fetch count of project recordings.
+    */
+    countProjectRecordings: function(filters){
+        return this.buildSearchQuery(filters).then(function(builder){
+            builder.addProjection.apply(builder, [
+                's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
+                'COUNT(*) as count'
+            ]);
+            delete builder.orderBy;
+            builder.setGroupBy('s.site_id');
+            return dbpool.query(builder.getSQL());
+        });
+    },
+    
+    /* fetch count of project recordings.
+    */
+    deleteMatching: function(filters, project_id){
+        return this.buildSearchQuery(filters).then(function(builder){
+            builder.addProjection.apply(builder, [
+                'r.recording_id as id'
+            ]);
+            delete builder.orderBy;
+            
+            return dbpool.query(builder.getSQL()).then(function(rows){
+                return Q.ninvoke(Recordings, 'delete', rows, project_id);
             });
         });
     },

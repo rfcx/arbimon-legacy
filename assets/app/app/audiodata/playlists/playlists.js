@@ -2,15 +2,46 @@ angular.module('a2.audiodata.playlists', [
     'a2.services', 
     'a2.directives', 
     'ui.bootstrap',
+    'a2.audiodata.playlists.playlist-arithmetic',
     'humane'
 ])
-.controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit) {
-    $scope.loading = true;
-    
-    a2Playlists.getList(function(data) {
-        $scope.playlists = data;
-        $scope.loading = false;
+.config(function($stateProvider) {
+    $stateProvider.state('audiodata.playlists', {
+        url: '/playlists',
+        controller: 'PlaylistCtrl as controller',
+        templateUrl: '/app/audiodata/playlists/playlists.html'
     });
+})
+.controller('PlaylistCtrl', function($scope, a2Playlists, $modal, notify, a2UserPermit) {
+    this.initialize = function(){
+        removeOnInvalidateHandler = a2Playlists.$on('invalidate-list', (function(){
+            this.reset();
+        }).bind(this));
+        this.reset();
+    };
+    
+    this.reset = function(){
+        $scope.loading = true;
+        a2Playlists.getList({info:true}).then(function(data) {
+            $scope.playlists = data;
+            $scope.loading = false;
+        });
+    };
+    
+    
+    this.operate = function(expression){
+        if(!a2UserPermit.can('manage playlists')) {
+            notify.log('You do not have permission to combine playlists');
+            return;
+        }
+
+        return a2Playlists.combine(expression).then(function(){
+            notify.log('Playlist created');            
+        }).catch(function(err){
+            err = err || {};
+            notify.error(err.message || err.data || 'Server error');
+        });
+    };
     
     $scope.edit = function() {
         if(!$scope.selected)
@@ -80,7 +111,7 @@ angular.module('a2.audiodata.playlists', [
                 if(data.error)
                     return notify.log(data.error);
                 
-                a2Playlists.getList(function(data) {
+                a2Playlists.getList().then(function(data) {
                     $scope.playlists = data;
                     $scope.loading = false;
                     notify.log('Playlist deleted');
@@ -88,5 +119,8 @@ angular.module('a2.audiodata.playlists', [
             });
         });
     };
+
+    this.initialize();
+
 })
 ;

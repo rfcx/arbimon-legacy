@@ -6,7 +6,11 @@ var model = require('../../../model');
 /** Return a list of all the playlists in a project.
  */
 router.get('/', function(req, res, next) {
-    model.playlists.find({project:req.project.project_id}, { count:true, show_type:true}, function(err, count) {
+    model.playlists.find({project:req.project.project_id}, { 
+        count:true, 
+        show_type:true,
+        show_info: !!req.query.info,
+    }, function(err, count) {
         if(err) return next(err);
 
         res.json(count);
@@ -18,8 +22,9 @@ router.param('playlist', function(req, res, next, playlist){
     model.playlists.find({
         id      : playlist,
         project : req.project.project_id
+    }, {
+        count:true,
     },
-    { count:true },
     function(err, playlists) {
         if(err) return next(err);
 
@@ -119,6 +124,41 @@ router.post('/create', function(req, res, next) {
     });
 });
 
+
+/** Combine playlists into a new one.
+ */
+router.post('/combine', function(req, res, next) {
+    if(!req.body.name){
+        return res.json({ error: "missing name parameter"});
+    }
+    res.type('json');
+    model.playlists.find({
+        name: req.body.name,
+        project: req.project.project_id
+    }).then(function(rows){
+        if(rows.length > 0){
+            return res.json({ error: "Playlist name in use" });
+        }
+        return model.playlists.combine({
+            name: req.body.name,
+            project: req.project.project_id,
+            operation: req.body.operation,
+            term1: req.body.term1,
+            term2: req.body.term2,
+        });
+    }).then(function(new_tset) {
+            debug("playlists " + req.body.term1 + " and " + req.body.term2 + " combined (" + req.body.operation + ") into ", new_tset);
+            
+            model.projects.insertNews({
+                news_type_id: 10, // playlist created
+                user_id: req.session.user.id,
+                project_id: req.project.project_id,
+                data: JSON.stringify({ playlist: req.body.name, playlist_id:new_tset.id })
+            });
+            
+            res.json({ success: true });
+    }).catch(next);
+});
 
 // /** Add a data to a playlist.
 //  */

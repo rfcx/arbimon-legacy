@@ -4,13 +4,38 @@ angular.module('a2.directive.a2-table', [
 .directive('a2Table', function($window, $filter, $templateCache, $compile) {
     var $ = $window.$;
     
+    function compileFields(element){
+        return element.children('field').toArray().map(function(field){
+            field = angular.element(field);
+            var clone = field.clone();
+            field.detach();
+            return {
+                title: clone.attr('title'),
+                key: clone.attr('key'),
+                content: clone.html()
+            };
+        });
+    }
+    
+    function compileSelectExpand(element, options){
+        var selectExpand = element.children('expand-select');
+        if(!selectExpand.length){
+            return;
+        }
+        
+        var clone = selectExpand.clone(true);
+        selectExpand.detach();
+        selectExpand = angular.element('<tr ng-show="selected"><td colspan="' + options.fieldCount + '"></td></tr>');
+        selectExpand.find('td').append(clone);
+        return selectExpand;
+    }
+    
     return {
         restrict: 'E',
         scope: {
             rows: '=',
             selected: '=?',
             onSelect: '&',
-            extSort: '&',
             checked: '=?',
             search: '=?',
             // noCheckbox: '@',    // disable row checkboxes
@@ -18,95 +43,117 @@ angular.module('a2.directive.a2-table', [
             dateFormat: '@',    // moment date format, default: 'lll'
             numberDecimals: '@', // decimal spaces 
         },
-        controller: 'a2TableCtrl',
-        compile: function(tElement, tAttrs) {
-            var detaEle = tElement;
+        controller: 'a2TableCtrl as controller',
+        compile: function(element, attrs) {
+            var template = angular.element($templateCache.get('/directives/a2-table.html'));
+            var tplHead = template.find("thead tr");
+            var tplBody = template.find("tbody tr");
+            var options = {};
+            options.fields = compileFields(element);
+            options.hasCheckbox = attrs.noCheckbox === undefined;
+            options.hasSelection = attrs.noSelect === undefined;
+            options.fieldCount = options.fields.length + (options.hasCheckbox?1:0);
+            options.selectExpand = compileSelectExpand(element, options);
+            options.fields.forEach(function(field, index){
+                tplHead.append(
+                    angular.element('<th ng-click="controller.sortBy(' + index+ ')"></th>').text(field.title).append(
+                        field.key ?
+                        '    <i ng-if="sortKey == ' + index + '" class="fa" ng-class="reverse ? \'fa-chevron-up\': \'fa-chevron-down\'"></i>\n' :
+                        ''
+                    )
+                );
+                tplBody.append(
+                    angular.element('<td>').addClass(field.tdclass).html(field.content)
+                );
+            });
             
-            var fields = [];
-            
-            for(var i = 0; i < detaEle[0].children.length; i++) {
-                var child = $(detaEle[0].children[i]);
+            return function(scope, element, attrs, a2TableCtrl) {
+                var tableScope = scope.$parent.$new(false, scope);
+                options.scope = scope;
+                options.tableScope = tableScope;
+                options.onSelect = scope.onSelect && function (row){
+                    return scope.onSelect({row:row});
+                };
                 
-                fields.push({
-                    title: child.attr('title'),
-                    key: child.attr('key'),
-                    content: child.html()
-                });
-            }
-            
-            
-            return function(scope, element, attrs) {
-                scope.fields = fields;
+                a2TableCtrl.initialize(options);
                 
-                if(attrs.noCheckbox !== undefined) {
-                    scope.noCheck = true;
+                tableScope.controller = a2TableCtrl;
+                a2TableCtrl.fields = options.fields;
+                if(options.selectExpand){
+                    a2TableCtrl.selectExpand = $compile(options.selectExpand)(tableScope);
                 }
                 
-                if(attrs.noSelect !== undefined) {
-                    scope.noSelect = true;
-                }
+                a2TableCtrl.noCheck = !options.hasCheckbox;
+                a2TableCtrl.noSelect = !options.hasSelection;
+                tableScope.sortKey = attrs.defaultSort || tableScope.sortKey;
                 
                 if(attrs.search) {
                     scope.$watch('search', function(value) {
-                        scope.query = scope.search;
-                        scope.updateChecked();
+                        tableScope.query = scope.search;
+                        a2TableCtrl.updateChecked();
                     });
                 }
-                
-                if(attrs.defaultSort) { 
-                    scope.sortKey = attrs.defaultSort;
-                }
                     
-                if(attrs.checked) {
-                    scope.$watch('rows', scope.updateChecked, true);
-                }
+                a2TableCtrl.setRows(scope.rows);
+                scope.$watch('rows', function(rows){
+                    a2TableCtrl.setRows(rows);
+                }, true);
+
                 
-                element.html($templateCache.get('/directives/a2-table.html'));
+                element.append($compile(template)(tableScope));
+                console.log("!!!", tableScope);
                 
-                $compile(element.contents())(scope);
+                scope.$on('$destroy', function(){
+                    tableScope.$destroy();
+                });
+                
             };
         }
     };
 })
-.controller('a2TableCtrl', function($scope, $filter) {
-    $scope.updateChecked = function() {
-        if($scope.rows) {
-            var visible = $filter('filter')($scope.rows, $scope.query);
+.controller('a2TableCtrl', function($filter) {
+    var scope, tableScope;
+    this.initialize = function(options){
+        scope = options.scope;
+        tableScope = options.tableScope;
+        this.__onSelect = options.onSelect;
+    };
+    
+    this.setRows = function(rows){
+        this.rows = rows;
+        this.updateChecked();
+    };
+    
+    this.updateChecked = function() {
+        if(this.rows) {
+            var visible = $filter('filter')(this.rows, tableScope.query);
             
-            $scope.checked = visible.filter(function(row) {
+            scope.checked = visible.filter(function(row) {
                 return row.checked | false;
             });
         }
     };
     
-    $scope.toggleAll = function() {
-        var allFalse = true;
+    this.toggleAll = function() {
+        var allFalse = this.rows.reduce(function(_, row){
+            return _ && !row.checked;
+        }, true);
         
-        for(var i in $scope.rows) {
-            if($scope.rows[i].checked) {
-                allFalse = false;
-                break;
-            }
-        }
+        this.rows.forEach(function(row){
+            row.checked = allFalse;
+        });
         
-        for(var j in $scope.rows) {
-            $scope.rows[j].checked = allFalse;
-        }
-        
-        $scope.checkall = allFalse;
-        
+        tableScope.checkall = allFalse;        
     };
     
-    $scope.check = function($event, $index) {
-        
-        if($scope.lastChecked && $event.shiftKey) {
-            if($scope.lastChecked) {
+    this.check = function($event, $index) {        
+        if(this.lastChecked && $event.shiftKey) {
+            if(this.lastChecked) {
                 var rows;
-                if($scope.lastChecked > $index) {
-                    rows = $scope.rows.slice($index, $scope.lastChecked);
-                }
-                else {
-                    rows = $scope.rows.slice($scope.lastChecked, $index);
+                if(this.lastChecked > $index) {
+                    rows = this.rows.slice($index, this.lastChecked);
+                } else {
+                    rows = this.rows.slice(this.lastChecked, $index);
                 }
                     
                 rows.forEach(function(row) {
@@ -115,67 +162,49 @@ angular.module('a2.directive.a2-table', [
             }
         }
                 
-        $scope.lastChecked = $index;
+        this.lastChecked = $index;
     };
     
-    $scope.keyboardSel = function(row, $index, $event) {
-        if($event.key === " " || $event.key === "Enter") 
-            $scope.sel(row, $index);
+    this.keyboardSel = function(row, $index, $event) {
+        if($event.key === " " || $event.key === "Enter"){
+            this.sel(row, $index);
+        }
     };
     
-    $scope.sel = function(row, $index) {
-        if($scope.noSelect)
+    this.sel = function(row, $index, $event) {
+        if(this.noSelect){
             return;
-            
-        $scope.selected = row;
-        if($scope.onSelect)
-            $scope.onSelect({ row: row });
-    };
-                        
-    $scope.sortBy = function(field) {
-        if($scope.sortKey !== field.key) {
-            $scope.sortKey = field.key;
-            
-            if($scope.extSort === undefined)
-                $scope.sort = field.key;
-            
-            $scope.reverse = false;
-        }
-        else {
-            $scope.reverse = !$scope.reverse;
         }
             
-        if($scope.extSort)
-            $scope.extSort({ sortBy: field.key, reverse: $scope.reverse });
-    };
-            
-    $scope.formatString = function(value) {
-                
-        if(value instanceof Date) {
-            return moment(value).utc().format($scope.dateFormat || 'lll');
-        }
-        else if(typeof value === 'number') {
-            var precision = $scope.numberDecimals || 3;
-            
-            var p =  Math.pow(10, precision);
-            
-            return Math.round(value*p)/p;
+        if(tableScope.selected === row){
+            row = undefined;
         }
         
-        return value;
-    };
-})
-.directive('a2TableContent', function($compile){
-    return {
-        restrict: 'E',
-        scope: {
-            template: '=',
-            row: '='
-        },
-        link: function(scope, element, attrs) {
-                element.html(scope.template);
-                $compile(element.contents())(scope);
+        tableScope.selected = row;
+        scope.selected = row;
+        if(this.selectExpand){
+            angular.element($event.currentTarget).after(
+                this.selectExpand
+            );
+        }
+        if(this.__onSelect){
+            this.__onSelect(row);
         }
     };
+                        
+    this.sortBy = function(fieldIndex) {
+        var field = this.fields[fieldIndex];
+        
+        if(tableScope.sortKey !== fieldIndex) {
+            tableScope.sortKey = fieldIndex;
+            tableScope.sort = field.key;
+            
+            tableScope.reverse = false;
+        } else {
+            tableScope.reverse = !tableScope.reverse;
+        }
+            
+    };
+            
 })
 ;

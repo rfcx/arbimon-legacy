@@ -17,14 +17,19 @@
                 ></recording-data-export-parameters>
             </div>
         </div>
-        <div class="btn-group padding-leftx2">
-            <button class="btn btn-danger"
-            ng-click="controller.deleteRecordings()"
-            ng-class="{ disabled: !checked || !checked.length }"
-            tooltip="Delete recording(s)"
-            tooltip-trigger="mouseenter">
-                <i class="fa fa-trash"></i>
+
+        <div class="btn-group padding-leftx2" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
+            <button class="btn btn-danger" dropdown-toggle>
+                <i class="fa fa-trash"></i> Delete <i class="fa fa-caret-down"></i></button>
             </button>
+            <ul class="dropdown-form dropdown-menu" role="menu">
+                <li><a ng-click="controller.deleteRecordings()"
+                    ng-class="{ disabled: !checked || !checked.length }"
+                >Checked recordings</a></li>
+                <li><a ng-click="controller.deleteMatchingRecordings()"
+                    ng-class="{ disabled: !checked || !checked.length }"
+                >All filtered recordings</a></li>
+            </ul>
         </div>
     </div>
 </div>

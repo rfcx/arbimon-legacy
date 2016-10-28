@@ -37,11 +37,6 @@ angular.module('a2.audiodata', [
         url: '/training-sets?set&show',
         controller: 'TrainingSetsCtrl as controller',
         templateUrl: '/app/audiodata/training-sets.html'
-    })
-    .state('audiodata.playlists', {
-        url: '/playlists',
-        controller: 'PlaylistCtrl',
-        templateUrl: '/app/audiodata/playlists.html'
     });
 })
 ;
