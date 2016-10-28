@@ -1008,6 +1008,7 @@ var Recordings = {
                 to: joi.date()
             }).and('from', 'to'),
             sites:  arrayOrSingle(joi.string()),
+            imported: joi.boolean(),
             years:  arrayOrSingle(joi.number()),
             months: arrayOrSingle(joi.number()),
             days:   arrayOrSingle(joi.number()),
@@ -1064,6 +1065,14 @@ var Recordings = {
             
             if(parameters.sites) {
                 builder.addConstraint('s.name IN (?)', [parameters.sites]);
+            }
+            
+            if(parameters.imported !== undefined){
+                builder.addConstraint(
+                    parameters.imported ?
+                    'pis.site_id IS NOT NULL' :
+                    'pis.site_id IS NULL'
+                );
             }
             
             if(parameters.years) {
