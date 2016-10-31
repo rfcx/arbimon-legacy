@@ -60,14 +60,14 @@
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <a2-table class="table-hide-btns" rows="recs" data-checked="checked" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site" no-select>
-            <field title="">
+        <a2-table class="table-hide-btnss" rows="recs" data-checked="checked" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site">
+            <!-- <field title="">
                 <a class="btn btn-default btn-xs"
                     ng-href="#/visualizer/rec/{{row.id}}"
                     title="View in Visualizer">
                     <i class="fa fa-cubes"></i>
                 </a>
-            </field>
+            </field> -->
             <field title="Filename"   key="file"     >{{ row.file     }}</field>
             <field title="Site"       key="site"     >{{ row.site     }}</field>
             <field title="Time"       key="datetime" >{{ row.datetime | momentUtc: 'lll'}}
@@ -81,6 +81,18 @@
             <field title="Microphone" key="mic"      >{{ row.mic      }}</field>
             <field title="Software"   key="version"  >{{ row.version  }}</field>
             <!-- <field title=""   key=""     >{{ row.file     }}</field> -->
+            <expand-select>
+                <!-- <h4>{{selected.file}}</h4> -->
+                <!-- <p class="">
+                    Type : {{selected.type}}
+                </p> -->
+                <div>
+                    <img ng-src="{{selected.thumbnail}}"/>
+                </div>
+                <a class="btn btn-default btn-xs" ui-sref="visualizer.view({type:'rec', idA:selected.id})">
+                    <i class="fa fa-cubes"></i> View in Visualizer
+                </a>
+            </expand-select>
         </a2-table>
         <loader ng-hide="!loading"></loader>
     </div>

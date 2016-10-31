@@ -985,6 +985,10 @@ var Recordings = {
                     var r = results[i][0];
                     if(output == "count"){
                         r = r[0].count;
+                    } else if(output == 'list'){
+                        r.forEach(function(_1){
+                            _1.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(_1.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
+                        });
                     } else if(output != 'list'){
                         r = r[0];
                     }
