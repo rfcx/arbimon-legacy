@@ -11,6 +11,7 @@ var dbpool = require('../utils/dbpool');
 var APIError = require('../utils/apierror');
 // TODO remove circular dependencies
 var model = require('../model');
+var config = require('../config');
 
 // local variables
 var s3;
@@ -101,14 +102,16 @@ var Playlists = {
         return q.resolve().then(function(){
             if(playlist.type == "soundscape region"){
                 return dbpool.query(
-                    "SELECT  soundscape_region_id as region, soundscape_id as soundscape \n" +
+                    "SELECT  soundscape_region_id as region, S.soundscape_id as soundscape, S.uri \n" +
                     "FROM soundscape_regions SCR \n" +
+                    "JOIN soundscapes S ON SCR.soundscape_id = S.soundscape_id\n" +
                     "WHERE SCR.sample_playlist_id = ?", [
                     playlist.id,
                 ]).get(0).then(function(sr){
                     if(sr){
                         playlist.region     = sr.region;
                         playlist.soundscape = sr.soundscape;
+                        playlist.soundscape_thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + sr.uri;
                     }
                 });
             } else if(/union|intersection|subtraction/.test(playlist.type) && playlist.metadata){

@@ -43,7 +43,7 @@
                             Type : {{selected.type}}
                         </p>
                         <div ng-if="selected.soundscape">
-                            <img ng-src="{{'https://a2-chino.s3.amazonaws.com/project_' + selected.project_id + '/soundscapes/' + selected.soundscape + '/image.png'}}" alt="" 
+                            <img ng-src="{{selected.soundscape_thumbnail}}" alt="" 
                             class="crisp-image"
                             width="300"
                             height="154"
