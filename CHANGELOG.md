@@ -110,4 +110,11 @@
     - fixed bug in Users.getProjectList (for reals)
 - v1.9.7
     - fixed bug in Users.getProjectList (for reals, I swear)
+- v1.9.8
+    - fixed bug training models
+    - added playlists functionality (arithmetic and details)
+    - can now filter by playlists
+    - added recording details
+    - code refactors
+
 
