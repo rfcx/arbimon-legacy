@@ -101,7 +101,7 @@ var audiotools = {
         options = options || {};
         
         var args = [];
-        args.push('--guard', '--magic', '--show-progress');
+        args.push('--magic', '--show-progress');
         args.push(source_path);
         if (options.sample_rate) {
             args.push('-r', options.sample_rate | 0);
