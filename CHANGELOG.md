@@ -116,5 +116,6 @@
     - can now filter by playlists
     - added recording details
     - code refactors
-
+- v1.9.9
+    - Removed autogain protection from sox calls (was ruining some mp3 reproductions)
 
