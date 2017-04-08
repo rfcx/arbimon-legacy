@@ -94,7 +94,7 @@ var AudioEventDetections = {
             select.push('AED.playlist_id');
             postprocess.push(function(aeds){
                 return q.all(aeds.map(function(aed){
-                    return q.ninvoke(model.playlists, 'find', {id: aed.playlist_id}).get(0).get(0).then(function(playlist){
+                    return q.ninvoke(model.playlists, 'find', {id: aed.playlist_id}).get(0).then(function(playlist){
                         aed.playlist = playlist;
                         delete aed.playlist_id;
                     });
