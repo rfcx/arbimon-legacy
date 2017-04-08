@@ -63,7 +63,9 @@
         </div>
         <div class="">
             <!-- <loader ng-hide="plots.loading">Loading Data</loader> -->
-            <c3-chart-display data="plots.chart.data" axes="plots.chart.axes"></c3-chart-display>
+            <plotly-plotter class="input-source" layout="plots.chart.layout" data="plots.chart.data">
+            </plotly-plotter>
+            <!-- <c3-chart-display data="plots.chart.data" axes="plots.chart.axes"></c3-chart-display> -->
         </div>
     </div>
     
