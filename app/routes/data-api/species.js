@@ -4,6 +4,7 @@ var model = require('../../model');
 
 
 router.get('/list/:limit', function(req, res, next) {
+    res.type('json');
     var limit = Number(req.params.limit);
 
     model.species.list(limit, function(err, rows) {
@@ -16,6 +17,7 @@ router.get('/list/:limit', function(req, res, next) {
 });
 
 router.get('/search', function(req, res, next) {
+    res.type('json');
     var query = req.query.q || '';
 
     model.species.search(query, function(err, rows){
@@ -43,6 +45,7 @@ router.param('speciesId', function(req, res, next, species_id){
 });
 
 router.get('/:speciesId', function(req, res, next) {
+    res.type('json');
     res.json(req.species);
 });
 

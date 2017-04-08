@@ -10,6 +10,7 @@ var sha256 = require('../../utils/sha256');
 var APIError = require('../../utils/apierror');
 
 router.get('/projectlist', function(req, res, next) {
+    res.type('json');
     // super user list all projects
     if(req.session.user.isSuper === 1) {
         model.projects.listAll(function(err, rows) {
@@ -28,6 +29,7 @@ router.get('/projectlist', function(req, res, next) {
 });
 
 router.get('/feed/formats', function(req, res, next) {
+    res.type('json');
     model.news.getNewsTypeFormats().then(function(newsTypeFormats) {
         res.json(newsTypeFormats.reduce(function(_, format){
             _[format.id] = format.message_format;
@@ -37,6 +39,7 @@ router.get('/feed/formats', function(req, res, next) {
 });
 
 router.get('/feed/:page', function(req, res, next) {
+    res.type('json');
     
     var page = req.params.page || 0;
     
@@ -59,6 +62,7 @@ router.get('/feed/:page', function(req, res, next) {
 });
 
 router.get('/info', function(req, res) {
+    res.type('json');
     var user = req.session.user;
     
     res.json({
@@ -73,6 +77,7 @@ router.get('/info', function(req, res) {
 });
 
 router.get('/search/:query?', function(req, res, next) {
+    res.type('json');
     var query = req.params.query;
     
     if(!query){
@@ -93,6 +98,7 @@ router.get('/search/:query?', function(req, res, next) {
 });
 
 router.post('/update/password', function(req, res, next){
+    res.type('json');
     var userData = req.body.userData;
     var password = req.body.password;
     
@@ -157,6 +163,7 @@ router.post('/update', function(req, res, next){
 });
 
 router.get('/address', function(req, res, next) {
+    res.type('json');
     model.users.getAddress(req.session.user.id, function(err, rows) {
         if(err) return next(err);
         
@@ -167,6 +174,7 @@ router.get('/address', function(req, res, next) {
 });
 
 router.put('/address', function(req, res, next) {
+    res.type('json');
     if(!req.body.address) {
         return res.status(400).json({ error: "missing parameters" });
     }

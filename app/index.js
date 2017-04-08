@@ -149,6 +149,9 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
+    if('string' === typeof err){
+        err = new Error(err);
+    }
     res.status(err.status || 500);
 
     // json APIs have more error-handling possibilities
@@ -171,7 +174,7 @@ app.use(function(err, req, res, next) {
         }
         else {
             res.render('error', {
-                message: "Something went wrong",
+                message: err.message || "Something went wrong",
                 error: {}
             });
         }

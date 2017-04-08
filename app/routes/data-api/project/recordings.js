@@ -7,6 +7,7 @@ var model = require('../../../model');
 
 
 router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
+    res.type('json');
     var site_id = req.params.siteid;
     var filename = req.params.filename;
     
@@ -81,6 +82,7 @@ router.get('/recordings-export.csv', function(req, res, next) {
 
 
 router.get('/count', function(req, res, next) {
+    res.type('json');
     model.projects.totalRecordings(req.project.project_id, function(err, rows) {
         if(err) return next(err);
             
@@ -89,6 +91,7 @@ router.get('/count', function(req, res, next) {
 });
 
 router.get('/:recUrl?', function(req, res, next) {
+    res.type('json');
     var recordingUrl = req.params.recUrl;
     
     model.recordings.findByUrlMatch(
@@ -108,6 +111,7 @@ router.get('/:recUrl?', function(req, res, next) {
 });
 
 router.get('/count/:recUrl?', function(req, res, next) {
+    res.type('json');
     var recordingUrl = req.params.recUrl;
     
     model.recordings.findByUrlMatch(recordingUrl, req.project.project_id, { count_only:true }, function(err, count) {
@@ -119,6 +123,7 @@ router.get('/count/:recUrl?', function(req, res, next) {
 });
 
 router.get('/available/:recUrl?', function(req, res, next) {
+    res.type('json');
     var recordingUrl = req.params.recUrl;
     model.recordings.findByUrlMatch(
         recordingUrl, 
@@ -210,6 +215,7 @@ router.get('/:get/:oneRecUrl?', function(req, res, next) {
 });
 
 router.post('/validate/:oneRecUrl?', function(req, res, next) {
+    res.type('json');
     if(!req.haveAccess(req.project.project_id, "validate species")) {
         return res.json({ error: "you dont have permission to validate species" });
     }
@@ -221,6 +227,7 @@ router.post('/validate/:oneRecUrl?', function(req, res, next) {
 });
 
 router.post('/delete', function(req, res, next) {
+    res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
         return res.json({ error: "you dont have permission to manage project recordings" });
     }

@@ -4,6 +4,7 @@ var router = require('express').Router();
 var model = require('../../../model');
 
 router.get('/processing', function(req, res, next) {
+    res.type('json');
     model.uploads.getUploadsList({
         project: req.project.project_id,
         count: true,

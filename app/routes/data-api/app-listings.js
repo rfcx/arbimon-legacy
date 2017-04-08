@@ -3,6 +3,7 @@ var router = require('express').Router();
 var models = require('../../model');
 
 router.get('/:appname?', function(req, res, next){
+    res.type('json');
     models.AppListings.getListFor(req.params.appname).then(function(appList){
         res.json(appList);
     }).catch(next);

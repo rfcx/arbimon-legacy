@@ -70,6 +70,7 @@ router.param('bbox', function(req, res, next, bbox){
 /** Return a list of all the soundscapes in a project.
  */
 router.get('/', function(req, res, next) {
+    res.type('json');
     model.soundscapes.find({project:req.project.project_id}, {
         compute:req.query && req.query.show
     }, function(err, count) {
@@ -81,6 +82,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/details', function(req, res, next) {
+    res.type('json');
     model.soundscapes.details(req.project.project_id,
     function(err, data) {
         if(err) return next(err);
@@ -93,10 +95,12 @@ router.get('/details', function(req, res, next) {
 
 
 router.get('/:soundscape', function(req, res, next) {
+    res.type('json');
     res.json(req.soundscape);
 });
 
 router.get('/:soundscape/delete', function(req, res, next) {
+    res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
         return res.json({ error: "you dont have permission to 'manage soundscapes'" });
     
@@ -110,6 +114,7 @@ router.get('/:soundscape/delete', function(req, res, next) {
 });
 
 router.get('/:soundscape/scidx', function(req, res, next) {
+    res.type('json');
     var soundscape = req.soundscape;
     var just_count = req.query && req.query.count;
     model.soundscapes.fetchSCIDX(req.soundscape, {
@@ -124,6 +129,7 @@ router.get('/:soundscape/scidx', function(req, res, next) {
 });
 
 router.get('/:soundscape/norm-vector', function(req, res, next) {
+    res.type('json');
     var soundscape = req.soundscape;
     model.soundscapes.fetchNormVector(req.soundscape, function(err, vector){
         if(err){
@@ -272,6 +278,7 @@ router.get('/:soundscape/export-list', function(req, res, next) {
 
 
 router.get('/:soundscape/indices', function(req, res, next) {
+    res.type('json');
     
     var uri = sprintf('project_%(project_id)s/soundscapes/%(soundscape_id)s/', {
         project_id: req.project.project_id,
@@ -320,6 +327,7 @@ router.get('/:soundscape/indices', function(req, res, next) {
 });
 
 router.post('/:soundscape/scale', function(req, res, next) {
+    res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage soundscapes")){
         return res.json({ error: "you dont have permission to 'manage soundscapes'" });
     }
@@ -340,6 +348,7 @@ router.post('/:soundscape/scale', function(req, res, next) {
 
 
 router.get('/:soundscape/recordings/:bbox', function(req, res, next) {
+    res.type('json');
     var soundscape = req.soundscape;
     var filters = {
         ignore_offsets : true,
@@ -382,6 +391,7 @@ region_router.param('region', function(req, res, next, region){
 });
 
 region_router.get('/', function(req, res, next) {
+    res.type('json');
     model.soundscapes.getRegions(req.soundscape, {
         compute:req.query.view
     },function(err, regions){
@@ -394,6 +404,7 @@ region_router.get('/', function(req, res, next) {
 });
 
 region_router.post('/add', function(req, res, next) {
+    res.type('json');
     
     if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
         return res.json({ error: "you dont have permission to 'manage soundscapes'" });
@@ -412,10 +423,12 @@ region_router.post('/add', function(req, res, next) {
 });
 
 region_router.get('/:region', function(req, res, next) {
+    res.type('json');
     res.json(req.region);
 });
 
 region_router.post('/:region/sample', function(req, res, next) {
+    res.type('json');
     model.soundscapes.sampleRegion(req.soundscape, req.region, {
         count : (req.region.count * (req.body.percent|0) / 100.0) | 0
     }, function(err, region){
@@ -429,6 +442,7 @@ region_router.post('/:region/sample', function(req, res, next) {
 
 
 region_router.get('/:region/tags/:recid', function(req, res, next) {
+    res.type('json');
     model.soundscapes.getRegionTags(req.region, {
         recording : req.params.recid
     }, function(err, region){
@@ -441,6 +455,7 @@ region_router.get('/:region/tags/:recid', function(req, res, next) {
 });
 
 region_router.post('/:region/tags/:recid/add', function(req, res, next) {
+    res.type('json');
     
     if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
         return res.json({ error: "you dont have permission to 'manage soundscapes'" });
@@ -456,6 +471,7 @@ region_router.post('/:region/tags/:recid/add', function(req, res, next) {
 
 
 region_router.post('/:region/tags/:recid/remove', function(req, res, next) {
+    res.type('json');
     
     if(!req.haveAccess(req.project.project_id, "manage soundscapes"))
         return res.json({ error: "you dont have permission to 'manage soundscapes'" });

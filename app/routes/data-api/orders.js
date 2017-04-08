@@ -96,18 +96,21 @@ var createOrder = function(user, order, addendum, appHost) {
 };
 
 router.get('/payments-status', function(req, res) {
+    res.type('json');
     res.json({ 
         payments_enable: req.systemSettings('feature.payments') == 'on' 
     });
 });
 
 router.get('/contact', function(req, res) {
+    res.type('json');
     res.json({
         email:req.systemSettings('orders.contact.email')
     });
 });
 
 router.post('/check-coupon', function(req, res, next) {
+    res.type('json');
     model.ActivationCodes.listAll({
         consumed:0,
         hash:req.body.hash,
@@ -274,6 +277,7 @@ router.post('/create-project', function(req, res, next) {
 
 
 router.post('/update-project', function(req, res, next) {
+    res.type('json');
     console.log(req.body);
     
     var newPlan = req.body.project.plan;
@@ -357,6 +361,7 @@ router.post('/update-project', function(req, res, next) {
 });
 
 router.post('/calculate-shipping', function(req, res, next) {
+    res.type('json');
     if(!req.body.address || !req.body.recorderQty)
         return res.status(400).json({ error: "missing parameters" });
     
@@ -394,11 +399,13 @@ router.post('/calculate-shipping', function(req, res, next) {
 
 
 router.get('/countries', function(req, res) {
+    res.type('json');
     res.json(countries);
 });
 
 
 router.param('orderId', function(req, res, next, orderId) {
+    res.type('json');
     console.log(orderId);
     model.orders.findById(orderId, function(err, rows) {
         if(err) return next(err);
@@ -440,6 +447,7 @@ router.param('orderId', function(req, res, next, orderId) {
 // });
 
 router.post('/process/:orderId', function(req, res, next) {
+    res.type('json');
     
     if(!req.query.PayerID) {
         return res.status(400).json({ error: 'MISSING_PARAMS'});
@@ -577,6 +585,7 @@ router.post('/process/:orderId', function(req, res, next) {
 });
 
 router.get('/cancel/:orderId', function(req, res, next) {
+    res.type('json');
     // set order as canceled
     
     if(req.order.status != 'created') {

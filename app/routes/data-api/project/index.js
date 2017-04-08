@@ -24,6 +24,7 @@ var classiRoutes = require('./classifications');
 var tagRoutes = require('./tags');
 
 router.param('projectUrl', function(req, res, next, project_url){
+    res.type('json');
     model.projects.find({ url: project_url }, function(err, rows) {
         if(err){
             return next(err);
@@ -65,10 +66,12 @@ router.param('projectUrl', function(req, res, next, project_url){
 router.use('/:projectUrl/sites', sites);
 
 router.get('/:projectUrl/info', function(req, res, next) {
+    res.type('json');
     res.json(req.project);
 });
 
 router.post('/:projectUrl/info/update', function(req, res, next) {
+    res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you dont have permission to 'manage project settings'" });
     }
@@ -138,6 +141,7 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
 });
 
 router.get('/:projectUrl/classes', function(req, res, next) {
+    res.type('json');
     var classId = req.query.class_id || null;
     var options = {};
     if(req.query.validations) {
@@ -152,6 +156,7 @@ router.get('/:projectUrl/classes', function(req, res, next) {
 });
 
 router.post('/:projectUrl/class/add', function(req, res, next) {
+    res.type('json');
 
     if(!req.body.species || !req.body.songtype) {
         return res.status(400).json({ error: "missing parameters"});
@@ -191,6 +196,7 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
 });
 
 router.post('/:projectUrl/class/del', function(req, res, next){
+    res.type('json');
     if(!req.body.project_classes) {
         return res.status(400).json({ error: "missing parameters"});
     }
@@ -235,6 +241,7 @@ router.post('/:projectUrl/class/del', function(req, res, next){
 });
 
 router.get('/:projectUrl/roles', function(req, res, next) {
+    res.type('json');
     model.projects.availableRoles(function(err, roles){
         if(err) return next(err);
         
@@ -243,6 +250,7 @@ router.get('/:projectUrl/roles', function(req, res, next) {
 });
 
 router.get('/:projectUrl/users', function(req, res, next) {
+    res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
@@ -261,6 +269,7 @@ router.get('/:projectUrl/users', function(req, res, next) {
 });
 
 router.post('/:projectUrl/user/add', function(req, res, next) {
+    res.type('json');
     if(!req.body.user_id) {
         return res.json({ error: "missing parameters"});
     }
@@ -283,6 +292,7 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
 });
 
 router.post('/:projectUrl/user/role', function(req, res, next) {
+    res.type('json');
     
     if(!req.body.user_id || !req.body.role_id) {
         return res.json({ error: "missing parameters"});
@@ -306,6 +316,7 @@ router.post('/:projectUrl/user/role', function(req, res, next) {
 });
 
 router.post('/:projectUrl/user/del', function(req, res, next) {
+    res.type('json');
     if(!req.body.user_id) {
         return res.json({ error: "missing parameters"});
     }
@@ -323,6 +334,7 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
 });
 
 router.get('/:projectUrl/user-permissions', function(req, res, next) {
+    res.type('json');
     model.users.getPermissions(
         req.session.user.id, 
         req.project.project_id, 
@@ -346,6 +358,7 @@ router.get('/:projectUrl/user-permissions', function(req, res, next) {
 });
 
 router.get('/:projectUrl/validations/count', function(req, res, next) {
+    res.type('json');
     model.projects.validationsCount(req.project.project_id, function(err, result) {
         if(err) return next(err);
         
@@ -354,6 +367,7 @@ router.get('/:projectUrl/validations/count', function(req, res, next) {
 });
 
 router.get('/:projectUrl/usage', function(req, res, next) {
+    res.type('json');
     model.projects.getStorageUsage(req.project.project_id).then(function(result) {
         res.json({ min_usage: result.min_usage });
     }).catch(next);

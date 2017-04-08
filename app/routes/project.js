@@ -31,6 +31,7 @@ router.use('/', function(req, res, next){
 });
 
 router.get('/:projecturl?/', function(req, res, next) {
+    res.type('html');
     var project_url = req.params.projecturl;
     var project_id = req.query.id;
     
