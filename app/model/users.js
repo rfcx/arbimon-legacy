@@ -411,7 +411,7 @@ var Users = {
             if(!user) {
                 tries = invalidLogins.tries;
             } else {
-                tries = Math.max(invalidLogins.tries, user.login_tries);
+                tries =user.login_tries;
             }
 
             result.user = user;
