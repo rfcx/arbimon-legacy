@@ -119,3 +119,6 @@
 - v1.9.9
     - Removed autogain protection from sox calls (was ruining some mp3 reproductions)
 
+- v1.9.10
+    - Fixed aed playlist getting code
+    - Adding admin plots feature
