@@ -420,12 +420,12 @@ var Users = {
             debug('login tries:', tries);
             
             if(user && (user.disabled_until === '0000-00-00 00:00:00') ){
-                throw { error: "This account had been disabled" };
+                throw new APIError("This account had been disabled");
             }
             
             if(tries >=  permitedRetries || (user && (user.disabled_until > now) ) ) {
                 // TODO:: esto dice una hora pero no necesariamente es una, o si?
-                throw { error: "Too many tries, try again in 1 hour. If you think this is wrong contact us." };
+                throw new APIError("Too many tries, try again in 1 hour. If you think this is wrong contact us.");
             }
             
             return result;
@@ -512,7 +512,11 @@ var Users = {
                     result.reason
                 ).catch(console.error.bind(console));
                 
-                throw result.error;
+                return {
+                    success: false,
+                    error: result.error,
+                    captchaNeeded: result.captchaNeeded
+                };
             }
             
             // update user info

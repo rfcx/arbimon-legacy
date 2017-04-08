@@ -54,8 +54,8 @@ angular.module('a2.login', [
                 $window.location.assign(data.redirect);
             }
         })
-        .error(function() {
-            notify.error('Something went wrong, try again later');
+        .error(function(error) {
+            notify.error(error || 'Something went wrong, try again later');
         });
     };
     
