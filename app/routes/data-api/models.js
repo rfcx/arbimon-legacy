@@ -24,6 +24,7 @@ var s3 = new AWS.S3();
 // ------------------------ models routes -------------------------------------
 
 router.get('/project/:projectUrl/models', function(req, res, next) {
+    res.type('json');
 
     model.projects.modelList(req.params.projectUrl, function(err, rows) {
         if(err) return next(err);
@@ -33,6 +34,7 @@ router.get('/project/:projectUrl/models', function(req, res, next) {
 });
 
 router.get('/project/:projectUrl/models/forminfo', function(req, res, next) {
+    res.type('json');
 
     model.models.types(function(err, row1) {
         if(err) return next(err);
@@ -107,6 +109,7 @@ router.post('/project/:projectUrl/models/new', function(req, res, next) {
 });
 
 router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
+    res.type('json');
     model.models.details(req.params.mid, function(err, model) {
         if(err) {
             if(err.message == "model not found") {
@@ -121,6 +124,7 @@ router.get('/project/:projectUrl/models/:mid', function(req, res, next) {
 });
 
 router.post('/project/:projectUrl/models/savethreshold', function(req, res, next) {
+    res.type('json');
     model.models.savethreshold(req.body.m,req.body.t, function(err, row) {
         if(err) return next(err);
 
@@ -129,6 +133,7 @@ router.post('/project/:projectUrl/models/savethreshold', function(req, res, next
 });
 
 router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
+    res.type('json');
     model.projects.findByUrl(req.params.projectUrl,
         function(err, rows)
         {
@@ -158,6 +163,7 @@ router.get('/project/:projectUrl/models/:mid/delete', function(req, res, next) {
 });
 
 router.get('/project/:projectUrl/models/:modelId/validation-list', function(req, res, next) {
+    res.type('json');
 
     if(!req.params.modelId)
         return res.json({ error: 'missing values' });
@@ -233,6 +239,7 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
 });
 
 router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', function(req, res, next) {
+    res.type('json');
     if(!req.params.modelId || !req.params.recId) {
         return res.status(400).json({ error: 'missing parameters'});
     }
@@ -271,6 +278,7 @@ router.get('/project/:projectUrl/models/:modelId/training-vector/:recId', functi
 // --------------------- validations routes -----------------------------------
 
 router.get('/project/:projectUrl/validations', function(req, res, next) {
+    res.type('json');
     if(!req.query.species_id || !req.query.sound_id) {
         return res.status(400).json({ error: "missing query parameters" });
     }
@@ -284,6 +292,7 @@ router.get('/project/:projectUrl/validations', function(req, res, next) {
 // --------------------- soundscapes routes
 
 router.post('/project/:projectUrl/soundscape/new', function(req, res, next) {
+    res.type('json');
     var response_already_sent;
     var params, job_id;
 

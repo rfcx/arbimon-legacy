@@ -4,6 +4,7 @@ var router = express.Router();
 var model = require('../../../model');
 
 router.get('/', function(req, res, next){
+    res.type('json');
     model.tags.search({
         q:req.query.q || '', 
         offset:req.query.off || 0,

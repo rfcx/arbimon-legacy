@@ -29,6 +29,7 @@ router.param('dataId', function(req, res, next, dataId){
 /** Return a list of all the training sets in a project.
  */
 router.get('/', function(req, res, next) {
+    res.type('json');
     model.trainingSets.find({ project:req.project.project_id }, function(err, count) {
         if(err) return next(err);
 
@@ -40,6 +41,7 @@ router.get('/', function(req, res, next) {
 /** Return a list of all the training set types in a project (actually in the system).
  */
 router.get('/types', function(req, res, next) {
+    res.type('json');
     model.trainingSets.getTypes(function(err, types) {
         if(err) return next(err);
 
@@ -52,6 +54,7 @@ router.get('/types', function(req, res, next) {
 /** Return a training set's data.
  */
 router.get('/list/:trainingSet/:recUrl?', function(req, res, next) {
+    res.type('json');
     model.trainingSets.fetchData(req.trainingSet, {
         recording: req.params.recUrl
     }, function(err, count) {
@@ -78,6 +81,7 @@ router.get('/rois/:trainingSet', function(req, res, next) {
             }
         });
     } else {
+        res.type('json');
         model.trainingSets.fetchRois(req.trainingSet, function(err, data) {
             if(err) return next(err);
 
@@ -87,6 +91,7 @@ router.get('/rois/:trainingSet', function(req, res, next) {
 });
 
 router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
+    res.type('json');
     model.trainingSets.fetchDataImage(req.trainingSet, req.dataId, function(err, data) {
         if(err) return next(err);
         res.json(data);
@@ -95,6 +100,7 @@ router.get('/data/:trainingSet/get-image/:dataId', function(req, res, next) {
 
 
 router.get('/species/:trainingSet', function(req, res, next) {
+    res.type('json');
     model.trainingSets.fetchSpecies(req.trainingSet, function(err, rows) {
         if(err) return next(err);
         
@@ -109,6 +115,7 @@ router.get('/species/:trainingSet', function(req, res, next) {
 
 
 router.use(function(req, res, next) { 
+    res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage training sets"))
         return res.json({ error: "you dont have permission to 'manage training sets'" });
         
@@ -119,6 +126,7 @@ router.use(function(req, res, next) {
 /** Add a training set to a project.
 */
 router.post('/add', function(req, res, next) {
+    res.type('json');
     
     model.trainingSets.nameInUse(req.project.project_id, req.body.name).then(function(isInUse) {
         if(isInUse) {
@@ -169,6 +177,7 @@ router.post('/edit/:trainingSet', function(req, res, next) {
 /** Remove a training set.
 */
 router.post('/remove/:trainingSet', function(req, res, next) {
+    res.type('json');
     model.trainingSets.remove(req.trainingSet).then(function() {
         model.projects.insertNews({
             news_type_id: 13, // training set created
@@ -186,6 +195,7 @@ router.post('/remove/:trainingSet', function(req, res, next) {
 /** Add a training set to a project.
 */
 router.post('/add-data/:trainingSet', function(req, res, next) {
+    res.type('json');
     model.trainingSets.addData(req.trainingSet, req.body, function(err, tset_data) {
         if(err) return next(err);
         return res.json(tset_data);
@@ -194,6 +204,7 @@ router.post('/add-data/:trainingSet', function(req, res, next) {
 
 
 router.get('/:trainingSet/remove-roi/:roiId', function(req, res, next) {
+    res.type('json');
     model.trainingSets.removeRoi(req.params.roiId,req.trainingSet,
     function(err, data) {
         if(err) return next(err);

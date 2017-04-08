@@ -13,6 +13,7 @@ var model = require('../../model');
 // only super user can access admin section
 
 router.get('/', function(req, res, next) {
+    res.type('json');
     model.users.list(function(err, rows) {
         if(err) return next(err);
         

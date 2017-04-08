@@ -3,6 +3,7 @@ var router = express.Router();
 var model = require('../../model');
 
 router.get('/all', function(req, res, next) {
+    res.type('json');
     model.songtypes.listAll(function(err, rows) {
         if(err)
             next(err);
@@ -28,6 +29,7 @@ router.param('songtypeId', function(req, res, next, songtype_id){
 });
 
 router.get('/:songtypeId', function(req, res, next) {
+    res.type('json');
     res.json(req.songtype);
 });
 

@@ -13,6 +13,7 @@ var model = require('../../model');
 // only super user can access admin section
 
 router.get('/', function(req, res, next) {
+    res.type('json');
     model.projects.listAll(function(err, rows) {
         if(err) return next(err);
         
@@ -36,6 +37,7 @@ router.put('/:projectId', function(req, res, next) {
 
 
 router.get('/codes', function(req, res, next) {
+    res.type('json');
     model.ActivationCodes.listAll().then(function(codes){
         res.json(codes);
     }).catch(next);
@@ -43,6 +45,7 @@ router.get('/codes', function(req, res, next) {
 
 
 router.post('/codes', function(req, res, next) {
+    res.type('json');
     model.ActivationCodes.createCode(req.session.user, req.body).then(function(){
         res.json(true);
     }).catch(next);

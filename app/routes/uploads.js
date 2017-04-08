@@ -118,6 +118,7 @@ var verifySite = function(req, res, next) {
 };
 
 var receiveUpload = function(req, res, next) {
+    res.type('json');
     
     return q.all([
         model.projects.find({id:req.upload.projectId}).get(0),
@@ -291,6 +292,7 @@ var receiveUpload = function(req, res, next) {
 };
 
 var receiveSiteLogUpload = function(req, res, next) {    
+    res.type('json');
     var params = {};
     var error;
     var upload_file;

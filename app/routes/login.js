@@ -83,6 +83,7 @@ router.use(function(req, res, next) {
 });
 
 router.get('/api/login_available', function(req, res, next) {
+    res.type('json');
     if(!req.query.username) {
         return res.json({ error: "missing parameter"});
     }
@@ -95,6 +96,7 @@ router.get('/api/login_available', function(req, res, next) {
 });
 
 router.get('/api/email_available', function(req, res, next) {
+    res.type('json');
     if(!req.query.email) {
         return res.json({ error: "missing parameter"});
     }
@@ -111,6 +113,7 @@ router.get('/api/email_available', function(req, res, next) {
 });
 
 router.get('/', function(req, res) {  
+    res.type('html');
     if(req.session) { 
         if(req.session.loggedIn) return res.redirect('/home'); 
     }
@@ -125,6 +128,7 @@ router.get('/', function(req, res) {
 });
 
 router.get('/login', function(req, res) {  
+    res.type('html');
     if(req.session) { 
         if(req.session.loggedIn) return res.redirect('/home'); 
     }
@@ -139,6 +143,7 @@ router.get('/login', function(req, res) {
 
 
 router.post('/login', function(req, res, next) {
+    res.type('json');
     model.users.performLogin(req, {
         username : req.body.username,
         password : req.body.password,
@@ -169,6 +174,7 @@ router.post('/oauth-login', function(req, res, next) {
 });
 
 router.get('/logout', function(req, res, next) {
+    res.type('json');
     req.session.destroy(function(err) {
         if(err) return next(err);
         
@@ -177,10 +183,12 @@ router.get('/logout', function(req, res, next) {
 });
 
 router.get('/register', function(req, res) {
+    res.type('html');
     res.render('register');
 });
 
 router.get('/activate/:hash', function(req, res, next) {
+    res.type('html');
     model.users.findAccountSupportReq(req.params.hash, function(err, data) {
         if(err) return next(err);
         
@@ -232,6 +240,7 @@ router.get('/activate/:hash', function(req, res, next) {
 });
 
 router.post('/register', function(req, res, next) {
+    res.type('json');
     // console.log(req.body);
     
     var user = req.body.user;
@@ -389,10 +398,12 @@ router.post('/register', function(req, res, next) {
 });
 
 router.get('/forgot_request', function(req, res) {
+    res.type('html');
     res.render('forgot-request');
 });
 
 router.post('/forgot_request', function(req, res, next) {
+    res.type('json');
     if(!validator.isEmail(req.body.email)) {
         return res.json({ error: 'Invalid email address'});
     }
@@ -434,6 +445,7 @@ router.post('/forgot_request', function(req, res, next) {
 
 
 router.get('/reset_password/:hash', function(req, res, next) {
+    res.type('html');
     var now = new Date();
     
     model.users.findAccountSupportReq(req.params.hash, function(err, rows) {
@@ -457,6 +469,7 @@ router.get('/reset_password/:hash', function(req, res, next) {
 });
 
 router.post('/reset_password/:hash', function(req, res, next) {
+    res.type('json');
     var now = new Date();
     
     model.users.findAccountSupportReq(req.params.hash, function(err, rows) {

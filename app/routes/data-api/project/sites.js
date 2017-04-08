@@ -7,6 +7,7 @@ var csv_stringify = require("csv-stringify");
 var model = require('../../../model');
 
 router.get('/', function(req, res, next) {
+    res.type('json');
     model.projects.getProjectSites(req.project.project_id, {
         compute:{
             rec_count:true,
@@ -18,6 +19,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/create', function(req, res, next) {
+    res.type('json');
     var project = req.project;
     var site = req.body.site;
 
@@ -65,6 +67,7 @@ router.post('/create', function(req, res, next) {
 // });
 
 router.post('/update', function(req, res, next) {
+    res.type('json');
     var project = req.project;
     var site = req.body.site;
     
@@ -91,6 +94,7 @@ router.post('/update', function(req, res, next) {
 });
 
 router.post('/delete', function(req, res, next) {
+    res.type('json');
     var project = req.project;
     var site = req.body.site;
 
@@ -126,6 +130,7 @@ router.param('siteid', function(req, res, next, siteid){
 });
 
 router.get('/:siteid/logs', function(req, res, next){
+    res.type('json');
     model.sites.getLogFileList(req.site, function(err, logFileList){
         if(err){
             next(err);
@@ -314,6 +319,7 @@ router.get('/:siteid/log/data.txt', function(req, res, next){
 });
 
 router.post('/generate-token', function(req, res, next){
+    res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage project sites")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
@@ -343,6 +349,7 @@ router.post('/generate-token', function(req, res, next){
 });
 
 router.post('/revoke-token', function(req, res, next){
+    res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage project sites")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     } 

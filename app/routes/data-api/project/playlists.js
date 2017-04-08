@@ -6,6 +6,7 @@ var model = require('../../../model');
 /** Return a list of all the playlists in a project.
  */
 router.get('/', function(req, res, next) {
+    res.type('json');
     model.playlists.find({project:req.project.project_id}, { 
         count:true, 
         show_type:true,
@@ -19,6 +20,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.param('playlist', function(req, res, next, playlist){
+    res.type('json');
     model.playlists.find({
         id      : playlist,
         project : req.project.project_id
@@ -40,6 +42,7 @@ router.param('playlist', function(req, res, next, playlist){
 /** Return a playlist's data.
  */
 router.get('/:playlist', function(req, res, next) {
+    res.type('json');
     model.playlists.fetchData(req.playlist, req.query, function(err, data) {
         if(err) return next(err);
 
@@ -53,6 +56,7 @@ router.get('/:playlist', function(req, res, next) {
 /** Return a playlist's extra info.
 */
 router.get('/info/:playlist', function(req, res, next) {
+    res.type('json');
     model.playlists.getInfo(req.playlist, function(err, data) {
         if(err) return next(err);
         res.json(data);
@@ -60,6 +64,7 @@ router.get('/info/:playlist', function(req, res, next) {
 });
 
 router.get('/:playlist/:recid/position', function(req, res, next) {
+    res.type('json');
     model.playlists.fetchRecordingPosition(req.playlist, req.params.recid, function(err, data) {
         if(err) return next(err);
         res.json(data);
@@ -67,6 +72,7 @@ router.get('/:playlist/:recid/position', function(req, res, next) {
 });
 
 router.get('/:playlist/:recid/next', function(req, res, next) {
+    res.type('json');
     model.playlists.fetchNextRecording(req.playlist, req.params.recid, function(err, data) {
         if(err) return next(err);
         res.json(data);
@@ -74,6 +80,7 @@ router.get('/:playlist/:recid/next', function(req, res, next) {
 });
 
 router.get('/:playlist/:recid/previous', function(req, res, next) {
+    res.type('json');
     model.playlists.fetchPreviousRecording(req.playlist, req.params.recid, function(err, data) {
         if(err) return next(err);
         res.json(data);
@@ -92,6 +99,7 @@ router.use(function(req, res, next) {
 /** Add a playlist to a project.
  */
 router.post('/create', function(req, res, next) {
+    res.type('json');
     
     if(!req.body.playlist_name || !req.body.params)
         return res.json({ error: "missing parameters"});
@@ -128,6 +136,7 @@ router.post('/create', function(req, res, next) {
 /** Combine playlists into a new one.
  */
 router.post('/combine', function(req, res, next) {
+    res.type('json');
     if(!req.body.name){
         return res.json({ error: "missing name parameter"});
     }
@@ -171,6 +180,7 @@ router.post('/combine', function(req, res, next) {
 
 
 router.post('/delete', function(req, res, next) {
+    res.type('json');
     if(!req.body.playlists)
         return res.json({ error: "missing paramenters" });
     

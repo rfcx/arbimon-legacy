@@ -11,6 +11,7 @@ var model = require('../../../model');
 // ---------------------- jobs routes -----------------------------------------
 
 router.get('/progress', function(req, res, next) {
+    res.type('json');
     model.jobs.activeJobs({ id: req.project.project_id }, function(err, row) {
         if(err) return next(err);
 
@@ -30,6 +31,7 @@ router.use(function(req, res, next) {
 
 
 router.get('/hide/:jId', function(req, res, next) {
+    res.type('json');
 
     model.jobs.hide(req.params.jId, function(err, rows) {
         if(err) return next(err);
@@ -43,6 +45,7 @@ router.get('/hide/:jId', function(req, res, next) {
 });
 
 router.get('/cancel/:jId', function(req, res, next) {
+    res.type('json');
 
     model.jobs.cancel(req.params.jId, function(err, rows) {
         if(err) return next(err);

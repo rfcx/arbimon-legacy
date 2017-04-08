@@ -26,11 +26,13 @@ router.use(function(req, res, next) {
 
 
 router.get('/', function(req, res) {
+    res.type('html');
     res.render('admin', { user: req.session.user });
 });
 
 
 router.get('/dashboard-stats', function(req, res, next) {
+    res.type('json');
     async.series([
         model.jobs.status,
         model.news.countProjectsCreatedToday,
@@ -112,6 +114,7 @@ router.get('/plot-data/data.txt', function(req, res, next) {
 
 
 router.get('/job-queue', function(req, res, next) {
+    res.type('json');
     request.get(config('hosts').jobqueue + '/stats')
         .on('error', function(err) {
             res.json({ error:'Could not read job queue stats.' });
@@ -120,6 +123,7 @@ router.get('/job-queue', function(req, res, next) {
 });
 
 router.get('/jobs', function(req, res, next) {
+    res.type('json');
     model.jobs.find(req.query, function(err, jobs) {
         if(err) return next(err);
         
@@ -128,6 +132,7 @@ router.get('/jobs', function(req, res, next) {
 });
 
 router.get('/system-settings', function(req, res, next) {
+    res.type('json');
     model.settings.get(function(err, rows) {
         if(err) return next(err);
         
@@ -150,6 +155,7 @@ router.get('/system-settings', function(req, res, next) {
 
 // update system setting value
 router.put('/system-settings', function(req, res, next) {
+    res.type('json');
     model.settings.set(req.body.setting, req.body.value, function(err, results) {
         if(err) return next(err);
         

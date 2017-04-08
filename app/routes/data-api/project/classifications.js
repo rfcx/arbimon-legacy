@@ -15,6 +15,7 @@ var s3 = new AWS.S3();
 
 
 router.get('/', function(req, res, next) {
+    res.type('json');
     model.classifications.list(req.project.project_id, function(err, rows) {
         if(err) return next(err);
 
@@ -23,6 +24,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/:classiId', function(req, res, next) {
+    res.type('json');
     model.classifications.errorsCount(req.params.classiId, function(err, rowsRecs) {
         if(err) return next(err);
         
@@ -87,6 +89,7 @@ router.get('/:classiId', function(req, res, next) {
 });
 
 router.get('/:classiId/more/:from/:total', function(req, res, next) {
+    res.type('json');
     model.classifications.moreDetails(req.params.classiId, req.params.from, req.params.total, function(err, rows) {
         if(err) return next(err);
                 
@@ -106,6 +109,7 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
 });
 
 router.get('/:classiId/delete', function(req, res) {
+    res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage models and classification")) {
         return res.json({
             err: "You dont have permission to 'manage models and classification'"
@@ -118,6 +122,7 @@ router.get('/:classiId/delete', function(req, res) {
 });
 
 router.post('/new', function(req, res, next) {
+    res.type('json');
     var response_already_sent;
     var params, job_id;
     
@@ -184,6 +189,7 @@ router.post('/new', function(req, res, next) {
 });
 
 router.get('/:classiId/vector/:recId', function(req, res, next) {
+    res.type('json');
     
     if(!req.params.classiId || !req.params.recId) {
         return res.status(400).json({ error: 'missing parameters'});
@@ -224,6 +230,7 @@ router.get('/:classiId/vector/:recId', function(req, res, next) {
 });
 
 router.get('/csv/:classiId', function(req, res) {
+    res.type('json');
 
     model.classifications.getName(req.params.classiId, function(err, row) {
         if(err) throw err;

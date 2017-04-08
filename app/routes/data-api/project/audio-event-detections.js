@@ -8,6 +8,7 @@ var model = require('../../../model');
 var pokeDaMonkey = require('../../../utils/monkey');
 
 router.get('/', function(req, res, next) {
+    res.type('json');
     model.AudioEventDetections.getFor({
         project: req.project.project_id,
         showAlgorithm: true,
@@ -20,26 +21,31 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/algorithms', function(req, res, next) {
+    res.type('json');
     model.AudioEventDetections.getAlgorithms().then(function(algorithms) {
         res.json(algorithms);
     }).catch(next);
 });
 
 router.get('/statistics', function(req, res, next) {
+    res.type('json');
     model.AudioEventDetections.getStatistics().then(function(statistics) {
         res.json(statistics);
     }).catch(next);
 });
 
 router.get('/data/statistics', function(req, res, next) {
+    res.type('json');
     res.json(model.AudioEventDetections.getDataStatistics());
 });
 
 router.get('/data/aggregates', function(req, res, next) {
+    res.type('json');
     res.json(model.AudioEventDetections.getDataAggregates());
 });
 
 router.get('/data/:aed/:x/:y/:z', function(req, res, next) {
+    res.type('json');
     model.AudioEventDetections.getData({
         aed : req.params.aed,
         x : req.params.x,
@@ -55,6 +61,7 @@ router.get('/data/:aed/:x/:y/:z', function(req, res, next) {
 });
 
 router.post('/default-plot/:aed', function(req, res, next) {
+    res.type('json');
     model.AudioEventDetections.setDefaultPlot({
         aed : req.params.aed,
         x : req.body.x,

@@ -13,18 +13,22 @@ var login = require('./login');
 router.use('/', login);
 
 router.get('/terms', function(req, res) {
+    res.type('html');
     res.render('post-page', { title: "Terms of use", content: 'terms' });
 });
 
 router.get('/privacy', function(req, res) {
+    res.type('html');
     res.render('post-page', { title: "Privacy policy", content: 'privacy' });
 });
 
 router.get('/support', function(req, res) {
+    res.type('html');
     res.render('post-page', { title: "Support", content: 'support' });
 });
 
 router.get('/classifiers', function(req, res) {
+    res.type('html');
     res.render('classifiers');
 });
 
@@ -41,20 +45,24 @@ router.use(function(req, res, next) {
 
 // TODO[gio]:: this route is unused, since / gets handled in login, maybe delete?
 router.get('/', function(req, res) {
+    res.type('html');
     res.redirect('/home');
 });
 
 router.get('/process-order/:orderId', function(req, res, next) {
+    res.type('html');
     // render view to show progress
     res.render('processing-order');
 });
 
 router.get('/home', function(req, res) {
+    res.type('html');
     res.render('home', { title: "Home", user: req.session.user });
 });
 
 
 router.get('/user-settings', function(req, res) {
+    res.type('html');
     if(req.session.user && req.session.loggedIn){
         res.render('user-settings', { title: "User settings", user: req.session.user });
     } else {
