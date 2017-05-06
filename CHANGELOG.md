@@ -122,3 +122,8 @@
 - v1.9.10
     - Fixed aed playlist getting code
     - Adding admin plots feature
+
+- v1.9.11
+    - fixing user login bugs
+    - adding content types to routes
+    - Adding Cornell recording filename format
