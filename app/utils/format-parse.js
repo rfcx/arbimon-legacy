@@ -17,6 +17,7 @@
 
 var formatParse = function(formatName, filename) {
     var formats = {
+        Cornell : /(.*(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})\d{2}.*)(\.\w+)$/,
         Wildlife: /(.*(\d{4})(\d{2})(\d{2})[_|\$](\d{2})(\d{2})\d{2}.*)(\.\w+)$/,
         Arbimon: /(.*(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})(-(\d{2}))?.*)(\.\w+)$/
     };

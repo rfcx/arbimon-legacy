@@ -7,6 +7,18 @@ var root = '../../../app/';
 var formatParse = require(root + 'utils/format-parse');
 
 describe('format-parse', function(){
+    describe('Cornell format', function(){
+        it('should parse SWIFT formats as well.', function(){
+            var result = formatParse('Cornell','SWIFT21_20170227_040002Z.wav');
+            
+            result.should.deep.equal({
+                filename: 'SWIFT21_20170227_040002Z',
+                datetime: new Date(2017, 1, 27, 4, 0),
+                filetype: '.wav'
+            });
+        });
+    });
+
     describe('Wildlife format', function(){
         it('should parse datetime correctly.', function(){
             var result = formatParse('Wildlife','TEST_SM3_ 20140530_0630000.mp3');

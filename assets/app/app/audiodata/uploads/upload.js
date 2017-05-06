@@ -222,8 +222,9 @@ angular.module('a2.audiodata.uploads.upload', [
     }
     
     $scope.formats = [
-        { name: "Arbimon", format: "(YYYY-MM-DD_HH-MM)" },
+        { name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
         { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" },
+        { name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
     ];
     
     Project.getSites(function(sites) {
