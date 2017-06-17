@@ -47,9 +47,10 @@ scidx.prototype = {
                 maxx : filter.maxx !== undefined ? filter.maxx :  1/0.0, 
                 miny : filter.miny !== undefined ? filter.miny : -1/0.0, 
                 maxy : filter.maxy !== undefined ? filter.maxy :  1/0.0
-            }
+            },
+            stats:{maxAmp:0},
         };
-            
+        this.stats = _.stats;
             
         async.waterfall([
             function open_file(next){
@@ -150,14 +151,14 @@ scidx.prototype = {
     }, 
     __read_rows: function(_, callback){
         // var yi = 0, ye = _.height;
-        var yi = Math.max(0, _.box.miny);
-        var ye = Math.min(_.height, _.box.maxy + 1);
+        var yi = 0;
+        var h = _.height;
         // # read each row
         async.whilst(
-            function(){ return yi < ye;}, 
+            function(){ return yi < h;}, 
             (function read_row(read_next_row){
                 _.y = yi;
-                ++yi;                
+                ++yi;
                 this.__read_one_row(_, read_next_row);
 
             }).bind(this), callback
@@ -174,7 +175,9 @@ scidx.prototype = {
         // #     cells_ptr[] 	array of 8 byte offsets from the beginning of the row
         // #                   structure - indicates begining of each entry of cells[]
         // #     cells[] 	array of cell structures of size width
-        if(row_ptr && miny <= y && y <= maxy){
+        var read_row_data = miny <= y && y <= maxy;
+        _.read_row_data = read_row_data;
+        if(row_ptr){
             async.waterfall([
                 function setup_vars(next){
                     oy = _.offsety + y;
@@ -196,7 +199,7 @@ scidx.prototype = {
                     this.__read_cells(_, next);
                 }).bind(this),
                 function add_row(cells_read_count, next){
-                    if(cells_read_count){
+                    if(cells_read_count && read_row_data){
                         index[oy] = _.row;
                     }
                     next();
@@ -215,12 +218,12 @@ scidx.prototype = {
         // #     indices[] 	array of rec_bytes byte uints of size count -
         // #                   indicates indices in recs[] lists
         // var xi = 0, xf = _.width;
-        var xi = Math.max(0, _.box.minx);
-        var xf = Math.min(_.width, _.box.maxx + 1);
+        var xi = 0;
+        var w = _.width;
         var row = _.row;
         var cells_read = 0;
         async.whilst(
-            function(){ return xi < xf; },
+            function(){ return xi < w; },
             (function read_cell(next_cell){
                 _.x = xi;
                 ++xi;
@@ -248,7 +251,8 @@ scidx.prototype = {
         var x       = _.x;
         var cell_ptr= _.cell_pointers[x];
         var minx    = _.box.minx, maxx = _.box.maxx;
-        if(cell_ptr && minx <= x && x <= maxx){
+        var read_cell_data = _.read_row_data && (minx <= x && x <= maxx);
+        if(cell_ptr){
             // # seek to cell location denoted by cell_ptr,
             _.finp.seek(cell_ptr);
             var cell=[null, null];
@@ -276,7 +280,18 @@ scidx.prototype = {
                 },
                 function(upc, next){
                     cell[1] = upc;
-                    next(null, cell);
+                    next();
+                },
+                function(next){
+                    _.stats.maxAmp = Math.max(_.stats.maxAmp, cell[1] ? Math.max.apply(null, cell[1]) : 0);
+                    next();
+                },
+                function(next){
+                    if(read_cell_data){
+                        next(null, cell);
+                    } else {
+                        next();
+                    }
                 }
             ], callback);
             // # print cell_count, rcfmt, rcbytes
