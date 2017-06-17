@@ -350,6 +350,7 @@ router.post('/:soundscape/scale', function(req, res, next) {
 router.get('/:soundscape/recordings/:bbox', function(req, res, next) {
     res.type('json');
     var soundscape = req.soundscape;
+    var use_threshold = !!req.query.threshold;
     var filters = {
         ignore_offsets : true,
         minx : ((req.bbox.x1 - soundscape.min_t)) | 0,
@@ -358,17 +359,19 @@ router.get('/:soundscape/recordings/:bbox', function(req, res, next) {
         maxy : ((req.bbox.y2 - soundscape.min_f) / soundscape.bin_size - 1) | 0
     };
     var just_count = req.query && req.query.count;
-    model.soundscapes.fetchSCIDX(req.soundscape, filters, function(err, scidx){
-        if(err){
-            next(err);
+    q.resolve().then(function(){
+        return model.soundscapes.fetchSCIDX(req.soundscape, filters);
+    }).then(function(scidx){
+        var options = use_threshold && {threshold:{
+            value : soundscape.threshold,
+            type : soundscape.threshold_type,
+        }};
+        if(just_count){
+            res.json(scidx.count(options));
         } else {
-            if(just_count){
-                res.json(scidx.count());
-            } else {
-                res.json(scidx.flatten());
-            }
+            res.json(scidx.flatten(options));
         }
-    });
+    }).catch(next);
 });
 
 
@@ -412,7 +415,8 @@ region_router.post('/add', function(req, res, next) {
     var bbox = parse_bbox(req.body.bbox);
     model.soundscapes.addRegion(req.soundscape, {
         bbox : bbox,
-        name : req.body.name
+        name : req.body.name,
+        threshold: !!req.body.threshold,
     }, function(err, region){
         if(err){
             next(err);
