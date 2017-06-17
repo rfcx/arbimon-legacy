@@ -36,6 +36,13 @@ angular.module('a2.visualizer.layers.soundscapes.regions', [
         return x1+','+y1+'-'+x2+','+y2;
     };
     
+    a2Soundscapes.getAmplitudeReferences().then((function(amplitudeReferences){
+        this.amplitudeReferences = amplitudeReferences.reduce(function(_, item){
+            _[item.value] = item;
+            return _;
+        }, {});
+    }).bind(this));
+    
     this.show={
         names : true,
         tags  : true
