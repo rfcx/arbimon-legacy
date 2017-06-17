@@ -300,44 +300,55 @@ scidx.prototype = {
         }
     },
     
-    flatten : function(){
-        var recs = {};
-        var idx = this.index, row, cell;
-        
-        for(var y in idx){
-            row = idx[y];
-            for(var x in row){
-                cell = row[x];
-                for(var z in cell[0]){
-                    recs[cell[0][z]] = true;
+    reduceCells: function(fn, accum){
+        var index = this.index, row, cell;
+        return Object.keys(index).reduce(function(_1, y){
+            var row = index[y];
+            return Object.keys(row).reduce(function(_2, x){
+                return fn(_2, row[x]);
+            }, _1);
+        }, accum);
+    },
+    
+    flatten : function(options){
+        var threshold = this.resolveThreshold(options && options.threshold);
+
+        var recs = this.reduceCells(function(recs, cell){
+            cell[0].forEach(function(rec, index){
+                if(!cell[1] || cell[1][index] > threshold){
+                    recs[rec] = true;
                 }
-            }
-        }
+            });
+            return recs;
+        }, {});
         
         return this.recordings.filter(function(r, i){
             return recs[i];
         });
     },
     
-    count : function(){
-        var recs = {}, count=0;
-        var idx = this.index, row, cell;
-        
-        for(var y in idx){
-            row = idx[y];
-            for(var x in row){
-                cell = row[x];
-                for(var z in cell[0]){
-                    var rec = cell[0][z];
-                    if(!recs[rec]){
-                        recs[rec] = true;
-                        ++count;
-                    }
-                }
-            }
+    resolveThreshold: function(threshold){
+        if(!threshold){
+            return -Infinity;
+        } else if(threshold.type === 'relative-to-peak-maximum'){
+            var maximumAmplitudeValue = this.stats.maxAmp;
+            return threshold.value * maximumAmplitudeValue;
+        } else {
+            return +threshold.value;
         }
-        
-        return count;
+    },
+    
+    count : function(options){
+        var threshold = this.resolveThreshold(options && options.threshold);
+        return this.reduceCells(function(_, cell){
+            cell[0].forEach(function(rec, index){
+                if(!_.recs[rec] && (!cell[1] || cell[1][index] > threshold)){
+                    _.recs[rec] = true;
+                    ++_.count;
+                }
+            });
+            return _;
+        }, {recs:{}, count:0}).count;
     }
 
 
