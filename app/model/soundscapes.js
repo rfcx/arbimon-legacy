@@ -199,6 +199,7 @@ var Soundscapes = {
 
     region_schema : joi.object().keys({
         name      : joi.string(),
+        threshold : joi.boolean().optional(),
         bbox      : joi.object().keys({
             x1 : joi.number(),
             y1 : joi.number(),
@@ -238,13 +239,22 @@ var Soundscapes = {
                 }, next);
             },
             function(scidx, next){
-                count = scidx.count();
+                var options = region.threshold && {threshold:{
+                    value : soundscape.threshold,
+                    type : soundscape.threshold_type,
+                }};
+
+                count = scidx.count(options);
                 next();
             },
             function(next){
                 dbpool.queryHandler(
-                    "INSERT INTO soundscape_regions(soundscape_id, name, x1, y1, x2, y2, count) \n" +
-                    "VALUES (" + dbpool.escape([soundscape.id, data.name, x1, y1, x2, y2, count]) + ")\n", 
+                    "INSERT INTO soundscape_regions(soundscape_id, name, x1, y1, x2, y2, count, threshold, threshold_type) \n" +
+                    "VALUES (" + dbpool.escape([
+                        soundscape.id, data.name, x1, y1, x2, y2, count, 
+                        region.threshold ? soundscape.threshold : NULL,
+                        region.threshold ? soundscape.threshold_type : NULL,
+                    ]) + ")\n", 
                     next
                 );
             },
@@ -284,6 +294,7 @@ var Soundscapes = {
         
         return dbpool.queryHandler(
             "SELECT SCR.soundscape_region_id as id, SCR.soundscape_id as soundscape, SCR.name, SCR.x1, SCR.y1, SCR.x2, SCR.y2, SCR.count, \n" +
+            "    SCR.threshold, SCR.threshold_type, " +
             "    SCR.sample_playlist_id as playlist \n" +
             "FROM soundscape_regions SCR \n" +
             "WHERE " + constraints.join(' AND '), function(err, data){
@@ -323,9 +334,14 @@ var Soundscapes = {
             miny : ((region.y1 - soundscape.min_f) / soundscape.bin_size) | 0,
             maxy : ((region.y2 - soundscape.min_f) / soundscape.bin_size - 1) | 0
         };
+        
+        var options = region.threshold && {threshold:{
+            value: region.threshold,
+            type: region.threshold_type,
+        }};
 
         return Soundscapes.fetchSCIDX(soundscape, filters).then(function (scidx){
-            recordings = arrays.sample_without_replacement(scidx.flatten(), count);
+            recordings = arrays.sample_without_replacement(scidx.flatten(options), count);
         }).then(function(){
             return dbpool.performTransaction(function(tx){
                 var db = tx.connection;
