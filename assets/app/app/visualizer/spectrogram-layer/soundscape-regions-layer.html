@@ -93,6 +93,10 @@
                 {{layer.soundscape.selection.bbox.name}}<br />
                 <br />
                 Recordings : <span class="badge" >{{layer.soundscape.selection.bbox.count}}</span> <br />
+                <div ng-show="layer.soundscape.selection.bbox.threshold">
+                    Threshold : {{layer.soundscape.selection.bbox.threshold}} <br />
+                        {{layer.soundscape.amplitudeReferences[layer.soundscape.selection.bbox.threshold_type].caption}}<br />
+                </div>
                 <div ng-show="layer.soundscape.selection.bbox.tags">
                     <span ng-repeat="tag in layer.soundscape.selection.bbox.tags">
                         <a2-soundscape-region-tag tag="tag" show-count="true"></a2-soundscape-region-tag>

@@ -36,6 +36,13 @@ angular.module('a2.visualizer.layers.soundscapes.regions', [
         return x1+','+y1+'-'+x2+','+y2;
     };
     
+    a2Soundscapes.getAmplitudeReferences().then((function(amplitudeReferences){
+        this.amplitudeReferences = amplitudeReferences.reduce(function(_, item){
+            _[item.value] = item;
+            return _;
+        }, {});
+    }).bind(this));
+    
     this.show={
         names : true,
         tags  : true
@@ -52,7 +59,7 @@ angular.module('a2.visualizer.layers.soundscapes.regions', [
         if(!self.selection.valid){
             return;
         }
-        a2Soundscapes.getRecordings(self.soundscape, bbox2string(bbox), {count:1}, function(data){
+        a2Soundscapes.getRecordings(self.soundscape, bbox2string(bbox), {count:1, threshold:1}, function(data){
             bbox.q = data;
         });
     };
@@ -67,7 +74,8 @@ angular.module('a2.visualizer.layers.soundscapes.regions', [
         }
         
         a2Soundscapes.addRegion(self.soundscape, bbox2string(bbox), {
-            name : name
+            name : name,
+            threshold: 1,
         }, function(data){
             self.regions.push(data);
             self.selection.bbox = data;
