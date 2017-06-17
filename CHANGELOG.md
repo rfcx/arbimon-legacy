@@ -127,3 +127,6 @@
     - fixing user login bugs
     - adding content types to routes
     - Adding Cornell recording filename format
+
+- v1.9.12
+    - soundscape regions now consider the current soundscape threshold.
