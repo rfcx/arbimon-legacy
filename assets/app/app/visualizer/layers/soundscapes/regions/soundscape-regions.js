@@ -52,7 +52,7 @@ angular.module('a2.visualizer.layers.soundscapes.regions', [
         if(!self.selection.valid){
             return;
         }
-        a2Soundscapes.getRecordings(self.soundscape, bbox2string(bbox), {count:1}, function(data){
+        a2Soundscapes.getRecordings(self.soundscape, bbox2string(bbox), {count:1, threshold:1}, function(data){
             bbox.q = data;
         });
     };
@@ -67,7 +67,8 @@ angular.module('a2.visualizer.layers.soundscapes.regions', [
         }
         
         a2Soundscapes.addRegion(self.soundscape, bbox2string(bbox), {
-            name : name
+            name : name,
+            threshold: 1,
         }, function(data){
             self.regions.push(data);
             self.selection.bbox = data;
