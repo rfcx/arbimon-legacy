@@ -8,6 +8,7 @@ var project = require('./project');
 var dataApi = require('./data-api');
 var uploads = require('./uploads');
 var login = require('./login');
+var acmeChallenge = require('./acme-challenge');
 
 
 router.use('/', login);
@@ -31,6 +32,8 @@ router.get('/classifiers', function(req, res) {
     res.type('html');
     res.render('classifiers');
 });
+
+router.use('/', acmeChallenge);
 
 router.use('/uploads', uploads);
 
