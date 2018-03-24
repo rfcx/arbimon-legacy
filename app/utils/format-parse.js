@@ -42,7 +42,7 @@ var formatParse = function(formatName, filename) {
                     new Date(results[2], (results[3]-1), results[4], results[5], results[6]),
                     filetype: results[9]
                 };
-            } else if (formatName == 'AudioMoth')
+            } else if (formatName == 'AudioMoth') {
                 parsed = {
                     filename: results[1],
                     datetime: new Date(parseInt(results[1], 16)*1000),
