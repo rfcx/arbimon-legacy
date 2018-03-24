@@ -25,7 +25,7 @@ describe('format-parse', function(){
 
             result.should.deep.equal({
                 filename: '592D42A3',
-                datetime: new Date(2017, 5, 30, 10, 0),
+                datetime: new Date(2017, 4, 30, 6, 0, 3),
                 filetype: '.wav'
             });
         });
