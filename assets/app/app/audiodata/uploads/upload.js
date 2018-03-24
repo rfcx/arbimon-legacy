@@ -225,6 +225,7 @@ angular.module('a2.audiodata.uploads.upload', [
         { name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
         { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" },
         { name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
+        { name: "AudioMoth", format: "(Unix Time code in Hex)" },
     ];
     
     Project.getSites(function(sites) {
