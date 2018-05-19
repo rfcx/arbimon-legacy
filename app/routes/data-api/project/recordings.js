@@ -55,9 +55,17 @@ router.get('/recordings-export.csv', function(req, res, next) {
     } else {
         res.type('text/csv');
     }
-    var filters = req.query.filters || {};
+
+    try{
+        var filters = JSON.parse(req.query.filters) || {};
+    } catch(e){
+        return next(e);
+    }
+
     filters.project_id = req.project.project_id | 0;
+
     console.log(JSON.stringify(filters));
+
     var projection = req.query.show;
     
     model.recordings.exportRecordingData(projection, filters).then(function(results) {
