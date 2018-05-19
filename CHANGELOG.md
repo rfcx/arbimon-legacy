@@ -130,3 +130,6 @@
 
 - v1.9.12
     - soundscape regions now consider the current soundscape threshold.
+
+- v1.9.13
+    - fixed bug in recording filter + export
