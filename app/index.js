@@ -36,6 +36,7 @@ var www_root_path = path.resolve(__dirname, '..', 'public');
 paypal.configure(config('paypal'));
 var app = express();
 
+app.appRootPath = path.resolve(path.join(__dirname, '..'));
 
 // app settings
 // -----------------------------------------------------------------

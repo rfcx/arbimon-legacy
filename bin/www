@@ -4,6 +4,8 @@ var app = require('../app');
 var redirectHttp = require('../app/utils/redirect-http');
 
 app.set('app-port', process.env.APP_PORT || 3000);
+console.log("appRootPath", app.appRootPath);
+process.chdir(app.appRootPath);
 
 app.set('http-redirect-port', process.env.RD_PORT || 3001);
 
