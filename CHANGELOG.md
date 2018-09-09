@@ -136,3 +136,6 @@
 
 - v1.10.0
     - replaced lwip with jimp
+
+- v1.10.1
+    - fixed bug: jimp.crop is not async

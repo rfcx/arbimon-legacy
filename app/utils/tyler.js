@@ -73,20 +73,21 @@ function tyler(filePath, callback1) {
                 fs.exists(tileFilename, function(exists) {
                     if(exists) return callback();
 
-                    image.clone().crop(
-                        tileInfo.x0, tileInfo.y0,
-                        tileInfo.x1 - tileInfo.x0, tileInfo.y1 - tileInfo.y0,
-                        function(err, tile) {
+                    try {
+                        var tile = image.clone().crop(
+                            tileInfo.x0, tileInfo.y0,
+                            tileInfo.x1 - tileInfo.x0, tileInfo.y1 - tileInfo.y0
+                        );
+
+                        tile.write(tileFilename, function(err) {
                             if(err) return callback(err);
 
+                            callback();
+                        });
 
-                            tile.write(tileFilename, function(err) {
-                                if(err) return callback(err);
-
-                                callback();
-                            });
-                        }
-                    );
+                    } catch(err){
+                        callback(err);
+                    }
                 });
             },
             function finished(err) {
