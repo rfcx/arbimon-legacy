@@ -18,24 +18,23 @@ var mock_config = {
 
 var mocks = {
     fs : mock_fs,
-    lwip: { open: function(filepath, callback){
-        if(mocks.lwip.open.__err__){
-            callback(mocks.lwip.open.__err__);
+    jimp: { read: function(filepath, callback){
+        if(mocks.jimp.read.__err__){
+            callback(mocks.jimp.read.__err__);
         } else {
-            callback(null, mocks.lwip.open.__image__);
+            callback(null, mocks.jimp.read.__image__);
         }
     } },
     config : function (key){
         return mock_config[key];
     }
 };
-mocks.lwip.open.__image__ = {
+mocks.jimp.read.__image__ = {
     tile_cache:{},
-    width  : function(){ return 200; },
-    height : function(){ return 200; },
+    bitmap: { width: 200, height: 200 },
     set_tile: function(key, err){
         this.tile_cache[key] = {
-            writeFile: sinon.spy(function(filename, callback){
+            write: sinon.spy(function(filename, callback){
                 if(err){
                     setImmediate(callback, err);
                 } else {
@@ -44,7 +43,11 @@ mocks.lwip.open.__image__ = {
             })
         };
     },
-    extract: function(x0,y0,x1,y1, callback){
+    clone: function(){
+        return this;
+    },
+    crop: function( x0, y0, w, h, callback){
+        var x1 = x0 + w, y1 = y0 + h;
         var key = ''+x0+'_'+y0+'__'+x1+'_'+y1;
         if(this.tile_cache[key]){
             setImmediate(callback, null, this.tile_cache[key]);
@@ -59,23 +62,23 @@ tyler.__set__(mocks);
 
 describe('tyler', function(){
     beforeEach(function(){
-        delete mocks.lwip.open.__err__;
-        mocks.lwip.open.__image__.tile_cache = {};
-        sinon.spy(mocks.lwip.open.__image__, 'extract');
+        delete mocks.jimp.read.__err__;
+        mocks.jimp.read.__image__.tile_cache = {};
+        sinon.spy(mocks.jimp.read.__image__, 'crop');
         mock_fs.__set_files__([]);
     });
     afterEach(function(){
-        mocks.lwip.open.__image__.extract.restore();
+        mocks.jimp.read.__image__.crop.restore();
     });
     it('Should not slice a tile if it already exists', function(done){
-        mocks.lwip.open.__image__.set_tile('100_0__199_99');
-        mocks.lwip.open.__image__.set_tile('100_100__199_199');
+        mocks.jimp.read.__image__.set_tile('100_0__199_99');
+        mocks.jimp.read.__image__.set_tile('100_100__199_199');
         mock_fs.__set_files__([
             {path: 'test.tile_0_1.png', atime:new Date()}
         ]);
-        mocks.lwip.open.__image__.set_tile('0_0__99_99');
+        mocks.jimp.read.__image__.set_tile('0_0__99_99');
         tyler('test.png', function(err, results){
-            mocks.lwip.open.__image__.extract.callCount.should.equal(3);
+            mocks.jimp.read.__image__.crop.callCount.should.equal(3);
             should.not.exist(err);
             should.exist(results);
             results.should.deep.equal({
@@ -91,12 +94,12 @@ describe('tyler', function(){
         });
     });
     it('Should slice an image in to tiles of a maximum size, given in the config settings', function(done){
-        mocks.lwip.open.__image__.set_tile('100_0__199_99');
-        mocks.lwip.open.__image__.set_tile('100_100__199_199');
-        mocks.lwip.open.__image__.set_tile('0_100__99_199');
-        mocks.lwip.open.__image__.set_tile('0_0__99_99');
+        mocks.jimp.read.__image__.set_tile('100_0__199_99');
+        mocks.jimp.read.__image__.set_tile('100_100__199_199');
+        mocks.jimp.read.__image__.set_tile('0_100__99_199');
+        mocks.jimp.read.__image__.set_tile('0_0__99_99');
         tyler('test.png', function(err, results){
-            mocks.lwip.open.__image__.extract.callCount.should.equal(4);
+            mocks.jimp.read.__image__.crop.callCount.should.equal(4);
             should.not.exist(err);
             should.exist(results);
             results.should.deep.equal({
@@ -112,10 +115,10 @@ describe('tyler', function(){
         });
     });
     it('Should fail if a tile cannot be extracted.', function(done){
-        mocks.lwip.open.__image__.set_tile('100_0__199_99');
-        mocks.lwip.open.__image__.set_tile('100_100__199_199');
-        // mocks.lwip.open.__image__.set_tile('0_100__99_199');
-        mocks.lwip.open.__image__.set_tile('0_0__99_99');
+        mocks.jimp.read.__image__.set_tile('100_0__199_99');
+        mocks.jimp.read.__image__.set_tile('100_100__199_199');
+        // mocks.jimp.read.__image__.set_tile('0_100__99_199');
+        mocks.jimp.read.__image__.set_tile('0_0__99_99');
         tyler('test.png', function(err, results){
             should.exist(err);
             should.not.exist(results);
@@ -123,18 +126,18 @@ describe('tyler', function(){
         });
     });
     it('Should fail if an extracted tile cannot be written.', function(done){
-        mocks.lwip.open.__image__.set_tile('100_0__199_99');
-        mocks.lwip.open.__image__.set_tile('100_100__199_199');
-        mocks.lwip.open.__image__.set_tile('0_100__99_199', new Error('I am error'));
-        mocks.lwip.open.__image__.set_tile('0_0__99_99');
+        mocks.jimp.read.__image__.set_tile('100_0__199_99');
+        mocks.jimp.read.__image__.set_tile('100_100__199_199');
+        mocks.jimp.read.__image__.set_tile('0_100__99_199', new Error('I am error'));
+        mocks.jimp.read.__image__.set_tile('0_0__99_99');
         tyler('test.png', function(err, results){
             should.exist(err);
             should.not.exist(results);
             done();
         });
     });
-    it('Should return an error if lwip could not open the imaghe up.', function(done){
-        mocks.lwip.open.__err__ = new Error("I am error");
+    it('Should return an error if jimp could not open the imaghe up.', function(done){
+        mocks.jimp.read.__err__ = new Error("I am error");
         tyler('test.png', function(err, results){
             should.exist(err);
             should.not.exist(results);

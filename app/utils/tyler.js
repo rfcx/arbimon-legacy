@@ -1,44 +1,44 @@
 var debug = require('debug')('arbimon2:tyler');
-var lwip = require('lwip');
+var jimp = require('jimp');
 var async = require('async');
 var fs = require('fs');
 
 
-var config = require('../config'); 
+var config = require('../config');
 
 
 
-function tyler(filePath, callback1) { 
+function tyler(filePath, callback1) {
     // console.time('duration');
-    
+
     if(!filePath || typeof filePath !== "string") {
         return callback1(new Error('missing or invalid type filePath'));
     }
-    
+
     var result = /(.+)\.png$/.exec(filePath);
-    
+
     if(result === null) {
         return callback1(new Error('invalid file format for"'+ filePath +'"'));
     }
-    
+
     filename = result[1];
     debug('creating tiles from "%s"', filename);
-    
-    
-    lwip.open(filePath, function(err, image){
+
+
+    jimp.read(filePath, function(err, image){
         if(err){
             callback1(new Error('Could not open image file ' + filePath));
             return;
         }
-        var width = image.width();
-        var height = image.height();
-        
+        var width = image.bitmap.width;
+        var height = image.bitmap.height;
+
         var tileMaxWidth = config("spectrograms").spectrograms.tiles.max_width;
         var tileMaxHeight = config("spectrograms").spectrograms.tiles.max_height;
-        
+
         var tileCountX = Math.ceil(width / tileMaxWidth); // calculate tile grid size
         var tileCountY = Math.ceil(height / tileMaxHeight);
-        
+
         var x, y;
         var tiles = [];
         for(x=0; x < tileCountX; x++) {
@@ -51,11 +51,11 @@ function tyler(filePath, callback1) {
                     x1: Math.min((x+1) * tileMaxWidth, width)-1,
                     y1: Math.min( (y+1) * tileMaxHeight, height)-1,
                 };
-                
+
                 tiles.push(tile);
             }
         }
-        
+
         var result = {
             width: width,
             height: height,
@@ -63,24 +63,26 @@ function tyler(filePath, callback1) {
             y : tileCountY,
             set: tiles
         };
-        
+
         debug('tiles coordinates:', tiles);
-        
-        async.each(tiles, 
+
+        async.each(tiles,
             function createTile(tileInfo, callback) {
                 var tileFilename = filename + '.tile_'+ tileInfo.x + '_' + tileInfo.y + '.png';
-                
+
                 fs.exists(tileFilename, function(exists) {
                     if(exists) return callback();
-                    
-                    image.extract(tileInfo.x0, tileInfo.y0, tileInfo.x1, tileInfo.y1, 
+
+                    image.clone().crop(
+                        tileInfo.x0, tileInfo.y0,
+                        tileInfo.x1 - tileInfo.x0, tileInfo.y1 - tileInfo.y0,
                         function(err, tile) {
                             if(err) return callback(err);
-                            
-                            
-                            tile.writeFile(tileFilename, function(err) {
+
+
+                            tile.write(tileFilename, function(err) {
                                 if(err) return callback(err);
-                                
+
                                 callback();
                             });
                         }
@@ -89,10 +91,10 @@ function tyler(filePath, callback1) {
             },
             function finished(err) {
                 if(err) return callback1(err);
-                
+
                 // console.timeEnd('duration');
                 callback1(null, result);
-            } 
+            }
         );
     });
 }

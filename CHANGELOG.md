@@ -133,3 +133,6 @@
 
 - v1.9.13
     - fixed bug in recording filter + export
+
+- v1.10.0
+    - replaced lwip with jimp
