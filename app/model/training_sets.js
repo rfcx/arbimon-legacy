@@ -10,12 +10,12 @@ var util = require('util');
 var debug = require('debug')('arbimon2:model:training_sets');
 var async = require('async');
 var joi = require('joi');
-var lwip = require('lwip');
+var jimp = require('jimp');
 var AWS = require('aws-sdk');
 var q = require('q');
 
 // local dependencies
-var config       = require('../config'); 
+var config       = require('../config');
 var APIError = require('../utils/apierror');
 var tmpfilecache = require('../utils/tmpfilecache');
 var sqlutil      = require('../utils/sqlutil');
@@ -42,20 +42,20 @@ var TrainingSets = {
         var q = "SELECT name \n"+
                 "FROM training_sets \n"+
                 "WHERE training_set_id = " + dbpool.escape(set_id) + " AND removed=0";
-                
+
             queryHandler(q, callback);
     },
-    
+
     find: function (query, callback) {
         var constraints = ["TS.removed=0"];
 
         if(query) {
             if (query.id) {
                 constraints.push('TS.training_set_id = ' + dbpool.escape(query.id));
-            } 
+            }
             else if (query.project) {
                 constraints.push('TS.project_id = ' + dbpool.escape(query.project));
-                
+
                 if (query.name) {
                     constraints.push('TS.name = ' + dbpool.escape(query.name));
                 }
@@ -65,7 +65,7 @@ var TrainingSets = {
         if(constraints.length === 0){
             return q.reject(new Error("TrainingSets.find called with invalid query.")).nodeify(callback);
         }
-        
+
         var sql = "SELECT TS.training_set_id as id, \n" +
                 "       TS.name, \n" +
                 "       TS.date_created, \n" +
@@ -77,22 +77,22 @@ var TrainingSets = {
                 "JOIN training_set_types TST ON TS.training_set_type_id = TST.training_set_type_id \n" +
                 "LEFT JOIN training_sets_roi_set TSRS ON TS.training_set_id = TSRS.training_set_id \n" +
                 "WHERE " + constraints.join(" \nAND ");
-        
+
         return q.ninvoke(dbpool, 'queryHandler', sql).get(0).nodeify(callback);
     },
-    
+
     nameInUse: function(project_id, set_name, callback) {
         var sql = "SELECT count(*) as count \n"+
                 "FROM training_sets \n"+
-                "WHERE name = %s \n" + 
+                "WHERE name = %s \n" +
                 "AND project_id = %s AND removed=0";
-        
+
         sql = util.format(sql, dbpool.escape(set_name), dbpool.escape(project_id));
         return q.nfcall(queryHandler, sql).get(0).get(0).get('count').then(function(count){
             return (count | 0) > 0;
         }).nodeify(callback);
     },
-    
+
     /** Finds training sets, given a (non-empty) query.
      * @param {Object} data
      * @param {Object} data.project id of the project associated to this training set.
@@ -114,7 +114,7 @@ var TrainingSets = {
             callback(new Error("Training set type " + data.type + " is invalid."));
             return;
         }
-        
+
         var typedef_action = typedef.insert;
         var scope={};
         var tasks = [];
@@ -167,7 +167,7 @@ var TrainingSets = {
             callback(err, tset);
         });
     },
-    
+
     /** Edits a given training set.
      * @param {Object} trainingSet - the training set to edit
      * @param {Object} data
@@ -181,7 +181,7 @@ var TrainingSets = {
         var typedef_action = typedef && typedef.edit;
         var connection;
         var in_transaction = false;
-        
+
         return q().then(function check_training_set_not_empty(){
             if(!trainingSet){
                 throw new APIError("Training set not given.", 422);
@@ -207,7 +207,7 @@ var TrainingSets = {
             });
         }).then(function begin_transaction(){
             return q.ninvoke(connection, 'beginTransaction').then(function(){
-                in_transaction = true;                
+                in_transaction = true;
             });
         }).then(function run_main_update_query(){
             return q.ninvoke(connection, 'query',
@@ -222,7 +222,7 @@ var TrainingSets = {
             }
         }).then(function commit_transaction() {
             return q.ninvoke(connection, 'commit').then(function(){
-                in_transaction = false;                
+                in_transaction = false;
             });
         }).then(function fetch_newly_edited_object() {
             return TrainingSets.find({id:trainingSet.id});
@@ -235,7 +235,7 @@ var TrainingSets = {
 
 
 
-    
+
     /** Removes a given training set.
      * @param {Object} trainingSet - the training set to edit
      * @param {Function} callback called back with the newly inserted training set, or with errors.
@@ -246,11 +246,11 @@ var TrainingSets = {
         var typedef_action = typedef && typedef.edit;
         var connection;
         var in_transaction = false;
-        
+
         if(!trainingSet){
             return q.reject(new APIError("Training set not given.", 422));
         }
-        
+
         return q.nfcall(queryHandler, dbpool.format(
             "UPDATE training_sets\n" +
             "SET removed = 1 \n" +
@@ -283,12 +283,12 @@ var TrainingSets = {
         if(!query) {
             query = {};
         }
-        
+
         var typedef = TrainingSets.types[training_set.type];
 
         return typedef.get_data(training_set, query, callback);
     },
-    
+
     /** Fetches a training set's rois
      *  @param {Object}  training_set
      *  @param {Object}  options - set of options
@@ -302,7 +302,7 @@ var TrainingSets = {
         var typedef = TrainingSets.types[training_set.type];
         return typedef.get_rois(training_set, options, callback);
     },
-    
+
     /** Fetches the image of a training set's data element
      *  @param {Object}  training_set
      *  @param {Object}  dataId id of the data element
@@ -316,12 +316,12 @@ var TrainingSets = {
             callback(new Error("Not supported by training set type."));
         }
     },
-   
+
     removeRoi: function (roi_id, training_set, callback) {
         var typedef = TrainingSets.types[training_set.type];
         return typedef.remove_roi(roi_id, callback);
     },
-     
+
     /** Fetches a training set's species and songtype
      *  @param {Object}  training_set
      *  @param {Function} callback(err, path) function to call back with the results.
@@ -330,7 +330,7 @@ var TrainingSets = {
         var typedef = TrainingSets.types[training_set.type];
         typedef.get_species(training_set, callback);
     },
-    
+
     /** Fetches the available training set types.
      * @param {Function} callback(err, path) function to call back with the results.
      */
@@ -391,7 +391,7 @@ TrainingSets.types.roi_set = {
 
                     data.species  = classes[0].species;
                     data.songtype = classes[0].songtype;
-                    
+
                     return [data.species, data.songtype];
                 });
             } else if (data.extras && data.extras.species && data.extras.songtype) {
@@ -404,7 +404,7 @@ TrainingSets.types.roi_set = {
         },
         /** Updates the roi_set data of the associated training set.
          * @param {Integer} tset_id - id of the associated training set
-         * @param {Object} data - data to update 
+         * @param {Object} data - data to update
          * @return {Promise} resolved if the data is fit, rejected otherwise.
          */
         extras   : function(connection, tset_id, data){
@@ -439,7 +439,7 @@ TrainingSets.types.roi_set = {
         var rec_data;
         var rec_stats;
         var spec_data;
-        
+
         async.waterfall([
             function find_recording(next){
                 Recordings.findByUrlMatch(rdata.recording,0, {limit:1}, next);
@@ -450,40 +450,40 @@ TrainingSets.types.roi_set = {
             },
             function fetch_spectrogram(data, next){
                 rec_stats = data;
-                Recordings.fetchSpectrogramFile(rec_data, next);  
+                Recordings.fetchSpectrogramFile(rec_data, next);
             },
             function get_spectrogram(data, next){
                 debug('get_spectrogram');
                 spec_data = data;
-                lwip.open(spec_data.path, next);
+                jimp.read(spec_data.path, next);
             },
             function crop_roi(spectrogram, next){
                 debug('crop_roi');
-                var px2sec = rec_data.duration/spectrogram.width();
+                var px2sec = rec_data.duration/spectrogram.bitmap.width;
                 var max_freq = rec_data.sample_rate/2;
-                var px2hz  = max_freq/spectrogram.height();
-                
-                var left = Math.floor(rdata.x1/px2sec); 
-                var top = spectrogram.height()-Math.floor(rdata.y2/px2hz); 
-                var right = Math.ceil(rdata.x2/px2sec); 
-                var bottom = spectrogram.height()-Math.floor(rdata.y1/px2hz); 
-                
-                spectrogram.extract(left, top, right, bottom, 
+                var px2hz  = max_freq/spectrogram.bitmap.height;
+
+                var left = Math.floor(rdata.x1/px2sec);
+                var top = spectrogram.bitmap.height-Math.floor(rdata.y2/px2hz);
+                var right = Math.ceil(rdata.x2/px2sec);
+                var bottom = spectrogram.bitmap.height-Math.floor(rdata.y1/px2hz);
+
+                spectrogram.clone().crop(left, top, right - left, bottom - top,
                     function(err, roi) {
                         if(err) return next(err);
-                        
-                        roi.toBuffer('png', next);
+
+                        roi.getBuffer(jimp.MIME_PNG, next);
                     }
                 );
-            }, 
+            },
             function store_in_bucket(roiBuffer, next) {
                 debug('store_in_bucket');
                 // var next = arguments[arguments.length-1];
                 if(!s3){
                     s3 = new AWS.S3();
                 }
-                s3.putObject({ 
-                    Bucket: config('aws').bucketName, 
+                s3.putObject({
+                    Bucket: config('aws').bucketName,
                     Key: s3key,
                     ACL: 'public-read',
                     Body: roiBuffer
@@ -492,7 +492,7 @@ TrainingSets.types.roi_set = {
             function update_roi_data() {
                 debug('update_roi_data');
                 var next = arguments[arguments.length-1];
-                
+
                 var q = "UPDATE training_set_roi_set_data \n"+
                         "SET uri = ? \n"+
                         "WHERE roi_set_data_id = ?";
@@ -505,7 +505,7 @@ TrainingSets.types.roi_set = {
             }
         ], callback);
     },
-    
+
     fetch_data_image : function (training_set, data_id, callback){
         var self = this, data;
         async.waterfall([
@@ -513,9 +513,9 @@ TrainingSets.types.roi_set = {
                 self.get_data(training_set, {id:data_id}, next);
             },
             function check_and_get_tset_data(rows, fields, next){
-                if(!rows.length) { 
-                    next(new Error("Requested training set data does not exists.")); 
-                    return; 
+                if(!rows.length) {
+                    next(new Error("Requested training set data does not exists."));
+                    return;
                 }
                 data = rows[0];
                 next();
@@ -555,7 +555,7 @@ TrainingSets.types.roi_set = {
         if(!options || !options.noURI){
             fields.push("CONCAT(" + dbpool.escape(uri_prefix) + ",TSD.uri) as uri");
         }
-        
+
         return queryHandler(
             'SELECT ' + fields.join(',') + '\n' +
             'FROM ' + tables.join('\n') + '\n' +
@@ -571,7 +571,7 @@ TrainingSets.types.roi_set = {
                 "JOIN songtypes AS SG ON TRS.songtype_id = SG.songtype_id \n"+
                 "JOIN species AS S ON TRS.species_id = S.species_id \n"+
                 "WHERE TRS.training_set_id = ?";
-        
+
         queryHandler(dbpool.format(q, [training_set.id]), callback);
     },
     remove_roi : function(roi_id, callback) {
@@ -634,20 +634,20 @@ TrainingSets.types.roi_set = {
         async.waterfall([
             function(next){
                 joi.validate(data, self.data_schema, {context:training_set},next);
-            }, 
+            },
             function(vdata, next){
                 var x1 = Math.min(vdata.roi.x1, vdata.roi.x2), y1 = Math.min(vdata.roi.y1, vdata.roi.y2);
                 var x2 = Math.max(vdata.roi.x1, vdata.roi.x2), y2 = Math.max(vdata.roi.y1, vdata.roi.y2);
-                                
+
                 dbpool.queryHandler(
                     "INSERT INTO training_set_roi_set_data(training_set_id, recording_id, species_id, songtype_id, x1, y1, x2, y2) \n" +
                     "VALUES ("+dbpool.escape([
-                        training_set.id, vdata.recording, vdata.species, vdata.songtype, 
+                        training_set.id, vdata.recording, vdata.species, vdata.songtype,
                         x1, y1, x2, y2
                     ])+")",
                     next
                 );
-            }, 
+            },
             function(result, fields, next){
                 self.get_data(training_set, {id:result.insertId}, next);
             },
