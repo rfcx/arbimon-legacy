@@ -468,13 +468,12 @@ TrainingSets.types.roi_set = {
                 var right = Math.ceil(rdata.x2/px2sec);
                 var bottom = spectrogram.bitmap.height-Math.floor(rdata.y1/px2hz);
 
-                spectrogram.clone().crop(left, top, right - left, bottom - top,
-                    function(err, roi) {
-                        if(err) return next(err);
-
-                        roi.getBuffer(jimp.MIME_PNG, next);
-                    }
-                );
+                try {
+                    var roi = spectrogram.clone().crop(left, top, right - left, bottom - top);
+                    roi.getBuffer(jimp.MIME_PNG, next);
+                } catch(err){
+                    next(err);
+                }
             },
             function store_in_bucket(roiBuffer, next) {
                 debug('store_in_bucket');

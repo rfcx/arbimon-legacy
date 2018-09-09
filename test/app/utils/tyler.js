@@ -46,13 +46,13 @@ mocks.jimp.read.__image__ = {
     clone: function(){
         return this;
     },
-    crop: function( x0, y0, w, h, callback){
+    crop: function( x0, y0, w, h){
         var x1 = x0 + w, y1 = y0 + h;
         var key = ''+x0+'_'+y0+'__'+x1+'_'+y1;
         if(this.tile_cache[key]){
-            setImmediate(callback, null, this.tile_cache[key]);
+            return this.tile_cache[key];
         } else {
-            setImmediate(callback, new Error('tile not in cache: ' + key));
+            throw new Error('tile not in cache: ' + key);
         }
     }
 };
