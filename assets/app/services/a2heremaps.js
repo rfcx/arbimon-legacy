@@ -40,7 +40,8 @@ angular.module('a2.heremaps',[])
                 },
                 platform: new api.service.Platform({
                     app_id: appId,
-                    app_code: appCode
+                    app_code: appCode,
+                    useHTTPS: /https/.test($window.document.location.protocol)
                 })
             };
         });
