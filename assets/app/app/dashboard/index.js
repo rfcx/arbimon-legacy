@@ -65,7 +65,7 @@ angular.module('a2.app.dashboard',[
         done();
         $timeout(function() {
             a2HereMapsLoader.then(function(heremaps){
-                var defaultLayers = platform.createDefaultLayers();
+                var defaultLayers = heremaps.platform.createDefaultLayers();
                 
                 $scope.map = new heremaps.api.Map($window.document.getElementById('summary-map'),
                     defaultLayers.normal.map, {
@@ -80,7 +80,7 @@ angular.module('a2.app.dashboard',[
                         lat: site.lat,
                         lng: site.lon
                     }, {
-                        icon: heremap.makeTextIcon(site.name)
+                        icon: heremaps.makeTextIcon(site.name)
                     });
                 }));
 
