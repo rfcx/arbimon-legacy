@@ -6,7 +6,7 @@ angular.module('a2.app.dashboard',[
     'ct.ui.router.extras',
     'a2.forms',
     'humane',
-    'a2.googlemaps'
+    'a2.heremaps'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('dashboard', {
@@ -15,7 +15,7 @@ angular.module('a2.app.dashboard',[
         templateUrl: '/app/dashboard/index.html',
     });
 })
-.controller('SummaryCtrl', function($scope, Project, a2GoogleMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
+.controller('SummaryCtrl', function($scope, Project, a2HereMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
     $scope.loading = 9;
     
     var done = function() {
@@ -64,28 +64,30 @@ angular.module('a2.app.dashboard',[
         $scope.sites = sites;
         done();
         $timeout(function() {
-            a2GoogleMapsLoader.then(function(google){
+            a2HereMapsLoader.then(function(heremaps){
+                var defaultLayers = platform.createDefaultLayers();
                 
-                $scope.map = new google.maps.Map($window.document.getElementById('summary-map'), {
+                $scope.map = new heremaps.api.Map($window.document.getElementById('summary-map'),
+                    defaultLayers.normal.map, {
                     center: { lat: 18.3, lng: -66.5},
                     zoom: 8
                 });
                 
-                var bounds = new google.maps.LatLngBounds();
-                    
-                angular.forEach($scope.sites, function(site){
-                    var position = new google.maps.LatLng(site.lat, site.lon);
-                    
-                    var marker = new google.maps.Marker({
-                        position: position,
-                        title: site.name
+                var group = new heremaps.api.map.Group();
+
+                group.addObjects(($scope.sites || []).map(function (site){
+                    return new heremaps.api.map.DomMarker({
+                        lat: site.lat,
+                        lng: site.lon
+                    }, {
+                        icon: heremap.makeTextIcon(site.name)
                     });
-                    
-                    bounds.extend(position);
-                    marker.setMap($scope.map);
-                    
-                    $scope.map.fitBounds(bounds);
-                });
+                }));
+
+                $scope.map.addObject(group);
+
+                $scope.map.setViewBounds(group.getBounds());
+
             });
         }, 100);
         
