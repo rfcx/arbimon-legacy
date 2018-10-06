@@ -9,35 +9,36 @@ angular.module('a2.heremaps',[])
         '<span>${text}</span>' +
     '</div>'
 )
-.provider("a2HereMapsLoader", function(){
-    var defer;
+.provider("a2HereMapsLoader", function(a2HereMarkerTextIconTemplate){
+    var loadPromise;
     var appId;
     var appCode;
     
-    function loadScript($window, $q, a2HereMarkerTextIconTemplate) {
-        if(!defer){ 
-            return;
-        }
-        
-        $q.all([
-            "//js.api.here.com/v3/3.0/mapsjs-core.js",
-            "//js.api.here.com/v3/3.0/mapsjs-service.js"
-        ].map(function(src){
+    function loadScript($window, $q) {
+        function loadOneScript(src){
             return $q(function(resolve, reject){
                 var script = $window.document.createElement('script');
                 script.src = $window.document.location.protocol + src;
                 script.addEventListener('load', resolve);
-                script.addEventListener('error', reject);                
+                script.addEventListener('error', reject);
                 $window.document.body.appendChild(script);
             });
-        })).then(function (){
+        }
+        
+        return loadOneScript("//js.api.here.com/v3/3.0/mapsjs-core.js").then(function(){
+            return $q.all([
+                loadOneScript("//js.api.here.com/v3/3.0/mapsjs-service.js"),
+                loadOneScript("//js.api.here.com/v3/3.0/mapsjs-ui.js"),
+                loadOneScript("//js.api.here.com/v3/3.0/mapsjs-mapevents.js"),
+            ]);
+        }).then(function (){
             var api = $window.H;
             return {
                 api: api,
                 makeTextIcon: function(text){
                     return new H.map.DomIcon(a2HereMarkerTextIconTemplate.replace('${text}', text));
                 },
-                platform: api.service.Platform({
+                platform: new api.service.Platform({
                     app_id: appId,
                     app_code: appCode
                 })
@@ -51,12 +52,10 @@ angular.module('a2.heremaps',[])
             appCode = code;
         },        
         $get: function($window, $q){
-            console.log("$get: function($window, $q){");
-            if(!defer){
-                defer = $q.defer();
-                loadScript($window, $q);
+            if(!loadPromise){
+                loadPromise = loadScript($window, $q);
             }
-            return defer.promise;
+            return loadPromise;
         }
     };
 })
