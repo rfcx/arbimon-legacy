@@ -4,9 +4,9 @@ angular.module('a2.audiodata.sites', [
     'ui.bootstrap',
     'humane',
     'a2.qr-js',
-    'a2.googlemaps'
+    'a2.heremaps'
 ])
-.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader) {
+.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2HereMapsLoader) {
     $scope.loading = true;
     
     Project.getInfo(function(info){
@@ -36,30 +36,84 @@ angular.module('a2.audiodata.sites', [
                 });
             }
         }
-// )
     });
     
     $scope.editing = false;
     
-    a2GoogleMapsLoader.then(function(google){
-        $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
+    a2HereMapsLoader.then(function(heremaps){
+        var defaultLayers = heremaps.platform.createDefaultLayers();
+
+        $scope.map = new heremaps.api.Map($window.document.getElementById('map-site'),
+            defaultLayers.normal.map, {
             center: { lat: 18.3, lng: -66.5},
             zoom: 8
         });
+        var behavior = new heremaps.api.mapevents.Behavior(new heremaps.api.mapevents.MapEvents($scope.map));
+
+        // disable the default draggability of the underlying map
+        // when starting to drag a marker object:
+        $scope.map.addEventListener('dragstart', function(ev) {
+            var target = ev.target;
+            if (target instanceof heremaps.api.map.DomMarker && target.draggable) {
+                behavior.disable();
+                var target_handler = (target.draggable_handlers || {}).dragstart;
+                if (target_handler) {
+                    target_handler(ev);
+                }
+            }
+        }, false);
+
+        // re-enable the default draggability of the underlying map
+        // when dragging has completed
+        $scope.map.addEventListener('dragend', function(ev) {
+            var target = ev.target;
+            if (target instanceof mapsjs.map.DomMarker && target.draggable) {
+                behavior.enable();
+                var target_handler = (target.draggable_handlers || {}).dragend;
+                if (target_handler) {
+                    target_handler(ev);
+                }
+            }
+        }, false);
+
+        // Listen to the drag event and move the position of the marker
+        // as necessary
+         $scope.map.addEventListener('drag', function(ev) {
+             var target = ev.target;
+             var pointer = ev.currentPointer;
+             if (target instanceof mapsjs.map.DomMarker && target.draggable) {
+                 target.setPosition($scope.map.screenToGeo(pointer.viewportX, pointer.viewportY));
+                 var target_handler = (target.draggable_handlers || {}).drag;
+                 if (target_handler) {
+                     target_handler(ev);
+                 }
+             }
+        }, false); 
+               
+        heremaps.api.ui.UI.createDefault($scope.map, defaultLayers);
     });
     
     $scope.close = function() {
         $scope.creating = false;
         $scope.editing = false;
         if($scope.marker){
-            a2GoogleMapsLoader.then(function(google){
-                var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
-                $scope.marker.setDraggable(false);
-                $scope.marker.setPosition(position);
-                $scope.marker.setTitle($scope.selected.name);
+            a2HereMapsLoader.then(function(heremaps){
+                $scope.marker.setPosition({ lat: $scope.selected.lat, lng: $scope.selected.lon });
+                $scope.marker.setIcon(heremaps.makeTextIcon($scope.selected.name));
+                makeMarkerUndraggable($scope.marker);
             });
         }
     };
+    
+    function makeMarkerDraggable(marker, handlers){
+        marker.draggable = true;
+        marker.draggable_handlers = handlers;
+    }
+
+    function makeMarkerUndraggable(marker){
+        marker.draggable = false;
+        marker.draggable_handlers = null;
+    }
 
     $scope.status_controller = $controller('SiteStatusPlotterController', {'$scope':$scope});
     var onLogsRefreshed = $scope.status_controller.on('logs-refreshed', function(logParams){
@@ -202,27 +256,27 @@ angular.module('a2.audiodata.sites', [
         $scope.temp = {};
         $scope.set_show('map');
         
-        a2GoogleMapsLoader.then(function(google){
+        a2HereMapsLoader.then(function(heremaps){
             if(!$scope.marker) {
-                    $scope.marker = new google.maps.Marker({
-                        position: $scope.map.getCenter(),
-                        title: 'New Site Location'
+                    $scope.marker = new heremaps.api.maps.DomMarker(
+                        $scope.map.getCenter(), {
+                        icon: heremaps.makeTextIcon('New Site Location')
                     });
-                    $scope.marker.setMap($scope.map);
-            }
-            else {
+                    $scope.map.addObject($scope.marker);
+            } else {
                 $scope.marker.setPosition($scope.map.getCenter());
             }
                     
-            $scope.marker.setDraggable(true);
-            $scope.creating = true;
-            
-            google.maps.event.addListener($scope.marker, 'dragend', function(position) {
-                $scope.$apply(function () {
-                    $scope.temp.lat = position.latLng.lat();
-                    $scope.temp.lon = position.latLng.lng();
-                });
+            makeMarkerDraggable($scope.marker, {
+                dragend: function(event) {
+                    var position = event.target.getPosition();
+                    $scope.$apply(function () {
+                        $scope.temp.lat = position.lat;
+                        $scope.temp.lon = position.lng;
+                    });
+                }
             });
+            $scope.creating = true;
         });
                 
         $scope.creating = true;
@@ -240,13 +294,14 @@ angular.module('a2.audiodata.sites', [
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
         
-        $scope.marker.setDraggable(true);
-        
-        google.maps.event.addListener($scope.marker, 'dragend', function(position) {
-            $scope.$apply(function () {
-                $scope.temp.lat = position.latLng.lat();
-                $scope.temp.lon = position.latLng.lng();
-            });
+        makeMarkerDraggable($scope.marker, {
+            dragend: function(event) {
+                var position = event.target.getPosition();
+                $scope.$apply(function () {
+                    $scope.temp.lat = position.lat;
+                    $scope.temp.lon = position.lng;
+                });
+            }
         });
         $scope.editing = true;
     };
@@ -276,23 +331,24 @@ angular.module('a2.audiodata.sites', [
             
 
             
-            a2GoogleMapsLoader.then(function(google){
-                var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
+            a2HereMapsLoader.then(function(heremaps){
+                var position = {lat: $scope.selected.lat, lng: $scope.selected.lon};
                 
                 if(!$scope.marker) {
-                    $scope.marker = new google.maps.Marker({
-                        position: position,
-                        title: $scope.selected.name
+                    $scope.marker = new heremaps.api.map.DomMarker(
+                        position, {
+                        icon: heremaps.makeTextIcon($scope.selected.name)
                     });
-                    $scope.marker.setMap($scope.map);
-                }
-                else {
-                    $scope.marker.setDraggable(false);
+                    $scope.map.addObject($scope.marker);
+                } else {
+                    makeMarkerUndraggable($scope.marker);
                     $scope.marker.setPosition(position);
-                    $scope.marker.setTitle($scope.selected.name);
+                    $scope.marker.setIcon(
+                        heremaps.makeTextIcon($scope.selected.name)
+                    );
                 }
                 
-                $scope.map.panTo(position); 
+                $scope.map.setCenter(position, true);
             });      
         });             
     };
