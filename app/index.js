@@ -17,6 +17,8 @@ var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
 var paypal = require('paypal-rest-sdk');
 
+var dbpool = require('../utils/dbpool');
+var queryHandler = dbpool.queryHandler;
 
 var config = require('./config');
 AWS.config.update({
@@ -128,8 +130,16 @@ app.use(systemSettings.middleware());
 var routes = require('./routes/index');
 var admin = require('./routes/admin');
 
-app.get('/alive', function(req, res) { // for health checks
-    res.sendStatus(200);
+app.get('/alive', function(req, res, next) { // for health checks
+    queryHandler("SELECT project_id FROM project LIMIT 1", function (err){
+        if (err) {
+            next(err);
+            return;
+        } else {
+            res.sendStatus(200);
+            next();
+        }
+    });
 });
 
 app.use('/admin', admin);
