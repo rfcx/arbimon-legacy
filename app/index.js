@@ -20,9 +20,10 @@ var paypal = require('paypal-rest-sdk');
 var dbpool = require('./utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
+
 var config = require('./config');
 AWS.config.update({
-    accessKeyId: config('aws').accessKeyId, 
+    accessKeyId: config('aws').accessKeyId,
     secretAccessKey: config('aws').secretAccessKey,
     region: config('aws').region
 });
@@ -66,7 +67,7 @@ app.use(favicon(path.join(www_root_path, '/images/favicon.ico')));
 logger.token('tag', function(req, res){ return 'arbimon2:request'; });
 
 app.use(logger(
-    app.get('env') === 'production' ? 
+    app.get('env') === 'production' ?
     ':date[clf] :tag :remote-addr :method :url :status :response-time ms - :res[content-length] ":user-agent"' :
     'dev', {
     skip: function(req, res){
@@ -85,7 +86,7 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.use(jwt({ 
+app.use(jwt({
     secret: config('tokens').secret,
     userProperty: 'token',
     credentialsRequired: false
@@ -131,7 +132,7 @@ var routes = require('./routes/index');
 var admin = require('./routes/admin');
 
 app.get('/alive', function(req, res, next) { // for health checks
-    queryHandler("SELECT project_id FROM project LIMIT 1", function (err){
+    queryHandler("SELECT project_id FROM projects LIMIT 1", function (err){
         if (err) {
             next(err);
             return;
@@ -147,7 +148,7 @@ app.use('/admin', admin);
 app.use(function(req, res, next) {
     if(req.systemSettings('maintenance_mode') == 'on')
         return res.status(301).render('maintenance');
-    
+
     next();
 });
 
