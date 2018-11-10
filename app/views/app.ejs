@@ -20,31 +20,31 @@
                     <img src="/images/logo.svg">
                 </a>
             </div>
-        
+
             <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
                 <ul class="nav navbar-nav hide-tooltip-lg">
                     <li ui-sref-active="active">
                         <a ui-sref="dashboard" tooltip="Dashboard" tooltip-placement="bottom">
-                            <i class="fa fa-dashboard"></i> 
+                            <i class="fa fa-dashboard"></i>
                             <span class="visible-lg-inline visible-xs-inline">Dashboard</span>
                         </a>
                     </li>
                     <li ui-sref-active="open" tooltip="Data" tooltip-placement="bottom">
                         <a ui-sref="audiodata">
-                            <i class="fa fa-cloud-upload"></i> 
+                            <i class="fa fa-cloud-upload"></i>
                             <span class="visible-lg-inline visible-xs-inline">Data</span>
                         </a>
                         <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="audiodata"></ul>
                     </li>
                     <li ui-sref-active="active" tooltip="Visualizer" tooltip-placement="bottom">
                         <a ui-sref="visualizer">
-                            <i class="fa fa-cubes"></i> 
+                            <i class="fa fa-cubes"></i>
                             <span class="visible-lg-inline visible-xs-inline">Visualizer</span>
                         </a>
                     </li>
                     <li ui-sref-active="open" tooltip="Analysis" tooltip-placement="bottom">
                         <a ui-sref="analysis">
-                            <i class="fa fa-send-o"></i> 
+                            <i class="fa fa-send-o"></i>
                             <span class="visible-lg-inline visible-xs-inline">Analysis</span>
                         </a>
                         <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="analysis"></ul>
@@ -53,8 +53,8 @@
                 <ul class="nav navbar-nav hide-tooltip-lg" ng-controller="StatusBarNavIndexController">
                     <li ui-sref-active="active">
                         <a ui-sref="jobs" tooltip="Active Jobs" tooltip-placement="bottom">
-                            <i class="fa fa-cogs"></i> 
-                            <span class="visible-lg-inline visible-xs-inline">Jobs</span> 
+                            <i class="fa fa-cogs"></i>
+                            <span class="visible-lg-inline visible-xs-inline">Jobs</span>
                             <span ng-show="jobslength" class="badge" ng-bind="jobslength"></span>
                         </a>
                     </li>
@@ -62,28 +62,22 @@
                 <ul class="nav navbar-nav hide-tooltip-lg">
                     <li ui-sref-active="open">
                         <a ui-sref="settings" tooltip="Settings" tooltip-placement="bottom">
-                            <i class="fa fa-wrench"></i> 
-                            <span class="visible-lg-inline visible-xs-inline">Settings</span> 
+                            <i class="fa fa-wrench"></i>
+                            <span class="visible-lg-inline visible-xs-inline">Settings</span>
                         </a>
                         <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="settings"></ul>
-                    </li>
-                    <li tooltip-placement="bottom" tooltip="Forum">
-                        <a target="_blank" href="https://forum.sieve-analytics.com/arbimon/">
-                            <i class="fa fa-comments-o"></i>
-                            <span class="visible-lg-inline visible-xs-inline">Forum</span>
-                        </a>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right hide-tooltip-lg">
                     <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
                         <a class="dropdown-toggle" dropdown-toggle>
-                            <i class="fa fa-sitemap"></i> 
-                            <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>                            
+                            <i class="fa fa-sitemap"></i>
+                            <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>
                         </a>
                     </li>
 
                     <% include user-dropdown %>
-                    
+
                     <% include help-dropdown %>
                 </ul>
             </div>
@@ -91,8 +85,8 @@
     </nav>
     <% if(planAlert == 'expired') { %>
         <div class="alert-bar alert-danger" ng-hide="hideAlertBar" ng-click="hideAlertBar = true">
-            Your project data plan have expired, please renew your plan. 
-            If a new plan is not selected after 30 days of the 
+            Your project data plan have expired, please renew your plan.
+            If a new plan is not selected after 30 days of the
             due date, the project will be disable. (click to dismiss)
             <button class="close" ng-click="hideAlertBar = true">
                 <i class="fa fa-times"></i>
