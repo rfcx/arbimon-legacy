@@ -17,7 +17,7 @@ var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
 var paypal = require('paypal-rest-sdk');
 
-var dbpool = require('../utils/dbpool');
+var dbpool = require('./utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
 var config = require('./config');
