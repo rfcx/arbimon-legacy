@@ -146,3 +146,5 @@
     - Reverted to Google maps
     - Removed Forum Links
     - Removed audio event detection links as well
+- v1.12.1
+    - alive route now hits the database
