@@ -137,7 +137,8 @@ app.get('/alive', function(req, res, next) { // for health checks
             next(err);
             return;
         } else {
-            res.sendStatus(200);
+            res.status(200);
+            res.json({ alive: true });
             next();
         }
     });
