@@ -14,7 +14,7 @@ var a2 = angular.module('a2.app', [
     'ct.ui.router.extras',
     'a2.filter.project-url',
     'humane',
-    'a2.googlemaps',
+    'a2.heremaps',
     'a2.injected.data'
 ])
 .run(function($rootScope, Angularytics, a2UserPermit, notify, $state) {
@@ -37,8 +37,17 @@ var a2 = angular.module('a2.app', [
         }
     });
 })
-.config(function($urlRouterProvider, $locationProvider, AngularyticsProvider, a2GoogleMapsLoaderProvider, a2InjectedData) {
-    a2GoogleMapsLoaderProvider.setAPIKey(a2InjectedData.googleAPI.key);
+.config(function(
+    $urlRouterProvider,
+    $locationProvider,
+    AngularyticsProvider,
+    a2HereMapsLoaderProvider,
+    a2InjectedData
+) {
+    a2HereMapsLoaderProvider.setAPIIdAndCode(
+        a2InjectedData.here_maps_api.appId,
+        a2InjectedData.here_maps_api.appCode
+    );
     AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
     $locationProvider.html5Mode(true);
     $urlRouterProvider.otherwise("/dashboard");

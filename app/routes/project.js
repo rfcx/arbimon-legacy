@@ -9,7 +9,8 @@ var cardResolver = require('../utils/card-resolver')(cardStack);
 
 var injected_data = {
     facebook_api: config('facebook-api').public,
-    googleAPI : config('google-api')
+    googleAPI : config('google-api'),
+    here_maps_api: config('here-maps-api'),
 };
 
 // discards rest of path
@@ -121,7 +122,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                             project: req.project, 
                             url_base: req.originalUrl + (/\//.test(req.originalUrl) ? '' : '/'),
                             user: req.session.user,  
-                            // a2GoogleMapsLoader
+                            // a2HereMapsLoader
                             inject_data : injected_data,
                             card: card,
                             planAlert: project.plan_due < new Date() ? 'expired' : '',
