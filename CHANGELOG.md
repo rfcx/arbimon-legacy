@@ -139,6 +139,10 @@
 
 - v1.10.1
     - fixed bug: jimp.crop is not async
-    
-    - v1.11.0
-        - now using here maps api instead of google, which turned to the dark side now.
+
+- v1.11.0
+    - now using here maps api instead of google, which turned to the dark side now.
+- v1.12.0
+    - Reverted to Google maps
+    - Removed Forum Links
+    - Removed audio event detection links as well

@@ -18,20 +18,14 @@
         <% } %>
         </div>
         <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
-            <ul class="nav navbar-nav">
             <% if(user.isSuper) { %>
+            <ul class="nav navbar-nav">
                     <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>
-            <% } %>
-                <li class="hide-tooltip-lg" tooltip-placement="bottom" tooltip="Forum">
-                    <a target="_blank" href="https://forum.sieve-analytics.com/arbimon/">
-                        <i class="fa fa-comments-o"></i>
-                        <span class="visible-lg-inline visible-xs-inline">Forum</span>
-                    </a>
-                </li>
             </ul>
+            <% } %>
             <ul class="nav navbar-nav navbar-right">
                 <% include user-dropdown %>
-                
+
                 <% include help-dropdown %>
             </ul>
         </div>
