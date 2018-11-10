@@ -22,7 +22,6 @@ router.get('/alive', function(req, res, next) { // for health checks
         } else {
             res.status(200);
             res.json({ alive: true });
-            next();
         }
     });
 });
