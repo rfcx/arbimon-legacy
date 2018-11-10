@@ -9,7 +9,7 @@ var dataApi = require('./data-api');
 var uploads = require('./uploads');
 var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
-var dbpool = require('./utils/dbpool');
+var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 
 
