@@ -9,6 +9,22 @@ var dataApi = require('./data-api');
 var uploads = require('./uploads');
 var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
+var dbpool = require('../utils/dbpool');
+var queryHandler = dbpool.queryHandler;
+
+
+router.get('/alive', function(req, res, next) { // for health checks
+    res.type('json');
+    queryHandler("SELECT project_id FROM projects LIMIT 1", function (err){
+        if (err) {
+            next(err);
+            return;
+        } else {
+            res.status(200);
+            res.json({ alive: true });
+        }
+    });
+});
 
 
 router.use('/', login);
