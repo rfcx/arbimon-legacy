@@ -148,3 +148,7 @@
     - Removed audio event detection links as well
 - v1.12.1
     - alive route now hits the database
+- v1.13.0
+    - updated python requirements
+    - added python dependencies install section in README
+    - added upload queue configuration on/off switch (default is off)
