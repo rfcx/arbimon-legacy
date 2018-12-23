@@ -181,7 +181,9 @@ app.use(function(err, req, res, next) {
 
 app.start = function(){
     tmpfilecache.cleanup();
-    uploadQueue.resume();
+    if(config("upload-queue").enabled){
+        uploadQueue.resume();
+    }
 };
 
 module.exports = app;
