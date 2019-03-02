@@ -21,6 +21,7 @@ var playlist_routes = require('./playlists');
 var soundscape_routes = require('./soundscapes');
 var jobsRoutes = require('./jobs');
 var classiRoutes = require('./classifications');
+var patternMatchingRoutes = require('./pattern_matchings');
 var tagRoutes = require('./tags');
 
 router.param('projectUrl', function(req, res, next, project_url){
@@ -35,11 +36,11 @@ router.param('projectUrl', function(req, res, next, project_url){
         }
 
         var project = rows[0];
-        
+
         var permissions = req.session.user.permissions && req.session.user.permissions[project.project_id];
-        
+
         if(!permissions) {
-            model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) { 
+            model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
                 if(project.is_private && !rows.length && req.session.user.isSuper === 0) {
                     // if not authorized to see project send 401
                     return res.sendStatus(401);
@@ -49,15 +50,15 @@ router.param('projectUrl', function(req, res, next, project_url){
                     req.session.user.permissions = {};
 
                 req.session.user.permissions[project.project_id] = rows;
-                
+
                 req.project = project;
-                
+
                 return next();
             });
         }
         else {
             req.project = project;
-            
+
             return next();
         }
     });
@@ -75,16 +76,16 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you dont have permission to 'manage project settings'" });
     }
-    
+
     if(!req.body.project) {
         return res.status(400).json({ error: "missing parameters" });
     }
-    
+
     // make sure project requested is the one updated
     req.body.project.project_id = req.project.project_id;
-    
+
     var newProjectInfo;
-    
+
     async.waterfall([
         function(callback) {
             var schema = {
@@ -94,9 +95,9 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
                 description: joi.string(),
                 is_private: joi.number(),
             };
-            
-            joi.validate(req.body.project, schema, { stripUnknown: true }, 
-                function(err, projectInfo){ 
+
+            joi.validate(req.body.project, schema, { stripUnknown: true },
+                function(err, projectInfo){
                     newProjectInfo = projectInfo;
                     callback();
             });
@@ -130,9 +131,9 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
         function(urlChanged, callback) {
             model.projects.update(newProjectInfo, function(err, result){
                 if(err) return next(err);
-                
+
                 var url = urlChanged ? newProjectInfo.url : undefined;
-                
+
                 debug("update project:", result);
                 res.json({ success: true , url: url });
             });
@@ -147,7 +148,7 @@ router.get('/:projectUrl/classes', function(req, res, next) {
     if(req.query.validations) {
         options.countValidations = true;
     }
-    
+
     console.log(classId, options);
     model.projects.getProjectClasses(req.project.project_id, classId, options, function(err, classes){
         if(err) return next(err);
@@ -174,22 +175,22 @@ router.post('/:projectUrl/class/add', function(req, res, next) {
 
     model.projects.insertClass(projectClass, function(err, result){
         if(err) return next(err);
-        
+
         if(result.error) {
             return res.json(result);
         }
-        
+
         model.projects.insertNews({
             news_type_id: 5, // class added
             user_id: req.session.user.id,
             project_id: req.project.project_id,
-            data: JSON.stringify({ 
+            data: JSON.stringify({
                 class: [result.class],
-                species: [result.species, projectClass.species], 
-                song: [result.songtype, projectClass.songtype] 
+                species: [result.species, projectClass.species],
+                song: [result.songtype, projectClass.songtype]
             })
         });
-        
+
         debug("class added:", result);
         res.json({ success: true });
     });
@@ -204,35 +205,35 @@ router.post('/:projectUrl/class/del', function(req, res, next){
     if(!req.haveAccess(req.project.project_id, "manage project species")) {
         return res.status(401).json({ error: "you dont have permission to 'manage project species'" });
     }
-    
-    
+
+
     async.waterfall([
         function(callback) {
             model.projects.getProjectClasses(req.project.project_id, function(err, classes) {
                 if(err) return next(err);
-                
+
                 callback(null, classes);
             });
         },
         function(classes) {
             model.projects.removeClasses(req.body.project_classes, function(err, result){
                 if(err) return next(err);
-                
+
                 var classesDeleted = classes.filter(function(clss) {
                     return req.body.project_classes.indexOf(clss.id) >= 0;
                 });
-                
+
                 classesDeleted = classesDeleted.map(function(clss){
                     return clss.species_name + " " + clss.songtype_name;
                 });
-                
+
                 model.projects.insertNews({
                     news_type_id: 6, // class removed
                     user_id: req.session.user.id,
                     project_id: req.project.project_id,
                     data: JSON.stringify({ classes: classesDeleted })
                 });
-                
+
                 debug("class removed:", result);
                 res.json({ success: true, deleted: classesDeleted });
             });
@@ -244,7 +245,7 @@ router.get('/:projectUrl/roles', function(req, res, next) {
     res.type('json');
     model.projects.availableRoles(function(err, roles){
         if(err) return next(err);
-        
+
         res.json(roles);
     });
 });
@@ -254,16 +255,16 @@ router.get('/:projectUrl/users', function(req, res, next) {
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
-    
+
     model.projects.getUsers(req.project.project_id, function(err, rows){
         if(err) return next(err);
-        
+
         var users = rows.map(function(row){
             row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, req.secure);
-            
+
             return row;
         });
-        
+
         res.json(users);
     });
 });
@@ -273,11 +274,11 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
     if(!req.body.user_id) {
         return res.json({ error: "missing parameters"});
     }
-    
+
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
-    
+
     model.projects.addUser({
         project_id: req.project.project_id,
         user_id: req.body.user_id,
@@ -285,7 +286,7 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
     },
     function(err, result){
         if(err) return next(err);
-        
+
         debug("add user:", result);
         res.json({ success: true });
     });
@@ -293,15 +294,15 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
 
 router.post('/:projectUrl/user/role', function(req, res, next) {
     res.type('json');
-    
+
     if(!req.body.user_id || !req.body.role_id) {
         return res.json({ error: "missing parameters"});
     }
-    
+
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
-    
+
     model.projects.changeUserRole({
         project_id: req.project.project_id,
         user_id: req.body.user_id,
@@ -309,7 +310,7 @@ router.post('/:projectUrl/user/role', function(req, res, next) {
     },
     function(err, result){
         if(err) return next(err);
-        
+
         debug("change user role:", result);
         res.json({ success: true });
     });
@@ -320,14 +321,14 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
     if(!req.body.user_id) {
         return res.json({ error: "missing parameters"});
     }
-    
+
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
-    
+
     model.projects.removeUser(req.body.user_id, req.project.project_id, function(err, result){
         if(err) return next(err);
-        
+
         debug("remove user:", result);
         res.json({ success: true });
     });
@@ -336,22 +337,22 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
 router.get('/:projectUrl/user-permissions', function(req, res, next) {
     res.type('json');
     model.users.getPermissions(
-        req.session.user.id, 
-        req.project.project_id, 
+        req.session.user.id,
+        req.project.project_id,
         function(err, rows) {
             if(err) return next(err);
-            
+
             if(!rows.length && req.project.is_private && !req.session.user.isSuper) {
                 return res.json({ authorized: false });
             }
-            
-            var result = { 
+
+            var result = {
                 authorized: true,
                 public: !req.project.is_private,
                 super: !!req.session.user.isSuper,
                 permissions: rows.map(function(perm) { return perm.name; }),
             };
-            
+
             res.json(result);
         }
     );
@@ -361,7 +362,7 @@ router.get('/:projectUrl/validations/count', function(req, res, next) {
     res.type('json');
     model.projects.validationsCount(req.project.project_id, function(err, result) {
         if(err) return next(err);
-        
+
         res.json({ count: result[0].count });
     });
 });
@@ -380,6 +381,7 @@ router.use('/:projectUrl/playlists', playlist_routes);
 router.use('/:projectUrl/soundscapes', soundscape_routes);
 router.use('/:projectUrl/jobs', jobsRoutes);
 router.use('/:projectUrl/classifications', classiRoutes);
+router.use('/:projectUrl/pattern_matchings', patternMatchingRoutes);
 router.use('/:projectUrl/tags', tagRoutes);
 router.use('/:projectUrl/audio-event-detections', require('./audio-event-detections'));
 router.use('/:projectUrl/soundscape-composition', require('./soundscape-composition'));

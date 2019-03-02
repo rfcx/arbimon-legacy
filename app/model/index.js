@@ -18,6 +18,7 @@ exports.orders          = require('./orders');
 exports.plans           = require('./plans');
 exports.settings        = require('./system-settings');
 exports.classifications = require('./classifications');
+exports.patternMatchings = require('./pattern_matchings');
 exports.oauth           = require('./oauth');
 exports.AudioEventDetections = require('./audio-event-detections');
 exports.ActivationCodes = require('./activation-codes');
