@@ -79,7 +79,7 @@
 // .inline-block -> browser/recordings-by
 .inline,
 .a2-block-inline,
-.ib, 
+.ib,
 .inline-block {
     display: inline-block;
 }
@@ -113,7 +113,7 @@
 // -> register.ejs
 .banner {
     background: url("/images/login-banner.png");
-    background-position: center top; 
+    background-position: center top;
     height: 500px;
 }
 
@@ -125,7 +125,7 @@
     padding-bottom: @banner-padding;
     @media (max-width: @screen-md-min) {
         padding:0;
-    }    
+    }
 }
 
 // adds transparent white background to div
@@ -139,7 +139,7 @@
 }
 
 // -> validator-main.html, recordings-by-playlist.html, recordings-by-site.html,
-//    browser/soundscapes.html, training-data.html, add_tset.html, 
+//    browser/soundscapes.html, training-data.html, add_tset.html,
 //    edit_soundscape_visual_scale.html, new_roi_set_tset_partial.html
 .dropdown-height-7 {
     overflow-y: auto;
@@ -167,7 +167,7 @@
     -moz-box-shadow: 0px 1px 8px #888;
     box-shadow: 0px 1px 8px #888;
     margin-bottom: 6px;
-    
+
 }
 
 // -> recordings-by-site.html
@@ -177,7 +177,7 @@
 }
 
 
-// -> create-playlist.html, createnewclassification.html, newmodel.html, 
+// -> create-playlist.html, createnewclassification.html, newmodel.html,
 //    createnewsoundscape.html
 .red {
     color: red;
@@ -334,7 +334,7 @@ textarea.fixed-width {
     transform: rotate(-90deg);
     white-space: nowrap;
     width: 0;
-    
+
     &.w-8{
         transform: translateX(-25%) rotate(-90deg);
     }
@@ -466,7 +466,7 @@ textarea.fixed-width {
     padding-bottom: 10px;
 }
 
-// -> recordings-by-playlist.html, recordings-by-site.html, 
+// -> recordings-by-playlist.html, recordings-by-site.html,
 //    soundscapes.html, edit_soundscape_visual_scale.html
 .dropdown-menu.has-badges > li {
     position: relative;
@@ -502,7 +502,7 @@ textarea.fixed-width {
     margin-bottom: 15px;
 }
 
-// 
+//
 #aggregationlist .ui-selected {
     background: #d5d5d5;
     font-weight: bold;
@@ -544,7 +544,7 @@ textarea.fixed-width {
     }
 }
 
-// directive a2ThresholdSelector 
+// directive a2ThresholdSelector
 // resize text
 .thresholdtext {
     font-family: sans-serif;
@@ -556,11 +556,11 @@ textarea.fixed-width {
 
     .ngrs-range-slider {
         padding: 0 0 4px;
-        
+
         &.ngrs-vertical {
             width: 20px;
             margin: 0 auto;
-            
+
             .ngrs-runner {
                 margin: 0;
                 height: 70px;
@@ -574,7 +574,7 @@ textarea.fixed-width {
 }
 .bandwidthslider {
     margin-top: -4px;
-    
+
     .ngrs-range-slider {
         margin: 0;
         width: 220px;
@@ -618,7 +618,7 @@ textarea.fixed-width {
     }
 }
 
-// -> training-sets.html, classification/list, jobs/index, models/list, 
+// -> training-sets.html, classification/list, jobs/index, models/list,
 //    modelinfo, soundscapes/list
 .hidelongtext {
     text-overflow: ellipsis;
@@ -676,7 +676,7 @@ textarea.fixed-width {
     margin-left: -10px;
 }
 
-// hides tooltips on large screens 
+// hides tooltips on large screens
 @media (min-width: 1200px) {
     .hide-tooltip-lg .tooltip, .hide-tooltip-lg.tooltip {
         display: none !important;
@@ -782,17 +782,17 @@ textarea.fixed-width {
         right: 5;
         bottom: 18px;
         background-color: transparent;
-        
+
         &:focus {
             outline: none;
         }
-        
+
         .slider-track(@rules) {
             &::-moz-range-track { @rules(); }
             &::-ms-track { @rules(); }
             &::-webkit-slider-runnable-track { @rules(); }
         }
-        
+
         .slider-track({
             background-color: transparent;
             cursor: pointer;
@@ -876,7 +876,7 @@ label.no-bold{
 .panel.panel-dropdown{
     min-width: 300px;
     margin-bottom: 0;
-    
+
     > .panel-heading{
         padding-top:0;
         padding-bottom:0;
@@ -923,4 +923,8 @@ label.row{
 
 .em{
     font-style: italic;
+}
+
+.is-v-middle{
+    vertical-align: middle !important;
 }

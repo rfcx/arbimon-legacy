@@ -1,0 +1,63 @@
+<div class="modal-header">
+    <h3 class="modal-title">Create a new pattern matching</h3>
+</div>
+<div class="modal-body">
+    <form role="form">
+        <div class="form-group">
+            <label for="modelName">Pattern Matching name:</label>
+            <input  class="form-control" ng-model="datas.name" placeholder="Enter pattern matching name" type="text"/>
+            <span class="nameExistsSpan" ng-bind="nameMsg"></span>
+        </div>
+        <div class="form-group">
+            <label for="template">Select Template:</label>
+            <span class="red" ng-hide="data">
+                <em>No templates found.
+                    <a ng-click="cancel('/analysis/templates') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Go to templates'">Create one.</a>
+                </em>
+            </span>
+            <ui-select ng-disabled="disabled" ng-model="datas.template" theme="/common/templates/a2-ui-select">
+                <ui-select-match placeholder="Select or search a model...">{{$select.selected.mname}}</ui-select-match>
+                <ui-select-choices repeat="m in data | filter: $select.search">
+                    {{m.mname}} <span ng-if="!m.enabled" class="pull-right text-danger"><i>unavailable</i></span>
+                </ui-select-choices>
+            </ui-select>
+            <div class="text-danger" ng-show="datas.template && !datas.template.enabled">
+                Currently templates created of type "{{ datas.template.mtname }}" are unavailable, <br>
+                for more info <a href="/support">contact us</a>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="template">Select Playlist:</label>
+            <span class="red" ng-hide="playlists">
+                <em>No playlists found.
+                    <a ng-click="cancel('/audiodata/recordings') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Go to recordings'">
+                        Create one.
+                    </a>
+                </em>
+            </span>
+            <ui-select ng-disabled="disabled" ng-model="datas.playlist" theme="/common/templates/a2-ui-select">
+                <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
+                <ui-select-choices repeat="playlist in playlists | filter: $select.search">
+                    {{playlist.name}}
+                    <span class="pull-right">
+                        <small>
+                            <em>
+                                <strong >Count:</strong>({{playlist.count}})
+                            </em>
+                        </small>
+                    </span>
+                </ui-select-choices>
+            </ui-select>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Submit'" ng-disabled="buttonEnable()">
+        <i class="fa fa-cogs"></i>
+        Create
+    </button>
+    <button class="btn btn-default" ng-click="cancel() | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel'">
+        <i class="fa fa-times"></i>
+        Close
+    </button>
+</div>
