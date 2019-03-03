@@ -300,6 +300,7 @@ angular.module('a2.analysis.patternmatching', [
             patternMatchingId: '=',
             detailedView: '=',
             onSetDetailedView: '&',
+            onGoBack: '&',
         },
         controller : 'PatternMatchingDetailsCtrl',
         controllerAs: 'controller',
@@ -312,10 +313,10 @@ angular.module('a2.analysis.patternmatching', [
     initialize: function(patternMatchingId){
         this.id = patternMatchingId;
         this.offset = 0;
-        this.limit = 10;
-        this.selected = {match_index:0, match:null, page:0};
-        this.total = {matches:0, pages:0};
-        this.loading = {details: false, matches:false};
+        this.limit = 100;
+        this.selected = {roi_index:0, roi:null, page:0};
+        this.total = {rois:0, pages:0};
+        this.loading = {details: false, rois:false};
         this.projecturl = Project.getUrl();
         this.fetchDetails().then((function(){
             this.loadPage(this.selected.page);
@@ -328,8 +329,8 @@ angular.module('a2.analysis.patternmatching', [
             this.loading.details = false;
             this.patternMatching = patternMatching;
             this.total = {
-                matches: patternMatching.matches,
-                pages: Math.ceil(patternMatching.matches / this.limit)
+                rois: patternMatching.rois,
+                pages: Math.ceil(patternMatching.rois / this.limit)
             }
         }).bind(this)).catch((function(err){
             this.loading.details = false;
@@ -338,40 +339,41 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     loadPage: function(pageNumber){
-        this.loading.matches = true;
-            this.loading.matches = false;
-            return a2PatternMatching.getMatchesFor(this.id, this.limit, pageNumber * this.limit).then((function(matches){
-            this.matches = matches;
-            this.selected.match = Math.min()
-            return matches;
+        this.loading.rois = true;
+        console.log("", "q");
+        return a2PatternMatching.getRoisFor(this.id, this.limit, pageNumber * this.limit).then((function(rois){
+            this.loading.rois = false;
+            this.rois = rois;
+            this.selected.roi = Math.min()
+            return rois;
         }).bind(this)).catch((function(err){
-            this.loading.matches = false;
+            this.loading.rois = false;
             return notify.serverError(err);
         }).bind(this));
     },
 
-    getMatchVisualizerUrl: function(match){
-        return match ? "/project/"+this.projecturl+"/#/visualizer/rec/"+match.recording_id : '';
+    getRoiVisualizerUrl: function(roi){
+        return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording_id : '';
     },
 
-    setMatch: function(match_index){
-        if(this.total.matches <= 0){
-            this.selected.match_index = 0;
-            this.selected.match = null;
+    setRoi: function(roi_index){
+        if(this.total.rois <= 0){
+            this.selected.roi_index = 0;
+            this.selected.roi = null;
         } else {
-            this.selected.match_index = Math.max(0, Math.min(match_index | 0, this.total.matches - 1));
-            this.selected.match = this.matches[this.selected.match_index];
+            this.selected.roi_index = Math.max(0, Math.min(roi_index | 0, this.total.rois - 1));
+            this.selected.roi = this.rois[this.selected.roi_index];
         }
-        return this.selected.match;
+        return this.selected.roi;
     },
 
     setPage: function(page){
-        if(this.total.matches <= 0){
+        if(this.total.rois <= 0){
             this.selected.page = 0;
-            this.matches = [];
-            return this.matches;
+            this.rois = [];
+            return this.rois;
         } else {
-            page = Math.max(0, Math.min(page, (this.total.matches / this.limit) | 0));
+            page = Math.max(0, Math.min(page, (this.total.rois / this.limit) | 0));
             if(page != this.selected.page){
                 this.selected.page = page;
                 return this.loadPage(page);
@@ -379,12 +381,41 @@ angular.module('a2.analysis.patternmatching', [
         }
     },
 
+    select: function(option){
+        console.log('this.rois', this.rois);
+        var selectFn = null;
+        if(option === "all"){
+            selectFn = function(roi){roi.selected = true;};
+        } else if(option === "none"){
+            selectFn = function(roi){roi.selected = false;};
+        } else if(option === "not-validated"){
+            selectFn = function(roi){roi.selected = roi.validated === null;};
+        } else {
+            selectFn = function(roi){roi.selected = roi.id === option;};
+        }
+
+        (this.rois || []).forEach(selectFn);
+    },
+
+    validate: function(validation, rois){
+        if (rois === undefined){
+            rois = (this.rois || []).filter(function(roi){ return roi.selected; });
+        }
+        var roiIds = rois.map(function(roi){ return roi.id; })
+        return a2PatternMatching.validateRois(this.id, roiIds, validation).then((function(){
+            rois.forEach(function(roi){
+                roi.validated = validation;
+                roi.selected = false;
+            });
+        }).bind(this));
+    },
+
     nextMatch: function(step) {
-        return this.setMatch(this.selected.match_index + (step || 1));
+        return this.setRoi(this.selected.roi_index + (step || 1));
     },
 
     prevMatch: function (step) {
-        return this.setMatch(this.selected.match_index - (step || 1));
+        return this.setRoi(this.selected.roi_index - (step || 1));
     },
 
     nextPage: function(step) {

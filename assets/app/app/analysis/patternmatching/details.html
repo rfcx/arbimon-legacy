@@ -4,36 +4,34 @@
     </div>
     <div ng-if="!controller.loading.details">
         <div class="panel-body" ng-show="controller.patternMatching">
-            <div class="row">
-                <div class="col-sm-offset-2 col-sm-8">
-                    <div class="toolbar pull-left">
-                        <div class="btn-group" ng-show="controller.total.pages > 1 || detailedView">
-                            <a class="btn btn-default">Matched: {{controller.patternMatching.matches}}</a>
-                            <a class="btn btn-default">Validated: {{controller.patternMatching.validated}}</a>
-                            <a class="btn btn-default">Deleted: {{controller.patternMatching.removed}}</a>
-                        </div>
+            <div class="row row-flex flex-align-middle">
+                <div class="col-sm-1 flex-self-align-top">
+                    <button class="btn btn-default"
+                        ng-click="onGoBack({}) | trackEvent:'Analysis-Pattern-Matching-List':' go back'">
+                        &lt;  Go Back
+                    </button>
+                </div>
+                <div class="col-sm-1" style="padding-bottom:5px">
+                    <div class="roi-thumbnail" >
+                        <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
                     </div>
+                </div>
+                <div class="col-sm-3 is-v-middle">
+                    {{controller.patternMatching.name}}<br />
+                    {{ controller.patternMatching.species }}<br />
+                    {{ controller.patternMatching.songtype }}
+                </div>
+                <div class="col-sm-6 flex-self-align-bottom">
                     <div class="toolbar pull-right">
                         <div class="btn-group" ng-show="controller.total.pages > 1 || detailedView">
                             <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
                             <a class="btn btn-default" ng-hide="detailedView">{{controller.selected.page + 1}} of {{controller.total.pages}}</a>
-                            <a class="btn btn-default" ng-show="detailedView">{{controller.selected.match_index + 1}} of {{controller.total.matches}}</a>
+                            <a class="btn btn-default" ng-show="detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a>
                             <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
                         </div>
 
-                        <!-- <div class="btn-group">
-                            <button type="button" class="btn btn-default {{detailedView ? 'active' : ''}}" ng-click="controller.setDetailedView(true)"
-                                tooltip="Detail view" tooltip-append-to-body="true">
-                                <i class="fa fa-search"></i>
-                            </button>
-                            <button type="button" class="btn btn-default {{detailedView ? '' : 'active'}}" ng-click="controller.setDetailedView(false)"
-                                tooltip="Gallery view" tooltip-append-to-body="true">
-                                <i class="fa fa-th"></i>
-                            </button>
-                        </div> -->
-
                         <div class="btn-group">
-                            <a class="btn btn-default"
+                                <a class="btn btn-default"
                                 ng-href="{{controller.selected.trainingSet.export_url}}"
                                 ng-click="true | trackEvent:'Pattern Matching Details':'export'"
                                 ng-disabled="!controller.selected.trainingSet"
@@ -41,13 +39,13 @@
                                 <i class="fa fa-download"></i>
                             </a>
                         </div>
-
                     </div>
                 </div>
             </div>
-            <div ng-show="loading-matches">Loading...</div>
-            <div ng-hide="detailedView">
-                <div ng-repeat="roi in controller.matches" class="roi-thumbnail"
+            <div ng-show="loading-rois">Loading...</div>
+            <div>
+                <div ng-repeat="roi in controller.rois"
+                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                     ng-click="roi.selected = !roi.selected"
                     popover-html="'Duration: {{roi.x2 - roi.x1 | number:2}}s <br>
                              Bandwidth: {{roi.y2-roi.y1}}Hz <br>
@@ -56,15 +54,27 @@
                     popover-trigger="mouseenter"
                     popover-append-to-body="true"
                 >
-                    <input type="checkbox" ng-model="roi.selected" style="position:absolute; top:0; left:0">
-                    <button ng-click="controller.removeMatch(roi.id) | trackEvent:'Pattern Matching Details':'removeMatch'"
-                        class="roi-btn-tr roi-delete"
-                        tooltip-placement="left"
-                        tooltip-append-to-body="true"
-                        tooltip="Delete Match">
-                        <i class="fa fa-times"></i>
-                    </button>
-                    <a class="roi-btn-br" ng-href="{{controller.getMatchVisualizerUrl(roi)}}">
+                    <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
+                    <div class="roi-btn-cc h1" ng-if="roi.validated !== null">
+                        <i class="fa val-{{roi.validated}}"></i>
+                    </div>
+                    <!-- <div class="roi-btn-tr" >
+                        <button ng-click="controller.validate(1, [roi]) | trackEvent:'Pattern Matching Details':'validate roi'"
+                            class="btn btn-clear"
+                            tooltip-placement="left"
+                            tooltip-append-to-body="true"
+                            tooltip="Correct Match">
+                            <i class="fa val-1"></i>
+                        </button>
+                        <button ng-click="controller.validate(0, [roi]) | trackEvent:'Pattern Matching Details':'validate roi'"
+                            class="btn btn-clear"
+                            tooltip-placement="left"
+                            tooltip-append-to-body="true"
+                            tooltip="Wrong Match">
+                            <i class="fa val-0"></i>
+                        </button>
+                    </div> -->
+                    <a class="roi-btn-br" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
                         <i tooltip-placement="left"
                             tooltip-append-to-body="true"
                             tooltip="View in Visualizer"
@@ -73,48 +83,28 @@
                     </a>
                     <img ng-src="{{ roi.uri }}" class="roi-img"/>
                 </div>
-                <div>
-                    <button ng-click="selectAllMatches()">Select All</button>
-                </div>
             </div>
-            <!-- <div ng-show="detailedView">
-                <div class="row">
-                    <div class="col-sm-offset-2 col-sm-8" >
-                        <div class="row">
-                            <small>
-                                <div class="col-sm-5" >Duration: {{controller.selected.match.x2 - controller.selected.match.x1}}s</div>
-                                <div class="col-sm-5" >{{controller.selected.match.y1}}-{{controller.selected.match.y2}}Hz</div>
-                                <div class="col-sm-1" >
-                                    <a ng-href="{{controller.getMatchVisualizerUrl(controller.selected.match)}}">
-                                        <i tooltip="View in Visualizer" class="fa fa-cubes"></i>
-                                    </a>
-                                </div>
-                                <div class="col-sm-1" class="roi-div-inline-remove-detail" >
-                                    <button class="roi-delete"
-                                        ng-click="controller.removeMatch(controller.selected.match.id) | trackEvent:'Pattern Matching Details':'removeMatch'"
-                                        tooltip="Delete Match">
-                                        <i class="fa fa-times"></i>
-                                    </button>
-                                </div>
-                            </small>
-                        </div>
-                        <div class="thumbnail-viewer v-axis-wide roi-div-inline-img-detail has-vaxis has-haxis" ng-if="controller.selected.match">
-                            <axis type="v" class="v-axis" data="{
-                                range:[controller.selected.match.y1, controller.selected.match.y2],
-                                count:5, unit:'Hz',  font:'7px', color:'#333333'}
-                            "></axis>
-                            <axis type="h" class="h-axis" data="{
-                                range:[0, controller.selected.match.dur], prec:0.001,
-                                count:5, unit:'s',  font:'7px', color:'#333333'}
-                            "></axis>
-                            <div class="img-holder positioned"><img class="crisp-image" ng-src="{{controller.selected.match.uri}}"/></div>
+        </div>
+        <div class="panel-body" ng-show="controller.patternMatching">
+            <div class="row">
+
+                <div class="col-sm-11" >
+                    <div class="toolbar pull-right">
+                        <div class="btn-group">
+                            <button class="btn btn-default" >Select :</button>
+                            <button class="btn btn-default" ng-click="controller.select('all')">All</button>
+                            <button class="btn btn-default" ng-click="controller.select('none')">None</button>
+                            <button class="btn btn-default" ng-click="controller.select('not-validated')">Not Validated</button>
                         </div>
 
-                        <div class="bordeder-empy-div"></div>
+                        <div class="btn-group">
+                            <button class="btn btn-default" >Validate Selected as :</button>
+                            <button class="btn btn-default" ng-click="controller.validate(1)"><i class="fa val-1"></i> Correct</button>
+                            <button class="btn btn-default" ng-click="controller.validate(0)"><i class="fa val-0"></i> Wrong</button>
+                        </div>
                     </div>
                 </div>
-            </div> -->
-
+            </div>
         </div>
     </div>
 

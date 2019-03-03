@@ -22,8 +22,16 @@ angular.module('a2.srv.patternmatching', [
                 return response.data;
             });
         },
-        getMatchesFor: function(patternMatchingId, limit, offset) {
-            return $http.get('/api/project/' + Project.getUrl() + '/pattern_matchings/' + patternMatchingId + '/matches/' + (offset||0) + '_' + (limit||0)).then(function(response){
+        getRoisFor: function(patternMatchingId, limit, offset) {
+            return $http.get('/api/project/' + Project.getUrl() + '/pattern_matchings/' + patternMatchingId + '/rois/' + (offset||0) + '_' + (limit||0)).then(function(response){
+                return response.data;
+            });
+        },
+        validateRois: function(patternMatchingId, rois, validation) {
+            return $http.post('/api/project/' + Project.getUrl() + '/pattern_matchings/' + patternMatchingId + '/validate', {
+                rois: rois,
+                validation: validation,
+            }).then(function(response){
                 return response.data;
             });
         },
