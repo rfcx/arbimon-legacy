@@ -20,7 +20,7 @@ router.get('/', function(req, res, next) {
  */
 router.get('/:patternMatching/details', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.findOne({ id: req.params.patternMatching, showPlaylist:true, showCounts: true }).then(function(pm) {
+    model.patternMatchings.findOne({ id: req.params.patternMatching, showPlaylist:true, showSpecies:true, showCounts: true }).then(function(pm) {
         res.json(pm);
     }).catch(next);
 });
@@ -35,10 +35,20 @@ router.param('paging', function(req, res, next, paging){
     return next();
 });
 
-router.get('/:patternMatching/matches/:paging', function(req, res, next) {
+router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.getMatchesForId(req.params.patternMatching, req.paging.limit || 100, req.paging.offset || 0).then(function(matches) {
-        res.json(matches);
+    model.patternMatchings.getRoisForId(req.params.patternMatching, req.paging.limit || 100, req.paging.offset || 0).then(function(rois) {
+        res.json(rois);
+    }).catch(next);
+});
+
+router.post('/:patternMatching/validate', function(req, res, next) {
+    res.type('json');
+    model.patternMatchings.validateRois(req.params.patternMatching, req.body.rois, req.body.validation).then(function(rois) {
+        res.json({
+            rois: req.body.rois,
+            validation: req.body.validation,
+        });
     }).catch(next);
 });
 

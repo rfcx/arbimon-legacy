@@ -66,6 +66,13 @@ var PatternMatchings = {
             data.push(query.project);
         }
 
+        if (query.showSpecies) {
+            select.push("Sp.`scientific_name` as `species`");
+            select.push("St.`songtype`");
+            tables.push("JOIN species Sp ON Sp.species_id = PM.species_id");
+            tables.push("JOIN songtypes St ON St.songtype_id = PM.songtype_id");
+        }
+
         if (query.showPlaylist) {
             select.push("P.`name` as `playlist_name`");
             tables.push("JOIN playlists P ON P.playlist_id = PM.playlist_id");
@@ -111,16 +118,28 @@ var PatternMatchings = {
         }).nodeify(callback);
     },
 
-    getMatchesForId(patternMatchingId, limit, offset){
+    getRoisForId(patternMatchingId, limit, offset){
         return dbpool.query(
             "SELECT \n" +
-            "   `pattern_matching_match_id`, `pattern_matching_id`, `recording_id`, `species_id`, `songtype_id`, `x1`, `y1`, `x2`, `y2`, `uri`\n" +
+            "   `pattern_matching_roi_id` as `id`, `pattern_matching_id`, `recording_id`, `species_id`, `songtype_id`, `x1`, `y1`, `x2`, `y2`, `uri`, `validated`\n" +
             "FROM pattern_matching_rois\n" +
             "WHERE pattern_matching_id = ?\n" + (
                 (limit !== undefined) ? ("LIMIT " + (limit | 0) + (
                 (offset !== undefined) ? (" OFFSET " + (offset | 0)) : ""
             )) : ""),[
             patternMatchingId
+        ]);
+    },
+
+    validateRois(patternMatchingId, rois, validation){
+        return dbpool.query(
+            "UPDATE pattern_matching_rois\n" +
+            "SET validated = ?\n" +
+            "WHERE pattern_matching_id = ?\n" +
+            "AND pattern_matching_roi_id IN (?)", [
+            validation,
+            patternMatchingId,
+            rois,
         ]);
     },
 };
