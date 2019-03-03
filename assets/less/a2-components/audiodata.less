@@ -85,6 +85,23 @@
     display:inline-block;
     position:relative;
 
+    &.btn{
+        padding: 2px;
+        &.active .roi-img{
+            filter: brightness(50%);
+        }
+    }
+
+    .roi-btn-cc {
+        position:absolute;
+        top:50%;
+        left:50%;
+        transform: translate(-50%, -50%);
+        margin:0;
+        padding:0;
+        z-index:10;
+    }
+
     > button, > a {
         text-shadow: 0 0 5px rgba(0, 0, 0, 1);
     }
