@@ -26,25 +26,44 @@ var s3;
 // exports
 var Templates = {
     /** Finds templates, given a (non-empty) query.
-     * @param {Object} query
-     * @param {Object} query.id      find templates with the given id.
-     * @param {Object} query.project find templates associated to the given project id.
-     * @param {Object} query.name    find templates with the given name (must also provide a project id);
+     * @param {Object} options
+     * @param {Object} options.id      find templates with the given id.
+     * @param {Object} options.project find templates associated to the given project id.
+     * @param {Object} options.name    find templates with the given name (must also provide a project id);
      * @param {Function} callback called back with the queried results.
      */
-    find: function (query, callback) {
+    find: function (options) {
+        options = options || {}
         var constraints = [];
-        if(query) {
-            if (query.id) {
-                constraints.push('T.template_id = ' + dbpool.escape(query.id));
-            }
-            else if (query.project) {
-                constraints.push('T.project_id = ' + dbpool.escape(query.project));
+        var tables = ['templates T'];
+        var select = [
+            "T.`template_id` as id",
+            "T.`project_id` as project",
+            "T.`recording_id` as recording",
+            "T.`species_id` as species",
+            "T.`songtype_id` as songtype",
+            "T.`name`",
+            "CONCAT('https://s3.amazonaws.com/', '"+config('aws').bucketName+"', '/', T.`uri`) as `uri`",
+            "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
+            "T.`date_created`"
+        ];
 
-                if (query.name) {
-                    constraints.push('T.name = ' + dbpool.escape(query.name));
-                }
-            }
+        if (options.id) {
+            constraints.push('T.`template_id` = ' + dbpool.escape(options.id));
+        }
+
+        if (options.project) {
+            constraints.push('T.`project_id` = ' + dbpool.escape(options.project));
+        }
+
+        if (options.name) {
+            constraints.push('T.`name` = ' + dbpool.escape(options.name));
+        }
+
+        if(options.showSpecies){
+            tables.push('JOIN species Sp ON T.species_id = Sp.species_id');
+            tables.push('JOIN songtypes St ON T.songtype_id = St.songtype_id');
+            select.push('Sp.scientific_name as species_name', 'St.songtype as songtype_name');
         }
 
         if(constraints.length === 0){
@@ -52,14 +71,10 @@ var Templates = {
         }
 
         return dbpool.query(
-            "SELECT T.template_id as id,\n" +
-            "   `project_id` as project, `recording_id` as recording, `species_id` as species, `songtype_id` as songtype,\n" +
-            "   `name`, `uri`,\n" +
-            "   `x1`, `y1`, `x2`, `y2`,\n" +
-            "   `date_created`\n" +
-            "FROM templates T\n" +
+            "SELECT " + select.join(",\n") + "\n" +
+            "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join("\nAND ")
-        ).nodeify(callback);
+        );
     },
 
     findOne: function(query){
@@ -138,7 +153,7 @@ var Templates = {
     /** Creates a roi image
      * @param {Object} template - template, as returned by findOne
      */
-    createTemplateImage : function (template, callback){
+    createTemplateImage : function (template){
         var s3key = 'project_'+template.project+'/templates/'+template.id+'.png';
         template.uri = 'https://s3.amazonaws.com/'+config('aws').bucketName+'/' + s3key;
         var roi_file = tmpfilecache.key2File(s3key);
@@ -167,7 +182,11 @@ var Templates = {
             var roi = spectrogram.clone().crop(left, top, right - left, bottom - top);
             return roi.getBufferAsync(jimp.MIME_PNG);
         }).then((roiBuffer) => {
-            debug('store_in_bucket');
+            debug('store_in_bucket' + JSON.stringify({
+                Bucket: config('aws').bucketName,
+                Key: s3key,
+                ACL: 'public-read',
+            }));
             if(!s3){
                 s3 = new AWS.S3();
             }
@@ -176,7 +195,7 @@ var Templates = {
                 Key: s3key,
                 ACL: 'public-read',
                 Body: roiBuffer
-            });
+            }).promise();
         }).then(() => {
             debug('update_roi_data');
             return dbpool.query(dbpool.format(
@@ -188,7 +207,7 @@ var Templates = {
         }).then(() => {
             debug('return_updated_roi');
             return template;
-        }).nodeify(callback);
+        });
     },
 
 };

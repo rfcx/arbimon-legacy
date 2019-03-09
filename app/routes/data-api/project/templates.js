@@ -10,19 +10,17 @@ var model = require('../../../model');
  */
 router.get('/', function(req, res, next) {
     res.type('json');
-    model.templates.find({ project:req.project.project_id }, function(err, count) {
-        if(err) return next(err);
+    model.templates.find({ project:req.project.project_id, showSpecies:true }).then(function(count) {
         res.json(count);
         return null;
-    });
+    }).catch(next);
 });
 
 router.get('/:template/image', function(req, res, next) {
     res.type('json');
-    model.templates.fetchDataImage(req.template, req.dataId, function(err, data) {
-        if(err) return next(err);
+    model.templates.fetchDataImage(req.template, req.dataId).then(function(data) {
         res.json(data);
-    });
+    }).catch(next);
 });
 
 router.use(function(req, res, next) {
