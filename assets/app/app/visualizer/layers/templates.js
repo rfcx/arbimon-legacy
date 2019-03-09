@@ -33,7 +33,6 @@ angular.module('a2.visualizer.layers.templates', [
     });
 
     var getTemplatesPromise = a2Templates.getList().then(function(templates){
-        console.log('templates::', templates);
         self.templates = templates;
         return templates;
     });
