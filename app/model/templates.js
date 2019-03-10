@@ -50,6 +50,8 @@ var Templates = {
 
         if (options.id) {
             constraints.push('T.`template_id` = ' + dbpool.escape(options.id));
+        } else if (options.idIn) {
+            constraints.push('T.`template_id` IN (' + dbpool.escape(options.idIn) + ')');
         }
 
         if (options.project) {

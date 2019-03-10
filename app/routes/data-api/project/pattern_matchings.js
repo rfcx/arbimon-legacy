@@ -11,7 +11,7 @@ var csv_stringify = require("csv-stringify");
  */
 router.get('/', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.find({ project:req.project.project_id, showPlaylist:true}).then(function(count) {
+    model.patternMatchings.find({ project:req.project.project_id, showTemplate: true, showPlaylist:true}).then(function(count) {
         res.json(count);
     }).catch(next);
 });
@@ -20,7 +20,7 @@ router.get('/', function(req, res, next) {
  */
 router.get('/:patternMatching/details', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.findOne({ id: req.params.patternMatching, showPlaylist:true, showSpecies:true, showCounts: true }).then(function(pm) {
+    model.patternMatchings.findOne({ id: req.params.patternMatching, showTemplate: true, showPlaylist:true, showCounts: true }).then(function(pm) {
         res.json(pm);
     }).catch(next);
 });

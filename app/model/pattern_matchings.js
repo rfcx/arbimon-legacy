@@ -17,6 +17,7 @@ var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
+var Templates     = require('./templates');
 
 // local variables
 var s3;
@@ -26,25 +27,24 @@ var queryHandler = dbpool.queryHandler;
 // exports
 var PatternMatchings = {
     /** Finds playlists, given a (non-empty) query.
-     * @param {Object}  query
-     * @param {Integer} query.id      find playlists with the given id.
-     * @param {Integer} query.project find playlists associated to the given project id.
-     * @param {Object}  options [optional]
+     * @param {Object}  options
+     * @param {Integer} options.id      find playlists with the given id.
+     * @param {Integer} options.project find playlists associated to the given project id.
      * @param {Boolean} options.count add the number of recordings in the playlist
      * @param {Boolean} options.show_info  show the playlist's info
      * @param {Function} callback called back with the queried results.
      * @return {Promise} resolving to array with the matching playlists.
      */
-    find: function (query, options, callback) {
+    find: function (options) {
         var constraints=[], projection=[];
+        var postprocess=[];
         var data=[];
         var select = [
             "PM.`pattern_matching_id` as id" ,
             "PM.`name`", "PM.`project_id`" ,
             "PM.`timestamp`", "PM.`species_id`", "PM.`songtype_id`" ,
             "PM.`parameters`" ,
-            "PM.`playlist_id`", "PM.`template_recording_id`" ,
-            "PM.`template_bbox`", "PM.`template_uri`" ,
+            "PM.`playlist_id`", "PM.`template_id`" ,
         ];
         var tables = ["pattern_matchings PM"];
         var groupby = [];
@@ -56,29 +56,35 @@ var PatternMatchings = {
             options = {};
         }
 
-        if (query.id) {
+        if (options.id) {
             constraints.push('PM.pattern_matching_id = ?');
-            data.push(query.id);
+            data.push(options.id);
         }
 
-        if (query.project) {
+        if (options.project) {
             constraints.push('PM.project_id = ?');
-            data.push(query.project);
+            data.push(options.project);
         }
 
-        if (query.showSpecies) {
-            select.push("Sp.`scientific_name` as `species`");
-            select.push("St.`songtype`");
-            tables.push("JOIN species Sp ON Sp.species_id = PM.species_id");
-            tables.push("JOIN songtypes St ON St.songtype_id = PM.songtype_id");
+        if (options.showTemplate) {
+            postprocess.push((rows) => {
+                const idmap = rows.reduce((_, row) => {
+                    _[row.template_id] = row;
+                    return _;
+                }, {});
+                return Templates.find({idIn: Object.keys(idmap)}).then(templates => {
+                    templates.forEach((template) => idmap[template.id].template = template);
+                    return rows;
+                });
+            });
         }
 
-        if (query.showPlaylist) {
+        if (options.showPlaylist) {
             select.push("P.`name` as `playlist_name`");
             tables.push("JOIN playlists P ON P.playlist_id = PM.playlist_id");
         }
 
-        if (query.showCounts) {
+        if (options.showCounts) {
             select.push("COUNT(*) as matches");
             select.push("SUM(IF(validated=1, 1, 0)) as validated");
             select.push("SUM(IF(validated=0, 1, 0)) as removed");
@@ -86,30 +92,24 @@ var PatternMatchings = {
             groupby.join("PM.pattern_matching_id");
         }
 
-        return dbpool.query(
+        postprocess.push((rows) => {
+            rows.forEach(row => {
+                row.parameters = JSON.parse(row.parameters);
+            })
+
+            return rows;
+        });
+
+        return postprocess.reduce((_, fn) => {
+            return _.then(fn);
+        }, dbpool.query(
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" \n  AND ") + (
                 groupby ? ("\n" + groupby.join(",\n    ")) : ""
             ),
             data
-        ).then( rows => {
-            rows.forEach(item => {
-                const bbox = JSON.parse(item.template_bbox);
-                item.parameters = JSON.parse(item.parameters);
-                item.template = {
-                    uri: item.template_uri,
-                    recording: item.template_recording_id,
-                    x1: bbox[0], y1: bbox[1],
-                    x2: bbox[2], y2: bbox[3],
-                };
-                delete item.template_uri;
-                delete item.template_recording_id;
-                delete item.template_bbox;
-            })
-
-            return rows;
-        }).nodeify(callback);
+        ))
     },
 
     findOne: function (query, options, callback) {
