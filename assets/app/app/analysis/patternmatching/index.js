@@ -151,7 +151,7 @@ angular.module('a2.analysis.patternmatching', [
     };
 
     $scope.createNewPatternMatching = function () {
-        if(!a2UserPermit.can('manage models and pattern matching')) {
+        if(!a2UserPermit.can('manage pattern matchings')) {
             notify.log('You do not have permission to create pattern matchings');
             return;
         }
@@ -175,7 +175,7 @@ angular.module('a2.analysis.patternmatching', [
     };
 
     $scope.deletePatternMatching = function(id,name) {
-        if(!a2UserPermit.can('manage models and pattern matching')) {
+        if(!a2UserPermit.can('manage pattern matchings')) {
             notify.log('You do not have permission to delete pattern matchings');
             return;
         }
@@ -358,6 +358,11 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     validate: function(validation, rois){
+        if(!a2UserPermit.can('validate pattern matchings')) {
+            notify.log('You do not have permission to validate the matched rois.');
+            return;
+        }
+
         if (rois === undefined){
             rois = (this.rois || []).filter(function(roi){ return roi.selected; });
         }
