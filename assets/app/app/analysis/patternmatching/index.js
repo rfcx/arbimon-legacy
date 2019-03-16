@@ -470,7 +470,7 @@ angular.module('a2.analysis.patternmatching', [
                 template: this.data.template.id,
                 params: this.data.params,
             }).then(function(patternMatching) {
-                $modalInstance.close({patternMatching: patternMatching});
+                $modalInstance.close({ok:true, patternMatching: patternMatching});
             }).catch(notify.serverError);
         },
         cancel: function (url) {
