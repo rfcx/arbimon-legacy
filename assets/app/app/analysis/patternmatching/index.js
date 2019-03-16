@@ -156,11 +156,6 @@ angular.module('a2.analysis.patternmatching', [
             return;
         }
 
-        $scope.loading = true;
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-
-
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/createnewpatternmatching.html',
             controller: 'CreateNewPatternMatchingInstanceCtrl as controller',
