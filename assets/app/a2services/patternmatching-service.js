@@ -35,10 +35,10 @@ angular.module('a2.srv.patternmatching', [
                 return response.data;
             });
         },
-        create: function(classificationData, callback) {
-            // $http.post('/api/project/'+Project.getUrl()+'/classifications/new', classificationData)
-            //     .success(callback)
-            //     .error(notify.serverError);
+        create: function(data) {
+            return $http.post('/api/project/'+Project.getUrl()+'/pattern_matchings/new', data).then(function(response){
+                return response.data;
+            });
         },
         delete: function(classificationId, callback) {
             // $http.get('/api/project/' + Project.getUrl() + '/classifications/' + classificationId + '/delete')

@@ -1,0 +1,86 @@
+<div>
+    <div class="roi" ng-repeat="roi in layer.templates.recordingTemplates"
+        ng-class="{'roi-selected':layer.templates.selected == roi}"
+        ng-click="$event.stopPropagation(); layer.templates.selected = roi  | trackEvent:'Visualizer-Templates':'selecting roi'"
+        ng-style="{
+            left:layout.sec2x(roi.x1, 1) + 'px',
+            top:layout.hz2y(roi.y2, 1) + 'px',
+            width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px',
+            height:layout.dhz2height(roi.y2, roi.y1) + 'px'
+        }">
+    </div>
+</div>
+
+<div class="input-source"
+    ng-style="{height: layout.spectrogram.height, width: layout.spectrogram.width}"
+    a2-visualizer-fit-spectrogram ng-show="selection.layer == layer"
+    ng-mousedown="($event.which == 1) && layer.templates.editor.add_point(pointer)"
+    ng-mousemove="($event.buttons == 1) && layer.templates.editor.add_tracer_point(pointer)"
+    ng-mouseup  ="($event.which == 1) && layer.templates.editor.add_point(pointer)">
+
+    <div a2-visualizer-spectrogram-affixed data-affix-top="20">
+        Click to create a template from this recording.
+        <div ng-show="layer.templates.editor.roi && !layer.templates.editor.roi.id"
+            a2-global-keyup="($event.which == 27) && layer.templates.editor.reset()">
+            Press <kbd>esc</kbd> to cancel template creation.
+        </div>
+    </div>
+    <div class="roi roi-current" ng-show="layer.templates.editor.roi"
+        ng-style="{
+            left: layout.sec2x(layer.templates.editor.roi.x1, 1) + 'px',
+            top:layout.hz2y(layer.templates.editor.roi.y2, 1) + 'px',
+            width:layout.dsec2width(layer.templates.editor.roi.x2,
+            layer.templates.editor.roi.x1, 1) + 'px',
+            height:layout.dhz2height(layer.templates.editor.roi.y2, layer.templates.editor.roi.y1) + 'px'
+        }">
+
+        <i class="fa fa-circle-o control-point cp-resize-tl" style="position:absolute;    top:-7px;  left:-6px" ></i>
+        <i class="fa fa-circle-o control-point cp-resize-tr" style="position:absolute;    top:-7px; right:-6px" ></i>
+        <i class="fa fa-circle-o control-point cp-resize-bl" style="position:absolute; bottom:-7px;  left:-6px" ></i>
+        <i class="fa fa-circle-o control-point cp-resize-br" style="position:absolute; bottom:-7px; right:-6px" ></i>
+    </div>
+    <div a2-insert-in=".visualizer-root">
+        <div class="popover right create-template"
+            ng-style="{
+                display: layer.templates.editor.valid ? 'block' : 'none',
+                left:(layout.viewport.left + layout.sec2x(layer.templates.editor.roi.x2, 1)) + 'px',
+                top:(layout.spectrogram.top + layout.hz2y((layer.templates.editor.roi.y1 + layer.templates.editor.roi.y2)/2, 1)) + 'px'
+            }">
+            <div class="arrow"></div>
+            <h3 class="popover-title">
+                Create Template
+                <a2-species species="layer.templates.tset.species"></a2-species>
+                <small>
+                    <a2-songtype songtype="layer.templates.tset.songtype"></a2-songtype>
+                </small>
+            </h3>
+            <div class="popover-content">
+                <div class="form">
+                    Name
+                    <input class="form-control" ng-model="layer.templates.editor.template_name"
+                        placeholder="{{layer.templates.editor.get_placeholder_name()}}"
+                    />
+                    Species Song
+                    <div class="form-group">
+                        <ui-select ng-model="layer.templates.editor.project_class" theme="bootstrap">
+                            <ui-select-match placeholder="Select a species sound">
+                                {{ $select.selected.species_name }}<br/>{{ $select.selected.songtype_name }}
+                            </ui-select-match>
+                            <ui-select-choices repeat="class in layer.templates.project_classes | filter:$select.search">
+                                {{ class.species_name }}<br/>{{ class.songtype_name }}
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-default"
+                    ng-click=" $event.stopPropagation(); layer.templates.editor.submit() | trackEvent:'Visualizer-Templates':'create template'">
+                    <i class="fa fa-plus text-success"></i> Create Template
+                </button>
+                <button class="btn btn-sm btn-default"
+                    ng-click=" $event.stopPropagation(); layer.templates.editor.reset() | trackEvent:'Visualizer-Templates':'cancel template'">
+                    <i class="fa fa-ban text-danger"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

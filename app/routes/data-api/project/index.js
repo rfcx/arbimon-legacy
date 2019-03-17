@@ -18,6 +18,7 @@ var sites = require('./sites');
 var recording_routes = require('./recordings');
 var training_set_routes = require('./training_sets');
 var playlist_routes = require('./playlists');
+var template_routes = require('./templates');
 var soundscape_routes = require('./soundscapes');
 var jobsRoutes = require('./jobs');
 var classiRoutes = require('./classifications');
@@ -378,6 +379,7 @@ router.get('/:projectUrl/usage', function(req, res, next) {
 router.use('/:projectUrl/recordings', recording_routes);
 router.use('/:projectUrl/training-sets', training_set_routes);
 router.use('/:projectUrl/playlists', playlist_routes);
+router.use('/:projectUrl/templates', template_routes);
 router.use('/:projectUrl/soundscapes', soundscape_routes);
 router.use('/:projectUrl/jobs', jobsRoutes);
 router.use('/:projectUrl/classifications', classiRoutes);

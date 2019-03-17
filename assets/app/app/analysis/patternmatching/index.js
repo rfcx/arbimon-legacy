@@ -151,50 +151,14 @@ angular.module('a2.analysis.patternmatching', [
     };
 
     $scope.createNewPatternMatching = function () {
-        if(!a2UserPermit.can('manage models and pattern matching')) {
+        if(!a2UserPermit.can('manage pattern matchings')) {
             notify.log('You do not have permission to create pattern matchings');
             return;
         }
 
-        $scope.loading = true;
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-
-
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/createnewpatternmatching.html',
-            controller: 'CreateNewPatternMatchingInstanceCtrl',
-            resolve: {
-                data: function($q){
-                    var d = $q.defer();
-                    Project.getModels(function(err, data){
-                        if(err){
-                            console.error(err);
-                        }
-
-                        d.resolve(data || []);
-
-                    });
-                    return d.promise;
-                },
-                playlists:function($q){
-                    var d = $q.defer();
-                    a2Playlists.getList().then(function(data) {
-                        d.resolve(data || []);
-                    });
-                    return d.promise;
-                },
-                projectData:function()
-                {
-                    return $scope.projectData;
-                }
-            }
-        });
-
-        modalInstance.opened.then(function() {
-            $scope.infoInfo = "";
-            $scope.showInfo = false;
-            $scope.loading = false;
+            controller: 'CreateNewPatternMatchingInstanceCtrl as controller',
         });
 
         modalInstance.result.then(function (result) {
@@ -202,20 +166,16 @@ angular.module('a2.analysis.patternmatching', [
             if (data.ok) {
                 JobsData.updateJobs();
                 notify.log("Your new pattern matching is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
-            }
-
-            if (data.error) {
+            } else if (data.error) {
                 notify.error("Error: "+data.error);
-            }
-
-            if (data.url) {
+            } else if (data.url) {
                 $location.path(data.url);
             }
         });
     };
 
     $scope.deletePatternMatching = function(id,name) {
-        if(!a2UserPermit.can('manage models and pattern matching')) {
+        if(!a2UserPermit.can('manage pattern matchings')) {
             notify.log('You do not have permission to delete pattern matchings');
             return;
         }
@@ -398,6 +358,11 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     validate: function(validation, rois){
+        if(!a2UserPermit.can('validate pattern matchings')) {
+            notify.log('You do not have permission to validate the matched rois.');
+            return;
+        }
+
         if (rois === undefined){
             rois = (this.rois || []).filter(function(roi){ return roi.selected; });
         }
@@ -447,8 +412,7 @@ angular.module('a2.analysis.patternmatching', [
     },
 
 }); this.initialize($scope.patternMatchingId);
-});
-/*
+})
 .controller('DeletePatternMatchingInstanceCtrl',
     function($scope, $modalInstance, a2PatternMatching, name, id, projectData) {
         $scope.name = name;
@@ -469,176 +433,49 @@ angular.module('a2.analysis.patternmatching', [
         };
     }
 )
-.controller('PatternMatchingDetailsInstanceCtrl',
-    function ($scope, $modalInstance, a2PatternMatching, a2Models, notify, a2UserPermit, PatternMatchingInfo) {
-        var loadClassifiedRec = function() {
-            a2PatternMatching.getResultDetails($scope.patternMatchingData.id, ($scope.currentPage*$scope.maxPerPage), $scope.maxPerPage, function(dataRec) {
+.controller('CreateNewPatternMatchingInstanceCtrl', function($scope, $modalInstance, a2PatternMatching, a2Templates, a2Playlists, notify) {
+    Object.assign(this, {
+        initialize: function(){
+            this.loading = {
+                playlists: false,
+                templates: false,
+                createPatternMatching: false,
+            };
 
-                a2PatternMatching.getRecVector($scope.patternMatchingData.id, dataRec[0].recording_id).success(function(data) {
-                    var maxVal = Math.max.apply(null, data.vector);
-                    if(typeof $scope.th === 'number') {
-                        $scope.htresDeci = ( maxVal < $scope.th )? 'no' : 'yes';
-                    }
-                    $scope.recVect = data.vector;
-                    $scope.recs = dataRec;
-                    $scope.minv = dataRec[0].stats.minv;
-                    $scope.maxv = dataRec[0].stats.maxv;
-                    $scope.maxvRounded = Math.round($scope.maxv*1000)/1000;
-                });
-            });
-        };
+            this.data = {
+                name: null,
+                playlist: null,
+                template: null,
+                params: { N: 100, threshold: 0.7 },
+            };
 
-        $scope.ok = function () {
-            $modalInstance.close( );
-        };
+            var list = this.list = {};
 
-        $scope.next = function () {
-            $scope.currentPage = $scope.currentPage + 1;
+            this.loading.templates = true;
+            a2Templates.getList().then((function(templates){
+                this.loading.templates = false;
+                list.templates = templates;
+            }).bind(this));
 
-            if($scope.currentPage*$scope.maxPerPage >= $scope.patternMatchingData.total) {
-
-                $scope.currentPage = $scope.currentPage - 1;
-            }
-            else{
-                loadClassifiedRec();
-            }
-        };
-
-        $scope.prev = function () {
-            $scope.currentPage = $scope.currentPage - 1;
-            if ($scope.currentPage  < 0) {
-                $scope.currentPage = 0;
-            }
-            else
-            {
-                loadClassifiedRec();
-            }
-        };
-
-        $scope.gotoc = function(where) {
-            if (where == 'first') {
-                $scope.currentPage = 0;
-            }
-            if (where == 'last') {
-                $scope.currentPage = Math.ceil($scope.patternMatchingData.total/$scope.maxPerPage) - 1;
-            }
-
-            loadClassifiedRec();
-        };
-
-
-        $scope.toggleRecDetails = function() {
-            $scope.showMore = !$scope.showMore;
-            if($scope.showMore && !$scope.recs) {
-                loadClassifiedRec();
-            }
-        };
-
-
-        $scope.loading = true;
-        $scope.htresDeci = '-';
-        $scope.patternMatchingData = PatternMatchingInfo.data;
-        $scope.project = PatternMatchingInfo.project;
-        $scope.showMore = false;
-        $scope.currentPage = 0;
-        $scope.maxPerPage = 1;
-
-        $scope.csvUrl = "/api/project/"+$scope.project.url+"/patternmatchings/csv/"+$scope.patternMatchingData.id;
-
-        $scope.showDownload = a2UserPermit.can('manage models and pattern matching');
-
-        console.table($scope.patternMatchingData);
-
-        a2PatternMatching.getDetails($scope.patternMatchingData.id, function(data) {
-            if(!data) {
-                $modalInstance.close();
-                notify.log("No details available for this pattern matching");
-                return;
-            }
-
-            angular.extend($scope.patternMatchingData, data);
-
-            $scope.totalRecs = Math.ceil($scope.patternMatchingData.total/$scope.maxPerPage);
-
-            console.log($scope.patternMatchingData);
-            $scope.results = [
-                ['absent', $scope.patternMatchingData.total-$scope.patternMatchingData.present],
-                ['present', $scope.patternMatchingData.present],
-                ['skipped', $scope.patternMatchingData.errCount]
-            ];
-
-            a2Models.findById($scope.patternMatchingData.modelId)
-                .success(function(modelInfo) {
-                    console.log(modelInfo);
-                    $scope.model = modelInfo;
-                    $scope.loading = false;
-                })
-                .error(function(err) {
-                    $scope.loading = false;
-                });
-        });
-})
-.controller('CreateNewPatternMatchingInstanceCtrl', function($scope, $modalInstance, a2PatternMatching, data, projectData, playlists) {
-    $scope.data = data;
-    $scope.projectData = projectData;
-    $scope.recselected = '';
-    $scope.showselection = false;
-    $scope.playlists = playlists;
-    $scope.nameMsg = '';
-    $scope.datas = {
-        name : '' ,
-        classifier: '',
-        playlist:''
-    };
-
-
-    $scope.$watch('recselected', function() {
-        if ($scope.recselected === 'selected') {
-            $scope.showselection = true;
-        }
-        else {
-            $scope.showselection = false;
-        }
+            this.loading.playlists = true;
+            a2Playlists.getList().then((function(playlists){
+                this.loading.playlists = false;
+                list.playlists = playlists;
+            }).bind(this));
+        },
+        ok: function () {
+            return a2PatternMatching.create({
+                name: this.data.name,
+                playlist: this.data.playlist.id,
+                template: this.data.template.id,
+                params: this.data.params,
+            }).then(function(patternMatching) {
+                $modalInstance.close({ok:true, patternMatching: patternMatching});
+            }).catch(notify.serverError);
+        },
+        cancel: function (url) {
+             $modalInstance.close({ cancel: true, url: url });
+        },
     });
-
-
-    $scope.ok = function () {
-        $scope.nameMsg = '';
-        var url = $scope.projectData.url;
-        $scope.all = 0;
-        $scope.selectedSites = [];
-
-        // NOTE temporary block disabled model types
-        if(!$scope.datas.classifier.enabled) return;
-
-        var patternMatchingData = {
-            n: $scope.datas.name,
-            c: $scope.datas.classifier.model_id,
-            a: $scope.all,
-            s: $scope.selectedSites.join(),
-            p: $scope.datas.playlist
-        };
-
-        a2PatternMatching.create(patternMatchingData, function(data) {
-            if (data.name) {
-                $scope.nameMsg = 'Name exists';
-            }
-            else {
-                $modalInstance.close( data );
-            }
-        });
-    };
-
-    $scope.buttonEnable = function () {
-        return  !(
-            typeof $scope.datas.playlist !== 'string' &&
-            $scope.datas.name.length &&
-            typeof $scope.datas.classifier !== 'string'
-        );
-    };
-
-    $scope.cancel = function (url) {
-         $modalInstance.close( {url:url});
-    };
+    this.initialize();
 });
-*/

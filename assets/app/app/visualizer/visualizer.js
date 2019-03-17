@@ -19,7 +19,7 @@ angular.module('a2.visualizer', [
     'a2.visualizer.directive.sidebar',
     'a2.visualizer.layers.base-image-layer',
     'a2.visualizer.layers.zoom-input-layer',
-    'a2.visualizer.layers.data-plot-layer',    
+    'a2.visualizer.layers.data-plot-layer',
     'a2.visualizer.layers.recordings',
     'a2.visualizer.layers.recording-soundscape-region-tags',
     'a2.visualizer.layers.recording-tags',
@@ -27,6 +27,7 @@ angular.module('a2.visualizer', [
     'a2.visualizer.layers.soundscapes',
     'a2.visualizer.layers.soundscape-composition-tool',
     'a2.visualizer.layers.training-sets',
+    'a2.visualizer.layers.templates',
     'visualizer-spectrogram',
     'visualizer-services',
     'a2.visualizer.audio-player',
@@ -42,7 +43,7 @@ angular.module('a2.visualizer', [
  * The layout manager for the spectrogram.
  */
 .config(function($stateProvider, $urlRouterProvider) {
-    
+
     $stateProvider.state('visualizer', {
         url: '/visualizer',
         views: {
@@ -87,7 +88,7 @@ angular.module('a2.visualizer', [
             }
             var l = lc.join('/');
             // console.log(".state('visualizer.rec', { controller: function($state, $scope){ $state.params: ", $state.params);
-            
+
             $scope.location.whenBrowserIsAvailable(function(){
                 $scope.$parent.$broadcast('set-browser-location', l);
             });
@@ -198,7 +199,7 @@ angular.module('a2.visualizer', [
         filter : $state.params.filter
     };
 
-    
+
     $scope.layers = layers.list; // current layers in the visualizer
     $scope.addLayer = layers.add.bind(layers);
     $scope.fullfillsRequirements   = layers.check_requirements.bind(layers);
@@ -217,18 +218,19 @@ angular.module('a2.visualizer', [
         'recording-soundscape-region-tags',
         'species-presence',
         'training-data',
+        'templates',
         'soundscape-composition-tool',
         'zoom-input-layer'
     );
-    
+
     $scope.visobject = null;
-    
+
     var location = new a2VisualizerLocationManager($scope, '/visualizer' + '/', $state);
     $scope.location = location;
-    
+
     $scope.set_location = location.set.bind(location);
 
-    
+
     $scope.layout = new VisualizerLayout();
     $scope.click2zoom = new a2SpectrogramClick2Zoom($scope.layout);
     $scope.Math = Math;
@@ -236,13 +238,13 @@ angular.module('a2.visualizer', [
         x   : 0, y  : 0,
         sec : 0, hz : 0
     };
-    
+
     $scope.selection = itemSelection.make('layer');
 
     $scope.getLayers = function(){
         return $scope.layers;
     };
-    
+
     $scope.setVisObject = function(visobject, type, location){
         console.log("$scope.setVisObject :: ", visobject, type, location);
         return $q.resolve().then(function(){
@@ -253,7 +255,7 @@ angular.module('a2.visualizer', [
                 $scope.loading_visobject = visobject_loader.getCaptionFor(visobject);
                 return visobject_loader.load(visobject, $scope).then(function (visobject){
                     console.log('VisObject loaded : ', visobject);
-                                        
+
                     $scope.loading_visobject = false;
                     $scope.visobject = visobject;
                     $scope.visobject_type = visobject.type;
@@ -265,23 +267,23 @@ angular.module('a2.visualizer', [
             events.emit('visobject', $scope.visobject);
         });
     };
-    
+
     $scope.audio_player = new a2AudioPlayer($scope, initial_state_params);
-    
+
     $scope.$on('browser-vobject-type', function(evt, type){
         $scope.visobject_type = type;
     });
-    
+
     $scope.$on('browser-available', function(){
         $scope.location.notifyBrowserAvailable();
     });
-    
+
     $rootScope.$on('notify-visobj-updated', function(){
         var args = Array.prototype.slice.call(arguments, 1);
         args.unshift('visobj-updated');
         $scope.$broadcast.apply($scope, args);
     });
-    
+
     $scope.$on('visobj-updated', function(visobject){
         $scope.setVisObject($scope.visobject, $scope.visobject_type, $scope.visobject_location);
     });
@@ -331,7 +333,7 @@ angular.module('a2-visualizer-spectrogram-Layout',[
             }
         };
     };
-    
+
     var make_scale = function(domain, range){
         var s;
         if(domain.ordinal){
@@ -346,11 +348,11 @@ angular.module('a2-visualizer-spectrogram-Layout',[
         }
         return s;
     };
-    
+
     var linear_interpolate = function(x, levels){
         var l = x * (levels.length-1);
         var f=Math.floor(l), c=Math.ceil(l), m=l-f;
-        
+
         return levels[f] * (1-m) + levels[c] * m;
     };
 
@@ -421,13 +423,13 @@ angular.module('a2-visualizer-spectrogram-Layout',[
             }
 
         },
-        
+
         apply_spectrogram : function(container, $scope, width, height, fix_scroll_center){
             var layout_tmp = this.tmp;
             var visobject = $scope.visobject;
-            
+
             var domain = this.domain = get_domain(visobject);
-            
+
             var avail_w = width  - layout_tmp.axis_sizew - layout_tmp.axis_lead;
             if(domain.legend){
                 avail_w -= layout_tmp.legend_width + layout_tmp.legend_gutter;
@@ -444,11 +446,11 @@ angular.module('a2-visualizer-spectrogram-Layout',[
             ];
             var zoom_sec2px = interpolate(this.scale.zoom.x, zoom_levels_x);
             var zoom_hz2px  = interpolate(this.scale.zoom.y, zoom_levels_y);
-            
+
             var spec_w = Math.max(avail_w, Math.ceil(domain.x.span * zoom_sec2px));
             var spec_h = Math.max(avail_h, Math.ceil(domain.y.span * zoom_hz2px ));
-            
-            
+
+
             var scalex = make_scale(domain.x, [0, spec_w]);
             var scaley = make_scale(domain.y, [spec_h, 0]);
             var scalelegend;
@@ -480,9 +482,9 @@ angular.module('a2-visualizer-spectrogram-Layout',[
                     width  : spec_w + 2*layout_tmp.axis_lead
                 }
             };
-            
+
             this.has_legend = $scope.has_legend = !!domain.legend;
-            
+
             if(domain.legend){
                 l.legend = { scale : scalelegend,
                     css:{
@@ -508,7 +510,7 @@ angular.module('a2-visualizer-spectrogram-Layout',[
                     this[i].scale = li.scale;
                 }
             }).bind(this));
-            
+
             this.offset.sec = domain.x.from;
             this.offset.hz  = domain.y.from;
             this.scale.sec2px = spec_w / domain.x.span;
@@ -519,10 +521,10 @@ angular.module('a2-visualizer-spectrogram-Layout',[
                 width  : avail_w,
                 height : avail_h
             };
-            
+
             var sh = l.spectrogram.css.height;
             var sw = l.spectrogram.css.width ;
-                            
+
             this.root = {
                 left : 0,
                 top  : 0,
@@ -552,11 +554,11 @@ angular.module('a2-visualizer-spectrogram-Layout',[
         apply_plotted : function(container, $scope, width, height, fix_scroll_center){
             var layout_tmp = this.tmp;
             var visobject = $scope.visobject;
-            
+
             var avail_w = width;
             var avail_h = height;
             var cheight = container[0].clientHeight;
-            
+
             this.has_legend = $scope.has_legend = false;
             var l = this.l = {
                 visualizer_root:{css:{'overflow':'hidden'}}
