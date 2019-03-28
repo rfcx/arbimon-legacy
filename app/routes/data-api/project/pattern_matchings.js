@@ -66,19 +66,27 @@ router.post('/new', function(req, res, next) {
             });
         }
     }).then(function(){
-        return model.jobs.newJob({
+        return model.patternMatchings.requestNewPatternMatchingJob({
             project    : project_id,
             user       : req.session.user.id,
             name       : req.body.name,
             template   : req.body.template,
             playlist   : req.body.playlist,
             params   : req.body.params,
-        }, 'pattern_matching_job');
-    }).then(function get_job_id(job_id){
-        pokeDaMonkey(); // this happens in 'parallel'
-        return job_id;
-    }).then(function(job_id){
-        res.json({ ok:"Pattern matching job created (id:"+job_id + ")."});
+        });
+    //     return model.jobs.newJob({
+    //         project    : project_id,
+    //         user       : req.session.user.id,
+    //         name       : req.body.name,
+    //         template   : req.body.template,
+    //         playlist   : req.body.playlist,
+    //         params   : req.body.params,
+    //     }, 'pattern_matching_job');
+    // }).then(function get_job_id(job_id){
+    //     pokeDaMonkey(); // this happens in 'parallel'
+    //     return job_id;
+}).then(function(result){
+        res.json({ ok: true, result: result });
     }).catch(next);
 });
 
