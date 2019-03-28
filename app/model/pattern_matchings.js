@@ -21,6 +21,7 @@ var Templates     = require('./templates');
 
 // local variables
 var s3;
+var lambda = new AWS.Lambda();
 var queryHandler = dbpool.queryHandler;
 
 
@@ -141,6 +142,34 @@ var PatternMatchings = {
             patternMatchingId,
             rois,
         ]);
+    },
+
+    JOB_SCHEMA : joi.object().keys({
+        project    : joi.number().integer(),
+        user       : joi.number().integer(),
+        name       : joi.string(),
+        playlist   : joi.number().integer(),
+        template   : joi.number().integer(),
+        params     : joi.object().keys({
+            N: joi.number().integer(),
+            threshold: joi.number(),
+        }),
+    }),
+
+    requestNewPatternMatchingJob: function(data){
+        return q.ninvoke(joi, 'validate', data, PatternMatchings.JOB_SCHEMA).then(() => lambda.invoke({
+            FunctionName: config('lambdas').pattern_matching,
+            InvocationType: 'Event',
+            Payload: JSON.stringify({
+                project_id: data.project,
+                user_id: data.user,
+                playlist_id: data.playlist,
+                template_id: data.template,
+                name: data.name,
+                N: data.params.N,
+                threshold: data.params.threshold,
+            }),
+        }).promise());
     },
 };
 
