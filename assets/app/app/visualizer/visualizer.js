@@ -92,7 +92,7 @@ angular.module('a2.visualizer', [
             // console.log(".state('visualizer.rec', { controller: function($state, $scope){ $state.params: ", $state.params);
 
             $scope.location.whenBrowserIsAvailable(function(){
-                $scope.$parent.$broadcast('set-browser-location', l);
+                $scope.$parent.$broadcast('set-browser-location', l, p.a);
             });
             if($scope.parseAnnotations){
                 $scope.parseAnnotations(p.a);
@@ -146,7 +146,14 @@ angular.module('a2.visualizer', [
             if(dont_sync){
                 this.__expected = location;
             }
-            $location.path(this.prefix + location);
+            if ($location.path() != this.prefix + location){
+                console.log('a2VisualizerLocationManager::set_location', this.prefix + location, dont_sync);
+                var search = $location.search();
+                delete search.a;
+
+                $location.path(this.prefix + location);
+                $location.search(search);
+            }
         },
         path_changed : function(path){
             if(path === undefined){
