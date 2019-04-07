@@ -13,6 +13,13 @@
                     <field>
                         <div class="roi-thumbnail" >
                             <img ng-src="{{row.uri}}" class="roi-img is-small"/>
+                            <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}">
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    tooltip="View in Visualizer"
+                                    class="fa fa-cubes">
+                                </i>
+                            </a>
                         </div>
                     </field>
                     <field title="Name" key="name">

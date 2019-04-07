@@ -19,6 +19,10 @@ angular.module('a2.audiodata.templates', [
             this.getList();
             this.projecturl = Project.getUrl();
         },
+        getTemplateVisualizerUrl: function(template){
+            var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
+            return template ? "/project/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        },
         getList: function(){
             this.loading.list = true;
             return a2Templates.getList().then((function(data){
