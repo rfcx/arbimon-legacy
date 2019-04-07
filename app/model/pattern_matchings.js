@@ -85,6 +85,12 @@ var PatternMatchings = {
             tables.push("JOIN playlists P ON P.playlist_id = PM.playlist_id");
         }
 
+        if(options.showSpecies){
+            tables.push('JOIN species Sp ON PM.species_id = Sp.species_id');
+            tables.push('JOIN songtypes St ON PM.songtype_id = St.songtype_id');
+            select.push('Sp.scientific_name as species_name', 'St.songtype as songtype_name');
+        }
+
         if (options.showCounts) {
             select.push("COUNT(*) as matches");
             select.push("SUM(IF(validated=1, 1, 0)) as validated");
