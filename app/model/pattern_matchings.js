@@ -101,7 +101,11 @@ var PatternMatchings = {
 
         postprocess.push((rows) => {
             rows.forEach(row => {
-                row.parameters = JSON.parse(row.parameters);
+                try {
+                    row.parameters = JSON.parse(row.parameters);
+                } catch(e) {
+                    row.parameters = {error: row.parameters};
+                }
             })
 
             return rows;
