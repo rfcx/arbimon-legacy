@@ -70,11 +70,11 @@ var PatternMatchings = {
         if (options.showTemplate) {
             postprocess.push((rows) => {
                 const idmap = rows.reduce((_, row) => {
-                    _[row.template_id] = row;
+                    (_[row.template_id] || (_[row.template_id] = [])).push(row);
                     return _;
                 }, {});
                 return Templates.find({idIn: Object.keys(idmap)}).then(templates => {
-                    templates.forEach((template) => idmap[template.id].template = template);
+                    templates.forEach((template) => idmap[template.id].forEach(row => row.template = template));
                     return rows;
                 });
             });
