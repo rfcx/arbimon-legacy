@@ -267,7 +267,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, Project, notify) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2UserPermit, Project, notify) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
