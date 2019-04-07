@@ -22,7 +22,11 @@ router.get('/', function(req, res, next) {
  */
 router.get('/:patternMatching/details', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.findOne({ id: req.params.patternMatching, showTemplate: true, showPlaylist:true, showCounts: true }).then(function(pm) {
+    model.patternMatchings.findOne({
+        id: req.params.patternMatching,
+        showTemplate: true, showPlaylist:true, showCounts: true,
+        showSpecies: true,
+    }).then(function(pm) {
         res.json(pm);
     }).catch(next);
 });

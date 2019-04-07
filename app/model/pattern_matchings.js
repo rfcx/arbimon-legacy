@@ -70,11 +70,11 @@ var PatternMatchings = {
         if (options.showTemplate) {
             postprocess.push((rows) => {
                 const idmap = rows.reduce((_, row) => {
-                    _[row.template_id] = row;
+                    (_[row.template_id] || (_[row.template_id] = [])).push(row);
                     return _;
                 }, {});
                 return Templates.find({idIn: Object.keys(idmap)}).then(templates => {
-                    templates.forEach((template) => idmap[template.id].template = template);
+                    templates.forEach((template) => idmap[template.id].forEach(row => row.template = template));
                     return rows;
                 });
             });
@@ -83,6 +83,12 @@ var PatternMatchings = {
         if (options.showPlaylist) {
             select.push("P.`name` as `playlist_name`");
             tables.push("JOIN playlists P ON P.playlist_id = PM.playlist_id");
+        }
+
+        if(options.showSpecies){
+            tables.push('JOIN species Sp ON PM.species_id = Sp.species_id');
+            tables.push('JOIN songtypes St ON PM.songtype_id = St.songtype_id');
+            select.push('Sp.scientific_name as species_name', 'St.songtype as songtype_name');
         }
 
         if (options.showCounts) {
@@ -95,7 +101,11 @@ var PatternMatchings = {
 
         postprocess.push((rows) => {
             rows.forEach(row => {
-                row.parameters = JSON.parse(row.parameters);
+                try {
+                    row.parameters = JSON.parse(row.parameters);
+                } catch(e) {
+                    row.parameters = {error: row.parameters};
+                }
             })
 
             return rows;

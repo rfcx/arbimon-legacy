@@ -18,6 +18,7 @@ angular.module('a2.visualizer', [
     'visualizer-layers',
     'a2.visualizer.directive.sidebar',
     'a2.visualizer.layers.base-image-layer',
+    'a2.visualizer.layers.annotation-layer',
     'a2.visualizer.layers.zoom-input-layer',
     'a2.visualizer.layers.data-plot-layer',
     'a2.visualizer.layers.recordings',
@@ -56,9 +57,10 @@ angular.module('a2.visualizer', [
         sticky: true,
     })
     .state('visualizer.view', {
-        url: '/:type/:idA/:idB/:idC?gain&filter',
+        url: '/:type/:idA/:idB/:idC?gain&filter&a',
         params:{
             type:'',
+            a:'',
             gain:'',
             filter:'',
             idA: {
@@ -90,8 +92,11 @@ angular.module('a2.visualizer', [
             // console.log(".state('visualizer.rec', { controller: function($state, $scope){ $state.params: ", $state.params);
 
             $scope.location.whenBrowserIsAvailable(function(){
-                $scope.$parent.$broadcast('set-browser-location', l);
+                $scope.$parent.$broadcast('set-browser-location', l, p.a);
             });
+            if($scope.parseAnnotations){
+                $scope.parseAnnotations(p.a);
+            }
         }
     })
     ;
@@ -141,7 +146,14 @@ angular.module('a2.visualizer', [
             if(dont_sync){
                 this.__expected = location;
             }
-            $location.path(this.prefix + location);
+            if ($location.path() != this.prefix + location){
+                console.log('a2VisualizerLocationManager::set_location', this.prefix + location, dont_sync);
+                var search = $location.search();
+                delete search.a;
+
+                $location.path(this.prefix + location);
+                $location.search(search);
+            }
         },
         path_changed : function(path){
             if(path === undefined){
@@ -200,6 +212,25 @@ angular.module('a2.visualizer', [
     };
 
 
+    $scope.parseAnnotations = function(annotationsString){
+        $scope.annotations = annotationsString ? annotationsString.split('|').map(function(item){
+            var comps = item.split(',');
+            var parsed = {type: comps.shift(), value:[]};
+            comps.forEach(function(comp){
+                var pair = comp.split(':');
+                if (pair.length > 1){
+                    var key = pair.shift();
+                    parsed[key] = pair[1].join(':');
+                } else {
+                    parsed.value.push(comp);
+                }
+            })
+            return parsed;
+        }) : [];
+    }
+
+    $scope.parseAnnotations($state.params.a);
+
     $scope.layers = layers.list; // current layers in the visualizer
     $scope.addLayer = layers.add.bind(layers);
     $scope.fullfillsRequirements   = layers.check_requirements.bind(layers);
@@ -210,6 +241,7 @@ angular.module('a2.visualizer', [
 
     layers.add(
         'base-image-layer',
+        'annotation-layer',
         'data-plot-layer',
         'recording-layer',
         'recording-tags-layer',
@@ -227,6 +259,7 @@ angular.module('a2.visualizer', [
 
     var location = new a2VisualizerLocationManager($scope, '/visualizer' + '/', $state);
     $scope.location = location;
+    $scope.annotation = {};
 
     $scope.set_location = location.set.bind(location);
 
@@ -247,23 +280,24 @@ angular.module('a2.visualizer', [
 
     $scope.setVisObject = function(visobject, type, location){
         console.log("$scope.setVisObject :: ", visobject, type, location);
-        return $q.resolve().then(function(){
+        return $q.resolve().then((function(){
             if (visobject) {
                 $scope.visobject_location = location;
                 $scope.location.set(location, true);
                 var visobject_loader = VisualizerObjectTypes.getLoader(type);
                 $scope.loading_visobject = visobject_loader.getCaptionFor(visobject);
-                return visobject_loader.load(visobject, $scope).then(function (visobject){
+                return visobject_loader.load(visobject, $scope).then((function (visobject){
                     console.log('VisObject loaded : ', visobject);
+                    this.parseAnnotations($location.search().a);
 
                     $scope.loading_visobject = false;
                     $scope.visobject = visobject;
                     $scope.visobject_type = visobject.type;
-                });
+                }).bind(this));
             } else {
                 $scope.visobject = null;
             }
-        }).then(function(){
+        }).bind(this)).then(function(){
             events.emit('visobject', $scope.visobject);
         });
     };

@@ -5,23 +5,33 @@
     <div ng-if="!controller.loading.details">
         <div class="panel-body" ng-show="controller.patternMatching">
             <div class="row row-flex flex-align-middle">
-                <div class="col-sm-1 flex-self-align-top">
+                <div class="col-sm-2 flex-self-align-top">
                     <button class="btn btn-default"
                         ng-click="onGoBack({}) | trackEvent:'Analysis-Pattern-Matching-List':' go back'">
                         &lt;  Go Back
                     </button>
                 </div>
-                <div class="col-sm-1" style="padding-bottom:5px">
+                <div class="col-sm-2" style="padding-bottom:5px">
                     <div class="roi-thumbnail" >
                         <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
+                        <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(controller.patternMatching.template)}}">
+                            <i tooltip-placement="left"
+                                tooltip-append-to-body="true"
+                                tooltip="View in Visualizer"
+                                class="fa fa-cubes">
+                            </i>
+                        </a>
                     </div>
                 </div>
-                <div class="col-sm-3 is-v-middle">
+                <div class="col-sm-5 is-v-middle">
                     {{controller.patternMatching.name}}<br />
-                    {{ controller.patternMatching.species }}<br />
-                    {{ controller.patternMatching.songtype }}
+                    {{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}<br />
+                    {{controller.patternMatching.timestamp | moment : 'lll' }}<br />
+                    {{controller.patternMatching.playlist_name}}<br />
+                    {{controller.patternMatching.parameters}}<br />
+                    {{controller.patternMatching.matches}} matches ({{controller.patternMatching.validated}} validated)
                 </div>
-                <div class="col-sm-6 flex-self-align-bottom">
+                <div class="col-sm-5 flex-self-align-bottom">
                     <div class="toolbar pull-right">
                         <div class="btn-group" ng-show="controller.total.pages > 1 || detailedView">
                             <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>

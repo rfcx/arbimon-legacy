@@ -69,6 +69,13 @@ angular.module('a2.analysis.patternmatching', [
         }, {notify:false});
     };
 
+    $scope.getTemplateVisualizerUrl = function(template){
+        var projecturl = Project.getUrl();
+        var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
+        return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+    },
+
+
 
     $scope.selectItem = function(patternmatchingId){
         if($scope.selectedPatternMatchingId == patternmatchingId){
@@ -267,7 +274,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, Project, notify) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2UserPermit, Project, notify) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -289,8 +296,8 @@ angular.module('a2.analysis.patternmatching', [
             this.loading.details = false;
             this.patternMatching = patternMatching;
             this.total = {
-                rois: patternMatching.rois,
-                pages: Math.ceil(patternMatching.rois / this.limit)
+                rois: patternMatching.matches,
+                pages: Math.ceil(patternMatching.matches / this.limit)
             }
         }).bind(this)).catch((function(err){
             this.loading.details = false;
@@ -313,7 +320,13 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     getRoiVisualizerUrl: function(roi){
-        return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording_id : '';
+        var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
+        return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+    },
+
+    getTemplateVisualizerUrl: function(template){
+        var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
+        return template ? "/project/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){
@@ -367,11 +380,16 @@ angular.module('a2.analysis.patternmatching', [
             rois = (this.rois || []).filter(function(roi){ return roi.selected; });
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
+        var newVals = 0;
         return a2PatternMatching.validateRois(this.id, roiIds, validation).then((function(){
             rois.forEach(function(roi){
+                if(roi.validated === null){
+                    newVals++;
+                }
                 roi.validated = validation;
                 roi.selected = false;
             });
+            this.patternMatching.validated += newVals;
         }).bind(this));
     },
 
