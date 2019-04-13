@@ -344,14 +344,7 @@ angular.module('a2.analysis.patternmatching', [
                 }
 
                 var site = _.idx[sitename];
-                if(!site.idx[recname]){
-                    site.idx[recname] = {list:[], name:recname};
-                    site.list.push(site.idx[recname]);
-                }
-
-                var rec = site.idx[recname];
-
-                rec.list.push(roi);
+                site.list.push(roi);
 
                 return _;
             }, {list:[], idx:{}}).list;
@@ -416,9 +409,7 @@ angular.module('a2.analysis.patternmatching', [
 
     forEachRoi: function(fn){
         (this.rois || []).forEach(function(site){
-            site.list.forEach(function(rec){
-                rec.list.forEach(fn);
-            });
+            site.list.forEach(fn);
         });
     },
 

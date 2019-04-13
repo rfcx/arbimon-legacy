@@ -87,12 +87,12 @@
             <div ng-show="loading-rois">Loading...</div>
             <div ng-repeat="site in controller.rois">
                 <div class="h3"><i class="fa fa-map-marker"></i> {{site.name}}</div>
-                <div ng-repeat="rec in site.list">
-                    <div>{{rec.name}}</div>
-                    <div ng-repeat="roi in rec.list"
+                    <div ng-repeat="roi in site.list"
                         class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                         ng-click="roi.selected = !roi.selected"
-                        popover-html="'Duration: {{roi.x2 - roi.x1 | number:2}}s <br>
+                        popover-html="'Recording: {{roi.recording}}<br>
+                                 Site: {{roi.site}}<br>
+                                 Duration: {{roi.x2 - roi.x1 | number:2}}s <br>
                                  Bandwidth: {{roi.y2-roi.y1}}Hz <br>
                                  Upper freq: {{roi.y2}}Hz <br>
                                  Lower freq: {{roi.y1}}Hz'"
@@ -103,22 +103,6 @@
                         <div class="roi-btn-cc h1" ng-if="roi.validated !== null">
                             <i class="fa val-{{roi.validated}}"></i>
                         </div>
-                        <!-- <div class="roi-btn-tr" >
-                            <button ng-click="controller.validate(1, [roi]) | trackEvent:'Pattern Matching Details':'validate roi'"
-                                class="btn btn-clear"
-                                tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="Correct Match">
-                                <i class="fa val-1"></i>
-                            </button>
-                            <button ng-click="controller.validate(0, [roi]) | trackEvent:'Pattern Matching Details':'validate roi'"
-                                class="btn btn-clear"
-                                tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="Wrong Match">
-                                <i class="fa val-0"></i>
-                            </button>
-                        </div> -->
                         <a class="roi-btn-br" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
@@ -126,9 +110,8 @@
                                 class="fa fa-cubes">
                             </i>
                         </a>
-                        <img ng-src="{{ roi.uri }}" class="roi-img"/>
+                        <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
                     </div>
-                </div>
             </div>
         </div>
     </div>
