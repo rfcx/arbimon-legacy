@@ -69,7 +69,24 @@ router.get('/:patternMatching/rois.csv', function(req, res, next) {
     model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name;});
-        var colOrder={filename:-3,site:-2,time:-1};
+        var colOrder={
+            id: -16,
+            recording: -15,
+            site: -14,
+            year: -13,
+            month: -12,
+            day: -11,
+            hour: -10,
+            min: -9,
+            species: -8,
+            songtype: -7,
+            x1: -6,
+            x2: -5,
+            y1: -4,
+            y2: -3,
+            validated: -2,
+            uri: -1
+        };
         fields.sort(function(a, b){
             var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
             return ca < cb ? -1 : (
