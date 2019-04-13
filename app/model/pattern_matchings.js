@@ -154,6 +154,10 @@ var PatternMatchings = {
         //     model: joi.number(),
         //     th: joi.number()
         // }).optionalKeys('th')),
+        show: joi.object().keys({
+            patternMatchingId: joi.boolean(),
+            names: joi.boolean(),
+        }),
         limit:  joi.number(),
         offset: joi.number(),
         // sortBy: joi.string(),
@@ -166,16 +170,61 @@ var PatternMatchings = {
         var builder = new SQLBuilder();
         return q.ninvoke(joi, 'validate', parameters, PatternMatchings.SEARCH_ROIS_SCHEMA).then(function(parameters){
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
+            var show = parameters.show || {};
 
             builder.addProjection(
-                'PMR.`pattern_matching_roi_id` as `id`, PMR.`pattern_matching_id`, PMR.`recording_id`',
-                'PMR.`species_id`, PMR.`songtype_id`',
-                'PMR.`x1`, PMR.`y1`, PMR.`x2`, PMR.`y2`',
-                'PMR.`uri`',
-                'PMR.`validated`'
+                'PMR.`pattern_matching_roi_id` as `id`',
             );
 
+            if(show.patternMatchingId){
+                builder.addProjection('PMR.`pattern_matching_id`');
+            }
+
             builder.addTable("pattern_matching_rois", "PMR");
+
+            if(show.names){
+                builder.addTable("JOIN recordings", "R", "R.recording_id = PMR.recording_id");
+                builder.addTable("JOIN sites", "S", "S.site_id = R.site_id");
+                builder.addProjection(
+                    'SUBSTRING_INDEX(R.`uri`, "/", -1) as `recording`',
+                    'S.`name` as `site`',
+                    'EXTRACT(year FROM R.`datetime`) as `year`',
+                    'EXTRACT(month FROM R.`datetime`) as `month`',
+                    'EXTRACT(day FROM R.`datetime`) as `day`',
+                    'EXTRACT(hour FROM R.`datetime`) as `hour`',
+                    'EXTRACT(minute FROM R.`datetime`) as `min`'
+                );
+
+                builder.addTable("JOIN species", "Sp", "Sp.species_id = PMR.species_id");
+                builder.addProjection('Sp.`scientific_name` as species');
+
+                builder.addTable("JOIN songtypes", "St", "St.songtype_id = PMR.songtype_id");
+                builder.addProjection('St.`songtype`');
+            } else {
+                builder.addProjection(
+                    'PMR.`recording_id`',
+                    'PMR.`species_id`',
+                    'PMR.`songtype_id`',
+                );
+
+            }
+
+            builder.addProjection(
+                'PMR.`x1`, PMR.`y1`, PMR.`x2`, PMR.`y2`',
+                'PMR.`uri`',
+            );
+
+            if(show.names){
+                builder.addProjection(
+                    '(CASE ' +
+                    'WHEN PMR.`validated` = 1 THEN "present" ' +
+                    'WHEN PMR.`validated` = 0 THEN "not present" ' +
+                    'ELSE "(not validated)" ' +
+                    'END) as validated'
+                );
+            } else {
+                builder.addProjection('PMR.`validated`');
+            }
 
             builder.addConstraint("PMR.pattern_matching_id = ?", [
                 parameters.patternMatching
@@ -195,7 +244,8 @@ var PatternMatchings = {
         return this.buildRoisQuery({
             patternMatching: patternMatchingId,
             limit: limit,
-            offset: offset
+            offset: offset,
+            show: { patternMatchingId: true },
         }).then(
             builder => dbpool.query(builder.getSQL())
         );
@@ -208,6 +258,7 @@ var PatternMatchings = {
             patternMatching: patternMatchingId,
             // limit: limit,
             // offset: offset
+            show: { names: true },
         }).then(
             builder => dbpool.streamQuery({
                 sql: builder.getSQL(),
