@@ -1,14 +1,15 @@
 <div a2-insert-in=".visualizer-root">
-    <div class="popover right create-template"
+    <div class="popover create-template"
+        ng-class="getXSide(x1, x2)"
         ng-style="{
             display: show ? 'block' : 'none',
-            left:(layout.viewport.left + layout.sec2x(x, 1)) + 'px',
-            top:(layout.spectrogram.top + layout.hz2y(y, 1)) + 'px',
-            transform: 'translateY(' + getYTranslation(y, true) + ')'
+            left:(layout.viewport.left + layout.sec2x(getXCoord(x1, x2), 1)) + 'px',
+            top:(layout.spectrogram.top + layout.hz2y((y1 + y2)/2, 1)) + 'px',
+            transform: getTransform(x1, x2, y1, y2)
         }"
     >
         <div class="arrow" ng-style="{
-            top: getYTranslation(y)
+            top: getYTranslation(y1)
         }"></div>
         <div ng-transclude></div>
     </div>

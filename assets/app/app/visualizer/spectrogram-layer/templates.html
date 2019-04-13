@@ -39,7 +39,12 @@
         <i class="fa fa-circle-o control-point cp-resize-bl" style="position:absolute; bottom:-7px;  left:-6px" ></i>
         <i class="fa fa-circle-o control-point cp-resize-br" style="position:absolute; bottom:-7px; right:-6px" ></i>
     </div>
-    <a2-visualizer-dialog show="layer.templates.editor.valid" x="layer.templates.editor.roi.x2" y="(layer.templates.editor.roi.y1 + layer.templates.editor.roi.y2)/2">
+    <a2-visualizer-dialog show="layer.templates.editor.valid"
+        x1="layer.templates.editor.roi.x1"
+        y1="layer.templates.editor.roi.y1"
+        x2="layer.templates.editor.roi.x2"
+        y2="layer.templates.editor.roi.y2"
+    >
         <h3 class="popover-title">
             Create Template
             <a2-species species="layer.templates.tset.species"></a2-species>
