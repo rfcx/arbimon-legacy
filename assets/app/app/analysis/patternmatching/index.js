@@ -285,6 +285,7 @@ angular.module('a2.analysis.patternmatching', [
         this.total = {rois:0, pages:0};
         this.loading = {details: false, rois:false};
         this.validation = this.lists.validation[2];
+        this.thumbnailClass = this.lists.thumbnails[0].value;
         this.projecturl = Project.getUrl();
         this.fetchDetails().then((function(){
             this.loadPage(this.selected.page);
@@ -292,6 +293,10 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     lists: {
+        thumbnails: [
+            { class:'fa fa-th-large', value:''},
+            { class:'fa fa-th', value:'is-small'},
+        ],
         selection: [
             {value:'all', text:'All'},
             {value:'none', text:'None'},
@@ -344,14 +349,7 @@ angular.module('a2.analysis.patternmatching', [
                 }
 
                 var site = _.idx[sitename];
-                if(!site.idx[recname]){
-                    site.idx[recname] = {list:[], name:recname};
-                    site.list.push(site.idx[recname]);
-                }
-
-                var rec = site.idx[recname];
-
-                rec.list.push(roi);
+                site.list.push(roi);
 
                 return _;
             }, {list:[], idx:{}}).list;
@@ -416,9 +414,7 @@ angular.module('a2.analysis.patternmatching', [
 
     forEachRoi: function(fn){
         (this.rois || []).forEach(function(site){
-            site.list.forEach(function(rec){
-                rec.list.forEach(fn);
-            });
+            site.list.forEach(fn);
         });
     },
 
