@@ -152,3 +152,5 @@
     - updated python requirements
     - added python dependencies install section in README
     - added upload queue configuration on/off switch (default is off)
+- v1.14.0
+    - Added templates and pattern matching
