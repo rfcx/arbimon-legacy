@@ -161,6 +161,7 @@ var PatternMatchings = {
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
+            datetime: joi.boolean(),
         }),
         limit:  joi.number(),
         offset: joi.number(),
@@ -198,6 +199,10 @@ var PatternMatchings = {
                 'EXTRACT(minute FROM R.`datetime`) as `min`'
             );
 
+            if(show.datetime){
+                builder.addProjection('R.`datetime`');
+            }
+
             builder.addTable("JOIN species", "Sp", "Sp.species_id = PMR.species_id");
             builder.addProjection('Sp.`scientific_name` as species');
 
@@ -209,7 +214,6 @@ var PatternMatchings = {
                     'PMR.`species_id`',
                     'PMR.`songtype_id`',
                 );
-
             }
 
             builder.addProjection(
@@ -252,7 +256,7 @@ var PatternMatchings = {
             patternMatching: patternMatchingId,
             limit: limit,
             offset: offset,
-            show: { patternMatchingId: true },
+            show: { patternMatchingId: true, datetime: true },
             sortBy: [['S.name', 1], ['R.datetime', 1]],
         }).then(
             builder => dbpool.query(builder.getSQL())

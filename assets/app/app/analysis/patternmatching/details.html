@@ -100,6 +100,7 @@
                         ng-click="roi.selected = !roi.selected"
                         popover-html="'Recording: {{roi.recording}}<br>
                                  Site: {{roi.site}}<br>
+                                 Time: {{roi.datetime | date:'medium'}} <br>
                                  Duration: {{roi.x2 - roi.x1 | number:2}}s <br>
                                  Bandwidth: {{roi.y2-roi.y1}}Hz <br>
                                  Upper freq: {{roi.y2}}Hz <br>

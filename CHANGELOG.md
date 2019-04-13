@@ -154,3 +154,7 @@
     - added upload queue configuration on/off switch (default is off)
 - v1.14.0
     - Added templates and pattern matching
+    - Can now call upload processing lambda
+- v1.14.1
+    - upload processing lambda is optional
+    - added datetime to pm rois

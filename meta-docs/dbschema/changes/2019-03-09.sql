@@ -32,9 +32,9 @@ CREATE TABLE `job_params_pattern_matching` (
   PRIMARY KEY (`job_id`),
   KEY `fk_job_params_pattern_matching_2_idx` (`playlist_id`),
   KEY `fk_job_params_pattern_matching_3_idx` (`template_id`),
-  CONSTRAINT `fk_job_params_pattern_matching_3` FOREIGN KEY (`template_id`) REFERENCES `templates` (`template_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_job_params_pattern_matching_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_job_params_pattern_matching_2` FOREIGN KEY (`playlist_id`) REFERENCES `playlists` (`playlist_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `fk_job_params_pattern_matching_2` FOREIGN KEY (`playlist_id`) REFERENCES `playlists` (`playlist_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_job_params_pattern_matching_3` FOREIGN KEY (`template_id`) REFERENCES `templates` (`template_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 
@@ -58,7 +58,6 @@ CREATE TABLE `pattern_matchings` (
   CONSTRAINT `fk_pattern_matchings_3` FOREIGN KEY (`playlist_id`) REFERENCES `playlists` (`playlist_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_pattern_matchings_5` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
-
 
 CREATE TABLE `pattern_matching_rois` (
   `pattern_matching_roi_id` int(11) NOT NULL AUTO_INCREMENT,
