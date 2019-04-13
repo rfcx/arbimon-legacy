@@ -105,11 +105,15 @@ module.exports = {
                 });
             },
             function(callback){
-                lambda.invoke({
-                    FunctionName: config('lambdas').process_uploaded_recording,
-                    InvocationType: 'Event',
-                    Payload: JSON.stringify(upload_row),
-                }, callback);
+                if(config('lambdas').process_uploaded_recording){
+                    lambda.invoke({
+                        FunctionName: config('lambdas').process_uploaded_recording,
+                        InvocationType: 'Event',
+                        Payload: JSON.stringify(upload_row),
+                    }, callback);
+                } else {
+                    callback();
+                }
             }
         ], cb);
     },
