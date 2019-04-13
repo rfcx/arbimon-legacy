@@ -50,7 +50,7 @@ SQLBuilder.prototype = {
         var group = this.getGroupBy();
         var limit = this.getLimit();
 
-        return "SELECT " + projection + "\n" +
+        return "SELECT\n    " + projection + "\n" +
             (tables.length ? "FROM " + tables.join("\n") + "\n" : "") +
             (constraints.length ? "WHERE (" + constraints.join(")\n AND (") + ")\n" : "") +
             (order ? "ORDER BY " + order + "\n" : "") +
@@ -73,7 +73,7 @@ SQLBuilder.prototype = {
     },
 
     getProjection: function(){
-        return this.select.join(', ');
+        return this.select.join(',\n    ');
     },
 
     getTables: function(){
