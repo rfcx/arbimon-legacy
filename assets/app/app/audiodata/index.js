@@ -8,11 +8,12 @@ angular.module('a2.audiodata', [
     'a2.audiodata.recordings',
     'a2.audiodata.training-sets',
     'a2.audiodata.playlists',
+    'a2.audiodata.templates',
     'a2.audiodata.soundscape-composition-classes',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.when("/audiodata", "/audiodata/sites");
-    
+
     $stateProvider.state('audiodata', {
         url: '/audiodata',
         views: {

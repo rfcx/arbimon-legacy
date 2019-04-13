@@ -10,7 +10,7 @@
     padding-left:5px;
     padding-right:5px;
     vertical-align:top;
-    
+
     &.a2-filter-text {
         padding-top: 5px;
     }
@@ -57,7 +57,7 @@
 
 .drophere {
     border: 1px solid;
-    
+
 }
 
 .uploads {
@@ -85,45 +85,66 @@
     display:inline-block;
     position:relative;
 
+    &.btn{
+        padding: 2px;
+        &.active .roi-img{
+            filter: brightness(50%);
+        }
+    }
+
+    .roi-btn-cc {
+        position:absolute;
+        top:50%;
+        left:50%;
+        transform: translate(-50%, -50%);
+        margin:0;
+        padding:0;
+        z-index:10;
+    }
+
     > button, > a {
         text-shadow: 0 0 5px rgba(0, 0, 0, 1);
     }
-    
+
     .roi-btn-tr {
         position:absolute;
         top:5px;
         right:5px;
         z-index:10;
     }
-    
+
     .roi-btn-tl {
         position:absolute;
         top:5px;
         left:5px;
         z-index:10;
     }
-    
+
     .roi-btn-br {
         position:absolute;
         bottom:5px;
         right:5px;
         z-index:10;
     }
-    
+
     .roi-btn-bl {
         position:absolute;
         bottom:5px;
         left:5px;
         z-index:10;
     }
-    
-    
+
+
     .roi-img {
         width:125px;
         height:125px;
         margin:2px;
+        &.is-small {
+            width:64px;
+            height:64px;
+        }
     }
-    
+
 }
 
 .roi-div-inline-remove-detail{
@@ -139,7 +160,7 @@
     background:transparent;
     border:none;
     font-size: 1.2em;
-    
+
     &:hover, &:focus {
         color: darken(@color, 10%);
     }

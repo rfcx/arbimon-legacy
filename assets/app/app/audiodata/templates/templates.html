@@ -1,0 +1,48 @@
+
+<div class="row">
+    <div class="col-lg-5 col-sm-12">
+        <div class="row">
+            <div class="col-sm-6">
+                <input class="form-control" type="text" placeholder="Search" ng-model="search.name">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <a2-table search="search" rows="controller.templates" no-checkbox>
+                    <field>
+                        <div class="roi-thumbnail" >
+                            <img ng-src="{{row.uri}}" class="roi-img is-small"/>
+                            <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}">
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    tooltip="View in Visualizer"
+                                    class="fa fa-cubes">
+                                </i>
+                            </a>
+                        </div>
+                    </field>
+                    <field title="Name" key="name">
+                        {{ row.name }}
+                    </field>
+                    <field title="Species" key="species_name">
+                        {{ row.species_name }}
+                    </field>
+                    <field title="Songtype" key="songtype_name">
+                        {{ row.songtype_name }}
+                    </field>
+                    <field title="Date created" key="date_created">
+                        {{ row.date_created | moment: 'll' }}
+                    </field>
+                </a2-table>
+                <loader ng-show="controller.loading.list"></loader>
+                <div class="jumbotron" ng-show="(!controller.templates || controller.templates.length == 0) && !controller.loading.list">
+                    <h3>
+                        No templates found.
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

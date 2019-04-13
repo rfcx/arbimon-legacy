@@ -17,31 +17,39 @@ SQLBuilder.prototype = {
         this.orderBy=null;
         this.limit=null;
     },
-    
+
     addProjection: function(/* projection columns */){
         this.select.push.apply(this.select, Array.prototype.slice.apply(arguments));
     },
-    
+
     addTable: function(table, alias, constraint, constraint_data){
         this.tables.push(this.tableIdx[alias] = [table, alias, constraint, constraint_data]);
     },
-    
+
     addConstraint: function(constraint, constraint_data){
         this.constraints.push([constraint, constraint_data]);
     },
-    
+
     setOrderBy: function(term, isAscending){
-        this.orderBy=[term, isAscending];
+        this.orderBy=[[term, isAscending]];
     },
-    
+
     setGroupBy: function(term, isAscending){
-        this.groupBy=[term, isAscending];
+        this.groupBy=[[term, isAscending]];
     },
-    
+
+    addOrderBy: function(term, isAscending){
+        (this.orderBy || (this.orderBy=[])).push([term, isAscending]);
+    },
+
+    addGroupBy: function(term, isAscending){
+        (this.groupBy || (this.groupBy=[])).push([term, isAscending]);
+    },
+
     setLimit: function(limit, offset){
-        this.limit=[limit, offset];
+        this.limit=[offset, limit];
     },
-    
+
     getSQL: function(){
         var projection = this.getProjection();
         var tables = this.getTables();
@@ -49,8 +57,8 @@ SQLBuilder.prototype = {
         var order = this.getOrderBy();
         var group = this.getGroupBy();
         var limit = this.getLimit();
-        
-        return "SELECT " + projection + "\n" +
+
+        return "SELECT\n    " + projection + "\n" +
             (tables.length ? "FROM " + tables.join("\n") + "\n" : "") +
             (constraints.length ? "WHERE (" + constraints.join(")\n AND (") + ")\n" : "") +
             (order ? "ORDER BY " + order + "\n" : "") +
@@ -59,23 +67,23 @@ SQLBuilder.prototype = {
             "\n;"
         ;
     },
-    
+
     getLimit: function(){
-        return this.limit ? this.limit.map(parseInt).join(', ') : '';
+        return this.limit ? this.limit.map(x => x|0).join(', ') : '';
     },
 
     getOrderBy: function(){
-        return this.orderBy ? (dbpool.escapeId(this.orderBy[0]) + ' ' + (this.orderBy[1] ? 'ASC' : 'DESC')) : '';
+        return this.orderBy ? this.orderBy.map(item => dbpool.escapeId(item[0]) + ' ' + (item[1] ? 'ASC' : 'DESC')).join(', ') : '';
     },
-    
+
     getGroupBy: function(){
-        return this.groupBy ? (dbpool.escapeId(this.groupBy[0]) + ' ' + (this.groupBy[1] ? 'ASC' : 'DESC')) : '';
+        return this.groupBy ? this.groupBy.map(item => dbpool.escapeId(item[0]) + ' ' + (item[1] ? 'ASC' : 'DESC')).join(', ') : '';
     },
 
     getProjection: function(){
-        return this.select.join(', ');
+        return this.select.join(',\n    ');
     },
-    
+
     getTables: function(){
         return this.tables.map(function(tabledef){
             return tabledef[0] + (tabledef[1] ? " AS " + tabledef[1] : "") + (
@@ -83,7 +91,7 @@ SQLBuilder.prototype = {
             );
         });
     },
-    
+
     getConstraints: function(){
         return this.constraints.map(function(constraintdef){
             return stringifyConstraint(constraintdef[0], constraintdef[1]);

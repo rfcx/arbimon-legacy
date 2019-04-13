@@ -14,11 +14,15 @@
 var debug = require('debug')('arbimon2:upload-queue');
 var async = require('async');
 var q = require('q');
+var AWS = require('aws-sdk');
 
+var config       = require('../config');
 var model = require('../model');
 var Uploader = require('../utils/uploader');
 var tmpFileCache = require('../utils/tmpfilecache');
 var JobScheduler = require('../utils/job-scheduler');
+
+var lambda = new AWS.Lambda();
 
 var scheduler = new JobScheduler({
     fetch: function(queue){
@@ -70,11 +74,11 @@ function uploadFromUploadItemEntry(upload_item){
 
 module.exports = {
     enqueue: function(upload, cb) {
+        var upload_row;
         async.waterfall([
             function(callback) {
                 upload.tempFileUri = Uploader.computeTempAreaPath(upload);
-
-                model.uploads.insertRecToList({
+                upload_row = {
                     filename: upload.name,
                     project_id: upload.projectId,
                     site_id: upload.siteId,
@@ -84,11 +88,12 @@ module.exports = {
                     datetime: upload.FFI.datetime,
                     channels: upload.info.channels,
                     duration: upload.info.duration
-                },
-                callback);
+                };
+                model.uploads.insertRecToList(upload_row, callback);
             },
             function(result, fields, callback) {
                 upload.id = result.insertId;
+                upload_row.upload_id = result.insertId;
                 callback();
             },
             function storeRawFileInBucket(callback){
@@ -100,9 +105,11 @@ module.exports = {
                 });
             },
             function(callback){
-                // scheduler.push(upload);
-                scheduler.run();
-                callback();
+                lambda.invoke({
+                    FunctionName: config('lambdas').process_uploaded_recording,
+                    InvocationType: 'Event',
+                    Payload: JSON.stringify(upload_row),
+                }, callback);
             }
         ], cb);
     },

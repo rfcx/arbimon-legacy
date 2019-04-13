@@ -1,0 +1,13 @@
+<div a2-visualizer-spectrogram-affixed>
+    <div ng-repeat="annotation in annotations">
+        <div class="roi annotation" ng-if="annotation.type=='box'"
+            ng-class="annotation.class || ''"
+            ng-style="{
+                left:layout.sec2x(annotation.value[0], 1) + 'px',
+                top:layout.hz2y(annotation.value[3], 1) + 'px',
+                width:layout.dsec2width(annotation.value[2], annotation.value[0], 1) + 'px',
+                height:layout.dhz2height(annotation.value[3], annotation.value[1]) + 'px'
+            }">
+        </div>
+    </div>
+</div>

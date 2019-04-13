@@ -1,0 +1,43 @@
+<div class="layer">
+    <h5 class="collapse-title" ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Training-Data':'open template layer'">
+        <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+        Templates
+    </h5>
+    <div ng-show="layer.is_open">
+        <!-- <div>
+            <h5  class="collapse-title"  ng-click="layer.is_tset_open = !layer.is_tset_open | trackEvent:'Visualizer-Roi-Set':'open layer'">
+                <i class="fa" ng-class="layer.is_tset_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                <a2-species species="layer.templates.tset.species"></a2-species>
+                <small>
+                    <a2-songtype songtype="layer.templates.tset.songtype"></a2-songtype>
+                </small>
+                <span class="pull-right badge">
+                        {{ layer.templates.recordingTemplates.length }}
+                </span>
+            </h5>
+        </div> -->
+        <div ng-hide="layer.templates.recordingTemplates.length">
+            There are no templates in this recording.
+        </div>
+        <div ng-show="layer.templates.recordingTemplates.length || layer.templates.editor.roi">
+            <table class="bg table table-condensed">
+                <tr><th>x1</th><th>y1</th><th>x2</th><th>y2</th></tr>
+                <tr ng-repeat="roi in layer.templates.recordingTemplates"
+                    ng-class ="{'active':layer.templates.selected == roi}"
+                    ng-click ="layer.templates.selected = roi | trackEvent:'Visualizer-Templates':'select template'"
+                >
+                    <td>{{roi.x1         | number:2}}&nbsp;s</td>
+                    <td>{{roi.y1 /1000.0 | number:2}}&nbsp;kHz</td>
+                    <td>{{roi.x2         | number:2}}&nbsp;s</td>
+                    <td>{{roi.y2 /1000.0 | number:2}}&nbsp;kHz</td>
+                </tr>
+                <tr class="text-info" ng-show="layer.templates.editor.roi && !layer.templates.editor.roi.id">
+                    <td>{{layer.templates.editor.roi.x1        | number:2}}&nbsp;s</td>
+                    <td>{{layer.templates.editor.roi.y1/1000.0 | number:2}}&nbsp;kHz</td>
+                    <td>{{layer.templates.editor.roi.x2        | number:2}}&nbsp;s</td>
+                    <td>{{layer.templates.editor.roi.y2/1000.0 | number:2}}&nbsp;kHz</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

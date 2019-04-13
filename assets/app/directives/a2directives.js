@@ -570,7 +570,7 @@ angular.module('a2.directives', [
             
             var loader = $compile('<loader hide-text="yes"></loader>')($scope).appendTo($element);
             
-            var img = $('<img>').load(function(){
+            var img = $('<img>').on('load', function(){
                     $element.removeClass('loading');
                 }).appendTo($element);
             

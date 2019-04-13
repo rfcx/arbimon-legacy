@@ -1,6 +1,7 @@
-angular.module('a2.analysis', [ 
+angular.module('a2.analysis', [
     'a2.analysis.models',
     'a2.analysis.classification',
+    'a2.analysis.patternmatching',
     'a2.analysis.soundscapes',
     'a2.analysis.audio-event-detection',
     'ui.router',

@@ -9,8 +9,10 @@ var dbpool = {
     getPool: function(){
         var pool = dbpool.pool;
         if(!pool){
+            console.log("making mysql pool...")
             pool = dbpool.pool = mysql.createPool({
                 host : config('db').host,
+                port : config('db').port || 3306,
                 user : config('db').user,
                 password : config('db').password,
                 database : config('db').database
@@ -81,9 +83,12 @@ var dbpool = {
         return q.ninvoke(dbpool.getPool(), 'getConnection').then(function (connection){
             dbpool.enable_query_debugging(connection);
             return connection;
+        }).catch(function (err){
+            console.error('connection error:', err);
+            throw err;
         }).nodeify(callback);
     },
-    
+
     performTransaction: function(transactionFn){
         return dbpool.getConnection().then(function(connection){
             var tx = new sqlutil.transaction(connection);

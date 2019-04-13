@@ -1,6 +1,6 @@
-var Users     = require('../../model/users');
-var Projects  = require('../../model/projects');
-var sha256    = require('../../utils/sha256');
+var Users     = require('../../app/model/users');
+var Projects  = require('../../app/model/projects');
+var sha256    = require('../../app/utils/sha256');
 var async     = require('async');
 var prompt    = require('prompt');
 
@@ -12,24 +12,24 @@ async.waterfall([
          prompt.get({properties:{
             login     : {
                 type: 'string',
-                required: true                        // If true, value entered must be         
+                required: true                        // If true, value entered must be
             },
             password  : {
                 type: 'string',                 // Specify the type of input to expect.
                 hidden: true,                        // If true, characters entered will not be output to console.
-                required: true                        // If true, value entered must be         
+                required: true                        // If true, value entered must be
             },
             retype_password  : {
                 type: 'string',                 // Specify the type of input to expect.
                 hidden: true,                        // If true, characters entered will not be output to console.
-                required: true                        // If true, value entered must be         
+                required: true                        // If true, value entered must be
             }
         }}, next);
     },
     function get_user_data(data, next){
         if(data.password != data.retype_password){
             next(new Error("typed passwords do not match."));
-        } else {            
+        } else {
             data.password = sha256(data.password);
             user_data = data;
             user = user_data.login;
@@ -48,12 +48,12 @@ async.waterfall([
             next();
         }
     },
-    function update_user_pwd(next){        
+    function update_user_pwd(next){
         Users.update({
             user_id : user_data.id,
             password : user_data.password
         }, next);
-    }, 
+    },
 ], function(err, result){
     if(err){
         console.log("User password change failed : ", err);
