@@ -27,6 +27,9 @@ angular.module('a2.srv.patternmatching', [
                 return response.data;
             });
         },
+        getExportUrl: function(params){
+            return '/api/project/' + Project.getUrl() + '/pattern_matchings/' + params.patternMatching + '/rois.csv';
+        },
         validateRois: function(patternMatchingId, rois, validation) {
             return $http.post('/api/project/' + Project.getUrl() + '/pattern_matchings/' + patternMatchingId + '/validate', {
                 rois: rois,

@@ -13,6 +13,7 @@ angular.module('a2.visualizer', [
     'a2.services',
     'a2.utils',
     'a2.visobjects',
+    'a2.visualizer.dialog',
     'a2.visobjectsbrowser',
     'a2.speciesValidator',
     'visualizer-layers',

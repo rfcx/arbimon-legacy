@@ -48,6 +48,63 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     }).catch(next);
 });
 
+
+router.get('/:patternMatching/rois.csv', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+
+    try {
+        var filters = JSON.parse(req.query.filters || '{}') || {};
+    } catch(e) {
+        return next(e);
+    }
+
+    filters.project_id = req.project.project_id | 0;
+
+    console.log(JSON.stringify(filters));
+
+    model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
+        var datastream = results[0];
+        var fields = results[1].map(function(f){return f.name;});
+        var colOrder={
+            id: -16,
+            recording: -15,
+            site: -14,
+            year: -13,
+            month: -12,
+            day: -11,
+            hour: -10,
+            min: -9,
+            species: -8,
+            songtype: -7,
+            x1: -6,
+            x2: -5,
+            y1: -4,
+            y2: -3,
+            validated: -2,
+            uri: -1
+        };
+        fields.sort(function(a, b){
+            var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
+            return ca < cb ? -1 : (
+                   ca > cb ?  1 : (
+                    a <  b ? -1 : (
+                    a >  b ?  1 :
+                    0
+            )));
+        });
+
+        datastream
+            .pipe(csv_stringify({header:true, columns:fields}))
+            .pipe(res);
+    }).catch(next);
+});
+
+
+
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     model.patternMatchings.validateRois(req.params.patternMatching, req.body.rois, req.body.validation).then(function(rois) {
