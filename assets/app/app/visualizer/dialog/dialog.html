@@ -1,0 +1,15 @@
+<div a2-insert-in=".visualizer-root">
+    <div class="popover right create-template"
+        ng-style="{
+            display: show ? 'block' : 'none',
+            left:(layout.viewport.left + layout.sec2x(x, 1)) + 'px',
+            top:(layout.spectrogram.top + layout.hz2y(y, 1)) + 'px',
+            transform: 'translateY(' + getYTranslation(y, true) + ')'
+        }"
+    >
+        <div class="arrow" ng-style="{
+            top: getYTranslation(y)
+        }"></div>
+        <div ng-transclude></div>
+    </div>
+</div>
