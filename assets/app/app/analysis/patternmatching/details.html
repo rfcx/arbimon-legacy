@@ -3,7 +3,7 @@
         Loading <loader></loader>
     </div>
     <div ng-if="!controller.loading.details">
-        <div class="panel-body" ng-show="controller.patternMatching">
+        <div class="panel-body" ng-if="controller.patternMatching">
             <div class="row row-flex flex-align-middle">
                 <div class="col-sm-2 flex-self-align-top">
                     <button class="btn btn-default"
@@ -32,6 +32,35 @@
                     {{controller.patternMatching.matches}} matches ({{controller.patternMatching.validated}} validated)
                 </div>
                 <div class="col-sm-5 flex-self-align-bottom">
+                    <div class="pull-right">
+                    <div class="toolbar pull-right">
+                        <div class="btn-group">
+                            <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
+                                on-select="controller.onSelect($select.selected)"
+                            >
+                                <ui-select-match placeholder="Select">Select</ui-select-match>
+                                <ui-select-choices repeat="$item in controller.lists.selection | filter:$select.search">
+                                    {{$item.text}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-default" >Validate as:</button>
+                            <ui-select ng-model="controller.validation" theme="bootstrap" style="display:inline-block; width:9em;">
+                                <ui-select-match>
+                                    <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
+                                </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.lists.validation | filter:$select.search">
+                                    <i ng-class="$item.class"></i> {{$item.text}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-primary" ng-click="controller.validate()">Submit</button>
+                        </div>
+                    </div>
                     <div class="toolbar pull-right">
                         <div class="btn-group" ng-show="controller.total.pages > 1 || detailedView">
                             <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
@@ -50,68 +79,54 @@
                             </a>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div ng-show="loading-rois">Loading...</div>
-            <div>
-                <div ng-repeat="roi in controller.rois"
-                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
-                    ng-click="roi.selected = !roi.selected"
-                    popover-html="'Duration: {{roi.x2 - roi.x1 | number:2}}s <br>
-                             Bandwidth: {{roi.y2-roi.y1}}Hz <br>
-                             Upper freq: {{roi.y2}}Hz <br>
-                             Lower freq: {{roi.y1}}Hz'"
-                    popover-trigger="mouseenter"
-                    popover-append-to-body="true"
-                >
-                    <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
-                    <div class="roi-btn-cc h1" ng-if="roi.validated !== null">
-                        <i class="fa val-{{roi.validated}}"></i>
                     </div>
-                    <!-- <div class="roi-btn-tr" >
-                        <button ng-click="controller.validate(1, [roi]) | trackEvent:'Pattern Matching Details':'validate roi'"
-                            class="btn btn-clear"
-                            tooltip-placement="left"
-                            tooltip-append-to-body="true"
-                            tooltip="Correct Match">
-                            <i class="fa val-1"></i>
-                        </button>
-                        <button ng-click="controller.validate(0, [roi]) | trackEvent:'Pattern Matching Details':'validate roi'"
-                            class="btn btn-clear"
-                            tooltip-placement="left"
-                            tooltip-append-to-body="true"
-                            tooltip="Wrong Match">
-                            <i class="fa val-0"></i>
-                        </button>
-                    </div> -->
-                    <a class="roi-btn-br" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
-                        <i tooltip-placement="left"
-                            tooltip-append-to-body="true"
-                            tooltip="View in Visualizer"
-                            class="fa fa-cubes">
-                        </i>
-                    </a>
-                    <img ng-src="{{ roi.uri }}" class="roi-img"/>
                 </div>
             </div>
         </div>
         <div class="panel-body" ng-show="controller.patternMatching">
-            <div class="row">
-
-                <div class="col-sm-11" >
-                    <div class="toolbar pull-right">
-                        <div class="btn-group">
-                            <button class="btn btn-default" >Select :</button>
-                            <button class="btn btn-default" ng-click="controller.select('all')">All</button>
-                            <button class="btn btn-default" ng-click="controller.select('none')">None</button>
-                            <button class="btn btn-default" ng-click="controller.select('not-validated')">Not Validated</button>
+            <div ng-show="loading-rois">Loading...</div>
+            <div ng-repeat="site in controller.rois">
+                <div class="h3"><i class="fa fa-map-marker"></i> {{site.name}}</div>
+                <div ng-repeat="rec in site.list">
+                    <div>{{rec.name}}</div>
+                    <div ng-repeat="roi in rec.list"
+                        class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                        ng-click="roi.selected = !roi.selected"
+                        popover-html="'Duration: {{roi.x2 - roi.x1 | number:2}}s <br>
+                                 Bandwidth: {{roi.y2-roi.y1}}Hz <br>
+                                 Upper freq: {{roi.y2}}Hz <br>
+                                 Lower freq: {{roi.y1}}Hz'"
+                        popover-trigger="mouseenter"
+                        popover-append-to-body="true"
+                    >
+                        <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
+                        <div class="roi-btn-cc h1" ng-if="roi.validated !== null">
+                            <i class="fa val-{{roi.validated}}"></i>
                         </div>
-
-                        <div class="btn-group">
-                            <button class="btn btn-default" >Validate Selected as :</button>
-                            <button class="btn btn-default" ng-click="controller.validate(1)"><i class="fa val-1"></i> Correct</button>
-                            <button class="btn btn-default" ng-click="controller.validate(0)"><i class="fa val-0"></i> Wrong</button>
-                        </div>
+                        <!-- <div class="roi-btn-tr" >
+                            <button ng-click="controller.validate(1, [roi]) | trackEvent:'Pattern Matching Details':'validate roi'"
+                                class="btn btn-clear"
+                                tooltip-placement="left"
+                                tooltip-append-to-body="true"
+                                tooltip="Correct Match">
+                                <i class="fa val-1"></i>
+                            </button>
+                            <button ng-click="controller.validate(0, [roi]) | trackEvent:'Pattern Matching Details':'validate roi'"
+                                class="btn btn-clear"
+                                tooltip-placement="left"
+                                tooltip-append-to-body="true"
+                                tooltip="Wrong Match">
+                                <i class="fa val-0"></i>
+                            </button>
+                        </div> -->
+                        <a class="roi-btn-br" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
+                            <i tooltip-placement="left"
+                                tooltip-append-to-body="true"
+                                tooltip="View in Visualizer"
+                                class="fa fa-cubes">
+                            </i>
+                        </a>
+                        <img ng-src="{{ roi.uri }}" class="roi-img"/>
                     </div>
                 </div>
             </div>

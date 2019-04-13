@@ -31,11 +31,19 @@ SQLBuilder.prototype = {
     },
 
     setOrderBy: function(term, isAscending){
-        this.orderBy=[term, isAscending];
+        this.orderBy=[[term, isAscending]];
     },
 
     setGroupBy: function(term, isAscending){
-        this.groupBy=[term, isAscending];
+        this.groupBy=[[term, isAscending]];
+    },
+
+    addOrderBy: function(term, isAscending){
+        (this.orderBy || (this.orderBy=[])).push([term, isAscending]);
+    },
+
+    addGroupBy: function(term, isAscending){
+        (this.groupBy || (this.groupBy=[])).push([term, isAscending]);
     },
 
     setLimit: function(limit, offset){
@@ -65,11 +73,11 @@ SQLBuilder.prototype = {
     },
 
     getOrderBy: function(){
-        return this.orderBy ? (dbpool.escapeId(this.orderBy[0]) + ' ' + (this.orderBy[1] ? 'ASC' : 'DESC')) : '';
+        return this.orderBy ? this.orderBy.map(item => dbpool.escapeId(item[0]) + ' ' + (item[1] ? 'ASC' : 'DESC')).join(', ') : '';
     },
 
     getGroupBy: function(){
-        return this.groupBy ? (dbpool.escapeId(this.groupBy[0]) + ' ' + (this.groupBy[1] ? 'ASC' : 'DESC')) : '';
+        return this.groupBy ? this.groupBy.map(item => dbpool.escapeId(item[0]) + ' ' + (item[1] ? 'ASC' : 'DESC')).join(', ') : '';
     },
 
     getProjection: function(){

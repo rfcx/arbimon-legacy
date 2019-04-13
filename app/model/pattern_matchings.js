@@ -25,6 +25,10 @@ var s3;
 var lambda = new AWS.Lambda();
 var queryHandler = dbpool.queryHandler;
 
+function arrayOrSingle(x){
+    return joi.alternatives(x, joi.array().items(x));
+}
+
 
 // exports
 var PatternMatchings = {
@@ -160,7 +164,7 @@ var PatternMatchings = {
         }),
         limit:  joi.number(),
         offset: joi.number(),
-        // sortBy: joi.string(),
+        sortBy: joi.array().items(joi.any()),
         // sortRev: joi.boolean(),
         // output:  arrayOrSingle(joi.string().valid('count','list','date_range')).default('list')
     },
@@ -182,25 +186,24 @@ var PatternMatchings = {
 
             builder.addTable("pattern_matching_rois", "PMR");
 
-            if(show.names){
-                builder.addTable("JOIN recordings", "R", "R.recording_id = PMR.recording_id");
-                builder.addTable("JOIN sites", "S", "S.site_id = R.site_id");
-                builder.addProjection(
-                    'SUBSTRING_INDEX(R.`uri`, "/", -1) as `recording`',
-                    'S.`name` as `site`',
-                    'EXTRACT(year FROM R.`datetime`) as `year`',
-                    'EXTRACT(month FROM R.`datetime`) as `month`',
-                    'EXTRACT(day FROM R.`datetime`) as `day`',
-                    'EXTRACT(hour FROM R.`datetime`) as `hour`',
-                    'EXTRACT(minute FROM R.`datetime`) as `min`'
-                );
+            builder.addTable("JOIN recordings", "R", "R.recording_id = PMR.recording_id");
+            builder.addTable("JOIN sites", "S", "S.site_id = R.site_id");
+            builder.addProjection(
+                'SUBSTRING_INDEX(R.`uri`, "/", -1) as `recording`',
+                'S.`name` as `site`',
+                'EXTRACT(year FROM R.`datetime`) as `year`',
+                'EXTRACT(month FROM R.`datetime`) as `month`',
+                'EXTRACT(day FROM R.`datetime`) as `day`',
+                'EXTRACT(hour FROM R.`datetime`) as `hour`',
+                'EXTRACT(minute FROM R.`datetime`) as `min`'
+            );
 
-                builder.addTable("JOIN species", "Sp", "Sp.species_id = PMR.species_id");
-                builder.addProjection('Sp.`scientific_name` as species');
+            builder.addTable("JOIN species", "Sp", "Sp.species_id = PMR.species_id");
+            builder.addProjection('Sp.`scientific_name` as species');
 
-                builder.addTable("JOIN songtypes", "St", "St.songtype_id = PMR.songtype_id");
-                builder.addProjection('St.`songtype`');
-            } else {
+            builder.addTable("JOIN songtypes", "St", "St.songtype_id = PMR.songtype_id");
+            builder.addProjection('St.`songtype`');
+            if(!show.names){
                 builder.addProjection(
                     'PMR.`recording_id`',
                     'PMR.`species_id`',
@@ -230,6 +233,10 @@ var PatternMatchings = {
                 parameters.patternMatching
             ]);
 
+            if(parameters.sortBy){
+                parameters.sortBy.forEach(item => builder.addOrderBy(item[0], item[1]));
+            }
+
             // builder.setOrderBy(parameters.sortBy || 'site', !parameters.sortRev);
 
             if(parameters.limit){
@@ -246,6 +253,7 @@ var PatternMatchings = {
             limit: limit,
             offset: offset,
             show: { patternMatchingId: true },
+            sortBy: [['S.name', 1], ['R.datetime', 1]],
         }).then(
             builder => dbpool.query(builder.getSQL())
         );
@@ -268,7 +276,7 @@ var PatternMatchings = {
     },
 
     validateRois(patternMatchingId, rois, validation){
-        return dbpool.query(
+        return rois.length ? dbpool.query(
             "UPDATE pattern_matching_rois\n" +
             "SET validated = ?\n" +
             "WHERE pattern_matching_id = ?\n" +
@@ -276,7 +284,7 @@ var PatternMatchings = {
             validation,
             patternMatchingId,
             rois,
-        ]);
+        ]) : Promise.resolve();
     },
 
     JOB_SCHEMA : joi.object().keys({

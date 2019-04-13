@@ -284,10 +284,24 @@ angular.module('a2.analysis.patternmatching', [
         this.selected = {roi_index:0, roi:null, page:0};
         this.total = {rois:0, pages:0};
         this.loading = {details: false, rois:false};
+        this.validation = this.lists.validation[2];
         this.projecturl = Project.getUrl();
         this.fetchDetails().then((function(){
             this.loadPage(this.selected.page);
         }).bind(this));
+    },
+
+    lists: {
+        selection: [
+            {value:'all', text:'All'},
+            {value:'none', text:'None'},
+            {value:'not-validated', text:'Not Validated'},
+        ],
+        validation: [
+            { class:"fa val-1", text: "Present", value: 1},
+            { class:"fa val-0", text: "Not Present", value: 0 },
+            { class:"fa val-null", text: "Clear", value: null },
+        ],
     },
 
     fetchDetails: function(){
@@ -312,12 +326,35 @@ angular.module('a2.analysis.patternmatching', [
         });
     },
 
+    onSelect: function($item){
+        this.select($item.value);
+    },
+
     loadPage: function(pageNumber){
         this.loading.rois = true;
-        console.log("", "q");
         return a2PatternMatching.getRoisFor(this.id, this.limit, pageNumber * this.limit).then((function(rois){
             this.loading.rois = false;
-            this.rois = rois;
+            this.rois = rois.reduce(function(_, roi){
+                var sitename = roi.site;
+                var recname = roi.recording;
+
+                if(!_.idx[sitename]){
+                    _.idx[sitename] = {list:[], idx:{}, name:sitename};
+                    _.list.push(_.idx[sitename]);
+                }
+
+                var site = _.idx[sitename];
+                if(!site.idx[recname]){
+                    site.idx[recname] = {list:[], name:recname};
+                    site.list.push(site.idx[recname]);
+                }
+
+                var rec = site.idx[recname];
+
+                rec.list.push(roi);
+
+                return _;
+            }, {list:[], idx:{}}).list;
             this.selected.roi = Math.min()
             return rois;
         }).bind(this)).catch((function(err){
@@ -374,7 +411,15 @@ angular.module('a2.analysis.patternmatching', [
             selectFn = function(roi){roi.selected = roi.id === option;};
         }
 
-        (this.rois || []).forEach(selectFn);
+        this.forEachRoi(selectFn);
+    },
+
+    forEachRoi: function(fn){
+        (this.rois || []).forEach(function(site){
+            site.list.forEach(function(rec){
+                rec.list.forEach(fn);
+            });
+        });
     },
 
     validate: function(validation, rois){
@@ -383,15 +428,26 @@ angular.module('a2.analysis.patternmatching', [
             return;
         }
 
+        if (validation === undefined){
+            validation = (this.validation || {value:null}).value;
+        }
+
         if (rois === undefined){
-            rois = (this.rois || []).filter(function(roi){ return roi.selected; });
+            rois = []
+            this.forEachRoi(function (roi){
+                if(roi.selected){
+                    rois.push(roi);
+                }
+            });
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
         var newVals = 0;
         return a2PatternMatching.validateRois(this.id, roiIds, validation).then((function(){
             rois.forEach(function(roi){
-                if(roi.validated === null){
+                if(validation !== null && roi.validated === null){
                     newVals++;
+                } else if(validation === null && roi.validated !== null){
+                    newVals--;
                 }
                 roi.validated = validation;
                 roi.selected = false;
