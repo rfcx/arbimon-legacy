@@ -295,6 +295,7 @@ angular.module('a2.analysis.patternmatching', [
         return a2PatternMatching.getDetailsFor(this.id).then((function(patternMatching){
             this.loading.details = false;
             this.patternMatching = patternMatching;
+            this.setupExportUrl();
             this.total = {
                 rois: patternMatching.matches,
                 pages: Math.ceil(patternMatching.matches / this.limit)
@@ -303,6 +304,12 @@ angular.module('a2.analysis.patternmatching', [
             this.loading.details = false;
             return notify.serverError(err);
         }).bind(this));
+    },
+
+    setupExportUrl: function(){
+        this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
+            patternMatching: this.patternMatching.id,
+        });
     },
 
     loadPage: function(pageNumber){
