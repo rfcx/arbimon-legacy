@@ -14,6 +14,7 @@ var config       = require('../config');
 var APIError = require('../utils/apierror');
 var tmpfilecache = require('../utils/tmpfilecache');
 var sqlutil      = require('../utils/sqlutil');
+var SQLBuilder   = require('../utils/sqlbuilder');
 var dbpool       = require('../utils/dbpool');
 var Recordings   = require('./recordings');
 var Projects     = require('./projects');
@@ -129,17 +130,90 @@ var PatternMatchings = {
         }).nodeify(callback);
     },
 
+    SEARCH_ROIS_SCHEMA : {
+        patternMatching: joi.number().required(),
+        // project_id: joi.number().required(),
+        // range: joi.object().keys({
+        //     from: joi.date(),
+        //     to: joi.date()
+        // }).and('from', 'to'),
+        // sites:  arrayOrSingle(joi.string()),
+        // imported: joi.boolean(),
+        // years:  arrayOrSingle(joi.number()),
+        // months: arrayOrSingle(joi.number()),
+        // days:   arrayOrSingle(joi.number()),
+        // hours:  arrayOrSingle(joi.number()),
+        // validations:  arrayOrSingle(joi.number()),
+        // presence:  arrayOrSingle(joi.string().valid('absent', 'present')),
+        // soundscape_composition:  arrayOrSingle(joi.number()),
+        // soundscape_composition_annotation:  arrayOrSingle(joi.string().valid('absent', 'present')),
+        // tags: arrayOrSingle(joi.number()),
+        // playlists: arrayOrSingle(joi.number()),
+        // classifications: arrayOrSingle(joi.number()),
+        // classification_results: arrayOrSingle(joi.object().keys({
+        //     model: joi.number(),
+        //     th: joi.number()
+        // }).optionalKeys('th')),
+        limit:  joi.number(),
+        offset: joi.number(),
+        // sortBy: joi.string(),
+        // sortRev: joi.boolean(),
+        // output:  arrayOrSingle(joi.string().valid('count','list','date_range')).default('list')
+    },
+
+    buildRoisQuery(parameters){
+        console.log('rois query from', parameters);
+        var builder = new SQLBuilder();
+        return q.ninvoke(joi, 'validate', parameters, PatternMatchings.SEARCH_ROIS_SCHEMA).then(function(parameters){
+            var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
+
+            builder.addProjection(
+                'PMR.`pattern_matching_roi_id` as `id`, PMR.`pattern_matching_id`, PMR.`recording_id`',
+                'PMR.`species_id`, PMR.`songtype_id`',
+                'PMR.`x1`, PMR.`y1`, PMR.`x2`, PMR.`y2`',
+                'PMR.`uri`',
+                'PMR.`validated`'
+            );
+
+            builder.addTable("pattern_matching_rois", "PMR");
+
+            builder.addConstraint("PMR.pattern_matching_id = ?", [
+                parameters.patternMatching
+            ]);
+
+            // builder.setOrderBy(parameters.sortBy || 'site', !parameters.sortRev);
+
+            if(parameters.limit){
+                builder.setLimit(parameters.limit, parameters.offset || 0);
+            }
+
+            return builder;
+        });
+    },
+
     getRoisForId(patternMatchingId, limit, offset){
-        return dbpool.query(
-            "SELECT \n" +
-            "   `pattern_matching_roi_id` as `id`, `pattern_matching_id`, `recording_id`, `species_id`, `songtype_id`, `x1`, `y1`, `x2`, `y2`, `uri`, `validated`\n" +
-            "FROM pattern_matching_rois\n" +
-            "WHERE pattern_matching_id = ?\n" + (
-                (limit !== undefined) ? ("LIMIT " + (limit | 0) + (
-                (offset !== undefined) ? (" OFFSET " + (offset | 0)) : ""
-            )) : ""),[
-            patternMatchingId
-        ]);
+        return this.buildRoisQuery({
+            patternMatching: patternMatchingId,
+            limit: limit,
+            offset: offset
+        }).then(
+            builder => dbpool.query(builder.getSQL())
+        );
+    },
+
+    exportRois(patternMatchingId, filters){
+        filters = filters || {};
+
+        return this.buildRoisQuery({
+            patternMatching: patternMatchingId,
+            // limit: limit,
+            // offset: offset
+        }).then(
+            builder => dbpool.streamQuery({
+                sql: builder.getSQL(),
+                typeCast: sqlutil.parseUtcDatetime,
+            })
+        );
     },
 
     validateRois(patternMatchingId, rois, validation){
