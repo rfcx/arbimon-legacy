@@ -14,11 +14,15 @@
 var debug = require('debug')('arbimon2:upload-queue');
 var async = require('async');
 var q = require('q');
+var AWS = require('aws-sdk');
 
+var config       = require('../config');
 var model = require('../model');
 var Uploader = require('../utils/uploader');
 var tmpFileCache = require('../utils/tmpfilecache');
 var JobScheduler = require('../utils/job-scheduler');
+
+var lambda = new AWS.Lambda();
 
 var scheduler = new JobScheduler({
     fetch: function(queue){
