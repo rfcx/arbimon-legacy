@@ -285,6 +285,7 @@ angular.module('a2.analysis.patternmatching', [
         this.total = {rois:0, pages:0};
         this.loading = {details: false, rois:false};
         this.validation = this.lists.validation[2];
+        this.thumbnailClass = this.lists.thumbnails[0].value;
         this.projecturl = Project.getUrl();
         this.fetchDetails().then((function(){
             this.loadPage(this.selected.page);
@@ -292,6 +293,10 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     lists: {
+        thumbnails: [
+            { class:'fa fa-th-large', value:''},
+            { class:'fa fa-th', value:'is-small'},
+        ],
         selection: [
             {value:'all', text:'All'},
             {value:'none', text:'None'},
