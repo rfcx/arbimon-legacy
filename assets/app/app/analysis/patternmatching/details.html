@@ -41,7 +41,10 @@
                     {{controller.patternMatching.timestamp | moment : 'lll' }}<br />
                     {{controller.patternMatching.playlist_name}}<br />
                     {{controller.patternMatching.parameters}}<br />
-                    {{controller.patternMatching.matches}} matches ({{controller.patternMatching.validated}} validated)
+                    {{controller.patternMatching.matches}} matches
+                        ({{controller.patternMatching.present}} present,
+                        {{controller.patternMatching.absent}} absent,
+                        {{controller.patternMatching.matches - (controller.patternMatching.present + controller.patternMatching.absent)}} unvalidated) 
                 </div>
                 <div class="col-sm-5 flex-self-align-bottom">
                     <div class="pull-right">

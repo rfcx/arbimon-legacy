@@ -437,18 +437,17 @@ angular.module('a2.analysis.patternmatching', [
             });
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
-        var newVals = 0;
+        var val_delta = {0:0, 1:0, null:0};
         return a2PatternMatching.validateRois(this.id, roiIds, validation).then((function(){
             rois.forEach(function(roi){
-                if(validation !== null && roi.validated === null){
-                    newVals++;
-                } else if(validation === null && roi.validated !== null){
-                    newVals--;
-                }
+                val_delta[roi.validated] -= 1;
+                val_delta[validation] += 1;
+
                 roi.validated = validation;
                 roi.selected = false;
             });
-            this.patternMatching.validated += newVals;
+            this.patternMatching.absent += val_delta[0];
+            this.patternMatching.present += val_delta[1];
         }).bind(this));
     },
 

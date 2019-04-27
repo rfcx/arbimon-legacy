@@ -102,8 +102,8 @@ var PatternMatchings = {
 
         if (options.showCounts) {
             select.push("COUNT(*) as matches");
-            select.push("SUM(IF(validated=1, 1, 0)) as validated");
-            select.push("SUM(IF(validated=0, 1, 0)) as removed");
+            select.push("SUM(IF(validated=1, 1, 0)) as present");
+            select.push("SUM(IF(validated=0, 1, 0)) as absent");
             tables.push("JOIN pattern_matching_rois PMM ON PMM.pattern_matching_id = PM.pattern_matching_id");
             groupby.join("PM.pattern_matching_id");
         }
