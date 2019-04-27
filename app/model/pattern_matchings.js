@@ -81,8 +81,12 @@ var PatternMatchings = {
         }
 
         if (options.showUser) {
-            select.push('J.user_id');
+            select.push(
+                'J.user_id',
+                "CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) AS user"
+            );
             tables.push("JOIN jobs J ON PM.job_id = J.job_id");
+            tables.push("JOIN users U ON J.user_id = U.user_id");
         }
 
         if (options.showTemplate) {

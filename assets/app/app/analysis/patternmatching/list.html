@@ -41,6 +41,9 @@
                     <td data-title="'Parameters'" data-sortable="'parameters'" class="no-wrap-table-cell is-v-middle">
                         {{patternmatching.parameters}}
                     </td>
+                    <td data-title="'User'" data-sortable="'user'" filter="{ 'user': 'text' }" class="is-v-middle">
+                        {{ patternmatching.user }}
+                    </td>
                     <td class="is-v-middle">
                         <button class="btn btn-default"
                             ng-click="selectItem(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
