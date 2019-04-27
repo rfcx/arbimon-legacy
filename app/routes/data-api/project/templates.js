@@ -10,7 +10,7 @@ var model = require('../../../model');
  */
 router.get('/', function(req, res, next) {
     res.type('json');
-    model.templates.find({ project:req.project.project_id, showSpecies:true }).then(function(count) {
+    model.templates.find({ project:req.project.project_id, deleted:0, showSpecies:true }).then(function(count) {
         res.json(count);
         return null;
     }).catch(next);
@@ -57,6 +57,14 @@ router.post('/add', function(req, res, next) {
         res.json(new_template);
     }).catch(next);
 });
+
+router.post('/:template/remove', function(req, res, next) {
+    res.type('json');
+    model.templates.delete(req.params.template | 0).then(function() {
+        res.json({ok: true});
+    }).catch(next);
+});
+
 
 // /** Edit a template.
 // */

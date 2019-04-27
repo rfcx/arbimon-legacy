@@ -67,9 +67,26 @@ var PatternMatchings = {
             data.push(options.id);
         }
 
+        if (options.completed !== undefined) {
+            constraints.push('PM.`completed` = ' + dbpool.escape(options.completed));
+        }
+
+        if (options.deleted !== undefined) {
+            constraints.push('PM.`deleted` = ' + dbpool.escape(options.deleted));
+        }
+
         if (options.project) {
             constraints.push('PM.project_id = ?');
             data.push(options.project);
+        }
+
+        if (options.showUser) {
+            select.push(
+                'J.user_id',
+                "CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) AS user"
+            );
+            tables.push("JOIN jobs J ON PM.job_id = J.job_id");
+            tables.push("JOIN users U ON J.user_id = U.user_id");
         }
 
         if (options.showTemplate) {
@@ -98,8 +115,8 @@ var PatternMatchings = {
 
         if (options.showCounts) {
             select.push("COUNT(*) as matches");
-            select.push("SUM(IF(validated=1, 1, 0)) as validated");
-            select.push("SUM(IF(validated=0, 1, 0)) as removed");
+            select.push("SUM(IF(validated=1, 1, 0)) as present");
+            select.push("SUM(IF(validated=0, 1, 0)) as absent");
             tables.push("JOIN pattern_matching_rois PMM ON PMM.pattern_matching_id = PM.pattern_matching_id");
             groupby.join("PM.pattern_matching_id");
         }
@@ -219,6 +236,7 @@ var PatternMatchings = {
             builder.addProjection(
                 'PMR.`x1`, PMR.`y1`, PMR.`x2`, PMR.`y2`',
                 'PMR.`uri`',
+                'PMR.`score`',
             );
 
             if(show.names){
@@ -249,6 +267,16 @@ var PatternMatchings = {
 
             return builder;
         });
+    },
+
+    /** Deletes a pattern matching results.
+     * @param {int} patternMatchingId
+     * @return {Promise} resolved after deleting the pattern matching
+     */
+    delete: function (patternMatchingId) {
+        return dbpool.query(
+            "UPDATE pattern_matchings SET deleted=1 WHERE pattern_matching_id = ?", [patternMatchingId]
+        );
     },
 
     getRoisForId(patternMatchingId, limit, offset){

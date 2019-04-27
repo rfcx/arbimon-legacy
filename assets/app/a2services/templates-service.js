@@ -20,10 +20,10 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
         //     return $http.post('/api/project/'+projectName+'/templates/edit/'+templateId, template_data);
         // },
         //
-        // delete: function(templateId) {
-        //     var projectName = Project.getUrl();
-        //     return $http.post('/api/project/'+projectName+'/templates/remove/'+templateId);
-        // },
+        delete: function(templateId) {
+            var projectName = Project.getUrl();
+            return $http.post('/api/project/'+projectName+'/templates/' + templateId + '/remove');
+        },
 
         getImage: function(templateId) {
             var projectName = Project.getUrl();

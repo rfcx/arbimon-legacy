@@ -1,21 +1,21 @@
 <table class="table table-hover a2-table">
 <thead>
     <tr>
-        <th ng-hide="controller.noCheck">
-            <input type="checkbox" ng-disabled="!controller.rows.length" ng-model="checkall" ng-change="controller.toggleAll()">
+        <th ng-hide="a2TableController.noCheck">
+            <input type="checkbox" ng-disabled="!a2TableController.rows.length" ng-model="checkall" ng-change="a2TableController.toggleAll()">
         </th>
     </tr>
 </thead>
 <tbody>
-    <tr ng-repeat="row in controller.rows | filter: query | orderBy: sort : reverse"
-        ng-click="controller.sel(row, $index, $event)"
+    <tr ng-repeat="row in a2TableController.rows | filter: query | orderBy: sort : reverse"
+        ng-click="a2TableController.sel(row, $index, $event)"
         ng-class="[selected == row ? 'active':'', userStyle]"
         tabindex="0"
-        ng-keypress="controller.keyboardSel(row, $index, $event)">
-        <td ng-hide="controller.noCheck">
+        ng-keypress="a2TableController.keyboardSel(row, $index, $event)">
+        <td ng-hide="a2TableController.noCheck">
             <input type="checkbox"
                 ng-model="row.checked"
-                ng-click="controller.check($event, $index)"
+                ng-click="a2TableController.check($event, $index)"
                 stop-click>
         </td>
     </tr>

@@ -11,7 +11,8 @@ angular.module('a2.audiodata.templates', [
         templateUrl: '/app/audiodata/templates/templates.html'
     });
 })
-.controller('TemplatesCtrl', function($state, $scope, a2Templates, Project, $q, a2UserPermit, notify) {
+.controller('TemplatesCtrl', function($state, $scope, a2Templates, Project, $q, a2UserPermit, notify, $modal) {
+    var self = this;
     Object.assign(this, {
         initialize: function(){
             this.loading = {list:false};
@@ -26,13 +27,39 @@ angular.module('a2.audiodata.templates', [
         getList: function(){
             this.loading.list = true;
             return a2Templates.getList().then((function(data){
-                console.log('data', data);
                 this.loading.list = false;
                 this.templates = data;//.map(function(d) {
                     // d.date_created = new Date(d.date_created);
                     // return d;
                 // });
             }.bind(this)));
+        },
+        deleteTemplate: function(templateId){
+            if(!a2UserPermit.can('manage templates')) {
+                notify.log('You do not have permission to delete templates');
+                return;
+            }
+
+            $scope.popup = {
+                title: 'Delete template',
+                messages: ['Are you sure you want to delete this template?'],
+                btnOk: 'Yes',
+                btnCancel: 'No',
+            };
+
+            var modalInstance = $modal.open({
+                templateUrl: '/common/templates/pop-up.html',
+                scope: $scope
+            });
+
+            modalInstance.result.then(function(confirmed) {
+                if(confirmed){
+                    return a2Templates.delete(templateId).then(function(){
+                        self.getList();
+                    });
+                }
+            });
+
         },
     });
     this.initialize();

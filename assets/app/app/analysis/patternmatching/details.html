@@ -21,6 +21,18 @@
                                 class="fa fa-cubes">
                             </i>
                         </a>
+                        <div class="roi-btn-b outside text-sm">
+                            {{controller.patternMatching.template.x2 - controller.patternMatching.template.x1 | number:2}}s
+                        </div>
+                        <div class="roi-btn-r outside text-sm">
+                            {{(controller.patternMatching.template.y2-controller.patternMatching.template.y1) | number:0}}Hz
+                        </div>
+                        <div class="roi-btn-tr outside text-sm">
+                            {{controller.patternMatching.template.y2 | number:0}}Hz <br>
+                        </div>
+                        <div class="roi-btn-br outside text-sm">
+                            {{controller.patternMatching.template.y1 | number:0}}Hz
+                        </div>
                     </div>
                 </div>
                 <div class="col-sm-5 is-v-middle">
@@ -29,7 +41,10 @@
                     {{controller.patternMatching.timestamp | moment : 'lll' }}<br />
                     {{controller.patternMatching.playlist_name}}<br />
                     {{controller.patternMatching.parameters}}<br />
-                    {{controller.patternMatching.matches}} matches ({{controller.patternMatching.validated}} validated)
+                    {{controller.patternMatching.matches}} matches
+                        ({{controller.patternMatching.present || 0}} present,
+                        {{controller.patternMatching.absent || 0}} absent,
+                        {{controller.patternMatching.matches - (controller.patternMatching.present + controller.patternMatching.absent)}} unvalidated)
                 </div>
                 <div class="col-sm-5 flex-self-align-bottom">
                     <div class="pull-right">
@@ -101,15 +116,12 @@
                         popover-html="'Recording: {{roi.recording}}<br>
                                  Site: {{roi.site}}<br>
                                  Time: {{roi.datetime | date:'medium'}} <br>
-                                 Duration: {{roi.x2 - roi.x1 | number:2}}s <br>
-                                 Bandwidth: {{roi.y2-roi.y1}}Hz <br>
-                                 Upper freq: {{roi.y2}}Hz <br>
-                                 Lower freq: {{roi.y1}}Hz'"
+                                 Score: {{(roi.score | number) || '(Missing)'}}'"
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
                     >
                         <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
-                        <div class="roi-btn-cc h1" ng-if="roi.validated !== null">
+                        <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
                             <i class="fa val-{{roi.validated}}"></i>
                         </div>
                         <a class="roi-btn-br" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
