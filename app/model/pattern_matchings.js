@@ -67,6 +67,10 @@ var PatternMatchings = {
             data.push(options.id);
         }
 
+        if (options.completed !== undefined) {
+            constraints.push('PM.`completed` = ' + dbpool.escape(options.completed));
+        }
+
         if (options.deleted !== undefined) {
             constraints.push('PM.`deleted` = ' + dbpool.escape(options.deleted));
         }
@@ -74,6 +78,11 @@ var PatternMatchings = {
         if (options.project) {
             constraints.push('PM.project_id = ?');
             data.push(options.project);
+        }
+
+        if (options.showUser) {
+            select.push('J.user_id');
+            tables.push("JOIN jobs J ON PM.job_id = J.job_id");
         }
 
         if (options.showTemplate) {
