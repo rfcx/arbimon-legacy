@@ -67,6 +67,10 @@ var PatternMatchings = {
             data.push(options.id);
         }
 
+        if (options.deleted !== undefined) {
+            constraints.push('PM.`deleted` = ' + dbpool.escape(options.deleted));
+        }
+
         if (options.project) {
             constraints.push('PM.project_id = ?');
             data.push(options.project);
@@ -249,6 +253,16 @@ var PatternMatchings = {
 
             return builder;
         });
+    },
+
+    /** Deletes a pattern matching results.
+     * @param {int} patternMatchingId
+     * @return {Promise} resolved after deleting the pattern matching
+     */
+    delete: function (patternMatchingId) {
+        return dbpool.query(
+            "UPDATE pattern_matchings SET deleted=1 WHERE pattern_matching_id = ?", [patternMatchingId]
+        );
     },
 
     getRoisForId(patternMatchingId, limit, offset){

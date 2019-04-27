@@ -181,7 +181,7 @@ angular.module('a2.analysis.patternmatching', [
         });
     };
 
-    $scope.deletePatternMatching = function(id,name) {
+    $scope.deletePatternMatching = function(id) {
         if(!a2UserPermit.can('manage pattern matchings')) {
             notify.log('You do not have permission to delete pattern matchings');
             return;
@@ -220,7 +220,7 @@ angular.module('a2.analysis.patternmatching', [
                 var index = -1;
                 var modArr = angular.copy($scope.patternmatchingsOriginal);
                 for (var i = 0; i < modArr.length; i++) {
-                    if (modArr[i].job_id === id) {
+                    if (modArr[i].id === id) {
                         index = i;
                         break;
                     }
@@ -500,7 +500,7 @@ angular.module('a2.analysis.patternmatching', [
 
         $scope.ok = function() {
             $scope.deletingloader = true;
-            a2PatternMatching.delete(id, function(data) {
+            a2PatternMatching.delete(id).then(function(data) {
                 $modalInstance.close(data);
             });
         };

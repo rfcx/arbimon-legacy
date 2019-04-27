@@ -13,7 +13,7 @@ var csv_stringify = require("csv-stringify");
  */
 router.get('/', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.find({ project:req.project.project_id, showTemplate: true, showPlaylist:true}).then(function(count) {
+    model.patternMatchings.find({ project:req.project.project_id, deleted:0, showTemplate: true, showPlaylist:true}).then(function(count) {
         res.json(count);
     }).catch(next);
 });
@@ -112,6 +112,24 @@ router.post('/:patternMatching/validate', function(req, res, next) {
             rois: req.body.rois,
             validation: req.body.validation,
         });
+    }).catch(next);
+});
+
+router.post('/:patternMatching/remove', function(req, res, next) {
+    res.type('json');
+
+    var project_id = req.project.project_id;
+
+    q.resolve().then(function(){
+        if(!req.haveAccess(project_id, "manage pattern matchings")){
+            throw new Error({
+                error: "You don't have permission to delete pattern matchings"
+            });
+        }
+    }).then(function(){
+        return model.patternMatchings.delete(req.params.patternMatching | 0);
+    }).then(function(){
+        res.json({ok: true});
     }).catch(next);
 });
 
