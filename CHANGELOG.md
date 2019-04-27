@@ -158,3 +158,8 @@
 - v1.14.1
     - upload processing lambda is optional
     - added datetime to pm rois
+- v1.15.0
+    - Can now delete templates and pattern matchings
+    - Layout changes to Pattern Matchings page
+    - Pattern Matching jobs are now shown.
+    - Add Pattern Matching correlation score to rois

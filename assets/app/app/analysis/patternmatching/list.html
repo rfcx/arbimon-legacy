@@ -41,16 +41,21 @@
                     <td data-title="'Parameters'" data-sortable="'parameters'" class="no-wrap-table-cell is-v-middle">
                         {{patternmatching.parameters}}
                     </td>
+                    <td data-title="'User'" data-sortable="'user'" filter="{ 'user': 'text' }" class="is-v-middle">
+                        {{ patternmatching.user }}
+                    </td>
                     <td class="is-v-middle">
-                        <button class="btn btn-default btn-xs"
-                            ng-click="selectItem(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
+                        <button class="btn btn-default"
+                            ng-click="selectItem(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
+                        >
                                 Show Details
                         </button>
-                        <button class="btn btn-default btn-xs"
-                            ng-click="deletePatternMatching(patternmatching.job_id,patternmatching.name) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'">
-                                Delete
+                        <button class="btn btn-danger"
+                            ng-click="deletePatternMatching(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
+                            tooltip="Delete"
+                            tooltip-trigger="mouseenter">
+                            <i class="fa fa-trash"></i>
                         </button>
-
                     </td>
                 </tr>
             </table>

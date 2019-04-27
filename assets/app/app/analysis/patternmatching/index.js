@@ -181,7 +181,7 @@ angular.module('a2.analysis.patternmatching', [
         });
     };
 
-    $scope.deletePatternMatching = function(id,name) {
+    $scope.deletePatternMatching = function(id) {
         if(!a2UserPermit.can('manage pattern matchings')) {
             notify.log('You do not have permission to delete pattern matchings');
             return;
@@ -220,7 +220,7 @@ angular.module('a2.analysis.patternmatching', [
                 var index = -1;
                 var modArr = angular.copy($scope.patternmatchingsOriginal);
                 for (var i = 0; i < modArr.length; i++) {
-                    if (modArr[i].job_id === id) {
+                    if (modArr[i].id === id) {
                         index = i;
                         break;
                     }
@@ -437,18 +437,17 @@ angular.module('a2.analysis.patternmatching', [
             });
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
-        var newVals = 0;
+        var val_delta = {0:0, 1:0, null:0};
         return a2PatternMatching.validateRois(this.id, roiIds, validation).then((function(){
             rois.forEach(function(roi){
-                if(validation !== null && roi.validated === null){
-                    newVals++;
-                } else if(validation === null && roi.validated !== null){
-                    newVals--;
-                }
+                val_delta[roi.validated] -= 1;
+                val_delta[validation] += 1;
+
                 roi.validated = validation;
                 roi.selected = false;
             });
-            this.patternMatching.validated += newVals;
+            this.patternMatching.absent += val_delta[0];
+            this.patternMatching.present += val_delta[1];
         }).bind(this));
     },
 
@@ -500,7 +499,7 @@ angular.module('a2.analysis.patternmatching', [
 
         $scope.ok = function() {
             $scope.deletingloader = true;
-            a2PatternMatching.delete(id, function(data) {
+            a2PatternMatching.delete(id).then(function(data) {
                 $modalInstance.close(data);
             });
         };

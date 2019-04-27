@@ -34,6 +34,14 @@
                     <field title="Date created" key="date_created">
                         {{ row.date_created | moment: 'll' }}
                     </field>
+                    <field>
+                        <button class="btn btn-danger"
+                            ng-click="controller.deleteTemplate(row.id) | trackEvent:'Audiodata-template':'del clicked'"
+                            tooltip="Delete Template"
+                            tooltip-trigger="mouseenter">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </field>
                 </a2-table>
                 <loader ng-show="controller.loading.list"></loader>
                 <div class="jumbotron" ng-show="(!controller.templates || controller.templates.length == 0) && !controller.loading.list">

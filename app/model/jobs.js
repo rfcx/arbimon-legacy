@@ -128,8 +128,8 @@ var Jobs = {
             },
             sql : {
                 report : {
-                    projections : ['CONCAT(UCASE(LEFT( JPT.`name`, 1)), SUBSTRING( JPT.`name`, 2)) as name'],
-                    tables      : ['JOIN `job_params_audio_event_detection` as JPT ON J.job_id = JPT.job_id'],
+                    projections : ['CONCAT(UCASE(LEFT( PMS.`name`, 1)), SUBSTRING( PMS.`name`, 2)) as name'],
+                    tables      : ['JOIN `pattern_matchings` as PMS ON J.job_id = PMS.job_id'],
                 }
             }
         },
@@ -289,11 +289,11 @@ var Jobs = {
             }
         }
 
-        for(var i in this.job_types){
+        var union = Object.keys(this.job_types).map(i => {
             var job_type = this.job_types[i];
             var jt_projections = job_type.sql && job_type.sql.report && job_type.sql.report.projections;
             var jt_tables      = job_type.sql && job_type.sql.report && job_type.sql.report.tables;
-            union.push(
+            return (
                 "SELECT J.`progress`, J.`progress_steps`, J.`job_type_id`, JT.name as type, J.`job_id`, J.state, J.last_update,\n" +
                 (jt_projections && jt_projections.length ?
                     "    "+jt_projections.join(", ")+",\n" : ""
@@ -307,7 +307,7 @@ var Jobs = {
                 "WHERE "+constraints.join(" AND ") + "\n" +
                 "  AND J.job_type_id = " + (job_type.type_id|0)
             );
-        }
+        });
 
         queryHandler("(\n" + union.join("\n) UNION (\n") + "\n)", callback);
     },

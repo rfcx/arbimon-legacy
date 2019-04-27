@@ -58,6 +58,10 @@ var Templates = {
             }
         }
 
+        if (options.deleted !== undefined) {
+            constraints.push('T.`deleted` = ' + dbpool.escape(options.deleted));
+        }
+
         if (options.project) {
             constraints.push('T.`project_id` = ' + dbpool.escape(options.project));
         }
@@ -135,6 +139,16 @@ var Templates = {
         ).then(
             () => this.createTemplateImage(data)
         ).nodeify(callback);
+    },
+
+    /** Finds templates, given a (non-empty) query.
+     * @param {int} templateId
+     * @return {Promise} resolved after inserting the template
+     */
+    delete: function (templateId) {
+        return dbpool.query(
+            "UPDATE templates SET deleted=1 WHERE template_id = ?", [templateId]
+        );
     },
 
     /** Fetches the image of a template.

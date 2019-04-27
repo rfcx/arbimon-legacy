@@ -383,7 +383,7 @@ router.use('/:projectUrl/templates', template_routes);
 router.use('/:projectUrl/soundscapes', soundscape_routes);
 router.use('/:projectUrl/jobs', jobsRoutes);
 router.use('/:projectUrl/classifications', classiRoutes);
-router.use('/:projectUrl/pattern_matchings', patternMatchingRoutes);
+router.use('/:projectUrl/pattern-matchings', patternMatchingRoutes);
 router.use('/:projectUrl/tags', tagRoutes);
 router.use('/:projectUrl/audio-event-detections', require('./audio-event-detections'));
 router.use('/:projectUrl/soundscape-composition', require('./soundscape-composition'));
