@@ -113,10 +113,7 @@
                         popover-html="'Recording: {{roi.recording}}<br>
                                  Site: {{roi.site}}<br>
                                  Time: {{roi.datetime | date:'medium'}} <br>
-                                 Duration: {{roi.x2 - roi.x1 | number:2}}s <br>
-                                 Bandwidth: {{roi.y2-roi.y1}}Hz <br>
-                                 Upper freq: {{roi.y2}}Hz <br>
-                                 Lower freq: {{roi.y1}}Hz'"
+                                 Score: {{(roi.score | number) || '(Missing)'}}'"
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
                     >

@@ -223,6 +223,7 @@ var PatternMatchings = {
             builder.addProjection(
                 'PMR.`x1`, PMR.`y1`, PMR.`x2`, PMR.`y2`',
                 'PMR.`uri`',
+                'PMR.`score`',
             );
 
             if(show.names){
