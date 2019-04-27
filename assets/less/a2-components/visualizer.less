@@ -507,14 +507,14 @@
     &:before{
         content: "\f068"
     }
-    color: @brand-warning;
+    color: @val-color-2;
 }
 
 .fa.val-null{
     &:before{
         content: "\f111"
     }
-    color: @gray-light;
+    color: @val-color-null;
 }
 
 
@@ -522,23 +522,23 @@
     &:before{
         content: "\f00c"
     }
-    color: @brand-success;
+    color: @val-color-1;
 }
 
 .fa.val-0, .fa.a2-absent{
     &:before{
         content: "\f00d"
     }
-    color: @brand-danger;
+    color: @val-color-0;
 }
 
 .btn.btn-fade-inactive:not(.active) {
     .fa.val-1, .fa.a2-present{
-        color: lighten(@brand-success, 25%);
+        color: lighten(@val-color-1, 25%);
     }
 
     .fa.val-0, .fa.a2-absent{
-        color: lighten(@brand-danger, 25%);
+        color: lighten(@val-color-0, 25%);
     }
 }
 
