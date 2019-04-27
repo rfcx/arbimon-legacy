@@ -25,13 +25,13 @@
                             {{controller.patternMatching.template.x2 - controller.patternMatching.template.x1 | number:2}}s
                         </div>
                         <div class="roi-btn-r outside text-sm">
-                            {{controller.patternMatching.template.y2-controller.patternMatching.template.y1}}Hz
+                            {{(controller.patternMatching.template.y2-controller.patternMatching.template.y1) | number:0}}Hz
                         </div>
                         <div class="roi-btn-tr outside text-sm">
-                            {{controller.patternMatching.template.y2}}Hz <br>
+                            {{controller.patternMatching.template.y2 | number:0}}Hz <br>
                         </div>
                         <div class="roi-btn-br outside text-sm">
-                            {{controller.patternMatching.template.y1}}Hz
+                            {{controller.patternMatching.template.y1 | number:0}}Hz
                         </div>
                     </div>
                 </div>
@@ -42,9 +42,9 @@
                     {{controller.patternMatching.playlist_name}}<br />
                     {{controller.patternMatching.parameters}}<br />
                     {{controller.patternMatching.matches}} matches
-                        ({{controller.patternMatching.present}} present,
-                        {{controller.patternMatching.absent}} absent,
-                        {{controller.patternMatching.matches - (controller.patternMatching.present + controller.patternMatching.absent)}} unvalidated) 
+                        ({{controller.patternMatching.present || 0}} present,
+                        {{controller.patternMatching.absent || 0}} absent,
+                        {{controller.patternMatching.matches - (controller.patternMatching.present + controller.patternMatching.absent)}} unvalidated)
                 </div>
                 <div class="col-sm-5 flex-self-align-bottom">
                     <div class="pull-right">
