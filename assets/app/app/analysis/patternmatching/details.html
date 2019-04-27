@@ -109,7 +109,7 @@
                         popover-append-to-body="true"
                     >
                         <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
-                        <div class="roi-btn-cc h1" ng-if="roi.validated !== null">
+                        <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
                             <i class="fa val-{{roi.validated}}"></i>
                         </div>
                         <a class="roi-btn-br" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
