@@ -343,6 +343,7 @@ var PatternMatchings = {
                 name: data.name,
                 N: data.params.N,
                 threshold: data.params.threshold,
+                citizen_scientist: data.params.citizen_scientist | 0,
             }),
         }).promise());
     },
