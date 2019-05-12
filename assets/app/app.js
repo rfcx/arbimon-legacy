@@ -1,16 +1,17 @@
 var a2 = angular.module('a2.app', [
     'a2.permissions',
     'templates-arbimon2',
-    'a2.app.dashboard', 
+    'a2.app.dashboard',
     'a2.audiodata',
-    'a2.visualizer', 
+    'a2.visualizer',
     'a2.analysis',
+    'a2.citizen-scientist',
     'a2.jobs',
     'a2.directive.sidenav-bar',
     'a2.settings',
     'a2.login',
     'angularytics',
-    'ui.router', 
+    'ui.router',
     'ct.ui.router.extras',
     'a2.filter.project-url',
     'humane',
@@ -24,9 +25,9 @@ var a2 = angular.module('a2.app', [
     $rootScope.$on('$stateChangeStart', function(e, to, params) {
         // only check permissions if state have allowAccess
         if(!angular.isFunction(to.allowAccess)) return;
-        
+
         var allowed = to.allowAccess(a2UserPermit);
-        
+
         if(allowed === undefined) { // if permissions have not loaded go dashboard
             e.preventDefault();
             $state.go('dashboard');
