@@ -12,6 +12,8 @@ angular.module('a2.directive.a2-table', [
             return {
                 title: clone.attr('title'),
                 key: clone.attr('key'),
+                tdclass: clone.attr('tdclass'),
+                width: clone.attr('width'),
                 filter: clone.attr('filter') !== undefined ? (clone.attr('filter') || clone.attr('key')) : undefined,
                 content: clone.html()
             };
@@ -75,7 +77,7 @@ angular.module('a2.directive.a2-table', [
                     )
                 );
                 tplBody.append(
-                    angular.element('<td>').addClass(field.tdclass).html(field.content)
+                    angular.element('<td ' + (field.width ? 'width="' + field.width + '"' : '') + '>').addClass(field.tdclass).html(field.content)
                 );
             });
 
