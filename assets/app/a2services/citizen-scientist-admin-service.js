@@ -1,22 +1,16 @@
 angular.module('a2.srv.citizen-scientist-admin', [
     'a2.srv.api',
 ])
-.factory('a2CitizenScientistAdminService',function(a2APIService){
+.factory('a2CitizenScientistAdminService',function(a2APIService, notify){
     return {
-        getClassificationStats: function(){
-            return Promise.resolve({
-                stats: ['E. Coqui', 'E. Brittoni', 'E. Juanariveroi', 'E. Cochranae', 'E. Llanero'].map(function(spp){
-                    var p = (Math.random() * 500) | 0, np = (Math.random() * 500) | 0, nv = (Math.random() * 500) | 0;
-                    return {species: spp, songtype: 'Common', present: p, notPresent: np, notValidated: nv, count: p + np + nv};
-                })
-            });
-            // return a2APIService.get('/uploads/processing');
+        getClassificationStats: function(speciesId){
+            return a2APIService.get('/citizen-scientist/stats/classification' + (speciesId ? '/' + speciesId : '')).catch(notify.serverError);
         },
-        getUserStats: function(){
-            return a2APIService.get('/uploads/processing');
+        getUserStats: function(userId){
+            return a2APIService.get('/citizen-scientist/stats/user' + (userId ? '/' + userId : '')).catch(notify.serverError);
         },
         getSettings: function(){
-            return a2APIService.get('/uploads/processing');
+            return a2APIService.get('/citizen-scientist/settings').catch(notify.serverError);
         },
     };
 })
