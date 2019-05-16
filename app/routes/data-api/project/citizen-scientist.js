@@ -146,11 +146,13 @@ router.get('/stats/classification/:species', function(req, res, next) {
     res.type('json');
 
     var project_id = req.project.project_id;
+    var species_id = req.params.species | 0
 
     q.resolve().then(function(){
         return model.CitizenScientist.getClassificationStats({
-            project: project_id, species: req.params.species | 0,
-            groupByMatching: true,
+            project: project_id,
+            species: species_id,
+            groupByMatching: !!species_id,
         });
     }).then(function(stats){
         res.json({stats: stats});
