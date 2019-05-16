@@ -50,7 +50,17 @@ var Users = {
             ]
         ).get(0).nodeify(callback);
     },
-    
+
+    getInfoForId: function(user_id){ 
+        return q.nfcall(queryHandler,
+            'SELECT user_id, login, firstname, lastname\n' +
+            'FROM users \n' +
+            'WHERE user_id = ?', [
+                user_id
+            ]
+        ).get(0).nodeify(callback);
+    },
+
     loginTry: function(ip, user, msg, callback) {
         
         var q = 'INSERT INTO invalid_logins(`ip`, `user`, `reason`) \n'+
