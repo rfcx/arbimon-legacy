@@ -91,16 +91,6 @@
                                 ng-class="{active: controller.thumbnailClass == item.value}"
                             ><i ng-class="item.class"></i></button>
                         </div>
-
-                        <div class="btn-group">
-                                <a class="btn btn-default"
-                                ng-href="{{controller.patternMatchingExportUrl}}"
-                                ng-click="true | trackEvent:'Pattern Matching Details':'export'"
-                                ng-disabled="!controller.patternMatchingExportUrl"
-                                tooltip="Export Pattern Matching Data">
-                                <i class="fa fa-download"></i>
-                            </a>
-                        </div>
                     </div>
                     </div>
                 </div>
@@ -121,8 +111,8 @@
                         popover-append-to-body="true"
                     >
                         <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
-                        <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
-                            <i class="fa val-{{roi.validated}}"></i>
+                        <div class="roi-btn-tr h1" ng-if="roi.cs_validated !== null">
+                            <i class="fa val-{{roi.cs_validated}}"></i>
                         </div>
                         <a class="roi-btn-br" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
                             <i tooltip-placement="left"

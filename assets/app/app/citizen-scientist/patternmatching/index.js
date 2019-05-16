@@ -1,6 +1,7 @@
 angular.module('a2.citizen-scientist.patternmatching', [
     'ui.bootstrap',
     'a2.srv.patternmatching',
+    'a2.srv.citizen-scientist',
     'a2.services',
     'a2.permissions',
     'humane',
@@ -13,7 +14,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         templateUrl: '/app/citizen-scientist/patternmatching/list.html'
     });
 })
-.controller('CitizenScientistPatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('CitizenScientistPatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     var initTable = function(p, c, s, f, t) {
         var sortBy = {};
         var acsDesc = 'desc';
@@ -100,7 +101,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
     };
 
     $scope.loadPatternMatchings = function() {
-        return a2PatternMatching.list().then(function(data) {
+        return a2CitizenScientistService.getPatternMatchings().then(function(data) {
             $scope.patternmatchingsOriginal = data;
             $scope.patternmatchingsData = data;
             $scope.infoInfo = "";
@@ -197,7 +198,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         templateUrl: '/app/citizen-scientist/patternmatching/details.html'
     };
 })
-.controller('CitizenScientistPatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2UserPermit, Project, notify) {
+.controller('CitizenScientistPatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2CitizenScientistService, a2UserPermit, Project, notify) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -234,7 +235,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
 
     fetchDetails: function(){
         this.loading.details = true;
-        return a2PatternMatching.getDetailsFor(this.id).then((function(patternMatching){
+        return a2CitizenScientistService.getPatternMatchingDetailsFor(this.id).then((function(patternMatching){
             this.loading.details = false;
             this.patternMatching = patternMatching;
             this.setupExportUrl();
@@ -260,7 +261,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
 
     loadPage: function(pageNumber){
         this.loading.rois = true;
-        return a2PatternMatching.getRoisFor(this.id, this.limit, pageNumber * this.limit).then((function(rois){
+        return a2CitizenScientistService.getPatternMatchingRoisFor(this.id, this.limit, pageNumber * this.limit).then((function(rois){
             this.loading.rois = false;
             this.rois = rois.reduce(function(_, roi){
                 var sitename = roi.site;
@@ -327,7 +328,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         } else if(option === "none"){
             selectFn = function(roi){roi.selected = false;};
         } else if(option === "not-validated"){
-            selectFn = function(roi){roi.selected = roi.validated === null;};
+            selectFn = function(roi){roi.selected = roi.cs_validated === null;};
         } else {
             selectFn = function(roi){roi.selected = roi.id === option;};
         }
@@ -361,12 +362,12 @@ angular.module('a2.citizen-scientist.patternmatching', [
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
         var val_delta = {0:0, 1:0, null:0};
-        return a2PatternMatching.validateRois(this.id, roiIds, validation).then((function(){
+        return a2CitizenScientistService.validatePatternMatchingRois(this.id, roiIds, validation).then((function(){
             rois.forEach(function(roi){
-                val_delta[roi.validated] -= 1;
+                val_delta[roi.cs_validated] -= 1;
                 val_delta[validation] += 1;
 
-                roi.validated = validation;
+                roi.cs_validated = validation;
                 roi.selected = false;
             });
             this.patternMatching.absent += val_delta[0];
