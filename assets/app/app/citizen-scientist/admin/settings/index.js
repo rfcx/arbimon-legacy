@@ -13,14 +13,30 @@ angular.module('a2.citizen-scientist.admin.settings', [
         templateUrl: '/app/citizen-scientist/admin/settings/index.html'
     });
 })
-.controller('A2CitizenScientistAdminSettingsCtrl', function($scope, a2CitizenScientistAdminService) {
+.controller('A2CitizenScientistAdminSettingsCtrl', function($scope, a2CitizenScientistAdminService, a2PatternMatching) {
     this.loadPage = function(){
         this.loading = true;
+        a2PatternMatching.list().then((function(data) {
+            this.patternmatchings = data;
+        }).bind(this));
+
         a2CitizenScientistAdminService.getSettings().then((function(data){
             this.loading = false;
-            this.list = data.list;
-            this.count = data.count;
+            this.settings = data;
         }).bind(this));
+    };
+
+    this.save = function(){
+        this.settings.pattern_matchings = this.patternmatchings.filter(function (pm){
+            return pm.citizen_scientist;
+        }).map(function (pm){
+            return pm.id;
+        });
+
+        return a2CitizenScientistAdminService.setSettings(this.settings).then((function(data){
+            notify.log("Settings Saved.");
+        }).bind(this));
+
     };
 
     this.loadPage();

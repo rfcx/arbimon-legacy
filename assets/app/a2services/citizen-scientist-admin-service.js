@@ -12,6 +12,9 @@ angular.module('a2.srv.citizen-scientist-admin', [
         getSettings: function(){
             return a2APIService.get('/citizen-scientist/settings').catch(notify.serverError);
         },
+        setSettings: function(settings){
+            return a2APIService.post('/citizen-scientist/settings', settings).catch(notify.serverError);
+        },
     };
 })
 ;
