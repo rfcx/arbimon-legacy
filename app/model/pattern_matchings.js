@@ -50,6 +50,7 @@ var PatternMatchings = {
             "PM.`name`", "PM.`project_id`" ,
             "PM.`timestamp`", "PM.`species_id`", "PM.`songtype_id`" ,
             "PM.`parameters`" ,
+            "PM.`citizen_scientist`",
             "PM.`playlist_id`", "PM.`template_id`" ,
         ];
         var tables = ["pattern_matchings PM"];
@@ -69,6 +70,10 @@ var PatternMatchings = {
 
         if (options.completed !== undefined) {
             constraints.push('PM.`completed` = ' + dbpool.escape(options.completed));
+        }
+
+        if (options.citizen_scientist !== undefined) {
+            constraints.push('PM.`citizen_scientist` = ' + dbpool.escape(options.citizen_scientist));
         }
 
         if (options.deleted !== undefined) {
@@ -175,6 +180,7 @@ var PatternMatchings = {
         //     model: joi.number(),
         //     th: joi.number()
         // }).optionalKeys('th')),
+        csValidationsFor: joi.number().integer(),
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
@@ -255,6 +261,11 @@ var PatternMatchings = {
                 parameters.patternMatching
             ]);
 
+            if(parameters.csValidationsFor){
+                builder.addProjection('PMV.`validated` as cs_validated');
+                builder.addTable("LEFT JOIN pattern_matching_validations", "PMV", "PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id AND PMV.user_id="+builder.escape(parameters.csValidationsFor));
+            }
+
             if(parameters.sortBy){
                 parameters.sortBy.forEach(item => builder.addOrderBy(item[0], item[1]));
             }
@@ -279,11 +290,12 @@ var PatternMatchings = {
         );
     },
 
-    getRoisForId(patternMatchingId, limit, offset){
+    getRoisForId(options){
         return this.buildRoisQuery({
-            patternMatching: patternMatchingId,
-            limit: limit,
-            offset: offset,
+            patternMatching: options.patternMatchingId,
+            csValidationsFor: options.csValidationsFor,
+            limit: options.limit,
+            offset: options.offset,
             show: { patternMatchingId: true, datetime: true },
             sortBy: [['S.name', 1], ['R.datetime', 1]],
         }).then(
@@ -317,6 +329,22 @@ var PatternMatchings = {
             patternMatchingId,
             rois,
         ]) : Promise.resolve();
+    },
+
+    validateCSRois(patternMatchingId, userId, rois, validation){
+        return rois.length ? dbpool.query(
+            "INSERT INTO pattern_matching_validations(\n" +
+            "    pattern_matching_roi_id, user_id, validated, timestamp\n" +
+            ") VALUES (\n" + rois.map(function(roi) {
+                return "   ?, ?, ?, NOW()\n";
+            }).join("), (\n") +
+            ")\n" +
+            "ON DUPLICATE KEY UPDATE\n" +
+            "    validated = VALUES(validated)", rois.reduce(function(_, roi) {
+                _.push(roi, userId, validation);
+                return _;
+            }, [])
+        ) : Promise.resolve();
     },
 
     JOB_SCHEMA : joi.object().keys({
