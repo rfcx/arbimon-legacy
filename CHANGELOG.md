@@ -163,3 +163,5 @@
     - Layout changes to Pattern Matchings page
     - Pattern Matching jobs are now shown.
     - Add Pattern Matching correlation score to rois
+- v1.15.0
+    - Added citizen scientist modules
