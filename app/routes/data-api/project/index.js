@@ -387,6 +387,7 @@ router.use('/:projectUrl/pattern-matchings', patternMatchingRoutes);
 router.use('/:projectUrl/tags', tagRoutes);
 router.use('/:projectUrl/audio-event-detections', require('./audio-event-detections'));
 router.use('/:projectUrl/soundscape-composition', require('./soundscape-composition'));
+router.use('/:projectUrl/citizen-scientist', require('./citizen-scientist'));
 router.use('/:projectUrl/uploads', require('./uploads'));
 
 module.exports = router;

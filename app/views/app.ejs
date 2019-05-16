@@ -49,6 +49,13 @@
                         </a>
                         <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="analysis"></ul>
                     </li>
+                    <li ui-sref-active="open" tooltip="Citizen Scientist" tooltip-placement="bottom">
+                        <a ui-sref="citizen-scientist">
+                            <i class="fa fa-users"></i>
+                            <span class="visible-lg-inline visible-xs-inline">Citizen Scientist</span>
+                        </a>
+                        <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="citizen-scientist"></ul>
+                    </li>
                 </ul>
                 <ul class="nav navbar-nav hide-tooltip-lg" ng-controller="StatusBarNavIndexController">
                     <li ui-sref-active="active">
@@ -97,6 +104,7 @@
         <div ui-view="audiodata"  ng-show="$state.includes('audiodata')"></div>
         <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
         <div ui-view="analysis"   ng-show="$state.includes('analysis')"></div>
+        <div ui-view="citizen-scientist"   ng-show="$state.includes('citizen-scientist')"></div>
         <div ui-view></div>
     </div>
 

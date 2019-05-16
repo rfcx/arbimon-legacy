@@ -18,6 +18,14 @@ SQLBuilder.prototype = {
         this.limit=null;
     },
 
+    escapeId: function(value){
+        return dbpool.escapeId(value);
+    },
+
+    escape: function(value){
+        return dbpool.escape(value);
+    },
+
     addProjection: function(/* projection columns */){
         this.select.push.apply(this.select, Array.prototype.slice.apply(arguments));
     },

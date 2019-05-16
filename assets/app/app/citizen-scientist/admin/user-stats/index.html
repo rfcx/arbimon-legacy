@@ -1,0 +1,44 @@
+<div class="row">
+    <h4 ng-show="!controller.userId">
+        User Stats
+        <span class="badge">{{controller.stats.length}} species</span>
+    </h4>
+    <h4 ng-show="controller.userId">
+        User Stats / {{controller.user.firstname}} {{controller.user.lastname}}
+        <button class="btn btn-default"
+            ng-click="controller.setUser() | trackEvent:'Analysis-Citizen-Scientist-User-Stats':' go back'">
+            &lt;  Go Back
+        </button>
+    </h4>
+</div>
+<div class="row">
+    <div class="col-sm-12" ng-if="!controller.userId">
+        <a2-table class="table-hide-btns"
+            rows="controller.stats" no-checkbox="true"
+            default-sort="user"
+            on-select="controller.setUser(row.user_id)"
+        >
+            <field title="User" filter key="user" >{{ row.user  }}</field>
+            <field title="Validated"  filter key="validated" >{{ row.validated }}</field>
+            <field title="Correct"  filter key="correct" >{{ row.correct }}</field>
+            <field title="Incorrect"  filter key="incorrect" >{{ row.incorrect }}</field>
+            <field title="Last_update"  filter key="last_update" >{{ row.last_update | date}}</field>
+        </a2-table>
+        <loader ng-hide="!loading"></loader>
+    </div>
+    <div class="col-sm-12" ng-if="controller.userId">
+        <a2-table class="table-hide-btns"
+            rows="controller.userStats" no-checkbox="true"
+            default-sort="species"
+            no-select
+        >
+            <field title="Species" filter key="species" >{{ row.species  }}</field>
+            <field title="Songtype" filter key="songtype" >{{ row.songtype  }}</field>
+            <field title="Validated"  filter key="validated" >{{ row.validated }}</field>
+            <field title="Correct"  filter key="correct" >{{ row.correct }}</field>
+            <field title="Incorrect"  filter key="incorrect" >{{ row.incorrect }}</field>
+            <field title="Last_update"  filter key="last_update" >{{ row.last_update | date}}</field>
+        </a2-table>
+        <loader ng-hide="!loading"></loader>
+    </div>
+</div>

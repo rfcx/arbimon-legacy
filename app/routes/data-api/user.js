@@ -61,6 +61,13 @@ router.get('/feed/:page', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/info/:userId', function(req, res) {
+    res.type('json');
+    model.users.getInfoForId(req.params.userId).then(function(user) {
+        res.json({ user: user });
+    }).catch(next);
+});
+
 router.get('/info', function(req, res) {
     res.type('json');
     var user = req.session.user;
