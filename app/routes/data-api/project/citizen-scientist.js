@@ -159,13 +159,18 @@ router.get('/stats/classification/:species', function(req, res, next) {
     }).catch(next);
 });
 
-router.get('/stats/user', function(req, res, next) {
+router.get('/stats/user/:user', function(req, res, next) {
     res.type('json');
 
     var project_id = req.project.project_id;
+    var user_id = req.params.user | 0
 
     q.resolve().then(function(){
-        return model.CitizenScientist.getUserStats(project_id);
+        return model.CitizenScientist.getUserStats({
+            project: project_id,
+            user: user_id,
+            groupByMatching: !!user_id,
+        });
     }).then(function(stats){
         res.json({stats: stats});
     }).catch(next);

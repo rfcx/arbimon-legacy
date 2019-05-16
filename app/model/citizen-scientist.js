@@ -58,21 +58,55 @@ var CitizenScientist = {
             ),
             data
         );
-        // return Promise.resolve({
-        //     stats: ['E. Coqui', 'E. Brittoni', 'E. Juanariveroi', 'E. Cochranae', 'E. Llanero'].map(function(spp){
-        //         var p = (Math.random() * 500) | 0, np = (Math.random() * 500) | 0, nv = (Math.random() * 500) | 0;
-        //         return {species: spp, songtype: 'Common', present: p, notPresent: np, notValidated: nv, count: p + np + nv};
-        //     })
-        // });
-
     },
 
     getUserStats: function(options){
+        var select = [
+            "PMUS.user_id",
+            "CONCAT(U.firstname, ' ', U.lastname) as user",
+            "SUM(PMUS.validated) as validated",
+            "SUM(PMUS.correct) as correct",
+            "SUM(PMUS.incorrect) as incorrect",
+            "MIN(PMUS.last_update) as last_update",
+        ];
+
+        var tables = [
+            "pattern_matching_user_statistics AS PMUS",
+            "JOIN users AS U ON PMUS.user_id = U.user_id",
+        ];
+
+        var constraints = [
+            "PM.project_id = ?"
+        ];
+
+        var data = [options.project];
+
+        var groupby = [];
+
+        if (options.user){
+            constraints.push('PMUS.user_id = ?');
+            data.push(options.user);
+        }
+
+        if (options.groupBySpecies){
+            select.unshift(
+                "Sp.species_id",
+                "Sp.scientific_name as `species`",
+                "St.songtype_id",
+                "St.songtype"
+            );
+            tables.push(
+                'JOIN species Sp ON Sp.species_id = PMUS.species_id',
+                'JOIN songtypes St ON St.songtype_id = PMUS.songtype_id'
+            );
+            groupby.push('Sp.species_id', 'Sp.songtype_id');
+        }
+
         return dbpool.query(
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" \n  AND ") + (
-                groupby ? ("\n" + groupby.join(",\n    ")) : ""
+                groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : ""
             ),
             data
         );
