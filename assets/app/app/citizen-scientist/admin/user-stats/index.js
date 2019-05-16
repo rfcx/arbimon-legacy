@@ -34,7 +34,7 @@ angular.module('a2.citizen-scientist.admin.user-stats', [
 
     this.loadForUser = function(){
         this.loadingForUser = true;
-        User.findById(this.userId).then((function(user){
+        User.getInfoForId(this.userId).then((function(user){
             this.user = user;
         }).bind(this))
         a2CitizenScientistAdminService.getUserStats(this.userId).then((function(data){
