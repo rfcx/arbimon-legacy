@@ -43,7 +43,11 @@ router.param('paging', function(req, res, next, paging){
 
 router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.getRoisForId(req.params.patternMatching, req.paging.limit || 100, req.paging.offset || 0).then(function(rois) {
+    model.patternMatchings.getRoisForId({
+        patternMatchingId: req.params.patternMatching,
+        limit: req.paging.limit || 100,
+        offset: req.paging.offset || 0,
+    }).then(function(rois) {
         res.json(rois);
     }).catch(next);
 });
