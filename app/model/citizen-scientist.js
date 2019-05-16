@@ -2,6 +2,7 @@
 "use strict";
 
 // 3rd party dependencies
+var joi     = require('joi');
 var debug = require('debug')('arbimon2:model:citizen-scientist');
 var q = require('q');
 var dbpool = require('../utils/dbpool');
@@ -76,7 +77,7 @@ var CitizenScientist = {
         ];
 
         var constraints = [
-            "PM.project_id = ?"
+            "PMUS.project_id = ?",
         ];
 
         var data = [options.project];
@@ -110,6 +111,54 @@ var CitizenScientist = {
             ),
             data
         );
+    },
+
+    getSettings: function(project_id){
+        return Promise.all([
+            dbpool.query(
+                "SELECT citizen_scientist_validation_consensus_number as consensus_number\n" +
+                "FROM projects\n" +
+                "WHERE project_id = ?", [
+                project_id
+            ]).get(0),
+            dbpool.query(
+                "SELECT pattern_matching_id\n" +
+                "FROM pattern_matchings\n" +
+                "WHERE citizen_scientist = 1"
+            ),
+        ]).then(([project_settings, pattern_matchings]) => {
+            return Object.assign({}, project_settings, {
+                pattern_matchings: pattern_matchings.map(pm => pm.pattern_matching_id),
+            });
+        });
+    },
+
+    SETTINGS_SCHEMA: joi.object().keys({
+        project: joi.number().integer(),
+        consensus_number: joi.number().integer(),
+        pattern_matchings: joi.array().items(joi.number().integer()),
+    }),
+
+    setSettings: function(settings){
+        return q.ninvoke(joi, 'validate', settings, CitizenScientist.SETTINGS_SCHEMA).then(function(){
+            settings.pattern_matchings.unshift(-1, 0);
+            return Promise.all([
+                dbpool.query(
+                    "UPDATE projects\n" +
+                    "SET citizen_scientist_validation_consensus_number=?\n" +
+                    "WHERE project_id=?\n", [
+                    settings.consensus_number,
+                    settings.project
+                ]),
+                dbpool.query(
+                    "UPDATE pattern_matchings\n" +
+                    "SET citizen_scientist = pattern_matching_id IN (?)\n" +
+                    "WHERE project_id=?\n", [
+                    settings.pattern_matchings,
+                    settings.project
+                ]),
+            ]);
+        });
     },
 };
 
