@@ -29,7 +29,8 @@ var CitizenScientist = {
         ];
 
         var constraints = [
-            "PM.project_id = ?"
+            "PM.project_id = ?",
+            "PM.deleted = 0"
         ];
 
         var data = [options.project];
@@ -127,7 +128,7 @@ var CitizenScientist = {
             dbpool.query(
                 "SELECT pattern_matching_id\n" +
                 "FROM pattern_matchings\n" +
-                "WHERE citizen_scientist = 1"
+                "WHERE citizen_scientist = 1 AND deleted = 0"
             ),
         ]).then(([project_settings, pattern_matchings]) => {
             return Object.assign({}, project_settings, {
