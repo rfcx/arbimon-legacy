@@ -46,6 +46,9 @@ var CitizenScientist = {
             data.push(options.songtype);
         }
 
+        groupby.push('PM.species_id');
+        groupby.push('PM.songtype_id');
+
         if (options.groupByMatching){
             select.unshift('PM.pattern_matching_id', 'PM.name');
             groupby.push('PM.pattern_matching_id');
