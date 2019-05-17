@@ -1,0 +1,5 @@
+<div class="stacked-bars">
+    <div ng-repeat="item in data track by $index" ng-style="{ 'background-color': getColor($index), width: asPercent(item) }"
+        aria-valuemax="100" aria-valuemin="0" aria-valuenow="{{item}}" role="progressbar" class="progress-bar"
+    >{{asPercent(item, 0)}}</div>
+</div>
