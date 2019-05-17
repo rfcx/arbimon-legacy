@@ -28,7 +28,7 @@ angular.module('a2.citizen-scientist.admin.user-stats', [
         this.loading = true;
         a2CitizenScientistAdminService.getUserStats().then((function(data){
             this.loading = false;
-            this.stats = data.stats;
+            this.stats = data.stats.filter(function(item){ return !!item.user_id});
         }).bind(this));
     };
 

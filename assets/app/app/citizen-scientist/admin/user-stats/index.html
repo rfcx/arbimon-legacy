@@ -1,14 +1,14 @@
 <div class="row">
     <h4 ng-show="!controller.userId">
         User Stats
-        <span class="badge">{{controller.stats.length}} species</span>
+        <span class="badge">{{controller.stats.length}} users</span>
     </h4>
     <h4 ng-show="controller.userId">
-        User Stats / {{controller.user.firstname}} {{controller.user.lastname}}
         <button class="btn btn-default"
             ng-click="controller.setUser() | trackEvent:'Analysis-Citizen-Scientist-User-Stats':' go back'">
             &lt;  Go Back
         </button>
+        User Stats / {{controller.user.firstname}} {{controller.user.lastname}}
     </h4>
 </div>
 <div class="row">
