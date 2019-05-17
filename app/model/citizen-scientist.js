@@ -178,7 +178,36 @@ var CitizenScientist = {
                 return _;
             }, [])
         ) : Promise.resolve()).then(function(){
+            return this.computeConsensusValidations(patternMatchingId, rois);
         });
+    },
+
+    computeConsensusValidations(patternMatchingId, rois){
+        return dbpool.query(
+            "UPDATE pattern_matching_rois\n" +
+            "  JOIN pattern_matchings ON pattern_matching_rois.pattern_matching_id = pattern_matchings.pattern_matching_id\n" +
+            "  JOIN projects ON pattern_matchings.project_id = projects.project_id\n" +
+            "SET pattern_matching_rois.validated =  IF(\n" +
+            "    (\n" +
+            "		SELECT COUNT(*) FROM pattern_matching_validations PMV\n" +
+            "		WHERE PMV.pattern_matching_roi_id = pattern_matching_rois.pattern_matching_roi_id AND PMV.validated = 1\n" +
+            " 	 ) >= projects.citizen_scientist_validation_consensus_number, \n" +
+            "    1,\n" +
+            "    IF(\n" +
+            "		(\n" +
+            "			SELECT COUNT(*) FROM pattern_matching_validations PMV\n" +
+            "			WHERE PMV.pattern_matching_roi_id = pattern_matching_rois.pattern_matching_roi_id AND PMV.validated = 0\n" +
+            "		) >= projects.citizen_scientist_validation_consensus_number, \n" +
+            "		0,\n" +
+            "		pattern_matching_rois.validated\n" +
+            "    )\n" +
+            ")\n" +
+            "WHERE pattern_matching_rois.pattern_matching_id = ?\n" +
+            "  AND pattern_matching_rois.pattern_matching_roi_id IN (?)\n" +
+            "  AND pattern_matching_rois.validated IS NULL", [
+            patternMatchingId,
+            rois
+        ]);
     },
 
 };
