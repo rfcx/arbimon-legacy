@@ -62,7 +62,7 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     var user = req.session.user;
-    model.patternMatchings.validateCSRois(req.params.patternMatching, user.id, req.body.rois, req.body.validation).then(function(rois) {
+    model.CitizenScientist.validateCSRois(req.params.patternMatching, user.id, req.body.rois, req.body.validation).then(function(rois) {
         res.json({
             rois: req.body.rois,
             validation: req.body.validation,

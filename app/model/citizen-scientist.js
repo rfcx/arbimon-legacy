@@ -163,6 +163,24 @@ var CitizenScientist = {
             ]);
         });
     },
+
+    validateCSRois(patternMatchingId, userId, rois, validation){
+        return (rois.length ? dbpool.query(
+            "INSERT INTO pattern_matching_validations(\n" +
+            "    pattern_matching_roi_id, user_id, validated, timestamp\n" +
+            ") VALUES (\n" + rois.map(function(roi) {
+                return "   ?, ?, ?, NOW()\n";
+            }).join("), (\n") +
+            ")\n" +
+            "ON DUPLICATE KEY UPDATE\n" +
+            "    validated = VALUES(validated)", rois.reduce(function(_, roi) {
+                _.push(roi, userId, validation);
+                return _;
+            }, [])
+        ) : Promise.resolve()).then(function(){
+        });
+    },
+
 };
 
 
