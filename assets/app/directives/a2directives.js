@@ -1,22 +1,22 @@
 angular.module('a2.directives', [
-    'a2.services', 
+    'a2.services',
     'a2.directive.a2-table',
     'a2.directive.percentage-bars',
     'templates-arbimon2',
 ])
 .run(function($window) {
     var $ = $window.$;
-    
+
     $(document).click( function(e){
         if($(e.target).closest('.calendar.popup:visible').length)
             return;
-            
+
         $('.calendar.popup:visible').hide();
     });
-    
+
     // extend jQuery
     // add parent tag selector
-    $.expr.filter.UP_PARENT_SPECIAL = function(_1){ 
+    $.expr.filter.UP_PARENT_SPECIAL = function(_1){
         var times = (_1 && _1.length) || 1;
         return $.expr.createPseudo(function(seed,matches,_3,_4){
             var dups=[];
@@ -39,7 +39,7 @@ angular.module('a2.directives', [
                 matches[i] = p;
                 seed[i] = !p;
             });
-            
+
             return true;
         });
     };
@@ -48,7 +48,7 @@ angular.module('a2.directives', [
 })
 .directive('a2GlobalKeyup', function($window, $timeout){
     var $ = $window.$;
-    
+
     return {
         restrict : 'A',
         scope : {
@@ -75,7 +75,7 @@ angular.module('a2.directives', [
             return fn(scope, locals);
         };
     };
-    
+
     return {
         scope: {
             'a2InfiniteScrollDistance':'=?',
@@ -91,7 +91,7 @@ angular.module('a2.directives', [
             }
             if(attrs.a2InfiniteScroll){
                 $scope.a2InfiniteScroll = mkFunction(pscope, attrs.a2InfiniteScroll);
-                    
+
                 ++cb_count;
             }
             if(!$scope.a2InfiniteScrollDistance){
@@ -100,7 +100,7 @@ angular.module('a2.directives', [
             if(!$scope.a2InfiniteScrollRefraction){
                 $scope.a2InfiniteScrollRefraction = 1000;
             }
-            
+
             element.bind("scroll", function(e) {
                 if($scope.a2Scroll){
                     $scope.a2Scroll({$event:e});
@@ -122,7 +122,7 @@ angular.module('a2.directives', [
 .directive('a2Persistent', function($rootScope, $compile, $timeout){
     var counter = 0;
     var poc = $('<div></div>');
-    return { 
+    return {
         restrict : 'E', scope : {},
         compile  : function(tElement, tAttrs){
             var children=tElement.children().detach();
@@ -161,13 +161,13 @@ angular.module('a2.directives', [
     return {
         restrict: 'A',
         link: function (scope, element, attr) {
-            
+
             var updateHeight = function() {
                 // console.log('window h:', $(window).height());
                 // console.log('ele pos:',  element.offset());
                 // console.log('ele h:', element.height());
                 var h = $($window).height() - element.offset().top;
-                
+
                 if(h < 500)
                     return;
 
@@ -205,7 +205,7 @@ angular.module('a2.directives', [
      };
 })
 /**   yearpick - complete year date picker
-  
+
   example usage:
   <div class="dropdown">
     <button ng-model="dia" yearpick disable-empty="true" year="year" date-count="dateData">
@@ -219,7 +219,7 @@ angular.module('a2.directives', [
 .directive('yearpick', function($timeout, $window) {
     var d3 = $window.d3;
     var $ = $window.$;
-    
+
     return {
         restrict: 'AE',
         scope: {
@@ -235,30 +235,30 @@ angular.module('a2.directives', [
         },
         link: function(scope, element, attrs) {
             var is_a_popup = !/yearpick/i.test(element[0].tagName);
-            
+
             var popup;
-            
+
             if(is_a_popup){
                 popup = $('<div></div>').insertAfter(element).addClass('calendar popup');
-                
+
                 element.click(function(e) {
                     e.stopPropagation();
-                    
+
                     // verify if hidden
                     var visible = popup.css('display') === 'none';
-                    
+
                     // always hide any other open yearpick
                     $('.calendar.popup:visible').hide();
-                    
+
                     if(visible) {
                         popup.css('display','block');
                     }
                 });
-            } 
+            }
             else {
                 popup = element.addClass('calendar');
             }
-            
+
             var weekOfMonth = function(d) {
                 var firstDay = new Date(d.toString());
                 firstDay.setDate(1);
@@ -276,7 +276,7 @@ angular.module('a2.directives', [
             };
             var computeMax = !attrs.maxDate;
             var computeMin = !attrs.minDate;
-            
+
             function setYear(year){
                 var old_year = scope.year;
                 scope.year = year;
@@ -291,7 +291,7 @@ angular.module('a2.directives', [
                     $timeout(function(){scope.onDateChanged({date:date});});
                 }
             }
-            
+
             if(!scope.year){
                 setYear((new Date()).getFullYear());
             }
@@ -300,17 +300,17 @@ angular.module('a2.directives', [
             var height = 510;
             var headerHeight = 40;
             var days;
-            
+
             var svg = d3.select(popup[0])
                 .append('svg')
                 .attr('width', width)
                 .attr('height', height);
-            
+
             var cal    = svg.append('g');
             var legend = svg.append('g');
             var prev   = svg.append('g').attr('class', 'btn');
             var next   = svg.append('g').attr('class', 'btn');
-            
+
             // draws previous year button
             prev.append('text')
                 .attr('text-anchor', 'start')
@@ -319,13 +319,13 @@ angular.module('a2.directives', [
                 .attr('x', 5)
                 .attr('y', 24)
                 .text('\uf060');
-            
+
             prev.on('click', function(e){
                 $timeout(function(){
                     setYear(scope.year-1);
                 });
             });
-            
+
             // draws next year button
             next.append('text')
                 .attr('text-anchor', 'end')
@@ -334,32 +334,32 @@ angular.module('a2.directives', [
                 .attr('x', width-5)
                 .attr('y', 24)
                 .text('\uf061');
-            
+
             next.on('click', function(e){
                 $timeout(function(){
                     setYear(scope.year+1);
                 });
             });
-            
-            
+
+
             // draw legend
             if(scope.mode === "density") {
                 var scale = {scale:[1, 50, 100], labels:['0','1','50','100']};
                 var color = d3.scale.threshold().domain(scale.scale).range(scale);
-                
+
                 var icon = legend.selectAll('g')
                     .data(['1','50','100'])
                     .enter()
                     .append('g')
                     .attr('transform', 'translate(20,0)');
-                
+
                 icon.append('rect')
                     .attr('width', cubesize)
                     .attr('height', cubesize)
                     .attr('y', height-cubesize-10)
                     .attr('x', function(d, i) { return i*45+22; })
                     .attr('class', function(d) { return 'cal-level-'+d; });
-                
+
                 icon.append('text')
                     .attr('text-anchor', 'middle')
                     .attr('font-size', 10)
@@ -367,40 +367,40 @@ angular.module('a2.directives', [
                     .attr('x', function(d, i) { return i*45+10; })
                     .text(function(d, i) { return '+'+d; });
             }
-            
+
             var drawCounts = function() {
                 if(scope.mode === "density" && !scope.dateCount) return;
-                
+
                 if(scope.disableEmpty()) {
                     days.classed('day-disabled', function(d) {
                         return $(this).hasClass('cal-oor') || !scope.dateCount[dateFormat(d)] ;
                     });
-                }                
-                
-                var squares = days.select('rect');                
-                squares.attr('class', function(d) {                     
+                }
+
+                var squares = days.select('rect');
+                squares.attr('class', function(d) {
                     var color = d3.scale.threshold().domain([1, 50, 100]).range(['0','1','50','100']);
-                    
+
                     var count = scope.dateCount[dateFormat(d)] || 0;
-                    
-                    return 'cal-level-'+color(count); 
+
+                    return 'cal-level-'+color(count);
                 });
             };
-            
+
             var draw = function() {
                 // set calendar year
                 calendar = cal.selectAll('g').data([scope.year]);
-                
-                // append new year 
+
+                // append new year
                 var title = calendar.enter().append('g');
-                
+
                 // set text position
                 title.append('text')
                     .attr('text-anchor', 'middle')
                     .attr('font-size', 30)
                     .attr('x', width/2)
                     .attr('y', 30);
-                
+
                 // set line position
                 title.append('line')
                     .attr('x1', 5)
@@ -409,54 +409,54 @@ angular.module('a2.directives', [
                     .attr('y2', headerHeight)
                     .attr('stroke', 'rgba(0,0,0,0.5)')
                     .attr('stroke-width', 1);
-                
+
                 // remove old year
                 calendar.exit().remove();
-                
+
                 // write year text
                 calendar.select('text').text(function(d) { return d; });
-                
+
                 prev.classed('disabled', scope.minDate && scope.minDate.getFullYear() >= scope.year);
                 next.classed('disabled', scope.maxDate && scope.year >= scope.maxDate.getFullYear());
-                
+
                 // setup the months containers and set the years' month date range
                 var mon = calendar.append('g')
                     .attr('transform', 'translate(0,'+ headerHeight +')')
                     .selectAll('g')
-                    .data(function(d) { 
+                    .data(function(d) {
                         return d3.time.months(new Date(d, 0, 1), new Date(d+1, 0, 1));
                     });
-                
+
                 // on enter in months, append new months
                 mon.enter().append('g');
-                
+
                 // in months, transform each month to their place in the yearpick
-                mon.attr('transform', function(d, i) { 
-                    return 'translate('+((d.getMonth()%4)*150+5)+','+(Math.floor(d.getMonth()/4)*150+5)+')'; 
+                mon.attr('transform', function(d, i) {
+                    return 'translate('+((d.getMonth()%4)*150+5)+','+(Math.floor(d.getMonth()/4)*150+5)+')';
                 });
-                
+
                 // in months, transform each month to their place in the yearpick
                 mon.append('text')
                     .attr('text-anchor', 'middle')
                     .attr('x', cubesize*7/2)
                     .attr('y', 15)
                     .text(function(d) { return monthName(d); });
-                
+
                 // remove old months
                 mon.exit().remove();
-                
-                
+
+
                 // setup day containers for each months
                 days = mon.selectAll('g')
-                    .data(function(d) { 
-                        return d3.time.days(new Date(d.getFullYear(), d.getMonth(), 1), new Date(d.getFullYear(), d.getMonth() + 1, 1)); 
+                    .data(function(d) {
+                        return d3.time.days(new Date(d.getFullYear(), d.getMonth(), 1), new Date(d.getFullYear(), d.getMonth() + 1, 1));
                     });
-                
+
                 //  in days, on enter, append a g of class btn
                 days.enter()
                     .append('g')
                     .attr('class', 'day');
-                
+
                 //  for each day, move the text, add class hover and onclick event handler
                 days.attr('transform', function() { return 'translate(0,24)'; })
                     .classed('hover', true)
@@ -481,7 +481,7 @@ angular.module('a2.directives', [
                     .attr('y', function(d, i) { return weekOfMonth(d) * (cubesize+1); })
                     .attr('x', function(d, i) { return (d.getDay()) * (cubesize+1); })
                     .attr('fill', 'white');
-                    
+
                 // .. and append a text on the foreground
                 days.append('text')
                     .attr('text-anchor', 'middle')
@@ -489,37 +489,37 @@ angular.module('a2.directives', [
                     .attr('y', function(d, i) { return weekOfMonth(d) * (cubesize+1)+13; })
                     .attr('x', function(d, i) { return (d.getDay()+1) * (cubesize+1)-10; })
                     .text(function(d, i) { return d.getDate(); });
-                
+
                 // if we have date counts, then draw them
                 if(attrs.dateCount) {
                     drawCounts();
                 }
-                
+
                 // remove old days
                 days.exit().remove();
             };
-            
+
             scope.$watch('maxDate', function(){
                 if(scope.maxDate && scope.year > scope.maxDate.getFullYear()){
                     setYear(scope.maxDate.getFullYear());
                 }
                 draw();
             });
-            
+
             scope.$watch('minDate', function(){
                 if(scope.minDate && scope.year < scope.minDate.getFullYear()){
                     setYear(scope.minDate.getFullYear());
                 }
                 draw();
             });
-            
+
             scope.$watch('year', function(){
                 if(!scope.year){
                     setYear(new Date().getFullYear());
                 }
                 draw();
             });
-            
+
             scope.$watch('ngModel', function(){
                 if(scope.ngModel){
                     setYear(scope.ngModel.getFullYear());
@@ -528,13 +528,13 @@ angular.module('a2.directives', [
                     });
                 }
             });
-            
+
             var computeMaxMinDateFromCounts = function(dateCounts, computeMax, computeMin){
                 var stats=null;
                 if(!dateCounts || (!computeMax && !computeMin)){
                     return;
                 }
-                
+
                 for(var dateFmt in dateCounts){
                     var date = format2Date(dateFmt);
                     if(stats){
@@ -551,7 +551,7 @@ angular.module('a2.directives', [
                     scope.maxDate = new Date(stats.max);
                 }
             };
-            
+
             if(canHaveDateCounts()) {
                 scope.$watch('dateCount', function(value) {
                     computeMaxMinDateFromCounts(value, computeMax, computeMin);
@@ -568,13 +568,13 @@ angular.module('a2.directives', [
         scope : {},
         link: function ($scope, $element, $attr) {
             $element.addClass('a2-img');
-            
+
             var loader = $compile('<loader hide-text="yes"></loader>')($scope).appendTo($element);
-            
+
             var img = $('<img>').on('load', function(){
                     $element.removeClass('loading');
                 }).appendTo($element);
-            
+
             $attr.$observe('a2Src', function(new_src){
                 if(!new_src){
                     img.hide();
@@ -588,9 +588,9 @@ angular.module('a2.directives', [
                     img.attr('src', this.src);
                 };
                 image.src = new_src;
-                
+
             });
-            
+
         }
     };
 })
@@ -625,23 +625,23 @@ angular.module('a2.directives', [
 })
 .directive('a2InsertIn', function($window){
     var $ = $window.$;
-    
+
     var count=1;
     return {
         restrict: 'A',
         link: function ($scope, $element, $attr){
             var anchor = $('<div class="a2-insert-in-anchor"></div>')
                 .attr('id', 'a2InsertInAnchor'+(count++));
-                
+
             var is_truthy = function(v){
                 return (v) && !/no|false|0/.test(''+v);
             };
             var keep_position = is_truthy($attr.a2KeepPosition);
             var target = $($attr.a2InsertIn);
-            
+
             $element[0].parentNode.replaceChild(anchor[0], $element[0]);
             $element.appendTo(target);
-            
+
             var reposition_element=null;
             if(keep_position){
                 var comp_pos = function(el){
@@ -667,93 +667,93 @@ angular.module('a2.directives', [
                 }, reposition_element, true);
                 reposition_element();
             }
-            
+
             $scope.$watch(function(){
                 return anchor.is(':visible');
             }, function(visibility){
                 $element.css('display', visibility ? 'block' : 'none');
             });
-            
+
             anchor.on('$destroy', function(){
                 $element.remove();
             });
-        }        
+        }
     };
 })
 .directive('a2LineChart', function($window) {
     var d3 = $window.d3;
-    
+
     var drawChart = function(data, options) {
-        
+
         var padding = {
             left: 30,
             right: 10,
             top: 10,
             bottom: 20
         };
-        
+
         var getY = function(value) { return value.y; };
         var getX = function(value) { return value.x; };
-        
+
         var yMin = d3.min(data, getY);
         var yMax = d3.max(data, getY);
-        
+
         var tMin = d3.min(data, getX);
         var tMax = d3.max(data, getX);
-        
+
         var element = options.element;
         var lineColor = options.lineColor || "red";
         var width = options.width,
         height = options.height;
-        
+
         var xScale = d3.scale.linear()
         .domain([tMin, tMax])
         .range([padding.left, width-padding.right]);
-        
+
         var yScale = d3.scale.linear()
         .domain([yMin, yMax])
         .range([height-padding.bottom, padding.top]);
-        
+
         var line = d3.svg.line()
         .x(function(d) { return xScale(d.x); })
         .y(function(d) { return yScale(d.y); })
         .interpolate("linear");
-        
+
         var symbol= d3.svg.symbol().type('circle');
-        
+
         var xAxis = d3.svg.axis()
         .scale(xScale).ticks(tMax-tMin);
-        
+
         var yAxis = d3.svg.axis()
         .scale(yScale).orient('left').ticks(3);
-        
+
         var svg = element
         .append('svg')
         .attr('class', "graph")
         .attr('height', height)
         .attr('width', width);
-        
+
         svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + (height-padding.bottom) + ")")
         .call(xAxis);
-        
+
         svg.append("g")
         .attr("class", "y axis")
         .attr("transform", "translate("+ padding.left +",0)")
         .call(yAxis);
-        
+
         var dataG = svg.append('g')
         .datum(data);
-        
+
         var path = dataG.append('path')
         .attr('stroke', lineColor)
         .attr('stroke-width',"2")
         .attr('fill',"none")
         .attr('d', line);
-        
+
         var totalLength = path.node().getTotalLength();
-        
+
         path.attr("stroke-dasharray", totalLength)
         .attr("stroke-dashoffset", totalLength)
         .transition().delay(200)
@@ -764,22 +764,22 @@ angular.module('a2.directives', [
             path.attr("stroke-dasharray", null)
             .attr("stroke-dashoffset", null);
         });
-        
-        
+
+
         dataG.append("g").selectAll('path')
         .data(function(d) { return d; })
         .enter()
         .append('path')
         .attr('fill',"transparent")
-        .attr("transform", function(d) { 
-            return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")scale(0.7,0.7)"; 
+        .attr("transform", function(d) {
+            return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")scale(0.7,0.7)";
         })
         .attr("d", symbol)
         .attr('fill', lineColor)
         .on('mouseenter', function(d) {
             var body = d3.select('body');
-            var coords = d3.mouse(body.node()); 
-            
+            var coords = d3.mouse(body.node());
+
             var tooltip = body.append('div')
             .datum(d)
             .attr('class', "graph-tooltip")
@@ -792,7 +792,7 @@ angular.module('a2.directives', [
             .text(Math.round(d.y*1000)/1000);
         });
     };
-    
+
     return {
         restrict: 'E',
         scope: {
@@ -802,33 +802,33 @@ angular.module('a2.directives', [
             color: '@?'
         },
         link: function (scope, element, attrs) {
-            
+
             scope.$watch('values', function() {
-                
+
                 if(!scope.values)
                     return;
-                
-                drawChart(scope.values, { 
-                    lineColor: scope.color, 
+
+                drawChart(scope.values, {
+                    lineColor: scope.color,
                     element: d3.select(element[0]),
-                    width: Number(scope.width), 
-                    height: Number(scope.height) 
+                    width: Number(scope.width),
+                    height: Number(scope.height)
                 });
             });
-            
+
         }
     };
 })
 .directive('c3ChartDisplay', function($window) {
     var c3 = $window.c3;
-    
+
     function normalize(data){
         if(typeof data != 'object') {
             return {columns:data};
         }
         return data;
     }
-    
+
     var makeChart = function(element, data, axes){
         console.log("c3ChartDisplay link: makeChart = function(element, data, axes){");
         var celem = element.find('div');
@@ -839,15 +839,15 @@ angular.module('a2.directives', [
         if(!celem.length){
             celem = angular.element('<div></div>').appendTo(element);
         }
-        
+
         var args={bindto: celem[0], data: normalize(data)};
         if(axes){
             args.axis=axes;
         }
-        
+
         return c3.generate(args);
     };
-    
+
     return {
         restrict: 'E',
         scope: {
@@ -863,7 +863,7 @@ angular.module('a2.directives', [
             });
             scope.$watch('data', function(o,n){
                 console.log("scope.$watch('data', function(o,n){",o,n);
-                if(!chart || o != n){ 
+                if(!chart || o != n){
                     chart = makeChart(element, scope.data, scope.axes, chart);
                 } else if(chart){
                     // chart.unload();
@@ -887,7 +887,7 @@ angular.module('a2.directives', [
         link: function(scope, element, attrs, ngModel){
             var saveBtn;
             var onDirtySaveFN = $parse(attrs.a2BsNgModelOnDirtySaveButton);
-            
+
             function addSaveBtn(){
                 element.wrap('<div class="input-group"></div>');
                 var parentEl = element.parent();
@@ -898,7 +898,7 @@ angular.module('a2.directives', [
                 );
                 saveBtn.find('button.btn').on('click', function(){
                     onDirtySaveFN(scope, {
-                        $name  : ngModel.$name, 
+                        $name  : ngModel.$name,
                         $modelValue : ngModel.$modelValue,
                         $setPristine: function(){
                             ngModel.$setPristine();
@@ -907,7 +907,7 @@ angular.module('a2.directives', [
                     });
                 });
 
-                saveBtn.appendTo(parentEl);                
+                saveBtn.appendTo(parentEl);
             }
             function removeSaveBtn(){
                 if(saveBtn){
@@ -916,7 +916,7 @@ angular.module('a2.directives', [
                 element.unwrap();
                 saveBtn = undefined;
             }
-            
+
             ngModel.$viewChangeListeners.push(function(){
                 if(ngModel.$dirty && !saveBtn){
                     addSaveBtn();
@@ -933,25 +933,25 @@ angular.module('a2.directives', [
     if(!createObjectURL && $window.webkitURL.createObjectURL){
         createObjectURL = $window.webkitURL.createObjectURL;
         revokeObjectURL = $window.webkitURL.revokeObjectURL;
-    } 
+    }
     if(!createObjectURL){
         revokeObjectURL = function(){};
     }
-    
+
     function dataURIToBinaryBuffer(dataURI) {
-        var BASE64_MARKER = ';base64,';   
+        var BASE64_MARKER = ';base64,';
         var base64Index = dataURI.indexOf(BASE64_MARKER) + BASE64_MARKER.length;
         var base64 = dataURI.substring(base64Index);
         var raw = $window.atob(base64);
         var rawLength = raw.length;
         var array = new $window.Uint8Array(new $window.ArrayBuffer(rawLength));
-        
+
         for(i = 0; i < rawLength; i++) {
             array[i] = raw.charCodeAt(i);
         }
         return array.buffer;
     }
-    
+
     function getCanvasBlob(canvas){
         if(canvas.toBlob){
             return $q(function(resolve){
@@ -977,7 +977,7 @@ angular.module('a2.directives', [
             if(!createObjectURL){
                 return $q.resolve(canvas.toDataURL("image/png"));
             }
-            
+
             return getCanvasBlob(canvas).then(function(blob){
                 return createObjectURL(blob);
             });
@@ -991,15 +991,15 @@ angular.module('a2.directives', [
     function computeHash(w, h, type, data){
         return JSON.stringify([w, h, type, data]);
     }
-    
+
     function createAxisData(canvas, w, h, type, data){
         if(!w || !h){
             return $q.reject("Empty canvas size");
         }
-        
+
         canvas.width = w;
         canvas.height = h;
-        
+
         var i;
         var prec = data.prec || 1;
         var min = ((data.range[0] / prec) | 0) * prec;
@@ -1014,7 +1014,7 @@ angular.module('a2.directives', [
         ctx.font = data.font;
         ctx.strokeStyle = data.color;
         ctx.lineWidth = 0.5;
-        
+
         ctx.clearRect(0, 0, w, h);
         var val, x, y, pad=3;
         var lblSize={w:0,h:10};
@@ -1025,13 +1025,13 @@ angular.module('a2.directives', [
                 lblSize.w = tW;
             }
         }
-        
-        
+
+
         if(type == 'h'){
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
             scale = w / (max - min);
-            
+
             ctx.beginPath();
             ctx.moveTo(0, 0);
             ctx.lineTo(w1, 0);
@@ -1053,7 +1053,7 @@ angular.module('a2.directives', [
             ctx.textAlign = 'right';
             ctx.textBaseline = 'alphabet';
             scale = h / (max - min);
-            
+
             ctx.beginPath();
             ctx.moveTo(w1, 0);
             ctx.lineTo(w1, h1);
@@ -1077,7 +1077,7 @@ angular.module('a2.directives', [
         //     count:10,
         //     unit:'kHz'
         // }
-                
+
         // console.log("drawAxis(",canvas, w, h, type, data,")");
         return canvasObjectURL.create(canvas);
         // return canvas.toDataURL();
@@ -1087,9 +1087,9 @@ angular.module('a2.directives', [
         var hash = computeHash(w, h, type, data);
         var axisDataPromise = promiseCache[hash];
         if(!axisDataPromise){
-            axisDataPromise = promiseCache[hash] = createAxisData(canvas, w, h, type, data);    
+            axisDataPromise = promiseCache[hash] = createAxisData(canvas, w, h, type, data);
         }
-        
+
         return axisDataPromise.then(function(axisData){
             img.src = axisData;
         });
@@ -1104,15 +1104,15 @@ angular.module('a2.directives', [
         link:function(scope, element, attrs){
             var img = element.find('img')[0];
             var tout;
-            
+
             var redrawAxis = $debounce(function (){
                 drawAxisOnImg(img, element.width(), element.height(), scope.type, scope.data);
             }, 500);
-            
+
             function elementSize(){
                 return element.width() * element.height();
             }
-            
+
             scope.$watch(elementSize, redrawAxis);
             scope.$watch('type', redrawAxis);
             scope.$watch('data', redrawAxis);
