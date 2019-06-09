@@ -22,4 +22,22 @@
 }
 
 
+span.swatch{
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    margin: 4px;
+    vertical-align: middle;
+    border: 1px solid gray;
+    &.val-0 {
+        background-color: @val-color-0;
+    }
+
+    &.val-1 {
+        background-color: @val-color-1;
+    }
+
+    &.val-2 {
+        background-color: white;
+    }
 }

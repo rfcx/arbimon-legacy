@@ -24,9 +24,9 @@
             <field title="Songtype"   filter key="songtype">{{ row.songtype }}</field>
             <field title="Stats"      key="stats" width="50%" >
                 <a2-percentage-bars data="[row.present, row.notPresent, row.notValidated]"
-                        popover-html="'Present: {{row.present}} ({{row.present * 100 / row.count | number:0}}%)<br />
-                                 Not Present: {{row.notPresent}} ({{row.notPresent * 100 / row.count | number:0}}%)<br />
-                                 Not Validated: {{row.notValidated}} ({{row.notValidated * 100 / row.count | number:0}}%)'"
+                        popover-html="'<span class=\'swatch val-1\'></span> Present: {{row.present}} ({{row.present * 100 / row.count | number:0}}%)<br />
+                                 <span class=\'swatch val-0\'></span> Not Present: {{row.notPresent}} ({{row.notPresent * 100 / row.count | number:0}}%)<br />
+                                 <span class=\'swatch val-2\'></span> Not Validated: {{row.notValidated}} ({{row.notValidated * 100 / row.count | number:0}}%)'"
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
                 />
@@ -45,9 +45,9 @@
             <field title="Pattern Matching"    filter key="name" >{{ row.name }}</field>
             <field title="Stats"      key="stats" width="50%" >
                 <a2-percentage-bars data="[row.present, row.notPresent, row.notValidated]"
-                        popover-html="'Present: {{row.present}} ({{row.present * 100 / row.count | number:0}}%)<br />
-                                 Not Present: {{row.notPresent}} ({{row.notPresent * 100 / row.count | number:0}}%)<br />
-                                 Not Validated: {{row.notValidated}} ({{row.notValidated * 100 / row.count | number:0}}%)'"
+                        popover-html="'<span class=\'swatch val-1\'></span> Present: {{row.present}} ({{row.present * 100 / row.count | number:0}}%)<br />
+                                 <span class=\'swatch val-0\'></span> Not Present: {{row.notPresent}} ({{row.notPresent * 100 / row.count | number:0}}%)<br />
+                                 <span class=\'swatch val-2\'></span> Not Validated: {{row.notValidated}} ({{row.notValidated * 100 / row.count | number:0}}%)'"
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
                 />
