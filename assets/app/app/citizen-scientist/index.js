@@ -4,7 +4,7 @@ angular.module('a2.citizen-scientist', [
     'ui.router',
     'ct.ui.router.extras'
 ]).config(function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.when("/citizen-scientist", "/citizen-scientist/admin/classification-stats/");
+    $urlRouterProvider.when("/citizen-scientist", "/citizen-scientist/patternmatching/");
     $stateProvider.state('citizen-scientist', {
         url: '/citizen-scientist',
         views: {
