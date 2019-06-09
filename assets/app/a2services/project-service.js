@@ -5,7 +5,7 @@ angular.module('a2.srv.project', [
     $location, $http, $q, $httpParamSerializer,
     a2APIService
 ) {
-        
+
         var nameRe = /\/?(project|citizen-scientist)\/([\w\_\-]+)/;
         var nrm = nameRe.exec($location.absUrl());
         var url = nrm ? nrm[2] : '';
@@ -45,7 +45,7 @@ angular.module('a2.srv.project', [
                     callback = options;
                     options = {};
                 }
-                
+
                 return $q.when($http.get('/api/project/'+url+'/classes', {
                         params: options
                     })).then(function(response){
@@ -56,7 +56,7 @@ angular.module('a2.srv.project', [
                     });
             },
             // TODO should rename getRecs to findRecs
-            getRecs: function(query, callback) { 
+            getRecs: function(query, callback) {
                 if(typeof query === "function") {
                     callback = query;
                     query = {};
@@ -69,20 +69,20 @@ angular.module('a2.srv.project', [
                         callback(data);
                     });
             },
-            getRecCounts: function(query) { 
+            getRecCounts: function(query) {
                 return a2APIService.get('/recordings/search-count', {params:query || {}});
             },
             getRecordingDataUrl: function(filters, projection){
                 var params={filters:filters, show:projection};
-                
+
                 Object.keys(params).forEach(function(param){
                     if(!Object.keys(params[param] || {}).length){
                         delete params[param];
                     }
                 });
-                
+
                 var serializedParams = $httpParamSerializer(params);
-                
+
                 return '/api/project/'+url+'/recordings/recordings-export.csv' + (serializedParams.length ? '?'+serializedParams : '');
             },
             getRecTotalQty: function(callback) {
@@ -231,7 +231,7 @@ angular.module('a2.srv.project', [
                         }
                     })
                     .success(callback);
-            }, 
+            },
         };
     })
 ;
