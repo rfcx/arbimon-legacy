@@ -91,6 +91,7 @@ router.get('/user-settings', function(req, res) {
 
 router.use('/api', dataApi);
 router.use('/project', project);
+router.use('/citizen-scientist', require('./citizen-scientist'));
 router.use('/', require('./access-token'));
 
 

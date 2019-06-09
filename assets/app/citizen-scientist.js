@@ -1,4 +1,4 @@
-var a2 = angular.module('a2.app', [
+var a2 = angular.module('a2.cs-app', [
     'a2.permissions',
     'templates-arbimon2',
     'a2.app.dashboard',
@@ -30,7 +30,7 @@ var a2 = angular.module('a2.app', [
 
         if(allowed === undefined) { // if permissions have not loaded go dashboard
             e.preventDefault();
-            $state.go('dashboard');
+            $state.go('citizen-scientist.patternmatching');
         }
         else if(allowed === false){
             e.preventDefault();
@@ -42,10 +42,11 @@ var a2 = angular.module('a2.app', [
     a2GoogleMapsLoaderProvider.setAPIKey(a2InjectedData.googleAPI.key);
     AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
     $locationProvider.html5Mode(true);
-    $urlRouterProvider.otherwise("/dashboard");
+    $urlRouterProvider.otherwise("/citizen-scientist/patternmatching/");
 })
 .controller('MainCtrl', function($scope, $state, Project){
     $scope.$state = $state;
+    $scope.onCitizenScientistPage = true;
     $scope.getUrlFor = function(page){
         if(page == 'citizen-scientist'){
             return '/citizen-scientist/' + Project.getUrl() + '/';
