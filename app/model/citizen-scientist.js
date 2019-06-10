@@ -180,6 +180,8 @@ var CitizenScientist = {
             }, [])
         ) : Promise.resolve()).then(() => {
             return this.computeConsensusValidations(patternMatchingId, rois);
+        }).then(() => {
+            return this.computeUserStats(patternMatchingId, userId);
         });
     },
 
@@ -209,6 +211,45 @@ var CitizenScientist = {
             patternMatchingId,
             rois
         ]);
+    },
+
+    computeUserStats(patternMatchingId, userId){
+        return dbpool.query(
+            "SELECT P.project_id, P.species_id, P.songtype_id\n" +
+            "FROM pattern_matchings P\n" +
+            "WHERE P.pattern_matching_id = ?", [
+            patternMatchingId
+        ]).get(0).then((pm) => {
+            return dbpool.query(
+                "INSERT INTO pattern_matching_user_statistics(\n" +
+                "    user_id, project_id, species_id, songtype_id,\n" +
+                "    validated, correct, incorrect,\n" +
+                "    confidence,\n" +
+                "    last_update\n" +
+                ") SELECT \n" +
+                "    ?, Q.project_id, Q.species_id, Q.songtype_id, \n" +
+                "    Q.validated, Q.correct, Q.incorrect,\n" +
+                "    (Q.correct + 1) / (Q.correct + Q.incorrect + 1),\n" +
+                "    NOW()\n" +
+                "FROM (\n" +
+                "    SELECT P.project_id, P.species_id, P.songtype_id,\n" +
+                "        SUM(IF(PMV.validated IS NOT NULL, 1, 0)) as validated,\n" +
+                "        SUM(IF(PMV.validated IS NOT NULL AND PMV.validated = PMR.consensus_validated, 1, 0)) as correct,\n" +
+                "        SUM(IF(PMV.validated IS NOT NULL AND PMV.validated != PMR.consensus_validated, 1, 0)) as incorrect\n" +
+                "    FROM pattern_matchings P\n" +
+                "    JOIN pattern_matching_rois PMR ON P.pattern_matching_id = PMR.pattern_matching_id\n" +
+                "    LEFT JOIN pattern_matching_validations PMV ON (PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id AND PMV.user_id = ?)\n" +
+                "    WHERE P.project_id = ? AND P.species_id = ? AND P.songtype_id = ?\n" +
+                ") Q\n" +
+                "ON DUPLICATE KEY UPDATE\n" +
+                "    validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect),\n" +
+                "    confidence=VALUES(confidence),\n" +
+                "    last_update=VALUES(last_update)\n" +
+                "", [
+                    userId,
+                    userId, pm.project_id, pm.species_id, pm.songtype_id,
+                ]);
+        });
     },
 
 };
