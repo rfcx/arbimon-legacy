@@ -15,9 +15,9 @@ var CitizenScientist = {
             "Sp.scientific_name as `species`",
             "St.songtype_id",
             "St.songtype",
-            "SUM(IF(PMR.validated = 1, 1, 0)) as present",
-            "SUM(IF(PMR.validated = 0, 1, 0)) as notPresent",
-            "SUM(IF(PMR.validated IS NULL, 1, 0)) as notValidated",
+            "SUM(IF(PMR.consensus_validated = 1, 1, 0)) as present",
+            "SUM(IF(PMR.consensus_validated = 0, 1, 0)) as notPresent",
+            "SUM(IF(PMR.consensus_validated IS NULL, 1, 0)) as notValidated",
             "COUNT(*) as `count`"
         ];
 
@@ -188,7 +188,7 @@ var CitizenScientist = {
             "UPDATE pattern_matching_rois\n" +
             "  JOIN pattern_matchings ON pattern_matching_rois.pattern_matching_id = pattern_matchings.pattern_matching_id\n" +
             "  JOIN projects ON pattern_matchings.project_id = projects.project_id\n" +
-            "SET pattern_matching_rois.validated =  IF(\n" +
+            "SET pattern_matching_rois.consensus_validated =  IF(\n" +
             "    (\n" +
             "		SELECT COUNT(*) FROM pattern_matching_validations PMV\n" +
             "		WHERE PMV.pattern_matching_roi_id = pattern_matching_rois.pattern_matching_roi_id AND PMV.validated = 1\n" +
