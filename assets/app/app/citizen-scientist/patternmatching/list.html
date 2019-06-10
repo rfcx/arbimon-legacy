@@ -26,17 +26,12 @@
                         </div>
                         {{patternmatching.name}}
                     </td>
-                    <td data-title="'Timestamp'" data-sortable="'timestamp'" class="is-v-middle">
-                        {{ patternmatching.timestamp | moment : 'lll' }}
-                    </td>
-                    <td data-title="'Playlist'" data-sortable="'playlist_name'" filter="{ 'playlist_name': 'text' }" class="no-wrap-table-cell is-v-middle">
-                        {{patternmatching.playlist_name}}
-                    </td>
-                    <td data-title="'Parameters'" data-sortable="'parameters'" class="no-wrap-table-cell is-v-middle">
-                        {{patternmatching.parameters}}
-                    </td>
-                    <td data-title="'User'" data-sortable="'user'" filter="{ 'user': 'text' }" class="is-v-middle">
-                        {{ patternmatching.user }}
+                    <td data-title="'Timestamp'" data-sortable="'timestamp'" class="is-v-middle" width="50%">
+                        <a2-percentage-bars data="[patternmatching.validated, 0, patternmatching.total - patternmatching.validated]"
+                                popover-html="'<span class=\'swatch val-1\'></span> Validated: {{patternmatching.validated}} ({{patternmatching.validated * 100 / patternmatching.total | number:0}}%)'"
+                                popover-trigger="mouseenter"
+                                popover-append-to-body="true"
+                        />
                     </td>
                     <td class="is-v-middle">
                         <button class="btn btn-default"

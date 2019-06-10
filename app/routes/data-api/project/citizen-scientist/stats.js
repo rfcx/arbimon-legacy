@@ -58,7 +58,7 @@ router.get('/user/:user', function(req, res, next) {
         return model.CitizenScientist.getUserStats({
             project: project_id,
             user: user_id,
-            groupByMatching: !!user_id,
+            groupBySpecies: !!user_id,
         });
     }).then(function(stats){
         res.json({stats: stats});

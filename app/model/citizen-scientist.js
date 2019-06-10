@@ -69,6 +69,7 @@ var CitizenScientist = {
         var select = [
             "PMUS.user_id",
             "CONCAT(U.firstname, ' ', U.lastname) as user",
+            "COUNT(DISTINCT PMUS.species_id, PMUS.songtype_id) as species",
             "SUM(PMUS.validated) as validated",
             "SUM(PMUS.correct) as correct",
             "SUM(PMUS.incorrect) as incorrect",
@@ -86,7 +87,7 @@ var CitizenScientist = {
 
         var data = [options.project];
 
-        var groupby = [];
+        var groupby = ['PMUS.user_id'];
 
         if (options.user){
             constraints.push('PMUS.user_id = ?');
@@ -104,7 +105,7 @@ var CitizenScientist = {
                 'JOIN species Sp ON Sp.species_id = PMUS.species_id',
                 'JOIN songtypes St ON St.songtype_id = PMUS.songtype_id'
             );
-            groupby.push('Sp.species_id', 'Sp.songtype_id');
+            groupby.push('Sp.species_id', 'St.songtype_id');
         }
 
         return dbpool.query(
@@ -227,27 +228,27 @@ var CitizenScientist = {
                 "    confidence,\n" +
                 "    last_update\n" +
                 ") SELECT \n" +
-                "    ?, Q.project_id, Q.species_id, Q.songtype_id, \n" +
+                "    Q.user_id, Q.project_id, Q.species_id, Q.songtype_id, \n" +
                 "    Q.validated, Q.correct, Q.incorrect,\n" +
                 "    (Q.correct + 1) / (Q.correct + Q.incorrect + 1),\n" +
                 "    NOW()\n" +
                 "FROM (\n" +
-                "    SELECT P.project_id, P.species_id, P.songtype_id,\n" +
-                "        SUM(IF(PMV.validated IS NOT NULL, 1, 0)) as validated,\n" +
-                "        SUM(IF(PMV.validated IS NOT NULL AND PMV.validated = PMR.consensus_validated, 1, 0)) as correct,\n" +
-                "        SUM(IF(PMV.validated IS NOT NULL AND PMV.validated != PMR.consensus_validated, 1, 0)) as incorrect\n" +
+                "    SELECT PMV.user_id, P.project_id, P.species_id, P.songtype_id,\n" +
+                "        COUNT(PMV.validated) as validated,\n" +
+                "        SUM(IF(PMV.validated = PMR.consensus_validated, 1, 0)) as correct,\n" +
+                "        SUM(IF(PMV.validated != PMR.consensus_validated, 1, 0)) as incorrect\n" +
                 "    FROM pattern_matchings P\n" +
                 "    JOIN pattern_matching_rois PMR ON P.pattern_matching_id = PMR.pattern_matching_id\n" +
-                "    LEFT JOIN pattern_matching_validations PMV ON (PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id AND PMV.user_id = ?)\n" +
+                "    JOIN pattern_matching_validations PMV ON PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id\n" +
                 "    WHERE P.project_id = ? AND P.species_id = ? AND P.songtype_id = ?\n" +
+                "    GROUP BY PMV.user_id\n" +
                 ") Q\n" +
                 "ON DUPLICATE KEY UPDATE\n" +
                 "    validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect),\n" +
                 "    confidence=VALUES(confidence),\n" +
                 "    last_update=VALUES(last_update)\n" +
                 "", [
-                    userId,
-                    userId, pm.project_id, pm.species_id, pm.songtype_id,
+                    pm.project_id, pm.species_id, pm.songtype_id,
                 ]);
         });
     },

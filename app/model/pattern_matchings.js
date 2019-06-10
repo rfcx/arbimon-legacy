@@ -76,6 +76,7 @@ var PatternMatchings = {
             constraints.push('PM.`citizen_scientist` = ' + dbpool.escape(options.citizen_scientist));
         }
 
+
         if (options.deleted !== undefined) {
             constraints.push('PM.`deleted` = ' + dbpool.escape(options.deleted));
         }
@@ -123,7 +124,14 @@ var PatternMatchings = {
             select.push("SUM(IF(validated=1, 1, 0)) as present");
             select.push("SUM(IF(validated=0, 1, 0)) as absent");
             tables.push("JOIN pattern_matching_rois PMM ON PMM.pattern_matching_id = PM.pattern_matching_id");
-            groupby.join("PM.pattern_matching_id");
+            groupby.push("PM.pattern_matching_id");
+        }
+
+        if(options.showUserStatsFor) {
+            select.push("COUNT(*) as total", "SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated");
+            tables.push("LEFT JOIN pattern_matching_rois PMR ON PM.pattern_matching_id = PMR.pattern_matching_id");
+            tables.push("LEFT JOIN pattern_matching_validations PMV ON (PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id AND PMV.user_id = " + (options.showUserStatsFor | 0) + ")");
+            groupby.push("PM.pattern_matching_id");
         }
 
         postprocess.push((rows) => {
@@ -144,7 +152,7 @@ var PatternMatchings = {
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" \n  AND ") + (
-                groupby ? ("\n" + groupby.join(",\n    ")) : ""
+                groupby ? ("\nGROUP BY " + groupby.join(",\n    ")) : ""
             ),
             data
         ))

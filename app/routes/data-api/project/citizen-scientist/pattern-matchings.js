@@ -15,7 +15,7 @@ router.get('/', function(req, res, next) {
         project:req.project.project_id,
         citizen_scientist:1,
         deleted:0,
-        showUser:true,
+        showUserStatsFor: req.session.user.id,
         showTemplate: true,
         showPlaylist:true
     }).then(function(count) {
