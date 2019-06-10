@@ -178,7 +178,7 @@ var CitizenScientist = {
                 _.push(roi, userId, validation);
                 return _;
             }, [])
-        ) : Promise.resolve()).then(function(){
+        ) : Promise.resolve()).then(() => {
             return this.computeConsensusValidations(patternMatchingId, rois);
         });
     },
