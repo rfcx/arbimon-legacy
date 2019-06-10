@@ -114,7 +114,8 @@ angular.module('a2.directive.a2-table', [
                 }, true);
 
 
-                element.append($compile(template)(tableScope));
+                var cmpel = $compile(template.clone())(tableScope);
+                element.append(cmpel);
 
                 scope.$on('$destroy', function(){
                     tableScope.$destroy();
