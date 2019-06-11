@@ -23,6 +23,17 @@ router.get('/:template/image', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/:template/audio', function(req, res, next) {
+    model.templates.getAudioFile(req.params.template).then(function(roiAudio) {
+        if(!roiAudio){
+            res.sendStatus(404);
+        } else {
+            res.sendFile(roiAudio.path);
+        }
+    }).catch(next);
+});
+
+
 router.use(function(req, res, next) {
     res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage templates")){

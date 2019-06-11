@@ -76,6 +76,11 @@ var Templates = {
             select.push('Sp.scientific_name as species_name', 'St.songtype as songtype_name');
         }
 
+        if(options.showRecordingUri){
+            tables.push('JOIN recordings R ON T.recording_id = R.recording_id');
+            select.push('R.uri as recUri');
+        }
+
         if(constraints.length === 0){
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }
@@ -159,14 +164,33 @@ var Templates = {
             return rows[0];
         }).then(data => {
             if(!rows.length) {
-                next(new Error("Requested template data does not exists."));
-                return;
+                throw new Error("Requested template data does not exists.");
             }
             if(!data.uri){
                 self.createTemplateImage(template, data, next);
             } else {
-                next(null, data);
+                return data;
             }
+        });
+    },
+
+    getAudioFile: function(templateId){
+        return this.find({
+            id: templateId,
+            showRecordingUri: true
+        }).get(0).then(template => {
+            if(!template) {
+                next(new Error("Requested template data does not exists."));
+                return;
+            }
+
+            return q.ninvoke(Recordings, 'fetchAudioFile', {uri: template.recUri}, {
+                maxFreq: Math.max(template.y1, template.y2),
+                trim: {
+                    from: Math.min(template.x1, template.x2),
+                    to: Math.max(template.x1, template.x2)
+                },
+            });
         });
     },
 

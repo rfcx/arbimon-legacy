@@ -107,6 +107,15 @@ router.get('/:patternMatching/rois.csv', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
+    model.patternMatchings.getRoiAudioFile(req.params.patternMatching, req.params.roiId).then(function(roiAudio) {
+        if(!roiAudio){
+            res.sendStatus(404);
+        } else {
+            res.sendFile(roiAudio.path);
+        }
+    }).catch(next);
+});
 
 
 router.post('/:patternMatching/validate', function(req, res, next) {

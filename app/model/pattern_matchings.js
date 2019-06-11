@@ -13,6 +13,7 @@ var q = require('q');
 var config       = require('../config');
 var APIError = require('../utils/apierror');
 var tmpfilecache = require('../utils/tmpfilecache');
+var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var SQLBuilder   = require('../utils/sqlbuilder');
 var dbpool       = require('../utils/dbpool');
@@ -312,6 +313,29 @@ var PatternMatchings = {
         }).then(
             builder => dbpool.query(builder.getSQL())
         );
+    },
+
+    getRoiAudioFile(patternMatching, roiId){
+        return dbpool.query(
+            "SELECT PMR.x1, PMR.x2, PMR.y1, PMR.y2, PMR.uri as imgUri, R.uri as recUri\n" +
+            "FROM pattern_matching_rois PMR\n" +
+            "JOIN recordings R ON PMR.recording_id = R.recording_id\n" +
+            "WHERE PMR.pattern_matching_id = ? AND PMR.pattern_matching_roi_id = ?", [
+                patternMatching, roiId
+            ]
+        ).get(0).then(function(pmr){
+            if(!pmr){
+                return;
+            }
+
+            return q.ninvoke(Recordings, 'fetchAudioFile', {uri: pmr.recUri}, {
+                maxFreq: Math.max(pmr.y1, pmr.y2),
+                trim: {
+                    from: Math.min(pmr.x1, pmr.x2),
+                    to: Math.max(pmr.x1, pmr.x2)
+                },
+            });
+        })
     },
 
     exportRois(patternMatchingId, filters){
