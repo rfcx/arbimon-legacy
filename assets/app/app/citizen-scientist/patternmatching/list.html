@@ -12,7 +12,9 @@
 
         <div ng-hide="loading">
             <table ng-table="tableParams" class="table" show-filter="true" >
-                <tr ng-repeat="patternmatching in patternmatchingsData">
+                <tr ng-repeat="patternmatching in patternmatchingsData"
+                    ng-click="selectItem(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
+                >
                     <td data-title="'Name'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{patternmatching.template.uri}}" class="roi-img is-small"/>
@@ -26,12 +28,15 @@
                         </div>
                         {{patternmatching.name}}
                     </td>
-                    <td data-title="'Timestamp'" data-sortable="'timestamp'" class="is-v-middle" width="50%">
+                    <td data-title="'Progress'" data-sortable="'timestamp'" class="is-v-middle" width="50%">
                         <a2-percentage-bars data="[patternmatching.validated, 0, patternmatching.total - patternmatching.validated]"
                                 popover-html="'<span class=\'swatch val-1\'></span> Validated: {{patternmatching.validated}} ({{patternmatching.validated * 100 / patternmatching.total | number:0}}%)'"
                                 popover-trigger="mouseenter"
                                 popover-append-to-body="true"
                         />
+                    </td>
+                    <td data-title="'Count'" data-sortable="'total'" class="is-v-middle">
+                        {{patternmatching.total}}
                     </td>
                     <td class="is-v-middle">
                         <button class="btn btn-default"
