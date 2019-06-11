@@ -14,11 +14,11 @@
                 <div class="col-sm-2" style="padding-bottom:5px">
                     <div class="roi-thumbnail" >
                         <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
-                        <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(controller.patternMatching.template)}}">
+                        <a class="roi-btn-br" ng-click="controller.playTemplateAudio()">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
-                                tooltip="View in Visualizer"
-                                class="fa fa-cubes">
+                                tooltip="Play Audio"
+                                class="fa fa-play">
                             </i>
                         </a>
                         <div class="roi-btn-b outside text-sm">
@@ -114,11 +114,11 @@
                         <div class="roi-btn-tr h1" ng-if="roi.cs_validated !== null">
                             <i class="fa val-{{roi.cs_validated}}"></i>
                         </div>
-                        <a class="roi-btn-br" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
+                        <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi)">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
-                                tooltip="View in Visualizer"
-                                class="fa fa-cubes">
+                                tooltip="Play Audio"
+                                class="fa fa-play">
                             </i>
                         </a>
                         <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
