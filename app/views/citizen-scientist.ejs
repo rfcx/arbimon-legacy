@@ -24,10 +24,12 @@
             <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
                 <ul class="nav navbar-nav hide-tooltip-lg">
                     <li ui-sref="citizen-scientist.patternmatching" ui-sref-active="active"><a>Pattern Matchings</a></li>
-                    <li ui-sref="citizen-scientist.admin.classification-stats" ng-class=" ('citizen-scientist.admin' | includedByState) ? 'active' : ''"><a>Admin</a></li>
-                    <li ui-sref="citizen-scientist.admin.classification-stats" ui-sref-active="active"><a>Classification Stats</a></li>
-                    <li ui-sref="citizen-scientist.admin.user-stats" ui-sref-active="active"><a>User Stats</a></li>
-                    <li ui-sref="citizen-scientist.admin.settings" ui-sref-active="active"><a>Settings</a></li>
+                    <li ui-sref="citizen-scientist.admin.classification-stats" ng-class=" ('citizen-scientist.admin' | includedByState) ? 'active' : ''"
+                        ng-if="userPermit.can('manage pattern matchings') || userPermit.can('view project')"
+                    ><a>Admin</a></li>
+                    <li ui-sref="citizen-scientist.admin.classification-stats" ui-sref-active="active"  ng-if="userPermit.can('view project')" ><a>Classification Stats</a></li>
+                    <li ui-sref="citizen-scientist.admin.user-stats" ui-sref-active="active"  ng-if="userPermit.can('view project')" ><a>User Stats</a></li>
+                    <li ui-sref="citizen-scientist.admin.settings" ui-sref-active="active" ng-if="userPermit.can('manage pattern matchings')" ><a>Settings</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right hide-tooltip-lg">
                     <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
