@@ -79,8 +79,20 @@ router.get('/:projecturl?/', function(req, res, next) {
             }
 
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
+                var permissionsMap = rows.reduce(function(_, p) {
+                    _[p.name] = true;
+                    return _;
+                }, {});
 
-                if(project.is_private && !rows.length && req.session.user.isSuper === 0) {
+                console.log("permissionsMap", permissionsMap);
+                console.log(project.is_private, permissionsMap['view project'], req.session.user.isSuper);
+                console.log(permissionsMap['use citizen scientist interface']);
+
+                if(!project.is_private || permissionsMap['view project'] || req.session.user.isSuper){
+                    // pass
+                } else if(permissionsMap['use citizen scientist interface']){
+                    return res.redirect('/citizen-scientist/' + project.url + '/');
+                } else {
                     // if not authorized to see project send 404
                     return res.redirect('/home');
                 }
