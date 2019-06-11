@@ -130,7 +130,7 @@ var Recordings = {
             deferred.resolve({});
             patternFound = true;
         }
-        
+
         return promise;
     },
     parseQueryItem: function(item, allow_range){
@@ -182,16 +182,16 @@ var Recordings = {
         }
         return undefined;
     },
-    
+
     findById: function(recId, callback) {
         var q = "SELECT * \n"+
                 "FROM recordings \n"+
                 "WHERE recording_id = ?";
-        
+
         q = dbpool.format(q, [recId]);
         queryHandler(q, callback);
     },
-    
+
     /** Finds recordings matching the given url and project id.
      * @param {String} recording_url url query selecting the set of recordings
      * @param {Integer} project_id id of the project associated to the recordings
@@ -215,7 +215,7 @@ var Recordings = {
             " ORDER BY S.name ASC, R.datetime ASC" : ''
         );
         var fields = Recordings.QUERY_FIELDS;
-        
+
         var projection;
         if (options.count_only) {
             projection = "COUNT(*) as count";
@@ -236,7 +236,7 @@ var Recordings = {
                         "R.precision, \n"+
                         "R.sample_encoding";
         }
-        
+
         var group_by, query;
         var constraints, data=[];
         var steps=[];
@@ -248,11 +248,11 @@ var Recordings = {
             }
 
             constraints = sqlutil.compile_query_constraints(urlquery, fields);
-            
+
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
                 count_only : options.count_only
             });
-            
+
             if(!urlquery.id) {
                 steps.push(dbpool.query("(\n" +
                 "   SELECT site_id FROM sites WHERE project_id = ?\n" +
@@ -294,7 +294,7 @@ var Recordings = {
             }
         }).nodeify(callback);
     },
-    
+
     fetchNext: function (recording, callback) {
         var query = "SELECT R2.recording_id as id\n" +
             "FROM recordings R \n" +
@@ -304,7 +304,7 @@ var Recordings = {
             "WHERE R.recording_id = " + dbpool.escape(recording.id) + "\n" +
             "ORDER BY R2.datetime ASC \n" +
             "LIMIT 1";
-            
+
         return queryHandler(query, function(err, rows){
             if(err) { callback(err); return; }
             if(!rows || !rows.length) { callback(null, [recording]); return; }
@@ -320,14 +320,14 @@ var Recordings = {
             "WHERE R.recording_id = " + dbpool.escape(recording.id) + "\n" +
             "ORDER BY R2.datetime DESC \n" +
             "LIMIT 1";
-            
+
         return queryHandler(query, function(err, rows){
             if(err) { callback(err); return; }
             if(!rows || !rows.length) { callback(null, [recording]); return; }
             Recordings.findByUrlMatch(rows[0].id, 0, {limit:1}, callback);
         });
     },
-            
+
     /** Finds out stats about a given recording and returns them.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.id integer that uniquely identifies the recording in the database.
@@ -338,18 +338,18 @@ var Recordings = {
         if(recording.sample_rate) {
             return callback(null, recording);
         }
-        
+
         Recordings.fetchRecordingFile(recording, function(err, cachedRecording){
             if(err || !cachedRecording) { callback(err, cachedRecording); return; }
             audioTools.info(cachedRecording.path, function(code, recStats){
-                
+
                 recording.sample_rate = recStats.sample_rate;
                 recording.duration = recStats.duration;
                 recording.samples = recStats.samples;
                 recording.bit_rate = recStats.bit_rate;
                 recording.precision = recStats.precision;
                 recording.sample_encoding = recStats.sample_encoding;
-                
+
                 fs.stat(cachedRecording.path, function(err, stats){
                     if(err){ callback(err); return; }
                     recording.file_size = stats.size;
@@ -359,11 +359,11 @@ var Recordings = {
                         callback(null, recording);
                     });
                 });
-                
+
             });
         });
     },
-    
+
     /** Fetches the validations for a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.id integer that uniquely identifies the recording in the database.
@@ -375,7 +375,7 @@ var Recordings = {
             "WHERE recording_id = " + dbpool.escape(recording.id);
         return queryHandler(query, callback);
     },
-    
+
     /** Downloads a recording from the bucket, storing it in a temporary file cache, and returns its path.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
@@ -396,7 +396,7 @@ var Recordings = {
             });
         }, callback);
     },
-    
+
     /** Returns the audio file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
@@ -404,6 +404,9 @@ var Recordings = {
      * @param {Object} options.gain the recording should have the specified gain applied.
      * @param {Object} options.maxFreq frequencies above the given one should be filtered.
      * @param {Object} options.minFreq frequencies below the given one should be filtered.
+     * @param {Object} options.trim.from offset to start the audio from.
+     * @param {Object} options.trim.to offset to end the audio at.
+     * @param {Object} options.trim.duration audio duration (overrides options.trim.to).
      * @param {Function} callback(err, path) function to call back with the recording audio file's path. (optional)
      * @return Promise with the fetched file.
      */
@@ -412,11 +415,11 @@ var Recordings = {
             callback = options;
             options = undefined;
         }
-        
+
         debug('fetchAudioFile');
         var mods=[];
         var mp3_ext = '.mp3';
-        
+
         if(options){
             if(options.gain && options.gain != 1){
                 mods.push({
@@ -432,14 +435,25 @@ var Recordings = {
                     args:{filter:{min:fmin, max:fmax, type:'sinc'}}
                 });
             }
+
+            if(options.trim){
+                var from = ((+options.trim.from * 1000) | 0) / 1000;
+                var to = ((+options.trim.to * 1000) | 0) / 1000;
+                var duration = options.trim.duration ? (+options.trim.duration) : (((to - from) * 1000) | 0) / 1000;
+
+                mods.push({
+                    ext:'from-' + from + '-len-' + duration,
+                    args:{ trim: {from: from, duration: duration} }
+                });
+            }
         }
-        
+
         if(mods.length){
             mp3_ext = '.' + mods.map(function(mod){
                 return mod.ext;
             }).join('.') + mp3_ext;
         }
-        
+
         var ifMissedGetFile = function(cache_miss) {
             debug('mp3 not found');
             Recordings.fetchRecordingFile(recording, function(err, recording_path){
@@ -450,7 +464,7 @@ var Recordings = {
                     format: 'mp3',
                     channels: 1
                 };
-                
+
                 if(mods.length){
                     mods.forEach(function(mod){
                         var modtak = Object.keys(mod.args);
@@ -461,7 +475,7 @@ var Recordings = {
                     });
                 }
                 debug(transcode_args);
-                
+
                 audioTools.transcode(
                     recording_path.path,
                     cache_miss.file,
@@ -476,11 +490,11 @@ var Recordings = {
                 );
             });
         };
-        
+
         var mp3audio_key = recording.uri.replace(fileExtPattern, mp3_ext);
         return Q.denodeify(tmpfilecache.fetch.bind(tmpfilecache))(mp3audio_key, ifMissedGetFile).nodeify(callback);
     },
-    
+
     /** Returns the spectrogram file of a given recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
@@ -517,25 +531,25 @@ var Recordings = {
             },
             function(specFile, next){
                 tyler(specFile.path, next);
-                
+
                 // TODO to enabled file deletion need to skip file creation if tiles exists
                 // fs.unlink(filePath, function() {
                 //     if(err) console.error('failed to deleted spectrogram file');
                 // });
             },
             function(specTiles, next){
-                
+
                 var maxFreq = recording.sample_rate / 2;
                 var pixels2Secs = recording.duration / specTiles.width ;
                 var pixels2Hz = maxFreq / specTiles.height;
-                
-                
+
+
                 async.map(specTiles.set,
                     function(t, cb) {
-                        
+
                         var h = t.y1-t.y0;
                         var w = t.x1-t.x0;
-                        
+
                         cb(null, {
                             j : t.x ,  // x index
                             i : t.y ,  // y index
@@ -551,7 +565,7 @@ var Recordings = {
                     },
                     function(err, tileSet) {
                         if(err) return next(err);
-                        
+
                         recording.tiles = {
                             x : specTiles.x,
                             y : specTiles.y,
@@ -564,7 +578,7 @@ var Recordings = {
         ],
         callback);
     },
-    
+
     fetchOneSpectrogramTile: function (recording, i, j, callback) {
         var tile_key = recording.uri.replace(fileExtPattern, '.tile_'+j+'_'+i+'.png');
         tmpfilecache.fetch(tile_key, function(cache_miss){
@@ -596,7 +610,7 @@ var Recordings = {
             });
         }, callback);
     },
-    
+
     /** Validates a recording.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Integer} user_id id of the user to associate to this validation.
@@ -611,7 +625,7 @@ var Recordings = {
             callback(new Error("validation is missing."));
             return;
         }
-        
+
         var add_one_validation = function(species_id, songtype_id, callback){
             var valobj = {
                 recording : recording.id,
@@ -647,9 +661,9 @@ var Recordings = {
                 });
             }
         };
-        
+
         var classes = validation['class'].split(',');
-        
+
         async.map(classes, function(val_class, next){
             var validationClass = /(\d+)(-(\d+))?/.exec(val_class);
             if(!validationClass) {
@@ -657,22 +671,22 @@ var Recordings = {
             }
             else if(!validationClass[2]){
                 var project_class = validationClass[1] | 0;
-                
+
                 var q = "SELECT species_id, songtype_id \n"+
                         "FROM project_classes \n"+
                         "WHERE project_class_id = ? \n"+
                         "AND project_id = ?";
-                
+
                 queryHandler(dbpool.format(q, [project_class, project_id]), function(err, rows){
                     if(err) return  next(err);
-                    
+
                     if(!rows.length) {
                         next(new Error("project class " + project_class + " not found"));
                         return;
                     }
-                    
+
                     var validation = rows[0];
-                    
+
                     add_one_validation(validation.species_id, validation.songtype_id, next);
                 });
             }
@@ -680,11 +694,11 @@ var Recordings = {
                 add_one_validation(validationClass[1] | 0, validationClass[3] | 0, next);
             }
         }, callback);
-        
+
     },
-    
+
     insert: function(recording, callback) {
-        
+
         var schema = {
             site_id:         joi.number().required(),
             uri:             joi.string().required(),
@@ -701,10 +715,10 @@ var Recordings = {
             sample_encoding: joi.string(),
             upload_time:     joi.date()
         };
-        
+
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
             if(err) return callback(err);
-            
+
             queryHandler('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
                 '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`\n' +
@@ -714,13 +728,13 @@ var Recordings = {
             ], callback);
         });
     },
-    
+
     update: function(recording, callback) {
-        
+
         if(recording.id) {
             recording.recording_id = recording.id;
         }
-        
+
         var schema = {
             recording_id:    joi.number().required(),
             site_id:         joi.number(),
@@ -738,12 +752,12 @@ var Recordings = {
             sample_encoding: joi.string(),
             upload_time:     joi.date()
         };
-        
+
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
             if(err) return callback(err);
-            
+
             var values = [];
-        
+
             for( var j in rec) {
                 if(j !== "recording_id") {
                     values.push(util.format('%s = %s',
@@ -752,35 +766,35 @@ var Recordings = {
                     ));
                 }
             }
-            
+
             var q = 'UPDATE recordings \n'+
                     'SET %s \n'+
                     'WHERE recording_id = %s';
-                    
+
             q = util.format(q, values.join(", "), rec.recording_id);
             queryHandler(q, callback);
         });
     },
-    
+
     exists: function(recording, callback) {
-        
+
         if(!recording.site_id || !recording.filename)
             callback(new Error("Missing fields"));
-        
+
         var q = "SELECT count(*) as count \n"+
                 "FROM recordings \n"+
                 "WHERE site_id = %s \n"+
                 "AND uri LIKE %s";
-        
+
         var uri = dbpool.escape('%' + recording.filename + '%');
         var site_id = dbpool.escape(Number(recording.site_id));
         q = util.format(q, site_id, uri);
-        
+
         return dbpool.query(q).then(function(rows){
             return rows[0].count > 0;
         }).nodeify(callback);
     },
-    
+
     __compute_thumbnail_path : function(recording, callback){
         recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
         callback();
@@ -788,7 +802,7 @@ var Recordings = {
     __compute_spectrogram_tiles : function(recording, callback){
         Recordings.fetchSpectrogramTiles(recording, callback);
     },
-    
+
     recordingInfoGivenUri : function(uri, callback){
         var q = "SELECT r.`recording_id` AS id, \n " +
                 "       date_format(r.`datetime`,'%m-%d-%Y %H:%i') as date, \n"+
@@ -799,7 +813,7 @@ var Recordings = {
                 "WHERE r.`uri` = " + dbpool.escape(uri);
         queryHandler(q, callback);
     },
-    
+
     /** finds a set of recordings given some search criteria.
      * @param {Object} params - search parameters
      * @param {Function} callback - callback function (optional)
@@ -807,13 +821,13 @@ var Recordings = {
      */
     findProjectRecordings: function(params, callback) {
         var schema = Recordings.SCHEMAS.searchFilters;
-        
+
         return Q.ninvoke(joi, 'validate', params, schema).then(function(parameters) {
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
-                
+
             var projection=[];
             var steps=[];
-            
+
             var select_clause = {
                 list: "SELECT DISTINCT r.recording_id AS id, \n"+
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
@@ -824,21 +838,21 @@ var Recordings = {
                       "       r.recorder, \n"+
                       "       r.version, \n"+
                       "       s.project_id != " + parameters.project_id + " as imported \n",
-                      
+
                 date_range: "SELECT DATE(MIN(r.datetime)) AS min_date, \n"+
                             "       DATE(MAX(r.datetime)) AS max_date \n",
-                            
+
                 count: "SELECT COUNT(DISTINCT r.recording_id) as count \n"
             };
-            
+
             var tables = [
                 "recordings AS r",
                 "JOIN sites AS s ON s.site_id = r.site_id"
             ];
-            
+
             var constraints = [];
             var data = [];
-            
+
             steps.push(dbpool.query("(\n" +
             "   SELECT site_id FROM sites WHERE project_id = ?\n" +
             ") UNION (\n" +
@@ -849,23 +863,23 @@ var Recordings = {
                     return site.site_id;
                 }));
             }));
-                    
+
             if(parameters.range) {
                 console.log(parameters.range);
                 constraints.push('r.datetime BETWEEN ? AND ?');
                 data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }
-            
+
             if(parameters.sites) {
                 constraints.push('s.name IN (?)');
                 data.push(parameters.sites);
             }
-            
+
             if(parameters.years) {
                 constraints.push('YEAR(r.datetime) IN (?)');
                 data.push(parameters.years);
             }
-            
+
             if(parameters.months) {
                 constraints.push('MONTH(r.datetime) IN (?)');
                 data.push((parameters.months instanceof Array) ?
@@ -873,17 +887,17 @@ var Recordings = {
                     parseInt(parameters.months)+1
                 );
             }
-            
+
             if(parameters.days) {
                 constraints.push('DAY(r.datetime) IN (?)');
                 data.push(parameters.days);
             }
-            
+
             if(parameters.hours) {
                 constraints.push('HOUR(r.datetime) IN (?)');
                 data.push(parameters.hours);
             }
-            
+
             if(parameters.validations) {
                 tables.push(
                     "LEFT JOIN recording_validations as rv ON r.recording_id = rv.recording_id",
@@ -891,26 +905,26 @@ var Recordings = {
                 );
                 constraints.push('pc.project_class_id IN (?)');
                 data.push(parameters.validations);
-                
+
                 if(parameters.presence && !(parameters.presence instanceof Array && parameters.presence.length >= 2)){
                     constraints.push('rv.present = ?');
                     data.push(parameters.presence == 'present' ? '1' : '0');
                 }
             }
-            
+
             if(parameters.soundscape_composition) {
                 tables.push(
                     "LEFT JOIN recording_soundscape_composition_annotations as RSCA ON r.recording_id = RSCA.recordingId"
                 );
                 constraints.push('RSCA.scclassId IN (?)');
                 data.push(parameters.soundscape_composition);
-                
+
                 if(parameters.soundscape_composition_annotation && !(parameters.soundscape_composition_annotation instanceof Array && parameters.soundscape_composition_annotation.length >= 2)){
                     constraints.push('RSCA.present = ?');
                     data.push(parameters.soundscape_composition_annotation == 'present' ? '1' : '0');
                 }
             }
-            
+
             if(parameters.tags) {
                 tables.push(
                     "LEFT JOIN recording_tags as RT ON r.recording_id = RT.recording_id"
@@ -933,7 +947,7 @@ var Recordings = {
                 );
                 constraints.push('CR.job_id IN (?)');
                 data.push(parameters.classifications);
-                
+
                 if(parameters.classification_results) {
                     if(!(parameters.classification_results instanceof Array)){
                         parameters.classification_results = [parameters.classification_results];
@@ -974,7 +988,7 @@ var Recordings = {
                             query.push("LIMIT " + limit_clause);
                         }
                     }
-                    
+
                     return Q.nfcall(queryHandler, {
                         sql: query.join('\n'),
                         typeCast: sqlutil.parseUtcDatetime,
@@ -1044,33 +1058,33 @@ var Recordings = {
             tag:  arrayOrSingle(joi.number()),
         }
     },
-    
+
     buildSearchQuery: function(searchParameters){
         var builder = new SQLBuilder();
         return Q.ninvoke(joi, 'validate', searchParameters, Recordings.SCHEMAS.searchFilters).then(function(parameters){
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
-                
+
             var projection=[];
-            
+
             builder.addTable("recordings", "r");
             builder.addTable("JOIN sites", "s", "s.site_id = r.site_id");
             builder.addTable("LEFT JOIN project_imported_sites", "pis", "s.site_id = pis.site_id AND pis.project_id = ?", parameters.project_id);
-            
+
             builder.addConstraint("(s.project_id = ? OR pis.project_id = ?)",[
                 parameters.project_id,
                 parameters.project_id
             ]);
-                    
+
             if(parameters.range) {
                 builder.addConstraint('r.datetime BETWEEN ? AND ?',[
                     getUTC(parameters.range.from), getUTC(parameters.range.to)
                 ]);
             }
-            
+
             if(parameters.sites) {
                 builder.addConstraint('s.name IN (?)', [parameters.sites]);
             }
-            
+
             if(parameters.imported !== undefined){
                 builder.addConstraint(
                     parameters.imported ?
@@ -1078,11 +1092,11 @@ var Recordings = {
                     'pis.site_id IS NULL'
                 );
             }
-            
+
             if(parameters.years) {
                 builder.addConstraint('YEAR(r.datetime) IN (?)', [parameters.years]);
             }
-            
+
             if(parameters.months) {
                 builder.addConstraint('MONTH(r.datetime) IN (?)', [
                     (parameters.months instanceof Array) ?
@@ -1090,35 +1104,35 @@ var Recordings = {
                         parseInt(parameters.months)+1
                 ]);
             }
-            
+
             if(parameters.days) {
                 builder.addConstraint('DAY(r.datetime) IN (?)', [parameters.days]);
             }
-            
+
             if(parameters.hours) {
                 builder.addConstraint('HOUR(r.datetime) IN (?)', [parameters.hours]);
             }
-            
+
             if(parameters.validations) {
                 builder.addTable("LEFT JOIN recording_validations", "rv", "r.recording_id = rv.recording_id");
                 builder.addTable("LEFT JOIN project_classes", "pc", "pc.species_id = rv.species_id AND pc.songtype_id = rv.songtype_id");
-                
+
                 builder.addConstraint('pc.project_class_id IN (?)', [parameters.validations]);
-                
+
                 if(parameters.presence && !(parameters.presence instanceof Array && parameters.presence.length >= 2)){
                     builder.addConstraint('rv.present = ?', [parameters.presence == 'present' ? '1' : '0']);
                 }
             }
-            
+
             if(parameters.soundscape_composition) {
                 builder.addTable("LEFT JOIN recording_soundscape_composition_annotations", "RSCA", "r.recording_id = RSCA.recordingId");
                 builder.addConstraint('RSCA.scclassId IN (?)', [parameters.soundscape_composition]);
-                
+
                 if(parameters.soundscape_composition_annotation && !(parameters.soundscape_composition_annotation instanceof Array && parameters.soundscape_composition_annotation.length >= 2)){
                     builder.addConstraint('RSCA.present = ?', [parameters.soundscape_composition_annotation == 'present' ? '1' : '0']);
                 }
             }
-            
+
             if(parameters.tags) {
                 builder.addTable("LEFT JOIN recording_tags", "RT", "r.recording_id = RT.recording_id");
                 builder.addConstraint('RT.tag_id IN (?)', [parameters.tags]);
@@ -1127,13 +1141,13 @@ var Recordings = {
                 builder.addTable("LEFT JOIN playlist_recordings", "PR", "r.recording_id = PR.recording_id");
                 builder.addConstraint('PR.playlist_id IN (?)', [parameters.playlists]);
             }
-            
+
             if(parameters.classifications) {
                 builder.addTable("LEFT JOIN classification_results", "CR", "r.recording_id = CR.recording_id");
                 builder.addTable("LEFT JOIN job_params_classification", "CRjp", "CRjp.job_id = CR.job_id");
                 builder.addTable("LEFT JOIN models", "CRm", "CRjp.model_id = CRm.model_id");
                 builder.addConstraint('CR.job_id IN (?)', [parameters.classifications]);
-                
+
                 if(parameters.classification_results) {
                     if(!(parameters.classification_results instanceof Array)){
                         parameters.classification_results = [parameters.classification_results];
@@ -1151,20 +1165,20 @@ var Recordings = {
                     );
                 }
             }
-            
+
             builder.setOrderBy(parameters.sortBy || 'site', !parameters.sortRev);
-            
+
             if(parameters.limit){
                 builder.setLimit(parameters.offset || 0, parameters.limit);
             }
-            
+
             return builder;
         });
     },
-    
+
     exportRecordingData: function(projection, filters){
         var builder;
-        
+
         return Q.all([
             this.buildSearchQuery(filters),
             Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
@@ -1172,7 +1186,7 @@ var Recordings = {
             builder = all[0];
             var projection_parameters = all[1];
             var promises=[];
-            
+
             if(projection_parameters.recording){
                 var recParamMap = {
                     'filename' : "SUBSTRING_INDEX(r.uri,'/',-1) as filename",
@@ -1187,7 +1201,7 @@ var Recordings = {
                     return recParamMap[recParam];
                 }));
             }
-            
+
             if(projection_parameters.validation){
                 promises.push(models.projects.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(function(classes){
                     classes.forEach(function(cls, idx){
@@ -1242,7 +1256,7 @@ var Recordings = {
                     });
                 }));
             }
-            
+
             return Q.all(promises);
         }).then(function(){
             return dbpool.streamQuery({
@@ -1252,7 +1266,7 @@ var Recordings = {
         });
     },
 
-    
+
     /* fetch count of project recordings.
     */
     countProjectRecordings: function(filters){
@@ -1266,7 +1280,7 @@ var Recordings = {
             return dbpool.query(builder.getSQL());
         });
     },
-    
+
     /* fetch count of project recordings.
     */
     deleteMatching: function(filters, project_id){
@@ -1275,19 +1289,19 @@ var Recordings = {
                 'r.recording_id as id'
             ]);
             delete builder.orderBy;
-            
+
             return dbpool.query(builder.getSQL()).then(function(rows){
                 return Q.ninvoke(Recordings, 'delete', rows, project_id);
             });
         });
     },
-    
+
     delete: function(recs, project_id, callback) {
-        
+
         var recIds = recs.map(function(rec) {
             return rec.id;
         });
-        
+
         var sqlFilterImported =
             "SELECT r.recording_id AS id, \n"+
             "       r.uri \n"+
@@ -1295,23 +1309,23 @@ var Recordings = {
             "JOIN sites AS s ON s.site_id = r.site_id  \n"+
             "WHERE r.recording_id IN (?) \n"+
             "AND s.project_id = ?";
-        
+
         queryHandler(dbpool.format(sqlFilterImported, [recIds, project_id]), function(err, rows) {
-            
+
             if(!rows.length) {
                 return callback(null, {
                     deleted: [],
                     msg: 'No recordings were deleted'
                 });
             }
-            
+
             var deleted = [];
-            
+
             async.eachSeries(rows,
                 function loop(rec, next) {
                     var ext = path.extname(rec.uri);
                     var thumbnailUri = rec.uri.replace(ext, '.thumbnail.png');
-                    
+
                     var params = {
                         Bucket: config('aws').bucketName,
                         Delete: {
@@ -1321,22 +1335,22 @@ var Recordings = {
                             ],
                         }
                     };
-                    
+
                     debug(params);
-                    
+
                     s3.deleteObjects(params, function(err, data) {
                         if(err && err.code != 'NoSuchKey') {
                             return next(err);
                         }
-                        
+
                         debug(data);
-                        
+
                         var sqlDelete = "DELETE FROM recordings \n"+
                                         "WHERE recording_id = ?";
-                        
+
                         queryHandler(dbpool.format(sqlDelete, [rec.id]), function(err, results) {
                             if(err) next(err);
-                            
+
                             deleted.push(rec.id);
                             next();
                         });
@@ -1345,17 +1359,17 @@ var Recordings = {
                 function done(err) {
                     if(err) {
                         if(!deleted.length) return callback(err);
-                        
+
                         return callback(err, {
                             deleted: deleted,
                             msg: 'some recordings where deleted but an error ocurred'
                         });
                     }
-                    
+
                     debug('recordings deleted:', deleted);
-                    
+
                     var s = deleted.length > 1 ? 's' : '';
-                    
+
                     callback(null, {
                         deleted: deleted,
                         msg: 'recording'+s+' deleted successfully'
@@ -1367,5 +1381,3 @@ var Recordings = {
 };
 
 module.exports = Recordings;
-    
-
