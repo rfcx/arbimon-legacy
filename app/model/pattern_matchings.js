@@ -120,15 +120,18 @@ var PatternMatchings = {
         }
 
         if (options.showCounts) {
-            select.push("COUNT(*) as matches");
+            select.push("SUM(IF(PMM.pattern_matching_id IS NULL, 0, 1)) as matches");
             select.push("SUM(IF(validated=1, 1, 0)) as present");
             select.push("SUM(IF(validated=0, 1, 0)) as absent");
-            tables.push("JOIN pattern_matching_rois PMM ON PMM.pattern_matching_id = PM.pattern_matching_id");
+            tables.push("LEFT JOIN pattern_matching_rois PMM ON PMM.pattern_matching_id = PM.pattern_matching_id");
             groupby.push("PM.pattern_matching_id");
         }
 
         if(options.showUserStatsFor) {
-            select.push("COUNT(*) as total", "SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated");
+            select.push(
+                "SUM(IF(PMR.pattern_matching_roi_id IS NULL, 0, 1)) as total",
+                "SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated"
+            );
             tables.push("LEFT JOIN pattern_matching_rois PMR ON PM.pattern_matching_id = PMR.pattern_matching_id");
             tables.push("LEFT JOIN pattern_matching_validations PMV ON (PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id AND PMV.user_id = " + (options.showUserStatsFor | 0) + ")");
             groupby.push("PM.pattern_matching_id");
