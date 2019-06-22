@@ -193,6 +193,8 @@ var PatternMatchings = {
         //     th: joi.number()
         // }).optionalKeys('th')),
         csValidationsFor: joi.number().integer(),
+        hideNormalValidations: joi.boolean(),
+        countCSValidations: joi.boolean(),
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
@@ -257,26 +259,49 @@ var PatternMatchings = {
                 'PMR.`score`',
             );
 
-            if(show.names){
-                builder.addProjection(
-                    '(CASE ' +
-                    'WHEN PMR.`validated` = 1 THEN "present" ' +
-                    'WHEN PMR.`validated` = 0 THEN "not present" ' +
-                    'ELSE "(not validated)" ' +
-                    'END) as validated'
-                );
-            } else {
-                builder.addProjection('PMR.`validated`');
+            if(!parameters.hideNormalValidations){
+                if(show.names){
+                    builder.addProjection(
+                        '(CASE ' +
+                        'WHEN PMR.`validated` = 1 THEN "present" ' +
+                        'WHEN PMR.`validated` = 0 THEN "not present" ' +
+                        'ELSE "(not validated)" ' +
+                        'END) as validated'
+                    );
+                } else {
+                    builder.addProjection('PMR.`validated`');
+                }
             }
 
             builder.addConstraint("PMR.pattern_matching_id = ?", [
                 parameters.patternMatching
             ]);
 
-            if(parameters.csValidationsFor){
-                builder.addProjection('PMV.`validated` as cs_validated');
-                builder.addTable("LEFT JOIN pattern_matching_validations", "PMV", "PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id AND PMV.user_id="+builder.escape(parameters.csValidationsFor));
+            if(parameters.csValidationsFor || parameters.countCSValidations){
+                if(show.names){
+                    builder.addProjection(
+                        '(CASE ' +
+                        'WHEN PMR.`consensus_validated` = 1 THEN "present" ' +
+                        'WHEN PMR.`consensus_validated` = 0 THEN "not present" ' +
+                        'ELSE "(not consensus validated)" ' +
+                        'END) as consensus_validated'
+                    );
+                } else {
+                    builder.addProjection('PMR.`consensus_validated` as consensus_validated');
+                }
+
+                var csValOnClause = 'PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id';
+                if(parameters.csValidationsFor){
+                    csValOnClause += " AND PMV.user_id="+builder.escape(parameters.csValidationsFor);
+                } else if (parameters.countCSValidations){
+                    builder.addProjection('SUM(IF(PMV.`validated` = 1, 1, 0)) as cs_val_present');
+                    builder.addProjection('SUM(IF(PMV.`validated` = 0, 1, 0)) as cs_val_not_present');
+                    builder.addGroupBy("PMR.pattern_matching_roi_id", true);
+                }
+
+                builder.addTable("LEFT JOIN pattern_matching_validations", "PMV", csValOnClause);
             }
+
 
             if(parameters.sortBy){
                 parameters.sortBy.forEach(item => builder.addOrderBy(item[0], item[1]));
@@ -338,13 +363,16 @@ var PatternMatchings = {
         })
     },
 
-    exportRois(patternMatchingId, filters){
+    exportRois(patternMatchingId, filters, options){
         filters = filters || {};
+        options = options || {};
 
         return this.buildRoisQuery({
             patternMatching: patternMatchingId,
             // limit: limit,
             // offset: offset
+            hideNormalValidations: options.hideNormalValidations,
+            countCSValidations: options.countCSValidations,
             show: { names: true },
         }).then(
             builder => dbpool.streamQuery({
