@@ -79,6 +79,10 @@ router.get('/:projecturl?/', function(req, res, next) {
             }
 
             model.users.getPermissions(req.session.user.id, project.project_id, function(err, rows) {
+                if(err) {
+                    next(err);
+                    return;
+                }
 
                 if(project.is_private && !rows.length && req.session.user.isSuper === 0) {
                     // if not authorized to see project send 404
