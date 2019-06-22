@@ -67,7 +67,7 @@ angular.module('a2.directives', [
         }
     };
 })
-.directive('a2Scroll',function($parse) {
+.directive('a2Scroll',function($parse, $window) {
     var mkFunction = function(scope, attr){
         var fn = $parse(attr);
         return function(locals) {
@@ -82,28 +82,66 @@ angular.module('a2.directives', [
             'a2InfiniteScrollDisabled':'=?',
             'a2InfiniteScrollImmediateCheck':'=?'
         },
-        link : function($scope, element, attrs) {
+        link : function($scope, element, attrs, controller) {
             var pscope = $scope.$parent;
-            var cb_count=0;
+            var fnBind = 'on';
+            var fnUnbind = 'off';
+
             if(attrs.a2Scroll){
-                $scope.a2Scroll = mkFunction(pscope, attrs.a2Scroll);
-                ++cb_count;
+                controller.a2Scroll = mkFunction(pscope, attrs.a2Scroll);
             }
+
+            controller.element = element;
+
+            if(attrs.a2ScrollOn){
+                if(attrs.a2ScrollOn == 'window'){
+                    controller.scrollElement = $window;
+                    fnBind = 'addEventListener';
+                    fnUnbind = 'removeEventListener';
+                } else {
+                    controller.scrollElement = $(attrs.a2ScrollOn);
+                }
+            }
+
             if(attrs.a2InfiniteScroll){
                 $scope.a2InfiniteScroll = mkFunction(pscope, attrs.a2InfiniteScroll);
-
-                ++cb_count;
             }
+
             if(!$scope.a2InfiniteScrollDistance){
                 $scope.a2InfiniteScrollDistance = 1;
             }
+
             if(!$scope.a2InfiniteScrollRefraction){
                 $scope.a2InfiniteScrollRefraction = 1000;
             }
 
-            element.bind("scroll", function(e) {
-                if($scope.a2Scroll){
-                    $scope.a2Scroll({$event:e});
+            controller.scrollHandler = controller.scrollHandler.bind(controller);
+            controller.scrollElement[fnBind]("scroll", controller.scrollHandler);
+            controller.element.bind("$destroy", function(){
+                controller.scrollElement[fnUnbind]('scroll', controller.scrollHandler);
+                controller.dispose()
+            });
+
+        },
+        controller: 'a2ScrollController'
+    };
+})
+.controller('a2ScrollController', function($scope){
+    Object.assign(this, {
+        anchors: {},
+        addAnchor: function(name, anchorElement){
+            this.anchors[name] = anchorElement;
+        },
+        removeAnchor: function(name){
+            delete this.anchors[name];
+        },
+        scrollHandler: function (event) {
+            try {
+                if(this.a2Scroll){
+                    this.a2Scroll({
+                        $event:event,
+                        $controller: this,
+                    });
                 }
                 if($scope.a2InfiniteScroll && !$scope.a2InfiniteScrollDisabled){
                     var remaining = ((element[0].scrollHeight - element[0].scrollTop)|0) / element.height();
@@ -115,8 +153,27 @@ angular.module('a2.directives', [
                         }
                     }
                 }
+            } finally {
+                $scope.$apply();
+            }
+        },
+        dispose: function(){
+            this.element = null;
+            this.scrollElement = null;
+            this.anchors = {};
+        },
+    });
+})
+.directive('a2ScrollAnchor',function() {
+    return {
+        require: '^a2Scroll',
+        link : function($scope, element, attrs, a2ScrollController) {
+            var name = attrs.name;
+            a2ScrollController.addAnchor(name, element);
+            element.bind("$destroy", function(){
+                a2ScrollController.removeAnchor(name);
             });
-        }
+        },
     };
 })
 .directive('a2Persistent', function($rootScope, $compile, $timeout){
