@@ -402,6 +402,7 @@ var PatternMatchings = {
         template   : joi.number().integer(),
         params     : joi.object().keys({
             N: joi.number().integer(),
+            persite: joi.number().integer().allow(null),
             threshold: joi.number(),
         }),
     }),
@@ -417,6 +418,7 @@ var PatternMatchings = {
                 template_id: data.template,
                 name: data.name,
                 N: data.params.N,
+                persite: data.params.persite,
                 threshold: data.params.threshold,
                 citizen_scientist: data.params.citizen_scientist | 0,
             }),
