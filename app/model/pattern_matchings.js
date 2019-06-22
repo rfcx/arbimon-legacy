@@ -96,6 +96,10 @@ var PatternMatchings = {
             tables.push("JOIN users U ON J.user_id = U.user_id");
         }
 
+        if (options.showConsensusNumber) {
+            select.push('PM.consensus_number');
+        }
+
         if (options.showTemplate) {
             postprocess.push((rows) => {
                 const idmap = rows.reduce((_, row) => {
