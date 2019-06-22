@@ -52,6 +52,14 @@
                         popover-append-to-body="true"
                 />
             </field>
+            <field>
+                <a class="btn btn-default"
+                    ng-href="{{controller.patternMatchingExportUrl(row)}}"
+                    ng-click="true | trackEvent:'CS Pattern Matching':'export'"
+                    tooltip="Export Citizen Scientist Pattern Matching Data">
+                <i class="fa fa-download"></i>
+            </a>
+            </field>
         </a2-table>
         <loader ng-hide="!controller.loadingForSpecies"></loader>
     </div>

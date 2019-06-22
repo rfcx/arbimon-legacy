@@ -5,6 +5,8 @@ var q = require('q');
 var express = require('express');
 var router = express.Router();
 var model = require('../../../../model');
+var csv_stringify = require("csv-stringify");
+
 
 
 /** Return a list of all the pattern matchings in a project.
@@ -70,6 +72,66 @@ router.post('/:patternMatching/validate', function(req, res, next) {
         });
     }).catch(next);
 });
+
+router.get('/:patternMatching/export.csv', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+
+    try {
+        var filters = JSON.parse(req.query.filters || '{}') || {};
+    } catch(e) {
+        return next(e);
+    }
+
+    filters.project_id = req.project.project_id | 0;
+
+    model.patternMatchings.findOne({ id: req.params.patternMatching }).then(function(pm) {
+        res.attachment(pm.name + '-citizen-scientist-export.csv')
+
+        return model.patternMatchings.exportRois(req.params.patternMatching, filters, {
+            hideNormalValidations: true,
+            countCSValidations: true
+        }).then(function(results) {
+            var datastream = results[0];
+            var fields = results[1].map(function(f){return f.name;});
+            var colOrder={
+                id: -18,
+                recording: -17,
+                site: -16,
+                year: -15,
+                month: -14,
+                day: -13,
+                hour: -12,
+                min: -11,
+                species: -10,
+                songtype: -9,
+                x1: -8,
+                x2: -7,
+                y1: -6,
+                y2: -5,
+                cs_val_present: -4,
+                cs_val_not_present: -3,
+                consensus_validated: -2.5,
+                validated: -2,
+                uri: -1
+            };
+            fields.sort(function(a, b){
+                var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
+                return ca < cb ? -1 : (
+                    ca > cb ?  1 : ( a <  b ? -1 : ( a >  b ?  1 : 0 ) )
+                );
+            });
+
+            datastream
+                .pipe(csv_stringify({header:true, columns:fields}))
+                .pipe(res);
+        }).catch(next);
+    }).catch(next);
+});
+
 
 router.post('/:patternMatching/remove', function(req, res, next) {
     res.type('json');
