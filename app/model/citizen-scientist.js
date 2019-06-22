@@ -68,8 +68,6 @@ var CitizenScientist = {
 
     getUserStats: function(options){
         var select = [
-            "PMUS.user_id",
-            "CONCAT(U.firstname, ' ', U.lastname) as user",
             "COUNT(DISTINCT PMUS.species_id, PMUS.songtype_id) as species",
             "SUM(PMUS.validated) as validated",
             "SUM(PMUS.correct) as correct",
