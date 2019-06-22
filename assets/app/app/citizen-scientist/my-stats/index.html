@@ -1,0 +1,83 @@
+<div class="row">
+    <h4>My Stats</h4>
+</div>
+<div class="row">
+    <table class="table" style="max-width:30em">
+        <tr>
+            <th>Overall</th>
+            <th>Me</th>
+            <th>Group</th>
+        </tr>
+        <tr>
+            <th>Correct</th>
+            <td>{{ controller.overall.correct }} ({{ controller.overall.correct * 100 / controller.overall.validated | number:0 }}%)</td>
+            <td>{{ controller.overall.group_correct }} ({{ controller.overall.group_correct * 100 / controller.overall.group_validated | number:0 }}%)</td>
+        </tr>
+        <tr>
+            <th>Incorrect</th>
+            <td>{{ controller.overall.incorrect }} ({{ controller.overall.incorrect * 100 / controller.overall.validated | number:0 }}%)</td>
+            <td>{{ controller.overall.group_incorrect }} ({{ controller.overall.group_incorrect * 100 / controller.overall.group_validated | number:0 }}%)</td>
+        </tr>
+        <tr>
+            <th>Total</th>
+            <td>{{ controller.overall.validated }}</td>
+            <td>{{ controller.overall.group_validated }}</td>
+        </tr>
+    </table>
+</div>
+<div class="row">
+    <h4>Per Species</h4>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <a2-table class="table-hide-btns"
+            rows="controller.stats" no-checkbox="true"
+            default-sort="species"
+            no-select
+        >
+            <field title="Species" filter key="species" >
+                {{ row.species_name  }}
+            </field>
+            <field title="Songtype" filter key="songtype" >
+                {{ row.songtype  }}
+            </field>
+            <field title="Validated"  filter size="5" key="validated" >
+                <div class="row-flex flex-space-evenly">
+                    <div>
+                        {{ row.validated }}
+                    </div>
+                    <div>
+                        group:
+                        {{ row.group_validated }}
+                    </div>
+                </div>
+            </field>
+            <field title="Correct"  filter size="5" key="correct" >
+                <div class="row-flex flex-space-evenly">
+                    <div>
+                        {{ row.correct }} ({{ row.correct * 100 / row.validated | number:0 }}%)
+                    </div>
+                    <div>
+                        group:
+                        {{ row.group_correct }} ({{ row.group_correct * 100 / row.group_validated | number:0 }}%)
+                    </div>
+                </div>
+            </field>
+            <field title="Incorrect"  filter size="5" key="incorrect" >
+                <div class="row-flex flex-space-evenly">
+                    <div>
+                        {{ row.incorrect }} ({{ row.incorrect * 100 / row.validated | number:0 }}%)
+                    </div>
+                    <div>
+                        group:
+                        {{ row.group_incorrect }} ({{ row.group_incorrect * 100 / row.group_validated | number:0 }}%)
+                    </div>
+                </div>
+            </field>
+            <field title="Last_update"  filter key="last_update" >
+                {{ row.last_update | date}}
+            </field>
+        </a2-table>
+        <loader ng-hide="!loading"></loader>
+    </div>
+</div>

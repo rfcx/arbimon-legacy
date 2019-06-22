@@ -78,7 +78,6 @@ var CitizenScientist = {
 
         var tables = [
             "pattern_matching_user_statistics AS PMUS",
-            "JOIN users AS U ON PMUS.user_id = U.user_id",
         ];
 
         var constraints = [
@@ -87,7 +86,19 @@ var CitizenScientist = {
 
         var data = [options.project];
 
-        var groupby = ['PMUS.user_id'];
+        var groupby = [];
+
+        if(options.groupByUser) {
+            groupby.push('PMUS.user_id');
+        }
+
+        if(options.showUser) {
+            select.push(
+                "PMUS.user_id",
+                "CONCAT(U.firstname, ' ', U.lastname) as user"
+            );
+            tables.push("JOIN users AS U ON PMUS.user_id = U.user_id")
+        }
 
         if (options.user){
             constraints.push('PMUS.user_id = ?');
