@@ -97,7 +97,7 @@ var CitizenScientist = {
         if (options.groupBySpecies){
             select.unshift(
                 "Sp.species_id",
-                "Sp.scientific_name as `species`",
+                "Sp.scientific_name as `species_name`",
                 "St.songtype_id",
                 "St.songtype"
             );
