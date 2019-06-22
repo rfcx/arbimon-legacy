@@ -28,7 +28,9 @@
                         </div>
                         {{patternmatching.name}}
                     </td>
-                    <td data-title="'Progress'" data-sortable="'timestamp'" class="is-v-middle" width="50%">
+                    <td data-title="'Species'" data-sortable="'species'" class="is-v-middle" >{{patternmatching.species_name}}</td>
+                    <td data-title="'Songtype'" data-sortable="'songtype'" class="is-v-middle" >{{patternmatching.songtype_name}}</td>
+                    <td data-title="'Progress'" data-sortable="'timestamp'" class="is-v-middle" width="25%">
                         <a2-percentage-bars data="[patternmatching.validated, 0, patternmatching.total - patternmatching.validated]"
                                 popover-html="'<span class=\'swatch val-1\'></span> Validated: {{patternmatching.validated}} ({{patternmatching.validated * 100 / patternmatching.total | number:0}}%)'"
                                 popover-trigger="mouseenter"
@@ -39,10 +41,11 @@
                         {{patternmatching.total}}
                     </td>
                     <td class="is-v-middle">
-                        <button class="btn btn-default"
+                        <button class="btn btn-default btn-small"
                             ng-click="selectItem(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
+                            tooltip="Show Details"
                         >
-                                Show Details
+                                <i class="fa fa-list-alt"></i>
                         </button>
                     </td>
                 </tr>
