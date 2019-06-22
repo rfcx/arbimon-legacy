@@ -289,6 +289,11 @@ angular.module('a2.citizen-scientist.patternmatching', [
                 return _;
             }, {list:[], idx:{}}).list;
             this.selected.roi = Math.min()
+
+            if(this.scrollElement){
+                this.scrollElement.scrollTo(0, 0);
+            }
+
             return rois;
         }).bind(this)).catch((function(err){
             this.loading.rois = false;
