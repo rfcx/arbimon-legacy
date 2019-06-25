@@ -14,7 +14,7 @@
                     <a ng-click="controller.cancel('/audiodata/models') | trackEvent:'Analysis-CNN-new cnn modal':'Cancel-Create model'">Create one.</a>
                 </em>
             </span>
-            <ui-select class="ui-select-6em" ng-disabled="disabled" ng-model="controller.data.model" theme="/common/models/a2-ui-select">
+            <ui-select class="ui-select-6em" ng-disabled="disabled" ng-model="controller.data.model" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a model...">
                     <div class="roi-thumbnail" >
                         <img ng-src="{{$select.selected.uri}}" class="roi-img is-small"/>
