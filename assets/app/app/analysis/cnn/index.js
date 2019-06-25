@@ -39,7 +39,6 @@ angular.module('a2.analysis.cnn', [
     };
 })
 .controller('CreateNewCNNInstanceCtrl', function($scope, $modalInstance, a2PatternMatching, a2Templates, a2Playlists, notify) {
-    /*
     Object.assign(this, {
         initialize: function(){
             this.loading = {
@@ -84,5 +83,5 @@ angular.module('a2.analysis.cnn', [
         },
     });
     this.initialize();
-    */
+
 });
