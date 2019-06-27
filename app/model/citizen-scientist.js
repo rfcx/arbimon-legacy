@@ -19,6 +19,8 @@ var CitizenScientist = {
             "SUM(IF(PMR.consensus_validated = 1, 1, 0)) as present",
             "SUM(IF(PMR.consensus_validated = 0, 1, 0)) as notPresent",
             "SUM(IF(PMR.consensus_validated IS NULL, 1, 0)) as notValidated",
+            "COUNT(PMV.pattern_matching_roi_id) as userParticipation",
+            "COUNT(DISTINCT PMV.pattern_matching_roi_id) / COUNT(DISTINCT PMV.pattern_matching_roi_id) as avgValidationsPerRoi",
             "COUNT(*) as `count`"
         ];
 
@@ -27,6 +29,7 @@ var CitizenScientist = {
             "JOIN pattern_matching_rois AS PMR ON PM.pattern_matching_id = PMR.pattern_matching_id",
             "JOIN species AS Sp ON PMR.species_id = Sp.species_id",
             "JOIN songtypes AS St ON PMR.songtype_id = St.songtype_id",
+            "LEFT JOIN pattern_matching_validations AS PMV ON PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id",
         ];
 
         var constraints = [
