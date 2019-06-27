@@ -197,8 +197,12 @@ var PatternMatchings = {
         //     th: joi.number()
         // }).optionalKeys('th')),
         csValidationsFor: joi.number().integer(),
+        expertCSValidations: joi.boolean(),
         hideNormalValidations: joi.boolean(),
         countCSValidations: joi.boolean(),
+        whereConflicted: joi.boolean(),
+        whereExpert: joi.boolean(),
+        whereConsensus: joi.boolean(),
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
@@ -281,6 +285,10 @@ var PatternMatchings = {
                 parameters.patternMatching
             ]);
 
+            if(parameters.expertCSValidations){
+                builder.addProjection('PMR.`expert_validated`');
+            }
+
             if(parameters.csValidationsFor || parameters.countCSValidations){
                 if(show.names){
                     builder.addProjection(
@@ -301,11 +309,22 @@ var PatternMatchings = {
                     builder.addProjection('SUM(IF(PMV.`validated` = 1, 1, 0)) as cs_val_present');
                     builder.addProjection('SUM(IF(PMV.`validated` = 0, 1, 0)) as cs_val_not_present');
                     builder.addGroupBy("PMR.pattern_matching_roi_id", true);
+
+                    if(parameters.whereConflicted){
+                        builder.addHaving("(SUM(IF(PMV.`validated` = 1, 1, 0)) > 0 AND SUM(IF(PMV.`validated` = 0, 1, 0)) > 0)", true);
+                    }
                 }
 
                 builder.addTable("LEFT JOIN pattern_matching_validations", "PMV", csValOnClause);
             }
 
+            if(parameters.whereConsensus){
+                builder.addConstraint("PMR.consensus_validated IS NOT NULL", []);
+            }
+
+            if(parameters.whereExpert){
+                builder.addConstraint("PMR.expert_validated IS NOT NULL", []);
+            }
 
             if(parameters.sortBy){
                 parameters.sortBy.forEach(item => builder.addOrderBy(item[0], item[1]));
@@ -335,9 +354,14 @@ var PatternMatchings = {
         return this.buildRoisQuery({
             patternMatching: options.patternMatchingId,
             csValidationsFor: options.csValidationsFor,
+            expertCSValidations: options.expertCSValidations,
+            countCSValidations: options.countCSValidations,
+            whereConflicted: options.whereConflicted,
+            whereConsensus: options.whereConsensus,
+            whereExpert: options.whereExpert,
             limit: options.limit,
             offset: options.offset,
-            show: { patternMatchingId: true, datetime: true },
+            show: { patternMatchingId: true, datetime: true, names: options.showNames },
             sortBy: [['S.name', 1], ['R.datetime', 1]],
         }).then(
             builder => dbpool.query(builder.getSQL())

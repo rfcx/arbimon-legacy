@@ -62,10 +62,38 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/:patternMatching/expert-rois/:paging', function(req, res, next) {
+    res.type('json');
+    var user = req.session.user;
+    model.patternMatchings.getRoisForId({
+        patternMatchingId: req.params.patternMatching,
+        expertCSValidations: true,
+        countCSValidations: true,
+        whereConsensus: req.query.search == 'consensus',
+        whereConflicted: req.query.search == 'conflicted',
+        whereExpert: req.query.search == 'expert',
+        limit: req.paging.limit || 100,
+        offset: req.paging.offset || 0,
+    }).then(function(rois) {
+        res.json(rois);
+    }).catch(next);
+});
+
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     var user = req.session.user;
     model.CitizenScientist.validateCSRois(req.params.patternMatching, user.id, req.body.rois, req.body.validation).then(function(rois) {
+        res.json({
+            rois: req.body.rois,
+            validation: req.body.validation,
+        });
+    }).catch(next);
+});
+
+router.post('/:patternMatching/expert-validate', function(req, res, next) {
+    res.type('json');
+    var user = req.session.user;
+    model.CitizenScientist.expertValidateCSRois(req.params.patternMatching, req.body.rois, req.body.validation).then(function(rois) {
         res.json({
             rois: req.body.rois,
             validation: req.body.validation,

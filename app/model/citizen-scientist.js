@@ -184,6 +184,18 @@ var CitizenScientist = {
         });
     },
 
+    expertValidateCSRois(patternMatchingId, rois, validation){
+        return rois.length ? dbpool.query(
+            "UPDATE pattern_matching_rois\n" +
+            "SET expert_validated = ?\n" +
+            "WHERE pattern_matching_id = ?\n" +
+            "AND pattern_matching_roi_id IN (?)", [
+            validation,
+            patternMatchingId,
+            rois,
+        ]) : Promise.resolve();
+    },
+
     computeConsensusValidations(patternMatchingId, rois){
         return dbpool.query(
             "UPDATE pattern_matching_rois\n" +
