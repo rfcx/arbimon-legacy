@@ -25,6 +25,9 @@
                 <ul class="nav navbar-nav hide-tooltip-lg">
                     <li ui-sref="citizen-scientist.my-stats" ui-sref-active="active"><a>My Stats</a></li>
                     <li ui-sref="citizen-scientist.patternmatching" ui-sref-active="active"><a>Pattern Matchings</a></li>
+                    <li ui-sref="citizen-scientist.expert" ng-class=" ('citizen-scientist.expert' | includedByState) ? 'active' : ''"
+                        ng-if="userPermit.can('manage pattern matchings')"
+                    ><a>Expert</a></li>
                     <li ui-sref="citizen-scientist.admin.classification-stats" ng-class=" ('citizen-scientist.admin' | includedByState) ? 'active' : ''"
                         ng-if="userPermit.can('manage pattern matchings') || userPermit.can('view project')"
                     ><a>Admin</a></li>
