@@ -430,6 +430,7 @@ var PatternMatchings = {
         template   : joi.number().integer(),
         params     : joi.object().keys({
             N: joi.number().integer(),
+            citizen_scientist: joi.boolean(),
             persite: joi.number().integer().allow(null),
             threshold: joi.number(),
         }),
