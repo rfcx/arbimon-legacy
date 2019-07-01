@@ -132,8 +132,8 @@
                     >
                         <div class="roi-img">
                             <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
-                            <div class="roi-btn-tr h1" ng-if="controller.firstNonNull(roi.expert_validated, roi.consensus_validated) !== null">
-                                <i class="fa val-{{controller.firstNonNull(roi.expert_validated, roi.consensus_validated)}}"></i>
+                            <div class="roi-btn-tr h1" ng-if="controller.compositeValidation(roi) !== null">
+                                <i class="fa val-{{controller.compositeValidation(roi)}}"></i>
                             </div>
                             <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi)">
                                 <i tooltip-placement="left"

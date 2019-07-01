@@ -234,8 +234,13 @@ angular.module('a2.citizen-scientist.expert', [
         }).bind(this));
         this.audio_player = new a2AudioPlayer($scope)
     },
-    firstNonNull: function(){
-        return Array.prototype.slice.call(arguments).reduce(function(_, arg){
+    compositeValidation: function(roi){
+        var expert_val = roi.expert_validated;
+        var consensus_val = roi.consensus_validated;
+        var cp = roi.cs_val_present;
+        var cnp = roi.cs_val_not_present;
+
+        return [expert_val, consensus_val, (cp > 0 && cnp > 0) ? -1 : null].reduce(function(_, arg){
             return _ === null ? arg : _;
         }, null);
     },
