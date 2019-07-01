@@ -22,3 +22,6 @@ WHERE pattern_matchings.project_id = jobs.project_id
   AND jobs.job_type_id = 6;
 
 UPDATE jobs SET state = 'completed' WHERE job_type_id = 6;
+
+ALTER TABLE `arbimon2`.`pattern_matchings`
+ADD COLUMN `citizen_scientist` TINYINT(1) NOT NULL DEFAULT 0;
