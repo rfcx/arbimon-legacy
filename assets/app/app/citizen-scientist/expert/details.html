@@ -132,8 +132,8 @@
                     >
                         <div class="roi-img">
                             <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
-                            <div class="roi-btn-tr h1" ng-if="roi.expert_validated !== null">
-                                <i class="fa val-{{roi.expert_validated}}"></i>
+                            <div class="roi-btn-tr h1" ng-if="controller.firstNonNull(roi.expert_validated, roi.consensus_validated) !== null">
+                                <i class="fa val-{{controller.firstNonNull(roi.expert_validated, roi.consensus_validated)}}"></i>
                             </div>
                             <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi)">
                                 <i tooltip-placement="left"
@@ -147,7 +147,7 @@
                         <div>
                             present: {{roi.cs_val_present}}<br />
                             not present: {{roi.cs_val_not_present}}<br />
-                            consensus: {{roi.consensus_validated | pmValidation }}<br />
+                            consensus: {{roi.consensus_validated | pmValidation: roi.cs_val_present: roi.cs_val_not_present }}<br />
                             expert: {{roi.expert_validated | pmValidation}}
                         </div>
                     </div>

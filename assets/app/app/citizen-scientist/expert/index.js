@@ -201,13 +201,17 @@ angular.module('a2.citizen-scientist.expert', [
     };
 })
 .filter('pmValidation', function(){
-    return function(validation){
+    return function(validation, cp, cnp){
         if (validation == 1) {
             return 'present';
         } else if (validation == 0) {
             return 'not present';
         } else if (validation === null || validation === undefined) {
-            return '---';
+            if (cp > 0 && cnp > 0) {
+                return 'conflicted';
+            } else {
+                return '---';
+            }
         }
     }
 })
@@ -230,7 +234,11 @@ angular.module('a2.citizen-scientist.expert', [
         }).bind(this));
         this.audio_player = new a2AudioPlayer($scope)
     },
-
+    firstNonNull: function(){
+        return Array.prototype.slice.call(arguments).reduce(function(_, arg){
+            return _ === null ? arg : _;
+        }, null);
+    },
     lists: {
         thumbnails: [
             { class:'fa fa-th-large', value:''},
