@@ -76,6 +76,8 @@ var CitizenScientist = {
             "SUM(PMUS.validated) as validated",
             "SUM(PMUS.correct) as consensus",
             "SUM(PMUS.incorrect) as non_consensus",
+            "SUM(PMUS.correct + PMUS.incorrect) as reached_th",
+            "SUM(PMUS.pending) as pending",
             "MIN(PMUS.last_update) as last_update",
         ];
 
