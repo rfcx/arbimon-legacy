@@ -3,6 +3,7 @@ ADD COLUMN `cs_val_present` INT NOT NULL DEFAULT 0 COMMENT 'current count of cs 
 ADD COLUMN `cs_val_not_present` INT NOT NULL DEFAULT 0 COMMENT 'current count of cs not present votes' AFTER `cs_val_present`;
 
 
+--  update current pmr cs p/np counts
 UPDATE pattern_matching_rois
     JOIN pattern_matchings ON pattern_matching_rois.pattern_matching_id = pattern_matchings.pattern_matching_id
     LEFT JOIN (
