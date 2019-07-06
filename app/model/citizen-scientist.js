@@ -18,7 +18,8 @@ var CitizenScientist = {
             "St.songtype",
             "SUM(IF(PMR.consensus_validated = 1, 1, 0)) as present",
             "SUM(IF(PMR.consensus_validated = 0, 1, 0)) as notPresent",
-            "SUM(IF(PMR.consensus_validated IS NULL, 1, 0)) as notValidated",
+            "SUM(IF(PMR.consensus_validated IS NULL AND PMR.cs_val_present + PMR.cs_val_not_present > 0, 1, 0)) as pending",
+            "SUM(IF(PMR.consensus_validated IS NULL AND PMR.cs_val_present + PMR.cs_val_not_present = 0, 1, 0)) as notValidated",
             "COUNT(PMV.pattern_matching_roi_id) as userParticipation",
             "COUNT(DISTINCT PMV.pattern_matching_roi_id) / COUNT(DISTINCT PMV.pattern_matching_roi_id) as avgValidationsPerRoi",
             "COUNT(*) as `count`"
