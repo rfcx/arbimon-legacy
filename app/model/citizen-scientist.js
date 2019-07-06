@@ -199,28 +199,35 @@ var CitizenScientist = {
         ]) : Promise.resolve();
     },
 
+    /** Computes the current p not p stats and consensus validation state for each given roi in a given pattern matching.
+    * The current consensus state is computed as following:
+     *      - if number of presents is bigger than consensus number: 1 (present)
+     *      - if number of not presents is bigger than consensus number: 0 (not present)
+     *      - else: NULL (not consensus validated)
+     * @param {int} patternMatchingId - id of the given patternMatching.
+     * @param {Array[int]} rois - ids of the given rois.
+     */
     computeConsensusValidations(patternMatchingId, rois){
         return dbpool.query(
             "UPDATE pattern_matching_rois\n" +
-            "  JOIN pattern_matchings ON pattern_matching_rois.pattern_matching_id = pattern_matchings.pattern_matching_id\n" +
-            "SET pattern_matching_rois.consensus_validated =  IF(\n" +
-            "    (\n" +
-            "		SELECT COUNT(*) FROM pattern_matching_validations PMV\n" +
-            "		WHERE PMV.pattern_matching_roi_id = pattern_matching_rois.pattern_matching_roi_id AND PMV.validated = 1\n" +
-            " 	 ) >= pattern_matchings.consensus_number, \n" +
-            "    1,\n" +
-            "    IF(\n" +
-            "		(\n" +
-            "			SELECT COUNT(*) FROM pattern_matching_validations PMV\n" +
-            "			WHERE PMV.pattern_matching_roi_id = pattern_matching_rois.pattern_matching_roi_id AND PMV.validated = 0\n" +
-            "		) >= pattern_matchings.consensus_number, \n" +
-            "		0,\n" +
-            "		pattern_matching_rois.validated\n" +
-            "    )\n" +
-            ")\n" +
+            "    JOIN pattern_matchings ON pattern_matching_rois.pattern_matching_id = pattern_matchings.pattern_matching_id\n" +
+            "    LEFT JOIN (\n" +
+            "        SELECT _PMV.pattern_matching_roi_id,\n" +
+            "            SUM(IF(_PMV.validated = 1, 1, 0)) as cs_present,\n" +
+            "            SUM(IF(_PMV.validated = 0, 1, 0)) as cs_not_present\n" +
+            "        FROM pattern_matching_validations _PMV\n" +
+            "        GROUP BY _PMV.pattern_matching_roi_id\n" +
+            "    ) AS PMV ON PMV.pattern_matching_roi_id = pattern_matching_rois.pattern_matching_roi_id\n" +
+            "SET \n" +
+            "    pattern_matching_rois.cs_present = COALESCE(PMV.cs_present, 0),\n" +
+            "    pattern_matching_rois.cs_not_present = COALESCE(PMV.cs_not_present, 0),\n" +
+            "    pattern_matching_rois.consensus_validated = (CASE\n" +
+            "        WHEN PMV.cs_present >= pattern_matchings.consensus_number THEN 1\n" +
+            "        WHEN PMV.cs_not_present >= pattern_matchings.consensus_number THEN 0\n" +
+            "        ELSE NULL\n" +
+            "    END)\n" +
             "WHERE pattern_matching_rois.pattern_matching_id = ?\n" +
-            "  AND pattern_matching_rois.pattern_matching_roi_id IN (?)\n" +
-            "  AND pattern_matching_rois.validated IS NULL", [
+            "  AND pattern_matching_rois.pattern_matching_roi_id IN (?)", [
             patternMatchingId,
             rois
         ]);
