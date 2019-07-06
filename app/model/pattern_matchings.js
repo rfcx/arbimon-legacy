@@ -216,7 +216,6 @@ var PatternMatchings = {
     },
 
     buildRoisQuery(parameters){
-        console.log('rois query from', parameters);
         var builder = new SQLBuilder();
         return q.ninvoke(joi, 'validate', parameters, PatternMatchings.SEARCH_ROIS_SCHEMA).then(function(parameters){
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
@@ -286,7 +285,17 @@ var PatternMatchings = {
             ]);
 
             if(parameters.expertCSValidations){
-                builder.addProjection('PMR.`expert_validated`');
+                if(show.names){
+                    builder.addProjection(
+                        '(CASE ' +
+                        'WHEN PMR.`expert_validated` = 1 THEN "present" ' +
+                        'WHEN PMR.`expert_validated` = 0 THEN "not present" ' +
+                        'ELSE "(not expert validated)" ' +
+                        'END) as expert_validated'
+                    );
+                } else {
+                    builder.addProjection('PMR.`expert_validated` as expert_validated');
+                }
             }
 
             if(parameters.csValidationsFor || parameters.countCSValidations){
@@ -400,6 +409,7 @@ var PatternMatchings = {
             // limit: limit,
             // offset: offset
             hideNormalValidations: options.hideNormalValidations,
+            expertCSValidations: options.expertCSValidations,
             countCSValidations: options.countCSValidations,
             show: { names: true },
         }).then(

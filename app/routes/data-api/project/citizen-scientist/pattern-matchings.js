@@ -121,6 +121,7 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
 
         return model.patternMatchings.exportRois(req.params.patternMatching, filters, {
             hideNormalValidations: true,
+            expertCSValidations: true,
             countCSValidations: true
         }).then(function(results) {
             var datastream = results[0];
@@ -143,6 +144,7 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
                 cs_val_present: -4,
                 cs_val_not_present: -3,
                 consensus_validated: -2.5,
+                expert_validated: -2.25,
                 validated: -2,
                 uri: -1
             };
