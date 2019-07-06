@@ -9,14 +9,14 @@
             <th>Group</th>
         </tr>
         <tr>
-            <th>Correct</th>
-            <td>{{ controller.overall.correct }} ({{ controller.overall.correct * 100 / controller.overall.validated | number:0 }}%)</td>
-            <td>{{ controller.overall.group_correct }} ({{ controller.overall.group_correct * 100 / controller.overall.group_validated | number:0 }}%)</td>
+            <th>Consensus</th>
+            <td>{{ controller.overall.consensus }} ({{ controller.overall.consensus * 100 / controller.overall.validated | number:0 }}%)</td>
+            <td>{{ controller.overall.group_consensus }} ({{ controller.overall.group_consensus * 100 / controller.overall.group_validated | number:0 }}%)</td>
         </tr>
         <tr>
-            <th>Incorrect</th>
-            <td>{{ controller.overall.incorrect }} ({{ controller.overall.incorrect * 100 / controller.overall.validated | number:0 }}%)</td>
-            <td>{{ controller.overall.group_incorrect }} ({{ controller.overall.group_incorrect * 100 / controller.overall.group_validated | number:0 }}%)</td>
+            <th>Non Consensus</th>
+            <td>{{ controller.overall.non_consensus }} ({{ controller.overall.non_consensus * 100 / controller.overall.validated | number:0 }}%)</td>
+            <td>{{ controller.overall.group_non_consensus }} ({{ controller.overall.group_non_consensus * 100 / controller.overall.group_validated | number:0 }}%)</td>
         </tr>
         <tr>
             <th>Total</th>
@@ -52,25 +52,25 @@
                     </div>
                 </div>
             </field>
-            <field title="Correct"  filter size="5" key="correct" >
+            <field title="Consensus"  filter size="5" key="consensus" >
                 <div class="row-flex flex-space-evenly">
                     <div>
-                        {{ row.correct }} ({{ row.correct * 100 / row.validated | number:0 }}%)
+                        {{ row.consensus }} ({{ row.consensus * 100 / row.validated | number:0 }}%)
                     </div>
                     <div>
                         group:
-                        {{ row.group_correct }} ({{ row.group_correct * 100 / row.group_validated | number:0 }}%)
+                        {{ row.group_consensus }} ({{ row.group_consensus * 100 / row.group_validated | number:0 }}%)
                     </div>
                 </div>
             </field>
-            <field title="Incorrect"  filter size="5" key="incorrect" >
+            <field title="Non Consensus"  filter size="5" key="non_consensus" >
                 <div class="row-flex flex-space-evenly">
                     <div>
-                        {{ row.incorrect }} ({{ row.incorrect * 100 / row.validated | number:0 }}%)
+                        {{ row.non_consensus }} ({{ row.non_consensus * 100 / row.validated | number:0 }}%)
                     </div>
                     <div>
                         group:
-                        {{ row.group_incorrect }} ({{ row.group_incorrect * 100 / row.group_validated | number:0 }}%)
+                        {{ row.group_non_consensus }} ({{ row.group_non_consensus * 100 / row.group_validated | number:0 }}%)
                     </div>
                 </div>
             </field>

@@ -74,8 +74,8 @@ var CitizenScientist = {
         var select = [
             "COUNT(DISTINCT PMUS.species_id, PMUS.songtype_id) as species",
             "SUM(PMUS.validated) as validated",
-            "SUM(PMUS.correct) as correct",
-            "SUM(PMUS.incorrect) as incorrect",
+            "SUM(PMUS.correct) as consensus",
+            "SUM(PMUS.incorrect) as non_consensus",
             "MIN(PMUS.last_update) as last_update",
         ];
 
