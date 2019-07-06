@@ -10,13 +10,18 @@
         </tr>
         <tr>
             <th>Consensus</th>
-            <td>{{ controller.overall.consensus }} ({{ controller.overall.consensus * 100 / controller.overall.validated | number:0 }}%)</td>
-            <td>{{ controller.overall.group_consensus }} ({{ controller.overall.group_consensus * 100 / controller.overall.group_validated | number:0 }}%)</td>
+            <td>{{ controller.overall.consensus }} ({{ controller.overall.consensus * 100 / (controller.overall.reached_th || 1) | number:0 }}%)</td>
+            <td>{{ controller.overall.group_consensus }} ({{ controller.overall.group_consensus * 100 / (controller.overall.group_reached_th || 1) | number:0 }}%)</td>
         </tr>
         <tr>
             <th>Non Consensus</th>
-            <td>{{ controller.overall.non_consensus }} ({{ controller.overall.non_consensus * 100 / controller.overall.validated | number:0 }}%)</td>
-            <td>{{ controller.overall.group_non_consensus }} ({{ controller.overall.group_non_consensus * 100 / controller.overall.group_validated | number:0 }}%)</td>
+            <td>{{ controller.overall.non_consensus }} ({{ controller.overall.non_consensus * 100 / (controller.overall.reached_th || 1) | number:0 }}%)</td>
+            <td>{{ controller.overall.group_non_consensus }} ({{ controller.overall.group_non_consensus * 100 / (controller.overall.group_reached_th || 1) | number:0 }}%)</td>
+        </tr>
+        <tr>
+            <th>Pending Consensus</th>
+            <td>{{ controller.overall.pending }}</td>
+            <td>{{ controller.overall.group_pending }}</td>
         </tr>
         <tr>
             <th>Total</th>
@@ -55,22 +60,33 @@
             <field title="Consensus"  filter size="5" key="consensus" >
                 <div class="row-flex flex-space-evenly">
                     <div>
-                        {{ row.consensus }} ({{ row.consensus * 100 / row.validated | number:0 }}%)
+                        {{ row.consensus }} ({{ row.consensus * 100 / (row.reached_th || 1) | number:0 }}%)
                     </div>
                     <div>
                         group:
-                        {{ row.group_consensus }} ({{ row.group_consensus * 100 / row.group_validated | number:0 }}%)
+                        {{ row.group_consensus }} ({{ row.group_consensus * 100 / (row.group_reached_th || 1) | number:0 }}%)
                     </div>
                 </div>
             </field>
             <field title="Non Consensus"  filter size="5" key="non_consensus" >
                 <div class="row-flex flex-space-evenly">
                     <div>
-                        {{ row.non_consensus }} ({{ row.non_consensus * 100 / row.validated | number:0 }}%)
+                        {{ row.non_consensus }} ({{ row.non_consensus * 100 / (row.reached_th || 1) | number:0 }}%)
                     </div>
                     <div>
                         group:
-                        {{ row.group_non_consensus }} ({{ row.group_non_consensus * 100 / row.group_validated | number:0 }}%)
+                        {{ row.group_non_consensus }} ({{ row.group_non_consensus * 100 / (row.group_reached_th || 1) | number:0 }}%)
+                    </div>
+                </div>
+            </field>
+            <field title="Pending Consensus"  filter size="5" key="pending" >
+                <div class="row-flex flex-space-evenly">
+                    <div>
+                        {{ row.pending }}
+                    </div>
+                    <div>
+                        group:
+                        {{ row.group_pending }}
                     </div>
                 </div>
             </field>
