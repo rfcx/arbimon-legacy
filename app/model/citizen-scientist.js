@@ -6,6 +6,7 @@ var joi     = require('joi');
 var debug = require('debug')('arbimon2:model:citizen-scientist');
 var q = require('q');
 var dbpool = require('../utils/dbpool');
+var sqlutil      = require('../utils/sqlutil');
 var PatternMatchings = require('./pattern_matchings');
 
 // exports
@@ -139,15 +140,24 @@ var CitizenScientist = {
             groupby.push('Sp.species_id', 'St.songtype_id');
         }
 
-        return dbpool.query(
+        var query = (
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" \n  AND ") + (
                 groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : ""
-            ),
-            data
+            )
         );
+
+        if (options.streamQuery){
+            return dbpool.streamQuery({
+                sql: query,
+                typeCast: sqlutil.parseUtcDatetime,
+            }, data);
+        } else {
+            return dbpool.query(query, data);
+        }
     },
+
 
     getSettings: function(project_id){
         return PatternMatchings.find({
