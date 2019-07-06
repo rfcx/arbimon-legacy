@@ -5,7 +5,9 @@
             rows="controller.patternmatchings" no-checkbox="true"
             default-sort="user"
         >
-            <field title="Name" filter key="name" ><label for="param-cs-{{row.id}}">{{ row.name }}</label></field>
+            <field title="Name" width="25%" filter key="name" ><label class="text-wrap" for="param-cs-{{row.id}}">{{ row.name }}</label></field>
+            <field title="Species" filter key="species_name" ><label for="param-cs-{{row.id}}">{{ row.species_name }}</label></field>
+            <field title="Songtype" filter key="songtype_name" ><label for="param-cs-{{row.id}}">{{ row.songtype_name }}</label></field>
             <field title="Avaliable for Citizen Scientist" key="citizen_scientist">
                 <input id="param-cs-{{row.id}}" ng-model="row.citizen_scientist" ng-true-value="1" ng-true-value="0" type="checkbox"/>
             </field>
