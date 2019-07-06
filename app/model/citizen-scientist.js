@@ -73,13 +73,11 @@ var CitizenScientist = {
 
     getUserStats: function(options){
         var select = [
-            "COUNT(DISTINCT PMUS.species_id, PMUS.songtype_id) as species",
             "SUM(PMUS.validated) as validated",
             "SUM(PMUS.correct) as consensus",
             "SUM(PMUS.incorrect) as non_consensus",
             "SUM(PMUS.correct + PMUS.incorrect) as reached_th",
             "SUM(PMUS.pending) as pending",
-            "MIN(PMUS.last_update) as last_update",
         ];
 
         var tables = [
@@ -98,9 +96,21 @@ var CitizenScientist = {
             groupby.push('PMUS.user_id');
         }
 
+        if(!options.hideSpeciesCount) {
+            select.push("COUNT(DISTINCT PMUS.species_id, PMUS.songtype_id) as species");
+        }
+
+        if(!options.hideLastUpdate) {
+            select.push("MIN(PMUS.last_update) as last_update");
+        }
+
         if(options.showUser) {
+            if(!options.hideUserId){
+                select.unshift(
+                    "PMUS.user_id"
+                );
+            }
             select.push(
-                "PMUS.user_id",
                 "CONCAT(U.firstname, ' ', U.lastname) as user"
             );
             tables.push("JOIN users AS U ON PMUS.user_id = U.user_id")
@@ -112,10 +122,14 @@ var CitizenScientist = {
         }
 
         if (options.groupBySpecies){
+            if(!options.hideSpeciesIds){
+                select.unshift(
+                    "Sp.species_id",
+                    "St.songtype_id",
+                );
+            }
             select.unshift(
-                "Sp.species_id",
-                "Sp.scientific_name as `species_name`",
-                "St.songtype_id",
+                "Sp.scientific_name as `" + (options.hideSpeciesCount ? 'species' : 'species_name') + "`",
                 "St.songtype"
             );
             tables.push(
