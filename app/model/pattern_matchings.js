@@ -298,7 +298,21 @@ var PatternMatchings = {
                 }
             }
 
-            if(parameters.csValidationsFor || parameters.countCSValidations){
+            if(parameters.csValidationsFor){
+                parameters.showConsensusValidated = true;
+                builder.addTable("LEFT JOIN pattern_matching_validations", "PMV",
+                    "PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id\n" +
+                    " AND PMV.user_id = " + builder.escape(parameters.csValidationsFor)
+                );
+            }
+
+            if(parameters.countCSValidations){
+                parameters.showConsensusValidated = true;
+                builder.addProjection('PMR.cs_val_present');
+                builder.addProjection('PMR.cs_val_not_present');
+            }
+
+            if(parameters.showConsensusValidated){
                 if(show.names){
                     builder.addProjection(
                         '(CASE ' +
@@ -310,21 +324,10 @@ var PatternMatchings = {
                 } else {
                     builder.addProjection('PMR.`consensus_validated` as consensus_validated');
                 }
+            }
 
-                var csValOnClause = 'PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id';
-                if(parameters.csValidationsFor){
-                    csValOnClause += " AND PMV.user_id="+builder.escape(parameters.csValidationsFor);
-                } else if (parameters.countCSValidations){
-                    builder.addProjection('SUM(IF(PMV.`validated` = 1, 1, 0)) as cs_val_present');
-                    builder.addProjection('SUM(IF(PMV.`validated` = 0, 1, 0)) as cs_val_not_present');
-                    builder.addGroupBy("PMR.pattern_matching_roi_id", true);
-
-                    if(parameters.whereConflicted){
-                        builder.addHaving("(SUM(IF(PMV.`validated` = 1, 1, 0)) > 0 AND SUM(IF(PMV.`validated` = 0, 1, 0)) > 0)", true);
-                    }
-                }
-
-                builder.addTable("LEFT JOIN pattern_matching_validations", "PMV", csValOnClause);
+            if(parameters.whereConflicted){
+                builder.addConstraint("(PMR.cs_val_present > 0 AND PMR.cs_val_not_present > 0)", []);
             }
 
             if(parameters.whereConsensus){
