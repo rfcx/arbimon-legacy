@@ -15,6 +15,10 @@ angular.module('a2.srv.citizen-scientist-expert', [
                 validation: validation,
             }).catch(notify.serverError);
         },
+        getCSExportUrl: function(options){
+            options = options || {};
+            return '/api/project/' + Project.getUrl() + '/citizen-scientist/pattern-matchings/' + (options.patternMatching | 0) + '/export.csv';
+        },
     };
 })
 ;

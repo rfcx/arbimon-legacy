@@ -289,7 +289,7 @@ angular.module('a2.citizen-scientist.expert', [
     },
 
     setupExportUrl: function(){
-        this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
+        this.patternMatchingExportUrl = a2CitizenScientistExpertService.getCSExportUrl({
             patternMatching: this.patternMatching.id,
         });
     },

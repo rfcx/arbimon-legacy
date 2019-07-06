@@ -111,6 +111,16 @@
                                 ng-class="{active: controller.thumbnailClass == item.value}"
                             ><i ng-class="item.class"></i></button>
                         </div>
+
+                        <div class="btn-group">
+                            <a class="btn btn-default"
+                                ng-href="{{controller.patternMatchingExportUrl}}"
+                                ng-click="true | trackEvent:'Pattern Matching Details':'export'"
+                                ng-disabled="!controller.patternMatchingExportUrl"
+                                tooltip="Export Pattern Matching Data">
+                                <i class="fa fa-download"></i>
+                            </a>
+                        </div>
                     </div>
                     </div>
                 </div>
