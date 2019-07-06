@@ -14,6 +14,7 @@ angular.module('a2.citizen-scientist.admin.user-stats', [
     });
 })
 .controller('A2CitizenScientistAdminUserStatsCtrl', function($scope, a2CitizenScientistAdminService, $stateParams, $state, Users) {
+    this.userStatsExportUrl = a2CitizenScientistAdminService.getUserStatsExportUrl();
     this.setUser = function(userId){
         this.userId = userId;
         $state.transitionTo($state.current.name, {

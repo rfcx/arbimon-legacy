@@ -9,6 +9,9 @@ angular.module('a2.srv.citizen-scientist-admin', [
         getUserStats: function(userId){
             return a2APIService.get('/citizen-scientist/stats/user' + (userId ? '/' + userId : '')).catch(notify.serverError);
         },
+        getUserStatsExportUrl: function(){
+            return '/api/project/' + Project.getUrl() + '/citizen-scientist/stats/export/user-stats.csv';
+        },
         getCSExportUrl: function(pattern_matching_id){
             return '/api/project/' + Project.getUrl() + '/citizen-scientist/pattern-matchings/' + (pattern_matching_id) + '/export.csv';
         },
