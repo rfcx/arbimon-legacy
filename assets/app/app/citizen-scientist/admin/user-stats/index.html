@@ -21,8 +21,9 @@
             <field title="User" filter key="user" >{{ row.user  }}</field>
             <field title="Species"  filter key="species" >{{ row.species }}</field>
             <field title="Validated"  filter key="validated" >{{ row.validated }}</field>
-            <field title="Consensus"  filter key="consensus" >{{ row.consensus }}</field>
-            <field title="Non Consensus"  filter key="non_consensus" >{{ row.non_consensus }}</field>
+            <field title="Consensus"  filter key="consensus" >{{ row.consensus }} ({{ row.consensus * 100 / (row.reached_th || 1) | number:0 }}%)</field>
+            <field title="Non Consensus"  filter key="non_consensus" >{{ row.non_consensus }} ({{ row.non_consensus * 100 / (row.reached_th || 1) | number:0 }}%)</field>
+            <field title="Pending Consensus"  filter key="pending" >{{ row.pending }}</field>
             <field title="Last Update"  filter key="last_update" >{{ row.last_update | date}}</field>
         </a2-table>
         <loader ng-hide="!loading"></loader>
@@ -36,8 +37,9 @@
             <field title="Species" filter key="species" >{{ row.species_name  }}</field>
             <field title="Songtype" filter key="songtype" >{{ row.songtype  }}</field>
             <field title="Validated"  filter key="validated" >{{ row.validated }}</field>
-            <field title="Consensus"  filter key="consensus" >{{ row.consensus }}</field>
-            <field title="Non Consensus"  filter key="non_consensus" >{{ row.non_consensus }}</field>
+            <field title="Consensus"  filter key="consensus" >{{ row.consensus }} ({{ row.consensus * 100 / (row.reached_th || 1) | number:0 }}%)</field>
+            <field title="Non Consensus"  filter key="non_consensus" >{{ row.non_consensus }} ({{ row.non_consensus * 100 / (row.reached_th || 1) | number:0 }}%)</field>
+            <field title="Pending Consensus"  filter key="pending" >{{ row.pending }}</field>
             <field title="Last Update"  filter key="last_update" >{{ row.last_update | date}}</field>
         </a2-table>
         <loader ng-hide="!loading"></loader>
