@@ -22,3 +22,35 @@ SET
         ELSE NULL
     END)
 ;
+
+ALTER TABLE `arbimon2`.`pattern_matching_user_statistics`
+ADD COLUMN `pending` INT NOT NULL DEFAULT 0 AFTER `incorrect`;
+
+--  update current user pending counts
+INSERT INTO pattern_matching_user_statistics(
+    user_id, project_id, species_id, songtype_id,
+    validated, correct, incorrect, pending,
+    confidence,
+    last_update
+) SELECT
+    Q.user_id, Q.project_id, Q.species_id, Q.songtype_id,
+    Q.validated, Q.correct, Q.incorrect, Q.pending,
+    (Q.correct + 1) / (Q.correct + Q.incorrect + 1),
+    NOW()
+FROM (
+    SELECT PMV.user_id, P.project_id, P.species_id, P.songtype_id,
+        COUNT(PMV.validated) as validated,
+        SUM(IF(PMV.validated = PMR.consensus_validated, 1, 0)) as correct,
+        SUM(IF(PMV.validated != PMR.consensus_validated, 1, 0)) as incorrect,
+        SUM(IF(PMV.validated IS NOT NULL AND PMR.consensus_validated IS NULL, 1, 0)) as pending
+    FROM pattern_matchings P
+    JOIN pattern_matching_rois PMR ON P.pattern_matching_id = PMR.pattern_matching_id
+    JOIN pattern_matching_validations PMV ON PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id
+    GROUP BY PMV.user_id, P.project_id, P.species_id, P.songtype_id
+) Q
+ON DUPLICATE KEY UPDATE
+    validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect),
+    pending=VALUES(pending),
+    confidence=VALUES(confidence),
+    last_update=VALUES(last_update)
+;

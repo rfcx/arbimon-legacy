@@ -244,19 +244,20 @@ var CitizenScientist = {
             return dbpool.query(
                 "INSERT INTO pattern_matching_user_statistics(\n" +
                 "    user_id, project_id, species_id, songtype_id,\n" +
-                "    validated, correct, incorrect,\n" +
+                "    validated, correct, incorrect, pending,\n" +
                 "    confidence,\n" +
                 "    last_update\n" +
                 ") SELECT \n" +
                 "    Q.user_id, Q.project_id, Q.species_id, Q.songtype_id, \n" +
-                "    Q.validated, Q.correct, Q.incorrect,\n" +
+                "    Q.validated, Q.correct, Q.incorrect, Q.pending,\n" +
                 "    (Q.correct + 1) / (Q.correct + Q.incorrect + 1),\n" +
                 "    NOW()\n" +
                 "FROM (\n" +
                 "    SELECT PMV.user_id, P.project_id, P.species_id, P.songtype_id,\n" +
                 "        COUNT(PMV.validated) as validated,\n" +
                 "        SUM(IF(PMV.validated = PMR.consensus_validated, 1, 0)) as correct,\n" +
-                "        SUM(IF(PMV.validated != PMR.consensus_validated, 1, 0)) as incorrect\n" +
+                "        SUM(IF(PMV.validated != PMR.consensus_validated, 1, 0)) as incorrect,\n" +
+                "        SUM(IF(PMV.validated IS NOT NULL AND PMR.consensus_validated IS NULL, 1, 0)) as pending\n" +
                 "    FROM pattern_matchings P\n" +
                 "    JOIN pattern_matching_rois PMR ON P.pattern_matching_id = PMR.pattern_matching_id\n" +
                 "    JOIN pattern_matching_validations PMV ON PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id\n" +
@@ -265,6 +266,7 @@ var CitizenScientist = {
                 ") Q\n" +
                 "ON DUPLICATE KEY UPDATE\n" +
                 "    validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect),\n" +
+                "    pending=VALUES(pending),\n" +
                 "    confidence=VALUES(confidence),\n" +
                 "    last_update=VALUES(last_update)\n" +
                 "", [
