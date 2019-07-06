@@ -21,11 +21,11 @@ angular.module('a2.directive.percentage-bars', [
     };
 })
 .controller('a2PercentageBarsCtrl', function($scope, $filter){
-    var DEFAULT_COLORS = [ 'green', 'red', 'yellow' ];
+    var DEFAULT_COLORS = [ '0', '1', '2' ];
     var numberFilter = $filter('number');
-    $scope.getColor = function(index){
+    $scope.getColorClass = function(index){
         var colors = $scope.colors || DEFAULT_COLORS;
-        return colors[index % colors.length];
+        return 'bar-' + colors[index % colors.length];
     };
     $scope.getTotal = function(){
         return $scope.data.reduce(function(a, b){ return a + b; });
