@@ -1,7 +1,7 @@
 <div class="panel panel-default">
     <div class="panel-heading">
         <h4>
-            {{ controller.project.name }} 
+            {{ controller.project.name }}
             <i class="fa" ng-class="controller.project.is_private ? 'fa-lock' :'fa-globe'"></i>
         </h4>
     </div>
@@ -32,7 +32,7 @@
             <label>
                 Enabled:
             </label>
-            <input type="checkbox" 
+            <input type="checkbox"
                 ng-model="controller.project.is_enabled"
                 ng-false-value="0"
                 ng-true-value="1"
@@ -50,15 +50,15 @@
             </div>
             <div class="form-group">
                 <label>Rec limit:</label>
-                <input type="number" 
-                    class="form-control" 
+                <input type="number"
+                    class="form-control"
                     style="display:inline; width:auto;"
                     ng-model="controller.project.storage_limit">
             </div>
             <div class="form-group">
                 <label>Processing limit:</label>
-                <input type="number" 
-                    class="form-control" 
+                <input type="number"
+                    class="form-control"
                     style="display:inline; width:auto;"
                     ng-model="controller.project.processing_limit">
             </div>

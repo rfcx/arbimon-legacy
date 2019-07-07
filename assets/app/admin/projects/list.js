@@ -1,6 +1,6 @@
 angular.module('a2.admin.projects.list', [
-    'ui.router', 
-    'ui.bootstrap', 
+    'ui.router',
+    'ui.bootstrap',
     'a2.utils',
     'a2.services',
     'templates-arbimon2',
@@ -39,19 +39,19 @@ angular.module('a2.admin.projects.list', [
         }).bind(this));
 
     };
-        
+
     this.select = function(project) {
         return $state.go('projects.list.detail', {url:project.url});
     };
-    
+
     this.notifyProjectUpdated = function(project) {
         var projectObject = this.projects.reduce(function(_, p, $index){
             return p.project_id == project.project_id ? project : _;
         }, null);
-        
+
         angular.merge(projectObject, project);
     };
-    
+
     this.initialize();
 })
 .controller('AdminProjectsListDetailCtrl', function($scope, $state, $q, notify, AdminProjectsListService) {
@@ -59,7 +59,7 @@ angular.module('a2.admin.projects.list', [
         console.log("$state", $state);
         this.setProject({url:$state.params.url});
     };
-        
+
     this.setProject = function(projectData) {
         return $q.all([
             AdminProjectsListService.getProjectInfo(projectData),
@@ -72,11 +72,11 @@ angular.module('a2.admin.projects.list', [
             this.recCount = all[2];
         }).bind(this));
     };
-    
+
     this.close = function() {
         $state.go('projects.list');
     };
-    
+
     this.save = function(){
         return AdminProjectsListService.updateProject(this.project).then((function(project){
             this.project = project;
@@ -85,8 +85,8 @@ angular.module('a2.admin.projects.list', [
             notify.error(err);
         });
     };
-    
-    this.initialize();    
+
+    this.initialize();
 })
 .service('AdminProjectsListService', function($http){
     return {
@@ -95,7 +95,7 @@ angular.module('a2.admin.projects.list', [
                 return response.data;
             });
         },
-            
+
         getProjectInfo : function(project) {
             return $http.get('/api/project/'+project.url+'/info').then(function(response){
                 var data = response.data;
@@ -109,13 +109,13 @@ angular.module('a2.admin.projects.list', [
                 return response.data;
             });
         },
-            
+
         getProjectRecordingCount : function(project) {
             return $http.get('/api/project/'+project.url+'/recordings/count').then(function(response) {
                 return response.data.count;
             });
         },
-        
+
         updateProject : function(project) {
             var projectData = {
                 project_id : project.project_id,
