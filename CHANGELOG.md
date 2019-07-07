@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- v1.16.1
+    - Completed and integrated citizen scientist module
+
 - v1.16.0
     - Added citizen scientist modules
 
