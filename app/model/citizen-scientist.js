@@ -248,8 +248,8 @@ var CitizenScientist = {
             "        GROUP BY _PMV.pattern_matching_roi_id\n" +
             "    ) AS PMV ON PMV.pattern_matching_roi_id = pattern_matching_rois.pattern_matching_roi_id\n" +
             "SET \n" +
-            "    pattern_matching_rois.cs_present = COALESCE(PMV.cs_present, 0),\n" +
-            "    pattern_matching_rois.cs_not_present = COALESCE(PMV.cs_not_present, 0),\n" +
+            "    pattern_matching_rois.cs_val_present = COALESCE(PMV.cs_present, 0),\n" +
+            "    pattern_matching_rois.cs_val_not_present = COALESCE(PMV.cs_not_present, 0),\n" +
             "    pattern_matching_rois.consensus_validated = (CASE\n" +
             "        WHEN PMV.cs_present >= pattern_matchings.consensus_number THEN 1\n" +
             "        WHEN PMV.cs_not_present >= pattern_matchings.consensus_number THEN 0\n" +
