@@ -68,8 +68,6 @@ router.get('/:patternMatching/rois.csv', function(req, res, next) {
 
     filters.project_id = req.project.project_id | 0;
 
-    console.log(JSON.stringify(filters));
-
     model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name;});
@@ -107,6 +105,15 @@ router.get('/:patternMatching/rois.csv', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
+    model.patternMatchings.getRoiAudioFile(req.params.patternMatching, req.params.roiId).then(function(roiAudio) {
+        if(!roiAudio){
+            res.sendStatus(404);
+        } else {
+            res.sendFile(roiAudio.path);
+        }
+    }).catch(next);
+});
 
 
 router.post('/:patternMatching/validate', function(req, res, next) {

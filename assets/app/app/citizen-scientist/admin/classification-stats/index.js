@@ -43,6 +43,10 @@ angular.module('a2.citizen-scientist.admin.classification-stats', [
         }).bind(this));
     };
 
+    this.patternMatchingExportUrl = function(row){
+        return a2CitizenScientistAdminService.getCSExportUrl(row.pattern_matching_id);
+    }
+
 
     this.loadPage();
     if (this.speciesId){

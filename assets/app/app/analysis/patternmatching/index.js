@@ -14,6 +14,8 @@ angular.module('a2.analysis.patternmatching', [
     });
 })
 .controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+    $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
+
     var initTable = function(p, c, s, f, t) {
         var sortBy = {};
         var acsDesc = 'desc';
@@ -27,9 +29,6 @@ angular.module('a2.analysis.patternmatching', [
             sorting: sortBy,
             filter:f
         };
-
-        $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
-        $scope.detailedView = $stateParams.show == 'detail';
 
         $scope.tableParams = new ngTableParams(tableConfig, {
             total: t,
@@ -48,25 +47,8 @@ angular.module('a2.analysis.patternmatching', [
                 }
 
                 $scope.patternmatchingsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                a2PatternMatching.saveState({
-                    'data':$scope.patternmatchingsOriginal,
-                    'filtered': $scope.patternmatchingsData,
-                    'f':params.filter(),
-                    'o':params.orderBy(),
-                    'p':params.page(),
-                    'c':params.count(),
-                    't':orderedData.length
-                });
             }
         });
-    };
-
-    $scope.setDetailedView = function(detailedView){
-        $scope.detailedView = detailedView;
-        $state.transitionTo($state.current.name, {
-            patternMatchingId:$scope.selectedPatternMatchingId,
-            show:detailedView?"detail":"gallery"
-        }, {notify:false});
     };
 
     $scope.getTemplateVisualizerUrl = function(template){
@@ -75,31 +57,17 @@ angular.module('a2.analysis.patternmatching', [
         return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
-
-
     $scope.selectItem = function(patternmatchingId){
-        if($scope.selectedPatternMatchingId == patternmatchingId){
-            $state.go('analysis.patternmatching', {
-                patternMatchingId: undefined
-            });
-        } else {
-            $state.go('analysis.patternmatching', {
-                patternMatchingId: patternmatchingId
-            });
-        }
+        $state.go('analysis.patternmatching', {
+            patternMatchingId: patternmatchingId ? patternmatchingId : undefined
+        });
     }
 
-    $scope.updateFlags = function() {
-        $scope.successInfo = "";
-        $scope.showSuccess = false;
-        $scope.errorInfo = "";
-        $scope.showError = false;
-        $scope.infoInfo = "";
-        $scope.showInfo = false;
-        $scope.loading = false;
-    };
-
     $scope.loadPatternMatchings = function() {
+        $scope.loading = true;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+
         return a2PatternMatching.list().then(function(data) {
             $scope.patternmatchingsOriginal = data;
             $scope.patternmatchingsData = data;
@@ -117,43 +85,6 @@ angular.module('a2.analysis.patternmatching', [
             } else {
                 $scope.infopanedata = "No pattern matchings found.";
             }
-        });
-    };
-
-    $scope.showPatternMatchingDetails = function (patternmatching) {
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-        $scope.loading = true;
-
-        var data = {
-            id: patternmatching.job_id,
-            name: patternmatching.cname,
-            modelId: patternmatching.model_id,
-            playlist: {
-                name: patternmatching.playlist_name,
-                id: patternmatching.playlist_id
-            }
-        };
-
-        var modalInstance = $modal.open({
-            templateUrl: '/app/analysis/patternmatching/patternmatchinginfo.html',
-            controller: 'PatternMatchingDetailsInstanceCtrl',
-            windowClass: 'details-modal-window',
-            backdrop: 'static',
-            resolve: {
-                PatternMatchingInfo: function () {
-                    return {
-                        data: data,
-                        project: $scope.projectData,
-                    };
-                },
-            }
-        });
-
-        modalInstance.opened.then(function() {
-            $scope.infoInfo = "";
-            $scope.showInfo = false;
-            $scope.loading = false;
         });
     };
 
@@ -234,29 +165,8 @@ angular.module('a2.analysis.patternmatching', [
         });
     };
 
-    $scope.loading = true;
-    $scope.infoInfo = "Loading...";
-    $scope.showInfo = true;
-
-    Project.getInfo(function(data) {
-        $scope.projectData = data;
-    });
-
-    var stateData = a2PatternMatching.getState();
-
-    if (stateData === null) {
+    if (!$scope.selectedPatternMatchingId) {
         $scope.loadPatternMatchings();
-    } else {
-        if (stateData.data.length > 0) {
-            $scope.patternmatchingsData = stateData.filtered;
-            $scope.patternmatchingsOriginal = stateData.data;
-            initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
-        } else {
-            $scope.infopanedata = "No models found.";
-        }
-        $scope.infoInfo = "";
-        $scope.showInfo = false;
-        $scope.loading = false;
     }
 })
 .directive('a2PatternMatchingDetails', function(){
@@ -265,8 +175,6 @@ angular.module('a2.analysis.patternmatching', [
         replace: true,
         scope : {
             patternMatchingId: '=',
-            detailedView: '=',
-            onSetDetailedView: '&',
             onGoBack: '&',
         },
         controller : 'PatternMatchingDetailsCtrl',
@@ -329,6 +237,15 @@ angular.module('a2.analysis.patternmatching', [
         this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
             patternMatching: this.patternMatching.id,
         });
+    },
+
+    onScroll: function($event, $controller){
+        this.scrollElement = $controller.scrollElement;
+        var scrollPos = $controller.scrollElement.scrollY;
+        var headerTop = $controller.anchors.header.offset().top;
+
+        this.headerTop = headerTop | 0;
+        this.scrolledPastHeader = scrollPos >= headerTop;
     },
 
     onSelect: function($item){
@@ -469,22 +386,12 @@ angular.module('a2.analysis.patternmatching', [
 
     next: function(step) {
         if(!step){step = 1;}
-        if(this.detailedView) {
-            this.nextMatch(step);
-        } else {
-            this.nextPage(step);
-        }
+        this.nextPage(step);
     },
 
     prev: function(step) {
         if(!step){step = 1;}
         return this.next(-step);
-    },
-
-    setDetailedView: function(detailedView){
-        if ($scope.onSetDetailedView) {
-            $scope.onSetDetailedView({value: detailedView})
-        }
     },
 
 }); this.initialize($scope.patternMatchingId);

@@ -33,8 +33,7 @@ router.post('/', function(req, res, next) {
     }).then(function(){
         return model.CitizenScientist.setSettings({
             project: project_id,
-            consensus_number: req.body.consensus_number,
-            pattern_matchings: req.body.pattern_matchings,
+            pattern_matchings: req.body,
         });
 }).then(function(result){
         res.json({ ok: true, result: result });

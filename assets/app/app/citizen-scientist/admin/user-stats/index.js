@@ -14,6 +14,7 @@ angular.module('a2.citizen-scientist.admin.user-stats', [
     });
 })
 .controller('A2CitizenScientistAdminUserStatsCtrl', function($scope, a2CitizenScientistAdminService, $stateParams, $state, Users) {
+    this.userStatsExportUrl = a2CitizenScientistAdminService.getUserStatsExportUrl();
     this.setUser = function(userId){
         this.userId = userId;
         $state.transitionTo($state.current.name, {
@@ -28,13 +29,13 @@ angular.module('a2.citizen-scientist.admin.user-stats', [
         this.loading = true;
         a2CitizenScientistAdminService.getUserStats().then((function(data){
             this.loading = false;
-            this.stats = data.stats;
+            this.stats = data.stats.filter(function(item){ return !!item.user_id});
         }).bind(this));
     };
 
     this.loadForUser = function(){
         this.loadingForUser = true;
-        User.getInfoForId(this.userId).then((function(user){
+        Users.getInfoForId(this.userId).then((function(user){
             this.user = user;
         }).bind(this))
         a2CitizenScientistAdminService.getUserStats(this.userId).then((function(data){

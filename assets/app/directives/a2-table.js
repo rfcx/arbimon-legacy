@@ -72,7 +72,7 @@ angular.module('a2.directive.a2-table', [
                 tplFilters.append(
                     angular.element('<th></th>').append(
                         (field.filter !== undefined) ?
-                        '   <input type="text" ng-model="a2TableController.filter['+index+']" ng-change="a2TableController.onFilterChanged(' + index + ')">\n' :
+                        '   <input type="text" class="a2-table-filter" ng-model="a2TableController.filter['+index+']" ng-change="a2TableController.onFilterChanged(' + index + ')">\n' :
                         ''
                     )
                 );
@@ -114,7 +114,8 @@ angular.module('a2.directive.a2-table', [
                 }, true);
 
 
-                element.append($compile(template)(tableScope));
+                var cmpel = $compile(template.clone())(tableScope);
+                element.append(cmpel);
 
                 scope.$on('$destroy', function(){
                     tableScope.$destroy();

@@ -2,8 +2,12 @@
     <div ng-if="controller.loading.details">
         Loading <loader></loader>
     </div>
-    <div ng-if="!controller.loading.details">
-        <div class="panel-body" ng-if="controller.patternMatching">
+    <div ng-if="!controller.loading.details && controller.patternMatching"
+        a2-scroll="controller.onScroll($event, $controller)"
+        a2-scroll-on="window"
+    >
+    <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
+        <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader }">
             <div class="row row-flex flex-align-middle">
                 <div class="col-sm-2 flex-self-align-top">
                     <button class="btn btn-default"
@@ -14,11 +18,11 @@
                 <div class="col-sm-2" style="padding-bottom:5px">
                     <div class="roi-thumbnail" >
                         <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
-                        <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(controller.patternMatching.template)}}">
+                        <a class="roi-btn-br" ng-click="controller.playTemplateAudio()">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
-                                tooltip="View in Visualizer"
-                                class="fa fa-cubes">
+                                tooltip="Play Audio"
+                                class="fa fa-play">
                             </i>
                         </a>
                         <div class="roi-btn-b outside text-sm">
@@ -42,9 +46,9 @@
                     {{controller.patternMatching.playlist_name}}<br />
                     {{controller.patternMatching.parameters}}<br />
                     {{controller.patternMatching.matches}} matches
-                        ({{controller.patternMatching.present || 0}} present,
-                        {{controller.patternMatching.absent || 0}} not present,
-                        {{controller.patternMatching.matches - (controller.patternMatching.present + controller.patternMatching.absent)}} unvalidated)
+                        ({{controller.patternMatching.cs_present || 0}} present,
+                        {{controller.patternMatching.cs_absent || 0}} not present,
+                        {{controller.patternMatching.matches - (controller.patternMatching.cs_present + controller.patternMatching.cs_absent)}} unvalidated)
                 </div>
                 <div class="col-sm-5 flex-self-align-bottom">
                     <div class="pull-right">
@@ -96,7 +100,7 @@
                 </div>
             </div>
         </div>
-        <div class="panel-body" ng-show="controller.patternMatching">
+        <div class="panel-body">
             <div ng-show="loading-rois">Loading...</div>
             <div ng-repeat="site in controller.rois">
                 <div class="h3"><i class="fa fa-map-marker"></i> {{site.name}}</div>
@@ -114,11 +118,11 @@
                         <div class="roi-btn-tr h1" ng-if="roi.cs_validated !== null">
                             <i class="fa val-{{roi.cs_validated}}"></i>
                         </div>
-                        <a class="roi-btn-br" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
+                        <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi, $event)">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
-                                tooltip="View in Visualizer"
-                                class="fa fa-cubes">
+                                tooltip="Play Audio"
+                                class="fa fa-play">
                             </i>
                         </a>
                         <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>

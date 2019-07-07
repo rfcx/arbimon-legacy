@@ -49,8 +49,8 @@
                         </a>
                         <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="analysis"></ul>
                     </li>
-                    <li ui-sref-active="open" tooltip="Citizen Scientist" tooltip-placement="bottom">
-                        <a ui-sref="citizen-scientist">
+                    <li ui-sref-active="open" tooltip="Citizen Scientist" tooltip-placement="bottom" ng-if="userPermit.has('citizen_scientist')">
+                        <a ng-href="{{getUrlFor('citizen-scientist')}}" target="arbimonCSUI">
                             <i class="fa fa-users"></i>
                             <span class="visible-lg-inline visible-xs-inline">Citizen Scientist</span>
                         </a>

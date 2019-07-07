@@ -2,6 +2,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
     'ui.bootstrap',
     'a2.srv.patternmatching',
     'a2.srv.citizen-scientist',
+    'a2.visualizer.audio-player',
     'a2.services',
     'a2.permissions',
     'humane',
@@ -9,12 +10,14 @@ angular.module('a2.citizen-scientist.patternmatching', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('citizen-scientist.patternmatching', {
-        url: '/patternmatching/:patternMatchingId??show',
+        url: '/patternmatching/:patternMatchingId?',
         controller: 'CitizenScientistPatternMatchingCtrl',
         templateUrl: '/app/citizen-scientist/patternmatching/list.html'
     });
 })
 .controller('CitizenScientistPatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+    $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
+
     var initTable = function(p, c, s, f, t) {
         var sortBy = {};
         var acsDesc = 'desc';
@@ -28,9 +31,6 @@ angular.module('a2.citizen-scientist.patternmatching', [
             sorting: sortBy,
             filter:f
         };
-
-        $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
-        $scope.detailedView = $stateParams.show == 'detail';
 
         $scope.tableParams = new ngTableParams(tableConfig, {
             total: t,
@@ -49,25 +49,8 @@ angular.module('a2.citizen-scientist.patternmatching', [
                 }
 
                 $scope.patternmatchingsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                a2PatternMatching.saveState({
-                    'data':$scope.patternmatchingsOriginal,
-                    'filtered': $scope.patternmatchingsData,
-                    'f':params.filter(),
-                    'o':params.orderBy(),
-                    'p':params.page(),
-                    'c':params.count(),
-                    't':orderedData.length
-                });
             }
         });
-    };
-
-    $scope.setDetailedView = function(detailedView){
-        $scope.detailedView = detailedView;
-        $state.transitionTo($state.current.name, {
-            patternMatchingId:$scope.selectedPatternMatchingId,
-            show:detailedView?"detail":"gallery"
-        }, {notify:false});
     };
 
     $scope.getTemplateVisualizerUrl = function(template){
@@ -76,31 +59,17 @@ angular.module('a2.citizen-scientist.patternmatching', [
         return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
-
-
     $scope.selectItem = function(patternmatchingId){
-        if($scope.selectedPatternMatchingId == patternmatchingId){
-            $state.go('citizen-scientist.patternmatching', {
-                patternMatchingId: undefined
-            });
-        } else {
-            $state.go('citizen-scientist.patternmatching', {
-                patternMatchingId: patternmatchingId
-            });
-        }
+        $state.go('citizen-scientist.patternmatching', {
+            patternMatchingId: patternmatchingId ? patternmatchingId : undefined
+        });
     }
 
-    $scope.updateFlags = function() {
-        $scope.successInfo = "";
-        $scope.showSuccess = false;
-        $scope.errorInfo = "";
-        $scope.showError = false;
-        $scope.infoInfo = "";
-        $scope.showInfo = false;
-        $scope.loading = false;
-    };
-
     $scope.loadPatternMatchings = function() {
+        $scope.loading = true;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+
         return a2CitizenScientistService.getPatternMatchings().then(function(data) {
             $scope.patternmatchingsOriginal = data;
             $scope.patternmatchingsData = data;
@@ -121,66 +90,8 @@ angular.module('a2.citizen-scientist.patternmatching', [
         });
     };
 
-    $scope.showPatternMatchingDetails = function (patternmatching) {
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-        $scope.loading = true;
-
-        var data = {
-            id: patternmatching.job_id,
-            name: patternmatching.cname,
-            modelId: patternmatching.model_id,
-            playlist: {
-                name: patternmatching.playlist_name,
-                id: patternmatching.playlist_id
-            }
-        };
-
-        var modalInstance = $modal.open({
-            templateUrl: '/app/citizen-scientist/patternmatching/patternmatchinginfo.html',
-            controller: 'CitizenScientistPatternMatchingDetailsCtrl',
-            windowClass: 'details-modal-window',
-            backdrop: 'static',
-            resolve: {
-                PatternMatchingInfo: function () {
-                    return {
-                        data: data,
-                        project: $scope.projectData,
-                    };
-                },
-            }
-        });
-
-        modalInstance.opened.then(function() {
-            $scope.infoInfo = "";
-            $scope.showInfo = false;
-            $scope.loading = false;
-        });
-    };
-
-    $scope.loading = true;
-    $scope.infoInfo = "Loading...";
-    $scope.showInfo = true;
-
-    Project.getInfo(function(data) {
-        $scope.projectData = data;
-    });
-
-    var stateData = a2PatternMatching.getState();
-
-    if (stateData === null) {
+    if (!$scope.selectedPatternMatchingId) {
         $scope.loadPatternMatchings();
-    } else {
-        if (stateData.data.length > 0) {
-            $scope.patternmatchingsData = stateData.filtered;
-            $scope.patternmatchingsOriginal = stateData.data;
-            initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
-        } else {
-            $scope.infopanedata = "No models found.";
-        }
-        $scope.infoInfo = "";
-        $scope.showInfo = false;
-        $scope.loading = false;
     }
 })
 .directive('a2CitizenScientistPatternMatchingDetails', function(){
@@ -189,8 +100,6 @@ angular.module('a2.citizen-scientist.patternmatching', [
         replace: true,
         scope : {
             patternMatchingId: '=',
-            detailedView: '=',
-            onSetDetailedView: '&',
             onGoBack: '&',
         },
         controller : 'CitizenScientistPatternMatchingDetailsCtrl',
@@ -198,7 +107,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         templateUrl: '/app/citizen-scientist/patternmatching/details.html'
     };
 })
-.controller('CitizenScientistPatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2CitizenScientistService, a2UserPermit, Project, notify) {
+.controller('CitizenScientistPatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistService, a2UserPermit, Project, a2AudioPlayer, notify) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -214,6 +123,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         this.fetchDetails().then((function(){
             this.loadPage(this.selected.page);
         }).bind(this));
+        this.audio_player = new a2AudioPlayer($scope)
     },
 
     lists: {
@@ -255,6 +165,15 @@ angular.module('a2.citizen-scientist.patternmatching', [
         });
     },
 
+    onScroll: function($event, $controller){
+        this.scrollElement = $controller.scrollElement;
+        var scrollPos = $controller.scrollElement.scrollY;
+        var headerTop = $controller.anchors.header.offset().top;
+
+        this.headerTop = headerTop | 0;
+        this.scrolledPastHeader = scrollPos >= headerTop;
+    },
+
     onSelect: function($item){
         this.select($item.value);
     },
@@ -278,11 +197,34 @@ angular.module('a2.citizen-scientist.patternmatching', [
                 return _;
             }, {list:[], idx:{}}).list;
             this.selected.roi = Math.min()
+
+            if(this.scrollElement){
+                this.scrollElement.scrollTo(0, 0);
+            }
+
             return rois;
         }).bind(this)).catch((function(err){
             this.loading.rois = false;
             return notify.serverError(err);
         }).bind(this));
+    },
+
+    playRoiAudio: function(roi, $event){
+        if($event){
+            $event.preventDefault();
+            $event.stopPropagation();
+        }
+        var audio_player = this.audio_player;
+        audio_player.load(a2PatternMatching.getAudioUrlFor(roi)).then(function(){
+            audio_player.play();
+        })
+    },
+
+    playTemplateAudio: function(){
+        var audio_player = this.audio_player;
+        audio_player.load(a2Templates.getAudioUrlFor(this.patternMatching.template)).then(function(){
+            audio_player.play();
+        })
     },
 
     getRoiVisualizerUrl: function(roi){
@@ -343,7 +285,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
     },
 
     validate: function(validation, rois){
-        if(!a2UserPermit.can('validate pattern matchings')) {
+        if(!a2UserPermit.can('use citizen scientist interface')) {
             notify.log('You do not have permission to validate the matched rois.');
             return;
         }
@@ -370,8 +312,8 @@ angular.module('a2.citizen-scientist.patternmatching', [
                 roi.cs_validated = validation;
                 roi.selected = false;
             });
-            this.patternMatching.absent += val_delta[0];
-            this.patternMatching.present += val_delta[1];
+            this.patternMatching.cs_absent += val_delta[0];
+            this.patternMatching.cs_present += val_delta[1];
         }).bind(this));
     },
 
@@ -393,22 +335,12 @@ angular.module('a2.citizen-scientist.patternmatching', [
 
     next: function(step) {
         if(!step){step = 1;}
-        if(this.detailedView) {
-            this.nextMatch(step);
-        } else {
-            this.nextPage(step);
-        }
+        this.nextPage(step);
     },
 
     prev: function(step) {
         if(!step){step = 1;}
         return this.next(-step);
-    },
-
-    setDetailedView: function(detailedView){
-        if ($scope.onSetDetailedView) {
-            $scope.onSetDetailedView({value: detailedView})
-        }
     },
 
 }); this.initialize($scope.patternMatchingId);

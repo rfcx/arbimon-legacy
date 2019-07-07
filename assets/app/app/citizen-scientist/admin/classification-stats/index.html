@@ -4,98 +4,67 @@
         <span class="badge">{{controller.stats.length}} species</span>
     </h4>
     <h4 ng-show="controller.speciesId">
-        Classification Stats / {{controller.species.scientific_name}}
         <button class="btn btn-default"
             ng-click="controller.setSpecies() | trackEvent:'Analysis-Citizen-Scientist-Stats':' go back'">
             &lt;  Go Back
         </button>
+        Classification Stats / {{controller.species.scientific_name}}
     </h4>
 </div>
 <div class="row">
-    <div class="col-sm-12" ng-if="!controller.speciesId">
+    <div class="col-sm-12" ng-show="!controller.speciesId">
         <a2-table class="table-hide-btns"
             rows="controller.stats" no-checkbox="true"
             ext-sort="sortRecs(sortBy, reverse)"
             default-sort="site"
+            ng-show="!controller.loading"
             on-select="controller.setSpecies(row.species_id)"
         >
             <field title="Species"    filter key="species" >{{ row.species  }}</field>
             <field title="Songtype"   filter key="songtype">{{ row.songtype }}</field>
             <field title="Stats"      key="stats" width="50%" >
-                <div class="stacked-bars"
-                    popover-html="'Present: {{row.present}} ({{row.present * 100 / row.count | number:0}}%)<br />
-                             Not Present: {{row.notPresent}} ({{row.notPresent * 100 / row.count | number:0}}%)<br />
-                             Not Validated: {{row.notValidated}} ({{row.notValidated * 100 / row.count | number:0}}%)'"
-                    popover-trigger="mouseenter"
-                    popover-append-to-body="true"
-                >
-                    <div ng-style="{ 'background-color': 'green', width:((row.present * 100 / row.count) | number) + '%' }"
-                        aria-valuemax="100"
-                        aria-valuemin="0"
-                        aria-valuenow="{{row.present}}"
-                        role="progressbar"
-                        class="progress-bar">
-                    </div>
-                    <div ng-style="{ 'background-color': 'red', width:((row.notPresent * 100 / row.count) | number) + '%' }"
-                        aria-valuemax="100"
-                        aria-valuemin="0"
-                        aria-valuenow="{{row.notPresent}}"
-                        role="progressbar"
-                        class="progress-bar">
-                    </div>
-                    <div ng-style="{ 'background-color': 'yellow', width:((row.notValidated * 100 / row.count) | number) + '%' }"
-                        aria-valuemax="100"
-                        aria-valuemin="0"
-                        aria-valuenow="{{row.notValidated}}"
-                        role="progressbar"
-                        class="progress-bar">
-                    </div>
-                </div>
+                <a2-percentage-bars data="[row.present, row.notPresent, row.pending, row.notValidated]"
+                        colors="[0, 1, -2, 2]"
+                        popover-html="'<span class=\'swatch val-1\'></span> Present: {{row.present}} <span class=\'popover-percent\'>({{row.present * 100 / row.count | number:0}}%)</span><br />
+                                 <span class=\'swatch val-0\'></span> Not Present: {{row.notPresent}} <span class=\'popover-percent\'>({{row.notPresent * 100 / row.count | number:0}}%)</span><br />
+                                 <span class=\'swatch val--2\'></span> Pending: {{row.pending}} <span class=\'popover-percent\'>({{row.pending * 100 / row.count | number:0}}%)</span><br />
+                                 <span class=\'swatch val-2\'></span> Not Validated: {{row.notValidated}} <span class=\'popover-percent\'>({{row.notValidated * 100 / row.count | number:0}}%)</span>'"
+                        popover-trigger="mouseenter"
+                        popover-append-to-body="true"
+                />
             </field>
         </a2-table>
-        <loader ng-hide="!loading"></loader>
+        <loader ng-hide="!controller.loading"></loader>
     </div>
-    <div class="col-sm-12" ng-if="controller.speciesId">
+    <div class="col-sm-12" ng-show="controller.speciesId">
         <a2-table class="table-hide-btns"
-            ng-show="controller.speciesId"
+            ng-show="!controller.loadingForSpecies"
             rows="controller.speciesStats" no-checkbox="true"
             ext-sort="sortRecs(sortBy, reverse)"
             default-sort="site"
             no-select
         >
-            <field title="Name"    filter key="name" >{{ row.name }}</field>
+            <field title="Pattern Matching"    filter key="name" >{{ row.name }}</field>
             <field title="Stats"      key="stats" width="50%" >
-                <div class="stacked-bars"
-                    popover-html="'Present: {{row.present}} ({{row.present * 100 / row.count | number:0}}%)<br />
-                             Not Present: {{row.notPresent}} ({{row.notPresent * 100 / row.count | number:0}}%)<br />
-                             Not Validated: {{row.notValidated}} ({{row.notValidated * 100 / row.count | number:0}}%)'"
-                    popover-trigger="mouseenter"
-                    popover-append-to-body="true"
-                >
-                    <div ng-style="{ 'background-color': 'green', width:((row.present * 100 / row.count) | number) + '%' }"
-                        aria-valuemax="100"
-                        aria-valuemin="0"
-                        aria-valuenow="{{row.present}}"
-                        role="progressbar"
-                        class="progress-bar">
-                    </div>
-                    <div ng-style="{ 'background-color': 'red', width:((row.notPresent * 100 / row.count) | number) + '%' }"
-                        aria-valuemax="100"
-                        aria-valuemin="0"
-                        aria-valuenow="{{row.notPresent}}"
-                        role="progressbar"
-                        class="progress-bar">
-                    </div>
-                    <div ng-style="{ 'background-color': 'yellow', width:((row.notValidated * 100 / row.count) | number) + '%' }"
-                        aria-valuemax="100"
-                        aria-valuemin="0"
-                        aria-valuenow="{{row.notValidated}}"
-                        role="progressbar"
-                        class="progress-bar">
-                    </div>
-                </div>
+                <a2-percentage-bars data="[row.present, row.notPresent, row.pending, row.notValidated]"
+                        colors="[0, 1, -2, 2]"
+                        popover-html="'<span class=\'swatch val-1\'></span> Present: {{row.present}} <span class=\'popover-percent\'>({{row.present * 100 / row.count | number:0}}%)</span><br />
+                                 <span class=\'swatch val-0\'></span> Not Present: {{row.notPresent}} <span class=\'popover-percent\'>({{row.notPresent * 100 / row.count | number:0}}%)</span><br />
+                                 <span class=\'swatch val--2\'></span> Pending: {{row.pending}} <span class=\'popover-percent\'>({{row.pending * 100 / row.count | number:0}}%)</span><br />
+                                 <span class=\'swatch val-2\'></span> Not Validated: {{row.notValidated}} <span class=\'popover-percent\'>({{row.notValidated * 100 / row.count | number:0}}%)</span>'"
+                        popover-trigger="mouseenter"
+                        popover-append-to-body="true"
+                />
+            </field>
+            <field>
+                <a class="btn btn-default"
+                    ng-href="{{controller.patternMatchingExportUrl(row)}}"
+                    ng-click="true | trackEvent:'CS Pattern Matching':'export'"
+                    tooltip="Export Citizen Scientist Pattern Matching Data">
+                <i class="fa fa-download"></i>
+            </a>
             </field>
         </a2-table>
-        <loader ng-hide="!loading"></loader>
+        <loader ng-hide="!controller.loadingForSpecies"></loader>
     </div>
 </div>

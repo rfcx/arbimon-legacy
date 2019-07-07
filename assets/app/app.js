@@ -44,6 +44,11 @@ var a2 = angular.module('a2.app', [
     $locationProvider.html5Mode(true);
     $urlRouterProvider.otherwise("/dashboard");
 })
-.controller('MainCtrl', function($scope, $state){
+.controller('MainCtrl', function($scope, $state, Project){
     $scope.$state = $state;
+    $scope.getUrlFor = function(page){
+        if(page == 'citizen-scientist'){
+            return '/citizen-scientist/' + Project.getUrl() + '/';
+        }
+    }
 });

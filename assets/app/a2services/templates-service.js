@@ -15,6 +15,10 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             });
         },
 
+        getAudioUrlFor: function(template){
+            return '/api/project/' + Project.getUrl() + '/templates/' + template.id + '/audio';
+        },
+
         // edit: function(templateId, template_data) {
         //     var projectName = Project.getUrl();
         //     return $http.post('/api/project/'+projectName+'/templates/edit/'+templateId, template_data);

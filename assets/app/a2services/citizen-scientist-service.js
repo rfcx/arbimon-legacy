@@ -3,6 +3,9 @@ angular.module('a2.srv.citizen-scientist', [
 ])
 .factory('a2CitizenScientistService',function(a2APIService, notify){
     return {
+        getMyStats: function(userId){
+            return a2APIService.get('/citizen-scientist/stats/mine').catch(notify.serverError);
+        },
         getPatternMatchings: function(){
             return a2APIService.get('/citizen-scientist/pattern-matchings').catch(notify.serverError);
         },

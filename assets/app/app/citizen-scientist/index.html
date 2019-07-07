@@ -1,5 +1,5 @@
 <div>
-    <a2-sidenav-bar name="citizen-scientist" enabled="('citizen-scientist' | includedByState)">
+    <a2-sidenav-bar name="citizen-scientist" enabled="('citizen-scientist' | includedByState)" ng-hide="onCitizenScientistPage">
         <li ui-sref="citizen-scientist.patternmatching" ui-sref-active="active"><a>Pattern Matchings</a></li>
         <li ui-sref="citizen-scientist.admin.classification-stats" ng-class=" ('citizen-scientist.admin' | includedByState) ? 'active' : ''">
             <a>Admin</a>

@@ -21,19 +21,19 @@ var songtypes = require('./songtypes');
 var s3;
 
 var Projects = {
-    
+
     listAll: function(callback) {
         var q = "SELECT project_id as id, name, url, description, is_private, is_enabled \n"+
                 "FROM projects";
 
         queryHandler(q, callback);
     },
-    
+
     find: function (query, callback) {
         var whereExp = [], data=[];
         var selectExtra = '';
         var joinExtra = '';
-        
+
         if(query.hasOwnProperty("id")) {
             whereExp.push("p.project_id = ?");
             data.push(query.id);
@@ -46,23 +46,24 @@ var Projects = {
             whereExp.push("p.name = ?");
             data.push(query.name);
         }
-        
+
         if(!whereExp.length) {
             return q.reject(new Error('no query params'));
         }
-        
+
         if(!query.basicInfo){
             selectExtra = "   pp.tier, \n"+
                           "   pp.storage AS storage_limit, \n"+
                           "   pp.processing AS processing_limit, \n"+
                           "   pp.created_on AS plan_created, \n"+
                           "   pp.activation AS plan_activated, \n"+
+                          "   p.citizen_scientist_enabled, \n"+
                           "   pp.duration_period AS plan_period \n";
             joinExtra   = "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
         } else {
             selectExtra = "p.project_id as id \n";
         }
-        
+
         return dbpool.query(
             "SELECT p.*" + (selectExtra ? ", \n" + selectExtra : "\n") +
             "FROM projects AS p \n" + joinExtra +
@@ -70,13 +71,13 @@ var Projects = {
             "  AND (") + ")", data
         ).nodeify(callback);
     },
-    
+
     // DEPRACATED use find()
     findById: function (project_id, callback) {
         console.info('projects.findById DEPRECATED');
         return Projects.find({id: project_id}, callback);
     },
-    
+
     // DEPRACATED use find()
     findByUrl: function (project_url, callback) {
         console.info('projects.findByUrl DEPRECATED');
@@ -119,7 +120,7 @@ var Projects = {
                     sitesById[site.id] = site;
                     return site.id;
                 });
-                
+
                 return q.all([
                     options.compute.rec_count ? dbpool.query(
                         "SELECT r.site_id, COUNT(r.recording_id ) as rec_count\n"+
@@ -180,17 +181,17 @@ var Projects = {
             return sites.length;
         });
     },
-    
+
     /**
-     * creates a project and its plan, and adds the creator to the project as 
+     * creates a project and its plan, and adds the creator to the project as
      * owner on user_project_role
-     * @param {Object} project 
+     * @param {Object} project
      * @param {String} project.name
      * @param {String} project.url
      * @param {String} project.description
      * @param {Number} project.owner_id - creator id
      * @param {Number} project.project_type_id
-     * @param {Boolean} project.is_private 
+     * @param {Boolean} project.is_private
      * @param {Function} callback(err, projectId)
     */
     create: function(project, owner_id, callback) {
@@ -208,61 +209,61 @@ var Projects = {
                 duration_period: joi.number().optional(),
             })
         });
-        
+
         var result = joi.validate(project, schema, {
             stripUnknown: true,
             presence: 'required',
         });
-        
+
         if(result.error) {
             return callback(result.error);
         }
-        
+
         project = result.value;
         var plan = project.plan;
         delete project.plan;
-        
+
         project.storage_usage = 0;
         project.processing_usage = 0;
 
         var q = 'INSERT INTO projects \n'+
                 'SET ?';
-        
+
         var q2 = 'INSERT INTO user_project_role \n'+
                  'SET ?';
-        
+
         var createPlan = 'INSERT INTO project_plans \n'+
                          'SET ?';
-                         
+
         var updatePlan = 'UPDATE projects \n'+
                          'SET current_plan = ? \n'+
                          'WHERE project_id = ?';
-        
+
         dbpool.getConnection(function(err, db) {
             db.beginTransaction(function(err){
                 if(err) return callback(err);
-                
+
                 var projectId;
-                
+
                 async.waterfall([
                     function insertProject(cb) {
                         db.query(q, project, cb);
                     },
                     function insertOwner(result, fields, cb) {
                         projectId = result.insertId;
-                        
+
                         var values = {
                             user_id: owner_id,
                             project_id: projectId,
                             role_id: 4 // owner role id
                         };
-                        
+
                         db.query(q2, values, cb);
                     },
                     function insertPlan(result, fields, cb) {
                         plan.project_id = projectId;
                         plan.created_on = new Date();
-                        
+
                         db.query(createPlan, plan, cb);
                     },
                     function updateCurrentPlan(result, fields, cb) {
@@ -271,7 +272,7 @@ var Projects = {
                     function commit(result, fields, cb) {
                         db.commit(cb);
                     }
-                ], 
+                ],
                 function(err) {
                     db.release();
                     if(err) {
@@ -280,7 +281,7 @@ var Projects = {
                         });
                         return;
                     }
-                    
+
                     callback(null, projectId);
                 });
             });
@@ -289,7 +290,7 @@ var Projects = {
 
     /**
      * updates a project.
-     * @param {Object} project 
+     * @param {Object} project
      * @param {Number} project.project_id
      * @param {String} project.name
      * @param {String} project.url
@@ -305,7 +306,7 @@ var Projects = {
      * @return {Promise} resolved after the update.
     */
     update: function(project, callback) {
-        
+
         var schema = {
             project_id: joi.number().required(),
             name: joi.string(),
@@ -317,6 +318,7 @@ var Projects = {
             current_plan: joi.number(),
             storage_usage: joi.number().allow(null),
             processing_usage: joi.number().allow(null),
+            citizen_scientist_enabled: [joi.number().valid(0,1), joi.boolean()],
             plan: joi.object().keys({
                 tier: joi.string(),
                 storage: joi.number(),
@@ -325,14 +327,14 @@ var Projects = {
                 duration_period: joi.number().allow(null).optional(),
             }).optional()
         };
-        
+
         return q.ninvoke(joi, 'validate', project, schema).then(function(projectInfo){
             var projectId = projectInfo.project_id;
             delete projectInfo.project_id;
-            
+
             var projectInfoPlan = projectInfo.plan;
             delete projectInfo.plan;
-            
+
             return q.all([
                 dbpool.query(
                     'UPDATE projects\n'+
@@ -342,7 +344,7 @@ var Projects = {
                 ]),
                 projectInfoPlan && dbpool.query(
                     "UPDATE project_plans\n"+
-                    "SET ?\n" + 
+                    "SET ?\n" +
                     "WHERE project_id=?", [
                         projectInfoPlan,
                         projectId
@@ -351,16 +353,16 @@ var Projects = {
             ]);
         }).nodeify(callback);
     },
-    
+
     insertNews: function(news, callback) {
-        
+
         var schema = {
-            user_id: joi.number().required(), 
-            project_id: joi.number().required(), 
-            data: joi.string().required(), 
+            user_id: joi.number().required(),
+            project_id: joi.number().required(),
+            data: joi.string().required(),
             news_type_id: joi.number().required()
         };
-        
+
         joi.validate(news, schema, function(err, newsVal) {
             if(err) {
                 if(callback) {
@@ -370,24 +372,24 @@ var Projects = {
                     return console.error(err);
                 }
             }
-            
+
             var q = 'INSERT INTO project_news \n'+
                     'SET user_id = %s, '+
                     'project_id = %s, '+
                     'data = %s, '+
                     'news_type_id = %s';
 
-            q = util.format(q, 
-                dbpool.escape(newsVal.user_id), 
-                dbpool.escape(newsVal.project_id), 
-                dbpool.escape(newsVal.data), 
+            q = util.format(q,
+                dbpool.escape(newsVal.user_id),
+                dbpool.escape(newsVal.project_id),
+                dbpool.escape(newsVal.data),
                 dbpool.escape(newsVal.news_type_id)
             );
-            
+
             queryHandler(q, function(err, result) {
                 if(callback) {
                     if(err) return callback(err);
-                    
+
                     return callback(null, result);
                 } else {
                     if(err) {
@@ -395,7 +397,7 @@ var Projects = {
                     }
                 }
             });
-            
+
         });
     },
 
@@ -414,7 +416,7 @@ var Projects = {
             options = {};
             classId = null;
         }
-        
+
         var params = [projectId];
         var select_clause = [
             "pc.project_class_id as id",
@@ -433,8 +435,8 @@ var Projects = {
         ];
         var where_clause = ['pc.project_id = ?'];
         var groupby_clause = [];
-        
-        
+
+
         if(classId) {
             where_clause.push("pc.project_class_id = ?");
             params.push(classId);
@@ -465,7 +467,7 @@ var Projects = {
         return q.nfcall(queryHandler, dbpool.format(
             "SELECT " + select_clause.join(", \n") + "\n" +
             "FROM " + from_clause.join("\n") + "\n" +
-            "WHERE (" + where_clause.join(") AND (") + ")" + 
+            "WHERE (" + where_clause.join(") AND (") + ")" +
             (groupby_clause.length ? "\nGROUP BY " + groupby_clause.join(",") : ""),
             params)
         ).get(0).nodeify(callback);
@@ -475,10 +477,10 @@ var Projects = {
         var schema = {
             species: joi.string().required(),
             songtype: joi.string().required(),
-            project_id: joi.number().required() 
+            project_id: joi.number().required()
         };
         var value, classSpecies, classSong;
-        
+
         return q.ninvoke(joi, 'validate', project_class, schema).then(function(_value){
             value = _value;
             return q.all([
@@ -489,11 +491,11 @@ var Projects = {
             classSpecies = all[0];
             classSong = all[1];
             console.log("classSpecies", classSpecies, "classSong", classSong);
-            
+
             if(!classSpecies){
                 throw new Error(util.format("species '%s' not in system", value.species));
             }
-            
+
             if(!classSong){
                 throw new Error(util.format("songtype '%s' not in system", value.songtype));
             }
@@ -514,13 +516,13 @@ var Projects = {
             if(classExists){
                 return { error: "class already in project" };
             }
-            
+
             return dbpool.query(
                 'INSERT INTO project_classes(project_id, species_id, songtype_id) \n'+
                 'VALUES (?, ?, ?)', [
                 value.project_id,
                 classSpecies.id,
-                classSong.id      
+                classSong.id
             ]).then(function(result){
                 return {
                     class: result.insertId,
@@ -546,12 +548,12 @@ var Projects = {
             queryHandler(q, callback);
         });
     },
-    
-    getUsers: function(project_id, callback){ 
-        
+
+    getUsers: function(project_id, callback){
+
         if(typeof project_id !== 'number')
             return callback(new Error("invalid type for 'project_id'"));
-        
+
         var q = "SELECT u.login AS username, \n"+
                 "       u.user_id AS id, \n"+
                 "       u.email, \n"+
@@ -560,53 +562,53 @@ var Projects = {
                 "JOIN user_project_role AS upr ON u.user_id = upr.user_id \n"+
                 "JOIN roles AS r on upr.role_id = r.role_id \n"+
                 "WHERE upr.project_id = %s";
-        
+
         q = util.format(q, project_id);
         queryHandler(q, callback);
     },
-    
+
     addUser: function(userProjectRole, callback) {
         var schema = {
             user_id: joi.number().required(),
             project_id: joi.number().required(),
             role_id: joi.number().required()
         };
-        
+
         joi.validate(userProjectRole, schema, function(err, upr){
             if(err) return callback(err);
-            
+
             var user_id = dbpool.escape(upr.user_id);
             var project_id = dbpool.escape(upr.project_id);
             var role_id = dbpool.escape(upr.role_id);
-            
+
             var q = 'INSERT INTO user_project_role \n'+
                     'SET user_id = %s, role_id = %s, project_id = %s';
-            
+
             q = util.format(q, user_id, role_id, project_id);
             queryHandler(q, callback);
         });
 
     },
-    
+
     changeUserRole: function(userProjectRole, callback) {
         var schema = {
             user_id: joi.number().required(),
             project_id: joi.number().required(),
             role_id: joi.number().required()
         };
-            
+
         joi.validate(userProjectRole, schema, function(err, upr){
             if(err) return callback(err);
-            
+
             var user_id = dbpool.escape(upr.user_id);
             var project_id = dbpool.escape(upr.project_id);
             var role_id = dbpool.escape(upr.role_id);
-            
+
             var q = "UPDATE user_project_role \n"+
                     "SET role_id = %s \n"+
                     "WHERE user_id = %s \n"+
                     "AND project_id = %s";
-            
+
             q = util.format(q, role_id, user_id, project_id);
             queryHandler(q, callback);
         });
@@ -622,7 +624,7 @@ var Projects = {
                 "       CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)), \n"+
                 "       ' ', \n"+
                 "       CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) \n"+
-                "   ) as muser, \n" + 
+                "   ) as muser, \n" +
                 "   mt.name as mtname, \n"+
                 "   mt.enabled, \n"+
                 "   0 as imported\n" +
@@ -643,7 +645,7 @@ var Projects = {
                 "       CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)), \n"+
                 "       ' ', \n"+
                 "       CONCAT(UCASE(LEFT(u.lastname, 1)), SUBSTRING(u.lastname, 2)) \n"+
-                "   ) as muser, \n" + 
+                "   ) as muser, \n" +
                 "   mt.name as mtname, \n"+
                 "   mt.enabled, \n"+
                 "   1 as imported\n" +
@@ -660,7 +662,7 @@ var Projects = {
 
             queryHandler(q, callback);
     },
-   
+
     trainingSets: function(project_url, callback) {
         var q = (
             "SELECT ( \n"+
@@ -695,10 +697,10 @@ var Projects = {
                 "FROM `validation_set` ts, `projects` p \n" +
                 "WHERE ts.`project_id` = p.`project_id` \n" +
                 "AND p.`url` = " + dbpool.escape(project_url);
-                
+
         queryHandler(q, callback);
     },
-   
+
     validationsStats: function(projectUrl, speciesId, songtypeId, callback) {
         var q = "SELECT SUM( present ) AS present, \n"+
                 "    (COUNT( present ) - SUM( present )) AS absent, \n"+
@@ -710,17 +712,17 @@ var Projects = {
                 "AND `species_id` = ? \n"+
                 "AND `songtype_id` = ? \n"+
                 "GROUP BY species_id, songtype_id";
-        
+
         queryHandler(dbpool.format(q, [projectUrl, speciesId, songtypeId]), function(err, rows) {
             if(err) return callback(err);
-            
+
             if(!rows.length) {
                 var empty = {
                     present: 0,
                     absent: 0,
                     total: 0,
                 };
-                
+
                 callback(null, empty);
             }
             else {
@@ -728,45 +730,45 @@ var Projects = {
             }
         });
     },
-    
+
     validationsCount: function(project_id, callback) {
         var q = "SELECT count(*) AS count \n"+
                 "FROM recording_validations AS rv\n"+
                 "WHERE rv.project_id = " + dbpool.escape(project_id);
         queryHandler(q, callback);
     },
-    
+
     modelValidationUri: function(model_id, callback) {
         var q = "SELECT vs.`uri` \n"+
                 "FROM `validation_set` vs, `models` m \n"+
                 "WHERE m.`validation_set_id` = vs.`validation_set_id` \n"+
                 "AND m.`model_id` = "+ dbpool.escape(model_id);
-        
+
         queryHandler(q, callback);
     },
 
     removeUser: function(user_id, project_id, callback) {
         if(typeof project_id !== 'number')
             return callback(new Error("invalid type for 'project_id'"));
-        
+
         if(typeof user_id !== 'number')
             return callback(new Error("invalid type for 'user_id'"));
-        
+
         var q = "DELETE FROM user_project_role \n"+
                 "WHERE user_id = %s AND project_id = %s";
-        
+
         q = util.format(q, dbpool.escape(user_id), dbpool.escape(project_id));
         queryHandler(q, callback);
     },
-    
+
     availableRoles: function(callback) {
         var q = "SELECT role_id as id, name, description \n"+
                 "FROM roles \n"+
                 "WHERE name != 'Owner' order by level";
-                
+
         queryHandler(q, callback);
     },
-    
+
     // this includes recordings processing
     totalRecordings: function(project_id, callback) {
         var q = "SELECT count(*) as count \n"+
@@ -780,11 +782,11 @@ var Projects = {
                 "    JOIN sites AS s ON s.site_id = r.site_id \n"+
                 "    WHERE s.project_id = %1$s) \n"+
                 ") as t";
-        
+
         q = sprintf(q, dbpool.escape(project_id));
         queryHandler(q, callback);
     },
-    
+
     // this includes recordings processing
     getStorageUsage: function(project_id, callback) {
         return dbpool.query(
