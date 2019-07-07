@@ -269,7 +269,7 @@ angular.module('a2.citizen-scientist.expert', [
 
     fetchDetails: function(){
         this.loading.details = true;
-        return a2CitizenScientistService.getPatternMatchingDetailsFor(this.id).then((function(patternMatching){
+        return a2CitizenScientistExpertService.getPatternMatchingDetailsFor(this.id).then((function(patternMatching){
             this.loading.details = false;
             this.patternMatching = patternMatching;
             this.setupExportUrl();
@@ -437,17 +437,28 @@ angular.module('a2.citizen-scientist.expert', [
             });
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
-        var val_delta = {0:0, 1:0, null:0};
+        var val_delta = {conflict_unresolved:0, conflict_resolved:0, null:0, 0:0, 1:0};
         return a2CitizenScientistExpertService.validatePatternMatchingRois(this.id, roiIds, validation).then((function(){
             rois.forEach(function(roi){
+                var oldtag, newtag;
+                if(roi.cs_val_present > 0 && roi.cs_val_not_present > 0){
+                    oldtag = roi.expert_validated !== null ? 'conflict_resolved' : 'conflict_unresolved';
+                    newtag = validation !== null ? 'conflict_resolved' : 'conflict_unresolved';
+                }
+
+                val_delta[oldtag] -= 1;
+                val_delta[newtag] += 1;
+
                 val_delta[roi.expert_validated] -= 1;
                 val_delta[validation] += 1;
 
                 roi.expert_validated = validation;
                 roi.selected = false;
             });
-            this.patternMatching.absent += val_delta[0];
-            this.patternMatching.present += val_delta[1];
+            this.patternMatching.cs_conflict_resolved += val_delta.conflict_resolved;
+            this.patternMatching.cs_conflict_unresolved += val_delta.conflict_unresolved;
+            this.patternMatching.expert_consensus_absent += val_delta[0];
+            this.patternMatching.expert_consensus_present += val_delta[1];
         }).bind(this));
     },
 

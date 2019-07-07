@@ -46,9 +46,11 @@
                     {{controller.patternMatching.playlist_name}}<br />
                     {{controller.patternMatching.parameters}}<br />
                     {{controller.patternMatching.matches}} matches
-                        ({{controller.patternMatching.present || 0}} present,
-                        {{controller.patternMatching.absent || 0}} not present,
-                        {{controller.patternMatching.matches - (controller.patternMatching.present + controller.patternMatching.absent)}} unvalidated)
+                        ({{controller.patternMatching.expert_consensus_present || 0}} present,
+                        {{controller.patternMatching.expert_consensus_absent || 0}} not present, <br/>
+                        {{controller.patternMatching.cs_conflict_unresolved || 0}} conflicted,
+                        {{controller.patternMatching.cs_conflict_resolved || 0}} resolved,
+                        {{controller.patternMatching.matches - (controller.patternMatching.expert_consensus_present + controller.patternMatching.expert_consensus_absent + controller.patternMatching.cs_conflict_unresolved)}} unvalidated)
                 </div>
                 <div class="col-sm-5 flex-self-align-bottom">
                     <div class="pull-right">

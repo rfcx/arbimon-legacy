@@ -41,6 +41,19 @@ router.get('/:patternMatching/details', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/:patternMatching/expert/details', function(req, res, next) {
+    res.type('json');
+    var user = req.session.user;
+    model.patternMatchings.findOne({
+        id: req.params.patternMatching,
+        showCSExpertStats: true,
+        showTemplate: true, showPlaylist:true, showCounts: true,
+        showSpecies: true,
+    }).then(function(pm) {
+        res.json(pm);
+    }).catch(next);
+});
+
 router.param('paging', function(req, res, next, paging){
     const components = paging.split('_');
     console.log('paging components', components);
