@@ -45,6 +45,7 @@ router.get('/:projecturl?/', function(req, res, next) {
             return res.redirect('/home');
         }).then(function(rows) {
             if(!project || (project.is_private && !rows.length && req.session.user.isSuper === 0)){
+            if(!project || !project.citizen_scientist_enabled || (project.is_private && !rows.length && req.session.user.isSuper === 0)){
                 // if not authorized to see project send 404
                 return next();
             } else {
