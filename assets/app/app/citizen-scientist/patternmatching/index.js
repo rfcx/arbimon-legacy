@@ -301,7 +301,11 @@ angular.module('a2.citizen-scientist.patternmatching', [
         }).bind(this));
     },
 
-    playRoiAudio: function(roi){
+    playRoiAudio: function(roi, $event){
+        if($event){
+            $event.preventDefault();
+            $event.stopPropagation();
+        }
         var audio_player = this.audio_player;
         audio_player.load(a2PatternMatching.getAudioUrlFor(roi)).then(function(){
             audio_player.play();

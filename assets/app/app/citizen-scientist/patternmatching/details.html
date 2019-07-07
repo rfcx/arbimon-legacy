@@ -118,7 +118,7 @@
                         <div class="roi-btn-tr h1" ng-if="roi.cs_validated !== null">
                             <i class="fa val-{{roi.cs_validated}}"></i>
                         </div>
-                        <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi)">
+                        <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi, $event)">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="Play Audio"
