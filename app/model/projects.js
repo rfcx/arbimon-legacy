@@ -318,6 +318,7 @@ var Projects = {
             current_plan: joi.number(),
             storage_usage: joi.number().allow(null),
             processing_usage: joi.number().allow(null),
+            citizen_scientist_enabled: [joi.number().valid(0,1), joi.boolean()],
             plan: joi.object().keys({
                 tier: joi.string(),
                 storage: joi.number(),

@@ -128,6 +128,7 @@ angular.module('a2.admin.projects.list', [
                 current_plan : project.current_plan,
                 storage_usage : project.storage_usage,
                 processing_usage : project.processing_usage,
+                citizen_scientist_enabled : !!project.citizen_scientist_enabled,
                 plan : {
                     tier: project.tier,
                     storage: project.storage_limit,
