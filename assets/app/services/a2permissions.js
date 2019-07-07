@@ -13,6 +13,9 @@ angular.module('a2.permissions', [
         isSuper: function(){
             return permit.super;
         },
+        has: function(feature) {
+            return permit.features && permit.features[feature];
+        },
         can: function(perm) {
             var allowed;
 
