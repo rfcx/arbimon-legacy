@@ -14,8 +14,17 @@ SQLBuilder.prototype = {
         this.tables=[];
         this.tableIdx={};
         this.constraints=[];
+        this.having=[];
         this.orderBy=null;
         this.limit=null;
+    },
+
+    escapeId: function(value){
+        return dbpool.escapeId(value);
+    },
+
+    escape: function(value){
+        return dbpool.escape(value);
     },
 
     addProjection: function(/* projection columns */){
@@ -24,6 +33,10 @@ SQLBuilder.prototype = {
 
     addTable: function(table, alias, constraint, constraint_data){
         this.tables.push(this.tableIdx[alias] = [table, alias, constraint, constraint_data]);
+    },
+
+    addHaving: function(constraint){
+        this.having.push(constraint);
     },
 
     addConstraint: function(constraint, constraint_data){
@@ -56,13 +69,15 @@ SQLBuilder.prototype = {
         var constraints = this.getConstraints();
         var order = this.getOrderBy();
         var group = this.getGroupBy();
+        var having = this.getHaving();
         var limit = this.getLimit();
 
         return "SELECT\n    " + projection + "\n" +
             (tables.length ? "FROM " + tables.join("\n") + "\n" : "") +
             (constraints.length ? "WHERE (" + constraints.join(")\n AND (") + ")\n" : "") +
-            (order ? "ORDER BY " + order + "\n" : "") +
             (group ? "GROUP BY " + group + "\n" : "") +
+            (having ? "HAVING " + having + "\n" : "") +
+            (order ? "ORDER BY " + order + "\n" : "") +
             (limit ? "LIMIT " + limit + "\n" : "") +
             "\n;"
         ;
@@ -78,6 +93,10 @@ SQLBuilder.prototype = {
 
     getGroupBy: function(){
         return this.groupBy ? this.groupBy.map(item => dbpool.escapeId(item[0]) + ' ' + (item[1] ? 'ASC' : 'DESC')).join(', ') : '';
+    },
+
+    getHaving: function(){
+        return this.having ? this.having.join(', ') : '';
     },
 
     getProjection: function(){

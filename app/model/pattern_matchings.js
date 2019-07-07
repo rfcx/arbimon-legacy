@@ -13,6 +13,7 @@ var q = require('q');
 var config       = require('../config');
 var APIError = require('../utils/apierror');
 var tmpfilecache = require('../utils/tmpfilecache');
+var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var SQLBuilder   = require('../utils/sqlbuilder');
 var dbpool       = require('../utils/dbpool');
@@ -50,6 +51,7 @@ var PatternMatchings = {
             "PM.`name`", "PM.`project_id`" ,
             "PM.`timestamp`", "PM.`species_id`", "PM.`songtype_id`" ,
             "PM.`parameters`" ,
+            "PM.`citizen_scientist`",
             "PM.`playlist_id`", "PM.`template_id`" ,
         ];
         var tables = ["pattern_matchings PM"];
@@ -71,6 +73,11 @@ var PatternMatchings = {
             constraints.push('PM.`completed` = ' + dbpool.escape(options.completed));
         }
 
+        if (options.citizen_scientist !== undefined) {
+            constraints.push('PM.`citizen_scientist` = ' + dbpool.escape(options.citizen_scientist));
+        }
+
+
         if (options.deleted !== undefined) {
             constraints.push('PM.`deleted` = ' + dbpool.escape(options.deleted));
         }
@@ -87,6 +94,10 @@ var PatternMatchings = {
             );
             tables.push("JOIN jobs J ON PM.job_id = J.job_id");
             tables.push("JOIN users U ON J.user_id = U.user_id");
+        }
+
+        if (options.showConsensusNumber) {
+            select.push('PM.consensus_number');
         }
 
         if (options.showTemplate) {
@@ -114,11 +125,40 @@ var PatternMatchings = {
         }
 
         if (options.showCounts) {
-            select.push("COUNT(*) as matches");
-            select.push("SUM(IF(validated=1, 1, 0)) as present");
-            select.push("SUM(IF(validated=0, 1, 0)) as absent");
-            tables.push("JOIN pattern_matching_rois PMM ON PMM.pattern_matching_id = PM.pattern_matching_id");
-            groupby.join("PM.pattern_matching_id");
+            select.push("SUM(IF(PMR.pattern_matching_id IS NULL, 0, 1)) as matches");
+            select.push("SUM(IF(PMR.validated=1, 1, 0)) as present");
+            select.push("SUM(IF(PMR.validated=0, 1, 0)) as absent");
+            tables.push("LEFT JOIN pattern_matching_rois PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
+            groupby.push("PM.pattern_matching_id");
+        }
+
+        if(options.showUserStatsFor || options.showCSExpertStats){
+            select.push(
+                "SUM(IF(PMR.pattern_matching_roi_id IS NULL, 0, 1)) as total",
+            );
+            if(!options.showCounts){
+                tables.push("LEFT JOIN pattern_matching_rois PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
+            }
+        }
+
+        if(options.showUserStatsFor) {
+            select.push(
+                "SUM(IF(PMV.validated = 1, 1, 0)) as cs_present",
+                "SUM(IF(PMV.validated = 0, 1, 0)) as cs_absent",
+                "SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated"
+            );
+            tables.push("LEFT JOIN pattern_matching_validations PMV ON (PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id AND PMV.user_id = " + (options.showUserStatsFor | 0) + ")");
+            groupby.push("PM.pattern_matching_id");
+        }
+
+        if(options.showCSExpertStats) {
+            select.push(
+                "SUM(IF(PMR.expert_validated IS NOT NULL, 1, 0)) as expert_validated",
+                "SUM(IF(PMR.expert_validated = 1, 1, IF(PMR.expert_validated IS NULL AND PMR.consensus_validated = 1, 1, 0))) as expert_consensus_present",
+                "SUM(IF(PMR.expert_validated = 0, 1, IF(PMR.expert_validated IS NULL AND PMR.consensus_validated = 0, 1, 0))) as expert_consensus_absent",
+                "SUM(IF(PMR.consensus_validated IS NULL AND PMR.cs_val_present > 0 AND PMR.cs_val_not_present > 0 AND PMR.expert_validated IS NOT NULL, 1, 0)) as cs_conflict_resolved",
+                "SUM(IF(PMR.consensus_validated IS NULL AND PMR.cs_val_present > 0 AND PMR.cs_val_not_present > 0 AND PMR.expert_validated IS NULL, 1, 0)) as cs_conflict_unresolved",
+            );
         }
 
         postprocess.push((rows) => {
@@ -139,7 +179,7 @@ var PatternMatchings = {
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" \n  AND ") + (
-                groupby ? ("\n" + groupby.join(",\n    ")) : ""
+                groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : ""
             ),
             data
         ))
@@ -175,6 +215,13 @@ var PatternMatchings = {
         //     model: joi.number(),
         //     th: joi.number()
         // }).optionalKeys('th')),
+        csValidationsFor: joi.number().integer(),
+        expertCSValidations: joi.boolean(),
+        hideNormalValidations: joi.boolean(),
+        countCSValidations: joi.boolean(),
+        whereConflicted: joi.boolean(),
+        whereExpert: joi.boolean(),
+        whereConsensus: joi.boolean(),
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
@@ -188,7 +235,6 @@ var PatternMatchings = {
     },
 
     buildRoisQuery(parameters){
-        console.log('rois query from', parameters);
         var builder = new SQLBuilder();
         return q.ninvoke(joi, 'validate', parameters, PatternMatchings.SEARCH_ROIS_SCHEMA).then(function(parameters){
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
@@ -239,21 +285,78 @@ var PatternMatchings = {
                 'PMR.`score`',
             );
 
-            if(show.names){
-                builder.addProjection(
-                    '(CASE ' +
-                    'WHEN PMR.`validated` = 1 THEN "present" ' +
-                    'WHEN PMR.`validated` = 0 THEN "not present" ' +
-                    'ELSE "(not validated)" ' +
-                    'END) as validated'
-                );
-            } else {
-                builder.addProjection('PMR.`validated`');
+            if(!parameters.hideNormalValidations){
+                if(show.names){
+                    builder.addProjection(
+                        '(CASE ' +
+                        'WHEN PMR.`validated` = 1 THEN "present" ' +
+                        'WHEN PMR.`validated` = 0 THEN "not present" ' +
+                        'ELSE "(not validated)" ' +
+                        'END) as validated'
+                    );
+                } else {
+                    builder.addProjection('PMR.`validated`');
+                }
             }
 
             builder.addConstraint("PMR.pattern_matching_id = ?", [
                 parameters.patternMatching
             ]);
+
+            if(parameters.expertCSValidations){
+                if(show.names){
+                    builder.addProjection(
+                        '(CASE ' +
+                        'WHEN PMR.`expert_validated` = 1 THEN "present" ' +
+                        'WHEN PMR.`expert_validated` = 0 THEN "not present" ' +
+                        'ELSE "(not expert validated)" ' +
+                        'END) as expert_validated'
+                    );
+                } else {
+                    builder.addProjection('PMR.`expert_validated` as expert_validated');
+                }
+            }
+
+            if(parameters.csValidationsFor){
+                parameters.showConsensusValidated = true;
+                builder.addTable("LEFT JOIN pattern_matching_validations", "PMV",
+                    "PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id\n" +
+                    " AND PMV.user_id = " + builder.escape(parameters.csValidationsFor)
+                );
+                builder.addProjection('PMV.validated as cs_validated');
+            }
+
+            if(parameters.countCSValidations){
+                parameters.showConsensusValidated = true;
+                builder.addProjection('PMR.cs_val_present');
+                builder.addProjection('PMR.cs_val_not_present');
+            }
+
+            if(parameters.showConsensusValidated){
+                if(show.names){
+                    builder.addProjection(
+                        '(CASE ' +
+                        'WHEN PMR.`consensus_validated` = 1 THEN "present" ' +
+                        'WHEN PMR.`consensus_validated` = 0 THEN "not present" ' +
+                        'ELSE "(not consensus validated)" ' +
+                        'END) as consensus_validated'
+                    );
+                } else {
+                    builder.addProjection('PMR.`consensus_validated` as consensus_validated');
+                }
+            }
+
+            if(parameters.whereConflicted){
+                builder.addConstraint("(PMR.cs_val_present > 0 AND PMR.cs_val_not_present > 0)", []);
+            }
+
+            if(parameters.whereConsensus){
+                builder.addConstraint("PMR.consensus_validated IS NOT NULL", []);
+            }
+
+            if(parameters.whereExpert){
+                builder.addConstraint("PMR.expert_validated IS NOT NULL", []);
+            }
 
             if(parameters.sortBy){
                 parameters.sortBy.forEach(item => builder.addOrderBy(item[0], item[1]));
@@ -279,25 +382,60 @@ var PatternMatchings = {
         );
     },
 
-    getRoisForId(patternMatchingId, limit, offset){
+    getRoisForId(options){
         return this.buildRoisQuery({
-            patternMatching: patternMatchingId,
-            limit: limit,
-            offset: offset,
-            show: { patternMatchingId: true, datetime: true },
+            patternMatching: options.patternMatchingId,
+            csValidationsFor: options.csValidationsFor,
+            expertCSValidations: options.expertCSValidations,
+            countCSValidations: options.countCSValidations,
+            whereConflicted: options.whereConflicted,
+            whereConsensus: options.whereConsensus,
+            whereExpert: options.whereExpert,
+            limit: options.limit,
+            offset: options.offset,
+            show: { patternMatchingId: true, datetime: true, names: options.showNames },
             sortBy: [['S.name', 1], ['R.datetime', 1]],
         }).then(
             builder => dbpool.query(builder.getSQL())
         );
     },
 
-    exportRois(patternMatchingId, filters){
+    getRoiAudioFile(patternMatching, roiId, options){
+        options = options || {};
+        return dbpool.query(
+            "SELECT PMR.x1, PMR.x2, PMR.y1, PMR.y2, PMR.uri as imgUri, R.uri as recUri\n" +
+            "FROM pattern_matching_rois PMR\n" +
+            "JOIN recordings R ON PMR.recording_id = R.recording_id\n" +
+            "WHERE PMR.pattern_matching_id = ? AND PMR.pattern_matching_roi_id = ?", [
+                patternMatching, roiId
+            ]
+        ).get(0).then(function(pmr){
+            if(!pmr){
+                return;
+            }
+
+            return q.ninvoke(Recordings, 'fetchAudioFile', {uri: pmr.recUri}, {
+                maxFreq: Math.max(pmr.y1, pmr.y2),
+                gain: options.gain || 15,
+                trim: {
+                    from: Math.min(pmr.x1, pmr.x2),
+                    to: Math.max(pmr.x1, pmr.x2)
+                },
+            });
+        })
+    },
+
+    exportRois(patternMatchingId, filters, options){
         filters = filters || {};
+        options = options || {};
 
         return this.buildRoisQuery({
             patternMatching: patternMatchingId,
             // limit: limit,
             // offset: offset
+            hideNormalValidations: options.hideNormalValidations,
+            expertCSValidations: options.expertCSValidations,
+            countCSValidations: options.countCSValidations,
             show: { names: true },
         }).then(
             builder => dbpool.streamQuery({
@@ -327,6 +465,8 @@ var PatternMatchings = {
         template   : joi.number().integer(),
         params     : joi.object().keys({
             N: joi.number().integer(),
+            citizen_scientist: joi.boolean(),
+            persite: joi.number().integer().allow(null),
             threshold: joi.number(),
         }),
     }),
@@ -342,7 +482,9 @@ var PatternMatchings = {
                 template_id: data.template,
                 name: data.name,
                 N: data.params.N,
+                persite: data.params.persite,
                 threshold: data.params.threshold,
+                citizen_scientist: data.params.citizen_scientist | 0,
             }),
         }).promise());
     },

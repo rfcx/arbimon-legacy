@@ -43,7 +43,11 @@ router.param('paging', function(req, res, next, paging){
 
 router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.getRoisForId(req.params.patternMatching, req.paging.limit || 100, req.paging.offset || 0).then(function(rois) {
+    model.patternMatchings.getRoisForId({
+        patternMatchingId: req.params.patternMatching,
+        limit: req.paging.limit || 100,
+        offset: req.paging.offset || 0,
+    }).then(function(rois) {
         res.json(rois);
     }).catch(next);
 });
@@ -63,8 +67,6 @@ router.get('/:patternMatching/rois.csv', function(req, res, next) {
     }
 
     filters.project_id = req.project.project_id | 0;
-
-    console.log(JSON.stringify(filters));
 
     model.patternMatchings.exportRois(req.params.patternMatching, filters).then(function(results) {
         var datastream = results[0];
@@ -103,6 +105,15 @@ router.get('/:patternMatching/rois.csv', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
+    model.patternMatchings.getRoiAudioFile(req.params.patternMatching, req.params.roiId).then(function(roiAudio) {
+        if(!roiAudio){
+            res.sendStatus(404);
+        } else {
+            res.sendFile(roiAudio.path);
+        }
+    }).catch(next);
+});
 
 
 router.post('/:patternMatching/validate', function(req, res, next) {

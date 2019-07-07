@@ -55,9 +55,9 @@ router.use('/uploads', uploads);
 
 // all routes after this middleware
 // are available only to logged users
-router.use(function(req, res, next) {                
-    if(req.session && (req.session.loggedIn || req.session.isAnonymousGuest)) { 
-        return next(); 
+router.use(function(req, res, next) {
+    if(req.session && (req.session.loggedIn || req.session.isAnonymousGuest)) {
+        return next();
     }
     res.render('get_fragment_hack.ejs');
 });
@@ -85,12 +85,13 @@ router.get('/user-settings', function(req, res) {
     if(req.session.user && req.session.loggedIn){
         res.render('user-settings', { title: "User settings", user: req.session.user });
     } else {
-        res.redirect('/home');        
+        res.redirect('/home');
     }
 });
 
 router.use('/api', dataApi);
 router.use('/project', project);
+router.use('/citizen-scientist', require('./citizen-scientist'));
 router.use('/', require('./access-token'));
 
 

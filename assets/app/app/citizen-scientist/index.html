@@ -1,0 +1,22 @@
+<div>
+    <a2-sidenav-bar name="citizen-scientist" enabled="('citizen-scientist' | includedByState)" ng-hide="onCitizenScientistPage">
+        <li ui-sref="citizen-scientist.patternmatching" ui-sref-active="active"><a>Pattern Matchings</a></li>
+        <li ui-sref="citizen-scientist.admin.classification-stats" ng-class=" ('citizen-scientist.admin' | includedByState) ? 'active' : ''">
+            <a>Admin</a>
+        </li>
+        <li ng-class=" ('citizen-scientist.admin' | includedByState) ? 'open' : ''">
+            <ul class="subnav dropdown-menu">
+                <li ui-sref="citizen-scientist.admin.classification-stats" ui-sref-active="active"><a>Classification Stats</a></li>
+                <li ui-sref="citizen-scientist.admin.user-stats" ui-sref-active="active"><a>User Stats</a></li>
+                <li ui-sref="citizen-scientist.admin.settings" ui-sref-active="active"><a>Settings</a></li>
+            </ul>
+        </li>
+    </a2-sidenav-bar>
+    <div class="container-fluid container-sidenav">
+        <div class="row">
+            <div class="col-sm-12">
+                <div ui-view></div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -21,21 +21,28 @@
         </div>
         <div ng-show="layer.templates.recordingTemplates.length || layer.templates.editor.roi">
             <table class="bg table table-condensed">
-                <tr><th>x1</th><th>y1</th><th>x2</th><th>y2</th></tr>
-                <tr ng-repeat="roi in layer.templates.recordingTemplates"
+                <tr ng-repeat-start="roi in layer.templates.recordingTemplates"
                     ng-class ="{'active':layer.templates.selected == roi}"
                     ng-click ="layer.templates.selected = roi | trackEvent:'Visualizer-Templates':'select template'"
                 >
-                    <td>{{roi.x1         | number:2}}&nbsp;s</td>
-                    <td>{{roi.y1 /1000.0 | number:2}}&nbsp;kHz</td>
-                    <td>{{roi.x2         | number:2}}&nbsp;s</td>
-                    <td>{{roi.y2 /1000.0 | number:2}}&nbsp;kHz</td>
+                    <td colspan="2">
+                        {{roi.name}}<br />
+                        {{roi.species_name}} {{roi.songtype_name}}<br />
+                    </td>
+                </tr>
+                <tr ng-repeat-end>
+                    <td>{{roi.x1         | number:2}} &mdash; {{roi.x2         | number:2}}&nbsp;s</td>
+                    <td>{{roi.y1 /1000.0 | number:2}} &mdash; {{roi.y2 /1000.0 | number:2}}&nbsp;kHz</td>
                 </tr>
                 <tr class="text-info" ng-show="layer.templates.editor.roi && !layer.templates.editor.roi.id">
-                    <td>{{layer.templates.editor.roi.x1        | number:2}}&nbsp;s</td>
-                    <td>{{layer.templates.editor.roi.y1/1000.0 | number:2}}&nbsp;kHz</td>
-                    <td>{{layer.templates.editor.roi.x2        | number:2}}&nbsp;s</td>
-                    <td>{{layer.templates.editor.roi.y2/1000.0 | number:2}}&nbsp;kHz</td>
+                    <td colspan="2">
+                        {{layer.templates.editor.template_name || "(unnamed template)"}}<br />
+                        {{layer.templates.editor.project_class.species_name || '(no species selected)'}} {{layer.templates.editor.project_class.songtype_name}}<br />
+                    </td>
+                </tr>
+                <tr class="text-info" ng-show="layer.templates.editor.roi && !layer.templates.editor.roi.id">
+                    <td>{{layer.templates.editor.roi.x1         | number:2}} &mdash; {{layer.templates.editor.roi.x2         | number:2}}&nbsp;s</td>
+                    <td>{{layer.templates.editor.roi.y1 /1000.0 | number:2}} &mdash; {{layer.templates.editor.roi.y2 /1000.0 | number:2}}&nbsp;kHz</td>
                 </tr>
             </table>
         </div>

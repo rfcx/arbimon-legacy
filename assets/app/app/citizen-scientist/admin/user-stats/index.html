@@ -1,0 +1,56 @@
+<div class="row"><div class="col-sm-12 col-lg-11" >
+    <h4 ng-show="!controller.userId">
+        User Stats
+        <span class="badge">{{controller.stats.length}} users</span>
+        <div class="pull-right btn-group">
+            <a class="btn btn-default"
+                ng-href="{{controller.userStatsExportUrl}}"
+                ng-click="true | trackEvent:'Citizen Scientist':'export user stats'"
+                ng-disabled="!controller.userStatsExportUrl"
+                tooltip="Export User Stats">
+                <i class="fa fa-download"></i>
+            </a>
+        </div>
+    </h4>
+    <h4 ng-show="controller.userId">
+        <button class="btn btn-default"
+            ng-click="controller.setUser() | trackEvent:'Analysis-Citizen-Scientist-User-Stats':' go back'">
+            &lt;  Go Back
+        </button>
+        User Stats / {{controller.user.firstname}} {{controller.user.lastname}}
+    </h4>
+</div></div>
+<div class="row">
+    <div class="col-sm-12" ng-if="!controller.userId">
+        <a2-table class="table-hide-btns"
+            rows="controller.stats" no-checkbox="true"
+            default-sort="user"
+            on-select="controller.setUser(row.user_id)"
+        >
+            <field title="User" filter key="user" >{{ row.user  }}</field>
+            <field title="Species"  filter key="species" >{{ row.species }}</field>
+            <field title="Validated"  filter key="validated" >{{ row.validated }}</field>
+            <field title="Consensus"  filter key="consensus" >{{ row.consensus }} ({{ row.consensus * 100 / (row.reached_th || 1) | number:0 }}%)</field>
+            <field title="Non Consensus"  filter key="non_consensus" >{{ row.non_consensus }} ({{ row.non_consensus * 100 / (row.reached_th || 1) | number:0 }}%)</field>
+            <field title="Pending Consensus"  filter key="pending" >{{ row.pending }}</field>
+            <field title="Last Update"  filter key="last_update" >{{ row.last_update | date}}</field>
+        </a2-table>
+        <loader ng-hide="!loading"></loader>
+    </div>
+    <div class="col-sm-12" ng-if="controller.userId">
+        <a2-table class="table-hide-btns"
+            rows="controller.userStats" no-checkbox="true"
+            default-sort="species"
+            no-select
+        >
+            <field title="Species" filter key="species" >{{ row.species_name  }}</field>
+            <field title="Songtype" filter key="songtype" >{{ row.songtype  }}</field>
+            <field title="Validated"  filter key="validated" >{{ row.validated }}</field>
+            <field title="Consensus"  filter key="consensus" >{{ row.consensus }} ({{ row.consensus * 100 / (row.reached_th || 1) | number:0 }}%)</field>
+            <field title="Non Consensus"  filter key="non_consensus" >{{ row.non_consensus }} ({{ row.non_consensus * 100 / (row.reached_th || 1) | number:0 }}%)</field>
+            <field title="Pending Consensus"  filter key="pending" >{{ row.pending }}</field>
+            <field title="Last Update"  filter key="last_update" >{{ row.last_update | date}}</field>
+        </a2-table>
+        <loader ng-hide="!loading"></loader>
+    </div>
+</div>

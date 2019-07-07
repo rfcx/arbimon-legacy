@@ -3,11 +3,11 @@ angular.module('a2.srv.api', [])
     var a2APIServiceClass = function(prefix){
         this.prefix = prefix;
     };
-    
+
     function returnData(response){
         return response.data;
     }
-    
+
     a2APIServiceClass.prototype = {
         getUrl: function(apiRoute){
             return this.prefix + apiRoute;
@@ -25,21 +25,21 @@ angular.module('a2.srv.api', [])
             return $q.when($http.put(this.prefix + apiRoute, data)).then(returnData);
         }
     };
-    
+
     return a2APIServiceClass;
 })
 .factory('a2APIService', function($location, $q, a2APIServiceClass){
-    var nrm = /\/?project\/([\w\_\-]+)/.exec($location.absUrl());
-    var projectName = nrm ? nrm[1] : '';
+    var nrm = /\/?(project|citizen-scientist)\/([\w\_\-]+)/.exec($location.absUrl());
+    var projectName = nrm ? nrm[2] : '';
     var apiURLPrefix = '/api/project/'+projectName;
     function returnData(response){
         return response.data;
     }
-    
+
     var a2APIService = new a2APIServiceClass(apiURLPrefix);
     a2APIService.api = new a2APIServiceClass('/api');
     a2APIService.project = new a2APIServiceClass('/project/' + projectName);
-    
+
     return a2APIService;
 })
 ;

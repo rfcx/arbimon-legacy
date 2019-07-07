@@ -1,0 +1,134 @@
+<div>
+    <div ng-if="controller.loading.details">
+        Loading <loader></loader>
+    </div>
+    <div ng-if="!controller.loading.details && controller.patternMatching"
+        a2-scroll="controller.onScroll($event, $controller)"
+        a2-scroll-on="window"
+    >
+    <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
+        <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader }">
+            <div class="row row-flex flex-align-middle">
+                <div class="col-sm-2 flex-self-align-top">
+                    <button class="btn btn-default"
+                        ng-click="onGoBack({}) | trackEvent:'Analysis-Pattern-Matching-List':' go back'">
+                        &lt;  Go Back
+                    </button>
+                </div>
+                <div class="col-sm-2" style="padding-bottom:5px">
+                    <div class="roi-thumbnail" >
+                        <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
+                        <a class="roi-btn-br" ng-click="controller.playTemplateAudio()">
+                            <i tooltip-placement="left"
+                                tooltip-append-to-body="true"
+                                tooltip="Play Audio"
+                                class="fa fa-play">
+                            </i>
+                        </a>
+                        <div class="roi-btn-b outside text-sm">
+                            {{controller.patternMatching.template.x2 - controller.patternMatching.template.x1 | number:2}}s
+                        </div>
+                        <div class="roi-btn-r outside text-sm">
+                            {{(controller.patternMatching.template.y2-controller.patternMatching.template.y1) | number:0}}Hz
+                        </div>
+                        <div class="roi-btn-tr outside text-sm">
+                            {{controller.patternMatching.template.y2 | number:0}}Hz <br>
+                        </div>
+                        <div class="roi-btn-br outside text-sm">
+                            {{controller.patternMatching.template.y1 | number:0}}Hz
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-5 is-v-middle">
+                    {{controller.patternMatching.name}}<br />
+                    {{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}<br />
+                    {{controller.patternMatching.timestamp | moment : 'lll' }}<br />
+                    {{controller.patternMatching.playlist_name}}<br />
+                    {{controller.patternMatching.parameters}}<br />
+                    {{controller.patternMatching.matches}} matches
+                        ({{controller.patternMatching.cs_present || 0}} present,
+                        {{controller.patternMatching.cs_absent || 0}} not present,
+                        {{controller.patternMatching.matches - (controller.patternMatching.cs_present + controller.patternMatching.cs_absent)}} unvalidated)
+                </div>
+                <div class="col-sm-5 flex-self-align-bottom">
+                    <div class="pull-right">
+                    <div class="toolbar pull-right">
+                        <div class="btn-group">
+                            <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
+                                on-select="controller.onSelect($select.selected)"
+                            >
+                                <ui-select-match placeholder="Select">Select</ui-select-match>
+                                <ui-select-choices repeat="$item in controller.lists.selection | filter:$select.search">
+                                    {{$item.text}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-default" >Validate as:</button>
+                            <ui-select ng-model="controller.validation" theme="bootstrap" style="display:inline-block; width:9em;">
+                                <ui-select-match>
+                                    <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
+                                </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.lists.validation | filter:$select.search">
+                                    <i ng-class="$item.class"></i> {{$item.text}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-primary" ng-click="controller.validate()">Submit</button>
+                        </div>
+                    </div>
+                    <div class="toolbar pull-right">
+                        <div class="btn-group" ng-show="controller.total.pages > 1 || detailedView">
+                            <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
+                            <a class="btn btn-default" ng-hide="detailedView">{{controller.selected.page + 1}} of {{controller.total.pages}}</a>
+                            <a class="btn btn-default" ng-show="detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a>
+                            <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-default"
+                                ng-repeat="item in controller.lists.thumbnails"
+                                ng-click="controller.thumbnailClass = item.value"
+                                ng-class="{active: controller.thumbnailClass == item.value}"
+                            ><i ng-class="item.class"></i></button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div ng-show="loading-rois">Loading...</div>
+            <div ng-repeat="site in controller.rois">
+                <div class="h3"><i class="fa fa-map-marker"></i> {{site.name}}</div>
+                    <div ng-repeat="roi in site.list"
+                        class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                        ng-click="roi.selected = !roi.selected"
+                        popover-html="'Recording: {{roi.recording}}<br>
+                                 Site: {{roi.site}}<br>
+                                 Time: {{roi.datetime | date:'medium'}} <br>
+                                 Score: {{(roi.score | number) || '(Missing)'}}'"
+                        popover-trigger="mouseenter"
+                        popover-append-to-body="true"
+                    >
+                        <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
+                        <div class="roi-btn-tr h1" ng-if="roi.cs_validated !== null">
+                            <i class="fa val-{{roi.cs_validated}}"></i>
+                        </div>
+                        <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi, $event)">
+                            <i tooltip-placement="left"
+                                tooltip-append-to-body="true"
+                                tooltip="Play Audio"
+                                class="fa fa-play">
+                            </i>
+                        </a>
+                        <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+</div>
