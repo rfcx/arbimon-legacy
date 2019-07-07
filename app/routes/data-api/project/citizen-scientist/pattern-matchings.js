@@ -30,8 +30,10 @@ router.get('/', function(req, res, next) {
  */
 router.get('/:patternMatching/details', function(req, res, next) {
     res.type('json');
+    var user = req.session.user;
     model.patternMatchings.findOne({
         id: req.params.patternMatching,
+        showUserStatsFor: user.id,
         showTemplate: true, showPlaylist:true, showCounts: true,
         showSpecies: true,
     }).then(function(pm) {

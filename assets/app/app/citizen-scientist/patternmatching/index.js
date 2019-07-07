@@ -404,8 +404,8 @@ angular.module('a2.citizen-scientist.patternmatching', [
                 roi.cs_validated = validation;
                 roi.selected = false;
             });
-            this.patternMatching.absent += val_delta[0];
-            this.patternMatching.present += val_delta[1];
+            this.patternMatching.cs_absent += val_delta[0];
+            this.patternMatching.cs_present += val_delta[1];
         }).bind(this));
     },
 
