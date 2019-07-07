@@ -135,6 +135,8 @@ var PatternMatchings = {
         if(options.showUserStatsFor) {
             select.push(
                 "SUM(IF(PMR.pattern_matching_roi_id IS NULL, 0, 1)) as total",
+                "SUM(IF(PMV.validated = 1, 1, 0)) as cs_present",
+                "SUM(IF(PMV.validated = 0, 1, 0)) as cs_absent",
                 "SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated"
             );
             tables.push("LEFT JOIN pattern_matching_rois PMR ON PM.pattern_matching_id = PMR.pattern_matching_id");
@@ -304,6 +306,7 @@ var PatternMatchings = {
                     "PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id\n" +
                     " AND PMV.user_id = " + builder.escape(parameters.csValidationsFor)
                 );
+                builder.addProjection('PMV.validated as cs_validated');
             }
 
             if(parameters.countCSValidations){
