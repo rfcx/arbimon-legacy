@@ -104,6 +104,9 @@ router.get('/:projecturl?/', function(req, res, next) {
                 var perms = {
                     authorized: true,
                     public: !project.is_private,
+                    features:{
+                        citizen_scientist: !!project.citizen_scientist_enabled,
+                    },
                     super: !!req.session.user.isSuper,
                     permissions: rows.map(function(perm) { return perm.name; }),
                 };
