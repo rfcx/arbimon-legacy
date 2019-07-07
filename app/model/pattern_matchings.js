@@ -132,18 +132,33 @@ var PatternMatchings = {
             groupby.push("PM.pattern_matching_id");
         }
 
-        if(options.showUserStatsFor) {
+        if(options.showUserStatsFor || options.showCSExpertStats){
             select.push(
                 "SUM(IF(PMR.pattern_matching_roi_id IS NULL, 0, 1)) as total",
-                "SUM(IF(PMV.validated = 1, 1, 0)) as cs_present",
-                "SUM(IF(PMV.validated = 0, 1, 0)) as cs_absent",
-                "SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated"
             );
             if(!options.showCounts){
                 tables.push("LEFT JOIN pattern_matching_rois PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
             }
+        }
+
+        if(options.showUserStatsFor) {
+            select.push(
+                "SUM(IF(PMV.validated = 1, 1, 0)) as cs_present",
+                "SUM(IF(PMV.validated = 0, 1, 0)) as cs_absent",
+                "SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated"
+            );
             tables.push("LEFT JOIN pattern_matching_validations PMV ON (PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id AND PMV.user_id = " + (options.showUserStatsFor | 0) + ")");
             groupby.push("PM.pattern_matching_id");
+        }
+
+        if(options.showCSExpertStats) {
+            select.push(
+                "SUM(IF(PMR.expert_validated IS NOT NULL, 1, 0)) as expert_validated",
+                "SUM(IF(PMR.expert_validated = 1, 1, IF(PMR.expert_validated IS NULL AND PMR.consensus_validated = 1, 1, 0))) as expert_consensus_present",
+                "SUM(IF(PMR.expert_validated = 0, 1, IF(PMR.expert_validated IS NULL AND PMR.consensus_validated = 0, 1, 0))) as expert_consensus_absent",
+                "SUM(IF(PMR.consensus_validated IS NULL AND PMR.cs_val_present > 0 AND PMR.cs_val_not_present > 0 AND PMR.expert_validated IS NOT NULL, 1, 0)) as cs_conflict_resolved",
+                "SUM(IF(PMR.consensus_validated IS NULL AND PMR.cs_val_present > 0 AND PMR.cs_val_not_present > 0 AND PMR.expert_validated IS NULL, 1, 0)) as cs_conflict_unresolved",
+            );
         }
 
         postprocess.push((rows) => {
