@@ -8,6 +8,10 @@
             width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px',
             height:layout.dhz2height(roi.y2, roi.y1) + 'px'
         }">
+        <span class="no-text-wrap">
+            {{roi.name}}<br />
+            {{roi.species_name}} {{roi.songtype_name}}
+        </span>
     </div>
 </div>
 
@@ -64,7 +68,7 @@
                         <ui-select-match placeholder="Select a species sound">
                             {{ $select.selected.species_name }}<br/>{{ $select.selected.songtype_name }}
                         </ui-select-match>
-                        <ui-select-choices repeat="class in layer.templates.project_classes | filter:$select.search">
+                        <ui-select-choices repeat="class in layer.templates.project_classes | filter:$select.search | orderBy: ['species_name', 'songtype_name']">
                             {{ class.species_name }}<br/>{{ class.songtype_name }}
                         </ui-select-choices>
                     </ui-select>
