@@ -11,12 +11,14 @@ angular.module('a2.citizen-scientist.expert', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('citizen-scientist.expert', {
-        url: '/expert/:patternMatchingId??show',
+        url: '/expert/:patternMatchingId?',
         controller: 'CitizenScientistExpertCtrl',
         templateUrl: '/app/citizen-scientist/expert/list.html'
     });
 })
 .controller('CitizenScientistExpertCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+    $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
+
     var initTable = function(p, c, s, f, t) {
         var sortBy = {};
         var acsDesc = 'desc';
@@ -30,9 +32,6 @@ angular.module('a2.citizen-scientist.expert', [
             sorting: sortBy,
             filter:f
         };
-
-        $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
-        $scope.detailedView = $stateParams.show == 'detail';
 
         $scope.tableParams = new ngTableParams(tableConfig, {
             total: t,
@@ -51,25 +50,8 @@ angular.module('a2.citizen-scientist.expert', [
                 }
 
                 $scope.patternmatchingsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                a2PatternMatching.saveState({
-                    'data':$scope.patternmatchingsOriginal,
-                    'filtered': $scope.patternmatchingsData,
-                    'f':params.filter(),
-                    'o':params.orderBy(),
-                    'p':params.page(),
-                    'c':params.count(),
-                    't':orderedData.length
-                });
             }
         });
-    };
-
-    $scope.setDetailedView = function(detailedView){
-        $scope.detailedView = detailedView;
-        $state.transitionTo($state.current.name, {
-            patternMatchingId:$scope.selectedPatternMatchingId,
-            show:detailedView?"detail":"gallery"
-        }, {notify:false});
     };
 
     $scope.getTemplateVisualizerUrl = function(template){
@@ -78,32 +60,17 @@ angular.module('a2.citizen-scientist.expert', [
         return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
-
-
     $scope.selectItem = function(patternmatchingId){
-        if($scope.selectedPatternMatchingId == patternmatchingId || !patternmatchingId){
-            a2PatternMatching.saveState();
-            $state.go('citizen-scientist.expert', {
-                patternMatchingId: undefined
-            });
-        } else {
-            $state.go('citizen-scientist.expert', {
-                patternMatchingId: patternmatchingId
-            });
-        }
+        $state.go('citizen-scientist.expert', {
+            patternMatchingId: patternmatchingId ? patternmatchingId : undefined
+        });
     }
 
-    $scope.updateFlags = function() {
-        $scope.successInfo = "";
-        $scope.showSuccess = false;
-        $scope.errorInfo = "";
-        $scope.showError = false;
-        $scope.infoInfo = "";
-        $scope.showInfo = false;
-        $scope.loading = false;
-    };
-
     $scope.loadPatternMatchings = function() {
+        $scope.loading = true;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+
         return a2CitizenScientistService.getPatternMatchings().then(function(data) {
             $scope.patternmatchingsOriginal = data;
             $scope.patternmatchingsData = data;
@@ -124,66 +91,8 @@ angular.module('a2.citizen-scientist.expert', [
         });
     };
 
-    $scope.showPatternMatchingDetails = function (patternmatching) {
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-        $scope.loading = true;
-
-        var data = {
-            id: patternmatching.job_id,
-            name: patternmatching.cname,
-            modelId: patternmatching.model_id,
-            playlist: {
-                name: patternmatching.playlist_name,
-                id: patternmatching.playlist_id
-            }
-        };
-
-        var modalInstance = $modal.open({
-            templateUrl: '/app/citizen-scientist/expert/patternmatchinginfo.html',
-            controller: 'CitizenScientistExpertDetailsCtrl',
-            windowClass: 'details-modal-window',
-            backdrop: 'static',
-            resolve: {
-                PatternMatchingInfo: function () {
-                    return {
-                        data: data,
-                        project: $scope.projectData,
-                    };
-                },
-            }
-        });
-
-        modalInstance.opened.then(function() {
-            $scope.infoInfo = "";
-            $scope.showInfo = false;
-            $scope.loading = false;
-        });
-    };
-
-    $scope.loading = true;
-    $scope.infoInfo = "Loading...";
-    $scope.showInfo = true;
-
-    Project.getInfo(function(data) {
-        $scope.projectData = data;
-    });
-
-    var stateData = a2PatternMatching.getState();
-
-    if (!stateData) {
+    if (!$scope.selectedPatternMatchingId) {
         $scope.loadPatternMatchings();
-    } else {
-        if (stateData.data.length > 0) {
-            $scope.patternmatchingsData = stateData.filtered;
-            $scope.patternmatchingsOriginal = stateData.data;
-            initTable(stateData.p,stateData.c,stateData.o[0],stateData.f,stateData.filtered.length);
-        } else {
-            $scope.infopanedata = "No models found.";
-        }
-        $scope.infoInfo = "";
-        $scope.showInfo = false;
-        $scope.loading = false;
     }
 })
 .directive('a2CitizenScientistExpertDetails', function(){
@@ -192,8 +101,6 @@ angular.module('a2.citizen-scientist.expert', [
         replace: true,
         scope : {
             patternMatchingId: '=',
-            detailedView: '=',
-            onSetDetailedView: '&',
             onGoBack: '&',
         },
         controller : 'CitizenScientistExpertDetailsCtrl',
@@ -398,7 +305,6 @@ angular.module('a2.citizen-scientist.expert', [
     },
 
     select: function(option){
-        console.log('this.rois', this.rois);
         var selectFn = null;
         if(option === "all"){
             selectFn = function(roi){roi.selected = true;};
@@ -481,22 +387,12 @@ angular.module('a2.citizen-scientist.expert', [
 
     next: function(step) {
         if(!step){step = 1;}
-        if(this.detailedView) {
-            this.nextMatch(step);
-        } else {
-            this.nextPage(step);
-        }
+        this.nextPage(step);
     },
 
     prev: function(step) {
         if(!step){step = 1;}
         return this.next(-step);
-    },
-
-    setDetailedView: function(detailedView){
-        if ($scope.onSetDetailedView) {
-            $scope.onSetDetailedView({value: detailedView})
-        }
     },
 
 }); this.initialize($scope.patternMatchingId);
