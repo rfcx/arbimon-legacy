@@ -57,6 +57,7 @@ var Projects = {
                           "   pp.processing AS processing_limit, \n"+
                           "   pp.created_on AS plan_created, \n"+
                           "   pp.activation AS plan_activated, \n"+
+                          "   p.citizen_scientist_enabled, \n"+
                           "   pp.duration_period AS plan_period \n";
             joinExtra   = "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
         } else {
