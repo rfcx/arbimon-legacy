@@ -81,7 +81,8 @@ angular.module('a2.citizen-scientist.expert', [
 
 
     $scope.selectItem = function(patternmatchingId){
-        if($scope.selectedPatternMatchingId == patternmatchingId){
+        if($scope.selectedPatternMatchingId == patternmatchingId || !patternmatchingId){
+            a2PatternMatching.saveState();
             $state.go('citizen-scientist.expert', {
                 patternMatchingId: undefined
             });
@@ -170,7 +171,7 @@ angular.module('a2.citizen-scientist.expert', [
 
     var stateData = a2PatternMatching.getState();
 
-    if (stateData === null) {
+    if (!stateData) {
         $scope.loadPatternMatchings();
     } else {
         if (stateData.data.length > 0) {
