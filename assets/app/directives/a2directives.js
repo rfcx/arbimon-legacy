@@ -1,6 +1,7 @@
 angular.module('a2.directives', [
     'a2.services',
     'a2.directive.a2-table',
+    'arbimon.directive.a2-switch',
     'a2.directive.percentage-bars',
     'templates-arbimon2',
 ])
