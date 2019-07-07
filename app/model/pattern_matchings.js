@@ -380,7 +380,8 @@ var PatternMatchings = {
         );
     },
 
-    getRoiAudioFile(patternMatching, roiId){
+    getRoiAudioFile(patternMatching, roiId, options){
+        options = options || {};
         return dbpool.query(
             "SELECT PMR.x1, PMR.x2, PMR.y1, PMR.y2, PMR.uri as imgUri, R.uri as recUri\n" +
             "FROM pattern_matching_rois PMR\n" +
@@ -395,6 +396,7 @@ var PatternMatchings = {
 
             return q.ninvoke(Recordings, 'fetchAudioFile', {uri: pmr.recUri}, {
                 maxFreq: Math.max(pmr.y1, pmr.y2),
+                gain: options.gain || 15,
                 trim: {
                     from: Math.min(pmr.x1, pmr.x2),
                     to: Math.max(pmr.x1, pmr.x2)
