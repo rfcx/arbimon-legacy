@@ -102,6 +102,8 @@ angular.module('a2.directives', [
                 } else {
                     controller.scrollElement = $(attrs.a2ScrollOn);
                 }
+            } else {
+                controller.scrollElement = element;
             }
 
             if(attrs.a2InfiniteScroll){

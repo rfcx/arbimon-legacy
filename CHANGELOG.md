@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- v1.16.2
+    - Fixed breaking a2-scroll bug
+
 - v1.16.1
     - Completed and integrated citizen scientist module
 
