@@ -8,12 +8,34 @@ angular.module('a2.analysis.cnn', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('analysis.cnn', {
-        url: '/cnn/:cNN??show',
-        controller: 'CNN',
+        url: '/cnn/:cnnID??show',
+        controller: 'CNNCtrl',
         templateUrl: '/app/analysis/cnn/list.html'
     });
 })
-.controller('CNN' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
+.controller('CNNCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
+
+    //for testing...
+    $scope.cnnsData = [{'id': 1,
+                        'name': 'Cool CNN Run 1',
+                        'timestamp': '2019-04-09T21:08:36.000Z',
+                        'model': 'Cool Model 1',
+                        'playlist_name': 'Cool Playlist 1',
+                        'user': 'Joe Fourier'},
+                        {'id': 2,
+                        'name': 'Cool CNN Run 2',
+                        'timestamp': '2019-05-09T21:08:36.000Z',
+                        'model': 'Cool Model 1',
+                        'playlist_name': 'Cool Playlist 1',
+                        'user': 'Joe Fourier'},
+                        {'id': 3,
+                        'name': 'Cool CNN Run 3',
+                        'timestamp': '2019-06-09T21:08:36.000Z',
+                        'model': 'Cool Model 1',
+                        'playlist_name': 'Cool Playlist 1',
+                        'user': 'Joe Fourier'}
+                    ]
+
     $scope.createNewCNN = function () {
         if(!a2UserPermit.can('manage pattern matchings')) {
             notify.log('You do not have permission to create pattern matchings');
@@ -36,6 +58,27 @@ angular.module('a2.analysis.cnn', [
                 $location.path(data.url);
             }
         });
+    };
+    $scope.selectItem = function(cnnId){
+        console.log('hey?');
+        console.log(cnnId);
+        if($scope.selectedcnnId == cnnId){
+            $state.go('analysis.cnn', {
+                cnnID: '8'//undefined
+            });
+        } else {
+            $state.go('analysis.cnn', {
+                cnnID: '7'//cnnId
+            });
+        }
+    }
+    $scope.setDetailedView = function(detailedView){
+        console.log('setting detailed view 72');
+        $scope.detailedView = detailedView;
+        $state.transitionTo($state.current.name, {
+            patternMatchingId:$scope.selectedPatternMatchingId,
+            show:detailedView?"detail":"gallery"
+        }, {notify:false});
     };
 })
 .controller('CreateNewCNNInstanceCtrl', function($scope, $modalInstance, a2PatternMatching, a2Templates, a2Playlists, notify) {
@@ -84,4 +127,21 @@ angular.module('a2.analysis.cnn', [
     });
     this.initialize();
 
+})
+.directive('a2CnnDetails', function(){
+    return {
+        restrict : 'E',
+        replace: true,
+        scope : {
+            cnnId: '=',
+            detailedView: '=',
+            onSetDetailedView: '&',
+            onGoBack: '&',
+        },
+        controller : 'CNNDetailsCtrl',
+        controllerAs: 'controller',
+        templateUrl: '/app/analysis/cnn/details_species.html'
+    };
+})
+.controller('CNNDetailsCtrl' , function($scope, a2PatternMatching, a2UserPermit, Project, notify) {
 });
