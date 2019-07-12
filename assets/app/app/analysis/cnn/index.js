@@ -1,6 +1,6 @@
 angular.module('a2.analysis.cnn', [
     'ui.bootstrap',
-//    'a2.srv.patternmatching',
+    'a2.srv.cnn',
     'a2.services',
     'a2.permissions',
     'humane',
@@ -8,13 +8,13 @@ angular.module('a2.analysis.cnn', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('analysis.cnn', {
-        url: '/cnn/:cnnID??show',
+        url: '/cnn/:cnnId??show',
         controller: 'CNNCtrl',
         templateUrl: '/app/analysis/cnn/list.html'
     });
 })
 .controller('CNNCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
-
+    $scope.stuffANDthings = "whatever stuff";
     //for testing...
     $scope.cnnsData = [{'id': 1,
                         'name': 'Cool CNN Run 1',
@@ -59,16 +59,17 @@ angular.module('a2.analysis.cnn', [
             }
         });
     };
+    $scope.selectedCNNId = 2;
     $scope.selectItem = function(cnnId){
         console.log('hey?');
         console.log(cnnId);
-        if($scope.selectedcnnId == cnnId){
+        if($scope.selectedCNNId == cnnId){
             $state.go('analysis.cnn', {
-                cnnID: '8'//undefined
+                cnnId: '8'//undefined
             });
         } else {
             $state.go('analysis.cnn', {
-                cnnID: '7'//cnnId
+                cnnId: '7'//cnnId
             });
         }
     }
