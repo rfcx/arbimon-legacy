@@ -81,9 +81,17 @@
     }
 }
 
+.roi-thumbnail-container{
+    display: inline-block;
+}
+
 .roi-thumbnail {
     display:inline-block;
     position:relative;
+
+    > div.roi-img{
+        position: relative;
+    }
 
     &.btn{
         padding: 2px;
@@ -259,8 +267,12 @@ loader.block{
     }
 }
 
-.sidenav .subnav a {
-    padding-left: 36px;
+.sidenav li a {
+    padding-left: 3px;
+}
+
+.sidenav .subnav li a, .sidenav .open .subnav.dropdown-menu li a {
+    padding-left: 3px;
 }
 
 .collapse.expanded{

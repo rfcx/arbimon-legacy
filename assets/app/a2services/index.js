@@ -6,6 +6,7 @@ angular.module('a2.services', [
     'a2.srv.sites',
     'a2.srv.soundscapes',
     'a2.srv.species',
+    'a2.srv.users',
     'a2.srv.training-sets',
     'a2.srv.templates',
 ])

@@ -15,14 +15,14 @@ router.get('/projectlist', function(req, res, next) {
     if(req.session.user.isSuper === 1) {
         model.projects.listAll(function(err, rows) {
             if(err) return next(err);
-            
+
             res.json(rows);
         });
     }
     else {
         model.users.projectList(req.session.user.id, function(err, rows) {
             if(err) return next(err);
-            
+
             res.json(rows);
         });
     }
@@ -40,10 +40,10 @@ router.get('/feed/formats', function(req, res, next) {
 
 router.get('/feed/:page', function(req, res, next) {
     res.type('json');
-    
+
     var page = req.params.page || 0;
-    
-    ( (req.session.user.isSuper === 1) ? 
+
+    ( (req.session.user.isSuper === 1) ?
         model.news.getFor({page:page, pageCount:10}) :
         model.news.userFeed(req.session.user.id, page)
     ).then(function(news) {
@@ -61,10 +61,17 @@ router.get('/feed/:page', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/info/:userId', function(req, res, next) {
+    res.type('json');
+    model.users.getInfoForId(req.params.userId).then(function(user) {
+        res.json({ user: user[0] });
+    }).catch(next);
+});
+
 router.get('/info', function(req, res) {
     res.type('json');
     var user = req.session.user;
-    
+
     res.json({
         username: user.username,
         email: user.email,
@@ -79,20 +86,20 @@ router.get('/info', function(req, res) {
 router.get('/search/:query?', function(req, res, next) {
     res.type('json');
     var query = req.params.query;
-    
+
     if(!query){
         return res.json({ error: "empty query" });
     }
-    
+
     model.users.search(query, function(err, rows){
         if(err) return next(err);
-        
+
         var users = rows.map(function(row){
             row.imageUrl = gravatar.url(row.email, { d: 'monsterid', s: 60 }, req.secure);
-            
+
             return row;
         });
-        
+
         res.json(users);
     });
 });
@@ -101,26 +108,26 @@ router.post('/update/password', function(req, res, next){
     res.type('json');
     var userData = req.body.userData;
     var password = req.body.password;
-    
+
     if(!userData || !userData.newPass || !password) {
         return res.json({ error: "missing parameters" });
     }
-    
+
     model.users.findById(req.session.user.id, function(err, user){
         if(err) return next(err);
-        
+
         if(sha256(password) !== user[0].password)
             return res.json({ error: "invalid password" });
-        
+
         model.users.update({
             user_id: req.session.user.id,
             password: sha256(userData.newPass)
         },
         function(err, result) {
             if(err) return next(err);
-            
+
             debug("update user pass:", result);
-            
+
             res.json({ message: "success! password updated"});
         });
     });
@@ -130,12 +137,12 @@ router.post('/update', function(req, res, next){
     res.type('json');
     var userData = req.body.userData;
     var password = req.body.password || '';
-    
+
     model.users.findById(req.session.user.id).get(0).then(function(user){
         if(model.users.hashPassword(password) != user.password){
             throw new APIError({ error: "Invalid confirmation password" }, 200);
         }
-        
+
         if(userData){
             var updateData = {
                 user_id: req.session.user.id,
@@ -149,10 +156,10 @@ router.post('/update', function(req, res, next){
                 updateData.oauth_google = userData.oauth.google;
                 updateData.oauth_facebook = userData.oauth.facebook;
             }
-            
+
             return model.users.update(updateData);
         }
-        
+
     }).then(function(){
         return model.users.findById(req.session.user.id).get(0);
     }).then(function(updatedUser){
@@ -166,9 +173,9 @@ router.get('/address', function(req, res, next) {
     res.type('json');
     model.users.getAddress(req.session.user.id, function(err, rows) {
         if(err) return next(err);
-        
+
         if(!rows.length) return res.json({ address: false });
-        
+
         res.json({ address: rows[0] });
     });
 });
@@ -178,13 +185,13 @@ router.put('/address', function(req, res, next) {
     if(!req.body.address) {
         return res.status(400).json({ error: "missing parameters" });
     }
-    
+
     var address = req.body.address;
     address.user_id = req.session.user.id;
-    
+
     model.users.updateAddress(address, function(err, result) {
         if(err) return next(err);
-        
+
         res.json({ address_update: true });
     });
 });

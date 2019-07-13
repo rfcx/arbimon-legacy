@@ -24,10 +24,12 @@ angular.module('a2.srv.species', [])
             });
         },
         findById: function(species_id, callback){
-            $http.get('/api/species/'+species_id)
-                .success(function(data) {
-                    callback(data);
-                });
+            return $http.get('/api/species/'+species_id).then(function(response) {
+                if (callback) {
+                    callback(response.data);
+                }
+                return response.data;
+            });
         }
     };
 })

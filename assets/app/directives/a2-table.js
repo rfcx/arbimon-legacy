@@ -12,6 +12,9 @@ angular.module('a2.directive.a2-table', [
             return {
                 title: clone.attr('title'),
                 key: clone.attr('key'),
+                tdclass: clone.attr('tdclass'),
+                width: clone.attr('width'),
+                filter: clone.attr('filter') !== undefined ? (clone.attr('filter') || clone.attr('key')) : undefined,
                 content: clone.html()
             };
         });
@@ -46,9 +49,12 @@ angular.module('a2.directive.a2-table', [
         controller: 'a2TableCtrl as a2TableController',
         compile: function(element, attrs) {
             var template = angular.element($templateCache.get('/directives/a2-table.html'));
-            var tplHead = template.find("thead tr");
+            var tplHead = template.find("thead tr.headers");
+            var tplFilters = template.find("thead tr.filters");
             var tplBody = template.find("tbody tr");
             var options = {};
+            var filterable = [];
+            var hasFilters = false;
             options.fields = compileFields(element);
             options.hasCheckbox = attrs.noCheckbox === undefined;
             options.hasSelection = attrs.noSelect === undefined;
@@ -62,8 +68,16 @@ angular.module('a2.directive.a2-table', [
                         ''
                     )
                 );
+                hasFilters |= field.filter !== undefined;
+                tplFilters.append(
+                    angular.element('<th></th>').append(
+                        (field.filter !== undefined) ?
+                        '   <input type="text" class="a2-table-filter" ng-model="a2TableController.filter['+index+']" ng-change="a2TableController.onFilterChanged(' + index + ')">\n' :
+                        ''
+                    )
+                );
                 tplBody.append(
-                    angular.element('<td>').addClass(field.tdclass).html(field.content)
+                    angular.element('<td ' + (field.width ? 'width="' + field.width + '"' : '') + '>').addClass(field.tdclass).html(field.content)
                 );
             });
 
@@ -100,8 +114,8 @@ angular.module('a2.directive.a2-table', [
                 }, true);
 
 
-                element.append($compile(template)(tableScope));
-                console.log("!!!", tableScope);
+                var cmpel = $compile(template.clone())(tableScope);
+                element.append(cmpel);
 
                 scope.$on('$destroy', function(){
                     tableScope.$destroy();
@@ -116,12 +130,19 @@ angular.module('a2.directive.a2-table', [
     this.initialize = function(options){
         scope = options.scope;
         tableScope = options.tableScope;
+        this.options = options;
         this.__onSelect = options.onSelect;
+        this.hasFilters = options.fields.reduce(function (_, field){ return _ || field.filter !== undefined; }, false);
+        this.filter = {};
     };
 
     this.setRows = function(rows){
         this.rows = rows;
         this.updateChecked();
+    };
+
+    this.onFilterChanged = function(index){
+        (tableScope.query || (tableScope.query = {}))[this.options.fields[index].filter] = this.filter[index];
     };
 
     this.updateChecked = function() {

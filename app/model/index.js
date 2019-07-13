@@ -26,3 +26,4 @@ exports.AudioEventDetections = require('./audio-event-detections');
 exports.ActivationCodes = require('./activation-codes');
 exports.AdminPlots      = require('./admin-plots');
 exports.AccessTokens    = require('./access-tokens');
+exports.CitizenScientist = require('./citizen-scientist');

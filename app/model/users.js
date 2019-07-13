@@ -24,7 +24,7 @@ function hashPassword(password){
 
 var Users = {
     hashPassword: hashPassword,
-    
+
     findByUsername: function(username, callback) {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
@@ -32,7 +32,7 @@ var Users = {
         q = util.format(q, dbpool.escape(username));
         queryHandler(q, callback);
     },
-    
+
     findByEmail: function(email, callback) {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
@@ -40,9 +40,9 @@ var Users = {
         q = util.format(q, dbpool.escape(email));
         queryHandler(q, callback);
     },
-    
+
     findById: function(user_id, callback) {
-        return q.nfcall(queryHandler, 
+        return q.nfcall(queryHandler,
             'SELECT * \n' +
             'FROM users \n' +
             'WHERE user_id = ?', [
@@ -50,18 +50,28 @@ var Users = {
             ]
         ).get(0).nodeify(callback);
     },
-    
+
+    getInfoForId: function(user_id){
+        return q.nfcall(queryHandler,
+            'SELECT user_id, login, firstname, lastname\n' +
+            'FROM users \n' +
+            'WHERE user_id = ?', [
+                user_id
+            ]
+        ).get(0);
+    },
+
     loginTry: function(ip, user, msg, callback) {
-        
+
         var q = 'INSERT INTO invalid_logins(`ip`, `user`, `reason`) \n'+
                 'VALUES ('+
-                dbpool.escape(ip) +',' + 
-                dbpool.escape(user) + ',' + 
+                dbpool.escape(ip) +',' +
+                dbpool.escape(user) + ',' +
                 dbpool.escape(msg) + ')';
-                
+
         queryHandler(q, callback);
     },
-    
+
     invalidLogins: function(ip, callback) {
         var q = 'SELECT COUNT(ip) as tries \n'+
                 'FROM invalid_logins \n'+
@@ -70,7 +80,7 @@ var Users = {
         q = util.format(q, dbpool.escape(ip));
         queryHandler(q, callback);
     },
-    
+
     removeLoginTries: function(ip, callback) {
         var q = 'DELETE ' +
                 'FROM `invalid_logins` ' +
@@ -78,17 +88,17 @@ var Users = {
         q = util.format(q, dbpool.escape(ip));
         queryHandler(q, callback);
     },
-    
+
     search: function(query, callback) {
         query = dbpool.escape('%'+query+'%');
-        
+
         var q = "SELECT user_id AS id, \n"+
                 "       email, \n"+
                 "       login AS username \n"+
                 "FROM users \n"+
                 "WHERE login LIKE %s \n"+
                 "OR email LIKE %s";
-        
+
         q = util.format(q, query, query);
         queryHandler(q, callback);
     },
@@ -110,7 +120,7 @@ var Users = {
         }
         data.push(userData.user_id);
 
-        return q.nfcall(queryHandler, 
+        return q.nfcall(queryHandler,
             'UPDATE users \n'+
             'SET ' + values.join(', ') + ' \n'+
             'WHERE user_id=?', data
@@ -135,8 +145,8 @@ var Users = {
 
         for(i in userData) {
             if(i !== 'user_id') {
-                values.push(util.format('%s = %s', 
-                    dbpool.escapeId(i), 
+                values.push(util.format('%s = %s',
+                    dbpool.escapeId(i),
                     dbpool.escape(userData[i])
                 ));
             }
@@ -205,7 +215,7 @@ var Users = {
             return hasAccess;
         });
     },
-    
+
     getPermissions : function(user_id, project_id, callback) {
         return dbpool.query(
             'SELECT p.permission_id AS id, p.name \n'+
@@ -215,11 +225,11 @@ var Users = {
             'JOIN permissions AS p ON p.permission_id = rp.permission_id \n'+
             'WHERE upr.user_id = ? \n'+
             'AND upr.project_id = ?', [
-            user_id, 
+            user_id,
             project_id
         ]).nodeify(callback);
     },
-    
+
     findOwnedProjects: function(user_id, query) {
         return dbpool.query(
             "SELECT p.*, \n"+
@@ -228,63 +238,63 @@ var Users = {
             "JOIN project_plans AS pp ON (p.current_plan = pp.plan_id) \n"+
             "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
             "WHERE upr.user_id = ? " +
-            (query && query.free ? "\n" + 
+            (query && query.free ? "\n" +
             "  AND pp.tier = 'free'" : ''), [
             user_id
         ]);
     },
-    
+
     newAccountRequest: function(params, hash, callback){
         var q = 'INSERT INTO user_account_support_request'+
                 '(support_type_id, hash, params, expires) \n'+
-                'VALUES (1,' + 
-                dbpool.escape(hash) + ','+ 
+                'VALUES (1,' +
+                dbpool.escape(hash) + ','+
                 dbpool.escape(JSON.stringify(params))+ ','+
                 '(\n'+
                 '    SELECT FROM_UNIXTIME( \n'+
                 '        UNIX_TIMESTAMP(now()) +\n' +
                 '        (SELECT max_lifetime \n'+
-                '         FROM user_account_support_type\n' + 
+                '         FROM user_account_support_type\n' +
                 '         WHERE account_support_type_id = 1)\n'+
                 '    ) as expiresin \n'+
                 '))';
 
         queryHandler(q, callback);
     },
-    
+
     newPasswordResetRequest: function(user_id, hash, callback) {
         var q = 'INSERT INTO user_account_support_request'+
                 '(support_type_id, user_id, hash, expires) \n'+
-                'VALUES (2,' + 
+                'VALUES (2,' +
                 dbpool.escape(user_id) + ','+
                 dbpool.escape(hash) + ','+
                 '(\n'+
                 '    SELECT FROM_UNIXTIME( \n'+
                 '        UNIX_TIMESTAMP(now()) +\n' +
                 '        (SELECT max_lifetime \n'+
-                '         FROM user_account_support_type\n' + 
+                '         FROM user_account_support_type\n' +
                 '         WHERE account_support_type_id = 2)\n'+
                 '    ) as expiresin \n'+
                 '))';
 
         queryHandler(q, callback);
     },
-    
+
     removeRequest : function(id, callback) {
-        var q = 'DELETE FROM user_account_support_request \n'+ 
+        var q = 'DELETE FROM user_account_support_request \n'+
                 'WHERE support_request_id = '+ dbpool.escape(id);
-        
+
         queryHandler(q, callback);
     },
-    
+
     findAccountSupportReq: function(hash, callback) {
         var q = 'SELECT * \n'+
                 'FROM user_account_support_request \n'+
                 'WHERE hash = ' + dbpool.escape(hash);
-        
+
         queryHandler(q, callback);
     },
-    
+
     usernameInUse: function(username, callback) {
         var q = "SELECT (SELECT count(*) as count \n"+
             "FROM user_account_support_request \n"+
@@ -292,15 +302,15 @@ var Users = {
             "(SELECT count(*) as count \n"+
             "FROM users AS u \n"+
             "WHERE login = %2$s) as count";
-        
+
         q = sprintf(q, dbpool.escape('%"'+username+'"%'), dbpool.escape(username));
         queryHandler(q, function(err, rows){
             if(err) return callback(err);
-            
+
             callback(null, rows[0].count > 0);
         });
     },
-    
+
     emailInUse: function(username, callback) {
         var q = "SELECT (SELECT count(*) as count \n"+
             "FROM user_account_support_request \n"+
@@ -308,15 +318,15 @@ var Users = {
             "(SELECT count(*) as count \n"+
             "FROM users AS u \n"+
             "WHERE email = %2$s) as count";
-        
+
         q = sprintf(q, dbpool.escape('%"'+username+'"%'), dbpool.escape(username));
         queryHandler(q, function(err, rows){
             if(err) return callback(err);
-            
+
             callback(null, rows[0].count > 0);
         });
     },
-    
+
     list: function(callback) {
         var q = 'SELECT user_id AS id, \n' +
                 'login AS username, \n' +
@@ -328,38 +338,38 @@ var Users = {
                 'created_on, \n' +
                 'disabled_until \n' +
                 'FROM users';
-        
+
         queryHandler(q, callback);
     },
-    
+
     countCreatedToday: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `users` \n'+
                 'WHERE DATE(created_on) = DATE(NOW())';
-        
+
         queryHandler(q, callback);
     },
-    
+
     getAddress: function(userId, callback) {
         var q = "SELECT * FROM addresses WHERE user_id = ?";
-        
+
         queryHandler(dbpool.format(q, [userId]), callback);
     },
-    
+
     updateAddress: function(userAddressData, callback) {
         var q = "REPLACE INTO addresses SET ?";
-        
+
         queryHandler(dbpool.format(q, userAddressData), callback);
     },
 
     challengeOAuth: function(credentials){
-        var result = { 
+        var result = {
             user: null,
             error: null,
         };
         return q.ninvoke(Users, "findByEmail", credentials.email).get(0).get(0).then(function(userByEmail){
             result.user = userByEmail;
-            
+
             if(!userByEmail){
                 // User does not exist!!!
             } else if(userByEmail.disabled_until === '0000-00-00 00:00:00'){
@@ -371,8 +381,8 @@ var Users = {
             return result;
         });
     },
-    
-    
+
+
     /** Executes a user login challenge, returning its promised results.
      * @params auth
      * @params auth.username
@@ -389,12 +399,12 @@ var Users = {
         var ip = auth.ip;
         var captchaResponse = auth.captcha;
         var redirectUrl = options.redirect || '/home';
-        
+
         var permitedRetries = 10;
         var captchaRequired = 3;
         var waitTime = 3600000; // miliseconds
         var now = new Date();
-        
+
         var result = {};
 
         return q.all([
@@ -405,9 +415,9 @@ var Users = {
         ]).then(function(all){
             var invalidLogins = all[0];
             var user = all[1] || null;
-            
+
             var tries;
-            
+
             if(!user) {
                 tries = invalidLogins.tries;
             } else {
@@ -416,37 +426,37 @@ var Users = {
 
             result.user = user;
             result.tries = tries;
-            
+
             debug('login tries:', tries);
-            
+
             if(user && (user.disabled_until === '0000-00-00 00:00:00') ){
                 throw new APIError("This account had been disabled");
             }
-            
+
             if(tries >=  permitedRetries || (user && (user.disabled_until > now) ) ) {
                 // TODO:: esto dice una hora pero no necesariamente es una, o si?
                 throw new APIError("Too many tries, try again in 1 hour. If you think this is wrong contact us.");
             }
-            
+
             return result;
         }).then(function(result){
             // verify if user not exceeded max retries check captcha if needed
             if(result.tries >= captchaRequired && !options.skipCaptcha) {
-                return q.nfcall(request, { 
+                return q.nfcall(request, {
                     uri:'https://www.google.com/recaptcha/api/siteverify',
                     qs: {
                         secret: config('recaptcha').secret,
                         response: captchaResponse,
                         remoteip: ip,
                     }
-                }).then(function(args) { 
+                }).then(function(args) {
                     var response = args[0];
                     var body = args[1];
-                    
+
                     body = JSON.parse(body);
-                    
+
                     debug('captcha validation:\n', body);
-                    
+
                     return body.success;
                 });
             } else {
@@ -458,7 +468,7 @@ var Users = {
             var user = result.user;
             var tries = result.tries;
             var response = {};
-            
+
             if(!result.verifyCaptcha) {
                 result.error = "Error validating captcha";
                 result.reason = 'invalid_captcha';
@@ -472,7 +482,7 @@ var Users = {
                 result.success = true;
                 result.redirect = redirectUrl;
             }
-            
+
             if(result.error) {
                 result.captchaNeeded = (tries + 1) >= captchaRequired;
                 result.tries += 1;
@@ -481,11 +491,11 @@ var Users = {
                     result.disable_until = now;
                 }
             }
-            
+
             return result;
         });
     },
-    
+
     performLogin: function(req, auth, options){
         return Users.challengeLogin(auth, {
             redirect : req.query.redirect
@@ -493,7 +503,7 @@ var Users = {
             var user = result.user;
             var tries = result.tries;
             var response = {};
-            
+
             if(result.error) {
                 if(user) {
                     q.ninvoke(Users, "update", result.disable_until ? {
@@ -505,32 +515,32 @@ var Users = {
                         login_tries: user.login_tries + 1
                     }).catch(console.error.bind(console));
                 }
-                
-                q.ninvoke(Users, "loginTry", 
-                    req.ip, 
-                    auth.username, 
+
+                q.ninvoke(Users, "loginTry",
+                    req.ip,
+                    auth.username,
                     result.reason
                 ).catch(console.error.bind(console));
-                
+
                 return {
                     success: false,
                     error: result.error,
                     captchaNeeded: result.captchaNeeded
                 };
             }
-            
+
             // update user info
-            q.ninvoke(Users, "update", { 
+            q.ninvoke(Users, "update", {
                 user_id: user.user_id,
                 last_login: new Date(),
                 login_tries: 0
             }).catch(console.error.bind(console));
-            
+
             // set session
-            req.session.loggedIn = true; 
+            req.session.loggedIn = true;
             req.session.isAnonymousGuest = false;
             req.session.user = Users.makeUserObject(user, {secure: req.secure, all:true});
-            
+
             return {
                 success: true,
                 redirect : req.query.redirect || '/home',
@@ -559,7 +569,7 @@ var Users = {
         }
         return userObj;
     },
-    
+
     /** Attempts to log in the user using validated oauth credentials.
      * @params req - request holding the session (for logging in ofcourse)
      * @params credentials - oauth credentials in question
@@ -570,15 +580,15 @@ var Users = {
      */
     oauthLogin: function(req, credentials, options) {
         options = options || {};
-        var now = new Date();        
+        var now = new Date();
         return this.challengeOAuth(credentials).then(function(result){
-            if(!result.error && !result.user){ 
+            if(!result.error && !result.user){
                 // No error and User does not exist!!!, it must be created, then OAuth is deemed sucessfull with the created user.
                 return Users.createFromOAuth(credentials);
             } else if(result.error){
                 if(result.error.status == 449 && options.authorize){
                     return Users.challengeLogin({
-                        username: options.username, 
+                        username: options.username,
                         password: options.password
                     }, {
                         skipCaptcha: true,
@@ -588,10 +598,10 @@ var Users = {
                             console.log("loginResult.error", loginResult.error);
                             throw loginResult.error;
                         }
-                        
+
                         var userData={user_id: loginResult.user.user_id};
                         userData['oauth_' + credentials.type] = 1;
-                        
+
                         return q.ninvoke(Users, "update", userData).then(function(){
                             return loginResult.user;
                         });
@@ -604,16 +614,16 @@ var Users = {
             }
         }).then(function(authenticatedUser) {
             // update user info
-            return q.ninvoke(Users, "update", { 
+            return q.ninvoke(Users, "update", {
                 user_id: authenticatedUser.user_id,
                 last_login: new Date(),
                 login_tries: 0
             }).then(function(){
                 // set session
-                req.session.loggedIn = true; 
+                req.session.loggedIn = true;
                 req.session.isAnonymousGuest = false;
                 req.session.user = Users.makeUserObject(authenticatedUser, {secure: req.secure, all:true});
-                
+
                 return authenticatedUser;
             });
         });
@@ -621,15 +631,15 @@ var Users = {
 
     queryPermission: function(user_id, project_id, permission_name) {
         return dbpool.query(
-            "(" + 
-            "   SELECT 0 as is_super, UPR.role_id as role\n" + 
-            "   FROM user_project_role UPR\n" + 
+            "(" +
+            "   SELECT 0 as is_super, UPR.role_id as role\n" +
+            "   FROM user_project_role UPR\n" +
             "   JOIN role_permissions RP ON UPR.role_id = RP.role_id\n" +
             "   JOIN permissions P ON RP.permission_id = P.permission_id\n" +
             "   WHERE UPR.user_id = ? AND UPR.project_id = ?\n" +
-            ") UNION (" + 
-            "   SELECT U.is_super, 0 as role\n" + 
-            "   FROM users U\n" + 
+            ") UNION (" +
+            "   SELECT U.is_super, 0 as role\n" +
+            "   FROM users U\n" +
             "   WHERE U.user_id = ?\n" +
             "     AND U.is_super = 1\n" +
             ")", [

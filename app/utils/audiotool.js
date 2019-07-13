@@ -23,11 +23,11 @@ var audiotools = {
         debug('running sox with ', args);
         if(options instanceof Function) { callback = options; }
         options = options || {};
-        
+
         var cp = childProcess.spawn('sox', args);
-        var stdout = {value:""}, 
+        var stdout = {value:""},
             stderr = {value:""};
-            
+
         if(options.stderr2stdout) {
             stderr = stdout;
         }
@@ -39,7 +39,7 @@ var audiotools = {
         cp.stdout.on('data', function(data) {
             stdout.value += data;
         });
-        
+
         cp.on('close', function(code){
             debug('sox ended with code : ', code);
             debug('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
@@ -65,7 +65,7 @@ var audiotools = {
                     var value = m[2];
                     switch (param) {
                         case 'input_file'      : value = value.substr(1, value.length-2); break;
-                        case 'channels'        : 
+                        case 'channels'        :
                         case 'sample_rate'     : value = value | 0; break;
                         case 'precision'       : value = /^(\d+)-bit/.exec(value)[1] | 0; break;
                         case 'duration'        :
@@ -89,17 +89,19 @@ var audiotools = {
      * @param {Object} options.format set the output audio format
      * @param {Object} options.compression set the output compression
      * @param {Object} options.channels set the number of channels in the output
+     * @param {Object} options.trim.from start the audio at the specified offset.
+     * @param {Object} options.trim.duration clip the autdio to a given duration.
      * @param {Object} options.gain apply gain to the audio file.
      * @param {Object} options.filter apply a frequency filter to the audio file.
      * @param {Object} options.filter.max maximum frequency to allow.
      * @param {Object} options.filter.min minimum frequency to allow.
      * @param {Object} options.filter.type one of ['default', 'sinc'].
      * @param {Function} callback function to call with the results.
-     */    
+     */
     transcode : function(source_path, destination_path, options, callback){
         if(options instanceof Function) { callback = options; }
         options = options || {};
-        
+
         var args = [];
         args.push('--magic', '--show-progress');
         args.push(source_path);
@@ -121,6 +123,7 @@ var audiotools = {
         if (options.gain) {
             args.push('gain', options.gain | 0);
         }
+
         if (options.filter && (options.filter.min || options.filter.max)) {
             var fmin=options.filter.min|0, fmax=options.filter.max|0;
             switch(options.filter.type){
@@ -141,6 +144,11 @@ var audiotools = {
                 break;
             }
         }
+
+        if (options.trim) {
+            args.push('trim', +options.trim.from, +options.trim.duration);
+        }
+
         audiotools.sox(args, {}, callback);
     },
     /** Generates a spectrogram of a given audio file.
@@ -162,7 +170,7 @@ var audiotools = {
     spectrogram : function(source_path, destination_path, options, callback){
         if(options instanceof Function) { callback = options; }
         options = options || {};
-        
+
         var args = [];
         args.push(source_path);
         if(options.maxfreq) {
@@ -184,7 +192,7 @@ var audiotools = {
         args.push(
             '-q', ((options.quantization | 0) || 249) // color quantization
         );
-        
+
         if(options.window && ['Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser'].indexOf(options.window) >= 0) {
             args.push('-w', options.window); // just the raw spectrogram image
         }
@@ -192,7 +200,7 @@ var audiotools = {
         args.push('-o', destination_path);
         audiotools.sox(args, {}, callback);
     },
-    
+
     /** split a file longer than 120 seconds to to 1 minute files
      * @method splitter
      * @param {String} sourcePath path to the source audio file.
@@ -204,26 +212,26 @@ var audiotools = {
         rec.ext = path.extname(sourcePath);
         rec.dir = path.dirname(sourcePath);
         rec.filename = path.basename(sourcePath, rec.ext);
-        
+
         var splitCommand = sprintf('sox %(dir)s/%(filename)s%(ext)s %(dir)s/%(filename)s.p%%1n%(ext)s', rec);
-        
+
         var files = [];
-        
+
         // splits only if recording is longer than 2 mins
         if(duration < 120) return callback(null, []);
-        
+
         var oneMinPieces = Math.floor(duration/60)-1;
         var lastPieceLength = duration - (oneMinPieces*60);
-        
+
         for(var i=0; i < oneMinPieces; i++) {
             files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, i+1, rec.ext));
             splitCommand += ' trim 0 60 : newfile :';
         }
         files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, oneMinPieces+1, rec.ext));
         splitCommand += ' trim 0 '+ lastPieceLength;
-        
+
         debug('splitter:', splitCommand);
-        
+
         var split = childProcess.exec(splitCommand, function(error, stdout, stderr) {
             // console.log('stdout: ' + stdout);
             // console.log('stderr: ' + stderr);
