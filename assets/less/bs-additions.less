@@ -45,3 +45,20 @@
         padding:5px 10px;
     }
 }
+
+
+.btn-group-item{
+    float:left;
+    &:not(:first-child), &:not(:first-child){
+        .btn, input{
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0;
+        }
+    }
+    &:not(:last-child), &:not(:first-child){
+        .btn, input{
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0;
+        }
+    }
+}

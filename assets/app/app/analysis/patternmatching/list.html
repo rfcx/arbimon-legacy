@@ -53,7 +53,7 @@
                                 Show Details
                         </button>
                         <button class="btn btn-danger"
-                            ng-click="deletePatternMatching(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
+                            ng-click="deletePatternMatching(patternmatching.id, $event) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
                             tooltip="Delete"
                             tooltip-trigger="mouseenter">
                             <i class="fa fa-trash"></i>
