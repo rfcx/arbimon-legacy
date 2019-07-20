@@ -1,33 +1,22 @@
 <div class="margin-xs">
-    <div class="dropdown" dropdown>
-        <button class="btn btn-block btn-default dropdown-toggle" dropdown-toggle>
-            <i class="fa" ng-class="{
-                'fa-list' : !browser.$type.loading.playlists, 
-                'fa-spinner fa-spin': browser.$type.loading.playlists}">
-            </i>
-            <span class="finite-h-extent">{{browser.$type.playlist.name || "Select a playlist"}}</span>
-            <i class="fa fa-caret-down"></i>
-            <span class="badge">{{browser.$type.playlist.count}}</span>
-        </button>
-        <ul class="dropdown-menu has-badges dropdown-height-7" role="menu">
-            <li ng-show="browser.$type.loading.playlists">
-                <a><i class="fa fa-spinner fa-spin"></i> Loading Playlists</a>
-            </li>
-            <li ng-hide="browser.$type.loading.playlists || browser.$type.playlists">
-                <a>No Playlists in Project</a>
-            </li>
-            <li ng-hide="browser.$type.loading.playlists" 
-                ng-repeat="playlist in browser.$type.playlists" 
-                ng-class="{active: browser.$type.playlist == playlist}">
-                    <a ng-click="browser.$type.set_playlist(playlist) | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist'">
-                        {{playlist.name}}
-                    </a>
-                    <span class="badge">{{playlist.count}}</span>
-            </li>
-        </ul>
-    </div>
-    
-    <button ng-repeat="link in browser.lovo.links" 
+    <ui-select ng-model="browser.$type.playlist" theme="bootstrap"
+        class="has-badges"
+        on-select="browser.$type.set_playlist($select.selected) | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist'"
+        append-to-body="true"
+    >
+        <ui-select-match class="a2-uism-btn-icon {{browser.$type.loading.playlists ? 'icon-loader' : 'icon-playlist'}}"
+            placeholder="{{browser.$type.loading.playlists ? 'Loading playlists' : 'Select playlist'}}"
+        >
+            {{ browser.$type.playlist.name }}
+        </ui-select-match>
+        <ui-select-choices repeat="playlist in browser.$type.playlists | filter:$select.search">
+            <i class="fa fa-list" ></i>
+            {{ playlist.name }}
+            <span class="badge">{{playlist.count}}</span>
+        </ui-select-choices>
+    </ui-select>
+
+    <button ng-repeat="link in browser.lovo.links"
         class="btn btn-link btn-block"
         style="margin-top:5px;"
         ng-click="browser.$type.resolve_link(link) | trackEvent:'Visualizer-Recordings-By-Playlist':'open playlist object'">
@@ -38,20 +27,20 @@
 <div class="col-sm-12">
     <div class="btn-toolbar text-center" ng-show="browser.lovo.paging && browser.lovo.paging.last_page > 0">
         <div class="pull-left btn-group">
-            <button class="btn btn-default btn-xs" 
-                ng-disabled="browser.lovo.paging.is_at_first_page" 
+            <button class="btn btn-default btn-xs"
+                ng-disabled="browser.lovo.paging.is_at_first_page"
                 ng-click="browser.lovo.paging.set_page('first')">
                     <i class="fa fa-angle-double-left"></i>
             </button>
-            <button class="btn btn-default btn-xs" 
-                ng-disabled="browser.lovo.paging.is_at_first_page" 
+            <button class="btn btn-default btn-xs"
+                ng-disabled="browser.lovo.paging.is_at_first_page"
                 ng-click="browser.lovo.paging.set_page('previous')">
                     <i class="fa fa-angle-left"></i>
             </button>
         </div>
         <div class="inline-block">
             <div class="btn-group">
-                <button class="btn btn-default btn-xs fa" 
+                <button class="btn btn-default btn-xs fa"
                     ng-repeat="page in browser.lovo.paging.block"
                     ng-class="browser.lovo.paging.current_page == page ? 'active' : ''"
                     ng-click="browser.lovo.paging.set_page(page)"
@@ -60,11 +49,11 @@
         </div>
         <div class="pull-right btn-group">
             <button class="btn btn-default btn-xs"
-                ng-disabled="browser.lovo.paging.is_at_last_page" 
+                ng-disabled="browser.lovo.paging.is_at_last_page"
                 ng-click="browser.lovo.paging.set_page('next')"
             ><i class="fa fa-angle-right"></i></button>
             <button class="btn btn-default btn-xs"
-                ng-disabled="browser.lovo.paging.is_at_last_page" 
+                ng-disabled="browser.lovo.paging.is_at_last_page"
                 ng-click="browser.lovo.paging.set_page('last')"
             ><i class="fa fa-angle-double-right"></i></button>
         </div>
