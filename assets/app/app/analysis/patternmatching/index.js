@@ -307,14 +307,14 @@ angular.module('a2.analysis.patternmatching', [
         return this.selected.roi;
     },
 
-    setPage: function(page){
+    setPage: function(page, force){
         if(this.total.rois <= 0){
             this.selected.page = 0;
             this.rois = [];
             return this.rois;
         } else {
             page = Math.max(0, Math.min(page, (this.total.rois / this.limit) | 0));
-            if(page != this.selected.page){
+            if(page != this.selected.page || force){
                 this.selected.page = page;
                 return this.loadPage(page);
             }
