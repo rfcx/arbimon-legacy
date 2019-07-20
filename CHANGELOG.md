@@ -1,5 +1,7 @@
 # CHANGELOG
 
+- v1.16.4
+    - bugfix in pattern matching details set page control
 - v1.16.3
     - pattern matchings:
         - changing roi datetime display to utc (e.g. no timezone correction)
