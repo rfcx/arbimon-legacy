@@ -134,7 +134,7 @@
                         ng-click="roi.selected = !roi.selected"
                         popover-html="'Recording: {{roi.recording}}<br>
                                  Site: {{roi.site}}<br>
-                                 Time: {{roi.datetime | date:'medium'}} <br>
+                                 Time: {{roi.datetime | date:'medium': 'UTC'}} <br>
                                  Score: {{(roi.score | number) || '(Missing)'}}'"
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
