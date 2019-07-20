@@ -171,7 +171,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2UserPermit, Project, notify) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioPlayer, notify) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -187,6 +187,7 @@ angular.module('a2.analysis.patternmatching', [
         this.fetchDetails().then((function(){
             this.loadPage(this.selected.page);
         }).bind(this));
+        this.audio_player = new a2AudioPlayer($scope)
     },
 
     lists: {
@@ -265,6 +266,24 @@ angular.module('a2.analysis.patternmatching', [
             this.loading.rois = false;
             return notify.serverError(err);
         }).bind(this));
+    },
+
+    playRoiAudio: function(roi, $event){
+        if($event){
+            $event.preventDefault();
+            $event.stopPropagation();
+        }
+        var audio_player = this.audio_player;
+        audio_player.load(a2PatternMatching.getAudioUrlFor(roi)).then(function(){
+            audio_player.play();
+        })
+    },
+
+    playTemplateAudio: function(){
+        var audio_player = this.audio_player;
+        audio_player.load(a2Templates.getAudioUrlFor(this.patternMatching.template)).then(function(){
+            audio_player.play();
+        })
     },
 
     getRoiVisualizerUrl: function(roi){
