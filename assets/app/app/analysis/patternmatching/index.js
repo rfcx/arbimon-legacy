@@ -120,10 +120,6 @@ angular.module('a2.analysis.patternmatching', [
             return;
         }
 
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-        $scope.loading = true;
-
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/deletepatternmatching.html',
             controller: 'DeletePatternMatchingInstanceCtrl',
@@ -134,16 +130,7 @@ angular.module('a2.analysis.patternmatching', [
                 id: function() {
                     return id;
                 },
-                projectData: function() {
-                    return $scope.projectData;
-                }
             }
-        });
-
-        modalInstance.opened.then(function() {
-            $scope.infoInfo = "";
-            $scope.showInfo = false;
-            $scope.loading = false;
         });
 
         modalInstance.result.then(function(ret) {
@@ -399,12 +386,9 @@ angular.module('a2.analysis.patternmatching', [
 }); this.initialize($scope.patternMatchingId);
 })
 .controller('DeletePatternMatchingInstanceCtrl',
-    function($scope, $modalInstance, a2PatternMatching, name, id, projectData) {
+    function($scope, $modalInstance, a2PatternMatching, name, id) {
         $scope.name = name;
-        $scope.id = id;
         $scope.deletingloader = false;
-        $scope.projectData = projectData;
-        var url = $scope.projectData.url;
 
         $scope.ok = function() {
             $scope.deletingloader = true;
