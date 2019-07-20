@@ -13,7 +13,7 @@ var a2 = angular.module('a2.app', [
     'angularytics',
     'ui.router',
     'ct.ui.router.extras',
-    'a2.filter.project-url',
+    'a2.filters',
     'humane',
     'a2.googlemaps',
     'a2.injected.data'
