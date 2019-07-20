@@ -102,7 +102,7 @@
                         <div class="btn-group" ng-show="controller.total.pages > 1">
                             <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
                             <ui-select class="btn-group-item" ng-model="controller.selected.page" theme="bootstrap" style="display:inline-block; width:7em;"
-                                ng-change="controller.setPage(($select.selected | a2PageTitleToNumber), true)"
+                                ng-change="controller.setPage($select.selected, true)"
                             >
                                 <ui-select-match>
                                     {{$select.selected | a2PageNumberToTitle}} of {{controller.total.pages}}
