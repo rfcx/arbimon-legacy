@@ -112,7 +112,9 @@ angular.module('a2.analysis.patternmatching', [
         });
     };
 
-    $scope.deletePatternMatching = function(id) {
+    $scope.deletePatternMatching = function(id, $event) {
+        $event.stopPropagation();
+
         if(!a2UserPermit.can('manage pattern matchings')) {
             notify.log('You do not have permission to delete pattern matchings');
             return;
