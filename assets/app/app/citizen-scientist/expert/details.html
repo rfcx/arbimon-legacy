@@ -99,10 +99,18 @@
                         </div>
                     </div>
                     <div class="toolbar pull-right">
-                        <div class="btn-group" ng-show="controller.total.pages > 1 || detailedView">
+                        <div class="btn-group" ng-show="controller.total.pages > 1">
                             <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
-                            <a class="btn btn-default" ng-hide="detailedView">{{controller.selected.page + 1}} of {{controller.total.pages}}</a>
-                            <a class="btn btn-default" ng-show="detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a>
+                            <ui-select class="btn-group-item" ng-model="controller.selected.page" theme="bootstrap" style="display:inline-block; width:7em;"
+                                ng-change="controller.setPage($select.selected, true)"
+                            >
+                                <ui-select-match>
+                                    {{$select.selected | a2PageNumberToTitle}} of {{controller.total.pages}}
+                                </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.total.pages | a2Range | filter:($select.search | a2PageTitleToNumber)">
+                                    {{$item | a2PageNumberToTitle}}
+                                </ui-select-choices>
+                            </ui-select>
                             <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
                         </div>
 
@@ -137,7 +145,7 @@
                         ng-click="roi.selected = !roi.selected"
                         popover-html="'Recording: {{roi.recording}}<br>
                                  Site: {{roi.site}}<br>
-                                 Time: {{roi.datetime | date:'medium'}} <br>
+                                 Time: {{roi.datetime | date:'medium':'UTC'}} <br>
                                  Score: {{(roi.score | number) || '(Missing)'}}'"
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"

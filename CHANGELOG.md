@@ -1,5 +1,19 @@
 # CHANGELOG
 
+- v1.16.4
+    - bugfix in pattern matching details set page control
+- v1.16.3
+    - pattern matchings:
+        - changing roi datetime display to utc (e.g. no timezone correction)
+        - replacing # of # page caption with a ui select for selecting current page
+        - adding roi and template audio play button to details page
+        - moving visualizer link to the bottom right
+        - removing broken/unneeded variables in delete controller
+        - removing delete button click-through
+    - visualizer
+        - using ui select in playlist dropdown
+        - using ui select in sites dropdown
+
 - v1.16.2
     - Fixed breaking a2-scroll bug
 

@@ -112,15 +112,13 @@ angular.module('a2.analysis.patternmatching', [
         });
     };
 
-    $scope.deletePatternMatching = function(id) {
+    $scope.deletePatternMatching = function(id, $event) {
+        $event.stopPropagation();
+
         if(!a2UserPermit.can('manage pattern matchings')) {
             notify.log('You do not have permission to delete pattern matchings');
             return;
         }
-
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-        $scope.loading = true;
 
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/deletepatternmatching.html',
@@ -132,16 +130,7 @@ angular.module('a2.analysis.patternmatching', [
                 id: function() {
                     return id;
                 },
-                projectData: function() {
-                    return $scope.projectData;
-                }
             }
-        });
-
-        modalInstance.opened.then(function() {
-            $scope.infoInfo = "";
-            $scope.showInfo = false;
-            $scope.loading = false;
         });
 
         modalInstance.result.then(function(ret) {
@@ -182,7 +171,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2UserPermit, Project, notify) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioPlayer, notify) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -198,6 +187,7 @@ angular.module('a2.analysis.patternmatching', [
         this.fetchDetails().then((function(){
             this.loadPage(this.selected.page);
         }).bind(this));
+        this.audio_player = new a2AudioPlayer($scope)
     },
 
     lists: {
@@ -278,6 +268,24 @@ angular.module('a2.analysis.patternmatching', [
         }).bind(this));
     },
 
+    playRoiAudio: function(roi, $event){
+        if($event){
+            $event.preventDefault();
+            $event.stopPropagation();
+        }
+        var audio_player = this.audio_player;
+        audio_player.load(a2PatternMatching.getAudioUrlFor(roi)).then(function(){
+            audio_player.play();
+        })
+    },
+
+    playTemplateAudio: function(){
+        var audio_player = this.audio_player;
+        audio_player.load(a2Templates.getAudioUrlFor(this.patternMatching.template)).then(function(){
+            audio_player.play();
+        })
+    },
+
     getRoiVisualizerUrl: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
         return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
@@ -299,14 +307,14 @@ angular.module('a2.analysis.patternmatching', [
         return this.selected.roi;
     },
 
-    setPage: function(page){
+    setPage: function(page, force){
         if(this.total.rois <= 0){
             this.selected.page = 0;
             this.rois = [];
             return this.rois;
         } else {
             page = Math.max(0, Math.min(page, (this.total.rois / this.limit) | 0));
-            if(page != this.selected.page){
+            if(page != this.selected.page || force){
                 this.selected.page = page;
                 return this.loadPage(page);
             }
@@ -397,12 +405,9 @@ angular.module('a2.analysis.patternmatching', [
 }); this.initialize($scope.patternMatchingId);
 })
 .controller('DeletePatternMatchingInstanceCtrl',
-    function($scope, $modalInstance, a2PatternMatching, name, id, projectData) {
+    function($scope, $modalInstance, a2PatternMatching, name, id) {
         $scope.name = name;
-        $scope.id = id;
         $scope.deletingloader = false;
-        $scope.projectData = projectData;
-        var url = $scope.projectData.url;
 
         $scope.ok = function() {
             $scope.deletingloader = true;

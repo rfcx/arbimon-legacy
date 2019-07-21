@@ -18,11 +18,18 @@
                 <div class="col-sm-2" style="padding-bottom:5px">
                     <div class="roi-thumbnail" >
                         <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
-                        <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(controller.patternMatching.template)}}">
+                        <a class="roi-btn-bl" ng-href="{{controller.getTemplateVisualizerUrl(controller.patternMatching.template)}}">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="View in Visualizer"
                                 class="fa fa-cubes">
+                            </i>
+                        </a>
+                        <a class="roi-btn-br" ng-click="controller.playTemplateAudio()">
+                            <i tooltip-placement="left"
+                                tooltip-append-to-body="true"
+                                tooltip="Play Audio"
+                                class="fa fa-play">
                             </i>
                         </a>
                         <div class="roi-btn-b outside text-sm">
@@ -81,10 +88,18 @@
                         </div>
                     </div>
                     <div class="toolbar pull-right">
-                        <div class="btn-group" ng-show="controller.total.pages > 1 || detailedView">
+                        <div class="btn-group" ng-show="controller.total.pages > 1">
                             <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
-                            <a class="btn btn-default" ng-hide="detailedView">{{controller.selected.page + 1}} of {{controller.total.pages}}</a>
-                            <a class="btn btn-default" ng-show="detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a>
+                            <ui-select class="btn-group-item" ng-model="controller.selected.page" theme="bootstrap" style="display:inline-block; width:7em;"
+                                ng-change="controller.setPage($select.selected, true)"
+                            >
+                                <ui-select-match>
+                                    {{$select.selected | a2PageNumberToTitle}} of {{controller.total.pages}}
+                                </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.total.pages | a2Range | filter:($select.search | a2PageTitleToNumber)">
+                                    {{$item | a2PageNumberToTitle}}
+                                </ui-select-choices>
+                            </ui-select>
                             <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
                         </div>
 
@@ -119,7 +134,7 @@
                         ng-click="roi.selected = !roi.selected"
                         popover-html="'Recording: {{roi.recording}}<br>
                                  Site: {{roi.site}}<br>
-                                 Time: {{roi.datetime | date:'medium'}} <br>
+                                 Time: {{roi.datetime | date:'medium': 'UTC'}} <br>
                                  Score: {{(roi.score | number) || '(Missing)'}}'"
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
@@ -128,11 +143,18 @@
                         <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
                             <i class="fa val-{{roi.validated}}"></i>
                         </div>
-                        <a class="roi-btn-br" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
+                        <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="View in Visualizer"
                                 class="fa fa-cubes">
+                            </i>
+                        </a>
+                        <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi)">
+                            <i tooltip-placement="left"
+                                tooltip-append-to-body="true"
+                                tooltip="Play Audio"
+                                class="fa fa-play">
                             </i>
                         </a>
                         <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>

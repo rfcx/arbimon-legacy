@@ -15,7 +15,7 @@
     &.a2-difference:before{
         content:'\2296';
     }
-    
+
     &.a2-combine{
         transform:scaleY(-1) rotate(-25deg);
         &:before{
@@ -27,4 +27,34 @@
 
 .user-avatar {
     border-radius: 50%; // set radius in percents
+}
+
+
+.a2-uism-btn-icon {
+    .btn::before {
+        display: inline-block;
+        font: normal normal normal 14px/1 FontAwesome;
+        font-size: inherit;
+        text-rendering: auto;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        float: left;
+        padding-right: 5px;
+        line-height: inherit;
+    }
+
+    &.icon-site > .btn::before {
+        content: "\f041";
+    }
+
+    &.icon-playlist > .btn::before {
+        content: "\f03a";
+    }
+    // fa-spinner fa-spin
+    &.icon-loader > .btn::before {
+        content: "\f110";
+        -webkit-animation: fa-spin 2s infinite linear;
+        animation: fa-spin 2s infinite linear;
+    }
+
 }
