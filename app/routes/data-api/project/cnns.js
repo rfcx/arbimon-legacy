@@ -9,15 +9,27 @@ var pokeDaMonkey = require('../../../utils/monkey');
 var csv_stringify = require("csv-stringify");
 
 
-/** Return a list of all the pattern matchings in a project.
- */
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
     res.type('json');
-    //model.patternMatchings.find({ project:req.project.project_id, deleted:0, showUser:true, showTemplate: true, showPlaylist:true}).then(function(count) {
-    //    res.json(count);
-    //}).catch(next);
-    res.json(model.CNN.find());
-    //next();
+    model.CNN.find({
+        project: req.project.project_id,
+        showPlaylist: true,
+        showModelName: true,
+        showUser: true,
+        resolveModelUri: true
+    }).then(function (count) {
+        res.json(count);
+    }).catch(next);
 });
+
+router.get('/models/', function (req, res, next) {
+    res.type('json');
+    model.CNN.listModels({
+        project: req.project.project_id
+    }).then(function (count) {
+        res.json(count);
+    }).catch(next);
+});
+
 
 module.exports = router;
