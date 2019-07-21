@@ -1,6 +1,5 @@
 <div class="row">
-    {{ cnnId }}
-    <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="!cnnId">
+    <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="!selectedCNNId">
         <h3>
             Convolutional Neural Networks
             <a class="btn btn-sm btn-default"
@@ -10,6 +9,7 @@
                 <i class="fa fa-plus" ></i>
             </a>
         </h3>
+
         <loader ng-show="loading"></loader>
         <button class="btn btn-default pull-right"
             tooltip="Refresh list"
@@ -63,6 +63,6 @@
         </div>
     </div>
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="selectedCNNId">
-        <a2-cnn-details cnn-id="selectedCNNId" detailed-view="detailedView" on-set-detailed-view="setDetailedView(value)" on-go-back="selectItem()" />
+        <a2-cnn-details cnn-id="selectedCNNId" on-go-back="selectItem()" />
     </div>
 </div>
