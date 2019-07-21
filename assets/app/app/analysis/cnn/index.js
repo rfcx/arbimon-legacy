@@ -13,8 +13,10 @@ angular.module('a2.analysis.cnn', [
         templateUrl: '/app/analysis/cnn/list.html'
     });
 })
-.controller('CNNCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
-    $scope.stuffANDthings = "whatever stuff";
+.controller('CNNCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
+    $scope.selectedCNNId = $stateParams.cnnId;
+
+    /*
     //for testing...
     $scope.cnnsData = [{'id': 1,
                         'name': 'Cool CNN Run 1',
@@ -35,6 +37,11 @@ angular.module('a2.analysis.cnn', [
                         'playlist_name': 'Cool Playlist 1',
                         'user': 'Joe Fourier'}
                     ]
+    */
+    a2CNN.list().then(function(data) {
+        $scope.cnnsData = data;
+        console.log("TCL: cnnsData", $scope.cnnsData)
+    });
 
     $scope.createNewCNN = function () {
         if(!a2UserPermit.can('manage pattern matchings')) {
@@ -59,17 +66,15 @@ angular.module('a2.analysis.cnn', [
             }
         });
     };
-    $scope.selectedCNNId = 2;
+
     $scope.selectItem = function(cnnId){
-        console.log('hey?');
-        console.log(cnnId);
         if($scope.selectedCNNId == cnnId){
             $state.go('analysis.cnn', {
-                cnnId: '8'//undefined
+                cnnId: undefined
             });
         } else {
             $state.go('analysis.cnn', {
-                cnnId: '7'//cnnId
+                cnnId: cnnId
             });
         }
     }
@@ -144,5 +149,9 @@ angular.module('a2.analysis.cnn', [
         templateUrl: '/app/analysis/cnn/details_species.html'
     };
 })
-.controller('CNNDetailsCtrl' , function($scope, a2PatternMatching, a2UserPermit, Project, notify) {
+.controller('CNNDetailsCtrl' , function($scope, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
+    a2CNN.list().then(function(data) {
+        $scope.models = data;
+        console.log("TCL: data", data)
+    });
 });
