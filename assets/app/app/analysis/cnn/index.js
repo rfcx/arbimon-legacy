@@ -150,8 +150,76 @@ angular.module('a2.analysis.cnn', [
     };
 })
 .controller('CNNDetailsCtrl' , function($scope, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
-    a2CNN.list().then(function(data) {
-        $scope.models = data;
-        console.log("TCL: data", data)
+    $scope.viewType = "all";
+
+    a2CNN.getDetailsFor($scope.cnnId).then(function(data) {
+        $scope.job_details = data;
+        console.log("TCL: data findOne", data)
     });
+
+    a2CNN.listResults($scope.cnnId).then(function(data) {
+        $scope.results = data;
+        // DEBUG ONLY - adding in random to see different results
+        /*
+        $scope.results = $scope.results.map(function (el){
+            el.present = (Math.random() >= 0.5)?1:0;
+            return el;
+        });
+        */
+        console.log("TCL: data cnnId", data)
+    });
+
+    var bySpecies = function(dataIn) {
+        var dataOut = {};
+        dataIn.forEach(function(element) {
+            var s = element.species_id;
+            if (!(s in dataOut)) {
+                dataOut[s] = {count: 0,
+                              species_id: s,
+                              scientific_name: element.scientific_name};
+            }
+            if (element.present == 1) {
+                dataOut[s].count++;
+            }
+        });
+        console.log(dataOut);
+        return dataOut;
+    }
+
+    var byRecordings = function(dataIn) {
+        var dataOut = {total: 0};
+        dataIn.forEach(function(element) {
+            var r = element.recording_id;
+            var s = element.species_id;
+            if (!(r in dataOut)) {
+                dataOut[r] = {recording_id: r,
+                              species: {},
+                              total: 0}
+            }
+            if (!(s in dataOut[r].species)) {
+                dataOut[r].species[s] = {species_id: s,
+                                         scientific_name: element.scientific_name,
+                                         count: 0}
+            }
+            if (element.present == 1) {
+                dataOut[r].species[s].count++;
+                dataOut[r].total++;
+            }
+        });
+        console.log(dataOut);
+        return dataOut;
+    }
+
+    $scope.switchView = function(viewType) {
+    console.log("TCL: $scope.switchView -> viewType", viewType)
+        if (viewType=="species") {
+            $scope.species = bySpecies($scope.results);
+            $scope.viewType = "species";
+        } else if (viewType=="recordings") {
+            $scope.recordings = byRecordings($scope.results);
+            $scope.viewType = "recordings";
+        } else {
+            $scope.viewType = "all";
+        }
+    };
 });
