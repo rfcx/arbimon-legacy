@@ -32,15 +32,14 @@ var CNN = {
         var postprocess = [];
         var data = [];
         var select = [
-            "CNN.`id` as id",
+            "CNN.`job_id`",
             "CNN.`name`",
-            "CNN.`cnn_model_id`",
+            "CNN.`cnn_id`",
             "CNN.`playlist_id`",
-            "CNN.`user_id`",
             "CNN.`project_id`",
             "CNN.`timestamp`",
         ];
-        var tables = ["cnns CNN"];
+        var tables = ["job_params_cnn CNN"];
         var groupby = [];
         if (options instanceof Function) {
             callback = options;
@@ -50,21 +49,28 @@ var CNN = {
             options = {};
         }
 
+        if (options.job_id) {
+            constraints.push("CNN.job_id = ?");
+            data.push(options.job_id);
+        }
+
         if (options.showPlaylist) {
             select.push("P.`name` as `playlist_name`");
-            tables.push("JOIN playlists P ON P.playlist_id = CNN.playlist_id");
+            tables.push("JOIN playlists P ON P.`playlist_id` = CNN.`playlist_id`");
         }
 
         if (options.showModelName) {
             select.push("CM.`name` as `cnn_model_name`");
             select.push("CM.`uri` as model_uri");
-            tables.push("JOIN cnn_models CM ON CM.cnn_id = CNN.cnn_model_id");
+            tables.push("JOIN cnn_models CM ON CM.`cnn_id` = CNN.`cnn_id`");
         }
 
         if (options.showUser) {
+            select.push("J.`user_id`");
+            tables.push("JOIN jobs J on CNN.`job_id` = J.`job_id`");
             select.push("U.`firstname` as `firstname`");
             select.push("U.`lastname` as `lastname`");
-            tables.push("JOIN users U ON CNN.user_id = U.user_id");
+            tables.push("JOIN users U ON J.`user_id` = U.`user_id`");
         }
 
         if (options.project) {
@@ -103,6 +109,13 @@ var CNN = {
         return postprocess.reduce((_, fn) => {
             return _.then(fn);
         }, dbpool.query(queryStr, data))
+    },
+
+    findOne: function (job_id, options) {
+        options.job_id = job_id;
+        return CNN.find(options).then(function(rows){
+            return rows[0];
+        });
     },
 
     listModels: function (options) {
@@ -152,6 +165,92 @@ var CNN = {
         return postprocess.reduce((_, fn) => {
             return _.then(fn);
         }, dbpool.query(queryStr, data))
+    },
+    listResults: function (job_id, options) {
+        
+        var constraints = [],
+            projection = [];
+        var postprocess = [];
+        var data = [];
+        var select = [
+            "CRP.`cnn_presence_id`",
+            "CRP.`job_id`",
+            "CRP.`recording_id`",
+            "CRP.`species_id`",
+            "CRP.`songtype_id`",
+            "CRP.`present`",
+            "CRP.`max_score`",
+            "SP.`scientific_name`",
+            "ST.`songtype`"
+        ];
+        var tables = ["cnn_results_presence CRP"];
+
+        constraints.push('CRP.`job_id` = ?');
+        data.push(job_id);
+
+        tables.push("JOIN species SP ON SP.`species_id` = CRP.`species_id`");
+        tables.push("JOIN songtypes ST ON ST.`songtype_id` = CRP.`songtype_id`");
+        
+        var groupby = [];
+        if (options instanceof Function) {
+            callback = options;
+            options = null;
+        }
+        if (!options) {
+            options = {};
+        }
+
+        postprocess.push((rows) => {
+            rows.forEach(row => {
+                try {
+                    row.parameters = JSON.parse(row.parameters);
+                } catch (e) {
+                    row.parameters = {
+                        error: row.parameters
+                    };
+                }
+            })
+            return rows;
+        });
+
+        var queryStr =
+            "SELECT " + select.join(",\n    ") + "\n" +
+            "FROM " + tables.join("\n") + "\n" +
+            (constraints.length ? ("WHERE " + constraints.join(" \n  AND ")) : "") +
+            (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "");
+
+        console.log("TCL: queryStr", queryStr)
+
+        return postprocess.reduce((_, fn) => {
+            return _.then(fn);
+        }, dbpool.query(queryStr, data))
+    },
+    JOB_SCHEMA : joi.object().keys({
+        project    : joi.number().integer(),
+        user       : joi.number().integer(),
+        name       : joi.string(),
+        playlist   : joi.number().integer(),
+        cnn   : joi.number().integer(),
+        params     : joi.object().keys({
+        }),
+    }),
+    requestNewCNNJob: function(data){
+        console.log("TCL: data", data)
+        return {data: data};
+/*
+        return q.ninvoke(joi, 'validate', data, CNN.JOB_SCHEMA).then(() => lambda.invoke({
+            FunctionName: config('lambdas').new_cnn_job_test1,
+            InvocationType: 'Event',
+            Payload: JSON.stringify({
+                project_id: data.project,
+                user_id: data.user,
+                playlist_id: data.playlist,
+                cnn_id: data.cnn,
+                name: data.name,
+                params: {}
+            }),
+        }).promise());
+*/
     }
 };
 
