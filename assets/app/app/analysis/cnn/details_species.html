@@ -1,6 +1,124 @@
 <div>
-details species view!
-<div ng-repeat="model in models">
-    <p>{{ model }}</p>
-</div>
+    <div ng-if="controller.loading.details">
+        Loading <loader></loader>
+    </div>
+    <div ng-if="!controller.loading.details"
+        a2-scroll="controller.onScroll($event, $controller)"
+        a2-scroll-on="window"
+    >
+        <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
+        <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader }">
+            <div class="row row-flex flex-align-middle">
+                <div class="col-sm-4 flex-self-align-top">
+                    <button class="btn btn-default"
+                        ng-click="onGoBack({}) | trackEvent:'Analysis-CNN-List':' go back'">
+                        &lt;  Go Back
+                    </button>
+                    <button class="btn btn-default"
+                        ng-click="switchView('all')">
+                        All
+                    </button>
+                    <button class="btn btn-default"
+                        ng-click="switchView('species')">
+                        Species
+                    </button>
+                    <button class="btn btn-default"
+                        ng-click="switchView('recordings')">
+                        Recordings
+                    </button>
+                </div>
+                <div class="col-sm-8 flex-self-align-top">{{ job_details }}</div>
+            </div>
+        </div>
+        <div>{{ viewType }}</div>
+        <div class="panel-body" ng-show="viewType=='species'">
+            <table ng-table="tableParams" class="table" show-filter="true" >
+                <tr ng-repeat="specie in species">
+                    <td data-title="'Species'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
+                        {{ specie.scientific_name }}
+                    </td>
+                    <td data-title="'Count'" data-sortable="'count'" class="is-v-middle">
+                        {{ specie.count }}
+                    </td>
+                    <td class="is-v-middle">
+                        <button class="btn btn-default"
+                            ng-click="selectItem(cnn.job_id) | trackEvent:'Analysis-CNN-List':' show cnn details'"
+                        >
+                                Show Details
+                        </button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="panel-body" ng-show="viewType=='recordings'">
+                <table ng-table="tableParams" class="table" show-filter="true" >
+                    <tr ng-repeat="recording in recordings">
+                        <td data-title="'Recording'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
+                            {{ recording.recording_id }}
+                        </td>
+                        <td data-title="'Total'" data-sortable="'count'" class="is-v-middle">
+                            {{ recording.total }}
+                        </td>
+                        <td data-title="'Species'">
+                            <span ng-repeat="specie in recording.species" ng-show="specie.count > 0">{{ specie.scientific_name }}({{ specie.count }}) </span>
+                        </td>
+                        <td class="is-v-middle">
+                            <button class="btn btn-default"
+                                ng-click="selectItem(cnn.job_id) | trackEvent:'Analysis-CNN-List':' show cnn details'"
+                            >
+                                    Show Details
+                            </button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="panel-body" ng-show="viewType=='all'">
+                <table ng-table="tableParams" class="table" show-filter="true" >
+                    <tr ng-repeat="result in results">
+                        <td data-title="'ID'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
+                            {{ result.cnn_presence_id }}
+                        </td>
+                        <td data-title="'Recording'" data-sortable="'recording_id'" class="is-v-middle">
+                                {{ result.recording_id }}
+                            </td>
+                        <td data-title="'Species'" data-sortable="'species'" class="is-v-middle">
+                            {{ result.scientific_name }}
+                        </td>
+                        <td data-title="'Song Type'" data-sortable="'songtype'" class="is-v-middle">
+                            {{ result.songtype }}
+                        </td>
+                        <td data-title="'Present'" data-sortable="'present'" class="is-v-middle">
+                            <i class="fa" ng-class="(result.present==1)?'fa-check':'fa-times'"></i> 
+                        </td>
+                        <td data-title="'Max Score'" data-sortable="'max_score'" class="is-v-middle">
+                            {{ result.max_score }}
+                        </td>
+                        <td class="is-v-middle">
+                            <button class="btn btn-default"
+                                ng-click="selectItem(cnn.job_id) | trackEvent:'Analysis-CNN-List':' show cnn details'"
+                            >
+                                    Show Details
+                            </button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+        <div class="panel-body">
+            <div class="row" ng-repeat="result in resultsDisplayed | orderBy:'max_score'">
+                {{ result }}<br>
+                <div class="progress progress-striped active"> 
+                    <div ng-style="{ 'background-color': 'blue', width : result.max_score*100 + '%' }" 
+                        aria-valuemax="1" 
+                        aria-valuemin="0" 
+                        aria-valuenow="{{result.max_score}}" 
+                        role="progressbar"
+                        class="progress-bar">
+                        {{ result.max_score }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
