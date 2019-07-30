@@ -207,6 +207,8 @@ angular.module('a2.analysis.cnn', [
     }
 
     var bySpeciesHist = function (dataIn, species_id){
+        console.log("TCL: bySpeciesHist -> dataIn", dataIn)
+        console.log("TCL: bySpeciesHist -> species_id", species_id)
         speciesTimes = [];
         count = 0;
         dataIn.forEach(function(element) {
@@ -216,10 +218,12 @@ angular.module('a2.analysis.cnn', [
                 } else {
                     speciesName = element.scientific_name;
                 }
-                var d = new Date(element.datetime);
-                var minutes = d.getHours()*60 + d.getMinutes();
-                speciesTimes.push(new Date(3000, 0, 1, d.getHours(), d.getMinutes()));
-                count++;
+                if (element.present == 1) {
+                    var d = new Date(element.datetime);
+                    var minutes = d.getHours()*60 + d.getMinutes();
+                    speciesTimes.push(new Date(3000, 0, 1, d.getHours(), d.getMinutes()));
+                    count++;
+                }
             }
         });
         return {times: speciesTimes,
@@ -229,6 +233,8 @@ angular.module('a2.analysis.cnn', [
     var plotShown = false;
     $scope.showHist = function(species_id){
         $scope.speciesInfo = bySpeciesHist($scope.results, species_id);
+        console.log("TCL: $scope.showHist -> $scope.speciesInfo", $scope.speciesInfo)
+        // TODO: fix the counts... something is off
         var trace = {
             x: $scope.speciesInfo.times,
             type: 'histogram',
