@@ -64,11 +64,11 @@ router.post('/new/', function(req, res, next) {
         */
     }).then(function(){
         return model.CNN.requestNewCNNJob({
-            project    : project_id,
-            user       : req.session.user.id,
+            project_id    : project_id,
+            user_id       : req.session.user.id,
             name       : req.body.name,
-            cnn        : req.body.cnn,
-            playlist   : req.body.playlist,
+            cnn_id        : req.body.cnn_id,
+            playlist_id   : req.body.playlist_id,
             params     : req.body.params
         });
     }).then(function(result){
