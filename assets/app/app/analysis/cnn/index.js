@@ -85,28 +85,28 @@ angular.module('a2.analysis.cnn', [
         }, {notify:false});
     };
 })
-.controller('CreateNewCNNInstanceCtrl', function($scope, $modalInstance, a2PatternMatching, a2Templates, a2Playlists, notify) {
+.controller('CreateNewCNNInstanceCtrl', function($scope, $modalInstance, a2PatternMatching, a2Templates, a2Playlists, a2CNN, notify) {
     Object.assign(this, {
         initialize: function(){
             this.loading = {
                 playlists: false,
-                templates: false,
-                createPatternMatching: false,
+                models: false,
             };
 
             this.data = {
                 name: null,
                 playlist: null,
-                template: null,
-                params: { N: 100, threshold: 0.7 },
+                model: null,
+                params: { },
             };
 
             var list = this.list = {};
 
-            this.loading.templates = true;
-            a2Templates.getList().then((function(templates){
-                this.loading.templates = false;
-                list.templates = templates;
+            this.loading.models = true;
+            a2CNN.listModels().then((function(models){
+                console.log(models);
+                this.loading.models = false;
+                list.models = models;
             }).bind(this));
 
             this.loading.playlists = true;
@@ -116,13 +116,14 @@ angular.module('a2.analysis.cnn', [
             }).bind(this));
         },
         ok: function () {
-            return a2PatternMatching.create({
+            console.log(this.data);
+            return a2CNN.create({
+                playlist_id: this.data.playlist.id,
+                cnn_id: this.data.model.id,
                 name: this.data.name,
-                playlist: this.data.playlist.id,
-                template: this.data.template.id,
-                params: this.data.params,
-            }).then(function(patternMatching) {
-                $modalInstance.close({ok:true, patternMatching: patternMatching});
+                params: this.data.params
+            }).then(function(cnn) {
+                $modalInstance.close({ok:true, cnn: cnn});
             }).catch(notify.serverError);
         },
         cancel: function (url) {
@@ -149,6 +150,7 @@ angular.module('a2.analysis.cnn', [
 })
 .controller('CNNDetailsCtrl' , function($scope, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
     $scope.viewType = "all";
+    $scope.counts = {recordings: null};
 
     a2CNN.getDetailsFor($scope.cnnId).then(function(data) {
         $scope.job_details = data;
@@ -265,6 +267,7 @@ angular.module('a2.analysis.cnn', [
             $scope.showHist(specie ? specie : "all");
         } else if (viewType=="recordings") {
             $scope.recordings = byRecordings($scope.results);
+            $scope.counts.recordings = Object.keys($scope.recordings).length;
             $scope.viewType = "recordings";
         } else {
             $scope.viewType = "all";
