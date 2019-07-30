@@ -32,6 +32,19 @@
         </div>
         <div>{{ viewType }}</div>
         <div class="panel-body" ng-show="viewType=='species'">
+            <div class="row row-flex flex-align-middle">
+                <div class="col-sm-2">
+                    <button ng-click="showHist('all')">All</button>
+                </div>
+                <div class="col-sm-10">
+                    <div id="speciesHist"></div>
+                </div>
+                <div class="col-sm-2">
+                    Species: {{ speciesInfo.name }}
+                    <br>
+                    Total found: {{ speciesInfo.count }}
+                </div>
+            </div>
             <table ng-table="tableParams" class="table" show-filter="true" >
                 <tr ng-repeat="specie in species">
                     <td data-title="'Species'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
@@ -42,7 +55,7 @@
                     </td>
                     <td class="is-v-middle">
                         <button class="btn btn-default"
-                            ng-click="selectItem(cnn.job_id) | trackEvent:'Analysis-CNN-List':' show cnn details'"
+                            ng-click="showHist(specie.species_id)"
                         >
                                 Show Details
                         </button>
@@ -54,6 +67,16 @@
                 <table ng-table="tableParams" class="table" show-filter="true" >
                     <tr ng-repeat="recording in recordings">
                         <td data-title="'Recording'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
+                        <div class="roi-thumbnail" >
+                            <img ng-src="{{recording.uri}}" class="roi-img is-small"/>
+                            <a class="roi-btn-br" ng-href="{{getRecordingVisualizerUrl(recording.recording_id)}}">
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    tooltip="View in Visualizer"
+                                    class="fa fa-cubes">
+                                </i>
+                            </a>
+                        </div>
                             {{ recording.recording_id }}
                         </td>
                         <td data-title="'Total'" data-sortable="'count'" class="is-v-middle">
@@ -64,7 +87,7 @@
                         </td>
                         <td class="is-v-middle">
                             <button class="btn btn-default"
-                                ng-click="selectItem(cnn.job_id) | trackEvent:'Analysis-CNN-List':' show cnn details'"
+                                ng-click="console.log('clicked')"
                             >
                                     Show Details
                             </button>
@@ -95,7 +118,7 @@
                         </td>
                         <td class="is-v-middle">
                             <button class="btn btn-default"
-                                ng-click="selectItem(cnn.job_id) | trackEvent:'Analysis-CNN-List':' show cnn details'"
+                            ng-click="switchView('species', result.species_id)"
                             >
                                     Show Details
                             </button>
