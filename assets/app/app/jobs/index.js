@@ -86,7 +86,7 @@ angular.module('a2.jobs', [
 
 
     JobsData.getJobTypes().success(function(data) {
-        var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528'];
+        var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528', '#ffff00'];
         
         var job_types = data.filter(function(type) {
             return type.enabled;
