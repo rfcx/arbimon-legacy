@@ -40,7 +40,6 @@ angular.module('a2.analysis.cnn', [
     */
     a2CNN.list().then(function(data) {
         $scope.cnnsData = data;
-        console.log("TCL: cnnsData", $scope.cnnsData)
     });
 
     $scope.createNewCNN = function () {
@@ -79,7 +78,6 @@ angular.module('a2.analysis.cnn', [
         }
     }
     $scope.setDetailedView = function(detailedView){
-        console.log('setting detailed view 72');
         $scope.detailedView = detailedView;
         $state.transitionTo($state.current.name, {
             patternMatchingId:$scope.selectedPatternMatchingId,
@@ -154,7 +152,6 @@ angular.module('a2.analysis.cnn', [
 
     a2CNN.getDetailsFor($scope.cnnId).then(function(data) {
         $scope.job_details = data;
-        console.log("TCL: data findOne", data)
     });
 
     a2CNN.listResults($scope.cnnId).then(function(data) {
@@ -166,7 +163,6 @@ angular.module('a2.analysis.cnn', [
             return el;
         });
         */
-        console.log("TCL: data cnnId", data)
     });
 
     var bySpecies = function(dataIn) {
@@ -182,7 +178,6 @@ angular.module('a2.analysis.cnn', [
                 dataOut[s].count++;
             }
         });
-        console.log(dataOut);
         return dataOut;
     }
 
@@ -206,15 +201,68 @@ angular.module('a2.analysis.cnn', [
                 dataOut[r].total++;
             }
         });
-        console.log(dataOut);
         return dataOut;
     }
 
-    $scope.switchView = function(viewType) {
-    console.log("TCL: $scope.switchView -> viewType", viewType)
+    var bySpeciesHist = function (dataIn, species_id){
+        speciesTimes = [];
+        count = 0;
+        dataIn.forEach(function(element) {
+            if (species_id == 'all' | element.species_id == species_id) {
+                if (species_id == 'all') {
+                    speciesName = 'All';
+                } else {
+                    speciesName = element.scientific_name;
+                }
+                var d = new Date(element.datetime);
+                var minutes = d.getHours()*60 + d.getMinutes();
+                speciesTimes.push(new Date(3000, 0, 1, d.getHours(), d.getMinutes()));
+                count++;
+            }
+        });
+        return {times: speciesTimes,
+                count: count,
+                name: speciesName};
+    };
+    var plotShown = false;
+    $scope.showHist = function(species_id){
+        $scope.speciesInfo = bySpeciesHist($scope.results, species_id);
+        var trace = {
+            x: $scope.speciesInfo.times,
+            type: 'histogram',
+            //xbins: {size: new Date(3000, 0, 2, 2).getTime() - new Date(3000, 0, 2, 0).getTime()}
+            //magic numbers for full day/2 hour bins
+            xbins: {start: 32503698000000, end: 32503791600000, size: 7200000}
+        };
+        var layout = {
+            title: $scope.speciesInfo.name + ' by time of day.',
+            xaxis: {
+                tickformat: '%H:%M', // For more time formatting types, see: https://github.com/d3/d3-time-format/blob/master/README.md
+                range: [
+                    new Date(3000, 0, 1).getTime(),
+                    new Date(3000, 0, 2).getTime()]
+            }
+        };
+        var data = [trace];
+        console.log("TCL: $scope.showHist -> data", data)
+        
+        if (!plotShown){
+            Plotly.newPlot('speciesHist', data, layout);
+            plotShown = true;
+        } else {
+            Plotly.newPlot('speciesHist', data, layout);
+        }
+    };
+
+    $scope.getRecordingVisualizerUrl = function(recording_id) {
+        return "/project/"+Project.getUrl()+"/#/visualizer/rec/"+recording_id;
+    }
+
+    $scope.switchView = function(viewType, specie) {
         if (viewType=="species") {
             $scope.species = bySpecies($scope.results);
             $scope.viewType = "species";
+            $scope.showHist(specie ? specie : "all");
         } else if (viewType=="recordings") {
             $scope.recordings = byRecordings($scope.results);
             $scope.viewType = "recordings";
