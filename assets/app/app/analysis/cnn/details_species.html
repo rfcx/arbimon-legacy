@@ -64,6 +64,7 @@
             </table>
         </div>
         <div class="panel-body" ng-show="viewType=='recordings'">
+                {{ counts.recordings }}
                 <table ng-table="tableParams" class="table" show-filter="true" >
                     <tr ng-repeat="recording in recordings">
                         <td data-title="'Recording'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
