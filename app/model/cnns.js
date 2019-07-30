@@ -236,31 +236,31 @@ var CNN = {
         }, dbpool.query(queryStr, data))
     },
     JOB_SCHEMA : joi.object().keys({
-        project    : joi.number().integer(),
-        user       : joi.number().integer(),
+        project_id    : joi.number().integer(),
+        user_id       : joi.number().integer(),
         name       : joi.string(),
-        playlist   : joi.number().integer(),
-        cnn   : joi.number().integer(),
+        playlist_id   : joi.number().integer(),
+        cnn_id   : joi.number().integer(),
         params     : joi.object().keys({
         }),
     }),
     requestNewCNNJob: function(data){
         console.log("TCL: data", data)
-        return {data: data};
-/*
+        //return {data: data};
+
         return q.ninvoke(joi, 'validate', data, CNN.JOB_SCHEMA).then(() => lambda.invoke({
             FunctionName: config('lambdas').new_cnn_job_test1,
             InvocationType: 'Event',
             Payload: JSON.stringify({
-                project_id: data.project,
-                user_id: data.user,
-                playlist_id: data.playlist,
-                cnn_id: data.cnn,
+                project_id: data.project_id,
+                user_id: data.user_id,
+                playlist_id: data.playlist_id,
+                cnn_id: data.cnn_id,
                 name: data.name,
                 params: {}
             }),
         }).promise());
-*/
+
     }
 };
 
