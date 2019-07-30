@@ -233,8 +233,6 @@ angular.module('a2.analysis.cnn', [
     var plotShown = false;
     $scope.showHist = function(species_id){
         $scope.speciesInfo = bySpeciesHist($scope.results, species_id);
-        console.log("TCL: $scope.showHist -> $scope.speciesInfo", $scope.speciesInfo)
-        // TODO: fix the counts... something is off
         var trace = {
             x: $scope.speciesInfo.times,
             type: 'histogram',
