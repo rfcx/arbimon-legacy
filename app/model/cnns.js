@@ -166,6 +166,12 @@ var CNN = {
             return _.then(fn);
         }, dbpool.query(queryStr, data))
     },
+    // copied from recordings.js in express model
+    // if that changes this should change as well
+    __compute_thumbnail_path : function(recording, callback){
+        recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
+        if (callback){callback()};
+    },
     listResults: function (job_id, options) {
         
         var constraints = [],
@@ -181,7 +187,9 @@ var CNN = {
             "CRP.`present`",
             "CRP.`max_score`",
             "SP.`scientific_name`",
-            "ST.`songtype`"
+            "ST.`songtype`",
+            "R.`datetime`",
+            "R.`uri`"
         ];
         var tables = ["cnn_results_presence CRP"];
 
@@ -190,7 +198,8 @@ var CNN = {
 
         tables.push("JOIN species SP ON SP.`species_id` = CRP.`species_id`");
         tables.push("JOIN songtypes ST ON ST.`songtype_id` = CRP.`songtype_id`");
-        
+
+        tables.push("JOIN recordings R ON R.`recording_id` = CRP.`recording_id`");
         var groupby = [];
         if (options instanceof Function) {
             callback = options;
@@ -202,6 +211,7 @@ var CNN = {
 
         postprocess.push((rows) => {
             rows.forEach(row => {
+                this.__compute_thumbnail_path(row);
                 try {
                     row.parameters = JSON.parse(row.parameters);
                 } catch (e) {
