@@ -21,17 +21,7 @@
             <table ng-table="tableParams" class="table" show-filter="true" >
                 <tr ng-repeat="cnn in cnnsData">
                     <td data-title="'Name'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
-                        <div class="roi-thumbnail" >
-                            <img ng-src="{{cnn.template.uri}}" class="roi-img is-small"/>
-                            <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(cnn.template)}}">
-                                <i tooltip-placement="left"
-                                    tooltip-append-to-body="true"
-                                    tooltip="View in Visualizer"
-                                    class="fa fa-cubes">
-                                </i>
-                            </a>
-                        </div>
-                        {{cnn.name}} ({{ cnn.job_id }})
+                        {{cnn.name}} (job_id: {{ cnn.job_id }})
                     </td>
                     <td data-title="'Timestamp'" data-sortable="'timestamp'" class="is-v-middle">
                         {{ cnn.timestamp | moment : 'lll' }}
