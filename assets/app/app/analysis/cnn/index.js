@@ -252,8 +252,6 @@ angular.module('a2.analysis.cnn', [
             }
         };
         var data = [trace];
-        console.log("TCL: $scope.showHist -> data", data);
-        console.log("TCL: $scope.showHist -> layout", layout);
         if (!plotShown){
             Plotly.newPlot('speciesHist', data, layout);
             plotShown = true;
@@ -263,8 +261,7 @@ angular.module('a2.analysis.cnn', [
     };
 
     $scope.getRecordingVisualizerUrl = function(recording_id) {
-        var url = "/project/"+Project.getUrl()+"/visualizer/rec/"+recording_id;
-        return url;
+        return "/project/"+Project.getUrl()+"/visualizer/rec/"+recording_id;
     };
 
     $scope.switchView = function(viewType, specie) {
@@ -274,7 +271,6 @@ angular.module('a2.analysis.cnn', [
             $scope.showHist(specie ? specie : "all");
         } else if (viewType=="recordings") {
             $scope.recordings = byRecordings($scope.results);
-            console.log("TCL: $scope.switchView -> $scope.recordings", $scope.recordings)
             $scope.counts.recordings = Object.keys($scope.recordings).length;
             $scope.viewType = "recordings";
         } else {
