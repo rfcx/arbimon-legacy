@@ -69,7 +69,7 @@
                     <tr ng-repeat="recording in recordings">
                         <td data-title="'Recording'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
                         <div class="roi-thumbnail" >
-                            <img ng-src="{{recording.uri}}" class="roi-img is-small"/>
+                            <img ng-src="{{recording.thumbnail}}" class="roi-img is-small"/>
                             <a class="roi-btn-br" ng-href="{{getRecordingVisualizerUrl(recording.recording_id)}}">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
@@ -87,11 +87,9 @@
                             <span ng-repeat="specie in recording.species" ng-show="specie.count > 0">{{ specie.scientific_name }}({{ specie.count }}) </span>
                         </td>
                         <td class="is-v-middle">
-                            <button class="btn btn-default"
-                                ng-click="console.log('clicked')"
-                            >
-                                    Show Details
-                            </button>
+                            <a class="btn btn-default" ng-href="{{getRecordingVisualizerUrl(recording.recording_id)}}">
+                                Show In Visualizer
+                            </a>
                         </td>
                     </tr>
                 </table>
