@@ -43,8 +43,9 @@ angular.module('a2.analysis.cnn', [
     });
 
     $scope.createNewCNN = function () {
+        // TODO: add in real cnn permissions
         if(!a2UserPermit.can('manage pattern matchings')) {
-            notify.log('You do not have permission to create pattern matchings');
+            notify.log('You do not have permission to create cnn jobs.');
             return;
         }
 
@@ -190,6 +191,7 @@ angular.module('a2.analysis.cnn', [
             var s = element.species_id;
             if (!(r in dataOut)) {
                 dataOut[r] = {recording_id: r,
+                              thumbnail: element.thumbnail,
                               species: {},
                               total: 0}
             }
@@ -243,15 +245,15 @@ angular.module('a2.analysis.cnn', [
         var layout = {
             title: $scope.speciesInfo.name + ' by time of day.',
             xaxis: {
-                tickformat: '%H:%M', // For more time formatting types, see: https://github.com/d3/d3-time-format/blob/master/README.md
+                tickformat: '%X', // For more time formatting types, see: https://github.com/d3/d3-time-format/blob/master/README.md
                 range: [
                     new Date(3000, 0, 1).getTime(),
                     new Date(3000, 0, 2).getTime()]
             }
         };
         var data = [trace];
-        console.log("TCL: $scope.showHist -> data", data)
-        
+        console.log("TCL: $scope.showHist -> data", data);
+        console.log("TCL: $scope.showHist -> layout", layout);
         if (!plotShown){
             Plotly.newPlot('speciesHist', data, layout);
             plotShown = true;
@@ -261,8 +263,9 @@ angular.module('a2.analysis.cnn', [
     };
 
     $scope.getRecordingVisualizerUrl = function(recording_id) {
-        return "/project/"+Project.getUrl()+"/#/visualizer/rec/"+recording_id;
-    }
+        var url = "/project/"+Project.getUrl()+"/visualizer/rec/"+recording_id;
+        return url;
+    };
 
     $scope.switchView = function(viewType, specie) {
         if (viewType=="species") {
@@ -271,6 +274,7 @@ angular.module('a2.analysis.cnn', [
             $scope.showHist(specie ? specie : "all");
         } else if (viewType=="recordings") {
             $scope.recordings = byRecordings($scope.results);
+            console.log("TCL: $scope.switchView -> $scope.recordings", $scope.recordings)
             $scope.counts.recordings = Object.keys($scope.recordings).length;
             $scope.viewType = "recordings";
         } else {
