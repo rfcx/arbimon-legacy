@@ -247,9 +247,15 @@ var CNN = {
     requestNewCNNJob: function(data){
         console.log("TCL: data", data)
         //return {data: data};
-
+        var f_name = config('lambdas').new_cnn_job_test1;
+        if (data.lambda) {
+            f_name = config('lambdas')[data.lambda];
+            delete data.lambda;
+        }
+        console.log("Lambda chosen************:   " + f_name);
+        
         return q.ninvoke(joi, 'validate', data, CNN.JOB_SCHEMA).then(() => lambda.invoke({
-            FunctionName: config('lambdas').new_cnn_job_test1,
+            FunctionName: f_name,
             InvocationType: 'Event',
             Payload: JSON.stringify({
                 project_id: data.project_id,
@@ -260,6 +266,7 @@ var CNN = {
                 params: {}
             }),
         }).promise());
+        
 
     }
 };

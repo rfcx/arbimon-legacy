@@ -69,6 +69,7 @@ router.post('/new/', function(req, res, next) {
             name       : req.body.name,
             cnn_id        : req.body.cnn_id,
             playlist_id   : req.body.playlist_id,
+            lambda        : req.body.lambda,
             params     : req.body.params
         });
     }).then(function(result){

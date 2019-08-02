@@ -14,6 +14,8 @@ angular.module('a2.analysis.cnn', [
     });
 })
 .controller('CNNCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
+    // this debug line for sanity between servers... Will remove TODO
+    console.log("CNN Version 0.2");
     $scope.selectedCNNId = $stateParams.cnnId;
 
     var initTable = function(p, c, s, f, t) {
@@ -154,14 +156,17 @@ angular.module('a2.analysis.cnn', [
                 models: false,
             };
 
+            var list = this.list = {};
+            list.lambdas = [{'name': 'call_id_testing:1 - create fake data', 'key': "new_cnn_job_test1"},
+                            {'name': 'function_id_driver - test real function', 'key': "new_cnn_job_v1"}];
+
             this.data = {
                 name: null,
                 playlist: null,
                 model: null,
+                lambda: list.lambdas[0],
                 params: { },
             };
-
-            var list = this.list = {};
 
             this.loading.models = true;
             a2CNN.listModels().then((function(models){
@@ -175,17 +180,26 @@ angular.module('a2.analysis.cnn', [
                 this.loading.playlists = false;
                 list.playlists = playlists;
             }).bind(this));
+
+
         },
         ok: function () {
+            console.log("create stuff...");
             console.log(this.data);
-            return a2CNN.create({
-                playlist_id: this.data.playlist.id,
-                cnn_id: this.data.model.id,
-                name: this.data.name,
-                params: this.data.params
-            }).then(function(cnn) {
-                $modalInstance.close({ok:true, cnn: cnn});
-            }).catch(notify.serverError);
+            try {
+                return a2CNN.create({
+                    playlist_id: this.data.playlist.id,
+                    cnn_id: this.data.model.id,
+                    name: this.data.name,
+                    lambda: this.data.lambda.key,
+                    params: this.data.params
+                }).then(function(cnn) {
+                    $modalInstance.close({ok:true, cnn: cnn});
+                }).catch(notify.serverError);
+            } catch(error) {
+                console.log(error);
+            }
+            
         },
         cancel: function (url) {
              $modalInstance.close({ cancel: true, url: url });
