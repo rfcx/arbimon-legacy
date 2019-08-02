@@ -16,6 +16,41 @@ angular.module('a2.analysis.cnn', [
 .controller('CNNCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
     $scope.selectedCNNId = $stateParams.cnnId;
 
+    var initTable = function(p, c, s, f, t) {
+        var sortBy = {};
+        var acsDesc = 'desc';
+        if (s[0]=='+') {
+            acsDesc = 'asc';
+        }
+        sortBy[s.substring(1)] = acsDesc;
+        var tableConfig = {
+            page: p,
+            count: c,
+            sorting: sortBy,
+            filter:f
+        };
+
+        $scope.tableParams = new ngTableParams(tableConfig, {
+            total: t,
+            getData: function ($defer, params) {
+                $scope.infopanedata = "";
+                var filteredData = params.filter() ? $filter('filter')($scope.cnnOriginal , params.filter()) : $scope.cnnOriginal;
+
+                var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.cnnOriginal;
+
+                params.total(orderedData.length);
+
+                $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+
+                if (orderedData.length < 1) {
+                    $scope.infopanedata = "No cnn searches found.";
+                }
+
+                $scope.cnnsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+            }
+        });
+    };
+
     /*
     //for testing...
     $scope.cnnsData = [{'id': 1,
@@ -38,10 +73,35 @@ angular.module('a2.analysis.cnn', [
                         'user': 'Joe Fourier'}
                     ]
     */
-    a2CNN.list().then(function(data) {
-        $scope.cnnsData = data;
-    });
 
+    $scope.loadCNNs = function() {
+        $scope.loading = true;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+
+        return a2CNN.list().then(function(data) {
+            $scope.cnnOriginal = data;
+            $scope.cnnsData = data;
+            $scope.infoInfo = "";
+            $scope.showInfo = false;
+            $scope.loading = false;
+            $scope.infopanedata = "";
+
+            if(data.length > 0) {
+                if(!$scope.tableParams) {
+                    initTable(1,10,"+cname",{},data.length);
+                } else {
+                    $scope.tableParams.reload();
+                }
+            } else {
+                $scope.infopanedata = "No cnns found.";
+            }
+        });
+    };
+
+    if (!$scope.selectedCNNId) {
+        $scope.loadCNNs();
+    }
     $scope.createNewCNN = function () {
         // TODO: add in real cnn permissions
         if(!a2UserPermit.can('manage pattern matchings')) {
