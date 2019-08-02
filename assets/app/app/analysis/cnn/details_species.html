@@ -47,7 +47,7 @@
             </div>
             <table ng-table="tableParams" class="table" show-filter="true" >
                 <tr ng-repeat="specie in species">
-                    <td data-title="'Species'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
+                    <td data-title="'Species'" class="hidelongtext widthtd" data-sortable="'scientific_name'" filter="{ 'scientific_name': 'text' }">
                         {{ specie.scientific_name }}
                     </td>
                     <td data-title="'Count'" data-sortable="'count'" class="is-v-middle">

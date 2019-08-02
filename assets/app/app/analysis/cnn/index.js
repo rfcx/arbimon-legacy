@@ -53,29 +53,6 @@ angular.module('a2.analysis.cnn', [
         });
     };
 
-    /*
-    //for testing...
-    $scope.cnnsData = [{'id': 1,
-                        'name': 'Cool CNN Run 1',
-                        'timestamp': '2019-04-09T21:08:36.000Z',
-                        'model': 'Cool Model 1',
-                        'playlist_name': 'Cool Playlist 1',
-                        'user': 'Joe Fourier'},
-                        {'id': 2,
-                        'name': 'Cool CNN Run 2',
-                        'timestamp': '2019-05-09T21:08:36.000Z',
-                        'model': 'Cool Model 1',
-                        'playlist_name': 'Cool Playlist 1',
-                        'user': 'Joe Fourier'},
-                        {'id': 3,
-                        'name': 'Cool CNN Run 3',
-                        'timestamp': '2019-06-09T21:08:36.000Z',
-                        'model': 'Cool Model 1',
-                        'playlist_name': 'Cool Playlist 1',
-                        'user': 'Joe Fourier'}
-                    ]
-    */
-
     $scope.loadCNNs = function() {
         $scope.loading = true;
         $scope.infoInfo = "Loading...";
@@ -170,7 +147,6 @@ angular.module('a2.analysis.cnn', [
 
             this.loading.models = true;
             a2CNN.listModels().then((function(models){
-                console.log(models);
                 this.loading.models = false;
                 list.models = models;
             }).bind(this));
@@ -184,8 +160,6 @@ angular.module('a2.analysis.cnn', [
 
         },
         ok: function () {
-            console.log("create stuff...");
-            console.log(this.data);
             try {
                 return a2CNN.create({
                     playlist_id: this.data.playlist.id,
@@ -197,7 +171,7 @@ angular.module('a2.analysis.cnn', [
                     $modalInstance.close({ok:true, cnn: cnn});
                 }).catch(notify.serverError);
             } catch(error) {
-                console.log(error);
+                console.log("a2CNN.create error: " + error);
             }
             
         },
@@ -223,7 +197,42 @@ angular.module('a2.analysis.cnn', [
         templateUrl: '/app/analysis/cnn/details_species.html'
     };
 })
-.controller('CNNDetailsCtrl' , function($scope, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
+.controller('CNNDetailsCtrl' , function($scope, ngTableParams, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
+    var initTable = function(p, c, s, f, t) {
+        var sortBy = {};
+        var acsDesc = 'desc';
+        if (s[0]=='+') {
+            acsDesc = 'asc';
+        }
+        sortBy[s.substring(1)] = acsDesc;
+        var tableConfig = {
+            page: p,
+            count: c,
+            sorting: sortBy,
+            filter:f
+        };
+
+        $scope.tableParams = new ngTableParams(tableConfig, {
+            total: t,
+            getData: function ($defer, params) {
+                $scope.infopanedata = "";
+                var filteredData = params.filter() ? $filter('filter')($scope.cnnOriginal , params.filter()) : $scope.cnnOriginal;
+                var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.cnnOriginal;
+
+                params.total(orderedData.length);
+                $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+                if (orderedData.length < 1) {
+                    $scope.infopanedata = "No cnn searches found.";
+                }
+
+                $scope.cnnsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+                if ($scope.viewType == "species"){
+                    $scope.species = $scope.cnnsData;
+                }
+            }
+        });
+    };
+
     $scope.viewType = "all";
     $scope.counts = {recordings: null};
 
@@ -283,8 +292,6 @@ angular.module('a2.analysis.cnn', [
     }
 
     var bySpeciesHist = function (dataIn, species_id){
-        console.log("TCL: bySpeciesHist -> dataIn", dataIn)
-        console.log("TCL: bySpeciesHist -> species_id", species_id)
         speciesTimes = [];
         count = 0;
         dataIn.forEach(function(element) {
@@ -339,10 +346,33 @@ angular.module('a2.analysis.cnn', [
     };
 
     $scope.switchView = function(viewType, specie) {
+        $scope.loading = true;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+        $scope.infoInfo = "";
+        $scope.showInfo = false;
+        $scope.loading = false;
+        $scope.infopanedata = "";
+
         if (viewType=="species") {
             $scope.species = bySpecies($scope.results);
             $scope.viewType = "species";
             $scope.showHist(specie ? specie : "all");
+
+                    
+                    if(Object.keys($scope.species).length > 0) {
+                        $scope.cnnOriginal = Object.values($scope.species);
+                        $scope.cnnsData = $scope.cnnOriginal;
+                        if(!$scope.tableParams) {
+                            initTable(1,10,"+cname",{},$scope.cnnOriginal.length);
+                        } else {
+                            $scope.tableParams.reload();
+                        }
+                        $scope.species = $scope.cnnsData;
+                    } else {
+                        $scope.infopanedata = "No cnn species found.";
+                    }
+
         } else if (viewType=="recordings") {
             $scope.recordings = byRecordings($scope.results);
             $scope.counts.recordings = Object.keys($scope.recordings).length;
