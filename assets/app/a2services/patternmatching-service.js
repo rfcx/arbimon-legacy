@@ -29,6 +29,13 @@ angular.module('a2.srv.patternmatching', [
 
             return a2APIService.get('/pattern-matchings/' + patternMatchingId + '/rois/' + (offset||0) + '_' + (limit||0) + (query ? '?'+query : '')).catch(notify.serverError);
         },
+        getSiteIndexFor: function(patternMatchingId, options) {
+            var query = Object.keys(options || {}).map(function(option){
+                return option + '=' + encodeURIComponent(options[option]);
+            }).join('&');
+
+            return a2APIService.get('/pattern-matchings/' + patternMatchingId + '/site-index' + (query ? '?'+query : '')).catch(notify.serverError);
+        },
         getExportUrl: function(params){
             return '/api/project/' + Project.getUrl() + '/pattern-matchings/' + params.patternMatching + '/rois.csv';
         },
