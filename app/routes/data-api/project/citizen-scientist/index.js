@@ -8,7 +8,7 @@ var router = express.Router();
 // global project.citizen_scientist_enabled check
 router.use(function(req, res, next) {
     if(!req.project.citizen_scientist_enabled) {
-        return res.status(401).json({ error: "Citizen scientist features are not enabled for your." });
+        return res.status(401).json({ error: "Citizen scientist features are not enabled for your project." });
     }
 
     next();
