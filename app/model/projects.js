@@ -777,7 +777,7 @@ var Projects = {
                 "FROM ( \n"+
                 "    (SELECT upload_id as id \n"+
                 "    FROM uploads_processing  \n"+
-                "    WHERE project_id = %1$s AND state != 'uploaded') \n"+
+                "    WHERE project_id = %1$s AND state != 'uploaded' AND state != 'error') \n"+
                 "    UNION \n"+
                 "    (SELECT recording_id as id \n"+
                 "    FROM recordings AS r \n"+
