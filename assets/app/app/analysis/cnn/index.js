@@ -15,7 +15,7 @@ angular.module('a2.analysis.cnn', [
 })
 .controller('CNNCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
     // this debug line for sanity between servers... Will remove TODO
-    console.log("CNN Version 0.2");
+    console.log("CNN Version 0.3");
     $scope.selectedCNNId = $stateParams.cnnId;
 
     var initTable = function(p, c, s, f, t) {
