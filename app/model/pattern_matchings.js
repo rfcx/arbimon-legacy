@@ -219,6 +219,7 @@ var PatternMatchings = {
         expertCSValidations: joi.boolean(),
         hideNormalValidations: joi.boolean(),
         countCSValidations: joi.boolean(),
+        perSiteCount: joi.boolean(),
         whereConflicted: joi.boolean(),
         whereExpert: joi.boolean(),
         whereConsensus: joi.boolean(),
@@ -258,6 +259,7 @@ var PatternMatchings = {
             builder.addProjection(
                 'SUBSTRING_INDEX(R.`uri`, "/", -1) as `recording`',
                 'S.`name` as `site`',
+                'S.`site_id`',
                 'EXTRACT(year FROM R.`datetime`) as `year`',
                 'EXTRACT(month FROM R.`datetime`) as `month`',
                 'EXTRACT(day FROM R.`datetime`) as `day`',
@@ -349,6 +351,15 @@ var PatternMatchings = {
                 }
             }
 
+            if(parameters.perSiteCount){
+                builder.select = [
+                    'S.site_id',
+                    'S.`name` as `site`',
+                    'COUNT(*) as `count`'
+                ]
+                builder.setGroupBy('S.site_id')
+            }
+
             if(parameters.whereConflicted){
                 builder.addConstraint("(PMR.cs_val_present > 0 AND PMR.cs_val_not_present > 0)", []);
             }
@@ -368,7 +379,6 @@ var PatternMatchings = {
             if(parameters.whereUnvalidated){
                 builder.addConstraint("PMR.validated IS NULL", []);
             }
-
 
             if(parameters.whereExpert){
                 builder.addConstraint("PMR.expert_validated IS NOT NULL", []);
@@ -401,6 +411,7 @@ var PatternMatchings = {
     getRoisForId(options){
         return this.buildRoisQuery({
             patternMatching: options.patternMatchingId,
+            perSiteCount: options.perSiteCount,
             csValidationsFor: options.csValidationsFor,
             expertCSValidations: options.expertCSValidations,
             countCSValidations: options.countCSValidations,
