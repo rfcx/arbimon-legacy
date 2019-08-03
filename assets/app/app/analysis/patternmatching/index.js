@@ -180,6 +180,7 @@ angular.module('a2.analysis.patternmatching', [
         this.loading = {details: false, rois:false};
         this.validation = this.lists.validation[2];
         this.thumbnailClass = this.lists.thumbnails[0].value;
+        this.search = this.lists.search[0];
         this.projecturl = Project.getUrl();
         this.fetchDetails().then((function(){
             this.loadPage(this.selected.page);
@@ -191,6 +192,12 @@ angular.module('a2.analysis.patternmatching', [
         thumbnails: [
             { class:'fa fa-th-large', value:''},
             { class:'fa fa-th', value:'is-small'},
+        ],
+        search: [
+            {value:'all', text:'All'},
+            {value:'present', text:'Present'},
+            {value:'not_present', text:'Not Present'},
+            {value:'unvalidated', text:'Unvalidated'},
         ],
         selection: [
             {value:'all', text:'All'},
@@ -220,6 +227,11 @@ angular.module('a2.analysis.patternmatching', [
         }).bind(this));
     },
 
+    onSearchChanged: function(){
+        this.selected.page = 0;
+        this.loadPage(0);
+    },
+
     setupExportUrl: function(){
         this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
             patternMatching: this.patternMatching.id,
@@ -241,7 +253,12 @@ angular.module('a2.analysis.patternmatching', [
 
     loadPage: function(pageNumber){
         this.loading.rois = true;
-        return a2PatternMatching.getRoisFor(this.id, this.limit, pageNumber * this.limit).then((function(rois){
+        return a2PatternMatching.getRoisFor(
+            this.id,
+            this.limit,
+            pageNumber * this.limit,
+            { search: this.search && this.search.value }
+        ).then((function(rois){
             this.loading.rois = false;
             this.rois = rois.reduce(function(_, roi){
                 var sitename = roi.site;
@@ -319,7 +336,6 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     select: function(option){
-        console.log('this.rois', this.rois);
         var selectFn = null;
         if(option === "all"){
             selectFn = function(roi){roi.selected = true;};
