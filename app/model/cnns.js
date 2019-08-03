@@ -78,6 +78,12 @@ var CNN = {
             data.push(options.project);
         }
 
+        if(options.playlistCount){
+            projection.push("(\n" +
+            "   SELECT COUNT(*) FROM playlist_recordings PLR WHERE CNN.playlist_id = PLR.playlist_id\n" +
+            ") as playlist_count");
+        }
+
         postprocess.push((rows) => {
             rows.forEach(row => {
                 if (options.showUser) {
@@ -101,6 +107,7 @@ var CNN = {
 
         var queryStr =
             "SELECT " + select.join(",\n    ") + "\n" +
+            (projection.length ? ","+projection.join(",")+"\n" : "") +
             "FROM " + tables.join("\n") + "\n" +
             (constraints.length ? ("WHERE " + constraints.join(" \n  AND ")) : "") +
             (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "")

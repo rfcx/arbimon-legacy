@@ -16,6 +16,7 @@ router.get('/', function (req, res, next) {
         showPlaylist: true,
         showModelName: true,
         showUser: true,
+        playlistCount: true,
         resolveModelUri: true
     }).then(function (count) {
         res.json(count);
