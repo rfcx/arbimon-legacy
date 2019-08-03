@@ -116,7 +116,26 @@
                                     {{$item | a2PageNumberToTitle}}
                                 </ui-select-choices>
                             </ui-select>
+                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
+                                ng-change="controller.setSiteBookmark($select.selected)"
+                            >
+                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
+                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
+                                </ui-select-choices>
+                            </ui-select>
                             <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
+                        </div>
+
+                        <div class="btn-group" ng-show="controller.total.pages <= 1">
+                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
+                                ng-change="controller.setSiteBookmark($select.selected)"
+                            >
+                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
+                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
+                                </ui-select-choices>
+                            </ui-select>
                         </div>
 
                         <div class="btn-group">
@@ -144,7 +163,7 @@
         <div class="panel-body" ng-show="controller.patternMatching">
             <div ng-show="loading-rois">Loading...</div>
             <div ng-repeat="site in controller.rois">
-                <div class="h3"><i class="fa fa-map-marker"></i> {{site.name}}</div>
+                <div class="h3" id="site-{{site.id}}"><i class="fa fa-map-marker"></i> {{site.name}}</div>
                     <div ng-repeat="roi in site.list"
                         class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                         ng-click="roi.selected = !roi.selected"

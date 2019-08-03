@@ -168,7 +168,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioPlayer, notify) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioPlayer, notify, $anchorScroll, $document) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -176,6 +176,7 @@ angular.module('a2.analysis.patternmatching', [
         this.offset = 0;
         this.limit = 100;
         this.selected = {roi_index:0, roi:null, page:0};
+        this.siteIndex = [];
         this.total = {rois:0, pages:0};
         this.loading = {details: false, rois:false};
         this.validation = this.lists.validation[2];
@@ -183,6 +184,7 @@ angular.module('a2.analysis.patternmatching', [
         this.search = this.lists.search[0];
         this.projecturl = Project.getUrl();
         this.fetchDetails().then((function(){
+            this.loadSiteIndex();
             this.loadPage(this.selected.page);
         }).bind(this));
         this.audio_player = new a2AudioPlayer($scope)
@@ -230,6 +232,7 @@ angular.module('a2.analysis.patternmatching', [
     onSearchChanged: function(){
         this.selected.page = 0;
         this.loadPage(0);
+        this.loadSiteIndex();
     },
 
     setupExportUrl: function(){
@@ -251,6 +254,27 @@ angular.module('a2.analysis.patternmatching', [
         this.select($item.value);
     },
 
+    loadSiteIndex: function(){
+        return a2PatternMatching.getSiteIndexFor(this.id, { search: this.search && this.search.value }).then((function(siteIndex){
+            this.siteIndex = siteIndex;
+        }).bind(this));
+    },
+
+    setSiteBookmark: function(site){
+        var bookmark = 'site-' + site.site_id;
+        var sitePage = (site.offset / this.limit) | 0;
+
+        console.log({
+            site:site,
+            bookmark:bookmark,
+            sitePage:sitePage,
+        })
+        this.setPage(sitePage).then(function(){
+            $anchorScroll.yOffset = $('.a2-page-header').height() + 60;
+            $anchorScroll(bookmark)
+        });
+    },
+
     loadPage: function(pageNumber){
         this.loading.rois = true;
         return a2PatternMatching.getRoisFor(
@@ -261,11 +285,12 @@ angular.module('a2.analysis.patternmatching', [
         ).then((function(rois){
             this.loading.rois = false;
             this.rois = rois.reduce(function(_, roi){
+                var site_id = roi.site_id;
                 var sitename = roi.site;
                 var recname = roi.recording;
 
                 if(!_.idx[sitename]){
-                    _.idx[sitename] = {list:[], idx:{}, name:sitename};
+                    _.idx[sitename] = {list:[], idx:{}, name:sitename, id:site_id};
                     _.list.push(_.idx[sitename]);
                 }
 
@@ -325,7 +350,7 @@ angular.module('a2.analysis.patternmatching', [
         if(this.total.rois <= 0){
             this.selected.page = 0;
             this.rois = [];
-            return this.rois;
+            return $q.resolve(this.rois);
         } else {
             page = Math.max(0, Math.min(page, (this.total.rois / this.limit) | 0));
             if(page != this.selected.page || force){
@@ -333,6 +358,8 @@ angular.module('a2.analysis.patternmatching', [
                 return this.loadPage(page);
             }
         }
+
+        return $q.resolve();
     },
 
     select: function(option){
