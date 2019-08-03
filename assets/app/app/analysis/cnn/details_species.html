@@ -8,29 +8,61 @@
     >
         <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
         <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader }">
-            <div class="row row-flex flex-align-middle">
+            <div class="row row-flex flex-align-top">
                 <div class="col-sm-4 flex-self-align-top">
-                    <button class="btn btn-default"
-                        ng-click="onGoBack({}) | trackEvent:'Analysis-CNN-List':' go back'">
-                        &lt;  Go Back
-                    </button>
-                    <button class="btn btn-default"
-                        ng-click="switchView('all')">
-                        All
-                    </button>
-                    <button class="btn btn-default"
-                        ng-click="switchView('species')">
-                        Species
-                    </button>
-                    <button class="btn btn-default"
-                        ng-click="switchView('recordings')">
-                        Recordings
-                    </button>
+                    <div class="row row-flex flex-align-top">
+                        <h3>
+                            {{ job_details.name }}
+                        </h3>
+                    </div>
+                    <div class="row row-flex flex-align-middle">
+                        <button class="btn btn-default"
+                            style="transition: 0.5s all;"
+                            onclick="this.blur();"
+                            ng-click="onGoBack({}) | trackEvent:'Analysis-CNN-List':' go back'">
+                            &lt;  Go Back
+                        </button>
+                        <button class="btn btn-default"
+                            style="transition: 0.5s all;"
+                            onclick="this.blur();"
+                            ng-class="viewType=='all' ? 'btn-lg' : 'btn-md'"
+                            ng-click="switchView('all')">
+                            All
+                        </button>
+                        <button class="btn btn-default"
+                            style="transition: 0.5s all;"
+                            onclick="this.blur();"
+                            ng-class="viewType=='species' ? 'btn-lg' : 'btn-md'"
+                            ng-click="switchView('species')">
+                            Species
+                        </button>
+                        <button class="btn btn-default"
+                            style="transition: 0.5s all;"
+                            onclick="this.blur();"
+                            ng-class="viewType=='recordings' ? 'btn-lg' : 'btn-md'"
+                            ng-click="switchView('recordings')">
+                            Recordings
+                        </button>
+                    </div>
                 </div>
-                <div class="col-sm-8 flex-self-align-top">{{ job_details }}</div>
+                <div class="col-sm-8 flex-self-align-top">
+                    <div class="row row-flex flex-align-top">
+                        <h3>
+                            CNN ID: {{ job_details.job_id }}
+                        </h3>
+                    </div>
+                    <div class="row row-flex flex-align-middle">
+                        <h4>
+                            Playlist ID: {{ job_details.playlist_id }} / Timestamp: {{ job_details.timestamp }}
+                            </br>
+                            Parameters: {{ job_details.parameters }}
+                        </h4>
+                    </div>
+                </div>
+                <!--{"job_id":11906,"name":"switchTest1-fake","cnn_id":1,"playlist_id":8406,"project_id":1,"timestamp":"2019-08-02T23:06:19.000Z","parameters":{}}-->
+
             </div>
         </div>
-        <div>{{ viewType }}</div>
         <div class="panel-body" ng-show="viewType=='species'">
             <div class="row row-flex flex-align-middle">
                 <div class="col-sm-2">
@@ -97,16 +129,30 @@
             <div class="panel-body" ng-show="viewType=='all'">
                 <table ng-table="tableParams" class="table" show-filter="true" >
                     <tr ng-repeat="result in mainResults">
-                        <td data-title="'ID'" class="hidelongtext widthtd" data-sortable="'cnn_presence_id'" filter="{ 'cnn_presence_id': 'text' }">
+                        <td data-title="'CNN Presence ID'" data-sortable="'cnn_presence_id'" filter="{ 'cnn_presence_id': 'text' }" class="hidelongtext widthtd">
                             {{ result.cnn_presence_id }}
                         </td>
-                        <td data-title="'Recording'" data-sortable="'recording_id'" class="is-v-middle">
-                                {{ result.recording_id }}
-                            </td>
-                        <td data-title="'Species'" data-sortable="'scientific_name'" class="is-v-middle">
-                            {{ result.scientific_name }}
+                        <td data-title="'Recording'" data-sortable="'recording_id'" filter="{ 'recording_id': 'text' }" class="hidelongtext widthtd is-v-middle">
+                        <div class="roi-thumbnail" >
+                            <img ng-src="{{result.thumbnail}}" class="roi-img is-small"/>
+                            <a class="roi-btn-br" ng-href="{{getRecordingVisualizerUrl(result.recording_id)}}">
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    tooltip="View in Visualizer"
+                                    class="fa fa-cubes">
+                                </i>
+                            </a>
+                        </div>
+                            {{ result.recording_id }}
                         </td>
-                        <td data-title="'Song Type'" data-sortable="'songtype'" class="is-v-middle">
+                        <td data-title="'Species'" data-sortable="'scientific_name'" class="is-v-middle" filter="{ 'scientific_name': 'text' }">
+                            <button class="btn btn-default"
+                            ng-click="switchView('species', result.species_id)"
+                            >
+                                {{ result.scientific_name }}
+                            </button>
+                        </td>
+                        <td data-title="'Song Type'" data-sortable="'songtype'" class="is-v-middle" filter="{ 'songtype': 'text' }">
                             {{ result.songtype }}
                         </td>
                         <td data-title="'Present'" data-sortable="'present'" class="is-v-middle">
@@ -116,11 +162,11 @@
                             {{ result.max_score }}
                         </td>
                         <td class="is-v-middle">
-                            <button class="btn btn-default"
-                            ng-click="switchView('species', result.species_id)"
-                            >
-                                    Show Details
-                            </button>
+                            <td class="is-v-middle">
+                                <a class="btn btn-default" ng-href="{{getRecordingVisualizerUrl(recording.recording_id)}}">
+                                    Show In Visualizer
+                                </a>
+                            </td>
                         </td>
                     </tr>
                 </table>
