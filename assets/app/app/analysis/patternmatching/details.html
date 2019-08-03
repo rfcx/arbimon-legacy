@@ -62,6 +62,21 @@
                     <div class="pull-right">
                     <div class="toolbar pull-right">
                         <div class="btn-group">
+                            <button class="btn btn-default" ><i class="fa fa-search"></i></button>
+                            <ui-select ng-model="controller.search" theme="bootstrap" style="display:inline-block; width:9em;"
+                                on-select="controller.onSearchChanged()"
+                            >
+                                <ui-select-match>
+                                    <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
+                                </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.lists.search | filter:$select.search">
+                                    <i ng-class="$item.class"></i> {{$item.text}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    <div class="toolbar pull-right">
+                        <div class="btn-group">
                             <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="controller.onSelect($select.selected)"
                             >

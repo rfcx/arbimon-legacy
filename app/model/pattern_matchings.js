@@ -222,6 +222,9 @@ var PatternMatchings = {
         whereConflicted: joi.boolean(),
         whereExpert: joi.boolean(),
         whereConsensus: joi.boolean(),
+        wherePresent: joi.boolean(),
+        whereNotPresent: joi.boolean(),
+        whereUnvalidated: joi.boolean(),
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
@@ -354,6 +357,19 @@ var PatternMatchings = {
                 builder.addConstraint("PMR.consensus_validated IS NOT NULL", []);
             }
 
+            if(parameters.wherePresent){
+                builder.addConstraint("PMR.validated = 1", []);
+            }
+
+            if(parameters.whereNotPresent){
+                builder.addConstraint("PMR.validated = 0", []);
+            }
+
+            if(parameters.whereUnvalidated){
+                builder.addConstraint("PMR.validated IS NULL", []);
+            }
+
+
             if(parameters.whereExpert){
                 builder.addConstraint("PMR.expert_validated IS NOT NULL", []);
             }
@@ -391,6 +407,9 @@ var PatternMatchings = {
             whereConflicted: options.whereConflicted,
             whereConsensus: options.whereConsensus,
             whereExpert: options.whereExpert,
+            wherePresent: options.wherePresent,
+            whereNotPresent: options.whereNotPresent,
+            whereUnvalidated: options.whereUnvalidated,
             limit: options.limit,
             offset: options.offset,
             show: { patternMatchingId: true, datetime: true, names: options.showNames },
