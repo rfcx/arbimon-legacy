@@ -11,6 +11,7 @@
         </h3>
 
         <loader ng-show="loading"></loader>
+
         <button class="btn btn-default pull-right"
             tooltip="Refresh list"
             ng-click="loadCNNs()">
@@ -20,19 +21,25 @@
         <div ng-hide="loading">
             <table ng-table="tableParams" class="table" show-filter="true" >
                 <tr ng-repeat="cnn in cnnsData">
-                    <td data-title="'Name'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
-                        {{cnn.name}} (job_id: {{ cnn.job_id }})
+                    <td data-title="'Name'" data-sortable="'name'" filter="{ 'name': 'text' }" class="hidelongtext widthtd" >
+                        {{ cnn.name }}
                     </td>
-                    <td data-title="'Timestamp'" data-sortable="'timestamp'" class="is-v-middle">
+                    <td data-title="'ID'" data-sortable="'job_id'" filter="{ 'job_id': 'text' }" class="no-wrap-table-cell is-v-middle">
+                        {{ cnn.job_id }}
+                    </td>
+                    <td data-title="'Timestamp'" data-sortable="'timestamp'" class="no-wrap-table-cell is-v-middle">
                         {{ cnn.timestamp | moment : 'lll' }}
                     </td>
-                    <td data-title="'CNN Model'" data-sortable="'model'" class="no-wrap-table-cell is-v-middle">
-                        {{cnn.cnn_model_name}}
+                    <td data-title="'CNN Model'" data-sortable="'cnn_model_name'" filter="{ 'cnn_model_name': 'text' }"  class="no-wrap-table-cell is-v-middle">
+                        {{ cnn.cnn_model_name }}
                     </td>
                     <td data-title="'Playlist'" data-sortable="'playlist_name'" filter="{ 'playlist_name': 'text' }" class="no-wrap-table-cell is-v-middle">
-                        {{cnn.playlist_name}}
+                        {{ cnn.playlist_name }}
                     </td>
-                    <td data-title="'User'" data-sortable="'user'" filter="{ 'user': 'text' }" class="is-v-middle">
+                    <td data-title="'Recordings'" data-sortable="'playlist_count'" filter="{ 'playlist_count': 'text' }" class="no-wrap-table-cell is-v-middle">
+                        {{ cnn.playlist_count }}
+                    </td>
+                    <td data-title="'User'" data-sortable="'user'" filter="{ 'user': 'text' }" class="no-wrap-table-cell is-v-middle">
                         {{ cnn.user }}
                     </td>
                     <td class="is-v-middle">
@@ -50,6 +57,13 @@
                     </td>
                 </tr>
             </table>
+            <div class="jumbotron" ng-show="(!cnnOriginal || !cnnOriginal.length > 0) && !loading">
+                <h3>{{ infopanedata }}  
+                    <a ng-click="createNewCNN()">
+                        Create a cnn
+                    </a>
+                </h3>
+            </div>
         </div>
     </div>
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="selectedCNNId">
