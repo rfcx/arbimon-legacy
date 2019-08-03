@@ -2,10 +2,39 @@
     <h3 class="modal-title">Delete pattern matching</h3>
 </div>
 <div class="modal-body">
-    <span ng-hide="deletingloader">You are about to delete pattern matching <b>{{name}}</b>. Are you sure?</span>
+    <div ng-hide="deletingloader">You are about to delete the pattern matching <b>{{controller.patternMatching.name}}</b>.</div>
+    <br />
+    <div class="row row-flex flex-align-middle">
+        <div class="col-sm-4" style="padding-bottom:5px">
+            <div class="roi-thumbnail" >
+                <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
+                <div class="roi-btn-b outside text-sm">
+                    {{controller.patternMatching.template.x2 - controller.patternMatching.template.x1 | number:2}}s
+                </div>
+                <div class="roi-btn-r outside text-sm">
+                    {{(controller.patternMatching.template.y2-controller.patternMatching.template.y1) | number:0}}Hz
+                </div>
+                <div class="roi-btn-tr outside text-sm">
+                    {{controller.patternMatching.template.y2 | number:0}}Hz <br>
+                </div>
+                <div class="roi-btn-br outside text-sm">
+                    {{controller.patternMatching.template.y1 | number:0}}Hz
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 is-v-middle">
+            <b>{{controller.patternMatching.name}}</b><br />
+            {{controller.patternMatching.template.name }}<br />
+            {{controller.patternMatching.timestamp | moment : 'lll' }}<br />
+            {{controller.patternMatching.playlist_name}}<br />
+            {{controller.patternMatching.parameters | asCSV}}
+        </div>
+    </div>
+    <br />
+    <div>Are you sure?</div>
     <div class="centeredloder"><loader ng-show="deletingloader"></loader></div>
 </div>
 <div class="modal-footer">
     <button class="btn btn-danger" ng-click="ok() | trackEvent:'Analysis-pattern-matching delete confirm':'yes'">Yes</button>
-    <button class="btn btn-default" ng-click="cancel() | trackEvent:'Analysis-pattern-matching delete confirm':'no'">No</button>  
+    <button class="btn btn-default" ng-click="cancel() | trackEvent:'Analysis-pattern-matching delete confirm':'no'">No</button>
 </div>
