@@ -16,41 +16,6 @@ angular.module('a2.analysis.patternmatching', [
 .controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
-    var initTable = function(p, c, s, f, t) {
-        var sortBy = {};
-        var acsDesc = 'desc';
-        if (s[0]=='+') {
-            acsDesc = 'asc';
-        }
-        sortBy[s.substring(1)] = acsDesc;
-        var tableConfig = {
-            page: p,
-            count: c,
-            sorting: sortBy,
-            filter:f
-        };
-
-        $scope.tableParams = new ngTableParams(tableConfig, {
-            total: t,
-            getData: function ($defer, params) {
-                $scope.infopanedata = "";
-                var filteredData = params.filter() ? $filter('filter')($scope.patternmatchingsOriginal , params.filter()) : $scope.patternmatchingsOriginal;
-
-                var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.patternmatchingsOriginal;
-
-                params.total(orderedData.length);
-
-                $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-
-                if (orderedData.length < 1) {
-                    $scope.infopanedata = "No Pattern matchings searches found.";
-                }
-
-                $scope.patternmatchingsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-            }
-        });
-    };
-
     $scope.getTemplateVisualizerUrl = function(template){
         var projecturl = Project.getUrl();
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
@@ -77,11 +42,6 @@ angular.module('a2.analysis.patternmatching', [
             $scope.infopanedata = "";
 
             if(data.length > 0) {
-                if(!$scope.tableParams) {
-                    initTable(1,10,"+cname",{},data.length);
-                } else {
-                    $scope.tableParams.reload();
-                }
             } else {
                 $scope.infopanedata = "No pattern matchings found.";
             }
@@ -144,7 +104,6 @@ angular.module('a2.analysis.patternmatching', [
                 }
                 if (index > -1) {
                     $scope.patternmatchingsOriginal.splice(index, 1);
-                    $scope.tableParams.reload();
                     notify.log("PatternMatching deleted successfully");
                 }
             }
