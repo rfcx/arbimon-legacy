@@ -156,8 +156,6 @@ angular.module('a2.analysis.cnn', [
                 this.loading.playlists = false;
                 list.playlists = playlists;
             }).bind(this));
-
-
         },
         ok: function () {
             try {
@@ -173,14 +171,12 @@ angular.module('a2.analysis.cnn', [
             } catch(error) {
                 console.log("a2CNN.create error: " + error);
             }
-            
         },
         cancel: function (url) {
              $modalInstance.close({ cancel: true, url: url });
         },
     });
     this.initialize();
-
 })
 .directive('a2CnnDetails', function(){
     return {
@@ -310,6 +306,7 @@ angular.module('a2.analysis.cnn', [
                 count: count,
                 name: speciesName};
     };
+
     var plotShown = false;
     $scope.showHist = function(species_id){
         $scope.speciesInfo = bySpeciesHist($scope.results, species_id);
