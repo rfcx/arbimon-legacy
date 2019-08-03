@@ -9,6 +9,16 @@ var pokeDaMonkey = require('../../../utils/monkey');
 var csv_stringify = require("csv-stringify");
 
 
+// global project.pattern_matching_enabled check
+router.use(function(req, res, next) {
+    if(!req.project.pattern_matching_enabled) {
+        return res.status(401).json({ error: "Pattern matching features are not enabled for your project." });
+    }
+
+    next();
+});
+
+
 /** Return a list of all the pattern matchings in a project.
  */
 router.get('/', function(req, res, next) {
@@ -45,6 +55,9 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     res.type('json');
     model.patternMatchings.getRoisForId({
         patternMatchingId: req.params.patternMatching,
+        wherePresent: req.query.search == 'present',
+        whereNotPresent: req.query.search == 'not_present',
+        whereUnvalidated: req.query.search == 'unvalidated',
         limit: req.paging.limit || 100,
         offset: req.paging.offset || 0,
     }).then(function(rois) {
@@ -52,6 +65,22 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/:patternMatching/site-index', function(req, res, next) {
+    res.type('json');
+    model.patternMatchings.getRoisForId({
+        patternMatchingId: req.params.patternMatching,
+        perSiteCount: true,
+        wherePresent: req.query.search == 'present',
+        whereNotPresent: req.query.search == 'not_present',
+        whereUnvalidated: req.query.search == 'unvalidated',
+    }).then(function(rois) {
+        res.json(rois.reduce(function(_, item){
+            item.offset = _.accum;
+            _.accum += item.count;
+            return _;
+        }, {list:rois, accum:0}).list);
+    }).catch(next);
+});
 
 router.get('/:patternMatching/rois.csv', function(req, res, next) {
     if(req.query.out=="text"){

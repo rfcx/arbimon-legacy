@@ -47,11 +47,12 @@
                     </div>
                 </div>
                 <div class="col-sm-5 is-v-middle">
-                    {{controller.patternMatching.name}}<br />
+                    <b>{{controller.patternMatching.name}}</b><br />
                     {{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}<br />
+                    {{controller.patternMatching.template.name }}<br />
                     {{controller.patternMatching.timestamp | moment : 'lll' }}<br />
                     {{controller.patternMatching.playlist_name}}<br />
-                    {{controller.patternMatching.parameters}}<br />
+                    {{controller.patternMatching.parameters | asCSV}}<br />
                     {{controller.patternMatching.matches}} matches
                         ({{controller.patternMatching.present || 0}} present,
                         {{controller.patternMatching.absent || 0}} not present,
@@ -59,6 +60,21 @@
                 </div>
                 <div class="col-sm-5 flex-self-align-bottom">
                     <div class="pull-right">
+                    <div class="toolbar pull-right">
+                        <div class="btn-group">
+                            <button class="btn btn-default" ><i class="fa fa-search"></i></button>
+                            <ui-select ng-model="controller.search" theme="bootstrap" style="display:inline-block; width:9em;"
+                                on-select="controller.onSearchChanged()"
+                            >
+                                <ui-select-match>
+                                    <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
+                                </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.lists.search | filter:$select.search">
+                                    <i ng-class="$item.class"></i> {{$item.text}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
                     <div class="toolbar pull-right">
                         <div class="btn-group">
                             <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
@@ -100,7 +116,26 @@
                                     {{$item | a2PageNumberToTitle}}
                                 </ui-select-choices>
                             </ui-select>
+                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
+                                ng-change="controller.setSiteBookmark($select.selected)"
+                            >
+                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
+                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
+                                </ui-select-choices>
+                            </ui-select>
                             <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
+                        </div>
+
+                        <div class="btn-group" ng-show="controller.total.pages <= 1">
+                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
+                                ng-change="controller.setSiteBookmark($select.selected)"
+                            >
+                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
+                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
+                                </ui-select-choices>
+                            </ui-select>
                         </div>
 
                         <div class="btn-group">
@@ -128,7 +163,7 @@
         <div class="panel-body" ng-show="controller.patternMatching">
             <div ng-show="loading-rois">Loading...</div>
             <div ng-repeat="site in controller.rois">
-                <div class="h3"><i class="fa fa-map-marker"></i> {{site.name}}</div>
+                <div class="h3" id="site-{{site.id}}"><i class="fa fa-map-marker"></i> {{site.name}}</div>
                     <div ng-repeat="roi in site.list"
                         class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                         ng-click="roi.selected = !roi.selected"

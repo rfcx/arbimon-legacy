@@ -2,7 +2,7 @@ angular.module('a2.srv.patternmatching', [
     'a2.srv.project',
     'humane'
 ])
-.factory('a2PatternMatching', function($q, $http, Project, notify) {
+.factory('a2PatternMatching', function($q, $http, a2APIService, Project, notify) {
     var saveData = null;
 
     return {
@@ -22,10 +22,19 @@ angular.module('a2.srv.patternmatching', [
                 return response.data;
             });
         },
-        getRoisFor: function(patternMatchingId, limit, offset) {
-            return $http.get('/api/project/' + Project.getUrl() + '/pattern-matchings/' + patternMatchingId + '/rois/' + (offset||0) + '_' + (limit||0)).then(function(response){
-                return response.data;
-            });
+        getRoisFor: function(patternMatchingId, limit, offset, options) {
+            var query = Object.keys(options || {}).map(function(option){
+                return option + '=' + encodeURIComponent(options[option]);
+            }).join('&');
+
+            return a2APIService.get('/pattern-matchings/' + patternMatchingId + '/rois/' + (offset||0) + '_' + (limit||0) + (query ? '?'+query : '')).catch(notify.serverError);
+        },
+        getSiteIndexFor: function(patternMatchingId, options) {
+            var query = Object.keys(options || {}).map(function(option){
+                return option + '=' + encodeURIComponent(options[option]);
+            }).join('&');
+
+            return a2APIService.get('/pattern-matchings/' + patternMatchingId + '/site-index' + (query ? '?'+query : '')).catch(notify.serverError);
         },
         getExportUrl: function(params){
             return '/api/project/' + Project.getUrl() + '/pattern-matchings/' + params.patternMatching + '/rois.csv';

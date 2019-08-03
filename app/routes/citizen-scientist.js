@@ -97,6 +97,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     authorized: true,
                     public: !project.is_private,
                     features:{
+                        pattern_matching: !!project.pattern_matching_enabled,
                         citizen_scientist: !!project.citizen_scientist_enabled,
                     },
                     super: !!req.session.user.isSuper,
