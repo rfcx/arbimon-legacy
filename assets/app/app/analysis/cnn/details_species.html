@@ -15,31 +15,27 @@
                             {{ job_details.name }}
                         </h3>
                     </div>
-                    <div class="row row-flex flex-align-middle">
-                        <button class="btn btn-default"
-                            style="transition: 0.5s all;"
+                    <div class="row row-flex flex-align-middle cnn-selection-btns">
+                        <button class="btn btn-default non-active-cnn-selection"
                             onclick="this.blur();"
                             ng-click="onGoBack({}) | trackEvent:'Analysis-CNN-List':' go back'">
                             &lt;  Go Back
                         </button>
-                        <button class="btn btn-default"
-                            style="transition: 0.5s all;"
+                        <button class="btn btn-default "
                             onclick="this.blur();"
-                            ng-class="viewType=='all' ? 'btn-lg' : 'btn-md'"
+                            ng-class="viewType=='all' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
                             ng-click="switchView('all')">
                             All
                         </button>
                         <button class="btn btn-default"
-                            style="transition: 0.5s all;"
                             onclick="this.blur();"
-                            ng-class="viewType=='species' ? 'btn-lg' : 'btn-md'"
+                            ng-class="viewType=='species' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
                             ng-click="switchView('species')">
                             Species
                         </button>
                         <button class="btn btn-default"
-                            style="transition: 0.5s all;"
                             onclick="this.blur();"
-                            ng-class="viewType=='recordings' ? 'btn-lg' : 'btn-md'"
+                            ng-class="viewType=='recordings' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
                             ng-click="switchView('recordings')">
                             Recordings
                         </button>
