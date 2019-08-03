@@ -16,41 +16,6 @@ angular.module('a2.analysis.patternmatching', [
 .controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
-    var initTable = function(p, c, s, f, t) {
-        var sortBy = {};
-        var acsDesc = 'desc';
-        if (s[0]=='+') {
-            acsDesc = 'asc';
-        }
-        sortBy[s.substring(1)] = acsDesc;
-        var tableConfig = {
-            page: p,
-            count: c,
-            sorting: sortBy,
-            filter:f
-        };
-
-        $scope.tableParams = new ngTableParams(tableConfig, {
-            total: t,
-            getData: function ($defer, params) {
-                $scope.infopanedata = "";
-                var filteredData = params.filter() ? $filter('filter')($scope.patternmatchingsOriginal , params.filter()) : $scope.patternmatchingsOriginal;
-
-                var orderedData = params.sorting() ? $filter('orderBy')(filteredData, params.orderBy()) : $scope.patternmatchingsOriginal;
-
-                params.total(orderedData.length);
-
-                $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-
-                if (orderedData.length < 1) {
-                    $scope.infopanedata = "No Pattern matchings searches found.";
-                }
-
-                $scope.patternmatchingsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-            }
-        });
-    };
-
     $scope.getTemplateVisualizerUrl = function(template){
         var projecturl = Project.getUrl();
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
@@ -77,11 +42,6 @@ angular.module('a2.analysis.patternmatching', [
             $scope.infopanedata = "";
 
             if(data.length > 0) {
-                if(!$scope.tableParams) {
-                    initTable(1,10,"+cname",{},data.length);
-                } else {
-                    $scope.tableParams.reload();
-                }
             } else {
                 $scope.infopanedata = "No pattern matchings found.";
             }
@@ -112,7 +72,7 @@ angular.module('a2.analysis.patternmatching', [
         });
     };
 
-    $scope.deletePatternMatching = function(id, $event) {
+    $scope.deletePatternMatching = function(patternMatching, $event) {
         $event.stopPropagation();
 
         if(!a2UserPermit.can('manage pattern matchings')) {
@@ -122,13 +82,10 @@ angular.module('a2.analysis.patternmatching', [
 
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/deletepatternmatching.html',
-            controller: 'DeletePatternMatchingInstanceCtrl',
+            controller: 'DeletePatternMatchingInstanceCtrl as controller',
             resolve: {
-                name: function() {
-                    return name;
-                },
-                id: function() {
-                    return id;
+                patternMatching: function() {
+                    return patternMatching;
                 },
             }
         });
@@ -147,7 +104,6 @@ angular.module('a2.analysis.patternmatching', [
                 }
                 if (index > -1) {
                     $scope.patternmatchingsOriginal.splice(index, 1);
-                    $scope.tableParams.reload();
                     notify.log("PatternMatching deleted successfully");
                 }
             }
@@ -171,7 +127,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioPlayer, notify) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioPlayer, notify, $anchorScroll, $document) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -179,12 +135,15 @@ angular.module('a2.analysis.patternmatching', [
         this.offset = 0;
         this.limit = 100;
         this.selected = {roi_index:0, roi:null, page:0};
+        this.siteIndex = [];
         this.total = {rois:0, pages:0};
         this.loading = {details: false, rois:false};
         this.validation = this.lists.validation[2];
         this.thumbnailClass = this.lists.thumbnails[0].value;
+        this.search = this.lists.search[0];
         this.projecturl = Project.getUrl();
         this.fetchDetails().then((function(){
+            this.loadSiteIndex();
             this.loadPage(this.selected.page);
         }).bind(this));
         this.audio_player = new a2AudioPlayer($scope)
@@ -194,6 +153,12 @@ angular.module('a2.analysis.patternmatching', [
         thumbnails: [
             { class:'fa fa-th-large', value:''},
             { class:'fa fa-th', value:'is-small'},
+        ],
+        search: [
+            {value:'all', text:'All'},
+            {value:'present', text:'Present'},
+            {value:'not_present', text:'Not Present'},
+            {value:'unvalidated', text:'Unvalidated'},
         ],
         selection: [
             {value:'all', text:'All'},
@@ -223,6 +188,12 @@ angular.module('a2.analysis.patternmatching', [
         }).bind(this));
     },
 
+    onSearchChanged: function(){
+        this.selected.page = 0;
+        this.loadPage(0);
+        this.loadSiteIndex();
+    },
+
     setupExportUrl: function(){
         this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
             patternMatching: this.patternMatching.id,
@@ -242,16 +213,43 @@ angular.module('a2.analysis.patternmatching', [
         this.select($item.value);
     },
 
+    loadSiteIndex: function(){
+        return a2PatternMatching.getSiteIndexFor(this.id, { search: this.search && this.search.value }).then((function(siteIndex){
+            this.siteIndex = siteIndex;
+        }).bind(this));
+    },
+
+    setSiteBookmark: function(site){
+        var bookmark = 'site-' + site.site_id;
+        var sitePage = (site.offset / this.limit) | 0;
+
+        console.log({
+            site:site,
+            bookmark:bookmark,
+            sitePage:sitePage,
+        })
+        this.setPage(sitePage).then(function(){
+            $anchorScroll.yOffset = $('.a2-page-header').height() + 60;
+            $anchorScroll(bookmark)
+        });
+    },
+
     loadPage: function(pageNumber){
         this.loading.rois = true;
-        return a2PatternMatching.getRoisFor(this.id, this.limit, pageNumber * this.limit).then((function(rois){
+        return a2PatternMatching.getRoisFor(
+            this.id,
+            this.limit,
+            pageNumber * this.limit,
+            { search: this.search && this.search.value }
+        ).then((function(rois){
             this.loading.rois = false;
             this.rois = rois.reduce(function(_, roi){
+                var site_id = roi.site_id;
                 var sitename = roi.site;
                 var recname = roi.recording;
 
                 if(!_.idx[sitename]){
-                    _.idx[sitename] = {list:[], idx:{}, name:sitename};
+                    _.idx[sitename] = {list:[], idx:{}, name:sitename, id:site_id};
                     _.list.push(_.idx[sitename]);
                 }
 
@@ -311,7 +309,7 @@ angular.module('a2.analysis.patternmatching', [
         if(this.total.rois <= 0){
             this.selected.page = 0;
             this.rois = [];
-            return this.rois;
+            return $q.resolve(this.rois);
         } else {
             page = Math.max(0, Math.min(page, (this.total.rois / this.limit) | 0));
             if(page != this.selected.page || force){
@@ -319,10 +317,11 @@ angular.module('a2.analysis.patternmatching', [
                 return this.loadPage(page);
             }
         }
+
+        return $q.resolve();
     },
 
     select: function(option){
-        console.log('this.rois', this.rois);
         var selectFn = null;
         if(option === "all"){
             selectFn = function(roi){roi.selected = true;};
@@ -405,13 +404,13 @@ angular.module('a2.analysis.patternmatching', [
 }); this.initialize($scope.patternMatchingId);
 })
 .controller('DeletePatternMatchingInstanceCtrl',
-    function($scope, $modalInstance, a2PatternMatching, name, id) {
-        $scope.name = name;
+    function($scope, $modalInstance, a2PatternMatching, patternMatching) {
+        this.patternMatching = patternMatching;
         $scope.deletingloader = false;
 
         $scope.ok = function() {
             $scope.deletingloader = true;
-            a2PatternMatching.delete(id).then(function(data) {
+            a2PatternMatching.delete(patternMatching.id).then(function(data) {
                 $modalInstance.close(data);
             });
         };

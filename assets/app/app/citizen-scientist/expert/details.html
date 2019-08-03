@@ -40,11 +40,12 @@
                     </div>
                 </div>
                 <div class="col-sm-5 is-v-middle">
-                    {{controller.patternMatching.name}}<br />
+                    <b>{{controller.patternMatching.name}}</b><br />
                     {{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}<br />
+                    {{controller.patternMatching.template.name }}<br />
                     {{controller.patternMatching.timestamp | moment : 'lll' }}<br />
                     {{controller.patternMatching.playlist_name}}<br />
-                    {{controller.patternMatching.parameters}}<br />
+                    {{controller.patternMatching.parameters | asCSV}}<br />
                     {{controller.patternMatching.matches}} matches
                         ({{controller.patternMatching.expert_consensus_present || 0}} present,
                         {{controller.patternMatching.expert_consensus_absent || 0}} not present, <br/>
