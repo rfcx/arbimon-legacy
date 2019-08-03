@@ -112,7 +112,7 @@ angular.module('a2.analysis.patternmatching', [
         });
     };
 
-    $scope.deletePatternMatching = function(id, $event) {
+    $scope.deletePatternMatching = function(patternMatching, $event) {
         $event.stopPropagation();
 
         if(!a2UserPermit.can('manage pattern matchings')) {
@@ -122,13 +122,10 @@ angular.module('a2.analysis.patternmatching', [
 
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/patternmatching/deletepatternmatching.html',
-            controller: 'DeletePatternMatchingInstanceCtrl',
+            controller: 'DeletePatternMatchingInstanceCtrl as controller',
             resolve: {
-                name: function() {
-                    return name;
-                },
-                id: function() {
-                    return id;
+                patternMatching: function() {
+                    return patternMatching;
                 },
             }
         });
@@ -405,13 +402,13 @@ angular.module('a2.analysis.patternmatching', [
 }); this.initialize($scope.patternMatchingId);
 })
 .controller('DeletePatternMatchingInstanceCtrl',
-    function($scope, $modalInstance, a2PatternMatching, name, id) {
-        $scope.name = name;
+    function($scope, $modalInstance, a2PatternMatching, patternMatching) {
+        this.patternMatching = patternMatching;
         $scope.deletingloader = false;
 
         $scope.ok = function() {
             $scope.deletingloader = true;
-            a2PatternMatching.delete(id).then(function(data) {
+            a2PatternMatching.delete(patternMatching.id).then(function(data) {
                 $modalInstance.close(data);
             });
         };
