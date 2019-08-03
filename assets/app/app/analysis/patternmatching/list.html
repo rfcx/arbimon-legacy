@@ -17,50 +17,49 @@
         </button>
 
         <div ng-hide="loading">
-            <table ng-table="tableParams" class="table" show-filter="true" >
-                <tr ng-repeat="patternmatching in patternmatchingsData"
-                    ng-click="selectItem(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
-                >
-                    <td data-title="'Name'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
-                        <div class="roi-thumbnail" >
-                            <img ng-src="{{patternmatching.template.uri}}" class="roi-img is-small"/>
-                            <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(patternmatching.template)}}">
-                                <i tooltip-placement="left"
-                                    tooltip-append-to-body="true"
-                                    tooltip="View in Visualizer"
-                                    class="fa fa-cubes">
-                                </i>
-                            </a>
-                        </div>
-                        {{patternmatching.name}}
-                    </td>
-                    <td data-title="'Timestamp'" data-sortable="'timestamp'" class="is-v-middle">
-                        {{ patternmatching.timestamp | moment : 'lll' }}
-                    </td>
-                    <td data-title="'Playlist'" data-sortable="'playlist_name'" filter="{ 'playlist_name': 'text' }" class="no-wrap-table-cell is-v-middle">
-                        {{patternmatching.playlist_name}}
-                    </td>
-                    <td data-title="'Parameters'" data-sortable="'parameters'" class="no-wrap-table-cell is-v-middle">
-                        {{patternmatching.parameters}}
-                    </td>
-                    <td data-title="'User'" data-sortable="'user'" filter="{ 'user': 'text' }" class="is-v-middle">
-                        {{ patternmatching.user }}
-                    </td>
-                    <td class="is-v-middle">
-                        <button class="btn btn-default"
-                            ng-click="selectItem(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
-                        >
-                                Show Details
-                        </button>
-                        <button class="btn btn-danger"
-                            ng-click="deletePatternMatching(patternmatching.id, $event) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
-                            tooltip="Delete"
-                            tooltip-trigger="mouseenter">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            </table>
+            <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
+                <field title="Name" class="hidelongtext widthtd" key="name" filter>
+                    <div class="roi-thumbnail" >
+                        <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
+                        <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}">
+                            <i tooltip-placement="left"
+                                tooltip-append-to-body="true"
+                                tooltip="View in Visualizer"
+                                class="fa fa-cubes">
+                            </i>
+                        </a>
+                    </div>
+                    {{row.name}}
+                </field>
+                <field title="Timestamp" key="timestamp" class="is-v-middle">
+                    {{ row.timestamp | moment : 'lll' }}
+                </field>
+                <field title="Playlist" key="playlist_name" filter class="no-wrap-table-cell is-v-middle">
+                    {{row.playlist_name}}
+                </field>
+                <field title="Template" key="template.name" filter class="no-wrap-table-cell is-v-middle">
+                    {{row.template.name}}
+                </field>
+                <field title="Parameters" key="parameters" filter="parameters.$" class="no-wrap-table-cell is-v-middle">
+                    {{row.parameters | asCSV }}
+                </field>
+                <field title="User" key="user" filter class="is-v-middle">
+                    {{ row.user }}
+                </field>
+                <field class="is-v-middle">
+                    <button class="btn btn-default"
+                        ng-click="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
+                    >
+                            Show Details
+                    </button>
+                    <button class="btn btn-danger"
+                        ng-click="deletePatternMatching(row.id, $event) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
+                        tooltip="Delete"
+                        tooltip-trigger="mouseenter">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </field>
+            </a2-table>
         </div>
     </div>
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="selectedPatternMatchingId">
