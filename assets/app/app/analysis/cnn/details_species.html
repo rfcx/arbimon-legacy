@@ -67,7 +67,7 @@
                 {{ counts.recordings }}
                 <table ng-table="tableParams" class="table" show-filter="true" >
                     <tr ng-repeat="recording in recordings">
-                        <td data-title="'Recording'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
+                        <td data-title="'Recording'" class="hidelongtext widthtd" data-sortable="'recording_id'" filter="{ 'recording_id': 'text' }">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{recording.thumbnail}}" class="roi-img is-small"/>
                             <a class="roi-btn-br" ng-href="{{getRecordingVisualizerUrl(recording.recording_id)}}">
@@ -80,10 +80,10 @@
                         </div>
                             {{ recording.recording_id }}
                         </td>
-                        <td data-title="'Total'" data-sortable="'count'" class="is-v-middle">
+                        <td data-title="'Total'" data-sortable="'total'" class="is-v-middle">
                             {{ recording.total }}
                         </td>
-                        <td data-title="'Species'">
+                        <td data-title="'Species'" data-sortable="'species_list'" filter="{'species_list': 'text'}" class="is-v-middle">
                             <span ng-repeat="specie in recording.species" ng-show="specie.count > 0">{{ specie.scientific_name }}({{ specie.count }}) </span>
                         </td>
                         <td class="is-v-middle">
@@ -96,14 +96,14 @@
             </div>
             <div class="panel-body" ng-show="viewType=='all'">
                 <table ng-table="tableParams" class="table" show-filter="true" >
-                    <tr ng-repeat="result in results">
-                        <td data-title="'ID'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
+                    <tr ng-repeat="result in mainResults">
+                        <td data-title="'ID'" class="hidelongtext widthtd" data-sortable="'cnn_presence_id'" filter="{ 'cnn_presence_id': 'text' }">
                             {{ result.cnn_presence_id }}
                         </td>
                         <td data-title="'Recording'" data-sortable="'recording_id'" class="is-v-middle">
                                 {{ result.recording_id }}
                             </td>
-                        <td data-title="'Species'" data-sortable="'species'" class="is-v-middle">
+                        <td data-title="'Species'" data-sortable="'scientific_name'" class="is-v-middle">
                             {{ result.scientific_name }}
                         </td>
                         <td data-title="'Song Type'" data-sortable="'songtype'" class="is-v-middle">

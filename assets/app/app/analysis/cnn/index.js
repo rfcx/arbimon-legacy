@@ -225,9 +225,13 @@ angular.module('a2.analysis.cnn', [
                     $scope.infopanedata = "No cnn searches found.";
                 }
 
-                $scope.cnnsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+                cnnsData  = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
                 if ($scope.viewType == "species"){
-                    $scope.species = $scope.cnnsData;
+                    $scope.species = cnnsData;
+                } else if ($scope.viewType == "recordings"){
+                    $scope.recordings = cnnsData;
+                } else {
+                    $scope.mainResults = cnnsData;
                 }
             }
         });
@@ -238,17 +242,6 @@ angular.module('a2.analysis.cnn', [
 
     a2CNN.getDetailsFor($scope.cnnId).then(function(data) {
         $scope.job_details = data;
-    });
-
-    a2CNN.listResults($scope.cnnId).then(function(data) {
-        $scope.results = data;
-        // DEBUG ONLY - adding in random to see different results
-        /*
-        $scope.results = $scope.results.map(function (el){
-            el.present = (Math.random() >= 0.5)?1:0;
-            return el;
-        });
-        */
     });
 
     var bySpecies = function(dataIn) {
@@ -276,14 +269,18 @@ angular.module('a2.analysis.cnn', [
                 dataOut[r] = {recording_id: r,
                               thumbnail: element.thumbnail,
                               species: {},
-                              total: 0}
+                              total: 0,
+                              species_list: ''}
             }
             if (!(s in dataOut[r].species)) {
                 dataOut[r].species[s] = {species_id: s,
                                          scientific_name: element.scientific_name,
-                                         count: 0}
+                                         count: 0};
             }
             if (element.present == 1) {
+                if (dataOut[r].species[s].count==0){
+                    dataOut[r].species_list = dataOut[r].species_list + ' ' + element.scientific_name;
+                }
                 dataOut[r].species[s].count++;
                 dataOut[r].total++;
             }
@@ -346,39 +343,49 @@ angular.module('a2.analysis.cnn', [
     };
 
     $scope.switchView = function(viewType, specie) {
-        $scope.loading = true;
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-        $scope.infoInfo = "";
-        $scope.showInfo = false;
-        $scope.loading = false;
-        $scope.infopanedata = "";
+        var loadSwitch = function(){
+            $scope.loading = true;
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            $scope.infoInfo = "";
+            $scope.showInfo = false;
+            $scope.loading = false;
+            $scope.infopanedata = "";
 
-        if (viewType=="species") {
-            $scope.species = bySpecies($scope.results);
-            $scope.viewType = "species";
-            $scope.showHist(specie ? specie : "all");
-
-                    
-                    if(Object.keys($scope.species).length > 0) {
-                        $scope.cnnOriginal = Object.values($scope.species);
-                        $scope.cnnsData = $scope.cnnOriginal;
-                        if(!$scope.tableParams) {
-                            initTable(1,10,"+cname",{},$scope.cnnOriginal.length);
-                        } else {
-                            $scope.tableParams.reload();
-                        }
-                        $scope.species = $scope.cnnsData;
-                    } else {
-                        $scope.infopanedata = "No cnn species found.";
-                    }
-
-        } else if (viewType=="recordings") {
-            $scope.recordings = byRecordings($scope.results);
-            $scope.counts.recordings = Object.keys($scope.recordings).length;
-            $scope.viewType = "recordings";
-        } else {
-            $scope.viewType = "all";
+            if (viewType=="species") {
+                $scope.species = bySpecies($scope.results);
+                $scope.viewType = "species";
+                $scope.showHist(specie ? specie : "all");
+                $scope.cnnOriginal = Object.values($scope.species);
+            } else if (viewType=="recordings") {
+                $scope.recordings = byRecordings($scope.results);
+                $scope.counts.recordings = Object.keys($scope.recordings).length;
+                $scope.viewType = "recordings";
+                $scope.cnnOriginal = Object.values($scope.recordings);
+            } else {
+                $scope.viewType = "all";
+                $scope.mainResults = $scope.results;
+                $scope.cnnOriginal = Object.values($scope.results);
+            }
+            if($scope.cnnOriginal.length > 0) {
+                //if(!$scope.tableParams) {
+                    initTable(1,10,"+cname",{},$scope.cnnOriginal.length);
+                //} else {
+                //    $scope.tableParams.reload();
+                //}
+            } else {
+                $scope.infopanedata = "No cnn results found.";
+            }
+        };
+        if (!$scope.results){
+            a2CNN.listResults($scope.cnnId).then(function(data) {
+                $scope.results = data;
+                loadSwitch();
+            });
+        } else{
+            loadSwitch();
         }
     };
+
+    $scope.switchView();
 });
