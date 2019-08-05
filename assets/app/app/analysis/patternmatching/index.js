@@ -7,6 +7,10 @@ angular.module('a2.analysis.patternmatching', [
     'c3-charts',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
+    $stateProvider.state('analysis.disabled-patternmatching', {
+        url: '/disabled/patternmatching',
+        templateUrl: '/app/analysis/patternmatching/disabled.html'
+    });
     $stateProvider.state('analysis.patternmatching', {
         url: '/patternmatching/:patternMatchingId??show',
         controller: 'PatternMatchingCtrl',
