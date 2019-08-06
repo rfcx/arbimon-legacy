@@ -8,15 +8,23 @@ angular.module('a2.analysis.cnn', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('analysis.cnn', {
-        url: '/cnn/:cnnId??show',
+        url: '/cnn/',
+        controller: 'CNNCtrl',
+        templateUrl: '/app/analysis/cnn/list.html'
+    })
+    .state('analysis.cnn_details', {
+        url: '/cnn/:cnnId',///:detailType/',
         controller: 'CNNCtrl',
         templateUrl: '/app/analysis/cnn/list.html'
     });
 })
-.controller('CNNCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
+.controller('CNNCtrl' , function($scope, $modal, $filter, $location, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
     // this debug line for sanity between servers... Will remove TODO
     console.log("CNN Version 0.3");
     $scope.selectedCNNId = $stateParams.cnnId;
+    console.log("TCL: $stateParams", $stateParams)
+    console.log("TCL: $state", $state.params)
+    
 
     var initTable = function(p, c, s, f, t) {
         var sortBy = {};
@@ -81,6 +89,7 @@ angular.module('a2.analysis.cnn', [
     if (!$scope.selectedCNNId) {
         $scope.loadCNNs();
     }
+
     $scope.createNewCNN = function () {
         // TODO: add in real cnn permissions
         if(!a2UserPermit.can('manage pattern matchings')) {
@@ -106,17 +115,22 @@ angular.module('a2.analysis.cnn', [
         });
     };
 
+    $scope.deleteCNN = function(cnn){
+        notify.log('Delete not implemented yet. Would be deleting: ' + cnn.name)
+    };
+
     $scope.selectItem = function(cnnId){
-        if($scope.selectedCNNId == cnnId){
-            $state.go('analysis.cnn', {
-                cnnId: undefined
-            });
+        if (!cnnId){
+            $state.go('analysis.cnn', {});
         } else {
-            $state.go('analysis.cnn', {
-                cnnId: cnnId
+            console.log('yes cnnID match');
+            $state.go('analysis.cnn_details', {
+                cnnId: cnnId,
+                //detailType: 'all'
             });
         }
-    }
+    };
+
     $scope.setDetailedView = function(detailedView){
         $scope.detailedView = detailedView;
         $state.transitionTo($state.current.name, {
@@ -193,7 +207,7 @@ angular.module('a2.analysis.cnn', [
         templateUrl: '/app/analysis/cnn/details_species.html'
     };
 })
-.controller('CNNDetailsCtrl' , function($scope, ngTableParams, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
+.controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
     var initTable = function(p, c, s, f, t) {
         var sortBy = {};
         var acsDesc = 'desc';
@@ -233,7 +247,7 @@ angular.module('a2.analysis.cnn', [
         });
     };
 
-    $scope.viewType = "all";
+    //$scope.viewType = "all";
     $scope.counts = {recordings: null};
 
     a2CNN.getDetailsFor($scope.cnnId).then(function(data) {
@@ -339,7 +353,16 @@ angular.module('a2.analysis.cnn', [
         return "/project/"+Project.getUrl()+"/visualizer/rec/"+recording_id;
     };
 
+    $scope.getTemplateVisualizerUrl = function(template){
+        var projecturl = Project.getUrl();
+        var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
+        return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+    };
+
     $scope.switchView = function(viewType, specie) {
+        if (specie) {
+            window.scrollTo(0,0);
+        }
         var loadSwitch = function(){
             $scope.loading = true;
             $scope.infoInfo = "Loading...";
@@ -364,6 +387,9 @@ angular.module('a2.analysis.cnn', [
                 $scope.mainResults = $scope.results;
                 $scope.cnnOriginal = Object.values($scope.results);
             }
+            //console.log('starting state change......');
+            //$state.go('analysis.cnn_details', {detailType: $scope.viewType});
+            //console.log('ending state change......');
             if($scope.cnnOriginal.length > 0) {
                 //if(!$scope.tableParams) {
                     initTable(1,10,"+cname",{},$scope.cnnOriginal.length);
@@ -384,5 +410,16 @@ angular.module('a2.analysis.cnn', [
         }
     };
 
-    $scope.switchView();
+
+
+    $scope.$watchCollection(function(){
+        return $state.params;
+    }, function(){
+        console.log("State params have been updated", $state.params);
+        //$scope.switchView($state.params.detailType ? $state.params.detailType : 'all');
+    });
+
+
+    console.log("TCL: $state.params", $state.params)
+    $scope.switchView($state.params.detailType ? $state.params.detailType : 'all');
 });
