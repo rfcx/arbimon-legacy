@@ -11,45 +11,41 @@
         </button>
 
         <div ng-hide="loading">
-            <table ng-table="tableParams" class="table" show-filter="true" >
-                <tr ng-repeat="patternmatching in patternmatchingsData"
-                    ng-click="selectItem(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
-                >
-                    <td data-title="'Name'" class="hidelongtext widthtd" data-sortable="'name'" filter="{ 'name': 'text' }">
-                        <div class="roi-thumbnail" >
-                            <img ng-src="{{patternmatching.template.uri}}" class="roi-img is-small"/>
-                            <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(patternmatching.template)}}">
-                                <i tooltip-placement="left"
-                                    tooltip-append-to-body="true"
-                                    tooltip="View in Visualizer"
-                                    class="fa fa-cubes">
-                                </i>
-                            </a>
-                        </div>
-                        {{patternmatching.name}}
-                    </td>
-                    <td data-title="'Species'" data-sortable="'species'" class="is-v-middle" >{{patternmatching.species_name}}</td>
-                    <td data-title="'Songtype'" data-sortable="'songtype'" class="is-v-middle" >{{patternmatching.songtype_name}}</td>
-                    <td data-title="'Progress'" data-sortable="'timestamp'" class="is-v-middle" width="25%">
-                        <a2-percentage-bars data="[patternmatching.validated, 0, patternmatching.total - patternmatching.validated]"
-                                popover-html="'<span class=\'swatch val-1\'></span> Validated: {{patternmatching.validated}} ({{patternmatching.validated * 100 / patternmatching.total | number:0}}%)'"
-                                popover-trigger="mouseenter"
-                                popover-append-to-body="true"
-                        />
-                    </td>
-                    <td data-title="'Count'" data-sortable="'total'" class="is-v-middle">
-                        {{patternmatching.total}}
-                    </td>
-                    <td class="is-v-middle">
-                        <button class="btn btn-default btn-small"
-                            ng-click="selectItem(patternmatching.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
-                            tooltip="Show Details"
-                        >
-                                <i class="fa fa-list-alt"></i>
-                        </button>
-                    </td>
-                </tr>
-            </table>
+            <a2-table rows="patternmatchingsData" no-checkbox="true"  on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
+                <field title="Name" class="hidelongtext widthtd" key="name" filter>
+                    <div class="roi-thumbnail" >
+                        <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
+                        <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}">
+                            <i tooltip-placement="left"
+                                tooltip-append-to-body="true"
+                                tooltip="View in Visualizer"
+                                class="fa fa-cubes">
+                            </i>
+                        </a>
+                    </div>
+                    {{row.name}}
+                </field>
+                <field title="Species" key="species_name" class="is-v-middle"  filter >{{row.species_name}}</field>
+                <field title="Songtype" key="songtype_name" class="is-v-middle"  filter >{{row.songtype_name}}</field>
+                <field title="Progress" class="is-v-middle" width="25%">
+                    <a2-percentage-bars data="[row.validated, 0, row.total - row.validated]"
+                            popover-html="'<span class=\'swatch val-1\'></span> Validated: {{row.validated}} ({{row.validated * 100 / row.total | number:0}}%)'"
+                            popover-trigger="mouseenter"
+                            popover-append-to-body="true"
+                    />
+                </field>
+                <field title="Count" key="total" class="is-v-middle" filter>
+                    {{row.total}}
+                </field>
+                <field class="is-v-middle">
+                    <button class="btn btn-default btn-small"
+                        ng-click="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
+                        tooltip="Show Details"
+                    >
+                            <i class="fa fa-list-alt"></i>
+                    </button>
+                </field>
+            </a2-table>
         </div>
     </div>
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="selectedPatternMatchingId">

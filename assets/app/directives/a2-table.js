@@ -142,7 +142,21 @@ angular.module('a2.directive.a2-table', [
     };
 
     this.onFilterChanged = function(index){
-        (tableScope.query || (tableScope.query = {}))[this.options.fields[index].filter] = this.filter[index];
+        var query = (tableScope.query || (tableScope.query = {}));
+        var key = this.options.fields[index].filter.split('.');
+        var value = this.filter[index];
+        if(value == ""){
+            while(key.length > 1){
+                query = (query || {})[key.shift()];
+            }
+            delete query[key.shift()];
+        } else {
+            while(key.length > 1){
+                var keycomp = key.shift();
+                query = (query[keycomp] || (query[keycomp] = {}));
+            }
+            query[key.shift()] = value;
+        }
     };
 
     this.updateChecked = function() {

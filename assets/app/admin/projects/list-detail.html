@@ -64,12 +64,17 @@
             </div>
             <label>Features</label>
             <div class="form-group">
+                <label>Pattern Matching:</label>
+                <div class="btn-group">
+                    <a2-switch ng-model="controller.project.pattern_matching_enabled" />
+                </div>
+            </div>
+            <div class="form-group">
                 <label>Citizen Scientist:</label>
                 <div class="btn-group">
                     <a2-switch ng-model="controller.project.citizen_scientist_enabled" />
                 </div>
             </div>
-
             <button class="btn btn-primary"
                 ng-click="controller.save()">
                 <i class="fa fa-floppy-o"></i> Save

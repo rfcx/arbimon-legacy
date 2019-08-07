@@ -162,6 +162,7 @@ var CitizenScientist = {
     getSettings: function(project_id){
         return PatternMatchings.find({
             project: project_id,
+            deleted: 0,
             showSpecies: true,
             showConsensusNumber: true,
         });

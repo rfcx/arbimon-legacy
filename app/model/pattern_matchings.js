@@ -115,6 +115,7 @@ var PatternMatchings = {
 
         if (options.showPlaylist) {
             select.push("P.`name` as `playlist_name`");
+            select.push("(SELECT COUNT(*) FROM playlist_recordings PR WHERE PR.playlist_id=P.playlist_id) as `playlist_count`");
             tables.push("JOIN playlists P ON P.playlist_id = PM.playlist_id");
         }
 
@@ -219,9 +220,13 @@ var PatternMatchings = {
         expertCSValidations: joi.boolean(),
         hideNormalValidations: joi.boolean(),
         countCSValidations: joi.boolean(),
+        perSiteCount: joi.boolean(),
         whereConflicted: joi.boolean(),
         whereExpert: joi.boolean(),
         whereConsensus: joi.boolean(),
+        wherePresent: joi.boolean(),
+        whereNotPresent: joi.boolean(),
+        whereUnvalidated: joi.boolean(),
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
@@ -255,6 +260,7 @@ var PatternMatchings = {
             builder.addProjection(
                 'SUBSTRING_INDEX(R.`uri`, "/", -1) as `recording`',
                 'S.`name` as `site`',
+                'S.`site_id`',
                 'EXTRACT(year FROM R.`datetime`) as `year`',
                 'EXTRACT(month FROM R.`datetime`) as `month`',
                 'EXTRACT(day FROM R.`datetime`) as `day`',
@@ -346,12 +352,33 @@ var PatternMatchings = {
                 }
             }
 
+            if(parameters.perSiteCount){
+                builder.select = [
+                    'S.site_id',
+                    'S.`name` as `site`',
+                    'COUNT(*) as `count`'
+                ]
+                builder.setGroupBy('S.site_id')
+            }
+
             if(parameters.whereConflicted){
                 builder.addConstraint("(PMR.cs_val_present > 0 AND PMR.cs_val_not_present > 0)", []);
             }
 
             if(parameters.whereConsensus){
                 builder.addConstraint("PMR.consensus_validated IS NOT NULL", []);
+            }
+
+            if(parameters.wherePresent){
+                builder.addConstraint("PMR.validated = 1", []);
+            }
+
+            if(parameters.whereNotPresent){
+                builder.addConstraint("PMR.validated = 0", []);
+            }
+
+            if(parameters.whereUnvalidated){
+                builder.addConstraint("PMR.validated IS NULL", []);
             }
 
             if(parameters.whereExpert){
@@ -378,19 +405,23 @@ var PatternMatchings = {
      */
     delete: function (patternMatchingId) {
         return dbpool.query(
-            "UPDATE pattern_matchings SET deleted=1 WHERE pattern_matching_id = ?", [patternMatchingId]
+            "UPDATE pattern_matchings SET deleted=1, citizen_scientist=0 WHERE pattern_matching_id = ?", [patternMatchingId]
         );
     },
 
     getRoisForId(options){
         return this.buildRoisQuery({
             patternMatching: options.patternMatchingId,
+            perSiteCount: options.perSiteCount,
             csValidationsFor: options.csValidationsFor,
             expertCSValidations: options.expertCSValidations,
             countCSValidations: options.countCSValidations,
             whereConflicted: options.whereConflicted,
             whereConsensus: options.whereConsensus,
             whereExpert: options.whereExpert,
+            wherePresent: options.wherePresent,
+            whereNotPresent: options.whereNotPresent,
+            whereUnvalidated: options.whereUnvalidated,
             limit: options.limit,
             offset: options.offset,
             show: { patternMatchingId: true, datetime: true, names: options.showNames },
@@ -416,6 +447,7 @@ var PatternMatchings = {
 
             return q.ninvoke(Recordings, 'fetchAudioFile', {uri: pmr.recUri}, {
                 maxFreq: Math.max(pmr.y1, pmr.y2),
+                minFreq: Math.min(pmr.y1, pmr.y2),
                 gain: options.gain || 15,
                 trim: {
                     from: Math.min(pmr.x1, pmr.x2),

@@ -15,6 +15,7 @@ angular.module('a2.directive.percentage-bars', [
         templateUrl: '/directives/a2-percentage-bars.html',
         scope: {
             data:"=",
+            total:"=",
             colors:"=",
         },
         controller: 'a2PercentageBarsCtrl as bars'
@@ -28,7 +29,7 @@ angular.module('a2.directive.percentage-bars', [
         return 'bar-' + colors[index % colors.length];
     };
     $scope.getTotal = function(){
-        return $scope.data.reduce(function(a, b){ return a + b; });
+        return $scope.total || $scope.data.reduce(function(a, b){ return a + b; });
     }
     $scope.asPercent = function(value, rounding){
         return numberFilter(value * 100 / $scope.getTotal(), rounding) + '%';
