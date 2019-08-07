@@ -1,5 +1,12 @@
 # CHANGELOG
 
+- v1.16.5
+    - Changed to pattern matching details page
+    - Added pattern matching enable flag, with disabled message
+    - Updated dashboard layout
+    - Added site indexing to pm details
+    - unneeded code removal
+    - css and whitespace fixes
 - v1.16.4
     - bugfix in pattern matching details set page control
 - v1.16.3
