@@ -115,6 +115,7 @@ var PatternMatchings = {
 
         if (options.showPlaylist) {
             select.push("P.`name` as `playlist_name`");
+            select.push("(SELECT COUNT(*) FROM playlist_recordings PR WHERE PR.playlist_id=P.playlist_id) as `playlist_count`");
             tables.push("JOIN playlists P ON P.playlist_id = PM.playlist_id");
         }
 

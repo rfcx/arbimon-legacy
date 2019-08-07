@@ -51,7 +51,7 @@
                     {{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}<br />
                     {{controller.patternMatching.template.name }}<br />
                     {{controller.patternMatching.timestamp | moment : 'lll' }}<br />
-                    {{controller.patternMatching.playlist_name}}<br />
+                    {{controller.patternMatching.playlist_name}} ({{controller.patternMatching.playlist_count}} recordings)<br />
                     {{controller.patternMatching.parameters | asCSV}}<br />
                     {{controller.patternMatching.matches}} matches
                         ({{controller.patternMatching.present || 0}} present,
