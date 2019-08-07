@@ -7,12 +7,17 @@ angular.module('a2.analysis.cnn', [
     'c3-charts',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
-    $stateProvider.state('analysis.cnn', {
+    
+    $stateProvider.state('analysis.disabled-cnn', {
+        url: '/disabled/cnn',
+        templateUrl: '/app/analysis/cnn/disabled.html'
+    })
+    .state('analysis.cnn', {
         url: '/cnn/',
         controller: 'CNNCtrl',
         templateUrl: '/app/analysis/cnn/list.html'
     })
-    .state('analysis.cnn_details', {
+    .state('analysis.cnn-details', {
         url: '/cnn/:cnnId',///:detailType/',
         controller: 'CNNCtrl',
         templateUrl: '/app/analysis/cnn/list.html'
@@ -20,11 +25,13 @@ angular.module('a2.analysis.cnn', [
 })
 .controller('CNNCtrl' , function($scope, $modal, $filter, $location, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
     // this debug line for sanity between servers... Will remove TODO
-    console.log("CNN Version 0.3");
+    console.log("CNN Version 0.45");
     $scope.selectedCNNId = $stateParams.cnnId;
     console.log("TCL: $stateParams", $stateParams)
     console.log("TCL: $state", $state.params)
-    
+
+    console.log("TCL: a2UserPermit.has('cnn')", a2UserPermit.has('cnn'))
+    console.log("TCL: a2UserPermit.has('pattern_matching')", a2UserPermit.has('pattern_matching'))
 
     var initTable = function(p, c, s, f, t) {
         var sortBy = {};
@@ -124,7 +131,7 @@ angular.module('a2.analysis.cnn', [
             $state.go('analysis.cnn', {});
         } else {
             console.log('yes cnnID match');
-            $state.go('analysis.cnn_details', {
+            $state.go('analysis.cnn-details', {
                 cnnId: cnnId,
                 //detailType: 'all'
             });
@@ -388,7 +395,7 @@ angular.module('a2.analysis.cnn', [
                 $scope.cnnOriginal = Object.values($scope.results);
             }
             //console.log('starting state change......');
-            //$state.go('analysis.cnn_details', {detailType: $scope.viewType});
+            //$state.go('analysis.cnn-details', {detailType: $scope.viewType});
             //console.log('ending state change......');
             if($scope.cnnOriginal.length > 0) {
                 //if(!$scope.tableParams) {

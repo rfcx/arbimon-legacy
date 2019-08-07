@@ -59,6 +59,7 @@ var Projects = {
                           "   pp.activation AS plan_activated, \n"+
                           "   p.citizen_scientist_enabled, \n"+
                           "   p.pattern_matching_enabled, \n"+
+                          "   p.cnn_enabled, \n"+
                           "   pp.duration_period AS plan_period \n";
             joinExtra   = "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
         } else {
@@ -321,6 +322,7 @@ var Projects = {
             processing_usage: joi.number().allow(null),
             citizen_scientist_enabled: [joi.number().valid(0,1), joi.boolean()],
             pattern_matching_enabled: [joi.number().valid(0,1), joi.boolean()],
+            cnn_enabled: [joi.number().valid(0,1), joi.boolean()],
             plan: joi.object().keys({
                 tier: joi.string(),
                 storage: joi.number(),
