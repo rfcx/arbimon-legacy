@@ -25,13 +25,8 @@ angular.module('a2.analysis.cnn', [
 })
 .controller('CNNCtrl' , function($scope, $modal, $filter, $location, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
     // this debug line for sanity between servers... Will remove TODO
-    console.log("CNN Version 0.45");
+    console.log("CNN Version 0.5");
     $scope.selectedCNNId = $stateParams.cnnId;
-    console.log("TCL: $stateParams", $stateParams)
-    console.log("TCL: $state", $state.params)
-
-    console.log("TCL: a2UserPermit.has('cnn')", a2UserPermit.has('cnn'))
-    console.log("TCL: a2UserPermit.has('pattern_matching')", a2UserPermit.has('pattern_matching'))
 
     var initTable = function(p, c, s, f, t) {
         var sortBy = {};
@@ -130,7 +125,6 @@ angular.module('a2.analysis.cnn', [
         if (!cnnId){
             $state.go('analysis.cnn', {});
         } else {
-            console.log('yes cnnID match');
             $state.go('analysis.cnn-details', {
                 cnnId: cnnId,
                 //detailType: 'all'
@@ -418,15 +412,15 @@ angular.module('a2.analysis.cnn', [
     };
 
 
-
+/* might need this function to watch for internal state changes, probably not but leaving it in for reference for now
     $scope.$watchCollection(function(){
         return $state.params;
     }, function(){
         console.log("State params have been updated", $state.params);
         //$scope.switchView($state.params.detailType ? $state.params.detailType : 'all');
     });
+*/
 
-
-    console.log("TCL: $state.params", $state.params)
+    //console.log("TCL: $state.params", $state.params)
     $scope.switchView($state.params.detailType ? $state.params.detailType : 'all');
 });
