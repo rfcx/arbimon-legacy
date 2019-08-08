@@ -205,7 +205,7 @@ angular.module('a2.analysis.cnn', [
         },
         controller : 'CNNDetailsCtrl',
         controllerAs: 'controller',
-        templateUrl: '/app/analysis/cnn/details_species.html'
+        templateUrl: '/app/analysis/cnn/details.html'
     };
 })
 .controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
