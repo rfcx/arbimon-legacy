@@ -25,7 +25,7 @@ angular.module('a2.analysis.cnn', [
 })
 .controller('CNNCtrl' , function($scope, $modal, $filter, $location, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
     // this debug line for sanity between servers... Will remove TODO
-    console.log("CNN Version 0.5");
+    console.log("CNN Version 0.55");
     $scope.selectedCNNId = $stateParams.cnnId;
 
     var initTable = function(p, c, s, f, t) {
@@ -337,9 +337,26 @@ angular.module('a2.analysis.cnn', [
         var dataOut = [];
         dataIn.forEach(function(element) {
             element.over_thresh = element.score >= thresh;
+            element.present = element.over_thresh;
             dataOut.push(element);
         });
         dataOut.sort((a, b) => (a.score < b.score) ? 1 : -1);
+        return dataOut;
+    }
+
+    var byROIsbySpecies = function(dataIn) {
+        dataOut = {};
+        dataIn.forEach(function(element) {
+            var s = element.species_id;
+            if (!(s in dataOut)) {
+                dataOut[s] = {count: 0,
+                              species_id: s,
+                              scientific_name: element.scientific_name,
+                              rois: []};
+            }
+            dataOut[s].rois.push(element);
+            dataOut[s].count++;
+        });
         return dataOut;
     }
 
@@ -480,10 +497,12 @@ angular.module('a2.analysis.cnn', [
                 a2CNN.listROIs($scope.cnnId).then(function(data) {
                     $scope.resultsROIs = data;
                     $scope.rois = byROIs($scope.resultsROIs);
+                    $scope.rois_species = byROIsbySpecies($scope.rois);
                     $scope.viewType = "rois";
                 });
             } else {
                 $scope.rois = byROIs($scope.resultsROIs);
+                $scope.rois_species = byROIsbySpecies($scope.rois);
                 $scope.viewType = "rois";
             }
         } else if (!$scope.results){

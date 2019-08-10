@@ -66,37 +66,40 @@
             </div>
         </div>
         <div class="panel-body" ng-show="viewType=='rois'">
-            <div ng-repeat="roi in rois"
-                class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
-                ng-click="roi.selected = !roi.selected"
-                popover-html="'Recording: {{roi.recording}}<br>
-                        Site: {{roi.site}}<br>
-                        Time: {{roi.datetime | date:'medium': 'UTC'}} <br>
-                        Score: {{(roi.score | number) || '(Missing)'}}'"
-                popover-trigger="mouseenter"
-                popover-append-to-body="true"
-            >
-                <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
-                <input class="roi-btn-tr" type="checkbox" ng-model="roi.over_thresh">
-                
-                <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
-                    <i class="fa val-{{roi.validated}}"></i>
+            <div ng-repeat="species in rois_species">
+                <div class="h3" id="site-{{species.species_id}}"><i class="fa fa-map-marker"></i> {{species.scientific_name}}</div>
+                <div ng-repeat="roi in species.rois"
+                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                    ng-click="roi.selected = !roi.selected"
+                    popover-html="'Recording: {{roi.recording}}<br>
+                            Site: {{roi.site}}<br>
+                            Time: {{roi.datetime | date:'medium': 'UTC'}} <br>
+                            Score: {{(roi.score | number) || '(Missing)'}}'"
+                    popover-trigger="mouseenter"
+                    popover-append-to-body="true"
+                >
+                    <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
+                    <input class="roi-btn-tr" type="checkbox" ng-model="roi.over_thresh">
+                    
+                    <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
+                        <i class="fa val-{{roi.validated}}"></i>
+                    </div>
+                    <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
+                        <i tooltip-placement="left"
+                            tooltip-append-to-body="true"
+                            tooltip="View in Visualizer"
+                            class="fa fa-cubes">
+                        </i>
+                    </a>
+                    <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi)">
+                        <i tooltip-placement="left"
+                            tooltip-append-to-body="true"
+                            tooltip="Play Audio"
+                            class="fa fa-play">
+                        </i>
+                    </a>
+                    <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img {{controller.thumbnailClass}}"/>
                 </div>
-                <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
-                    <i tooltip-placement="left"
-                        tooltip-append-to-body="true"
-                        tooltip="View in Visualizer"
-                        class="fa fa-cubes">
-                    </i>
-                </a>
-                <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi)">
-                    <i tooltip-placement="left"
-                        tooltip-append-to-body="true"
-                        tooltip="Play Audio"
-                        class="fa fa-play">
-                    </i>
-                </a>
-                <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img {{controller.thumbnailClass}}"/>
             </div>
         </div>
 
