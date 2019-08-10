@@ -117,9 +117,50 @@ angular.module('a2.analysis.cnn', [
         });
     };
 
-    $scope.deleteCNN = function(cnn){
-        notify.log('Delete not implemented yet. Would be deleting: ' + cnn.name)
+    $scope.deleteCNN = function(cnn, $event) {
+        $event.stopPropagation();
+        /*
+        if(!a2UserPermit.can('manage pattern matchings')) {
+            notify.log('You do not have permission to delete pattern matchings');
+            return;
+        }
+        */
+
+        var modalInstance = $modal.open({
+            templateUrl: '/app/analysis/cnn/deletecnn.html',
+            controller: 'DeleteCNNInstanceCtrl as controller',
+            resolve: {
+                cnn: function() {
+                    return cnn;
+                },
+            }
+        });
+
+        modalInstance.result.then(function(ret) {
+            if (ret.err) {
+                notify.error("Error: "+ret.err);
+            } else {
+                notify.log("CNN: (" + cnn.name + ") deleted successfully");
+                $scope.loadCNNs();
+                /*
+                var index = -1;
+                var modArr = angular.copy($scope.cnnOriginal);
+                for (var i = 0; i < modArr.length; i++) {
+                    if (modArr[i].job_id === cnn.job_id) {
+                        index = i;
+                        break;
+                    }
+                }
+                if (index > -1) {
+                    $scope.cnnOriginal.splice(index, 1);
+                    notify.log("CNN deleted successfully");
+                }
+                */
+            }
+        });
     };
+
+
 
     $scope.selectItem = function(cnnId){
         if (!cnnId){
@@ -140,6 +181,24 @@ angular.module('a2.analysis.cnn', [
         }, {notify:false});
     };
 })
+.controller('DeleteCNNInstanceCtrl',
+    function($scope, $modalInstance, a2CNN, cnn, Project) {
+        this.cnn = cnn;
+        $scope.project_name = Project.getUrl();
+        $scope.deletingloader = false;
+
+        $scope.ok = function() {
+            $scope.deletingloader = true;
+            a2CNN.delete(cnn.job_id).then(function(data) {
+                $modalInstance.close(data);
+            });
+        };
+
+        $scope.cancel = function() {
+            $modalInstance.dismiss('cancel');
+        };
+    }
+)
 .controller('CreateNewCNNInstanceCtrl', function($scope, $modalInstance, a2PatternMatching, a2Templates, a2Playlists, a2CNN, notify) {
     Object.assign(this, {
         initialize: function(){
@@ -271,6 +330,19 @@ angular.module('a2.analysis.cnn', [
         return dataOut;
     }
 
+    var byROIs = function(dataIn, thresh) {
+        if (!thresh) {
+            thresh = 0.9;
+        }
+        var dataOut = [];
+        dataIn.forEach(function(element) {
+            element.over_thresh = element.score >= thresh;
+            dataOut.push(element);
+        });
+        dataOut.sort((a, b) => (a.score < b.score) ? 1 : -1);
+        return dataOut;
+    }
+
     var byRecordings = function(dataIn) {
         var dataOut = {total: 0};
         dataIn.forEach(function(element) {
@@ -373,6 +445,7 @@ angular.module('a2.analysis.cnn', [
             $scope.loading = false;
             $scope.infopanedata = "";
 
+
             if (viewType=="species") {
                 $scope.species = bySpecies($scope.results);
                 $scope.viewType = "species";
@@ -401,12 +474,24 @@ angular.module('a2.analysis.cnn', [
                 $scope.infopanedata = "No cnn results found.";
             }
         };
-        if (!$scope.results){
+
+        if (viewType=="rois") {
+            if (!$scope.resultsROIs) {
+                a2CNN.listROIs($scope.cnnId).then(function(data) {
+                    $scope.resultsROIs = data;
+                    $scope.rois = byROIs($scope.resultsROIs);
+                    $scope.viewType = "rois";
+                });
+            } else {
+                $scope.rois = byROIs($scope.resultsROIs);
+                $scope.viewType = "rois";
+            }
+        } else if (!$scope.results){
             a2CNN.listResults($scope.cnnId).then(function(data) {
                 $scope.results = data;
                 loadSwitch();
             });
-        } else{
+        } else {
             loadSwitch();
         }
     };

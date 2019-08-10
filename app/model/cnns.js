@@ -49,6 +49,10 @@ var CNN = {
             options = {};
         }
 
+        if (!options.showDeleted) {
+            constraints.push("CNN.deleted = 0");
+        }
+
         if (options.job_id) {
             constraints.push("CNN.job_id = ?");
             data.push(options.job_id);
@@ -207,6 +211,108 @@ var CNN = {
         tables.push("JOIN songtypes ST ON ST.`songtype_id` = CRP.`songtype_id`");
 
         tables.push("JOIN recordings R ON R.`recording_id` = CRP.`recording_id`");
+        var groupby = [];
+        if (options instanceof Function) {
+            callback = options;
+            options = null;
+        }
+        if (!options) {
+            options = {};
+        }
+
+        postprocess.push((rows) => {
+            rows.forEach(row => {
+                this.__compute_thumbnail_path(row);
+                try {
+                    row.parameters = JSON.parse(row.parameters);
+                } catch (e) {
+                    row.parameters = {
+                        error: row.parameters
+                    };
+                }
+            })
+            return rows;
+        });
+
+        var queryStr =
+            "SELECT " + select.join(",\n    ") + "\n" +
+            "FROM " + tables.join("\n") + "\n" +
+            (constraints.length ? ("WHERE " + constraints.join(" \n  AND ")) : "") +
+            (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "");
+
+        console.log("TCL: queryStr", queryStr)
+
+        return postprocess.reduce((_, fn) => {
+            return _.then(fn);
+        }, dbpool.query(queryStr, data))
+    },
+    
+    /** Deletes a pattern matching results.
+     * @param {int} cnnId
+     * @return {Promise} resolved after deleting the pattern matching
+     */
+    delete: function (cnnId) {
+        return dbpool.query(
+            "UPDATE job_params_cnn SET deleted=1 WHERE job_id = ?", [cnnId]
+        );
+    },
+
+    getRoisForId(options){
+        console.log("TCL: getRoisForId -> options", options);
+        return this.buildRoisQuery({
+            patternMatching: options.patternMatchingId,
+            perSiteCount: options.perSiteCount,
+            csValidationsFor: options.csValidationsFor,
+            expertCSValidations: options.expertCSValidations,
+            countCSValidations: options.countCSValidations,
+            whereConflicted: options.whereConflicted,
+            whereConsensus: options.whereConsensus,
+            whereExpert: options.whereExpert,
+            wherePresent: options.wherePresent,
+            whereNotPresent: options.whereNotPresent,
+            whereUnvalidated: options.whereUnvalidated,
+            limit: options.limit,
+            offset: options.offset,
+            show: { patternMatchingId: true, datetime: true, names: options.showNames },
+            sortBy: [['S.name', 1], ['R.datetime', 1]],
+        }).then(
+            builder => dbpool.query(builder.getSQL())
+        );
+    },
+
+    listROIs: function (job_id, options) {
+        
+        var constraints = [],
+            projection = [];
+        var postprocess = [];
+        var data = [];
+        var select = [
+            "CRR.`cnn_result_roi_id`",
+            "CRR.`job_id`",
+            "CRR.`recording_id`",
+            "CRR.`species_id`",
+            "CRR.`songtype_id`",
+            "CRR.`x1`",
+            "CRR.`y1`",
+            "CRR.`x2`",
+            "CRR.`y2`",
+            "CRR.`uri` AS roi_thumbnail_uri",
+            "CRR.`score`",
+            "SP.`scientific_name`",
+            "ST.`songtype`",
+            "R.`datetime`",
+            "R.`uri` AS uri"
+            
+        ];
+        var tables = ["cnn_results_rois CRR"];
+
+        constraints.push('CRR.`job_id` = ?');
+        data.push(job_id);
+
+        tables.push("JOIN species SP ON SP.`species_id` = CRR.`species_id`");
+        tables.push("JOIN songtypes ST ON ST.`songtype_id` = CRR.`songtype_id`");
+
+        tables.push("JOIN recordings R ON R.`recording_id` = CRR.`recording_id`");
         var groupby = [];
         if (options instanceof Function) {
             callback = options;

@@ -6,6 +6,11 @@ angular.module('a2.srv.cnn', [
     var saveData = null;
 
     return {
+        listROIs: function (job_id, callback) {
+            return $http.get('/api/project/'+Project.getUrl()+'/cnn/rois/'+job_id).then(function(response){
+                return response.data;
+            }).catch(notify.serverError);
+        },
         listResults: function (job_id, callback) {
             return $http.get('/api/project/'+Project.getUrl()+'/cnn/results/'+job_id).then(function(response){
                 return response.data;

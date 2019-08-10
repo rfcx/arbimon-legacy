@@ -17,7 +17,8 @@ router.get('/', function (req, res, next) {
         showModelName: true,
         showUser: true,
         playlistCount: true,
-        resolveModelUri: true
+        resolveModelUri: true,
+        showDeleted: false
     }).then(function (count) {
         res.json(count);
     }).catch(next);
@@ -50,6 +51,40 @@ router.get('/results/:job_id', function (req, res, next) {
     }).catch(next);
 });
 
+router.get('/rois/:job_id', function (req, res, next) {
+    res.type('json');
+    model.CNN.listROIs(req.params.job_id, {
+        project: req.project.project_id
+    }).then(function (count) {
+        res.json(count);
+    }).catch(next);
+});
+
+router.param('paging', function(req, res, next, paging){
+    const components = paging.split('_');
+    console.log('paging components', components);
+    req.paging = {
+        offset: (components[0] | 0),
+        limit: (components[1] | 0),
+    }
+    return next();
+});
+
+router.get('/:cnn/rois/:paging', function(req, res, next) {
+    res.type('json');
+    model.CNN.getRoisForId({
+        cnnId: req.params.cnn,
+        wherePresent: req.query.search == 'present',
+        whereNotPresent: req.query.search == 'not_present',
+        whereUnvalidated: req.query.search == 'unvalidated',
+        limit: req.paging.limit || 100,
+        offset: req.paging.offset || 0,
+    }).then(function(rois) {
+        res.json(rois);
+    }).catch(next);
+});
+
+
 router.post('/new/', function(req, res, next) {
     res.type('json');
 
@@ -78,5 +113,24 @@ router.post('/new/', function(req, res, next) {
     }).catch(next);
 });
 
+router.post('/:cnn/remove', function(req, res, next) {
+    res.type('json');
+
+    var project_id = req.project.project_id;
+
+    q.resolve().then(function(){
+        /*
+        if(!req.haveAccess(project_id, "manage pattern matchings")){
+            throw new Error({
+                error: "You don't have permission to delete pattern matchings"
+            });
+        }
+        */
+    }).then(function(){
+        return model.CNN.delete(req.params.cnn | 0);
+    }).then(function(){
+        res.json({ok: true});
+    }).catch(next);
+});
 
 module.exports = router;
