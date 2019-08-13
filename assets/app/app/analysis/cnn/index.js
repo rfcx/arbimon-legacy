@@ -35,6 +35,8 @@ angular.module('a2.analysis.cnn', [
             acsDesc = 'asc';
         }
         sortBy[s.substring(1)] = acsDesc;
+        console.log("TCL: initTable -> sortBy", sortBy)
+        
         var tableConfig = {
             page: p,
             count: c,
@@ -78,7 +80,7 @@ angular.module('a2.analysis.cnn', [
 
             if(data.length > 0) {
                 if(!$scope.tableParams) {
-                    initTable(1,10,"+cname",{},data.length);
+                    initTable(1,10,"-timestamp",{},data.length);
                 } else {
                     $scope.tableParams.reload();
                 }
@@ -455,16 +457,19 @@ angular.module('a2.analysis.cnn', [
         if (specie) {
             window.scrollTo(0,0);
         }
+        var sortBy = "-cnn_presence_id";
         var loadSwitch = function(){
             if (viewType=="species") {
                 $scope.species = bySpecies($scope.results);
                 $scope.viewType = "species";
+                sortBy = "-scientific_name";
                 $scope.showHist(specie ? specie : "all");
                 $scope.cnnOriginal = Object.values($scope.species);
             } else if (viewType=="recordings") {
                 $scope.recordings = byRecordings($scope.results);
                 $scope.counts.recordings = Object.keys($scope.recordings).length;
                 $scope.viewType = "recordings";
+                sortBy = "-recording_id";
                 $scope.cnnOriginal = Object.values($scope.recordings);
             } else {
                 $scope.viewType = "all";
@@ -476,7 +481,7 @@ angular.module('a2.analysis.cnn', [
             //console.log('ending state change......');
             if($scope.cnnOriginal.length > 0) {
                 //if(!$scope.tableParams) {
-                    initTable(1,10,"+cname",{},$scope.cnnOriginal.length);
+                    initTable(1,10,sortBy,{},$scope.cnnOriginal.length);
                 //} else {
                 //    $scope.tableParams.reload();
                 //}
