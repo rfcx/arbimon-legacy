@@ -1,70 +1,71 @@
 <div>
-    <div ng-if="controller.loading.details">
-        Loading <loader></loader>
+    <div ng-if="loading">
+        Loading <loader></loader> <span ng-show="viewType=='rois'" class="alert alert-warning" role="alert">Please wait, pagination not enabled; ROIs may take some time to load...</span>
     </div>
-    <div ng-if="!controller.loading.details"
+    <div
         a2-scroll="controller.onScroll($event, $controller)"
         a2-scroll-on="window"
     >
-        <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
-        <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader }">
-            <div class="row row-flex flex-align-top">
-                <div class="col-sm-4 flex-self-align-top">
-                    <div class="row row-flex flex-align-top">
-                        <h3>
-                            {{ job_details.name }}
-                        </h3>
-                    </div>
-                    <div class="row row-flex flex-align-middle cnn-selection-btns">
-                        <button class="btn btn-default non-active-cnn-selection"
-                            onclick="this.blur();"
-                            ng-click="onGoBack({}) | trackEvent:'Analysis-CNN-List':' go back'">
-                            &lt;  Go Back
-                        </button>
-                        <button class="btn btn-default "
-                            onclick="this.blur();"
-                            ng-class="viewType=='all' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
-                            ng-click="switchView('all')">
-                            All
-                        </button>
-                        <button class="btn btn-default"
-                            onclick="this.blur();"
-                            ng-class="viewType=='species' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
-                            ng-click="switchView('species')">
-                            Species
-                        </button>
-                        <button class="btn btn-default"
-                            onclick="this.blur();"
-                            ng-class="viewType=='recordings' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
-                            ng-click="switchView('recordings')">
-                            Recordings
-                        </button>
-                        <button class="btn btn-default"
-                            onclick="this.blur();"
-                            ng-class="viewType=='rois' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
-                            ng-click="switchView('rois')">
-                            ROIs
-                        </button>
-                    </div>
+    <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
+    <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader }">
+        <div class="row row-flex flex-align-top">
+            <div class="col-sm-4 flex-self-align-top">
+                <div class="row row-flex flex-align-top">
+                    <h3>
+                        {{ job_details.name }}
+                    </h3>
                 </div>
-                <div class="col-sm-8 flex-self-align-top">
-                    <div class="row row-flex flex-align-top">
-                        <h3>
-                            CNN ID: {{ job_details.job_id }}
-                        </h3>
-                    </div>
-                    <div class="row row-flex flex-align-middle">
-                        <h4>
-                            Playlist ID: {{ job_details.playlist_id }} / Timestamp: {{ job_details.timestamp }}
-                            </br>
-                            Parameters: {{ job_details.parameters }}
-                        </h4>
-                    </div>
+                <div class="row row-flex flex-align-middle cnn-selection-btns">
+                    <button class="btn btn-default non-active-cnn-selection"
+                        onclick="this.blur();"
+                        ng-click="onGoBack({}) | trackEvent:'Analysis-CNN-List':' go back'">
+                        &lt;  Go Back
+                    </button>
+                    <button class="btn btn-default "
+                        onclick="this.blur();"
+                        ng-class="viewType=='all' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
+                        ng-click="switchView('all')">
+                        All
+                    </button>
+                    <button class="btn btn-default"
+                        onclick="this.blur();"
+                        ng-class="viewType=='species' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
+                        ng-click="switchView('species')">
+                        Species
+                    </button>
+                    <button class="btn btn-default"
+                        onclick="this.blur();"
+                        ng-class="viewType=='recordings' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
+                        ng-click="switchView('recordings')">
+                        Recordings
+                    </button>
+                    <button class="btn btn-default"
+                        onclick="this.blur();"
+                        ng-class="viewType=='rois' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
+                        ng-click="switchView('rois')">
+                        ROIs
+                    </button>
                 </div>
-                <!--{"job_id":11906,"name":"switchTest1-fake","cnn_id":1,"playlist_id":8406,"project_id":1,"timestamp":"2019-08-02T23:06:19.000Z","parameters":{}}-->
-
             </div>
+            <div class="col-sm-8 flex-self-align-top">
+                <div class="row row-flex flex-align-top">
+                    <h3>
+                        CNN ID: {{ job_details.job_id }}
+                    </h3>
+                </div>
+                <div class="row row-flex flex-align-middle">
+                    <h4>
+                        Playlist ID: {{ job_details.playlist_id }} / Timestamp: {{ job_details.timestamp }}
+                        </br>
+                        Parameters: {{ job_details.parameters }}
+                    </h4>
+                </div>
+            </div>
+            <!--{"job_id":11906,"name":"switchTest1-fake","cnn_id":1,"playlist_id":8406,"project_id":1,"timestamp":"2019-08-02T23:06:19.000Z","parameters":{}}-->
+
         </div>
+    </div>
+    <div ng-if="!loading">
         <div class="panel-body" ng-show="viewType=='rois'">
             <div ng-repeat="species in rois_species">
                 <div class="h3" id="site-{{species.species_id}}"><i class="fa fa-map-marker"></i> {{species.scientific_name}}</div>
@@ -211,22 +212,5 @@
                     </tr>
                 </table>
             </div>
-
-        <div class="panel-body">
-            <div class="row" ng-repeat="result in resultsDisplayed | orderBy:'max_score'">
-                {{ result }}<br>
-                <div class="progress progress-striped active"> 
-                    <div ng-style="{ 'background-color': 'blue', width : result.max_score*100 + '%' }" 
-                        aria-valuemax="1" 
-                        aria-valuemin="0" 
-                        aria-valuenow="{{result.max_score}}" 
-                        role="progressbar"
-                        class="progress-bar">
-                        {{ result.max_score }}%
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 </div>

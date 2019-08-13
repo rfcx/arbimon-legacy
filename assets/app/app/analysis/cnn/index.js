@@ -456,15 +456,6 @@ angular.module('a2.analysis.cnn', [
             window.scrollTo(0,0);
         }
         var loadSwitch = function(){
-            $scope.loading = true;
-            $scope.infoInfo = "Loading...";
-            $scope.showInfo = true;
-            $scope.infoInfo = "";
-            $scope.showInfo = false;
-            $scope.loading = false;
-            $scope.infopanedata = "";
-
-
             if (viewType=="species") {
                 $scope.species = bySpecies($scope.results);
                 $scope.viewType = "species";
@@ -495,21 +486,35 @@ angular.module('a2.analysis.cnn', [
         };
 
         if (viewType=="rois") {
+            $scope.viewType = "rois";
             if (!$scope.resultsROIs) {
+                $scope.loading = true;
+                $scope.infoInfo = "Loading...";
+                $scope.showInfo = true;
                 a2CNN.listROIs($scope.cnnId).then(function(data) {
                     $scope.resultsROIs = data;
+                    $scope.infoInfo = "";
+                    $scope.showInfo = false;
+                    $scope.loading = false;
+                    $scope.infopanedata = "";
                     $scope.rois = byROIs($scope.resultsROIs);
                     $scope.rois_species = byROIsbySpecies($scope.rois);
-                    $scope.viewType = "rois";
+                    
                 });
             } else {
                 $scope.rois = byROIs($scope.resultsROIs);
                 $scope.rois_species = byROIsbySpecies($scope.rois);
-                $scope.viewType = "rois";
             }
         } else if (!$scope.results){
+            $scope.loading = true;
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
             a2CNN.listResults($scope.cnnId).then(function(data) {
                 $scope.results = data;
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+                $scope.infopanedata = "";
                 loadSwitch();
             });
         } else {
