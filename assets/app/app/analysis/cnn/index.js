@@ -340,7 +340,9 @@ angular.module('a2.analysis.cnn', [
             element.present = element.over_thresh;
             dataOut.push(element);
         });
-        dataOut.sort((a, b) => (a.score < b.score) ? 1 : -1);
+        dataOut.sort(function(a, b) {
+            return (a.score < b.score) ? 1 : -1;
+        });
         return dataOut;
     }
 
