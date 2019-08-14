@@ -398,6 +398,7 @@ angular.module('a2.analysis.cnn', [
     var bySpeciesHist = function (dataIn, species_id){
         speciesTimes = [];
         count = 0;
+        speciesName = 'All'; //fix this... ugh
         dataIn.forEach(function(element) {
             if (species_id == 'all' | element.species_id == species_id) {
                 if (species_id == 'all') {
