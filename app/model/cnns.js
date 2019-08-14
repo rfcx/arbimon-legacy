@@ -266,8 +266,36 @@ var CNN = {
         );
     },
 
+    getRoiAudioFile(cnnId, roiId, options){
+        options = options || {};
+
+        var query = "SELECT CRR.x1, CRR.x2, CRR.y1, CRR.y2, CRR.uri as imgUri, R.uri as recUri\n" +
+        "FROM cnn_results_rois CRR\n" +
+        "JOIN recordings R ON CRR.recording_id = R.recording_id\n" +
+        "WHERE CRR.cnn_result_roi_id = ?";
+        
+        return dbpool.query(
+            query, [
+                roiId
+            ]
+        ).get(0).then(function(crr){
+            if(!crr){
+                return;
+            }
+
+            return q.ninvoke(Recordings, 'fetchAudioFile', {uri: crr.recUri}, {
+                maxFreq: Math.max(crr.y1, crr.y2),
+                minFreq: Math.min(crr.y1, crr.y2),
+                gain: options.gain || 15,
+                trim: {
+                    from: Math.min(crr.x1, crr.x2),
+                    to: Math.max(crr.x1, crr.x2)
+                },
+            });
+        })
+    },
+
     getRoisForId(options){
-        console.log("TCL: getRoisForId -> options", options);
         return this.buildRoisQuery({
             patternMatching: options.patternMatchingId,
             perSiteCount: options.perSiteCount,

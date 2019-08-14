@@ -25,7 +25,7 @@ angular.module('a2.analysis.cnn', [
 })
 .controller('CNNCtrl' , function($scope, $modal, $filter, $location, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
     // this debug line for sanity between servers... Will remove TODO
-    console.log("CNN Version 0.55");
+    console.log("CNN Version 0.6");
     $scope.selectedCNNId = $stateParams.cnnId;
 
     var initTable = function(p, c, s, f, t) {
@@ -35,8 +35,7 @@ angular.module('a2.analysis.cnn', [
             acsDesc = 'asc';
         }
         sortBy[s.substring(1)] = acsDesc;
-        console.log("TCL: initTable -> sortBy", sortBy)
-        
+
         var tableConfig = {
             page: p,
             count: c,

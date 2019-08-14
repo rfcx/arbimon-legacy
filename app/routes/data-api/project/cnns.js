@@ -60,6 +60,16 @@ router.get('/rois/:job_id', function (req, res, next) {
     }).catch(next);
 });
 
+router.get('/:cnnId/audio/:roiId', function(req, res, next) {
+    model.CNN.getRoiAudioFile(req.params.cnnId, req.params.roiId).then(function(roiAudio) {
+        if(!roiAudio){
+            res.sendStatus(404);
+        } else {
+            res.sendFile(roiAudio.path);
+        }
+    }).catch(next);
+});
+
 router.param('paging', function(req, res, next, paging){
     const components = paging.split('_');
     console.log('paging components', components);
