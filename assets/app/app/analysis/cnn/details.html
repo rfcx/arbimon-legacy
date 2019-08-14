@@ -184,7 +184,20 @@
                                 </i>
                             </a>
                         </div>
-                            {{ result.recording_id }}
+                            <br />{{ result.recording_id }}
+                        </td>
+                        <td data-title="'Triggering ROI'" data-sortable="'cnn_result_roi_id'" filter="{ 'cnn_result_roi_id': 'text' }" class="hidelongtext widthtd is-v-middle">
+                        <div class="roi-thumbnail" >
+                            <img ng-src="{{result.cnn_result_roi_uri}}" class="roi-img is-small"/>
+                            <a class="roi-btn-br" ng-href="{{getRecordingVisualizerUrl(result.recording_id)}}">
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    tooltip="View in Visualizer"
+                                    class="fa fa-cubes">
+                                </i>
+                            </a>
+                        </div>
+                            <br />{{ result.cnn_result_roi_id }}
                         </td>
                         <td data-title="'Species'" data-sortable="'scientific_name'" class="is-v-middle" filter="{ 'scientific_name': 'text' }">
                             <button class="btn btn-default"
