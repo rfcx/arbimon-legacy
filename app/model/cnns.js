@@ -202,7 +202,11 @@ var CNN = {
             "ST.`songtype`",
             "R.`datetime`",
             "R.`uri`",
-            "CRR.`uri` as `cnn_result_roi_uri`"
+            "CRR.`uri` as `cnn_result_roi_uri`",
+            "CRR.`x1`",
+            "CRR.`y1`",
+            "CRR.`x2`",
+            "CRR.`y2`"
         ];
         var tables = ["cnn_results_presence CRP"];
 

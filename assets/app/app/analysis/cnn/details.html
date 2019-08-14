@@ -85,21 +85,21 @@
                     <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
                         <i class="fa val-{{roi.validated}}"></i>
                     </div>
-                    <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
+                    <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}">
                         <i tooltip-placement="left"
                             tooltip-append-to-body="true"
                             tooltip="View in Visualizer"
                             class="fa fa-cubes">
                         </i>
                     </a>
-                    <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi)">
+                    <a class="roi-btn-br" ng-click="playRoiAudio(roi)">
                         <i tooltip-placement="left"
                             tooltip-append-to-body="true"
                             tooltip="Play Audio"
                             class="fa fa-play">
                         </i>
                     </a>
-                    <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img {{controller.thumbnailClass}}"/>
+                    <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img {{thumbnailClass}}"/>
                 </div>
             </div>
         </div>
@@ -189,7 +189,7 @@
                         <td data-title="'Triggering ROI'" data-sortable="'cnn_result_roi_id'" filter="{ 'cnn_result_roi_id': 'text' }" class="hidelongtext widthtd is-v-middle">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{result.cnn_result_roi_uri}}" class="roi-img is-small"/>
-                            <a class="roi-btn-br" ng-href="{{getRecordingVisualizerUrl(result.recording_id)}}">
+                            <a class="roi-btn-br" ng-href="{{getRoiVisualizerUrl(result)}}">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer"
@@ -217,7 +217,7 @@
                         </td>
                         <td class="is-v-middle">
                             <td class="is-v-middle">
-                                <a class="btn btn-default" ng-href="{{getRecordingVisualizerUrl(recording.recording_id)}}">
+                                <a class="btn btn-default" ng-href="{{getRoiVisualizerUrl(result)}}">
                                     Show In Visualizer
                                 </a>
                             </td>

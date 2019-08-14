@@ -269,7 +269,11 @@ angular.module('a2.analysis.cnn', [
         templateUrl: '/app/analysis/cnn/details.html'
     };
 })
-.controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
+.controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, a2AudioPlayer, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
+    var projecturl = Project.getUrl();
+
+    var audio_player = new a2AudioPlayer($scope);
+
     var initTable = function(p, c, s, f, t) {
         var sortBy = {};
         var acsDesc = 'desc';
@@ -447,10 +451,24 @@ angular.module('a2.analysis.cnn', [
         return "/project/"+Project.getUrl()+"/visualizer/rec/"+recording_id;
     };
 
+    $scope.getRoiVisualizerUrl = function(roi){
+        var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
+        return roi ? "/project/"+projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+    };
+
     $scope.getTemplateVisualizerUrl = function(template){
-        var projecturl = Project.getUrl();
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
         return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+    };
+
+    $scope.playRoiAudio = function(roi, $event){
+        if($event){
+            $event.preventDefault();
+            $event.stopPropagation();
+        }
+        audio_player.load(a2CNN.getAudioUrlFor(roi)).then(function(){
+            audio_player.play();
+        })
     };
 
     $scope.switchView = function(viewType, specie) {

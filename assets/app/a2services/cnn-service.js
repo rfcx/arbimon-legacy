@@ -45,6 +45,9 @@ angular.module('a2.srv.cnn', [
         getExportUrl: function(params){
             return '/api/project/' + Project.getUrl() + '/cnn/' + params.patternMatching + '/rois.csv';
         },
+        getAudioUrlFor: function(roi){
+            return '/api/project/' + Project.getUrl() + '/cnn/' + roi.pattern_matching_id + '/audio/' + roi.id;
+        },
         validateRois: function(cnnId, rois, validation) {
             return $http.post('/api/project/' + Project.getUrl() + '/cnn/' + cnnId + '/validate', {
                 rois: rois,
