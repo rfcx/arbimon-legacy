@@ -197,10 +197,12 @@ var CNN = {
             "CRP.`songtype_id`",
             "CRP.`present`",
             "CRP.`max_score`",
+            "CRP.`cnn_result_roi_id`",
             "SP.`scientific_name`",
             "ST.`songtype`",
             "R.`datetime`",
-            "R.`uri`"
+            "R.`uri`",
+            "CRR.`uri` as `cnn_result_roi_uri`"
         ];
         var tables = ["cnn_results_presence CRP"];
 
@@ -211,6 +213,9 @@ var CNN = {
         tables.push("JOIN songtypes ST ON ST.`songtype_id` = CRP.`songtype_id`");
 
         tables.push("JOIN recordings R ON R.`recording_id` = CRP.`recording_id`");
+
+        tables.push("JOIN cnn_results_rois CRR ON CRR.`cnn_result_roi_id` = CRP.`cnn_result_roi_id`");
+
         var groupby = [];
         if (options instanceof Function) {
             callback = options;
@@ -301,7 +306,10 @@ var CNN = {
             "SP.`scientific_name`",
             "ST.`songtype`",
             "R.`datetime`",
-            "R.`uri` AS uri"
+            "R.`uri` AS uri",
+            "R.`site_id`",
+            'SUBSTRING_INDEX(R.`uri`, "/", -1) as `recording`',
+            'S.`name` as `site`',
             
         ];
         var tables = ["cnn_results_rois CRR"];
@@ -313,6 +321,7 @@ var CNN = {
         tables.push("JOIN songtypes ST ON ST.`songtype_id` = CRR.`songtype_id`");
 
         tables.push("JOIN recordings R ON R.`recording_id` = CRR.`recording_id`");
+        tables.push("JOIN sites S ON S.site_id = R.site_id");
         var groupby = [];
         if (options instanceof Function) {
             callback = options;
