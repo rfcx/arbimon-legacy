@@ -126,7 +126,7 @@ var PatternMatchings = {
         }
 
         if (options.showCounts) {
-            select.push("SUM(IF(PMR.pattern_matching_id IS NULL, 0, 1)) as matches");
+            select.push("SUM(IF(PMR.pattern_matching_roi_id IS NULL, 0, 1)) as matches");
             select.push("SUM(IF(PMR.validated=1, 1, 0)) as present");
             select.push("SUM(IF(PMR.validated=0, 1, 0)) as absent");
             tables.push("LEFT JOIN pattern_matching_rois PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
