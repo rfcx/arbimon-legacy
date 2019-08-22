@@ -11,6 +11,11 @@ angular.module('a2.srv.cnn', [
                 return response.data;
             }).catch(notify.serverError);
         },
+        listROIsBySpecies: function (job_id, species_id, callback) {
+            return $http.get('/api/project/'+Project.getUrl()+'/cnn/roisBySpecies/'+job_id+'/'+species_id).then(function(response){
+                return response.data;
+            }).catch(notify.serverError);
+        },
         listResults: function (job_id, callback) {
             return $http.get('/api/project/'+Project.getUrl()+'/cnn/results/'+job_id).then(function(response){
                 return response.data;
@@ -41,6 +46,9 @@ angular.module('a2.srv.cnn', [
             return $http.get('/api/project/' + Project.getUrl() + '/cnn/' + cnnId + '/rois/' + (offset||0) + '_' + (limit||0)).then(function(response){
                 return response.data;
             });
+        },
+        countROIsBySpecies: function(cnnId) {
+            return $http.get('/api/project/' + Project.getUrl() + '/cnn/' + cnnId + '/countROIsBySpecies')
         },
         getExportUrl: function(params){
             return '/api/project/' + Project.getUrl() + '/cnn/' + params.patternMatching + '/rois.csv';

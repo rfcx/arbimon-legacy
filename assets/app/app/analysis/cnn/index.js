@@ -509,6 +509,10 @@ angular.module('a2.analysis.cnn', [
         };
 
         if (viewType=="rois") {
+            a2CNN.countROIsBySpecies($scope.cnnId).then(function(data) {
+            console.log("TCL: $scope.switchView -> data", data)
+                
+            });
             $scope.viewType = "rois";
             if (!$scope.resultsROIs) {
                 $scope.loading = true;

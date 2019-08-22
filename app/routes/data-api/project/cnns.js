@@ -33,6 +33,15 @@ router.get('/:job_id/details', function (req, res, next) {
     }).catch(next);
 });
 
+router.get('/:job_id/countROIsBySpecies', function (req, res, next) {
+    res.type('json');
+    model.CNN.countROIsBySpecies(req.params.job_id, {
+        project: req.project.project_id
+    }).then(function (count) {
+        res.json(count);
+    }).catch(next);
+});
+
 router.get('/models/', function (req, res, next) {
     res.type('json');
     model.CNN.listModels({
@@ -52,8 +61,20 @@ router.get('/results/:job_id', function (req, res, next) {
 });
 
 router.get('/rois/:job_id', function (req, res, next) {
+    console.log("**********THIS ONE************");
     res.type('json');
     model.CNN.listROIs(req.params.job_id, {
+        project: req.project.project_id
+    }).then(function (count) {
+        res.json(count);
+    }).catch(next);
+});
+
+router.get('/roisBySpecies/:job_id/:species_id', function (req, res, next) {
+    console.log("**********THIS ONE************");
+    res.type('json');
+    model.CNN.listROIs(req.params.job_id, {
+        species_id:  req.params.species_id,
         project: req.project.project_id
     }).then(function (count) {
         res.json(count);
@@ -81,6 +102,8 @@ router.param('paging', function(req, res, next, paging){
 });
 
 router.get('/:cnn/rois/:paging', function(req, res, next) {
+console.log("TCL****************************************: paging", paging)
+    
     res.type('json');
     model.CNN.getRoisForId({
         cnnId: req.params.cnn,

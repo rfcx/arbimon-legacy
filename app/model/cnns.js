@@ -295,30 +295,19 @@ var CNN = {
         })
     },
 
-    getRoisForId(options){
-        return this.buildRoisQuery({
-            patternMatching: options.patternMatchingId,
-            perSiteCount: options.perSiteCount,
-            csValidationsFor: options.csValidationsFor,
-            expertCSValidations: options.expertCSValidations,
-            countCSValidations: options.countCSValidations,
-            whereConflicted: options.whereConflicted,
-            whereConsensus: options.whereConsensus,
-            whereExpert: options.whereExpert,
-            wherePresent: options.wherePresent,
-            whereNotPresent: options.whereNotPresent,
-            whereUnvalidated: options.whereUnvalidated,
-            limit: options.limit,
-            offset: options.offset,
-            show: { patternMatchingId: true, datetime: true, names: options.showNames },
-            sortBy: [['S.name', 1], ['R.datetime', 1]],
-        }).then(
-            builder => dbpool.query(builder.getSQL())
-        );
+    countROIsBySpecies: function(job_id, options) {
+        return dbpool.query(
+            "SELECT CNR.species_id,\n" +
+            "COUNT(CNR.cnn_result_roi_id) as N,\n" +
+            "S.scientific_name\n" +
+            "FROM arbimon2.cnn_results_rois CNR\n" +
+            "JOIN species S ON S.species_id = CNR.species_id\n" +
+            "WHERE job_id = ?\n" +
+            "GROUP BY species_id;\n", [job_id]
+        )
     },
 
     listROIs: function (job_id, options) {
-        
         var constraints = [],
             projection = [];
         var postprocess = [];
@@ -363,6 +352,10 @@ var CNN = {
             options = {};
         }
 
+        if (options.species_id) {
+            constraints.push('CRR.`species_id` = ?');
+            data.push(options.species_id);
+        }
         postprocess.push((rows) => {
             rows.forEach(row => {
                 this.__compute_thumbnail_path(row);
@@ -382,7 +375,6 @@ var CNN = {
             "FROM " + tables.join("\n") + "\n" +
             (constraints.length ? ("WHERE " + constraints.join(" \n  AND ")) : "") +
             (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "");
-
         console.log("TCL: queryStr", queryStr)
 
         return postprocess.reduce((_, fn) => {
@@ -398,6 +390,7 @@ var CNN = {
         params     : joi.object().keys({
         }),
     }),
+
     requestNewCNNJob: function(data){
         console.log("TCL: data", data)
         //return {data: data};
@@ -407,7 +400,6 @@ var CNN = {
             f_name = config('lambdas')[data.lambda];
             delete data.lambda;
         }
-        
         console.log("Lambda chosen************:   " + f_name);
         
         return q.ninvoke(joi, 'validate', data, CNN.JOB_SCHEMA).then(() => lambda.invoke({
@@ -422,8 +414,6 @@ var CNN = {
                 params: {}
             }),
         }).promise());
-        
-
     }
 };
 
