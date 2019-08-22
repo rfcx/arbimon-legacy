@@ -144,6 +144,9 @@ var PatternMatchings = {
 
         if(options.showUserStatsFor) {
             select.push(
+                "SUM(IF(PMR.consensus_validated IS NULL AND PMR.expert_validated IS NULL, 1, 0)) as cs_total",
+            );
+            select.push(
                 "SUM(IF(PMV.validated = 1, 1, 0)) as cs_present",
                 "SUM(IF(PMV.validated = 0, 1, 0)) as cs_absent",
                 "SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated"
