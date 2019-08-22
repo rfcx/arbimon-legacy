@@ -223,7 +223,9 @@ var PatternMatchings = {
         perSiteCount: joi.boolean(),
         whereConflicted: joi.boolean(),
         whereExpert: joi.boolean(),
+        whereNotExpert: joi.boolean(),
         whereConsensus: joi.boolean(),
+        whereNotConsensus: joi.boolean(),
         wherePresent: joi.boolean(),
         whereNotPresent: joi.boolean(),
         whereUnvalidated: joi.boolean(),
@@ -369,6 +371,14 @@ var PatternMatchings = {
                 builder.addConstraint("PMR.consensus_validated IS NOT NULL", []);
             }
 
+            if(parameters.whereNotConsensus){
+                builder.addConstraint("PMR.consensus_validated IS NULL", []);
+            }
+
+            if(parameters.whereNotExpert){
+                builder.addConstraint("PMR.expert_validated IS NULL", []);
+            }
+
             if(parameters.wherePresent){
                 builder.addConstraint("PMR.validated = 1", []);
             }
@@ -418,7 +428,9 @@ var PatternMatchings = {
             countCSValidations: options.countCSValidations,
             whereConflicted: options.whereConflicted,
             whereConsensus: options.whereConsensus,
+            whereNotConsensus: options.whereNotConsensus,
             whereExpert: options.whereExpert,
+            whereNotExpert: options.whereNotExpert,
             wherePresent: options.wherePresent,
             whereNotPresent: options.whereNotPresent,
             whereUnvalidated: options.whereUnvalidated,
