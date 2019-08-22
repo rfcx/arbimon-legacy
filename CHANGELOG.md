@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- v1.16.6
+    - Filtering consensus and expert validated rois from cs pm ui
+    - Fixing stats multiple counting bug
 - v1.16.5
     - Changed to pattern matching details page
     - Added pattern matching enable flag, with disabled message

@@ -126,7 +126,7 @@ var PatternMatchings = {
         }
 
         if (options.showCounts) {
-            select.push("SUM(IF(PMR.pattern_matching_id IS NULL, 0, 1)) as matches");
+            select.push("SUM(IF(PMR.pattern_matching_roi_id IS NULL, 0, 1)) as matches");
             select.push("SUM(IF(PMR.validated=1, 1, 0)) as present");
             select.push("SUM(IF(PMR.validated=0, 1, 0)) as absent");
             tables.push("LEFT JOIN pattern_matching_rois PMR ON PMR.pattern_matching_id = PM.pattern_matching_id");
@@ -143,6 +143,9 @@ var PatternMatchings = {
         }
 
         if(options.showUserStatsFor) {
+            select.push(
+                "SUM(IF(PMR.consensus_validated IS NULL AND PMR.expert_validated IS NULL, 1, 0)) as cs_total",
+            );
             select.push(
                 "SUM(IF(PMV.validated = 1, 1, 0)) as cs_present",
                 "SUM(IF(PMV.validated = 0, 1, 0)) as cs_absent",
@@ -223,7 +226,9 @@ var PatternMatchings = {
         perSiteCount: joi.boolean(),
         whereConflicted: joi.boolean(),
         whereExpert: joi.boolean(),
+        whereNotExpert: joi.boolean(),
         whereConsensus: joi.boolean(),
+        whereNotConsensus: joi.boolean(),
         wherePresent: joi.boolean(),
         whereNotPresent: joi.boolean(),
         whereUnvalidated: joi.boolean(),
@@ -369,6 +374,14 @@ var PatternMatchings = {
                 builder.addConstraint("PMR.consensus_validated IS NOT NULL", []);
             }
 
+            if(parameters.whereNotConsensus){
+                builder.addConstraint("PMR.consensus_validated IS NULL", []);
+            }
+
+            if(parameters.whereNotExpert){
+                builder.addConstraint("PMR.expert_validated IS NULL", []);
+            }
+
             if(parameters.wherePresent){
                 builder.addConstraint("PMR.validated = 1", []);
             }
@@ -418,7 +431,9 @@ var PatternMatchings = {
             countCSValidations: options.countCSValidations,
             whereConflicted: options.whereConflicted,
             whereConsensus: options.whereConsensus,
+            whereNotConsensus: options.whereNotConsensus,
             whereExpert: options.whereExpert,
+            whereNotExpert: options.whereNotExpert,
             wherePresent: options.wherePresent,
             whereNotPresent: options.whereNotPresent,
             whereUnvalidated: options.whereUnvalidated,
