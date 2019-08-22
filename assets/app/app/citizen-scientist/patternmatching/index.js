@@ -150,8 +150,8 @@ angular.module('a2.citizen-scientist.patternmatching', [
             this.patternMatching = patternMatching;
             this.setupExportUrl();
             this.total = {
-                rois: patternMatching.matches,
-                pages: Math.ceil(patternMatching.matches / this.limit)
+                rois: patternMatching.cs_total,
+                pages: Math.ceil(patternMatching.cs_total / this.limit)
             }
         }).bind(this)).catch((function(err){
             this.loading.details = false;
