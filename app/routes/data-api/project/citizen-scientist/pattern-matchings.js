@@ -70,6 +70,8 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     model.patternMatchings.getRoisForId({
         patternMatchingId: req.params.patternMatching,
         csValidationsFor: user.id,
+        whereNotConsensus: true,
+        whereNotExpert: true,
         limit: req.paging.limit || 100,
         offset: req.paging.offset || 0,
     }).then(function(rois) {
