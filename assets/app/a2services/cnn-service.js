@@ -6,8 +6,17 @@ angular.module('a2.srv.cnn', [
     var saveData = null;
 
     return {
-        listROIs: function (job_id, callback) {
-            return $http.get('/api/project/'+Project.getUrl()+'/cnn/rois/'+job_id).then(function(response){
+        listROIs: function (job_id, limit, offset, species_id, callback) {
+            if (!limit){
+                var limit = 100;
+            }
+            if(!offset){
+                var offset = 0;
+            }
+            if (!species_id){
+                species_id = 0;
+            }
+            return $http.get('/api/project/'+Project.getUrl()+'/cnn/rois/'+job_id+"/"+species_id+"/"+offset+"_"+limit).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },

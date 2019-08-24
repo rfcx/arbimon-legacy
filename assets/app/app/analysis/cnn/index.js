@@ -269,7 +269,39 @@ angular.module('a2.analysis.cnn', [
     };
 })
 .controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, a2AudioPlayer, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
+
     var projecturl = Project.getUrl();
+
+    $scope.lists = {
+        thumbnails: [
+            { class:'fa fa-th-large', value:''},
+            { class:'fa fa-th', value:'is-small'},
+        ],
+        search: [
+            {value:'all', text:'All'},
+            {value:'present', text:'Present'},
+            {value:'not_present', text:'Not Present'},
+            {value:'unvalidated', text:'Unvalidated'},
+        ],
+        selection: [
+            {value:'all', text:'All'},
+            {value:'none', text:'None'},
+            {value:'not-validated', text:'Not Validated'},
+        ],
+        validation: [
+            { class:"fa val-1", text: "Present", value: 1},
+            { class:"fa val-0", text: "Not Present", value: 0 },
+            { class:"fa val-null", text: "Clear", value: null },
+        ],
+        current: {
+            thumbnailClass: 'is-small'
+        }
+    };
+    $scope.search = $scope.lists.search[0];
+    $scope.total = {rois:0, pages:0};
+    $scope.selected = {roi_index:0, roi:null, page:0};
+    $scope.offset = 0;
+    $scope.limit = 100;
 
     var audio_player = new a2AudioPlayer($scope);
 
@@ -507,47 +539,100 @@ angular.module('a2.analysis.cnn', [
                 $scope.infopanedata = "No cnn results found.";
             }
         };
-
-        if (viewType=="rois") {
-            a2CNN.countROIsBySpecies($scope.cnnId).then(function(data) {
-            console.log("TCL: $scope.switchView -> data", data)
-                
-            });
-            $scope.viewType = "rois";
-            if (!$scope.resultsROIs) {
-                $scope.loading = true;
-                $scope.infoInfo = "Loading...";
-                $scope.showInfo = true;
-                a2CNN.listROIs($scope.cnnId).then(function(data) {
-                    $scope.resultsROIs = data;
-                    $scope.infoInfo = "";
-                    $scope.showInfo = false;
-                    $scope.loading = false;
-                    $scope.infopanedata = "";
-                    $scope.rois = byROIs($scope.resultsROIs);
-                    $scope.rois_species = byROIsbySpecies($scope.rois);
-                    
-                });
-            } else {
-                $scope.rois = byROIs($scope.resultsROIs);
-                $scope.rois_species = byROIsbySpecies($scope.rois);
-            }
-        } else if (!$scope.results){
-            $scope.loading = true;
-            $scope.infoInfo = "Loading...";
-            $scope.showInfo = true;
-            a2CNN.listResults($scope.cnnId).then(function(data) {
-                $scope.results = data;
-                $scope.infoInfo = "";
-                $scope.showInfo = false;
-                $scope.loading = false;
-                $scope.infopanedata = "";
-                loadSwitch();
-            });
-        } else {
-            loadSwitch();
+    $scope.setPage = function(page, force){
+        page = Math.max(0, Math.min(page, ($scope.total.rois / $scope.limit) | 0));
+        if(page != $scope.selected.page || force){
+            $scope.selected.page = page;
+            console.log("TCL: $scope.setPage -> $scope.selected.page", $scope.selected.page)
+            $scope.offset = page * $scope.limit;
+            loadROIPage();
+        }
+        
+    };
+    $scope.moveROIPage = function(n){
+        var nextPage = $scope.selected.page + n;
+        if (nextPage > $scope.total.pages - 1){
+            $scope.setPage(0);
+        }else if (nextPage < 0){
+            $scope.setPage($scope.total.pages - 1);
+        }else {
+            $scope.setPage(nextPage);
         }
     };
+
+    $scope.setSpecies = function(species) {
+        console.log("TCL: $scope.setSpecies -> species", species)
+        $scope.selected.species = species;
+        $scope.selected.page = 0;
+        $scope.offset = 0;
+        $scope.total = {
+            rois: species.N,
+            pages: Math.ceil(species.N / $scope.limit)
+        };
+        console.log("TCL: $scope.setSpecies -> $scope.total", $scope.total)
+        loadROIPage();
+    };
+
+    var loadROIPage = function() {
+        $scope.loading = true;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+        console.log("TCL: loadROIPage -> $scope.selected.species.species_id", $scope.selected.species.species_id)
+        a2CNN.listROIs($scope.cnnId, $scope.limit, $scope.offset, $scope.selected.species.species_id).then(function(data) {
+            $scope.resultsROIs = data;
+            $scope.infoInfo = "";
+            $scope.showInfo = false;
+            $scope.loading = false;
+            $scope.infopanedata = "";
+            $scope.rois = byROIs($scope.resultsROIs);
+            $scope.rois_species = byROIsbySpecies($scope.rois);
+            
+        });
+    };
+
+    if (viewType=="rois") {
+        a2CNN.countROIsBySpecies($scope.cnnId).then(function(response) {
+            var data = response.data;
+            $scope.roi_species_counts = data;
+            var count_all = $scope.roi_species_counts.reduce(function(count, current){
+                return count = count + current.N;
+            }, 0);
+            $scope.selected.species = {species_id: 0, N: count_all, scientific_name: "All"};
+            $scope.roi_species_counts.unshift($scope.selected.species);
+            $scope.total = {
+                rois: count_all,
+                pages: Math.ceil(count_all / $scope.limit)
+            };
+            console.log("TCL: $scope.switchView -> $scope.total", $scope.total)
+            
+            console.log("TCL: $scope.switchView -> $scope.roi_species_count_all", $scope.roi_species_count_all)
+            console.log("TCL: $scope.switchView -> $scope.roi_species_counts", $scope.roi_species_counts)
+            $scope.viewType = "rois";
+            loadROIPage();
+        });
+        //$scope.viewType = "rois";
+        //if (!$scope.resultsROIs) {
+        //    loadROIPage();
+        //} else {
+        //    $scope.rois = byROIs($scope.resultsROIs);
+        //    $scope.rois_species = byROIsbySpecies($scope.rois);
+        //}
+    } else if (!$scope.results){
+        $scope.loading = true;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+        a2CNN.listResults($scope.cnnId).then(function(data) {
+            $scope.results = data;
+            $scope.infoInfo = "";
+            $scope.showInfo = false;
+            $scope.loading = false;
+            $scope.infopanedata = "";
+            loadSwitch();
+        });
+    } else {
+        loadSwitch();
+    }
+};
 
 
 /* might need this function to watch for internal state changes, probably not but leaving it in for reference for now
@@ -560,5 +645,5 @@ angular.module('a2.analysis.cnn', [
 */
 
     //console.log("TCL: $state.params", $state.params)
-    $scope.switchView($state.params.detailType ? $state.params.detailType : 'all');
+    $scope.switchView($state.params.detailType ? $state.params.detailType : 'rois');
 });

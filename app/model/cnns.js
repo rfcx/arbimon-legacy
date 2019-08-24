@@ -312,6 +312,8 @@ var CNN = {
             projection = [];
         var postprocess = [];
         var data = [];
+        var limits = false;
+
         var select = [
             "CRR.`cnn_result_roi_id`",
             "CRR.`job_id`",
@@ -351,10 +353,23 @@ var CNN = {
         if (!options) {
             options = {};
         }
-
+        console.log("TCL: options", options)
         if (options.species_id) {
-            constraints.push('CRR.`species_id` = ?');
-            data.push(options.species_id);
+
+        console.log("TCL: options.species_id", options.species_id)
+            
+            if (options.species_id != 0){
+                constraints.push('CRR.`species_id` = ?');
+                data.push(options.species_id);
+            }
+        }
+
+        if(options.limit){
+            console.log("TCL: options.limit", options.limit)
+            limits = {limit: options.limit,
+                      offset: options.offset || 0};
+            console.log("TCL: limits", limits)
+                      
         }
         postprocess.push((rows) => {
             rows.forEach(row => {
@@ -374,7 +389,9 @@ var CNN = {
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
             (constraints.length ? ("WHERE " + constraints.join(" \n  AND ")) : "") +
-            (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "");
+            (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "") +
+            "\nORDER BY CRR.`species_id`, R.`site_id`" +
+            (limits ? ("\nLIMIT " + limits.limit + " OFFSET " + limits.offset) : "");
         console.log("TCL: queryStr", queryStr)
 
         return postprocess.reduce((_, fn) => {

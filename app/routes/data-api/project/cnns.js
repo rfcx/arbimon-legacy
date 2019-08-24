@@ -9,6 +9,16 @@ var pokeDaMonkey = require('../../../utils/monkey');
 var csv_stringify = require("csv-stringify");
 
 
+router.param('paging', function(req, res, next, paging){
+    const components = paging.split('_');
+    console.log('paging components', components);
+    req.paging = {
+        offset: (components[0] | 0),
+        limit: (components[1] | 0),
+    }
+    return next();
+});
+
 router.get('/', function (req, res, next) {
     res.type('json');
     model.CNN.find({
@@ -61,7 +71,7 @@ router.get('/results/:job_id', function (req, res, next) {
 });
 
 router.get('/rois/:job_id', function (req, res, next) {
-    console.log("**********THIS ONE************");
+    console.log("**********THIS ONE1************");
     res.type('json');
     model.CNN.listROIs(req.params.job_id, {
         project: req.project.project_id
@@ -70,8 +80,23 @@ router.get('/rois/:job_id', function (req, res, next) {
     }).catch(next);
 });
 
+router.get('/rois/:job_id/:species_id/:paging', function (req, res, next) {
+    console.log("**********THIS ONE3************");
+
+    console.log("TCL: req.paging", req.paging)
+    res.type('json');
+    model.CNN.listROIs(req.params.job_id, {
+        project: req.project.project_id,
+        limit: req.paging.limit,
+        offset: req.paging.offset,
+        species_id: req.params.species_id
+    }).then(function (count) {
+        res.json(count);
+    }).catch(next);
+});
+
 router.get('/roisBySpecies/:job_id/:species_id', function (req, res, next) {
-    console.log("**********THIS ONE************");
+    console.log("**********THIS ONE2************");
     res.type('json');
     model.CNN.listROIs(req.params.job_id, {
         species_id:  req.params.species_id,
@@ -89,16 +114,6 @@ router.get('/:cnnId/audio/:roiId', function(req, res, next) {
             res.sendFile(roiAudio.path);
         }
     }).catch(next);
-});
-
-router.param('paging', function(req, res, next, paging){
-    const components = paging.split('_');
-    console.log('paging components', components);
-    req.paging = {
-        offset: (components[0] | 0),
-        limit: (components[1] | 0),
-    }
-    return next();
 });
 
 router.get('/:cnn/rois/:paging', function(req, res, next) {
