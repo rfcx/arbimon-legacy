@@ -286,11 +286,19 @@
                         <td data-title="'Triggering ROI'" data-sortable="'cnn_result_roi_id'" filter="{ 'cnn_result_roi_id': 'text' }" class="hidelongtext widthtd is-v-middle">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{result.cnn_result_roi_uri}}" class="roi-img-cnn is-small"/>
-                            <a class="roi-btn-br" ng-href="{{getRoiVisualizerUrl(result)}}">
+                            <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(result)}}">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer"
                                     class="fa fa-cubes">
+                                </i>
+                            </a>
+                            <a class="roi-btn-br" ng-click="playRoiAudio(result)">
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    tooltip="Play Audio"
+                                    class="fa fa-play"
+                                    style="cursor:pointer">
                                 </i>
                             </a>
                         </div>
