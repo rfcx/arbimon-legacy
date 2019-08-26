@@ -52,6 +52,34 @@ router.get('/:job_id/countROIsBySpecies', function (req, res, next) {
     }).catch(next);
 });
 
+router.get('/:job_id/countROIsBySites', function (req, res, next) {
+    res.type('json');
+    model.CNN.countROIsBySites(req.params.job_id, {
+        project: req.project.project_id
+    }).then(function (count) {
+        res.json(count);
+    }).catch(next);
+});
+
+router.get('/:job_id/countROIsBySpeciesSites', function (req, res, next) {
+    res.type('json');
+    model.CNN.countROIsBySpeciesSites(req.params.job_id, {
+        project: req.project.project_id
+    }).then(function (response) {
+        res.json(response);
+    }).catch(next);
+});
+
+router.post('/:job_id/validate', function(req, res, next) {
+    res.type('json');
+    model.CNN.validateRois(req.params.job_id, req.body.rois, req.body.validation).then(function(rois) {
+        res.json({
+            rois: req.body.rois,
+            validation: req.body.validation,
+        });
+    }).catch(next);
+});
+
 router.get('/models/', function (req, res, next) {
     res.type('json');
     model.CNN.listModels({
@@ -80,7 +108,7 @@ router.get('/rois/:job_id', function (req, res, next) {
     }).catch(next);
 });
 
-router.get('/rois/:job_id/:species_id/:paging', function (req, res, next) {
+router.get('/rois/:job_id/:species_id/:site_id/:paging', function (req, res, next) {
     console.log("**********THIS ONE3************");
 
     console.log("TCL: req.paging", req.paging)
@@ -89,7 +117,8 @@ router.get('/rois/:job_id/:species_id/:paging', function (req, res, next) {
         project: req.project.project_id,
         limit: req.paging.limit,
         offset: req.paging.offset,
-        species_id: req.params.species_id
+        species_id: req.params.species_id,
+        site_id: req.params.site_id
     }).then(function (count) {
         res.json(count);
     }).catch(next);

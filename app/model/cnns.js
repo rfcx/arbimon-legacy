@@ -297,14 +297,62 @@ var CNN = {
 
     countROIsBySpecies: function(job_id, options) {
         return dbpool.query(
-            "SELECT CNR.species_id,\n" +
-            "COUNT(CNR.cnn_result_roi_id) as N,\n" +
+            "SELECT CRR.species_id,\n" +
+            "COUNT(CRR.cnn_result_roi_id) as N,\n" +
             "S.scientific_name\n" +
-            "FROM arbimon2.cnn_results_rois CNR\n" +
-            "JOIN species S ON S.species_id = CNR.species_id\n" +
+            "FROM cnn_results_rois CRR\n" +
+            "JOIN species S ON S.species_id = CRR.species_id\n" +
             "WHERE job_id = ?\n" +
             "GROUP BY species_id;\n", [job_id]
         )
+    },
+
+    countROIsBySites: function(job_id, options) {
+        return dbpool.query(
+            "SELECT COUNT(CRR.cnn_result_roi_id) as N,\n" +
+            "S.name,\n" +
+            "S.site_id\n" +
+            "FROM cnn_results_rois CRR\n" +
+            "JOIN recordings R ON R.recording_id = CRR.recording_id\n" +
+            "JOIN sites S ON S.site_id = R.site_id\n" +
+            "WHERE job_id = ?\n" +
+            "GROUP BY S.site_id;\n", [job_id]
+        )
+    },
+
+    countROIsBySpeciesSites: function(job_id, options) {
+        var site_sql = "";
+        //[", SUM(CASE WHEN S.site_id=922 THEN 1 ELSE 0 END) site_922\n";]
+        return this.countROIsBySites(job_id).then(function(data) {
+            var rois_by_sites = data;
+            data.forEach(function(row) {
+                site_sql = site_sql + ", SUM(CASE WHEN S.site_id=" + row.site_id + " THEN 1 ELSE 0 END) site_" + row.site_id + "_" + row.name + "\n";
+                
+            })
+            console.log("TCL: site_sql", site_sql)
+            return dbpool.query(
+                "SELECT CRR.species_id, SP.scientific_name, COUNT(*) `total`\n" +
+                site_sql +
+                "FROM cnn_results_rois CRR\n" +
+                "JOIN recordings R ON R.recording_id=CRR.recording_id\n" +
+                "JOIN sites S ON S.site_id=R.site_id\n" +
+                "JOIN species SP ON SP.species_id=CRR.species_id\n" +
+                "WHERE job_id = ?\n" +
+                "GROUP BY CRR.species_id;\n", [job_id]
+            );
+        })
+    },
+
+    validateRois(job_id, rois, validation){
+        return rois.length ? dbpool.query(
+            "UPDATE cnn_results_rois\n" +
+            "SET validated = ?\n" +
+            "WHERE job_id = ?\n" +
+            "AND cnn_result_roi_id IN (?)", [
+            validation,
+            job_id,
+            rois,
+        ]) : Promise.resolve();
     },
 
     listROIs: function (job_id, options) {
@@ -326,6 +374,7 @@ var CNN = {
             "CRR.`y2`",
             "CRR.`uri` AS roi_thumbnail_uri",
             "CRR.`score`",
+            "CRR.`validated`",
             "SP.`scientific_name`",
             "ST.`songtype`",
             "R.`datetime`",
@@ -353,17 +402,21 @@ var CNN = {
         if (!options) {
             options = {};
         }
-        console.log("TCL: options", options)
+        console.log("************TCL: options", options)
         if (options.species_id) {
-
-        console.log("TCL: options.species_id", options.species_id)
-            
+            console.log("TCL: options.species_id", options.species_id)
             if (options.species_id != 0){
                 constraints.push('CRR.`species_id` = ?');
                 data.push(options.species_id);
             }
         }
-
+        if (options.site_id) {
+            console.log("TCL: options.site_id", options.site_id)
+            if (options.site_id != 0){
+                constraints.push('S.`site_id` = ?');
+                data.push(options.site_id);
+            }
+        }
         if(options.limit){
             console.log("TCL: options.limit", options.limit)
             limits = {limit: options.limit,

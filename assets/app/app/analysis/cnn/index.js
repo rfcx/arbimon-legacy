@@ -95,7 +95,7 @@ angular.module('a2.analysis.cnn', [
 
     $scope.createNewCNN = function () {
         // TODO: add in real cnn permissions
-        if(!a2UserPermit.can('manage pattern matchings')) {
+        if(!a2UserPermit.can('manage cnns')) {
             notify.log('You do not have permission to create cnn jobs.');
             return;
         }
@@ -120,12 +120,12 @@ angular.module('a2.analysis.cnn', [
 
     $scope.deleteCNN = function(cnn, $event) {
         $event.stopPropagation();
-        /*
-        if(!a2UserPermit.can('manage pattern matchings')) {
-            notify.log('You do not have permission to delete pattern matchings');
+        
+        if(!a2UserPermit.can('manage cnns')) {
+            notify.log('You do not have permission to delete cnns.');
             return;
         }
-        */
+        
 
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/cnn/deletecnn.html',
@@ -300,6 +300,7 @@ angular.module('a2.analysis.cnn', [
     $scope.search = $scope.lists.search[0];
     $scope.total = {rois:0, pages:0};
     $scope.selected = {roi_index:0, roi:null, page:0};
+    $scope.validation = {current: $scope.lists.validation[2]};
     $scope.offset = 0;
     $scope.limit = 100;
 
@@ -346,6 +347,24 @@ angular.module('a2.analysis.cnn', [
 
     //$scope.viewType = "all";
     $scope.counts = {recordings: null};
+
+    $scope.onSelect = function(item) {
+        $scope.select(item.value);
+    };
+
+    $scope.select = function(option) {
+        var selectFn = null;
+        if(option === "all"){
+            selectFn = function(roi){roi.selected = true;};
+        } else if(option === "none"){
+            selectFn = function(roi){roi.selected = false;};
+        } else if(option === "not-validated"){
+            selectFn = function(roi){roi.selected = roi.validated === null;};
+        } else {
+            selectFn = function(roi){roi.selected = roi.id === option;};
+        }
+        ($scope.resultsROIs || []).forEach(selectFn);
+    };
 
     a2CNN.getDetailsFor($scope.cnnId).then(function(data) {
         $scope.job_details = data;
@@ -503,6 +522,219 @@ angular.module('a2.analysis.cnn', [
         })
     };
 
+
+    $scope.setPage = function(page, force){
+        page = Math.max(0, Math.min(page, ($scope.total.rois / $scope.limit) | 0));
+        if(page != $scope.selected.page || force){
+            $scope.selected.page = page;
+            console.log("TCL: $scope.setPage -> $scope.selected.page", $scope.selected.page)
+            $scope.offset = page * $scope.limit;
+            loadROIPage();
+        }
+        
+    };
+    $scope.moveROIPage = function(n){
+        var nextPage = $scope.selected.page + n;
+        if (nextPage > $scope.total.pages - 1){
+            $scope.setPage(0);
+        }else if (nextPage < 0){
+            $scope.setPage($scope.total.pages - 1);
+        }else {
+            $scope.setPage(nextPage);
+        }
+    };
+
+    $scope.setSpecies = function(species) {
+        console.log("TCL: $scope.setSpecies -> species", species)
+        $scope.selected.species = species;
+        $scope.selected.page = 0;
+        $scope.offset = 0;
+
+        var site_name  = "site_" + $scope.selected.site.site_id + "_" + $scope.selected.site.name;
+        if ($scope.selected.site.site_id==0) {
+            site_name = 0;
+        }
+        $scope.counts.roi_species_counts = getSpeciesCounts(site_name, $scope.roi_species_sites_counts);
+        $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species.species_id, $scope.roi_species_sites_counts);
+        var count_all_species = $scope.counts.roi_species_counts.reduce(function(count, current){
+            return count = count + current.N;
+        }, 0);
+        all_species = {species_id: 0, N: count_all_species, scientific_name: "All Species"};
+        $scope.counts.roi_species_counts.unshift(all_species);
+        var count_all_sites = $scope.counts.roi_sites_counts.reduce(function(count, current){
+            return count = count + current.N;
+        }, 0);
+        var all_site = {site_id: 0, N: count_all_sites, name: "All Sites"};
+        $scope.counts.roi_sites_counts.unshift(all_site);
+        $scope.selected.site = $scope.counts.roi_sites_counts.find(function(element) {
+            return element.site_id == $scope.selected.site.site_id;
+        });
+        $scope.selected.species = $scope.counts.roi_species_counts.find(function(element) {
+            return element.species_id == $scope.selected.species.species_id;
+        });
+        //$scope.counts.roi_sites_counts.unshift($scope.selected.site);
+        //$scope.selected.site = all_site;
+        $scope.total = {
+            rois: species.N,
+            pages: Math.ceil(species.N / $scope.limit)
+        };
+        console.log("TCL: $scope.setSpecies -> $scope.total", $scope.total)
+        loadROIPage();
+    };
+
+    $scope.counts = {};
+    $scope.setSite = function(site) {
+        console.log("TCL: $scope.setSite -> site", site)
+        $scope.selected.site = site;
+        $scope.selected.page = 0;
+        $scope.offset = 0;
+        var site_name  = "site_" + $scope.selected.site.site_id + "_" + $scope.selected.site.name;
+        if ($scope.selected.site.site_id==0) {
+            site_name = 0;
+        }
+        $scope.counts.roi_species_counts = getSpeciesCounts(site_name, $scope.roi_species_sites_counts);
+        console.log("1TCL: $scope.setSite -> $scope.counts.roi_species_counts", $scope.counts.roi_species_counts)
+        $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species.species_id, $scope.roi_species_sites_counts);
+        var count_all_species = $scope.counts.roi_species_counts.reduce(function(count, current){
+            return count = count + current.N;
+        }, 0);
+        all_species = {species_id: 0, N: count_all_species, scientific_name: "All Species"};
+        $scope.counts.roi_species_counts.unshift(all_species);
+        //$scope.counts.roi_species_counts.unshift($scope.selected.species);
+        console.log("2TCL: $scope.setSite -> $scope.counts.roi_species_counts", $scope.counts.roi_species_counts)
+        var count_all_sites = $scope.counts.roi_sites_counts.reduce(function(count, current){
+            return count = count + current.N;
+        }, 0);
+        var all_site = {site_id: 0, N: count_all_sites, name: "All Sites"};
+        $scope.counts.roi_sites_counts.unshift(all_site);
+
+        $scope.selected.species = $scope.counts.roi_species_counts.find(function(element) {
+            return element.species_id == $scope.selected.species.species_id;
+        });
+        $scope.selected.site = $scope.counts.roi_sites_counts.find(function(element) {
+            return element.site_id == $scope.selected.site.site_id;
+        });
+        
+        $scope.total = {
+            rois: site.N,
+            pages: Math.ceil(site.N / $scope.limit)
+        };
+        console.log("TCL: $scope.setSite -> $scope.total", $scope.total)
+        loadROIPage();
+    };
+
+    var loadROIPage = function() {
+        $scope.loading = true;
+        $scope.infoInfo = "Loading...";
+        $scope.showInfo = true;
+        console.log("TCL: loadROIPage -> $scope.selected.species.species_id", $scope.selected.species.species_id)
+        console.log("TCL: loadROIPage -> $scope.selected.site.site_id", $scope.selected.site.site_id)
+        a2CNN.listROIs($scope.cnnId, $scope.limit, $scope.offset, $scope.selected.species.species_id, $scope.selected.site.site_id).then(function(data) {
+        
+            $scope.resultsROIs = data;
+            $scope.infoInfo = "";
+            $scope.showInfo = false;
+            $scope.loading = false;
+            $scope.infopanedata = "";
+            $scope.rois = byROIs($scope.resultsROIs);
+            $scope.rois_species = byROIsbySpecies($scope.rois);
+            console.log("TCL: loadROIPage -> $scope.rois_species", $scope.rois_species)
+            
+        });
+    };
+
+    $scope.validate = function(){
+        if(!a2UserPermit.can('validate cnn rois')) {
+            notify.log('You do not have permission to validate the cnn rois.');
+            return;
+        }
+
+        var validation = ($scope.validation.current || {value:null}).value;
+        console.log("TCL: $scope.validate -> $scope.validation.current", $scope.validation.current)
+
+        var rois = []
+        for (var species in $scope.rois_species) {
+            $scope.rois_species[species].rois.forEach(function (roi){
+                if(roi.selected){
+                    rois.push(roi);
+                }
+            });
+        }
+
+        var roiIds = rois.map(function(roi){ return roi.cnn_result_roi_id; })
+        console.log("TCL: $scope.validate -> roiIds", roiIds)
+        console.log("TCL: $scope.validate -> validation", validation)
+        //var val_delta = {0:0, 1:0, null:0};
+        try {
+            a2CNN.validateRois($scope.cnnId, roiIds, validation).then(function(response){
+                console.log("TCL: $scope.validate -> response", response)
+                rois.forEach(function(roi){
+                    roi.validated = validation;
+                    roi.selected = false;
+                });
+                //loadROIPage();
+            });
+        } catch(error) {
+            console.log("***----????"); //why not catching net::ERR_CONNECTION_REFUSED ?
+            console.log("TCL: $scope.validate -> error", error)
+        }
+    };
+
+    //$scope.calcWidth = function(roi) {
+
+    //};
+
+    var getSpeciesCounts = function(site, species_sites_matrix) {
+        console.log("TCL: getSpeciesCounts -> site", site)
+        console.log("TCL: getSpeciesCounts -> species_sites_matrix", species_sites_matrix)
+        if (site==0) {
+            site = 'total'
+        }
+        var roi_species_counts = [];
+        species_sites_matrix.forEach(function(species) {
+            roi_species_counts.push({species_id: species.species_id, N: species[site], scientific_name: species.scientific_name})
+        })
+        return roi_species_counts;
+    };
+
+    var getSitesCounts = function(species, species_sites_matrix) {
+        console.log("TCL: getSitesCounts -> species", species)
+        console.log("TCL: getSiteCounts -> species_sites_matrix", species_sites_matrix)
+        if (species==0) {
+            species = 'total'
+        }
+        var roi_site_counts = [];
+        species_sites_matrix.forEach(function(s) {
+            if (species=='total' | s.species_id == species) {
+                for (key in s) {
+                    split = key.split("_");
+                    site_id = split[1];
+                    name = split.slice(2).join("_");
+
+                    if (split[0] == "site") {
+                        row = {};
+                        row.site_id = site_id;
+                        row.N = s[key];
+                        row.name = name;
+                        roi_site_counts.push(row);
+                    }
+                }
+            }
+        })
+        if (species=='total') {
+            roi_site_counts_dict = roi_site_counts.reduce(function(sitesAcc, site) {
+                //console.log(sitesAcc);
+                //console.log(site);
+                if (!(site.site_id in sitesAcc)) {
+                    sitesAcc[site.site_id] = {site_id: site.site_id, N: 0, name: site.name};
+                }
+                sitesAcc[site.site_id].N += site.N;
+                return sitesAcc;
+            }, {})
+            roi_site_counts = Object.values(roi_site_counts_dict);
+        }
+        return roi_site_counts;
+    };
     $scope.switchView = function(viewType, specie) {
         if (specie) {
             window.scrollTo(0,0);
@@ -539,100 +771,61 @@ angular.module('a2.analysis.cnn', [
                 $scope.infopanedata = "No cnn results found.";
             }
         };
-    $scope.setPage = function(page, force){
-        page = Math.max(0, Math.min(page, ($scope.total.rois / $scope.limit) | 0));
-        if(page != $scope.selected.page || force){
-            $scope.selected.page = page;
-            console.log("TCL: $scope.setPage -> $scope.selected.page", $scope.selected.page)
-            $scope.offset = page * $scope.limit;
-            loadROIPage();
-        }
-        
-    };
-    $scope.moveROIPage = function(n){
-        var nextPage = $scope.selected.page + n;
-        if (nextPage > $scope.total.pages - 1){
-            $scope.setPage(0);
-        }else if (nextPage < 0){
-            $scope.setPage($scope.total.pages - 1);
-        }else {
-            $scope.setPage(nextPage);
-        }
-    };
+        if (viewType=="rois") {
+            //a2CNN.countROIsBySpeciesSites($scope.cnnId).then(function(response) {
+            //    var data = response.data;
+            //    $scope.roi_species_site_counts = data;
+            //    console.log("TCL: $scope.switchView -> $scope.roi_species_site_counts", $scope.roi_species_site_counts)
+            //});
+            a2CNN.countROIsBySpeciesSites($scope.cnnId).then(function(response) {
+                var data = response.data;
+                console.log("****TCL: $scope.switchView -> data", data)
+                $scope.roi_species_sites_counts = data;
+                $scope.counts.roi_species_counts = getSpeciesCounts(0, $scope.roi_species_sites_counts);
+                $scope.counts.roi_sites_counts = getSitesCounts(0, $scope.roi_species_sites_counts);
+                console.log("TCL: $scope.switchView -> $scope.counts.roi_sites_counts", $scope.counts.roi_sites_counts)
 
-    $scope.setSpecies = function(species) {
-        console.log("TCL: $scope.setSpecies -> species", species)
-        $scope.selected.species = species;
-        $scope.selected.page = 0;
-        $scope.offset = 0;
-        $scope.total = {
-            rois: species.N,
-            pages: Math.ceil(species.N / $scope.limit)
-        };
-        console.log("TCL: $scope.setSpecies -> $scope.total", $scope.total)
-        loadROIPage();
-    };
-
-    var loadROIPage = function() {
-        $scope.loading = true;
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-        console.log("TCL: loadROIPage -> $scope.selected.species.species_id", $scope.selected.species.species_id)
-        a2CNN.listROIs($scope.cnnId, $scope.limit, $scope.offset, $scope.selected.species.species_id).then(function(data) {
-            $scope.resultsROIs = data;
-            $scope.infoInfo = "";
-            $scope.showInfo = false;
-            $scope.loading = false;
-            $scope.infopanedata = "";
-            $scope.rois = byROIs($scope.resultsROIs);
-            $scope.rois_species = byROIsbySpecies($scope.rois);
-            
-        });
-    };
-
-    if (viewType=="rois") {
-        a2CNN.countROIsBySpecies($scope.cnnId).then(function(response) {
-            var data = response.data;
-            $scope.roi_species_counts = data;
-            var count_all = $scope.roi_species_counts.reduce(function(count, current){
-                return count = count + current.N;
-            }, 0);
-            $scope.selected.species = {species_id: 0, N: count_all, scientific_name: "All"};
-            $scope.roi_species_counts.unshift($scope.selected.species);
-            $scope.total = {
-                rois: count_all,
-                pages: Math.ceil(count_all / $scope.limit)
-            };
-            console.log("TCL: $scope.switchView -> $scope.total", $scope.total)
-            
-            console.log("TCL: $scope.switchView -> $scope.roi_species_count_all", $scope.roi_species_count_all)
-            console.log("TCL: $scope.switchView -> $scope.roi_species_counts", $scope.roi_species_counts)
-            $scope.viewType = "rois";
-            loadROIPage();
-        });
-        //$scope.viewType = "rois";
-        //if (!$scope.resultsROIs) {
-        //    loadROIPage();
-        //} else {
-        //    $scope.rois = byROIs($scope.resultsROIs);
-        //    $scope.rois_species = byROIsbySpecies($scope.rois);
-        //}
-    } else if (!$scope.results){
-        $scope.loading = true;
-        $scope.infoInfo = "Loading...";
-        $scope.showInfo = true;
-        a2CNN.listResults($scope.cnnId).then(function(data) {
-            $scope.results = data;
-            $scope.infoInfo = "";
-            $scope.showInfo = false;
-            $scope.loading = false;
-            $scope.infopanedata = "";
+                var count_all = $scope.counts.roi_species_counts.reduce(function(count, current){
+                    return count = count + current.N;
+                }, 0);
+                $scope.selected.species = {species_id: 0, N: count_all, scientific_name: "All Species"};
+                $scope.counts.roi_species_counts.unshift($scope.selected.species);
+                $scope.selected.site = {site_id: 0, N: count_all, name: "All Sites"};
+                $scope.counts.roi_sites_counts.unshift($scope.selected.site);
+                $scope.total = {
+                    rois: count_all,
+                    pages: Math.ceil(count_all / $scope.limit)
+                };
+                console.log("TCL: $scope.switchView -> $scope.total", $scope.total)
+                
+                console.log("TCL: $scope.switchView -> $scope.roi_species_count_all", $scope.roi_species_count_all)
+                console.log("TCL: $scope.switchView -> $scope.counts.roi_species_counts", $scope.counts.roi_species_counts)
+                $scope.viewType = "rois";
+                loadROIPage();
+            });
+            //$scope.viewType = "rois";
+            //if (!$scope.resultsROIs) {
+            //    loadROIPage();
+            //} else {
+            //    $scope.rois = byROIs($scope.resultsROIs);
+            //    $scope.rois_species = byROIsbySpecies($scope.rois);
+            //}
+        } else if (!$scope.results){
+            $scope.loading = true;
+            $scope.infoInfo = "Loading...";
+            $scope.showInfo = true;
+            a2CNN.listResults($scope.cnnId).then(function(data) {
+                $scope.results = data;
+                $scope.infoInfo = "";
+                $scope.showInfo = false;
+                $scope.loading = false;
+                $scope.infopanedata = "";
+                loadSwitch();
+            });
+        } else {
             loadSwitch();
-        });
-    } else {
-        loadSwitch();
-    }
-};
+        }
+    };
 
 
 /* might need this function to watch for internal state changes, probably not but leaving it in for reference for now

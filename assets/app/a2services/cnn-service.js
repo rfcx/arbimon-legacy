@@ -6,7 +6,8 @@ angular.module('a2.srv.cnn', [
     var saveData = null;
 
     return {
-        listROIs: function (job_id, limit, offset, species_id, callback) {
+        listROIs: function (job_id, limit, offset, species_id, site_id, callback) {
+        console.log("TCL: site_id", site_id)
             if (!limit){
                 var limit = 100;
             }
@@ -16,7 +17,10 @@ angular.module('a2.srv.cnn', [
             if (!species_id){
                 species_id = 0;
             }
-            return $http.get('/api/project/'+Project.getUrl()+'/cnn/rois/'+job_id+"/"+species_id+"/"+offset+"_"+limit).then(function(response){
+            if (!site_id){
+                site_id = 0;
+            }
+            return $http.get('/api/project/'+Project.getUrl()+'/cnn/rois/'+job_id+"/"+species_id+"/"+site_id+"/"+offset+"_"+limit).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },
@@ -58,6 +62,12 @@ angular.module('a2.srv.cnn', [
         },
         countROIsBySpecies: function(cnnId) {
             return $http.get('/api/project/' + Project.getUrl() + '/cnn/' + cnnId + '/countROIsBySpecies')
+        },
+        countROIsBySites: function(cnnId) {
+            return $http.get('/api/project/' + Project.getUrl() + '/cnn/' + cnnId + '/countROIsBySites')
+        },
+        countROIsBySpeciesSites: function(cnnId) {
+            return $http.get('/api/project/' + Project.getUrl() + '/cnn/' + cnnId + '/countROIsBySpeciesSites')
         },
         getExportUrl: function(params){
             return '/api/project/' + Project.getUrl() + '/cnn/' + params.patternMatching + '/rois.csv';
