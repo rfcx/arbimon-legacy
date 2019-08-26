@@ -303,6 +303,7 @@ angular.module('a2.analysis.cnn', [
     $scope.validation = {current: $scope.lists.validation[2]};
     $scope.offset = 0;
     $scope.limit = 100;
+    //$scope.viewType = "species";
 
     var audio_player = new a2AudioPlayer($scope);
 
@@ -820,7 +821,8 @@ angular.module('a2.analysis.cnn', [
                 $scope.showInfo = false;
                 $scope.loading = false;
                 $scope.infopanedata = "";
-                loadSwitch();
+                $scope.switchView('rois');
+                //loadSwitch();
             });
         } else {
             loadSwitch();
@@ -838,5 +840,5 @@ angular.module('a2.analysis.cnn', [
 */
 
     //console.log("TCL: $state.params", $state.params)
-    $scope.switchView($state.params.detailType ? $state.params.detailType : 'rois');
+    $scope.switchView($state.params.detailType ? $state.params.detailType : 'all');
 });
