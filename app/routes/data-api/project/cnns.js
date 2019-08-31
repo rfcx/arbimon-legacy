@@ -27,6 +27,8 @@ router.get('/:cnnId/rois.csv', function(req, res, next) {
     model.CNN.exportRois(req.params.cnnId, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name;});
+        console.log("TCL: fields", fields)
+        
         var colOrder={
             id: -16,
             recording: -15,

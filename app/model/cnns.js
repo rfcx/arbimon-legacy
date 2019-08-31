@@ -408,6 +408,7 @@ var CNN = {
             "CRR.`uri` AS roi_thumbnail_uri",
             "CRR.`score`",
             "CRR.`validated`",
+            "SP.`scientific_name` AS species",
             "SP.`scientific_name`",
             "ST.`songtype`",
             "R.`datetime`",
@@ -454,6 +455,15 @@ var CNN = {
             console.log("TCL: options.limit", options.limit)
             limits = {limit: options.limit,
                       offset: options.offset || 0};
+        }
+        if (options.human_dates){
+            select.push(
+            'EXTRACT(year FROM R.`datetime`) as `year`',
+            'EXTRACT(month FROM R.`datetime`) as `month`',
+            'EXTRACT(day FROM R.`datetime`) as `day`',
+            'EXTRACT(hour FROM R.`datetime`) as `hour`',
+            'EXTRACT(minute FROM R.`datetime`) as `min`'
+            );
         }
         if (options.search){
             console.log("TCL: options.search", options.search)
@@ -509,7 +519,8 @@ var CNN = {
         options = options || {};
 
         var sqlObj = this.listROIs(cnnId,{
-            return_sql: true
+            return_sql: true,
+            human_dates: true
             // offset: offset
             //hideNormalValidations: options.hideNormalValidations,
             //expertCSValidations: options.expertCSValidations,
