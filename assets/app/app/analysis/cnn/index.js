@@ -371,11 +371,14 @@ angular.module('a2.analysis.cnn', [
         ($scope.resultsROIs || []).forEach(selectFn);
     };
 
-    a2CNN.getDetailsFor($scope.cnnId).then(function(data) {
-        $scope.job_details = data;
-        console.log("TCL: $scope.job_details", $scope.job_details)
-        
-    });
+    var refreshDetails = function() {
+        a2CNN.getDetailsFor($scope.cnnId).then(function(data) {
+            $scope.job_details = data;
+            console.log("TCL: $scope.job_details", $scope.job_details)
+            
+        });
+    };
+    refreshDetails();
 
     var bySpecies = function(dataIn) {
         var dataOut = {};
@@ -686,6 +689,7 @@ angular.module('a2.analysis.cnn', [
             console.log("***----????"); //why not catching net::ERR_CONNECTION_REFUSED ?
             console.log("TCL: $scope.validate -> error", error)
         }
+        refreshDetails();
     };
 
     //$scope.calcWidth = function(roi) {

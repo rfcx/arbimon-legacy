@@ -61,6 +61,7 @@
                         <br>Timestamp: {{ job_details.timestamp }}
                         <br>CNN Model: {{job_details.cnn_model_name}}
                         <br>Parameters: {{ job_details.parameters }}
+                        <br>{{job_details.matches || 0}} matches ({{job_details.present || 0}} present, {{job_details.absent || 0}} not present, {{job_details.matches - (job_details.absent + job_details.present)}} unvalidated)
                 </div>
             </div>
 

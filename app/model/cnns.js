@@ -77,6 +77,14 @@ var CNN = {
             tables.push("JOIN users U ON J.`user_id` = U.`user_id`");
         }
 
+        if (options.showCounts) {
+            select.push("SUM(IF(CRR.cnn_result_roi_id IS NULL, 0, 1)) as matches");
+            select.push("SUM(IF(CRR.validated=1, 1, 0)) as present");
+            select.push("SUM(IF(CRR.validated=0, 1, 0)) as absent");
+            tables.push("LEFT JOIN cnn_results_rois CRR ON CRR.job_id = CNN.job_id");
+            groupby.push("CNN.job_id");
+        }
+
         if (options.project) {
             constraints.push('CNN.project_id = ?');
             data.push(options.project);

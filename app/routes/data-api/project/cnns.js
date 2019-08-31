@@ -95,7 +95,8 @@ router.get('/:job_id/details', function (req, res, next) {
         showModelName: true,
         showUser: true,
         playlistCount: true,
-        resolveModelUri: true
+        resolveModelUri: true,
+        showCounts: true
     }).then(function (count) {
         res.json(count);
     }).catch(next);
