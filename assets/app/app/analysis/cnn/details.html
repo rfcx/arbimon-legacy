@@ -33,6 +33,8 @@
                         ng-click="switchView('all')">
                         All
                     </button>
+                </div>
+                <div class="row row-flex flex-align-middle cnn-selection-btns">
                     <button class="btn btn-default"
                         onclick="this.blur();"
                         ng-class="viewType=='species' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
@@ -47,18 +49,15 @@
                     </button>
                 </div>
             </div>
-            <div class="col-sm-3 flex-self-align-top">
+            <div class="col-sm-3 flex-self-align-top" ng-show="job_details">
                 <div class="row row-flex flex-align-top">
                         CNN Job ID: {{ job_details.job_id }}
                         <br>
                         User: {{job_details.user}}
                 </div>
                 <div class="row row-flex flex-align-middle">
-                        Playlist:
-                        <br>&nbsp;&nbsp;&nbsp;&nbsp;ID: {{ job_details.playlist_id }}
-                        <br>&nbsp;&nbsp;&nbsp;&nbsp;Name: {{ job_details.playlist_name }}
-                        <br>&nbsp;&nbsp;&nbsp;&nbsp;Count: {{ job_details.playlist_count }}
-                        <br>Timestamp: {{ job_details.timestamp }}
+                        {{ job_details.playlist_name }} ({{ job_details.playlist_count }} recordings)
+                        <br>{{ job_details.timestamp }}
                         <br>CNN Model: {{job_details.cnn_model_name}}
                         <br>Parameters: {{ job_details.parameters }}
                         <br>{{job_details.matches || 0}} matches ({{job_details.present || 0}} present, {{job_details.absent || 0}} not present, {{job_details.matches - (job_details.absent + job_details.present)}} unvalidated)
