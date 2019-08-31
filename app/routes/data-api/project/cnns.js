@@ -30,7 +30,8 @@ router.get('/:cnnId/rois.csv', function(req, res, next) {
         console.log("TCL: fields", fields)
         
         var colOrder={
-            id: -16,
+            cnn_result_roi_id: -17,
+            score: -16,
             recording: -15,
             site: -14,
             year: -13,
