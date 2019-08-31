@@ -9,6 +9,59 @@ var pokeDaMonkey = require('../../../utils/monkey');
 var csv_stringify = require("csv-stringify");
 
 
+router.get('/:cnnId/rois.csv', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+
+    try {
+        var filters = JSON.parse(req.query.filters || '{}') || {};
+    } catch(e) {
+        return next(e);
+    }
+
+    filters.project_id = req.project.project_id | 0;
+
+    model.CNN.exportRois(req.params.cnnId, filters).then(function(results) {
+        var datastream = results[0];
+        var fields = results[1].map(function(f){return f.name;});
+        var colOrder={
+            id: -16,
+            recording: -15,
+            site: -14,
+            year: -13,
+            month: -12,
+            day: -11,
+            hour: -10,
+            min: -9,
+            species: -8,
+            songtype: -7,
+            x1: -6,
+            x2: -5,
+            y1: -4,
+            y2: -3,
+            validated: -2,
+            uri: -1
+        };
+        fields.sort(function(a, b){
+            var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
+            return ca < cb ? -1 : (
+                   ca > cb ?  1 : (
+                    a <  b ? -1 : (
+                    a >  b ?  1 :
+                    0
+            )));
+        });
+
+        datastream
+            .pipe(csv_stringify({header:true, columns:fields}))
+            .pipe(res);
+    }).catch(next);
+});
+
+
 router.param('paging', function(req, res, next, paging){
     const components = paging.split('_');
     console.log('paging components', components);
@@ -37,16 +90,22 @@ router.get('/', function (req, res, next) {
 router.get('/:job_id/details', function (req, res, next) {
     res.type('json');
     model.CNN.findOne(req.params.job_id, {
-        project: req.project.project_id
+        project: req.project.project_id,
+        showPlaylist: true,
+        showModelName: true,
+        showUser: true,
+        playlistCount: true,
+        resolveModelUri: true
     }).then(function (count) {
         res.json(count);
     }).catch(next);
 });
 
-router.get('/:job_id/countROIsBySpecies', function (req, res, next) {
+router.get('/:job_id/countROIsBySpecies/:search', function (req, res, next) {
     res.type('json');
     model.CNN.countROIsBySpecies(req.params.job_id, {
-        project: req.project.project_id
+        project: req.project.project_id,
+        search: req.params.search
     }).then(function (count) {
         res.json(count);
     }).catch(next);
@@ -61,10 +120,11 @@ router.get('/:job_id/countROIsBySites', function (req, res, next) {
     }).catch(next);
 });
 
-router.get('/:job_id/countROIsBySpeciesSites', function (req, res, next) {
+router.get('/:job_id/countROIsBySpeciesSites/:search', function (req, res, next) {
     res.type('json');
     model.CNN.countROIsBySpeciesSites(req.params.job_id, {
-        project: req.project.project_id
+        project: req.project.project_id,
+        search: req.params.search
     }).then(function (response) {
         res.json(response);
     }).catch(next);
@@ -108,7 +168,7 @@ router.get('/rois/:job_id', function (req, res, next) {
     }).catch(next);
 });
 
-router.get('/rois/:job_id/:species_id/:site_id/:paging', function (req, res, next) {
+router.get('/rois/:job_id/:species_id/:site_id/:search/:paging', function (req, res, next) {
     console.log("**********THIS ONE3************");
 
     console.log("TCL: req.paging", req.paging)
@@ -118,7 +178,8 @@ router.get('/rois/:job_id/:species_id/:site_id/:paging', function (req, res, nex
         limit: req.paging.limit,
         offset: req.paging.offset,
         species_id: req.params.species_id,
-        site_id: req.params.site_id
+        site_id: req.params.site_id,
+        search: req.params.search
     }).then(function (count) {
         res.json(count);
     }).catch(next);
