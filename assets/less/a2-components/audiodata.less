@@ -93,9 +93,16 @@
         position: relative;
     }
 
+    > div.roi-img-cnn{
+        position: relative;
+    }
+
     &.btn{
         padding: 2px;
         &.active .roi-img{
+            filter: brightness(50%);
+        }
+        &.active .roi-img-cnn{
             filter: brightness(50%);
         }
     }
