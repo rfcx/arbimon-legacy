@@ -532,27 +532,32 @@ var CNN = {
     },
 
     requestNewCNNJob: function(data){
-        //return {data: data};
-        var f_name = config('lambdas').new_cnn_job_test1;
-        console.log("TCL: config('lambdas')", config('lambdas'))
-        if (data.lambda) {
-            f_name = config('lambdas')[data.lambda];
+        console.log("TCL: data", data)
+        var queryStr = "SELECT arn FROM cnn_models WHERE cnn_id = ?;"
+        return dbpool.query(queryStr, [data.cnn_id]).then(function(rows) {
+            var arn = rows[0].arn || config('lambdas').new_cnn_job_v1;
+            //console.log("TCL: arn", arn)
+            //var f_name = config('lambdas').new_cnn_job_v1;
+            //console.log("TCL: config('lambdas')", config('lambdas'))
+            //if (data.lambda) {
+            //    f_name = config('lambdas')[data.lambda];
             delete data.lambda;
-        }
-        console.log("Lambda chosen************:   " + f_name);
-        
-        return q.ninvoke(joi, 'validate', data, CNN.JOB_SCHEMA).then(() => lambda.invoke({
-            FunctionName: f_name,
-            InvocationType: 'Event',
-            Payload: JSON.stringify({
-                project_id: data.project_id,
-                user_id: data.user_id,
-                playlist_id: data.playlist_id,
-                cnn_id: data.cnn_id,
-                name: data.name,
-                params: {}
-            }),
-        }).promise());
+            //}
+            //console.log("Lambda chosen************:   " + f_name);
+            
+            return q.ninvoke(joi, 'validate', data, CNN.JOB_SCHEMA).then(() => lambda.invoke({
+                FunctionName: arn,
+                InvocationType: 'Event',
+                Payload: JSON.stringify({
+                    project_id: data.project_id,
+                    user_id: data.user_id,
+                    playlist_id: data.playlist_id,
+                    cnn_id: data.cnn_id,
+                    name: data.name,
+                    params: {}
+                }),
+            }).promise());
+        });
     }
 };
 
