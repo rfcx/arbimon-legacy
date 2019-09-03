@@ -16,16 +16,16 @@
             </span>
             <ui-select class="ui-select-6em" ng-disabled="disabled" ng-model="controller.data.model" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select or search a model...">
-                    <div class="roi-thumbnail" >
+                    <!-- <div class="roi-thumbnail" >
                         <img ng-src="{{$select.selected.uri}}" class="roi-img is-small"/>
-                    </div>
+                    </div> -->
                     {{$select.selected.name}}
                     [{{$select.search}}]
                 </ui-select-match>
                 <ui-select-choices repeat="model in controller.list.models | filter: $select.search">
-                    <div class="roi-thumbnail" >
+                    <!-- <div class="roi-thumbnail" >
                         <img ng-src="{{model.uri}}" class="roi-img is-small"/>
-                    </div>
+                    </div> -->
                     {{model.name}}
                 </ui-select-choices>
             </ui-select>
@@ -55,7 +55,7 @@
                 </ui-select-choices>
             </ui-select>
         </div>
-        <div class="form-group">
+        <!-- <div class="form-group">
             <label for="template">Select Lambda Function:</label>
             <ui-select ng-model="controller.data.lambda" theme="/common/templates/a2-ui-select">
                 <ui-select-match placeholder="Select a lambda...">
@@ -65,7 +65,7 @@
                     {{lambda.name}}
                 </ui-select-choices>
             </ui-select>
-        </div>
+        </div> -->
     </form>
 </div>
 <div class="modal-footer">
