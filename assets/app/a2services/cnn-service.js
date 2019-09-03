@@ -7,7 +7,6 @@ angular.module('a2.srv.cnn', [
 
     return {
         listROIs: function (job_id, limit, offset, species_id, site_id, search, callback) {
-        console.log("TCL: site_id", site_id)
             if (!limit){
                 var limit = 100;
             }

@@ -25,7 +25,7 @@ angular.module('a2.analysis.cnn', [
 })
 .controller('CNNCtrl' , function($scope, $modal, $filter, $location, Project, ngTableParams, JobsData, a2CNN, a2Playlists, notify, $q, a2UserPermit, $state, $stateParams) {
     // this debug line for sanity between servers... Will remove TODO
-    console.log("CNN Version 0.6");
+    console.log("CNN Version 1.0");
     $scope.selectedCNNId = $stateParams.cnnId;
 
     var initTable = function(p, c, s, f, t) {
@@ -244,7 +244,7 @@ angular.module('a2.analysis.cnn', [
                     $modalInstance.close({ok:true, cnn: cnn});
                 }).catch(notify.serverError);
             } catch(error) {
-                console.log("a2CNN.create error: " + error);
+                console.error("a2CNN.create error: " + error);
             }
         },
         cancel: function (url) {
@@ -374,8 +374,6 @@ angular.module('a2.analysis.cnn', [
     var refreshDetails = function() {
         a2CNN.getDetailsFor($scope.cnnId).then(function(data) {
             $scope.job_details = data;
-            console.log("TCL: $scope.job_details", $scope.job_details)
-            
         });
     };
     refreshDetails();
@@ -537,7 +535,6 @@ angular.module('a2.analysis.cnn', [
         page = Math.max(0, Math.min(page, ($scope.total.rois / $scope.limit) | 0));
         if(page != $scope.selected.page || force){
             $scope.selected.page = page;
-            console.log("TCL: $scope.setPage -> $scope.selected.page", $scope.selected.page)
             $scope.offset = page * $scope.limit;
             loadROIPage();
         }
@@ -555,7 +552,6 @@ angular.module('a2.analysis.cnn', [
     };
 
     $scope.setSpecies = function(species) {
-        console.log("TCL: $scope.setSpecies -> species", species)
         $scope.selected.species = species;
         $scope.selected.page = 0;
         $scope.offset = 0;
@@ -588,13 +584,11 @@ angular.module('a2.analysis.cnn', [
             rois: species.N,
             pages: Math.ceil(species.N / $scope.limit)
         };
-        console.log("TCL: $scope.setSpecies -> $scope.total", $scope.total)
         loadROIPage();
     };
 
     $scope.counts = {};
     $scope.setSite = function(site) {
-        console.log("TCL: $scope.setSite -> site", site)
         $scope.selected.site = site;
         $scope.selected.page = 0;
         $scope.offset = 0;
@@ -603,7 +597,6 @@ angular.module('a2.analysis.cnn', [
             site_name = 0;
         }
         $scope.counts.roi_species_counts = getSpeciesCounts(site_name, $scope.roi_species_sites_counts);
-        console.log("1TCL: $scope.setSite -> $scope.counts.roi_species_counts", $scope.counts.roi_species_counts)
         $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species.species_id, $scope.roi_species_sites_counts);
         var count_all_species = $scope.counts.roi_species_counts.reduce(function(count, current){
             return count = count + current.N;
@@ -611,7 +604,6 @@ angular.module('a2.analysis.cnn', [
         all_species = {species_id: 0, N: count_all_species, scientific_name: "All Species"};
         $scope.counts.roi_species_counts.unshift(all_species);
         //$scope.counts.roi_species_counts.unshift($scope.selected.species);
-        console.log("2TCL: $scope.setSite -> $scope.counts.roi_species_counts", $scope.counts.roi_species_counts)
         var count_all_sites = $scope.counts.roi_sites_counts.reduce(function(count, current){
             return count = count + current.N;
         }, 0);
@@ -629,7 +621,6 @@ angular.module('a2.analysis.cnn', [
             rois: site.N,
             pages: Math.ceil(site.N / $scope.limit)
         };
-        console.log("TCL: $scope.setSite -> $scope.total", $scope.total)
         loadROIPage();
     };
 
@@ -637,8 +628,6 @@ angular.module('a2.analysis.cnn', [
         $scope.loading = true;
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
-        console.log("TCL: loadROIPage -> $scope.selected.species.species_id", $scope.selected.species.species_id)
-        console.log("TCL: loadROIPage -> $scope.selected.site.site_id", $scope.selected.site.site_id)
         
         a2CNN.listROIs($scope.cnnId, $scope.limit, $scope.offset, $scope.selected.species.species_id, $scope.selected.site.site_id, $scope.selected.search.value).then(function(data) {
         
@@ -649,7 +638,6 @@ angular.module('a2.analysis.cnn', [
             $scope.infopanedata = "";
             $scope.rois = byROIs($scope.resultsROIs);
             $scope.rois_species = byROIsbySpecies($scope.rois);
-            console.log("TCL: loadROIPage -> $scope.rois_species", $scope.rois_species)
             
         });
     };
@@ -661,8 +649,7 @@ angular.module('a2.analysis.cnn', [
         }
 
         var validation = ($scope.validation.current || {value:null}).value;
-        console.log("TCL: $scope.validate -> $scope.validation.current", $scope.validation.current)
-
+        
         var rois = []
         for (var species in $scope.rois_species) {
             $scope.rois_species[species].rois.forEach(function (roi){
@@ -673,12 +660,9 @@ angular.module('a2.analysis.cnn', [
         }
 
         var roiIds = rois.map(function(roi){ return roi.cnn_result_roi_id; })
-        console.log("TCL: $scope.validate -> roiIds", roiIds)
-        console.log("TCL: $scope.validate -> validation", validation)
-        //var val_delta = {0:0, 1:0, null:0};
+        
         try {
             a2CNN.validateRois($scope.cnnId, roiIds, validation).then(function(response){
-                console.log("TCL: $scope.validate -> response", response)
                 rois.forEach(function(roi){
                     roi.validated = validation;
                     roi.selected = false;
@@ -686,8 +670,7 @@ angular.module('a2.analysis.cnn', [
                 //loadROIPage();
             });
         } catch(error) {
-            console.log("***----????"); //why not catching net::ERR_CONNECTION_REFUSED ?
-            console.log("TCL: $scope.validate -> error", error)
+            console.error("TCL: $scope.validate -> error", error)
         }
         refreshDetails();
     };
@@ -697,8 +680,6 @@ angular.module('a2.analysis.cnn', [
     //};
 
     var getSpeciesCounts = function(site, species_sites_matrix) {
-        console.log("TCL: getSpeciesCounts -> site", site)
-        console.log("TCL: getSpeciesCounts -> species_sites_matrix", species_sites_matrix)
         if (site==0) {
             site = 'total'
         }
@@ -710,8 +691,6 @@ angular.module('a2.analysis.cnn', [
     };
 
     var getSitesCounts = function(species, species_sites_matrix) {
-        console.log("TCL: getSitesCounts -> species", species)
-        console.log("TCL: getSiteCounts -> species_sites_matrix", species_sites_matrix)
         if (species==0) {
             species = 'total'
         }
@@ -735,8 +714,7 @@ angular.module('a2.analysis.cnn', [
         })
         if (species=='total') {
             roi_site_counts_dict = roi_site_counts.reduce(function(sitesAcc, site) {
-                //console.log(sitesAcc);
-                //console.log(site);
+                
                 if (!(site.site_id in sitesAcc)) {
                     sitesAcc[site.site_id] = {site_id: site.site_id, N: 0, name: site.name};
                 }
@@ -774,58 +752,26 @@ angular.module('a2.analysis.cnn', [
                 $scope.mainResults = $scope.results;
                 $scope.cnnOriginal = Object.values($scope.results);
             }
-            //console.log('starting state change......');
-            //$state.go('analysis.cnn-details', {detailType: $scope.viewType});
-            //console.log('ending state change......');
+            
             if($scope.cnnOriginal.length > 0) {
-                //if(!$scope.tableParams) {
-                    initTable(1,10,sortBy,{},$scope.cnnOriginal.length);
-                //} else {
-                //    $scope.tableParams.reload();
-                //}
+                initTable(1,10,sortBy,{},$scope.cnnOriginal.length);
             } else {
                 $scope.infopanedata = "No cnn results found.";
             }
         };
         if (viewType=="rois") {
-            //a2CNN.countROIsBySpeciesSites($scope.cnnId).then(function(response) {
-            //    var data = response.data;
-            //    $scope.roi_species_site_counts = data;
-            //    console.log("TCL: $scope.switchView -> $scope.roi_species_site_counts", $scope.roi_species_site_counts)
-            //});
+            
             a2CNN.countROIsBySpeciesSites($scope.cnnId, {search: $scope.selected.search.value}).then(function(response) {
                 var data = response.data;
-                console.log("****TCL: $scope.switchView -> data", data)
-                
-                console.log("_*_*_*_*_*_*TCL: $scope.switchView -> $scope.roi_species_sites_counts", $scope.roi_species_sites_counts)
                 $scope.roi_species_sites_counts = data;
 
-                //var old_roi_species_counts = $scope.counts.roi_species_counts || [];
                 $scope.counts.roi_species_counts = getSpeciesCounts($scope.selected.site ? $scope.selected.site.site_id : 0, $scope.roi_species_sites_counts);
-                /*old_roi_species_counts.forEach(function (Old){
-                    found = $scope.counts.roi_species_counts.find(function (New){
-                        return (Old.species_id == New.species_id);
-                    });
-                    if(!found & (!Old.species_id==0)){
-                        $scope.counts.roi_species_counts.push({species_id: Old.species_id, N: 0, scientific_name: Old.scientific_name});
-                    }
-                });*/
-
-                //var old_roi_sites_counts = $scope.counts.roi_species_counts || [];
                 $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species ? $scope.selected.species.species_id : 0, $scope.roi_species_sites_counts);
-                /*old_roi_sites_counts.forEach(function (Old){
-                    $scope.counts.roi_sites_counts.find(function (New){
-                        return (Old.site_id == New.site_id);
-                    }) || $scope.counts.roi_sites_counts.push({site_id: Old.site_id, N: 0, name: Old.name});
-                });*/
-
-                console.log("TCL: $scope.switchView -> $scope.counts.roi_sites_counts", $scope.counts.roi_sites_counts)
-
+                
                 var count_all = $scope.counts.roi_species_counts.reduce(function(count, current){
                     return count = count + current.N;
                 }, 0);
                 
-                console.log("TCL: $scope.switchView -> $scope.selected.species", $scope.selected.species)
                 var all_species = {species_id: 0, N: count_all, scientific_name: "All Species"};
                 $scope.counts.roi_species_counts.unshift(all_species);
                 if (!$scope.selected.species){
@@ -836,7 +782,6 @@ angular.module('a2.analysis.cnn', [
                     }) || all_species;
                 }
                 
-                console.log("TCL: $scope.switchView -> $scope.selected.species", $scope.selected.species)
                 var all_sites = {site_id: 0, N: count_all, name: "All Sites"};
                 $scope.counts.roi_sites_counts.unshift(all_sites);
                 if (!$scope.selected.site){
@@ -850,10 +795,6 @@ angular.module('a2.analysis.cnn', [
                     rois: count_all,
                     pages: Math.ceil(count_all / $scope.limit)
                 };
-                console.log("TCL: $scope.switchView -> $scope.total", $scope.total)
-                
-                console.log("TCL: $scope.switchView -> $scope.roi_species_count_all", $scope.roi_species_count_all)
-                console.log("TCL: $scope.switchView -> $scope.counts.roi_species_counts", $scope.counts.roi_species_counts)
                 $scope.viewType = "rois";
                 loadROIPage();
             });
@@ -881,17 +822,5 @@ angular.module('a2.analysis.cnn', [
             loadSwitch();
         }
     };
-
-
-/* might need this function to watch for internal state changes, probably not but leaving it in for reference for now
-    $scope.$watchCollection(function(){
-        return $state.params;
-    }, function(){
-        console.log("State params have been updated", $state.params);
-        //$scope.switchView($state.params.detailType ? $state.params.detailType : 'all');
-    });
-*/
-
-    //console.log("TCL: $state.params", $state.params)
     $scope.switchView($state.params.detailType ? $state.params.detailType : 'all');
 });

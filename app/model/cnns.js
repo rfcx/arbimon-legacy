@@ -257,8 +257,6 @@ var CNN = {
             (constraints.length ? ("WHERE " + constraints.join(" \n  AND ")) : "") +
             (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "");
 
-        console.log("TCL: queryStr", queryStr)
-
         return postprocess.reduce((_, fn) => {
             return _.then(fn);
         }, dbpool.query(queryStr, data))
@@ -318,7 +316,6 @@ var CNN = {
     countROIsBySites: function(job_id, options) {
         var constraints = "";
         if (options.search){
-            console.log("TCL: options.search", options.search)
             if (options.search=="present"){
                 constraints = "AND CRR.`validated` = 1\n";
             } else if (options.search=="not_present"){
@@ -336,7 +333,6 @@ var CNN = {
         "WHERE job_id = ?\n" +
         constraints +
         "GROUP BY S.site_id;\n";
-        console.log("TCL: queryStr", queryStr)
         return dbpool.query(queryStr, [job_id]
         )
     },
@@ -344,7 +340,6 @@ var CNN = {
     countROIsBySpeciesSites: function(job_id, options) {
         var constraints = "";
         if (options.search){
-            console.log("TCL: options.search", options.search)
             if (options.search=="present"){
                 constraints = "AND CRR.`validated` = 1\n";
             } else if (options.search=="not_present"){
@@ -448,21 +443,18 @@ var CNN = {
         }
 
         if (options.species_id) {
-            console.log("TCL: options.species_id", options.species_id)
             if (options.species_id != 0){
                 constraints.push('CRR.`species_id` = ?');
                 data.push(options.species_id);
             }
         }
         if (options.site_id) {
-            console.log("TCL: options.site_id", options.site_id)
             if (options.site_id != 0){
                 constraints.push('S.`site_id` = ?');
                 data.push(options.site_id);
             }
         }
         if(options.limit){
-            console.log("TCL: options.limit", options.limit)
             limits = {limit: options.limit,
                       offset: options.offset || 0};
         }
@@ -476,7 +468,6 @@ var CNN = {
             );
         }
         if (options.search){
-            console.log("TCL: options.search", options.search)
             if (options.search=="present"){
                 constraints.push("CRR.`validated` = 1");
             } else if (options.search=="not_present"){
@@ -543,19 +534,11 @@ var CNN = {
     },
 
     requestNewCNNJob: function(data){
-        console.log("TCL: data", data)
         var queryStr = "SELECT arn FROM cnn_models WHERE cnn_id = ?;"
         return dbpool.query(queryStr, [data.cnn_id]).then(function(rows) {
             var arn = rows[0].arn || config('lambdas').new_cnn_job_v1;
-            //console.log("TCL: arn", arn)
-            //var f_name = config('lambdas').new_cnn_job_v1;
-            //console.log("TCL: config('lambdas')", config('lambdas'))
-            //if (data.lambda) {
-            //    f_name = config('lambdas')[data.lambda];
             delete data.lambda;
-            //}
-            //console.log("Lambda chosen************:   " + f_name);
-            
+
             return q.ninvoke(joi, 'validate', data, CNN.JOB_SCHEMA).then(() => lambda.invoke({
                 FunctionName: arn,
                 InvocationType: 'Event',

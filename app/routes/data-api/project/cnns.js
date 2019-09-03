@@ -26,9 +26,7 @@ router.get('/:cnnId/rois.csv', function(req, res, next) {
 
     model.CNN.exportRois(req.params.cnnId, filters).then(function(results) {
         var datastream = results[0];
-        console.log("TCL: datastream", datastream)
         var fields = results[1].map(function(f){return f.name;});
-        console.log("TCL: fields", fields)
         
         var colOrder={
             cnn_result_roi_id: -17,
@@ -68,7 +66,6 @@ router.get('/:cnnId/rois.csv', function(req, res, next) {
 
 router.param('paging', function(req, res, next, paging){
     const components = paging.split('_');
-    console.log('paging components', components);
     req.paging = {
         offset: (components[0] | 0),
         limit: (components[1] | 0),
@@ -164,7 +161,6 @@ router.get('/results/:job_id', function (req, res, next) {
 });
 
 router.get('/rois/:job_id', function (req, res, next) {
-    console.log("**********THIS ONE1************");
     res.type('json');
     model.CNN.listROIs(req.params.job_id, {
         project: req.project.project_id
@@ -174,9 +170,7 @@ router.get('/rois/:job_id', function (req, res, next) {
 });
 
 router.get('/rois/:job_id/:species_id/:site_id/:search/:paging', function (req, res, next) {
-    console.log("**********THIS ONE3************");
 
-    console.log("TCL: req.paging", req.paging)
     res.type('json');
     model.CNN.listROIs(req.params.job_id, {
         project: req.project.project_id,
@@ -191,7 +185,6 @@ router.get('/rois/:job_id/:species_id/:site_id/:search/:paging', function (req, 
 });
 
 router.get('/roisBySpecies/:job_id/:species_id', function (req, res, next) {
-    console.log("**********THIS ONE2************");
     res.type('json');
     model.CNN.listROIs(req.params.job_id, {
         species_id:  req.params.species_id,
@@ -212,8 +205,6 @@ router.get('/:cnnId/audio/:roiId', function(req, res, next) {
 });
 
 router.get('/:cnn/rois/:paging', function(req, res, next) {
-console.log("TCL****************************************: paging", paging)
-    
     res.type('json');
     model.CNN.getRoisForId({
         cnnId: req.params.cnn,
