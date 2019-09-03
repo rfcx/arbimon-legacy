@@ -1,3 +1,28 @@
+try {
+    angular.module("angularytics"); // this throws if GA script is not loaded
+} catch(e){ 
+    console.error("GA not available, likely adblocker", e);
+    (function () {
+        angular.module('angularytics', []).provider('Angularytics', function () {
+            this.setEventHandlers = function () {
+            };
+            this.$get = [
+                function () {
+                    var service = {};
+                    service.init = function () {
+                    };
+                    return service;
+                }
+            ];
+        }).filter('trackEvent', ['Angularytics', function () {
+            return function () {
+                return null;
+            };
+        }
+      ]);
+  }());
+}
+
 var a2 = angular.module('a2.app', [
     'a2.permissions',
     'templates-arbimon2',
