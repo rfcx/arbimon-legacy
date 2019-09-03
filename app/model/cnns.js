@@ -407,7 +407,6 @@ var CNN = {
             "CRR.`y2`",
             "CRR.`uri` AS roi_thumbnail_uri",
             "CRR.`score`",
-            "CRR.`validated`",
             "SP.`scientific_name` AS species",
             "SP.`scientific_name`",
             "ST.`songtype`",
@@ -418,6 +417,17 @@ var CNN = {
             'S.`name` as `site`',
             
         ];
+
+        if (options.humanValidated) {
+            select.push(
+                '(CASE ' +
+                'WHEN CRR.`validated` = 1 THEN "present" ' +
+                'WHEN CRR.`validated` = 0 THEN "not present" ' +
+                'ELSE "(not validated)" ' +
+                'END) as validated');
+        } else {
+            select.push("CRR.`validated`");
+        }
         var tables = ["cnn_results_rois CRR"];
 
         constraints.push('CRR.`job_id` = ?');
@@ -520,7 +530,8 @@ var CNN = {
 
         var sqlObj = this.listROIs(cnnId,{
             return_sql: true,
-            human_dates: true
+            human_dates: true,
+            humanValidated: true
             // offset: offset
             //hideNormalValidations: options.hideNormalValidations,
             //expertCSValidations: options.expertCSValidations,
