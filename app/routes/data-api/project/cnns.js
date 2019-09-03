@@ -26,6 +26,7 @@ router.get('/:cnnId/rois.csv', function(req, res, next) {
 
     model.CNN.exportRois(req.params.cnnId, filters).then(function(results) {
         var datastream = results[0];
+        console.log("TCL: datastream", datastream)
         var fields = results[1].map(function(f){return f.name;});
         console.log("TCL: fields", fields)
         
@@ -46,7 +47,7 @@ router.get('/:cnnId/rois.csv', function(req, res, next) {
             y1: -4,
             y2: -3,
             validated: -2,
-            uri: -1
+            roi_thumbnail_uri: -1
         };
         fields.sort(function(a, b){
             var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
@@ -57,7 +58,7 @@ router.get('/:cnnId/rois.csv', function(req, res, next) {
                     0
             )));
         });
-
+        fields = fields.filter(field => field in colOrder);
         datastream
             .pipe(csv_stringify({header:true, columns:fields}))
             .pipe(res);
