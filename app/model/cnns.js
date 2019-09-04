@@ -352,9 +352,9 @@ var CNN = {
         //[", SUM(CASE WHEN S.site_id=922 THEN 1 ELSE 0 END) site_922\n";]
         return this.countROIsBySites(job_id, options).then(function(data) {
             var rois_by_sites = data;
+            console.log("TCL: data", data)
             data.forEach(function(row) {
-                site_sql = site_sql + ", SUM(CASE WHEN S.site_id=" + row.site_id + " THEN 1 ELSE 0 END) site_" + row.site_id + "_" + row.name + "\n";
-                
+                site_sql = site_sql + ", SUM(CASE WHEN S.site_id=" + row.site_id + " THEN 1 ELSE 0 END) `site_" + row.site_id + "_" + row.name + "`\n";
             })
 
             return dbpool.query(
@@ -497,7 +497,7 @@ var CNN = {
             (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "") +
             "\nORDER BY CRR.`species_id`, R.`site_id`" +
             (limits ? ("\nLIMIT " + limits.limit + " OFFSET " + limits.offset) : "");
-
+        
         if (options.return_sql) {
             return {queryStr: queryStr, data: data};
         }
