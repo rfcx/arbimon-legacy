@@ -80,6 +80,7 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
         csValidationsFor: user.id,
         whereNotConsensus: true,
         whereNotExpert: true,
+        whereNotCSValidated: true,
         limit: req.paging.limit || 100,
         offset: req.paging.offset || 0,
     }).then(function(rois) {
