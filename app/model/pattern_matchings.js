@@ -229,6 +229,7 @@ var PatternMatchings = {
         whereNotExpert: joi.boolean(),
         whereConsensus: joi.boolean(),
         whereNotConsensus: joi.boolean(),
+        whereNotCSValidated: joi.boolean(),
         wherePresent: joi.boolean(),
         whereNotPresent: joi.boolean(),
         whereUnvalidated: joi.boolean(),
@@ -335,6 +336,9 @@ var PatternMatchings = {
                     " AND PMV.user_id = " + builder.escape(parameters.csValidationsFor)
                 );
                 builder.addProjection('PMV.validated as cs_validated');
+                if(parameters.whereNotCSValidated){
+                    builder.addConstraint("PMV.validated IS NULL", []);
+                }
             }
 
             if(parameters.countCSValidations){
@@ -432,6 +436,7 @@ var PatternMatchings = {
             whereConflicted: options.whereConflicted,
             whereConsensus: options.whereConsensus,
             whereNotConsensus: options.whereNotConsensus,
+            whereNotCSValidated: options.whereNotCSValidated,
             whereExpert: options.whereExpert,
             whereNotExpert: options.whereNotExpert,
             wherePresent: options.wherePresent,
