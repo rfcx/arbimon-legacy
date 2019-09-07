@@ -6,7 +6,17 @@ var express = require('express');
 var router = express.Router();
 var model = require('../../../../model');
 var csv_stringify = require("csv-stringify");
+var APIError = require('../../../../utils/apierror');
 
+router.use('/', function(req, res, next) {
+    if(!req.haveAccess(req.project.project_id, "view citizen scientist admin interface")){
+        return next(new APIError({
+            error: "You don't have permission to use the admin stats api"
+        }));
+    } else {
+        next();
+    }
+});
 
 router.get('/classification', function(req, res, next) {
     res.type('json');
