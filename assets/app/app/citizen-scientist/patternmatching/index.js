@@ -134,7 +134,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         selection: [
             {value:'all', text:'All'},
             {value:'none', text:'None'},
-            {value:'not-validated', text:'Not Validated'},
+            // {value:'not-validated', text:'Not Validated'},
         ],
         validation: [
             { class:"fa val-1", text: "Present", value: 1},
@@ -263,7 +263,6 @@ angular.module('a2.citizen-scientist.patternmatching', [
     },
 
     select: function(option){
-        console.log('this.rois', this.rois);
         var selectFn = null;
         if(option === "all"){
             selectFn = function(roi){roi.selected = true;};
@@ -281,6 +280,24 @@ angular.module('a2.citizen-scientist.patternmatching', [
     forEachRoi: function(fn){
         (this.rois || []).forEach(function(site){
             site.list.forEach(fn);
+        });
+    },
+
+    filterRoisFromList: function(roiIds){
+        if(!this.rois){
+            return;
+        }
+
+        roiIds = (roiIds || []).reduce(function(_, roiId){
+            _[roiId] = true;
+            return _;
+        }, {});
+
+        this.rois = this.rois.filter(function(site){
+            site.list = site.list.filter(function(roi){
+                return !roiIds[roi.id];
+            });
+            return site.list.length;
         });
     },
 
@@ -314,6 +331,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
             });
             this.patternMatching.cs_absent += val_delta[0];
             this.patternMatching.cs_present += val_delta[1];
+            this.filterRoisFromList(roiIds);
         }).bind(this));
     },
 

@@ -19,8 +19,11 @@ angular.module('a2.permissions', [
         can: function(perm) {
             var allowed;
 
-            if(permit.permissions)
-                allowed = permit.permissions.indexOf(perm) !== -1;
+            if(permit.permissions){
+                allowed = (Array.isArray(perm) ? perm : [perm]).reduce(function(_, perm) {
+                    return _ && permit.permissions.indexOf(perm) !== -1;
+                }, true);
+            }
 
             return allowed || permit.super;
         }

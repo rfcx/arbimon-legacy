@@ -5,6 +5,7 @@ var q = require('q');
 var express = require('express');
 var router = express.Router();
 var model = require('../../../../model');
+var APIError = require('../../../../utils/apierror');
 var csv_stringify = require("csv-stringify");
 
 
@@ -43,6 +44,13 @@ router.get('/:patternMatching/details', function(req, res, next) {
 
 router.get('/:patternMatching/expert/details', function(req, res, next) {
     res.type('json');
+
+    if(!req.haveAccess(req.project.project_id, "view citizen scientist expert interface")){
+        return next(new APIError({
+            error: "You don't have permission to view expert details"
+        }));
+    }
+
     var user = req.session.user;
     model.patternMatchings.findOne({
         id: req.params.patternMatching,
@@ -72,6 +80,7 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
         csValidationsFor: user.id,
         whereNotConsensus: true,
         whereNotExpert: true,
+        whereNotCSValidated: true,
         limit: req.paging.limit || 100,
         offset: req.paging.offset || 0,
     }).then(function(rois) {
@@ -81,6 +90,13 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
 
 router.get('/:patternMatching/expert-rois/:paging', function(req, res, next) {
     res.type('json');
+
+    if(!req.haveAccess(req.project.project_id, "view citizen scientist expert interface")){
+        return next(new APIError({
+            error: "You don't have permission to view expert roi details"
+        }));
+    }
+
     var user = req.session.user;
     model.patternMatchings.getRoisForId({
         patternMatchingId: req.params.patternMatching,
@@ -109,6 +125,13 @@ router.post('/:patternMatching/validate', function(req, res, next) {
 
 router.post('/:patternMatching/expert-validate', function(req, res, next) {
     res.type('json');
+
+    if(!req.haveAccess(req.project.project_id, "view citizen scientist expert interface")){
+        return next(new APIError({
+            error: "You don't have permission to validate as an expert"
+        }));
+    }
+
     var user = req.session.user;
     model.CitizenScientist.expertValidateCSRois(req.params.patternMatching, req.body.rois, req.body.validation).then(function(rois) {
         res.json({
@@ -187,7 +210,7 @@ router.post('/:patternMatching/remove', function(req, res, next) {
 
     q.resolve().then(function(){
         if(!req.haveAccess(project_id, "manage pattern matchings")){
-            throw new Error({
+            throw new APIError({
                 error: "You don't have permission to delete pattern matchings"
             });
         }

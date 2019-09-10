@@ -6,7 +6,45 @@ var express = require('express');
 var router = express.Router();
 var model = require('../../../../model');
 var csv_stringify = require("csv-stringify");
+var APIError = require('../../../../utils/apierror');
 
+
+router.get('/mine', function(req, res, next) {
+    res.type('json');
+
+    var project_id = req.project.project_id;
+    var user = req.session.user;
+
+    q.resolve().then(function(){
+        return Promise.all([
+            model.CitizenScientist.getUserStats({
+                project: project_id,
+                user: user.id,
+                groupBySpecies: true,
+            }),
+            model.CitizenScientist.getUserStats({
+                project: project_id,
+                groupBySpecies: true,
+            }),
+        ]);
+    }).then(function(stats){
+        res.json({
+            stats: stats[0],
+            groupStats: stats[1]
+        });
+    }).catch(next);
+});
+
+
+router.use('/', function(req, res, next) {
+    if(!req.haveAccess(req.project.project_id, "view citizen scientist admin interface")){
+        return next(new APIError({
+            error: "You don't have permission to use the admin stats api"
+        }));
+    } else {
+        next();
+    }
+});
 
 router.get('/classification', function(req, res, next) {
     res.type('json');
@@ -81,31 +119,6 @@ router.get('/user/:user', function(req, res, next) {
     }).catch(next);
 });
 
-router.get('/mine', function(req, res, next) {
-    res.type('json');
-
-    var project_id = req.project.project_id;
-    var user = req.session.user;
-
-    q.resolve().then(function(){
-        return Promise.all([
-            model.CitizenScientist.getUserStats({
-                project: project_id,
-                user: user.id,
-                groupBySpecies: true,
-            }),
-            model.CitizenScientist.getUserStats({
-                project: project_id,
-                groupBySpecies: true,
-            }),
-        ]);
-    }).then(function(stats){
-        res.json({
-            stats: stats[0],
-            groupStats: stats[1]
-        });
-    }).catch(next);
-});
 
 router.get('/export/user-stats.csv', function(req, res, next) {
     if(req.query.out=="text"){
