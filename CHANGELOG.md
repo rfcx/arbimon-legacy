@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- v1.16.7
+    - adding expert and admin cs ui and route permissions
+    - removing cs pm validated rois to prevent double voting
+    - adding best per site, beest per site/day filters to analytics/pm
 - v1.16.6
     - Filtering consensus and expert validated rois from cs pm ui
     - Fixing stats multiple counting bug
