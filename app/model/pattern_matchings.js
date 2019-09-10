@@ -233,6 +233,8 @@ var PatternMatchings = {
         wherePresent: joi.boolean(),
         whereNotPresent: joi.boolean(),
         whereUnvalidated: joi.boolean(),
+        bestPerSite: joi.boolean(),
+        bestPerSiteDay: joi.boolean(),
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
@@ -398,6 +400,29 @@ var PatternMatchings = {
                 builder.addConstraint("PMR.validated IS NULL", []);
             }
 
+            if(parameters.bestPerSite){
+                builder.addConstraint(
+                    "PMR.score = (\n" +
+                    "    SELECT MAX(sq1PMR.score)\n" +
+                    "    FROM pattern_matching_rois AS sq1PMR\n" +
+                    "    JOIN recordings AS sq1R ON sq1R.recording_id = sq1PMR.recording_id\n" +
+                    "    WHERE sq1R.site_id = R.site_id\n" +
+                    ")"
+                , []);
+            }
+
+            if(parameters.bestPerSiteDay){
+                builder.addConstraint(
+                    "PMR.score = (\n" +
+                    "    SELECT MAX(sq1PMR.score)\n" +
+                    "    FROM pattern_matching_rois AS sq1PMR\n" +
+                    "    JOIN recordings AS sq1R ON sq1R.recording_id = sq1PMR.recording_id\n" +
+                    "    WHERE sq1R.site_id = R.site_id\n" +
+                    "      AND DATE(sq1R.datetime) = DATE(R.datetime)\n" +
+                    ")"
+                , []);
+            }
+
             if(parameters.whereExpert){
                 builder.addConstraint("PMR.expert_validated IS NOT NULL", []);
             }
@@ -442,6 +467,8 @@ var PatternMatchings = {
             wherePresent: options.wherePresent,
             whereNotPresent: options.whereNotPresent,
             whereUnvalidated: options.whereUnvalidated,
+            bestPerSite: options.bestPerSite,
+            bestPerSiteDay: options.bestPerSiteDay,
             limit: options.limit,
             offset: options.offset,
             show: { patternMatchingId: true, datetime: true, names: options.showNames },

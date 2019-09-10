@@ -163,6 +163,8 @@ angular.module('a2.analysis.patternmatching', [
             {value:'present', text:'Present'},
             {value:'not_present', text:'Not Present'},
             {value:'unvalidated', text:'Unvalidated'},
+            {value:'best_per_site', text:'Best per Site'},
+            {value:'best_per_site_day', text:'Best per Site, Day'},
         ],
         selection: [
             {value:'all', text:'All'},
