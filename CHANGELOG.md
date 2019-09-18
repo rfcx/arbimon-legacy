@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- v1.16.8
+    - making pattern matching details ux more uniform
+    - fixing per site / per site per day queries
 - v1.16.7
     - adding expert and admin cs ui and route permissions
     - removing cs pm validated rois to prevent double voting
