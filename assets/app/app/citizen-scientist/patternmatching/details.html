@@ -6,7 +6,7 @@
         a2-scroll="controller.onScroll($event, $controller)"
         a2-scroll-on="window"
     >
-    <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
+        <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
         <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader }">
             <div class="row row-flex flex-align-middle">
                 <div class="col-sm-2 flex-self-align-top">
@@ -114,7 +114,7 @@
         <div class="panel-body">
             <div ng-show="loading-rois">Loading...</div>
             <div ng-repeat="site in controller.rois">
-                <div class="h3"><i class="fa fa-map-marker"></i> {{site.name}}</div>
+                <div class="h3" id="site-{{site.id}}"><i class="fa fa-map-marker"></i> {{site.name}}</div>
                     <div ng-repeat="roi in site.list"
                         class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                         ng-click="roi.selected = !roi.selected"
