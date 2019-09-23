@@ -5,7 +5,7 @@ ADD INDEX `name` USING BTREE (`name`);
 
 
 ALTER TABLE `arbimon2`.`pattern_matching_rois`
-ADD COLUMN `denorm_site_id` INT(10) NULL AFTER `expert_validated`,
+ADD COLUMN `denorm_site_id` INT(10) UNSIGNED NULL AFTER `expert_validated`,
 ADD COLUMN `denorm_recording_datetime` DATETIME NULL AFTER `denorm_site_id`,
 ADD COLUMN `denorm_recording_date` DATE NULL AFTER `denorm_recording_datetime`
 ;
