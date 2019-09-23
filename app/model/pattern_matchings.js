@@ -252,6 +252,7 @@ var PatternMatchings = {
         return q.ninvoke(joi, 'validate', parameters, PatternMatchings.SEARCH_ROIS_SCHEMA).then(function(parameters){
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
             var show = parameters.show || {};
+            var presteps=[];
 
             builder.addProjection(
                 'PMR.`pattern_matching_roi_id` as `id`',
@@ -441,7 +442,7 @@ var PatternMatchings = {
                 builder.setLimit(parameters.limit, parameters.offset || 0);
             }
 
-            return builder;
+            return Promise.all(presteps).then(() => builder);
         });
     },
 
