@@ -406,8 +406,7 @@ var PatternMatchings = {
                     "(\n" +
                     "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
                     "    FROM pattern_matching_rois sq1PMR\n" +
-                    "    JOIN recordings AS sq1R ON sq1R.recording_id = sq1PMR.recording_id\n" +
-                    "    WHERE sq1R.site_id = R.site_id\n" +
+                    "    WHERE sq1PMR.denorm_site_id = PMR.denorm_site_id\n" +
                     "      AND sq1PMR.pattern_matching_id = " + (parameters.patternMatching | 0) + "\n" +
                     "      AND sq1PMR.score > PMR.score\n" +
                     ") in (0)\n"
@@ -419,9 +418,8 @@ var PatternMatchings = {
                     "(\n" +
                     "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
                     "    FROM pattern_matching_rois sq1PMR\n" +
-                    "    JOIN recordings AS sq1R ON sq1R.recording_id = sq1PMR.recording_id\n" +
-                    "    WHERE sq1R.site_id = R.site_id\n" +
-                    "      AND DATE(sq1R.datetime) = DATE(R.datetime)\n" +
+                    "    WHERE sq1PMR.denorm_site_id = PMR.denorm_site_id\n" +
+                    "      AND sq1PMR.denorm_recording_date = PMR.denorm_recording_date\n" +
                     "      AND sq1PMR.pattern_matching_id = " + (parameters.patternMatching | 0) + "\n" +
                     "      AND sq1PMR.score > PMR.score\n" +
                     ") in (0)\n"
