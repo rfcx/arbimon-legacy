@@ -252,6 +252,7 @@ var PatternMatchings = {
         return q.ninvoke(joi, 'validate', parameters, PatternMatchings.SEARCH_ROIS_SCHEMA).then(function(parameters){
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
             var show = parameters.show || {};
+            var calc_denorm = false;
             var presteps=[];
 
             builder.addProjection(
@@ -402,6 +403,7 @@ var PatternMatchings = {
             }
 
             if(parameters.bestPerSite){
+                calc_denorm = true;
                 builder.addConstraint(
                     "(\n" +
                     "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
@@ -414,6 +416,7 @@ var PatternMatchings = {
             }
 
             if(parameters.bestPerSiteDay){
+                calc_denorm = true;
                 builder.addConstraint(
                     "(\n" +
                     "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
@@ -438,6 +441,18 @@ var PatternMatchings = {
 
             if(parameters.limit){
                 builder.setLimit(parameters.limit, parameters.offset || 0);
+            }
+
+            if (calc_denorm) {
+                presteps.push(dbpool.query(
+                    "UPDATE pattern_matching_rois PMR\n" +
+                    "JOIN recordings AS R ON R.recording_id = PMR.recording_id\n" +
+                    "SET PMR.denorm_site_id = R.site_id,\n" +
+                    "    PMR.denorm_recording_datetime = R.datetime,\n" +
+                    "    PMR.denorm_recording_date = DATE(R.datetime)\n" +
+                    "WHERE PMR.pattern_matching_id = " + (parameters.patternMatching | 0) + "\n" +
+                    ";"
+                ))
             }
 
             return Promise.all(presteps).then(() => builder);
