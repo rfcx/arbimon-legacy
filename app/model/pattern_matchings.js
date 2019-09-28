@@ -229,9 +229,12 @@ var PatternMatchings = {
         whereNotExpert: joi.boolean(),
         whereConsensus: joi.boolean(),
         whereNotConsensus: joi.boolean(),
+        whereNotCSValidated: joi.boolean(),
         wherePresent: joi.boolean(),
         whereNotPresent: joi.boolean(),
         whereUnvalidated: joi.boolean(),
+        bestPerSite: joi.boolean(),
+        bestPerSiteDay: joi.boolean(),
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
@@ -249,6 +252,8 @@ var PatternMatchings = {
         return q.ninvoke(joi, 'validate', parameters, PatternMatchings.SEARCH_ROIS_SCHEMA).then(function(parameters){
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
             var show = parameters.show || {};
+            var calc_denorm = false;
+            var presteps=[];
 
             builder.addProjection(
                 'PMR.`pattern_matching_roi_id` as `id`',
@@ -335,6 +340,9 @@ var PatternMatchings = {
                     " AND PMV.user_id = " + builder.escape(parameters.csValidationsFor)
                 );
                 builder.addProjection('PMV.validated as cs_validated');
+                if(parameters.whereNotCSValidated){
+                    builder.addConstraint("PMV.validated IS NULL", []);
+                }
             }
 
             if(parameters.countCSValidations){
@@ -394,6 +402,33 @@ var PatternMatchings = {
                 builder.addConstraint("PMR.validated IS NULL", []);
             }
 
+            if(parameters.bestPerSite){
+                calc_denorm = true;
+                builder.addConstraint(
+                    "(\n" +
+                    "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
+                    "    FROM pattern_matching_rois sq1PMR\n" +
+                    "    WHERE sq1PMR.denorm_site_id = PMR.denorm_site_id\n" +
+                    "      AND sq1PMR.pattern_matching_id = " + (parameters.patternMatching | 0) + "\n" +
+                    "      AND sq1PMR.score > PMR.score\n" +
+                    ") in (0)\n"
+                , []);
+            }
+
+            if(parameters.bestPerSiteDay){
+                calc_denorm = true;
+                builder.addConstraint(
+                    "(\n" +
+                    "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
+                    "    FROM pattern_matching_rois sq1PMR\n" +
+                    "    WHERE sq1PMR.denorm_site_id = PMR.denorm_site_id\n" +
+                    "      AND sq1PMR.denorm_recording_date = PMR.denorm_recording_date\n" +
+                    "      AND sq1PMR.pattern_matching_id = " + (parameters.patternMatching | 0) + "\n" +
+                    "      AND sq1PMR.score > PMR.score\n" +
+                    ") in (0)\n"
+                , []);
+            }
+
             if(parameters.whereExpert){
                 builder.addConstraint("PMR.expert_validated IS NOT NULL", []);
             }
@@ -408,7 +443,19 @@ var PatternMatchings = {
                 builder.setLimit(parameters.limit, parameters.offset || 0);
             }
 
-            return builder;
+            if (calc_denorm) {
+                presteps.push(dbpool.query(
+                    "UPDATE pattern_matching_rois PMR\n" +
+                    "JOIN recordings AS R ON R.recording_id = PMR.recording_id\n" +
+                    "SET PMR.denorm_site_id = R.site_id,\n" +
+                    "    PMR.denorm_recording_datetime = R.datetime,\n" +
+                    "    PMR.denorm_recording_date = DATE(R.datetime)\n" +
+                    "WHERE PMR.pattern_matching_id = " + (parameters.patternMatching | 0) + "\n" +
+                    ";"
+                ))
+            }
+
+            return Promise.all(presteps).then(() => builder);
         });
     },
 
@@ -432,11 +479,14 @@ var PatternMatchings = {
             whereConflicted: options.whereConflicted,
             whereConsensus: options.whereConsensus,
             whereNotConsensus: options.whereNotConsensus,
+            whereNotCSValidated: options.whereNotCSValidated,
             whereExpert: options.whereExpert,
             whereNotExpert: options.whereNotExpert,
             wherePresent: options.wherePresent,
             whereNotPresent: options.whereNotPresent,
             whereUnvalidated: options.whereUnvalidated,
+            bestPerSite: options.bestPerSite,
+            bestPerSiteDay: options.bestPerSiteDay,
             limit: options.limit,
             offset: options.offset,
             show: { patternMatchingId: true, datetime: true, names: options.showNames },

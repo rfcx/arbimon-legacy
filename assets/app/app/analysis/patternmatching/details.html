@@ -2,7 +2,7 @@
     <div ng-if="controller.loading.details">
         Loading <loader></loader>
     </div>
-    <div ng-if="!controller.loading.details"
+    <div ng-if="!controller.loading.details && controller.patternMatching"
         a2-scroll="controller.onScroll($event, $controller)"
         a2-scroll-on="window"
     >
@@ -160,7 +160,7 @@
                 </div>
             </div>
         </div>
-        <div class="panel-body" ng-show="controller.patternMatching">
+        <div class="panel-body">
             <div ng-show="loading-rois">Loading...</div>
             <div ng-repeat="site in controller.rois">
                 <div class="h3" id="site-{{site.id}}"><i class="fa fa-map-marker"></i> {{site.name}}</div>
@@ -169,7 +169,7 @@
                         ng-click="roi.selected = !roi.selected"
                         popover-html="'Recording: {{roi.recording}}<br>
                                  Site: {{roi.site}}<br>
-                                 Time: {{roi.datetime | date:'medium': 'UTC'}} <br>
+                                 Time: {{roi.datetime | date:'medium':'UTC'}} <br>
                                  Score: {{(roi.score | number) || '(Missing)'}}'"
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
@@ -185,7 +185,7 @@
                                 class="fa fa-cubes">
                             </i>
                         </a>
-                        <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi);$event.stopPropagation();">
+                        <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi, $event)">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="Play Audio"
