@@ -133,6 +133,18 @@ var Jobs = {
                 }
             }
         },
+        cnn_job: {
+            type_id: 7,
+            new: function(params, db) {
+                return 
+            },
+            sql : {
+                report : {
+                    projections : ['CONCAT(UCASE(LEFT( CNN.`name`, 1)), SUBSTRING( CNN.`name`, 2)) as name'],
+                    tables      : ['JOIN `job_params_cnn` as CNN ON J.job_id = CNN.job_id'],
+                }
+            }
+        }
     },
 
     /** Creates a new job given the parameters and job type.

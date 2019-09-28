@@ -93,9 +93,16 @@
         position: relative;
     }
 
+    > div.roi-img-cnn{
+        position: relative;
+    }
+
     &.btn{
         padding: 2px;
         &.active .roi-img{
+            filter: brightness(50%);
+        }
+        &.active .roi-img-cnn{
             filter: brightness(50%);
         }
     }
@@ -203,6 +210,16 @@
         &.is-small {
             width:64px;
             height:64px;
+        }
+    }
+
+    .roi-img-cnn {
+        height: 125px;
+        width: 242px; //todo, make dynamic
+        margin: 2px;
+        &.is-small {
+            height: 64px;
+            width: 124px; //todo, make dynamic
         }
     }
 

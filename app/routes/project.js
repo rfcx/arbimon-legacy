@@ -106,6 +106,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     public: !project.is_private,
                     features:{
                         pattern_matching: !!project.pattern_matching_enabled,
+                        cnn: !!project.cnn_enabled,
                         citizen_scientist: !!project.citizen_scientist_enabled,
                     },
                     super: !!req.session.user.isSuper,

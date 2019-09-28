@@ -129,6 +129,7 @@ angular.module('a2.admin.projects.list', [
                 storage_usage : project.storage_usage,
                 processing_usage : project.processing_usage,
                 citizen_scientist_enabled : !!project.citizen_scientist_enabled,
+                cnn_enabled : !!project.cnn_enabled,
                 pattern_matching_enabled : !!project.pattern_matching_enabled,
                 plan : {
                     tier: project.tier,
