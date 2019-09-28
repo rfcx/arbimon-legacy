@@ -1,5 +1,7 @@
 # CHANGELOG
 
+- v1.17.0
+    - Adding Convolutional Neural Network module.
 - v1.16.9
     - optimizing pattern matching best scored per site / per site per day queries
 - v1.16.8
