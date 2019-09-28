@@ -23,6 +23,7 @@ var soundscape_routes = require('./soundscapes');
 var jobsRoutes = require('./jobs');
 var classiRoutes = require('./classifications');
 var patternMatchingRoutes = require('./pattern_matchings');
+var cnnRoutes = require('./cnns');
 var tagRoutes = require('./tags');
 
 router.param('projectUrl', function(req, res, next, project_url){
@@ -384,6 +385,8 @@ router.use('/:projectUrl/soundscapes', soundscape_routes);
 router.use('/:projectUrl/jobs', jobsRoutes);
 router.use('/:projectUrl/classifications', classiRoutes);
 router.use('/:projectUrl/pattern-matchings', patternMatchingRoutes);
+router.use('/:projectUrl/cnn', cnnRoutes);
+
 router.use('/:projectUrl/tags', tagRoutes);
 router.use('/:projectUrl/audio-event-detections', require('./audio-event-detections'));
 router.use('/:projectUrl/soundscape-composition', require('./soundscape-composition'));
