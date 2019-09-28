@@ -24,7 +24,6 @@ var jobsRoutes = require('./jobs');
 var classiRoutes = require('./classifications');
 var patternMatchingRoutes = require('./pattern_matchings');
 var cnnRoutes = require('./cnns');
-
 var tagRoutes = require('./tags');
 
 router.param('projectUrl', function(req, res, next, project_url){
