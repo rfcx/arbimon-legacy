@@ -357,23 +357,16 @@ var PatternMatchings = {
             }
 
             if(parameters.perUserCSValidations){
-                presteps.push(dbpool.query(
-                    "SELECT DISTINCT U.user_id as id, CONCAT(U.firstname, ' ', U.lastname) AS name\n" +
-                    "FROM pattern_matching_rois PMR\n" +
-                    "JOIN pattern_matching_validations PMV ON PMV.pattern_matching_roi_id=PMR.pattern_matching_roi_id\n" +
-                    "JOIN users U ON PMV.user_id = U.user_id\n" +
-                    "WHERE PMR.pattern_matching_id = " + (parameters.patternMatching | 0) + "\n" +
-                    ";"
-                ).then(users => users.forEach(user => {
-                    const tblId = `PMV_U${user.id}`;
-                    const fieldId = dbpool.escapeId(`CS Val ${user.name}`);
-                    builder.addProjection(
-                        '(CASE ' + tblId + '.`validated` WHEN 1 THEN "present" WHEN 0 THEN "not present" ELSE "(not validated)" END) as ' + fieldId
-                    );
-                    builder.addTable("LEFT JOIN pattern_matching_validations", tblId,
-                        `PMR.pattern_matching_roi_id = ${tblId}.pattern_matching_roi_id AND ${tblId}.user_id = ${user.id}`
-                    )
-                })))
+                builder.addTable("LEFT JOIN pattern_matching_validations", "PMV",
+                    "PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id\n"
+                );
+                builder.addTable("LEFT JOIN users", "U",
+                    "PMV.user_id = U.user_id\n"
+                );
+                builder.addProjection("CONCAT(U.firstname, ' ', U.lastname) AS user")
+                builder.addProjection(
+                    '(CASE PMV.`validated` WHEN 1 THEN "present" WHEN 0 THEN "not present" ELSE "(not validated)" END) as cs_validation'
+                );
             }
 
             if(parameters.showConsensusValidated){
