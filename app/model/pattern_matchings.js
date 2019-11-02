@@ -408,6 +408,7 @@ var PatternMatchings = {
 
             if(parameters.bestPerSite){
                 calc_denorm = true;
+                builder.addConstraint('PMR.score IS NOT NULL');
                 builder.addConstraint(
                     "(\n" +
                     "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
@@ -421,6 +422,7 @@ var PatternMatchings = {
 
             if(parameters.bestPerSiteDay){
                 calc_denorm = true;
+                builder.addConstraint('PMR.score IS NOT NULL');
                 builder.addConstraint(
                     "(\n" +
                     "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
