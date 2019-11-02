@@ -184,7 +184,9 @@ router.get('/logout', function(req, res, next) {
 
 router.get('/register', function(req, res) {
     res.type('html');
-    res.render('register');
+    res.render('register', {
+        needCaptcha: config('recaptcha').needed
+    });
 });
 
 router.get('/activate/:hash', function(req, res, next) {
@@ -244,6 +246,7 @@ router.post('/register', function(req, res, next) {
     // console.log(req.body);
     
     var user = req.body.user;
+    var captchaNeeded = config('recaptcha').needed !== false;
     var captchaResponse = req.body.captcha;
     var subscribeToNewsletter = req.body.newsletter;
     
@@ -268,8 +271,11 @@ router.post('/register', function(req, res, next) {
             
             callback(null);
         },
-        // validate captcha
+        // validate captcha if needed
         function(callback) {
+            if(!captchaNeeded){
+                return callback(null);
+            }
             
             request({ 
                 uri:'https://www.google.com/recaptcha/api/siteverify',
