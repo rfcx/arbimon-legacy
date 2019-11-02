@@ -30,7 +30,7 @@ var settingGetter = function(key) {
 
 var init = function(argument) {
     settingsMonitor();
-    monitorLoop = setInterval(settingsMonitor, 30000);
+    monitorLoop = setInterval(settingsMonitor, 600000);
 };
 
 exports.middleware = function() {
