@@ -22,14 +22,15 @@
     width: 1em;
 }
 
-.add-swag(@swag; @content; @color; @shadow){
+.add-swag(@swag; @content; @color; @shadow; @fontsize:inherit; @bottom:0; @right:0){
     &.swag-@{swag}::after {
-        bottom: 0;
+        bottom: @bottom;
         color: @color;
+        font-size: @fontsize;
         content: @content;
         position: absolute;
-        right: 0;
-        text-shadow: 1px 1px 3px @shadow, 1px 1px 3px @shadow, 1px 1px 3px @shadow;
+        right: @right;
+        text-shadow: 1px 1px 3px @shadow, 1px 1px 3px @shadow, 1px 1px 3px @shadow, 1px 1px 3px @shadow, 1px 1px 3px @shadow, 1px 1px 3px @shadow;
     }
 }
 
@@ -46,4 +47,15 @@
 
     .add-swag(super; "\f13b"; purple; white);
     .add-swag(admin; "A"; lightsalmon; black);
+}
+
+.fa.xsmall{
+    font-size: .5em;
+}
+
+.fa.has-swag {
+    position: relative;
+    > .fa{
+        .add-swag(download; "\f019"; inherit; white; @fontsize:.5em; @bottom:-2px; @right:-3px);
+    }
 }

@@ -52,6 +52,7 @@ var PatternMatchings = {
             "PM.`timestamp`", "PM.`species_id`", "PM.`songtype_id`" ,
             "PM.`parameters`" ,
             "PM.`citizen_scientist`",
+            "PM.`cs_expert`",
             "PM.`playlist_id`", "PM.`template_id`" ,
         ];
         var tables = ["pattern_matchings PM"];
@@ -77,6 +78,9 @@ var PatternMatchings = {
             constraints.push('PM.`citizen_scientist` = ' + dbpool.escape(options.citizen_scientist));
         }
 
+        if (options.cs_expert !== undefined) {
+            constraints.push('PM.`cs_expert` = ' + dbpool.escape(options.cs_expert));
+        }
 
         if (options.deleted !== undefined) {
             constraints.push('PM.`deleted` = ' + dbpool.escape(options.deleted));
@@ -221,6 +225,7 @@ var PatternMatchings = {
         // }).optionalKeys('th')),
         csValidationsFor: joi.number().integer(),
         expertCSValidations: joi.boolean(),
+        perUserCSValidations: joi.boolean(),
         hideNormalValidations: joi.boolean(),
         countCSValidations: joi.boolean(),
         perSiteCount: joi.boolean(),
@@ -351,6 +356,19 @@ var PatternMatchings = {
                 builder.addProjection('PMR.cs_val_not_present');
             }
 
+            if(parameters.perUserCSValidations){
+                builder.addTable("LEFT JOIN pattern_matching_validations", "PMV",
+                    "PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id\n"
+                );
+                builder.addTable("LEFT JOIN users", "U",
+                    "PMV.user_id = U.user_id\n"
+                );
+                builder.addProjection("CONCAT(U.firstname, ' ', U.lastname) AS user")
+                builder.addProjection(
+                    '(CASE PMV.`validated` WHEN 1 THEN "present" WHEN 0 THEN "not present" ELSE "(not validated)" END) as cs_validation'
+                );
+            }
+
             if(parameters.showConsensusValidated){
                 if(show.names){
                     builder.addProjection(
@@ -404,6 +422,7 @@ var PatternMatchings = {
 
             if(parameters.bestPerSite){
                 calc_denorm = true;
+                builder.addConstraint('PMR.score IS NOT NULL');
                 builder.addConstraint(
                     "(\n" +
                     "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
@@ -417,6 +436,7 @@ var PatternMatchings = {
 
             if(parameters.bestPerSiteDay){
                 calc_denorm = true;
+                builder.addConstraint('PMR.score IS NOT NULL');
                 builder.addConstraint(
                     "(\n" +
                     "    SELECT COUNT(DISTINCT(sq1PMR.score))\n" +
@@ -465,7 +485,7 @@ var PatternMatchings = {
      */
     delete: function (patternMatchingId) {
         return dbpool.query(
-            "UPDATE pattern_matchings SET deleted=1, citizen_scientist=0 WHERE pattern_matching_id = ?", [patternMatchingId]
+            "UPDATE pattern_matchings SET deleted=1, citizen_scientist=0, cs_expert=0 WHERE pattern_matching_id = ?", [patternMatchingId]
         );
     },
 
@@ -533,6 +553,7 @@ var PatternMatchings = {
             hideNormalValidations: options.hideNormalValidations,
             expertCSValidations: options.expertCSValidations,
             countCSValidations: options.countCSValidations,
+            perUserCSValidations: options.perUserCSValidations,
             show: { names: true },
         }).then(
             builder => dbpool.streamQuery({

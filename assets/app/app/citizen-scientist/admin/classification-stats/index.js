@@ -43,8 +43,8 @@ angular.module('a2.citizen-scientist.admin.classification-stats', [
         }).bind(this));
     };
 
-    this.patternMatchingExportUrl = function(row){
-        return a2CitizenScientistAdminService.getCSExportUrl(row.pattern_matching_id);
+    this.patternMatchingExportUrl = function(row, per_user){
+        return a2CitizenScientistAdminService.getCSExportUrl(row.pattern_matching_id, per_user);
     }
 
 

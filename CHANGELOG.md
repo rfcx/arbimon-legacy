@@ -1,5 +1,11 @@
 # CHANGELOG
 
+- v1.17.1
+    - Updated/cleaned layout functionality.
+    - Fixed some layout bugs.
+    - Separated normal/expert CS publishing
+    - Added per user CS PM validations export
+    - Updated Random Forest model labeling
 - v1.17.0
     - Adding Convolutional Neural Network module.
 - v1.16.9

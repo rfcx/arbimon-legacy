@@ -60,9 +60,24 @@
                 <a class="btn btn-default"
                     ng-href="{{controller.patternMatchingExportUrl(row)}}"
                     ng-click="true | trackEvent:'CS Pattern Matching':'export'"
-                    tooltip="Export Citizen Scientist Pattern Matching Data">
-                <i class="fa fa-download"></i>
-            </a>
+                    popover-html="'Export Citizen Scientist<br />Pattern Matching Data'"
+                    popover-trigger="mouseenter"
+                    popover-append-to-body="true"
+                >
+                    <i class="fa fa-download"></i>
+                </a>
+                <a class="btn btn-default"
+                    ng-href="{{controller.patternMatchingExportUrl(row, true)}}"
+                    ng-click="true | trackEvent:'CS Pattern Matching':'export'"
+                    popover-html="'Export Citizen Scientist<br />Per User<br />Pattern Matching Data'"
+                    popover-trigger="mouseenter"
+                    popover-append-to-body="true"
+                >
+                    <span class="fa has-swag">
+                        <i class="fa fa-user"></i>
+                        <i class="fa swag-download"></i>
+                    </span>
+                </a>
             </field>
         </a2-table>
         <loader ng-hide="!controller.loadingForSpecies"></loader>
