@@ -118,12 +118,6 @@
                     <div ng-repeat="roi in site.list"
                         class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                         ng-click="roi.selected = !roi.selected"
-                        popover-html="'Recording: {{roi.recording}}<br>
-                                 Site: {{roi.site}}<br>
-                                 Time: {{roi.datetime | date:'medium':'UTC'}} <br>
-                                 Score: {{(roi.score | number) || '(Missing)'}}'"
-                        popover-trigger="mouseenter"
-                        popover-append-to-body="true"
                     >
                         <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
                         <div class="roi-btn-tr h1" ng-if="roi.cs_validated !== null">
