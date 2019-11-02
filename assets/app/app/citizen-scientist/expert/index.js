@@ -16,7 +16,7 @@ angular.module('a2.citizen-scientist.expert', [
         templateUrl: '/app/citizen-scientist/expert/list.html'
     });
 })
-.controller('CitizenScientistExpertCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('CitizenScientistExpertCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2CitizenScientistExpertService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
     var initTable = function(p, c, s, f, t) {
@@ -71,7 +71,7 @@ angular.module('a2.citizen-scientist.expert', [
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
 
-        return a2CitizenScientistService.getPatternMatchings().then(function(data) {
+        return a2CitizenScientistExpertService.getPatternMatchings().then(function(data) {
             $scope.patternmatchingsOriginal = data;
             $scope.patternmatchingsData = data;
             $scope.infoInfo = "";

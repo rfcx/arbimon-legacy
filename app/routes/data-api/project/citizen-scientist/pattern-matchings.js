@@ -27,6 +27,23 @@ router.get('/', function(req, res, next) {
     }).catch(next);
 });
 
+/** Return a list of all the pattern matchings in a project visible to an expert.
+ */
+router.get('/expert', function(req, res, next) {
+    res.type('json');
+    model.patternMatchings.find({
+        project:req.project.project_id,
+        cs_expert:1,
+        deleted:0,
+        showUserStatsFor: req.session.user.id,
+        showSpecies: true,
+        showTemplate: true,
+        showPlaylist:true
+    }).then(function(count) {
+        res.json(count);
+    }).catch(next);
+});
+
 /** Return a pattern matching's data.
  */
 router.get('/:patternMatching/details', function(req, res, next) {
