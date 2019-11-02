@@ -16,7 +16,7 @@ angular.module('a2.citizen-scientist.expert', [
         templateUrl: '/app/citizen-scientist/expert/list.html'
     });
 })
-.controller('CitizenScientistExpertCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('CitizenScientistExpertCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2CitizenScientistExpertService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
     var initTable = function(p, c, s, f, t) {
@@ -57,7 +57,7 @@ angular.module('a2.citizen-scientist.expert', [
     $scope.getTemplateVisualizerUrl = function(template){
         var projecturl = Project.getUrl();
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/visualizer/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     $scope.selectItem = function(patternmatchingId){
@@ -71,7 +71,7 @@ angular.module('a2.citizen-scientist.expert', [
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
 
-        return a2CitizenScientistService.getPatternMatchings().then(function(data) {
+        return a2CitizenScientistExpertService.getPatternMatchings().then(function(data) {
             $scope.patternmatchingsOriginal = data;
             $scope.patternmatchingsData = data;
             $scope.infoInfo = "";
@@ -271,12 +271,12 @@ angular.module('a2.citizen-scientist.expert', [
 
     getRoiVisualizerUrl: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        return roi ? "/visualizer/"+this.projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
     getTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/visualizer/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){

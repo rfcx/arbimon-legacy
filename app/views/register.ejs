@@ -126,6 +126,9 @@
                                     response="captchaResp"
                                     reset-widget="resetCaptcha">
                                 </div>
+                                <% } else { %>
+                                <span ng-init="captchaNotNeeded=1"></span>
+                                <% } %>
                             </div>
                             <button type="submit"
                                 class="btn btn-success btn-block btn-lg">

@@ -3,6 +3,9 @@ angular.module('a2.srv.citizen-scientist-expert', [
 ])
 .factory('a2CitizenScientistExpertService',function(a2APIService, Project, notify){
     return {
+        getPatternMatchings: function(){
+            return a2APIService.get('/citizen-scientist/pattern-matchings/expert').catch(notify.serverError);
+        },
         getPatternMatchingDetailsFor: function(patternMatchingId){
             return a2APIService.get('/citizen-scientist/pattern-matchings/' + patternMatchingId + '/expert/details').catch(notify.serverError);
         },

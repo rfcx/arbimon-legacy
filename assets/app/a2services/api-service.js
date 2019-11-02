@@ -29,7 +29,7 @@ angular.module('a2.srv.api', [])
     return a2APIServiceClass;
 })
 .factory('a2APIService', function($location, $q, a2APIServiceClass){
-    var nrm = /\/?(project|citizen-scientist)\/([\w\_\-]+)/.exec($location.absUrl());
+    var nrm = /\/?(project|citizen-scientist|visualizer)\/([\w\_\-]+)/.exec($location.absUrl());
     var projectName = nrm ? nrm[2] : '';
     var apiURLPrefix = '/api/project/'+projectName;
     function returnData(response){

@@ -24,9 +24,14 @@ angular.module('a2.citizen-scientist.admin.settings', [
 
     this.save = function(){
         var settings = this.patternmatchings.filter(function (pm){
-            return pm.citizen_scientist;
+            return pm.citizen_scientist || pm.cs_expert;
         }).map(function (pm){
-            return {id: pm.id, consensus_number: pm.consensus_number};
+            return {
+                id: pm.id,
+                consensus_number: pm.consensus_number,
+                citizen_scientist: pm.citizen_scientist,
+                cs_expert: pm.cs_expert,
+            };
         });
 
         return a2CitizenScientistAdminService.setSettings(settings).then((function(data){

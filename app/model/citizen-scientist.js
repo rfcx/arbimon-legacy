@@ -169,17 +169,22 @@ var CitizenScientist = {
         project: joi.number().integer(),
         pattern_matchings: joi.array().items(joi.object().keys({
             id: joi.number().integer(),
+            citizen_scientist: joi.boolean(),
+            cs_expert: joi.boolean(),
             consensus_number: joi.number().integer(),
         })),
     }),
 
     setSettings: function(settings){
         return q.ninvoke(joi, 'validate', settings, CitizenScientist.SETTINGS_SCHEMA).then(function(){
-            var ids = settings.pattern_matchings.map(pm => pm.id);
+            var ids = settings.pattern_matchings.filter(pm => pm.citizen_scientist).map(pm => pm.id);
+            var csxids = settings.pattern_matchings.filter(pm => pm.cs_expert).map(pm => pm.id);
             ids.unshift(-1, 0);
+            csxids.unshift(-1, 0);
             return dbpool.query(
                 "UPDATE pattern_matchings\n" +
                 "SET citizen_scientist = pattern_matching_id IN (?),\n" +
+                "cs_expert = pattern_matching_id IN (?),\n" +
                 "consensus_number = (CASE pattern_matching_id\n" +
                 "    WHEN -1 THEN 3\n" +
                 settings.pattern_matchings.map(pm =>
@@ -189,6 +194,7 @@ var CitizenScientist = {
                 "END)\n" +
                 "WHERE project_id=?\n", [
                 ids,
+                csxids,
                 settings.project
             ]);
         });
