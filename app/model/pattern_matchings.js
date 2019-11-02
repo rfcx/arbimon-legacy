@@ -52,6 +52,7 @@ var PatternMatchings = {
             "PM.`timestamp`", "PM.`species_id`", "PM.`songtype_id`" ,
             "PM.`parameters`" ,
             "PM.`citizen_scientist`",
+            "PM.`cs_expert`",
             "PM.`playlist_id`", "PM.`template_id`" ,
         ];
         var tables = ["pattern_matchings PM"];
@@ -77,6 +78,9 @@ var PatternMatchings = {
             constraints.push('PM.`citizen_scientist` = ' + dbpool.escape(options.citizen_scientist));
         }
 
+        if (options.cs_expert !== undefined) {
+            constraints.push('PM.`cs_expert` = ' + dbpool.escape(options.cs_expert));
+        }
 
         if (options.deleted !== undefined) {
             constraints.push('PM.`deleted` = ' + dbpool.escape(options.deleted));
@@ -465,7 +469,7 @@ var PatternMatchings = {
      */
     delete: function (patternMatchingId) {
         return dbpool.query(
-            "UPDATE pattern_matchings SET deleted=1, citizen_scientist=0 WHERE pattern_matching_id = ?", [patternMatchingId]
+            "UPDATE pattern_matchings SET deleted=1, citizen_scientist=0, cs_expert=0 WHERE pattern_matching_id = ?", [patternMatchingId]
         );
     },
 

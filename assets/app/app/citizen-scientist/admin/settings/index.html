@@ -8,8 +8,13 @@
             <field title="Name" width="25%" filter key="name" ><label class="text-wrap" for="param-cs-{{row.id}}">{{ row.name }}</label></field>
             <field title="Species" filter key="species_name" ><label for="param-cs-{{row.id}}">{{ row.species_name }}</label></field>
             <field title="Songtype" filter key="songtype_name" ><label for="param-cs-{{row.id}}">{{ row.songtype_name }}</label></field>
-            <field title="Avaliable for Citizen Scientist" key="citizen_scientist">
-                <input id="param-cs-{{row.id}}" ng-model="row.citizen_scientist" ng-true-value="1" ng-true-value="0" type="checkbox"/>
+            <field title="Avaliable for" key="citizen_scientist">
+                <div>
+                    <input id="param-cs-{{row.id}}" ng-model="row.citizen_scientist" ng-true-value="1" ng-true-value="0" type="checkbox"/>  Citizen Scientist
+                </div>
+                <div>
+                    <input id="param-cs-{{row.id}}" ng-model="row.cs_expert" ng-true-value="1" ng-true-value="0" type="checkbox"/>  Citizen Scientist Experts
+                </div>
             </field>
             <field title="Consensus Number" key="consensus_number">
                 <input id="param-cn-{{row.id}}" ng-model="row.consensus_number" type="number" ng-disabled="!row.citizen_scientist" />
