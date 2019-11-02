@@ -6,7 +6,7 @@ angular.module('a2.srv.project', [
     a2APIService
 ) {
 
-        var nameRe = /\/?(project|citizen-scientist)\/([\w\_\-]+)/;
+        var nameRe = /\/?(project|citizen-scientist|visualizer)\/([\w\_\-]+)/;
         var nrm = nameRe.exec($location.absUrl());
         var url = nrm ? nrm[2] : '';
 
