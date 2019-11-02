@@ -179,7 +179,6 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
         return model.patternMatchings.exportRois(req.params.patternMatching, filters, {
             hideNormalValidations: true,
             expertCSValidations: true,
-            perUserCSValidations: true,
             countCSValidations: true
         }).then(function(results) {
             var datastream = results[0];
@@ -203,6 +202,68 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
                 score: -4.5,
                 cs_val_present: -4,
                 cs_val_not_present: -3,
+                consensus_validated: 5,
+                expert_validated: 6,
+                uri: 10
+            };
+            fields.sort(function(a, b){
+                var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
+                return ca < cb ? -1 : (
+                    ca > cb ?  1 : ( a <  b ? -1 : ( a >  b ?  1 : 0 ) )
+                );
+            });
+
+            datastream
+                .pipe(csv_stringify({header:true, columns:fields}))
+                .pipe(res);
+        }).catch(next);
+    }).catch(next);
+});
+
+router.get('/:patternMatching/export-per-user.csv', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+
+    try {
+        var filters = JSON.parse(req.query.filters || '{}') || {};
+    } catch(e) {
+        return next(e);
+    }
+
+    filters.project_id = req.project.project_id | 0;
+
+    model.patternMatchings.findOne({ id: req.params.patternMatching }).then(function(pm) {
+        res.attachment(pm.name + '-citizen-scientist-per-user-export.csv')
+
+        return model.patternMatchings.exportRois(req.params.patternMatching, filters, {
+            hideNormalValidations: true,
+            expertCSValidations: true,
+            perUserCSValidations: true
+        }).then(function(results) {
+            var datastream = results[0];
+            var fields = results[1].map(function(f){return f.name;});
+            var colOrder={
+                id: -18,
+                recording: -17,
+                site_id: -16.5,
+                site: -16,
+                year: -15,
+                month: -14,
+                day: -13,
+                hour: -12,
+                min: -11,
+                species: -10,
+                songtype: -9,
+                x1: -8,
+                x2: -7,
+                y1: -6,
+                y2: -5,
+                score: -4.5,
+                user: -4,
+                cs_validation: -3,
                 consensus_validated: 5,
                 expert_validated: 6,
                 uri: 10
