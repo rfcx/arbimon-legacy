@@ -225,6 +225,7 @@ var PatternMatchings = {
         // }).optionalKeys('th')),
         csValidationsFor: joi.number().integer(),
         expertCSValidations: joi.boolean(),
+        perUserCSValidations: joi.boolean(),
         hideNormalValidations: joi.boolean(),
         countCSValidations: joi.boolean(),
         perSiteCount: joi.boolean(),
@@ -353,6 +354,26 @@ var PatternMatchings = {
                 parameters.showConsensusValidated = true;
                 builder.addProjection('PMR.cs_val_present');
                 builder.addProjection('PMR.cs_val_not_present');
+            }
+
+            if(parameters.perUserCSValidations){
+                presteps.push(dbpool.query(
+                    "SELECT DISTINCT U.user_id as id, CONCAT(U.firstname, ' ', U.lastname) AS name\n" +
+                    "FROM pattern_matching_rois PMR\n" +
+                    "JOIN pattern_matching_validations PMV ON PMV.pattern_matching_roi_id=PMR.pattern_matching_roi_id\n" +
+                    "JOIN users U ON PMV.user_id = U.user_id\n" +
+                    "WHERE PMR.pattern_matching_id = " + (parameters.patternMatching | 0) + "\n" +
+                    ";"
+                ).then(users => users.forEach(user => {
+                    const tblId = `PMV_U${user.id}`;
+                    const fieldId = dbpool.escapeId(`CS Val ${user.name}`);
+                    builder.addProjection(
+                        '(CASE ' + tblId + '.`validated` WHEN 1 THEN "present" WHEN 0 THEN "not present" ELSE "(not validated)" END) as ' + fieldId
+                    );
+                    builder.addTable("LEFT JOIN pattern_matching_validations", tblId,
+                        `PMR.pattern_matching_roi_id = ${tblId}.pattern_matching_roi_id AND ${tblId}.user_id = ${user.id}`
+                    )
+                })))
             }
 
             if(parameters.showConsensusValidated){
@@ -539,6 +560,7 @@ var PatternMatchings = {
             hideNormalValidations: options.hideNormalValidations,
             expertCSValidations: options.expertCSValidations,
             countCSValidations: options.countCSValidations,
+            perUserCSValidations: options.perUserCSValidations,
             show: { names: true },
         }).then(
             builder => dbpool.streamQuery({

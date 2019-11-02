@@ -179,6 +179,7 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
         return model.patternMatchings.exportRois(req.params.patternMatching, filters, {
             hideNormalValidations: true,
             expertCSValidations: true,
+            perUserCSValidations: true,
             countCSValidations: true
         }).then(function(results) {
             var datastream = results[0];
@@ -186,6 +187,7 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
             var colOrder={
                 id: -18,
                 recording: -17,
+                site_id: -16.5,
                 site: -16,
                 year: -15,
                 month: -14,
@@ -198,12 +200,12 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
                 x2: -7,
                 y1: -6,
                 y2: -5,
+                score: -4.5,
                 cs_val_present: -4,
                 cs_val_not_present: -3,
-                consensus_validated: -2.5,
-                expert_validated: -2.25,
-                validated: -2,
-                uri: -1
+                consensus_validated: 5,
+                expert_validated: 6,
+                uri: 10
             };
             fields.sort(function(a, b){
                 var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
