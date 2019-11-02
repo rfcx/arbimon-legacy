@@ -15,11 +15,11 @@ var settingsMonitor = function() {
             console.error(err.stack);
             return;
         }
-        
+
         for(var i=0; i < rows.length; i++) {
             settings[rows[i].key] = rows[i].value;
         }
-        
+
         debug(settings);
     });
 };
@@ -35,7 +35,7 @@ var init = function(argument) {
 
 exports.middleware = function() {
     init();
-    
+
     return function(req, res, next) {
         req.systemSettings = settingGetter;
         next();
