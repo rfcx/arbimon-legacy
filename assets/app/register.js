@@ -105,23 +105,21 @@ angular.module('a2.register' , [
         else if(!$scope.terms_accepted) {
             notify.log('To register you must agree with our terms of service');
         }
-        else if(!$scope.captchaResp) {
+        else if(!$scope.captchaResp && !$scope.captchaNotNeeded) {
             notify.log('Please complete the captcha');
-        }
-        else {
+        } else {
             $scope.loading = true;
             $http.post('/register', {
                 user: $scope.user,
                 captcha: $scope.captchaResp,
                 newsletter: $scope.newsletter
-            })
-            .success(function(data) {
+            }).success(function(data) {
                 $scope.loading = false;
                 if(data.success) {
                     $scope.completed = true;
                 }
-            })
-            .error(function(data) {
+
+            }).error(function(data) {
                 $scope.loading = false;
                 if(data.error) {
                     $scope.resetCaptcha();
