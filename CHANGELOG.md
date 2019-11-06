@@ -1,5 +1,7 @@
 # CHANGELOG
 
+- v1.17.2
+    - fixed broken registration page
 - v1.17.1
     - Updated/cleaned layout functionality.
     - Fixed some layout bugs.
