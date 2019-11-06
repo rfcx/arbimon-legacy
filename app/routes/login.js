@@ -250,7 +250,7 @@ router.post('/register', function(req, res, next) {
     var captchaResponse = req.body.captcha;
     var subscribeToNewsletter = req.body.newsletter;
     
-    if(!user || !captchaResponse) {
+    if(!user || (captchaNeeded && !captchaResponse)) {
         return res.status(400).json({ error: "missing parameters" });
     }
     
