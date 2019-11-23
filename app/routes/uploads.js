@@ -244,7 +244,7 @@ var receiveUpload = function(req, res, next) {
                         return res.status(401).json({ error: msg });
                     }
                     
-                    if(info.duration > 120) {
+                    if(info.duration > 61) {
                         audioTools.splitter(upload.path, info.duration, function(err, files) {
                             if(err) return next(err);
                             
