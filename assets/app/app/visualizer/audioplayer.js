@@ -1,5 +1,5 @@
 angular.module('a2.visualizer.audio-player', [])
-.service('a2AudioPlayer', function(A2AudioObject){
+.service('a2AudioPlayer', function(A2AudioObject, $q){
     'use strict';
     var a2AudioPlayer = function(scope, options){
         this.scope = scope;
@@ -54,7 +54,7 @@ angular.module('a2.visualizer.audio-player', [])
             } else {
                 delete this.resource_params.gain;
             }
-            return this.load(this.resource_url).then((function(){
+            return (this.resource_url ? this.load(this.resource_url) : $q.resolve()).then((function(){
                 this.gain = gain;
             }).bind(this));
             // this.resource.setGain(gain).then((function(){
@@ -75,7 +75,7 @@ angular.module('a2.visualizer.audio-player', [])
         _load_resource: function(url, params){
             this.loading=true;
             if(params){
-                var pk = Object.keys(params); 
+                var pk = Object.keys(params);
                 if(pk.length){
                     var ch = /\?/.test(url) ? '&' : '?';
                     url += ch + pk.map(function(k){return k + '=' + params[k];}).join('&');
@@ -146,7 +146,7 @@ angular.module('a2.visualizer.audio-player', [])
 .factory('A2AudioObject', ['$window', '$interval', '$q', function($window, $interval, $q) {
     var poll_loop_interval = 50; // 25;
     // var AudioContext = $window.AudioContext || $window.webkitAudioContext;
-    
+
     function loadAudio(url) {
         var deferred = $q.defer();
         var audio = new $window.Audio();
@@ -167,16 +167,16 @@ angular.module('a2.visualizer.audio-player', [])
 
         return deferred.promise;
     }
-    
+
     var A2AudioObject = function(url) {
         var d = $q.defer();
         this.url = url;
         this.onCompleteListeners = [];
         // this.context = new AudioContext();
         // $window.a2ao = this;
-        
+
         this.interval = $interval(this._check_current_time.bind(this), poll_loop_interval);
-        
+
         this.load_promise = loadAudio(url).then((function(nativeAudio) {
             this.audio = nativeAudio;
             this.audio.addEventListener('canplay', (function() {
@@ -193,9 +193,9 @@ angular.module('a2.visualizer.audio-player', [])
             this.error = true;
             console.warn(error);
         }).bind(this));
-        
+
     };
-    
+
     A2AudioObject.prototype = {
         // disconnect_ctx: function(){
         //     return this.context.suspend().then((function(){
@@ -225,7 +225,7 @@ angular.module('a2.visualizer.audio-player', [])
         //         this.ctx_source.connect(output);
         //         return this.context.resume();
         //     }).bind(this));
-        // },        
+        // },
         // setGain: function(gain){
         //     var d = $q.defer();
         //     this.gain = gain;
@@ -242,7 +242,7 @@ angular.module('a2.visualizer.audio-player', [])
         //     }
         //     return d.promise;
         // },
-        
+
         // setFrequencyFilter: function(filter){
         //     var d = $q.defer();
         //     d.resolve();
@@ -273,16 +273,16 @@ angular.module('a2.visualizer.audio-player', [])
         //             need_to_connect = true;
         //         }
         //     }
-        //     
+        //
         //     if(need_to_connect){
         //         promise = promise.then((function(){
         //             return this.setup_ctx_connections();
         //         }).bind(this));
         //     }
-        //     
+        //
         //     return promise;
         // },
-        
+
         play : function() {
             // this.context.resume();
             this.audio.play();
@@ -307,7 +307,7 @@ angular.module('a2.visualizer.audio-player', [])
         stop : function() {
             this.restart();
         },
-        
+
         discard: function() {
             if (!this.discarded) {
                 this.discarded = true;
@@ -352,7 +352,7 @@ angular.module('a2.visualizer.audio-player', [])
         _check_current_time : function () {
             if(this.audio) {
                 this.currentTime = this.audio.currentTime;
-                
+
                 if (this.currentTime >= this.duration) {
                     this.onCompleteListeners.forEach(function(listener){
                         listener(this);
@@ -362,7 +362,7 @@ angular.module('a2.visualizer.audio-player', [])
         }
 
     };
-    
+
     return A2AudioObject;
 }])
 ;
