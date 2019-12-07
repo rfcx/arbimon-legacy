@@ -123,7 +123,7 @@ angular.module('a2.citizen-scientist.expert', [
         }
     }
 })
-.controller('CitizenScientistExpertDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistService, a2CitizenScientistExpertService, a2UserPermit, Project, a2AudioPlayer, notify) {
+.controller('CitizenScientistExpertDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistService, a2CitizenScientistExpertService, a2UserPermit, Project, a2AudioBarService, notify) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -140,7 +140,6 @@ angular.module('a2.citizen-scientist.expert', [
         this.fetchDetails().then((function(){
             this.loadPage(this.selected.page);
         }).bind(this));
-        this.audio_player = new a2AudioPlayer($scope)
     },
     compositeValidation: function(roi){
         var expert_val = roi.expert_validated;
@@ -256,17 +255,11 @@ angular.module('a2.citizen-scientist.expert', [
             $event.preventDefault();
             $event.stopPropagation();
         }
-        var audio_player = this.audio_player;
-        audio_player.load(a2PatternMatching.getAudioUrlFor(roi)).then(function(){
-            audio_player.play();
-        })
+        a2AudioBarService.loadUrl(a2PatternMatching.getAudioUrlFor(roi), true);
     },
 
     playTemplateAudio: function(){
-        var audio_player = this.audio_player;
-        audio_player.load(a2Templates.getAudioUrlFor(this.patternMatching.template)).then(function(){
-            audio_player.play();
-        })
+        a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
     },
 
     getRoiVisualizerUrl: function(roi){
