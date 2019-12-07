@@ -1,5 +1,6 @@
 angular.module('a2.analysis.patternmatching', [
     'ui.bootstrap',
+    'a2.directive.audio-bar',
     'a2.srv.patternmatching',
     'a2.services',
     'a2.permissions',
@@ -131,7 +132,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioPlayer, notify, $anchorScroll, $document) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $document) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -150,7 +151,6 @@ angular.module('a2.analysis.patternmatching', [
             this.loadSiteIndex();
             this.loadPage(this.selected.page);
         }).bind(this));
-        this.audio_player = new a2AudioPlayer($scope)
     },
 
     lists: {
@@ -277,17 +277,11 @@ angular.module('a2.analysis.patternmatching', [
             $event.preventDefault();
             $event.stopPropagation();
         }
-        var audio_player = this.audio_player;
-        audio_player.load(a2PatternMatching.getAudioUrlFor(roi)).then(function(){
-            audio_player.play();
-        })
+        a2AudioBarService.loadUrl(a2PatternMatching.getAudioUrlFor(roi), true);
     },
 
     playTemplateAudio: function(){
-        var audio_player = this.audio_player;
-        audio_player.load(a2Templates.getAudioUrlFor(this.patternMatching.template)).then(function(){
-            audio_player.play();
-        })
+        a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
     },
 
     getRoiVisualizerUrl: function(roi){
