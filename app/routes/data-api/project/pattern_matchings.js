@@ -137,7 +137,7 @@ router.get('/:patternMatching/rois.csv', function(req, res, next) {
 });
 
 router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
-    model.patternMatchings.getRoiAudioFile(req.params.patternMatching, req.params.roiId).then(function(roiAudio) {
+    model.patternMatchings.getRoiAudioFile(req.params.patternMatching, req.params.roiId, { gain: req.query.gain }).then(function(roiAudio) {
         if(!roiAudio){
             res.sendStatus(404);
         } else {

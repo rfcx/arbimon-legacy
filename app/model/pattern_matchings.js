@@ -533,7 +533,7 @@ var PatternMatchings = {
             return q.ninvoke(Recordings, 'fetchAudioFile', {uri: pmr.recUri}, {
                 maxFreq: Math.max(pmr.y1, pmr.y2),
                 minFreq: Math.min(pmr.y1, pmr.y2),
-                gain: options.gain || 15,
+                gain: options.gain,
                 trim: {
                     from: Math.min(pmr.x1, pmr.x2),
                     to: Math.max(pmr.x1, pmr.x2)

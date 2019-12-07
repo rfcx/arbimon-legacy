@@ -1,5 +1,7 @@
 # CHANGELOG
 
+- v1.18.0
+    - added audio bar component
 - v1.17.2
     - fixed broken registration page
 - v1.17.1
