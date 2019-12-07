@@ -24,7 +24,7 @@ router.get('/:template/image', function(req, res, next) {
 });
 
 router.get('/:template/audio', function(req, res, next) {
-    model.templates.getAudioFile(req.params.template).then(function(roiAudio) {
+    model.templates.getAudioFile(req.params.template, { gain: req.query.gain }).then(function(roiAudio) {
         if(!roiAudio){
             res.sendStatus(404);
         } else {
