@@ -1,5 +1,7 @@
 # CHANGELOG
 
+- v1.18.1
+    - Added x20, x25, x30 and x50 gain
 - v1.18.0
     - added audio bar component
 - v1.17.2
