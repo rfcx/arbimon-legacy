@@ -157,10 +157,11 @@ angular.module('a2.citizen-scientist.expert', [
             { class:'fa fa-th', value:'is-small'},
         ],
         search: [
-            {value:'all', text:'All'},
-            {value:'consensus', text:'Consensus'},
-            {value:'conflicted', text:'Conflicted'},
-            {value:'expert', text:'Expert'},
+            {value:'all', text:'All', description: 'Show all matched rois.'},
+            {value:'consensus', text:'Consensus', description: 'Show only rois where there is a consensus.'},
+            {value:'pending', text:'Pending', description: 'Show only rois that have not reached a consensus yet.'},
+            {value:'conflicted', text:'Conflicted', description: 'Show only rois where there is a conflict.'},
+            {value:'expert', text:'Expert', description: 'Show only rois that have been decided by an expert.'},
         ],
         selection: [
             {value:'all', text:'All'},
