@@ -159,12 +159,12 @@ angular.module('a2.analysis.patternmatching', [
             { class:'fa fa-th', value:'is-small'},
         ],
         search: [
-            {value:'all', text:'All'},
-            {value:'present', text:'Present'},
-            {value:'not_present', text:'Not Present'},
-            {value:'unvalidated', text:'Unvalidated'},
-            {value:'best_per_site', text:'Best per Site'},
-            {value:'best_per_site_day', text:'Best per Site, Day'},
+            {value:'all', text:'All', description: 'Show all matched rois.'},
+            {value:'present', text:'Present', description: 'Show all rois marked as present.'},
+            {value:'not_present', text:'Not Present', description: 'Show all rois marked as not present.'},
+            {value:'unvalidated', text:'Unvalidated', description: 'Show all rois without validation.'},
+            {value:'best_per_site', text:'Best per Site', description: 'Show the best scored roi per site.'},
+            {value:'best_per_site_day', text:'Best per Site, Day', description: 'Show the best scored roi per site and day.'},
         ],
         selection: [
             {value:'all', text:'All'},

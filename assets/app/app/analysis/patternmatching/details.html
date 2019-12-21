@@ -71,6 +71,7 @@
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.lists.search | filter:$select.search">
                                     <i ng-class="$item.class"></i> {{$item.text}}
+                                    <div class="item-description">{{$item.description}}</div>
                                 </ui-select-choices>
                             </ui-select>
                         </div>
@@ -174,7 +175,7 @@
                         popover-trigger="mouseenter"
                         popover-append-to-body="true"
                     >
-                        <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
+                        <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
                         <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
                             <i class="fa val-{{roi.validated}}"></i>
                         </div>
