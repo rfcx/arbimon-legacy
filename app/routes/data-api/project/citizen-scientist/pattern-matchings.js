@@ -119,6 +119,7 @@ router.get('/:patternMatching/expert-rois/:paging', function(req, res, next) {
         patternMatchingId: req.params.patternMatching,
         expertCSValidations: true,
         countCSValidations: true,
+        whereNotConsensus: req.query.search == 'pending',
         whereConsensus: req.query.search == 'consensus',
         whereConflicted: req.query.search == 'conflicted',
         whereExpert: req.query.search == 'expert',
