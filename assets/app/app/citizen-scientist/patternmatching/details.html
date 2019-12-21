@@ -119,7 +119,7 @@
                         class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                         ng-click="roi.selected = !roi.selected"
                     >
-                        <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
+                        <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
                         <div class="roi-btn-tr h1" ng-if="roi.cs_validated !== null">
                             <i class="fa val-{{roi.cs_validated}}"></i>
                         </div>
