@@ -1,5 +1,8 @@
 # CHANGELOG
 
+- v1.18.3
+    - fixed cs stats
+    - made user stats fix script
 - v1.18.2
     - cs pm layout and functionality improvements
 - v1.18.1
