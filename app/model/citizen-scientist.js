@@ -17,11 +17,12 @@ var CitizenScientist = {
             "Sp.scientific_name as `species`",
             "St.songtype_id",
             "St.songtype",
-            "SUM(IF(PMR.consensus_validated = 1, 1, 0)) as present",
-            "SUM(IF(PMR.consensus_validated = 0, 1, 0)) as notPresent",
-            "SUM(IF(PMR.consensus_validated IS NULL AND PMR.cs_val_present + PMR.cs_val_not_present > 0, 1, 0)) as pending",
-            "SUM(IF(PMR.consensus_validated IS NULL AND PMR.cs_val_present + PMR.cs_val_not_present = 0, 1, 0)) as notValidated",
+            "SUM(IF(PMR.expert_validated = 1, 1, IF(PMR.expert_validated IS NULL AND PMR.consensus_validated = 1, 1, 0))) as present",
+            "SUM(IF(PMR.expert_validated = 0, 1, IF(PMR.expert_validated IS NULL AND PMR.consensus_validated = 0, 1, 0))) as notPresent",
+            "SUM(IF(PMR.expert_validated IS NULL AND PMR.consensus_validated IS NULL AND PMR.cs_val_present + PMR.cs_val_not_present > 0, 1, 0)) as pending",
+            "SUM(IF(PMR.expert_validated IS NULL AND PMR.consensus_validated IS NULL AND PMR.cs_val_present + PMR.cs_val_not_present = 0, 1, 0)) as notValidated",
             "COUNT(PMR.consensus_validated) as reached_th",
+            "COUNT(PMR.expert_validated IS NOT NULL) as expert_val",
             "COUNT(*) as `count`"
         ];
 
@@ -216,7 +217,7 @@ var CitizenScientist = {
         ) : Promise.resolve()).then(() => {
             return this.computeConsensusValidations(patternMatchingId, rois);
         }).then(() => {
-            return this.computeUserStats(patternMatchingId, userId);
+            return this.computeUserStats(patternMatchingId);
         });
     },
 
@@ -229,7 +230,9 @@ var CitizenScientist = {
             validation,
             patternMatchingId,
             rois,
-        ]) : Promise.resolve();
+        ]).then(() => {
+            return this.computeUserStats(patternMatchingId);
+        }) : Promise.resolve();
     },
 
     /** Computes the current p not p stats and consensus validation state for each given roi in a given pattern matching.
@@ -266,45 +269,52 @@ var CitizenScientist = {
         ]);
     },
 
-    computeUserStats(patternMatchingId, userId){
+    computeUserStats(patternMatchingId){
         return dbpool.query(
             "SELECT P.project_id, P.species_id, P.songtype_id\n" +
             "FROM pattern_matchings P\n" +
             "WHERE P.pattern_matching_id = ?", [
             patternMatchingId
         ]).get(0).then((pm) => {
-            return dbpool.query(
-                "INSERT INTO pattern_matching_user_statistics(\n" +
-                "    user_id, project_id, species_id, songtype_id,\n" +
-                "    validated, correct, incorrect, pending,\n" +
-                "    confidence,\n" +
-                "    last_update\n" +
-                ") SELECT \n" +
-                "    Q.user_id, Q.project_id, Q.species_id, Q.songtype_id, \n" +
-                "    Q.validated, Q.correct, Q.incorrect, Q.pending,\n" +
-                "    (Q.correct + 1) / (Q.correct + Q.incorrect + 1),\n" +
-                "    NOW()\n" +
-                "FROM (\n" +
-                "    SELECT PMV.user_id, P.project_id, P.species_id, P.songtype_id,\n" +
-                "        COUNT(PMV.validated) as validated,\n" +
-                "        SUM(IF(PMV.validated = PMR.consensus_validated, 1, 0)) as correct,\n" +
-                "        SUM(IF(PMV.validated != PMR.consensus_validated, 1, 0)) as incorrect,\n" +
-                "        SUM(IF(PMV.validated IS NOT NULL AND PMR.consensus_validated IS NULL, 1, 0)) as pending\n" +
-                "    FROM pattern_matchings P\n" +
-                "    JOIN pattern_matching_rois PMR ON P.pattern_matching_id = PMR.pattern_matching_id\n" +
-                "    JOIN pattern_matching_validations PMV ON PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id\n" +
-                "    WHERE P.project_id = ? AND P.species_id = ? AND P.songtype_id = ?\n" +
-                "    GROUP BY PMV.user_id\n" +
-                ") Q\n" +
-                "ON DUPLICATE KEY UPDATE\n" +
-                "    validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect),\n" +
-                "    pending=VALUES(pending),\n" +
-                "    confidence=VALUES(confidence),\n" +
-                "    last_update=VALUES(last_update)\n" +
-                "", [
-                    pm.project_id, pm.species_id, pm.songtype_id,
-                ]);
+            return CitizenScientist.computeUserStatsForProjectSpeciesSongtype(
+                pm.project_id, pm.species_id, pm.songtype_id,
+            );
         });
+    },
+
+    computeUserStatsForProjectSpeciesSongtype(project_id, species_id, songtype_id){
+        return dbpool.query(
+            "INSERT INTO pattern_matching_user_statistics(\n" +
+            "    user_id, project_id, species_id, songtype_id,\n" +
+            "    validated, correct, incorrect, pending,\n" +
+            "    confidence,\n" +
+            "    last_update\n" +
+            ") SELECT \n" +
+            "    Q.user_id, Q.project_id, Q.species_id, Q.songtype_id, \n" +
+            "    Q.validated, Q.correct, Q.incorrect, Q.pending,\n" +
+            "    (Q.correct + 1) / (Q.correct + Q.incorrect + 1),\n" +
+            "    NOW()\n" +
+            "FROM (\n" +
+            "    SELECT PMV.user_id, P.project_id, P.species_id, P.songtype_id,\n" +
+            "        COUNT(PMV.validated) as validated,\n" +
+            "        SUM(IF(PMV.validated = COALESCE(PMR.expert_validated, PMR.consensus_validated), 1, 0)) as correct,\n" +
+            "        SUM(IF(PMV.validated != COALESCE(PMR.expert_validated, PMR.consensus_validated), 1, 0)) as incorrect,\n" +
+            "        SUM(IF(PMV.validated IS NOT NULL AND PMR.expert_validated IS NULL AND PMR.consensus_validated IS NULL, 1, 0)) as pending\n" +
+            "    FROM pattern_matchings P\n" +
+            "    JOIN pattern_matching_rois PMR ON P.pattern_matching_id = PMR.pattern_matching_id\n" +
+            "    JOIN pattern_matching_validations PMV ON PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id\n" +
+            "    WHERE P.project_id = ? AND P.species_id = ? AND P.songtype_id = ?\n" +
+            "    GROUP BY PMV.user_id\n" +
+            ") Q\n" +
+            "ON DUPLICATE KEY UPDATE\n" +
+            "    validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect),\n" +
+            "    pending=VALUES(pending),\n" +
+            "    confidence=VALUES(confidence),\n" +
+            "    last_update=VALUES(last_update)\n" +
+            "", [
+                project_id, species_id, songtype_id,
+            ]
+        );
     },
 
 };
