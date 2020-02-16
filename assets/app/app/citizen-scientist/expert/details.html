@@ -185,6 +185,9 @@
                             not present: {{roi.cs_val_not_present}}<br />
                             consensus: {{roi.consensus_validated | pmValidation: roi.cs_val_present: roi.cs_val_not_present }}<br />
                             expert: {{roi.expert_validated | pmValidation}}
+                            <div ng-if="roi.expert_validated !== null">
+                                {{roi.expert_validation_user || '(Unknown)'}}
+                            </div>
                         </div>
                     </div>
             </div>
