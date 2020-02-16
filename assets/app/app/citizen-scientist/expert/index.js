@@ -360,6 +360,7 @@ angular.module('a2.citizen-scientist.expert', [
             this.patternMatching.cs_conflict_unresolved += val_delta.conflict_unresolved;
             this.patternMatching.expert_consensus_absent += val_delta[0];
             this.patternMatching.expert_consensus_present += val_delta[1];
+            this.loadPage(this.selected.page);
         }).bind(this));
     },
 
