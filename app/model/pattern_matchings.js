@@ -336,6 +336,8 @@ var PatternMatchings = {
                 } else {
                     builder.addProjection('PMR.`expert_validated` as expert_validated');
                 }
+                builder.addTable("LEFT JOIN users", "EVU", "PMR.expert_validation_user_id = EVU.user_id");
+                builder.addProjection("COALESCE(CONCAT(EVU.firstname, ' ', EVU.lastname), '(unknown)') AS expert_validation_user")
             }
 
             if(parameters.csValidationsFor){
