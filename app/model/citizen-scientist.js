@@ -221,13 +221,15 @@ var CitizenScientist = {
         });
     },
 
-    expertValidateCSRois(patternMatchingId, rois, validation){
+    expertValidateCSRois(userId, patternMatchingId, rois, validation){
         return rois.length ? dbpool.query(
             "UPDATE pattern_matching_rois\n" +
-            "SET expert_validated = ?\n" +
+            "SET expert_validated = ?,\n" +
+            "    expert_validation_user_id = ?\n" +
             "WHERE pattern_matching_id = ?\n" +
             "AND pattern_matching_roi_id IN (?)", [
             validation,
+            userId,
             patternMatchingId,
             rois,
         ]).then(() => {

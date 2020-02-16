@@ -151,7 +151,12 @@ router.post('/:patternMatching/expert-validate', function(req, res, next) {
     }
 
     var user = req.session.user;
-    model.CitizenScientist.expertValidateCSRois(req.params.patternMatching, req.body.rois, req.body.validation).then(function(rois) {
+    model.CitizenScientist.expertValidateCSRois(
+        req.session.user.id,
+        req.params.patternMatching,
+        req.body.rois,
+        req.body.validation
+    ).then(function(rois) {
         res.json({
             rois: req.body.rois,
             validation: req.body.validation,
