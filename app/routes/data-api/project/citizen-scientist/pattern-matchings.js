@@ -151,7 +151,12 @@ router.post('/:patternMatching/expert-validate', function(req, res, next) {
     }
 
     var user = req.session.user;
-    model.CitizenScientist.expertValidateCSRois(req.params.patternMatching, req.body.rois, req.body.validation).then(function(rois) {
+    model.CitizenScientist.expertValidateCSRois(
+        req.session.user.id,
+        req.params.patternMatching,
+        req.body.rois,
+        req.body.validation
+    ).then(function(rois) {
         res.json({
             rois: req.body.rois,
             validation: req.body.validation,
@@ -205,6 +210,7 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
                 cs_val_not_present: -3,
                 consensus_validated: 5,
                 expert_validated: 6,
+                expert_validation_user: 7,
                 uri: 10
             };
             fields.sort(function(a, b){
@@ -267,6 +273,7 @@ router.get('/:patternMatching/export-per-user.csv', function(req, res, next) {
                 cs_validation: -3,
                 consensus_validated: 5,
                 expert_validated: 6,
+                expert_validation_user: 7,
                 uri: 10
             };
             fields.sort(function(a, b){

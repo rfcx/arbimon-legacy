@@ -1,5 +1,7 @@
 # CHANGELOG
 
+- v1.18.4
+    - added user names to cs expert validations
 - v1.18.3
     - fixed cs stats
     - made user stats fix script
