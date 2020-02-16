@@ -210,6 +210,7 @@ router.get('/:patternMatching/export.csv', function(req, res, next) {
                 cs_val_not_present: -3,
                 consensus_validated: 5,
                 expert_validated: 6,
+                expert_validation_user: 7,
                 uri: 10
             };
             fields.sort(function(a, b){
@@ -272,6 +273,7 @@ router.get('/:patternMatching/export-per-user.csv', function(req, res, next) {
                 cs_validation: -3,
                 consensus_validated: 5,
                 expert_validated: 6,
+                expert_validation_user: 7,
                 uri: 10
             };
             fields.sort(function(a, b){
