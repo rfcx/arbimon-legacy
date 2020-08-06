@@ -2,6 +2,7 @@
  * Bootstrap variables
 */
 @import "variables.less";
+@import "mixins.less";
 // @import "../../bower_components/bootstrap/less/mixins.less";
 /**
  * app variables
@@ -76,9 +77,9 @@
 
 .navbar {
     border-radius: 0px;
-    -webkit-box-shadow: 0px 1px 8px #888;
-    -moz-box-shadow: 0px 1px 8px #888;
-    box-shadow: 0px 1px 8px #888;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
 }
 
 .alert-bar {
@@ -128,8 +129,8 @@
 
 // -> register.ejs
 .banner {
-    background: url("/images/login-banner.png");
-    background-position: center top;
+    //background: url("/images/login-banner.png");
+    //background-position: center top;
     height: 500px;
 }
 
@@ -147,11 +148,24 @@
 // adds transparent white background to div
 
 // ->  activate.ejs, forgot-request.ejs, register.ejs, reset-password.ejs
-.registration {
-    margin-top: 20px;
-    background-color: #dfdfdf;
-    background-color: rgba(255, 255, 255, 0.62);
-    border-radius: 10px;
+//.registration {
+//    margin-top: 20px;
+//    background-color: #dfdfdf;
+//    background-color: rgba(255, 255, 255, 0.62);
+//    border-radius: 10px;
+//}
+
+.card-container {
+    //margin: 15px auto 25px;
+    border-radius : 2px;
+    .box-shadow(0px 10px 20px rgba(0, 0, 0, 0.3));
+    background-color: #30343e;
+    padding: 60px 60px 80px 60px;
+
+    @media (max-width: @screen-sm-min) {
+        padding: 20px 20px 30px 20px;
+    }
+
 }
 
 // -> validator-main.html, recordings-by-playlist.html, recordings-by-site.html,
@@ -165,7 +179,7 @@
 
 // -> login.ejs
 .login-form {
-    padding: 10px;
+    //padding: 10px;
     background-color: transparent;
     border-radius: 6px;
     & h3 {
@@ -175,16 +189,16 @@
 
 // -> activate.ejs, forgot-request.ejs, login.ejs, not-found.ejs, terms.ejs,
 //    project_disabled.ejs, register.ejs, reset-password.ejs, support.ejs
-.login-top {
-    padding-top: 15px;
-    height: 52px;
-    border-bottom: 1px solid #ccc;
-    -webkit-box-shadow: 0px 1px 8px #888;
-    -moz-box-shadow: 0px 1px 8px #888;
-    box-shadow: 0px 1px 8px #888;
-    margin-bottom: 6px;
-
-}
+//.login-top {
+//    padding-top: 15px;
+//    height: 52px;
+//    border-bottom: 1px solid #ccc;
+//    -webkit-box-shadow: 0px 1px 8px #888;
+//    -moz-box-shadow: 0px 1px 8px #888;
+//    box-shadow: 0px 1px 8px #888;
+//    margin-bottom: 6px;
+//
+//}
 
 // -> recordings-by-site.html
 .dropdown-menu.datepicker {
@@ -972,4 +986,12 @@ label.row{
 a.ui-select-choices-row-inner {
     padding-left: 5px !important;
     padding-right: 5px !important;
+}
+
+.navbar-brand{
+    padding: 2px 15px;
+}
+
+.jumbotron{
+    background: transparent;
 }

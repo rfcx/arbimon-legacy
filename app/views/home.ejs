@@ -4,7 +4,7 @@
 <head>
     <% include head %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Arbimon II - <%= title %></title>
+	<title>RAINFOREST - <%= title %></title>
 </head>
 
 <body ng-controller="HomeCtrl as controller">
@@ -16,8 +16,8 @@
             <div class="row no-gutter">
                 <div class="col-xs-5">
                     <h3>
-                        Projects 
-                        <button class="btn btn-sm btn-default" 
+                        Projects
+                        <button class="btn btn-sm btn-default"
                             tooltip="Create a project"
                             tooltip-trigger="mouseenter"
                             ng-click="controller.createProject() | trackEvent:'Home':'createProject'"
@@ -33,8 +33,8 @@
                 </div>
                 <div class="col-xs-3">
                     <h3 class="btn-group btn-group-sm pull-right">
-                        <button class="btn btn-default" ng-click="controller.sortProjects('alpha'  )" ng-class="controller.projectSort.type == 'alpha'   ? 'active' : '' " ><i class="fa" ng-class="controller.projectSort.key == 'alpha-up'   ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc'"></i></button>
-                        <button class="btn btn-default" ng-click="controller.sortProjects('history')" ng-class="controller.projectSort.type == 'history' ? 'active' : '' " ><i class="fa" ng-class="controller.projectSort.key == 'history-up' ? 'fa-long-arrow-up'   : 'fa-long-arrow-down'"></i><i class="fa fa-clock-o"></i></button>
+                        <button class="btn btn-inverse" ng-click="controller.sortProjects('alpha'  )" ng-class="controller.projectSort.type == 'alpha'   ? 'active' : '' " ><i class="fa" ng-class="controller.projectSort.key == 'alpha-up'   ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc'"></i></button>
+                        <button class="btn btn-inverse" ng-click="controller.sortProjects('history')" ng-class="controller.projectSort.type == 'history' ? 'active' : '' " ><i class="fa" ng-class="controller.projectSort.key == 'history-up' ? 'fa-long-arrow-up'   : 'fa-long-arrow-down'"></i><i class="fa fa-clock-o"></i></button>
                     </h3>
                 </div>
             </div>
@@ -46,9 +46,9 @@
             <div class="row">
                 <div class="col-md-12">
                     <dl class="list-group projects-list">
-                        <button ng-class="{'disabled': !project.is_enabled }" 
+                        <button ng-class="{'disabled': !project.is_enabled }"
                             ng-click="controller.selectProject(project)"
-                           class="list-group-item btn-block text-left list-item-project" 
+                           class="list-group-item btn-block text-left list-item-project"
                            ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort | filter: controller.search ) | paginate: controller.currentPage : 10"
                         >
                             <div class="last-accessed" title="{{ project.lastAccessed | moment:'lll' }}">
@@ -69,7 +69,7 @@
             <h3>Projects feed <i class="fa fa-newspaper-o"></i></h3>
             <div class="list-group">
                 <div class="list-group-item" ng-repeat="news in controller.newsFeed track by $index" news-feed-item="news"></div>
-                <button class="btn btn-default btn-block more-btn" ng-click="controller.loadNewsPage() | trackEvent:'Home':'loadNewsPage'">More</button>
+                <button class="btn btn-inverse btn-block more-btn" ng-click="controller.loadNewsPage() | trackEvent:'Home':'loadNewsPage'">More</button>
             </div>
         </div>
     </div>
@@ -79,3 +79,4 @@
 </body>
 
 </html>
+

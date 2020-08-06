@@ -3,27 +3,31 @@
 
 <head>
     <% include head %>
-        <title>ARBIMON II - Account Activation</title>
+        <title>RAINFOREST - Account Activation</title>
 </head>
 
 <body>
-    <div class="login-top">
+    <nav class="navbar navbar-inverse" role="navigation">
         <div class="container">
-            <a href="/"><img src="/images/logo.svg"></a>
+            <div class="navbar-header">
+                <a href="/" class="navbar-brand">
+                    <img src="/images/rf-logo.png" width="100">
+                </a>
+            </div>
         </div>
-    </div>
+    </nav>
     <div class="login-banner">
         <div class="container">
             <div class="row">
-                <div class="col-sm-offset-3 col-sm-6 registration">
+                <div class="col-sm-offset-3 col-sm-6 card-container">
                     <div class="panel-body">
                         <h3>Activating your Arbimon Account</h3>
                         <p class="activation-text"><%- status %></p>
-                        
+
                         <% if(login) { %>
                             <a class="btn btn-primary" href="/login">Login now</a>
                         <% } %>
-                        
+
                     </div>
                 </div>
             </div>

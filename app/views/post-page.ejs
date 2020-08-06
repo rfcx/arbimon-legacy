@@ -4,32 +4,32 @@
 <head>
     <% include head %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ARBIMON II - <%= title %></title>
+    <title>RAINFOREST - <%= title %></title>
 </head>
 
 <body>
-    <nav class="navbar navbar-default" role="navigation">
+    <nav class="navbar navbar-inverse" role="navigation">
         <div class="container">
             <div class="navbar-header">
                 <a href="/" class="navbar-brand">
-                    <img src="/images/logo.svg">
+                    <img src="/images/rf-logo.png" width="100">
                 </a>
             </div>
         </div>
     </nav>
-    
+
     <div class="container">
         <div class="row">
             <div class="col-sm-offset-1 col-sm-10">
                 <div class="page-header">
                     <h1><%= title %></h1>
                 </div>
-                    
+
                 <%- include(content) %>
             </div>
         </div>
     </div>
-    
+
     <% include footer %>
 </body>
 

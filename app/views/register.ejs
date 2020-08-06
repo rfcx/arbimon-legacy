@@ -3,19 +3,23 @@
 
 <head>
     <% include head %>
-        <title>ARBIMON II - Register</title>
+        <title>RAINFOREST - Register</title>
 </head>
 
 <body ng-controller="UserRegisterCtrl">
-    <div class="login-top">
+    <nav class="navbar navbar-inverse" role="navigation">
         <div class="container">
-            <a href="/"><img src="/images/logo.svg"></a>
+            <div class="navbar-header">
+                <a href="/" class="navbar-brand">
+                    <img src="/images/rf-logo.png" width="100">
+                </a>
+            </div>
         </div>
-    </div>
+    </nav>
     <div class="banner">
         <div class="container">
             <div class="row">
-                <div class="col-sm-12 col-md-8 col-md-offset-2 registration">
+                <div class="col-sm-12 col-md-8 col-md-offset-2 card-container">
                     <div ng-hide="completed || loading">
                         <div class="page-header">
                             <h3>Register an Arbimon Account</h3>
@@ -24,34 +28,34 @@
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <input ng-model="user.firstName" 
-                                            type="text" 
-                                            name="first_name" 
-                                            id="first_name" 
-                                            class="form-control" 
+                                        <input ng-model="user.firstName"
+                                            type="text"
+                                            name="first_name"
+                                            id="first_name"
+                                            class="form-control"
                                             placeholder='Name'required>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <input ng-model="user.lastName" 
-                                            type="text" 
-                                            name="last_name" 
-                                            id="last_name" 
-                                            class="form-control " 
+                                        <input ng-model="user.lastName"
+                                            type="text"
+                                            name="last_name"
+                                            id="last_name"
+                                            class="form-control "
                                             placeholder="Last name" required>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-sm-8">
                                     <div class="form-group right-inner-icon">
-                                        <input ng-model="user.username" 
-                                            type="text" 
-                                            name="username" 
-                                            id="username" 
-                                            class="form-control" 
+                                        <input ng-model="user.username"
+                                            type="text"
+                                            name="username"
+                                            id="username"
+                                            class="form-control"
                                             placeholder="Username"
                                             pattern="([\d\w\.-]){4,32}"
                                             ng-pattern="/^([\d\w\.-]){4,32}$/"
@@ -73,12 +77,12 @@
                             <div class="row">
                                 <div class="col-sm-8">
                                     <div class="form-group right-inner-icon">
-                                        <input ng-model="user.email" 
-                                            type="email" 
-                                            name="email" 
-                                            id="email" 
-                                            class="form-control" 
-                                            placeholder="Email Address" 
+                                        <input ng-model="user.email"
+                                            type="email"
+                                            name="email"
+                                            id="email"
+                                            class="form-control"
+                                            placeholder="Email Address"
                                             ng-change="testEmail()"
                                             required />
                                         <i ng-show="emailOk" class="fa fa-check text-success"></i>
@@ -95,26 +99,26 @@
                                 </div>
                             </div>
 
-                            <password-input ng-model="user.password" 
-                                validation="passResult" 
+                            <password-input ng-model="user.password"
+                                validation="passResult"
                                 user-inputs="[user.username, user.firstName, user.lastName]">
                             </password-input>
                             <div class="row">
                                 <div class="col-sm-12">
-                                    <input ng-model="newsletter" 
-                                        type="checkbox" 
-                                        name="newsletter" 
-                                        ng-checked="true"> 
+                                    <input ng-model="newsletter"
+                                        type="checkbox"
+                                        name="newsletter"
+                                        ng-checked="true">
                                         Subscribe to our newsletter.
                                 </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-sm-12">
-                                    <input ng-model="terms_accepted" 
-                                        type="checkbox" 
+                                    <input ng-model="terms_accepted"
+                                        type="checkbox"
                                         name="terms" required>
-                                        I agree to the Sieve Analytics 
+                                        I agree to the Sieve Analytics
                                         <a href="/terms" target="_blank" class="text-info">
                                             terms of service
                                         </a>
@@ -136,7 +140,7 @@
                                 Register
                             </button>
                             <p class="help-block">Already a user? <a href="/login">Login here</a></p>
-                    
+
                         </form>
                     </div>
                     <div ng-show="loading">
@@ -148,11 +152,11 @@
                         <div class="page-header">
                             <h3>Activate your Arbimon Account</h3>
                         </div>
-                        <p class="activation-text">Hi <b>{{ user.firstName }} {{ user.lastName }},</b></p> 
+                        <p class="activation-text">Hi <b>{{ user.firstName }} {{ user.lastName }},</b></p>
                         <p class="activation-text">
-                            thanks for your interest in Arbimon II, 
+                            thanks for your interest in Arbimon II,
                             your account is almost ready but first you need to activate it.
-                            An activation link has been sent to <b>{{ user.email }}</b>, 
+                            An activation link has been sent to <b>{{ user.email }}</b>,
                             open the link to activate the account.
                         </p>
                     </div>

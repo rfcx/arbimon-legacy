@@ -69,6 +69,7 @@ var app={
         watch:'./assets/less/**/*.less',
         src: [
             './assets/less/bootstrap.less',
+            './assets/less/bootstrap-theme.less',
             './assets/less/style.less'
         ],
         dest: './public/assets/css/',
@@ -148,7 +149,7 @@ gulp.task('app:dependencies', function(done){
             var dep = dependencies[depkey];
             var dsrc = path.join(src, depkey);
             var ddst = path.join(dest, depkey);
-            
+
             if('object' == typeof dep){
                 return copy_deps(dsrc, ddst,  dep);
             } else if('string' == typeof dep){
@@ -162,7 +163,7 @@ gulp.task('app:dependencies', function(done){
             }
         }));
     }
-        
+
     copy_deps(
         app.dependencies.src,
         app.dependencies.dest,
@@ -199,9 +200,9 @@ gulp.task('app:server', function(done){
 
         newServer.waitProcessEnd = q.Promise(function(resolve, reject){
             newServer.process.on('close', function(code, signal){
-                var status = 
-                ((code !== null) ? " with code " + code : "") + 
-                (signal ? " due to signal " + signal : "") + 
+                var status =
+                ((code !== null) ? " with code " + code : "") +
+                (signal ? " due to signal " + signal : "") +
                 (newServer.expectKill ? " (expected)" : "")
                 ;
                 gutil.log("Server process (pid: #" + gutil.colors.yellow(newServer.process.pid) + ") exited" + status + ".");
@@ -213,7 +214,7 @@ gulp.task('app:server', function(done){
                 reject(err);
             });
         });
-        
+
         server = newServer;
     }).nodeify(done);
 });

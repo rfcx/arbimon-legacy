@@ -4,14 +4,14 @@
 <head>
     <% include head %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Arbimon II - <%= title %>
+    <title>RAINFOREST - <%= title %>
     </title>
 </head>
 
 <body ng-controller="UserSettingsCtrl as controller">
     <% include home-nav %>
     <div class="container">
-        <div class="col-sm-6 panel panel-default">
+        <div class="col-sm-6 panel panel-inverse">
             <div class="panel-heading row">
                 <img class="user-avatar col-sm-2 img-responsive" ng-src="{{controller.user.imageUrl}}" alt="user avatar">
                 <h3 class="col-sm-10">{{controller.user.name}} {{controller.user.lastname}}'s Profile</h3>
@@ -59,7 +59,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-sm-6">
                         <button class="btn btn-block btn-primary" ng-click="controller.save()">
@@ -71,7 +71,7 @@
                             <i class="fa fa-rotate-left"></i> Reset
                         </button>
                     </div>
-                </div>                
+                </div>
             </div>
         </div>
     </div>

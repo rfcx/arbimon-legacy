@@ -1,11 +1,11 @@
 <li class="dropdown" dropdown>
     <a class="dropdown-toggle" dropdown-toggle>
-        <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>" style="background-image:url('<%- user.imageUrl %>')"></i> 
-        <span class="visible-lg-inline visible-xs-inline"><%= user.username %></span> 
+        <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>" style="background-image:url('<%- user.imageUrl %>')"></i>
+        <span class="visible-lg-inline visible-xs-inline"><%= user.username %></span>
         <i class="fa fa-caret-down"></i>
     </a>
     <% if(user.isAnonymousGuest) { %>
-        <ul class="dropdown-menu" role="menu">
+        <ul class="dropdown-menu dropdown-menu-inverse" role="menu">
             <li class="" ng-controller="RedirectToLoginCtrl">
                 <a ng-href="{{ loginUrl }}">
                     <i class="fa fa-sign-in"></i> Log In
@@ -18,7 +18,7 @@
             </li>
         </ul>
     <% } else { %>
-        <ul class="dropdown-menu" role="menu">
+        <ul class="dropdown-menu dropdown-menu-inverse" role="menu">
             <li class="">
                 <a href="/user-settings">
                     <i class="fa fa-wrench"></i> Account Settings
@@ -30,5 +30,5 @@
                 </a>
             </li>
         </ul>
-    <% } %> 
+    <% } %>
 </li>
