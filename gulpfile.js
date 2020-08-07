@@ -69,7 +69,6 @@ var app={
         watch:'./assets/less/**/*.less',
         src: [
             './assets/less/bootstrap.less',
-            './assets/less/bootstrap-theme.less',
             './assets/less/style.less'
         ],
         dest: './public/assets/css/',

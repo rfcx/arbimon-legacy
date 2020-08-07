@@ -4,14 +4,14 @@
 <head>
     <% include head %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>RFCx Arbimon - <%= title %>
+    <title>Arbimon - <%= title %>
     </title>
 </head>
 
 <body ng-controller="UserSettingsCtrl as controller">
     <% include home-nav %>
     <div class="container">
-        <div class="col-sm-6 panel panel-inverse">
+        <div class="col-sm-6 panel panel-default">
             <div class="panel-heading row">
                 <img class="user-avatar col-sm-2 img-responsive" ng-src="{{controller.user.imageUrl}}" alt="user avatar">
                 <h3 class="col-sm-10">{{controller.user.name}} {{controller.user.lastname}}'s Profile</h3>

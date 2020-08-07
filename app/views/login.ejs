@@ -5,15 +5,16 @@
     <% include head %>
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ARBIMON II</title>
+    <title>Arbimon</title>
 </head>
 
 <body ng-controller="LoginCtrl as controller">
-    <nav class="navbar navbar-inverse" role="navigation">
+    <nav class="navbar navbar-default" role="navigation">
         <div class="container">
             <div class="navbar-header">
                 <a href="/" class="navbar-brand">
-                    <img src="/images/rf-logo.png" width="100">
+                    <img src="/images/rfcx-logo.png">
+                    Arbimon
                 </a>
             </div>
         </div>
@@ -25,7 +26,7 @@
                 <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-4 col-md-4 col-lg-offset-4 col-lg-4"
                      ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
                     <div class="login-form card-container">
-                        <h3>Arbimon II login</h3>
+                        <h3>Arbimon login</h3>
                         <form role="form" ng-submit="login()">
                             <div class="form-group">
                                 <label class="sr-only" for="user">Username</label>

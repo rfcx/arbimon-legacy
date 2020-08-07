@@ -4,7 +4,7 @@
 <head>
     <% include head %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>RFCx Arbimon - <%= title %></title>
+	<title>Arbimon - <%= title %></title>
 </head>
 
 <body ng-controller="HomeCtrl as controller">
@@ -33,8 +33,8 @@
                 </div>
                 <div class="col-xs-3">
                     <h3 class="btn-group btn-group-sm pull-right">
-                        <button class="btn btn-inverse" ng-click="controller.sortProjects('alpha'  )" ng-class="controller.projectSort.type == 'alpha'   ? 'active' : '' " ><i class="fa" ng-class="controller.projectSort.key == 'alpha-up'   ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc'"></i></button>
-                        <button class="btn btn-inverse" ng-click="controller.sortProjects('history')" ng-class="controller.projectSort.type == 'history' ? 'active' : '' " ><i class="fa" ng-class="controller.projectSort.key == 'history-up' ? 'fa-long-arrow-up'   : 'fa-long-arrow-down'"></i><i class="fa fa-clock-o"></i></button>
+                        <button class="btn btn-default" ng-click="controller.sortProjects('alpha'  )" ng-class="controller.projectSort.type == 'alpha'   ? 'active' : '' " ><i class="fa" ng-class="controller.projectSort.key == 'alpha-up'   ? 'fa-sort-alpha-desc' : 'fa-sort-alpha-asc'"></i></button>
+                        <button class="btn btn-default" ng-click="controller.sortProjects('history')" ng-class="controller.projectSort.type == 'history' ? 'active' : '' " ><i class="fa" ng-class="controller.projectSort.key == 'history-up' ? 'fa-long-arrow-up'   : 'fa-long-arrow-down'"></i><i class="fa fa-clock-o"></i></button>
                     </h3>
                 </div>
             </div>
@@ -69,7 +69,7 @@
             <h3>Projects feed <i class="fa fa-newspaper-o"></i></h3>
             <div class="list-group">
                 <div class="list-group-item" ng-repeat="news in controller.newsFeed track by $index" news-feed-item="news"></div>
-                <button class="btn btn-inverse btn-block more-btn" ng-click="controller.loadNewsPage() | trackEvent:'Home':'loadNewsPage'">More</button>
+                <button class="btn btn-default btn-block more-btn" ng-click="controller.loadNewsPage() | trackEvent:'Home':'loadNewsPage'">More</button>
             </div>
         </div>
     </div>

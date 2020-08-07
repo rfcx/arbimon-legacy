@@ -4,10 +4,10 @@
     <% include head %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <% include ng-permissions %>
-    <title>RFCx Arbimon - <%= project.name %><% if(card && card.name){ %> - <%= card.name %><%} %></title>
+    <title>Arbimon - <%= project.name %><% if(card && card.name){ %> - <%= card.name %><%} %></title>
 </head>
 <body ng-controller="MainCtrl">
-    <nav class="navbar navbar-inverse" role="navigation">
+    <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
                 <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
@@ -17,7 +17,7 @@
                     <span class="icon-bar"></span>
                 </button>
                 <a href="/home" class="navbar-brand">
-                    <img src="/images/rf-logo.png" width="100">
+                    <img src="/images/rfcx-logo.png">Arbimon
                 </a>
             </div>
 

@@ -5,7 +5,7 @@
         <i class="fa fa-caret-down"></i>
     </a>
     <% if(user.isAnonymousGuest) { %>
-        <ul class="dropdown-menu dropdown-menu-inverse" role="menu">
+        <ul class="dropdown-menu" role="menu">
             <li class="" ng-controller="RedirectToLoginCtrl">
                 <a ng-href="{{ loginUrl }}">
                     <i class="fa fa-sign-in"></i> Log In
@@ -18,7 +18,7 @@
             </li>
         </ul>
     <% } else { %>
-        <ul class="dropdown-menu dropdown-menu-inverse" role="menu">
+        <ul class="dropdown-menu" role="menu">
             <li class="">
                 <a href="/user-settings">
                     <i class="fa fa-wrench"></i> Account Settings

@@ -4,11 +4,11 @@
 <head>
     <% include head %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>RFCx Arbimon</title>
+    <title>Arbimon</title>
 </head>
 
 <body ng-controller="LoginCtrl as controller">
-    <nav class="navbar navbar-inverse" role="navigation">
+    <nav class="navbar navbar-default" role="navigation">
         <div class="container">
             <div class="navbar-header">
                 <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
@@ -21,7 +21,7 @@
                     {{ mode }}
                 </button>
                 <a href="/" class="navbar-brand">
-                    <img src="/images/rf-logo.png" width="100">
+                    <img src="/images/rfcx-logo.png">Arbimon
                 </a>
             </div>
             <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
@@ -42,7 +42,7 @@
             <div class="row">
                 <!--  visible-md-block visible-lg-block hide only on small and x-small screens -->
                 <div class="col-sm-12 col-md-7 col-lg-6" ng-class="mode === 'Sign up' ? 'visible-md-block visible-lg-block' : '' ">
-                    <h1 class="hidden-xs hidden-sm">Arbimon II</h1>
+                    <h1 class="hidden-xs hidden-sm">Arbimon</h1>
                     <p>
                         Bio-acoustics analysis platform
                         <ul class="feature-list fa-ul">
