@@ -43,7 +43,11 @@ Bio-Acoustic Analyzer
 - Database Info
   - MySQL
   - Production has a db and the development enviroments share a secondary db.
-
+- Servers and Networking
+  - the production and dev servers are on a private network together and not directly reachable from the outside. There is a jump/tunnel server that can be used to get into these. Tunnel server adress: [54.159.71.198](54.159.71.198) with user `ec2user` and the private key file for authentication (obtain this from another member of the team).
+    - This can be used to create a port forward to use with the database connection or can be directly connected to by ssh and then ssh to the other servers. Once on this server there are aliases setup to ssh to the other servers:
+      - `ssh-web-dev` for development web server
+      - `ssh-web` for production web server
 ---
 ## Legacy README
 
