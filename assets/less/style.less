@@ -170,6 +170,10 @@
   }
 }
 
+.dropdown-menu {
+  border: 1px solid @gray;
+}
+
 // -> recordings-by-site.html
 .dropdown-menu.datepicker {
   min-width: 290px;
@@ -533,13 +537,14 @@ textarea.fixed-width {
   path,
   line {
     fill: none;
-    stroke: black;
+    stroke: @text-color;
     shape-rendering: crispEdges;
   }
 
   text {
     font-family: sans-serif;
     font-size: 11px;
+    fill: @text-color
   }
 }
 
@@ -552,17 +557,25 @@ textarea.fixed-width {
 }
 
 // directive a2DrawPeakThreshold
+a2-draw-peak-threshold{
+  text {
+    font-family: sans-serif;
+    font-size: 11px;
+    fill: @text-color
+  }
+}
 .thresholdaxis {
   path,
   line {
     fill: none;
-    stroke: black;
+    stroke: @text-color;
     shape-rendering: crispEdges;
   }
 
   text {
     font-family: sans-serif;
     font-size: 11px;
+    fill: @text-color
   }
 }
 
@@ -956,9 +969,17 @@ body .ngrs-range-slider {
   margin: 0;
 }
 
+input, select, textarea{
+  color: black
+}
+
 
 label.row {
   display: block;
+}
+
+.btn.disabled, .btn[disabled], fieldset[disabled] .btn {
+  opacity: 0.5;
 }
 
 .em {
@@ -1062,7 +1083,26 @@ a.ui-select-choices-row-inner {
 }
 /* END: Override c3 chart style */
 
-//.js-plotly-plot .plotly .main-svg {
-//  background: transparent !important;
-//}
+/* START: Override plotly-plot chart style */
+.js-plotly-plot .plotly .modebar {
+  background: transparent !important;
+  //border-radius: 6px;
+}
+
+.js-plotly-plot .plotly .modebar-btn path {
+  fill: @text-color !important;
+}
+/* END: Override plotly-plot chart style */
+
+/* START: Override ng-table chart style */
+.ng-table th.sortable.sort-desc, .ng-table th.sortable.sort-asc {
+  background-color: @val-color-default !important;
+}
+/* END: Override ng-table chart style */
+.border-default {
+  border: 1px solid @gray-light;
+  &:hover, &.active{
+    border: 1px solid @text-color;
+  }
+}
 

@@ -1,8 +1,8 @@
 angular.module('a2.analysis.soundscapes', [
-    'a2.services', 
+    'a2.services',
     'a2.permissions',
-    'ui.bootstrap' , 
-    'ui-rangeSlider', 
+    'ui.bootstrap' ,
+    'ui-rangeSlider',
     'ngCsv'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
@@ -13,17 +13,17 @@ angular.module('a2.analysis.soundscapes', [
     });
 })
 .controller('SoundscapesCtrl', function(
-    $window, 
-    $scope, 
-    $modal, 
-    $filter, 
-    Project, 
-    JobsData, 
-    ngTableParams, 
-    a2Playlists, 
-    $location, 
-    a2Soundscapes, 
-    notify, 
+    $window,
+    $scope,
+    $modal,
+    $filter,
+    Project,
+    JobsData,
+    ngTableParams,
+    a2Playlists,
+    $location,
+    a2Soundscapes,
+    notify,
     a2UserPermit
 ){
     var $=$window.$;
@@ -36,18 +36,18 @@ angular.module('a2.analysis.soundscapes', [
     $scope.loading = true;
 
     $scope.infopanedata = '';
-    
+
     Project.getInfo(function(data){
         $scope.projectData = data;
         $scope.pid = data.project_id;
         $scope.url = data.url;
     });
-    
+
     a2Playlists.getList().then(function(data) {
             $scope.playlists = data;
     });
-    
-    
+
+
     var initTable = function(p,c,s,f,t) {
         var sortBy = {};
         var acsDesc = 'desc';
@@ -61,16 +61,16 @@ angular.module('a2.analysis.soundscapes', [
                 count: c,
                 sorting: sortBy,
                 filter:f
-            }, 
+            },
             {
                 total: t,
-                getData: function ($defer, params) 
+                getData: function ($defer, params)
                 {
                     $scope.infopanedata = "";
                     var filteredData = params.filter() ?
                     $filter('filter')($scope.soundscapesOriginal , params.filter()) :
                     $scope.soundscapesOriginal  ;
-                    
+
                     var orderedData = params.sorting() ?
                     $filter('orderBy')(filteredData, params.orderBy()) :
                     $scope.soundscapesOriginal ;
@@ -92,8 +92,8 @@ angular.module('a2.analysis.soundscapes', [
             }
         );
     };
-    
-    
+
+
     $scope.loadSoundscapes = function() {
         a2Soundscapes.getList2(function(data) {
             $scope.soundscapesOriginal = data;
@@ -103,7 +103,7 @@ angular.module('a2.analysis.soundscapes', [
             $scope.loading = false;
 
             $scope.infopanedata = "";
-            
+
             if(data.length > 0) {
                 if(!$scope.tableParams) {
                     initTable(1,10,"+name",{},data.length);
@@ -118,7 +118,7 @@ angular.module('a2.analysis.soundscapes', [
         });
     };
     var stateData = a2Soundscapes.getState();
-    
+
     if (stateData === null)
     {
         $scope.loadSoundscapes();
@@ -132,18 +132,18 @@ angular.module('a2.analysis.soundscapes', [
         }
         else {
             $scope.infopanedata = "No models found.";
-        }            
+        }
         $scope.infoInfo = "";
         $scope.showInfo = false;
         $scope.loading = false;
     }
-    
+
     $scope.deleteSoundscape = function (id, name) {
         if(!a2UserPermit.can('manage soundscapes')) {
             notify.log('You do not have permission to delete soundscapes');
             return;
         }
-        
+
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         $scope.loading = true;
@@ -185,20 +185,20 @@ angular.module('a2.analysis.soundscapes', [
                     if (index > -1) {
                         $scope.soundscapesOriginal.splice(index, 1);
                         $scope.tableParams.reload();
-                        
+
                         notify.log("Soundscape deleted successfully");
                     }
                 }
         });
     };
-    
-    
+
+
     $scope.createNewSoundscape = function () {
         if(!a2UserPermit.can('manage soundscapes')) {
             notify.log('You do not have permission to create soundscapes');
             return;
         }
-        
+
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         $scope.loading = true;
@@ -208,7 +208,7 @@ angular.module('a2.analysis.soundscapes', [
             resolve: {
                 amplitudeReferences : function(a2Soundscapes){
                     return a2Soundscapes.getAmplitudeReferences();
-                },                    
+                },
                 playlists:function()
                 {
                     return $scope.playlists;
@@ -219,13 +219,13 @@ angular.module('a2.analysis.soundscapes', [
                 }
             }
         });
-        
+
         modalInstance.opened.then(function() {
             $scope.infoInfo = "";
             $scope.showInfo = false;
             $scope.loading = false;
         });
-        
+
 
         modalInstance.result.then(function(result) {
             data = result;
@@ -233,24 +233,24 @@ angular.module('a2.analysis.soundscapes', [
                 JobsData.updateJobs();
                 notify.log("Your new soundscape is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
             }
-            
+
             if (data.err) {
                 notify.error(data.err);
             }
-            
+
             if (data.url) {
                 $location.path(data.url);
             }
         });
     };
-    
-    
+
+
     $scope.showDetails = function(soundscapeId) {
-        
+
         a2Soundscapes.get(soundscapeId, function(soundscape) {
-            
+
             a2Playlists.getInfo(soundscape.playlist_id, function(plist) {
-                
+
                 var modalInstance = $modal.open({
                     controller: 'SoundscapesDetailsCtrl as controller',
                     templateUrl: '/app/analysis/soundscapes/details.html',
@@ -263,11 +263,11 @@ angular.module('a2.analysis.soundscapes', [
                         }
                     }
                 });
-                
+
             });
-            
+
         });
-        
+
     };
 
 
@@ -276,7 +276,7 @@ angular.module('a2.analysis.soundscapes', [
             notify.log('You do not have permission to export soundscapes data');
             return;
         }
-        
+
         a2Soundscapes.getExportUrl(options).then(function(export_url){
             var a = $('<a></a>').attr('target', '_blank').attr('href', export_url).appendTo('body');
             $window.setTimeout(function(){
@@ -284,9 +284,9 @@ angular.module('a2.analysis.soundscapes', [
                 a.remove();
             }, 0);
         });
-        
+
     };
-    
+
 })
 .controller('DeleteSoundscapeInstanceCtrl',function($scope, $modalInstance, a2Soundscapes, name, id, projectData) {
     $scope.name = name;
@@ -319,7 +319,7 @@ angular.module('a2.analysis.soundscapes', [
         bandwidth : 0,
         normalize:false
     };
-    
+
     $scope.nameMsg = '';
     $scope.aggregationValue = function(val)
     {
@@ -329,9 +329,9 @@ angular.module('a2.analysis.soundscapes', [
     };
 
     $scope.ok = function () {
-        
+
         var url = $scope.projectData.url;
-        $scope.nameMsg = '';        
+        $scope.nameMsg = '';
         a2Soundscapes.create({
                 n: $scope.datasubmit.name,
                 p: $scope.datasubmit.playlist,
@@ -360,19 +360,19 @@ angular.module('a2.analysis.soundscapes', [
                 }
             });
     };
-    
+
     $scope.buttonEnable = function () {
         return  (
-            $scope.datasubmit.bin === 0 || 
-            ((typeof $scope.datasubmit.bin.length)  == 'string') || 
-            $scope.datasubmit.aggregation.length  === 0 || 
-            ((typeof $scope.datasubmit.threshold.length)  == 'string') || 
-            ((typeof $scope.datasubmit.bandwidth.length)  == 'string') || 
-            $scope.datasubmit.name.length  === 0 || 
+            $scope.datasubmit.bin === 0 ||
+            ((typeof $scope.datasubmit.bin.length)  == 'string') ||
+            $scope.datasubmit.aggregation.length  === 0 ||
+            ((typeof $scope.datasubmit.threshold.length)  == 'string') ||
+            ((typeof $scope.datasubmit.bandwidth.length)  == 'string') ||
+            $scope.datasubmit.name.length  === 0 ||
             ((typeof $scope.datasubmit.playlist) == 'string')
         ) ;
     };
-    
+
     $scope.cancel = function (url) {
          $modalInstance.close( {url:url});
     };
@@ -385,91 +385,91 @@ angular.module('a2.analysis.soundscapes', [
         },
         templateUrl: '/app/analysis/soundscapes/aggregationtypetelector.html',
         controller: function($scope) {
-        
+
             $scope.aggregations = [
                 {
                     name: 'Hour in Day',
                     scale: ['00:00', '01:00', '......', '22:00', '23:00'],
                     id: 'time_of_day'
-                }, 
+                },
                 {
                     name: 'Day in Week',
                     scale: ['Sun', 'Mon', '......', 'Fri', 'Sat'],
                     id: 'day_of_week'
-                }, 
+                },
                 {
                     name: 'Day in Month',
                     scale: ['1', '2', '......', '30', '31'],
                     id: 'day_of_month'
-                }, 
+                },
                 {
                     name: 'Month in Year',
                     scale: ['Jan', 'Feb', '......', 'Nov', 'Dec'],
                     id: 'month_in_year'
-                }, 
+                },
                 {
                     name: 'Day in Year',
                     scale: ['1', '2', '......', '365', '366'],
                     id: 'day_of_year'
-                }, 
+                },
                 {
                     name: 'Year',
                     scale: ['2010', '2011', '......', '2016', '2017'],
                     id: 'year'
                 }
             ];
-    
+
             $scope.width = 200;
             $scope.padding = 18;
             $scope.height = 20;
-            
-            
+
+
             $scope.select =  function(aggr) {
                 $scope.selected = aggr.id;
             };
         }
-    }; 
+    };
 })
 .directive('a2DrawAggregation', function($window) {
     var d3 = $window.d3;
-    
+
     return {
         restrict : 'E',
         scope: {
             "aggregation": "="
         },
         link: function(scope, element, attrs) {
-            
+
             // console.log(scope.aggregation);
-            
+
             var draw = function(aggre) {
                 var width = 200;
                 var height = 20;
                 var padding = 18;
-                
+
                 var svgContainer = d3.select(element[0])
                                 .append("svg")
                                 .attr("width", width)
                                 .attr("height", height);
-                                
+
                 var axisScale = d3.scale.linear()
                         .domain([0,4])
                         .range([padding, width-padding]);
-                        
-                
+
+
                 var xAxis = d3.svg.axis()
                         .scale(axisScale)
                         .orient("bottom")
                         .ticks(5)
                         .tickValues([0,1,2,3,4])
                         .tickFormat(function(d) { return aggre.scale[d]; });
-                
+
                 var xAxisGroup = svgContainer.append("g")
                         .attr("transform","translate(0,1)")
                         .attr("class", "aggregationaxis")
                         .call(xAxis);
             };
-            
+
             scope.$watch('aggregation', function(value) {
                 if(value)
                     draw(value);
@@ -478,12 +478,12 @@ angular.module('a2.analysis.soundscapes', [
     };
 })
 .directive('a2ThresholdSelector', function(a2Soundscapes) {
-    return {    
+    return {
         restrict : 'E',
         scope: {
             "threshold": "=" ,
             "thresholdReference": "=" ,
-            "bandwidth": "=" 
+            "bandwidth": "="
         },
         templateUrl: '/app/analysis/soundscapes/thresholdselector.html',
         link : function($scope) {
@@ -491,12 +491,12 @@ angular.module('a2.analysis.soundscapes', [
             var afterGetAmplitudeReferences = a2Soundscapes.getAmplitudeReferences().then(function(amplitudeReferences){
                 $scope.amplitudeReferences = amplitudeReferences;
             });
-            
+
             $scope.setAmplitudeReference = function(amplitudeReference){
                 console.log("amplitudeReference", amplitudeReference);
                 $scope.thresholdReference = amplitudeReference.value;
             };
-            
+
             $scope.$watch('thresholdReference', function(thresholdReference) {
                 afterGetAmplitudeReferences.then(function(){
                     console.log("thresholdReference", thresholdReference, $scope.amplitudeReferences);
@@ -505,39 +505,39 @@ angular.module('a2.analysis.soundscapes', [
                     });
                 });
             });
-            
+
             $scope.$watch('threshold', function(n, o) {
                 console.log('threshold', n, o);
                 $scope.thresholdInvPercent = (1-$scope.threshold)*100;
             });
-            
+
             $scope.$watch('thresholdInvPercent', function(n, o) {
                 console.log('thresholdInvPercent', n, o);
                 var precision = 0.1;
                 $scope.threshold = Math.round((100-$scope.thresholdInvPercent) / precision)/(100/precision);
             });
-            
+
         }
     };
 })
 .directive('a2DrawPeakThreshold', function($window) {
     var d3 = $window.d3;
-    return {    
+    return {
         restrict : 'E',
         scope: {
             "threshold": "=" ,
-            "bandwidth": "=" 
+            "bandwidth": "="
         },
         link: function($scope, element, attrs) {
-                            
-            
+
+
             var data = [0.7,1.0,0.1,0.55,0.1,0.6,0.9,0.01,0.15,0.1,0.4,0.1];
             var data_scale = 0.5;
             var lineData = [];
             for(var i= 0 ; i < data.length ; i++) {
                 lineData.push({x:(i+1),y:data[i] * data_scale});
             }
-            
+
             var peaks = [
                 {x:2.6 , y:1.0  * data_scale , d:999999},
                 {x:4.4 , y:0.55 * data_scale , d:210},
@@ -545,7 +545,7 @@ angular.module('a2.analysis.soundscapes', [
                 {x:9 ,   y:0.15 * data_scale , d:750},
                 {x:11 ,  y:0.4  * data_scale , d:950}
             ];
-            
+
             var WIDTH = 250,
             HEIGHT = 70,
             MARGINS = {
@@ -554,37 +554,37 @@ angular.module('a2.analysis.soundscapes', [
                 bottom: 10,
                 left: 24
             };
-            
+
             var vis = d3.select(element[0]).append('svg')
                 .attr('width', WIDTH)
                 .attr('height', HEIGHT);
-            
-            
+
+
             var xRange = d3.scale.linear().
             range([MARGINS.left, WIDTH - MARGINS.right]).domain([d3.min(lineData, function(d) {
               return d.x;
             }), d3.max(lineData, function(d) {
               return d.x;
             })]);
-            
+
             var yRange = d3.scale.linear().domain([0,1]).range([HEIGHT - MARGINS.top, MARGINS.bottom]);
-            
+
             var xAxis = d3.svg.axis()
                 .scale(xRange)
                 .ticks(0);
-              
+
             var yAxis = d3.svg.axis()
                 .scale(yRange)
                 .ticks(3)
                 .tickSize(3)
                 .orient('left')
                 .tickSubdivide(true);
-            
+
             var drawAmpThreshold = function(ampThresh) {
                 yval = 50*(1-ampThresh) + 10;
-                
+
                 vis.selectAll("line.movingline").remove();
-                
+
                 $scope.line=  vis.append('svg:line')
                     .attr("x1", MARGINS.left)
                     .attr("y1", yval)
@@ -592,15 +592,15 @@ angular.module('a2.analysis.soundscapes', [
                     .attr("y2", yval)  .attr('stroke', 'red')
                     .attr('stroke-width', 2)
                     .attr('fill', 'none').attr('class','movingline');
-                
+
                 vis.selectAll("text.peakText").remove();
-                
+
                 var peaki = 1;
                 for (var i = 0 ; i < peaks.length;i++)
                 {
                     if (peaks[i].y >= ampThresh && peaks[i].d >= $scope.bandwidth)
-                    {                
-                        $scope.peakText = vis.append("text")     
+                    {
+                        $scope.peakText = vis.append("text")
                         .attr("x", WIDTH*(peaks[i].x/lineData.length) )
                         .attr("y",  50*(1-peaks[i].y) + 10 ).attr('font-size','11px')
                         .style("text-anchor", "middle").attr('class','peakText')
@@ -609,14 +609,14 @@ angular.module('a2.analysis.soundscapes', [
                     }
                 }
             };
-            
+
             $scope.$watch('threshold', function() {
                 if(!$scope.threshold)
                     return;
-                
+
                 drawAmpThreshold($scope.threshold);
             });
-            
+
             $scope.$watch('bandwidth',
             function()
             {
@@ -625,7 +625,7 @@ angular.module('a2.analysis.soundscapes', [
                 $scope.banwidthValue = $scope.bandwidth;
                 xval = Math.floor( WIDTH*(peaks[0].x/lineData.length)) -11 + 190*($scope.bandwidth/1000);
                 vis.selectAll("line.movingline1").remove();
-                      
+
                 $scope.line = vis.append('svg:line')
                         .attr("x1",xval)
                         .attr("y1", 12)
@@ -633,38 +633,38 @@ angular.module('a2.analysis.soundscapes', [
                         .attr("y2", 60)  .attr('stroke', 'red')
                         .attr('stroke-width', 2)
                         .attr('fill', 'none').attr('class','movingline1');
-              
+
                 vis.selectAll("text.peakText").remove();
-            
+
                 var peaki = 1;
                 for (var i = 0 ; i < peaks.length;i++)
                 {
                     if (peaks[i].y >= $scope.threshold && peaks[i].d > $scope.banwidthValue)
                     {
-                    
+
                         $scope.peakText = vis.append("text")
                         .attr("x", WIDTH*(peaks[i].x/lineData.length) )
                         .attr("y",  50*(1-peaks[i].y) + 10 ).attr('font-size','11px')
                         .style("text-anchor", "middle").attr('class','peakText')
                         .text("P"+(peaki ));
                         peaki  = peaki  + 1;
-                    }   
+                    }
                 }
                 // $scope.onBandwidth($scope.banwidthValue);
                 // console.log($scope.banwidthValue);
             }
             );
-            
+
             vis.append('svg:g')
                 .attr('class', 'thresholdaxis')
                 .attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')
                 .call(xAxis);
-             
+
             vis.append('svg:g')
                 .attr('class', 'thresholdaxis')
                 .attr('transform', 'translate(' + (MARGINS.left) + ',0)')
                 .call(yAxis);
-              
+
             var lineFunc = d3.svg.line()
                 .x(function(d) {
                     return xRange(d.x);
@@ -673,13 +673,13 @@ angular.module('a2.analysis.soundscapes', [
                     return yRange(d.y);
                 })
                 .interpolate('linear');
-              
+
             vis.append('svg:path')
                 .attr('d', lineFunc(lineData))
                 .attr('stroke', 'blue')
                 .attr('stroke-width', 2)
                 .attr('fill', 'none');
-              
+
             $scope.line = vis.append('svg:line')
                 .attr("x1",Math.floor( WIDTH*(peaks[0].x/lineData.length)) -11)
                 .attr("y1", 12)
@@ -687,8 +687,8 @@ angular.module('a2.analysis.soundscapes', [
                 .attr("y2", 60)  .attr('stroke', 'red')
                 .attr('stroke-width', 2)
                 .attr('fill', 'none');
-              
-            vis.append("text")    
+
+            vis.append("text")
                 .attr("x", WIDTH/2 )
                 .attr("y",  68 ).attr('font-size','9px')
                 .style("text-anchor", "middle")
@@ -698,64 +698,64 @@ angular.module('a2.analysis.soundscapes', [
 })
 .controller('SoundscapesDetailsCtrl', function($scope, soundscape, playlist, a2Soundscapes, a2UserPermit) {
     $scope.showDownload = a2UserPermit.can('manage soundscapes');
-    
+
     var data2xy = function(offset) {
         offset = offset || 0;
-        
-        return function(d, i) {  
+
+        return function(d, i) {
             return { x: i+offset, y: d };
         };
     };
-    
+
     $scope.soundscape = soundscape;
     $scope.playlist = playlist;
-    
-    $scope.chartOptions = { 
+
+    $scope.chartOptions = {
         lineColor: '#c42',
-        width: 400, 
-        height: 400 
+        width: 400,
+        height: 400
     };
-    
+
     a2Soundscapes.getAmplitudeReferences().then((function(amplitudeReferences){
         this.amplitudeReferences = amplitudeReferences.reduce(function(_, _1){
             _[_1.value] = _1;
             return _;
         }, {});
     }).bind(this));
-    
-    
+
+
     a2Soundscapes.findIndices(soundscape.id, function(result) {
         if(!result)
             return;
-            
+
         $scope.index = {
             H: [],
             ACI: [],
             NP: [],
         };
         $scope.indices = [];
-        
-        $scope.indices.push({ 
+
+        $scope.indices.push({
             time: "TIME",
             H: "H",
             ACI: "ACI",
             NP: "NP",
         });
-        
+
         for(var i = 0; i < result.H.length; i++) {
             var t = i+soundscape.min_t;
-            
-            $scope.indices.push({ 
+
+            $scope.indices.push({
                 time: t,
                 H: result.H[i],
                 ACI: result.ACI[i],
                 NP: result.NP[i],
             });
-            
+
             $scope.index.H.push({ x: t, y: result.H[i] });
             $scope.index.ACI.push({ x: t, y: result.ACI[i] });
             $scope.index.NP.push({ x: t, y: result.NP[i] });
         }
-        
+
     });
 });

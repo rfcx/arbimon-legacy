@@ -1,7 +1,8 @@
 {
-    "host"     : ""        ,
-    "user"     : ""   ,
-    "password" : "",
-    "database" : "",
-    "timezone" : ""
+    "host": "127.0.0.1",
+    "user": "admin",
+    "port": "3306",
+    "password": "Do1kEW6FLLBG",
+    "database": "arbimon2",
+    "timezone": "Z"
 }

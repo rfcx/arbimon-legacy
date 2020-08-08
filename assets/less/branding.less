@@ -1,41 +1,73 @@
-.btn-google-login{
-    font-family:Roboto;
-    > i.icon{
-        float: left;
-        vertical-align: middle;
-    }
-    > .text {
-        line-height: 2em;
-    }
+@brand-google-color: #4285F4;
+@brand-google-dark-color: #3367d6;
+@brand-facebook-color: #1877F2;
+
+.btn-google-login {
+  font-family: Roboto;
+  background: @brand-google-color;
+  border: none;
+  padding: 0px;
+  display: inline-block;
+  width: auto;
+
+  > i.icon {
+    float: left;
+    vertical-align: middle;
+  }
+
+  > .text {
+    line-height: 3em;
+    margin: 0 18px;
+  }
+
+  &:active{
+    background: @brand-google-dark-color;
+  }
 }
 
 .icon-google {
-    background-image: url("/images/brand/google-signin-icon.png");
-    background-size: 2em 2em;
-    display: inline-block;
-    height: 2em;
-    width: 2em;
+  background-image: url("/images/brand/google-signin-icon.svg");
+  background-size: 3em 3em;
+  display: inline-block;
+  height: 3em;
+  width: 3em;
 }
 
-.btn-facebook-login{
-    // font-family:Roboto;
-    > i.icon{
-        float: left;
-        vertical-align: middle;
-    }
-    > .text {
-        line-height: 2em;
-    }
+.btn-facebook-login {
+  font-family: Roboto;
+  background: @brand-facebook-color;
+  border: none;
+  padding: 0 6px;
+  display: inline-block;
+  width: auto;
+
+  > i.icon {
+    float: left;
+    vertical-align: middle;
+    margin: 3px 0;
+  }
+
+  > .text {
+    line-height: 3em;
+    margin: 0 11px;
+    font-weight: bold;
+  }
+
+  &:hover, &:active{
+    background: @brand-facebook-color;
+    border: none;
+  }
 }
 
 .icon-facebook {
-    background-image: url("/images/brand/facebook-signin-icon.png");
-    background-size: 2em 2em;
-    display: inline-block;
-    height: 2em;
-    width: 2em;
-    &.inlined{
-        background-size: 1.5em 1.5em;
-        background-repeat: no-repeat;
-    }
+  background-image: url("/images/brand/facebook-signin-icon.png");
+  background-size: 2.5em 2.5em;
+  display: inline-block;
+  height: 2.5em;
+  width: 2.5em;
+
+  &.inlined {
+    background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+  }
 }
