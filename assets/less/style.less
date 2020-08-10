@@ -77,9 +77,9 @@
 
 .navbar {
   border-radius: 0px;
-  -webkit-box-shadow: 0px 1px 2px @gray;
-  -moz-box-shadow: 0px 1px 2px  @gray;
-  box-shadow: 0px 1px 2px  @gray;
+  -webkit-box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.7);
+  -moz-box-shadow: 0px 1px 2px  rgba(0, 0, 0, 0.7);
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.7);
 }
 
 .alert-bar {
@@ -147,7 +147,7 @@
   border-radius: 6px;
   background-color: @val-color-default;
   padding: 40px;
-  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 10px 20px 3px rgba(0, 0, 0, 0.7);
   @media (max-width: @screen-sm-min) {
     padding: 20px 20px 30px 20px;
   }
@@ -246,16 +246,26 @@
   width: 125px;
   height: 100%;
   float: left;
-  border-radius: 6px;
+  border-radius: 0 6px 6px 0;
   background-color: @val-color-default;
-  //box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
-  -webkit-box-shadow: 0px 3px 10px @gray;
-  -moz-box-shadow: 0px 3px 10px @gray;
-  box-shadow: 0px 3px 10px @gray;
+  -webkit-box-shadow: 0px 6px 6px 3px rgba(0, 0, 0, 0.7);
+  -moz-box-shadow: 0px 6px 6px 3px rgba(0, 0, 0, 0.7);
+  box-shadow: 0px 6px 6px 3px rgba(0, 0, 0, 0.7);
 
   li {
     padding: 0;
     list-style-type: none;
+  }
+
+  li:first-child{
+    a {
+      border-radius: 0 6px 0px 0;
+    }
+  }
+  li:last-child{
+    a {
+      border-radius: 0 0px 6px 0;
+    }
   }
 
   ul {
