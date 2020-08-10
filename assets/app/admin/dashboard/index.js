@@ -1,6 +1,6 @@
 angular.module('a2.admin.dashboard', [
-    'ui.router', 
-    'ui.bootstrap', 
+    'ui.router',
+    'ui.bootstrap',
     'a2.utils',
     'a2.services',
     'a2.directives',
@@ -12,7 +12,7 @@ angular.module('a2.admin.dashboard', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise("/dashboard");
-    
+
     $stateProvider
         .state('dashboard', {
             url: '/dashboard',
@@ -21,16 +21,16 @@ angular.module('a2.admin.dashboard', [
         });
 })
 .controller('AdminDashboardCtrl', function($scope, $http, $q, $controller) {
-    
+
     $scope.plots = $controller('AdminDashboardPlotterController', {'$scope':$scope});
-    
+
     $http.get('/admin/dashboard-stats')
         .success(function(data) {
             $scope.newUsers = data.newUsers;
             $scope.newProjects = data.newProjects;
             $scope.Jobs = data.jobsStatus;
         });
-    
+
     $scope.getSystemSettings = function() {
         $http.get('/admin/system-settings')
             .success(function(data) {
@@ -41,10 +41,10 @@ angular.module('a2.admin.dashboard', [
 
     $scope.setSetting = function(setting, value){
         var d=$q.defer();
-        
+
         if(!setting){
             d.resolve();
-        } else {        
+        } else {
         $http.put('/admin/system-settings', {
                 setting: setting,
                 value: value
@@ -61,7 +61,7 @@ angular.module('a2.admin.dashboard', [
         }
         return d.promise;
     };
-    
+
     $scope.toggleSetting = function(setting) {
         var value = $scope.settings[setting] == 'on' ? 'off' : 'on';
         return this.setSetting(setting, value);
