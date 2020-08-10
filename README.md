@@ -18,11 +18,13 @@ Bio-Acoustic Analyzer
   - `gulp build`
 - Change Config Files
   - `config/db.json`
+    - use `db.local.json` to not have secrets committed to the repo
   - `www` (optional)
   - hosts file (optional)
 - Setup SSH Tunnel to SQL Database
   - ssh pem file
   - tunnel command
+    - `ssh -N -L 3306:arbimon-dev-cluster.cluster-ctjyvabp9jnq.us-east-1.rds.amazonaws.com:3306 ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem`
   - check with MySQL Workbench (or other sql explorer) (optional)
 - Run Development Server
   - `gulp watch`
