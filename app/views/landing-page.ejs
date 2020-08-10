@@ -86,12 +86,17 @@
                                 reset-widget="resetCaptcha">
                             </div>
                             <button class="btn btn-primary btn-block" type="submit"><i class="fa fa-sign-in"></i> log in</button>
-                            <div class="text-right"><a href="/forgot_request">forgot password?</a></div>
+                            <div class="text-right margin-xs"><a href="/forgot_request">forgot password?</a></div>
 
                             <div class="form-group oauth-buttons text-center">
                                 <a2-google-login-button class="btn-block" on-signed-in="controller.oAuthLogin('google', user)"></a2-google-login-button>
                                 <a2-facebook-login-button class="btn-block" on-signed-in="controller.oAuthLogin('facebook', user)"></a2-facebook-login-button>
                             </div>
+                            <br />
+                            <small class="text-info inline-block text-justify margin-xs">
+                                Note: Arbimon requires a separate account from the other Rainforest Connection applications
+                                (you cannot use your existing Rainforest Connection account).
+                            </small>
                         </form>
                     </div>
                 </div>

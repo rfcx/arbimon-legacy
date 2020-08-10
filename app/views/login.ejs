@@ -26,7 +26,7 @@
                 <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-4 col-md-4 col-lg-offset-4 col-lg-4"
                      ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
                     <div class="login-form card-container">
-                        <h3>Arbimon login</h3>
+                        <h3 class="margin-xs">Arbimon login</h3>
                         <form role="form" ng-submit="login()">
                             <div class="form-group">
                                 <label class="sr-only" for="user">Username</label>
@@ -55,7 +55,7 @@
                             </div>
                             <button class="btn btn-primary btn-block" type="submit"><i class="fa fa-sign-in"></i> log in
                             </button>
-                            <div class=""><a href="/forgot_request">forgot password?</a></div>
+                            <div class="text-right margin-xs"><a href="/forgot_request">forgot password?</a></div>
 
                             <div class="form-group oauth-buttons text-center">
                                 <a2-google-login-button class="btn-block"
@@ -63,6 +63,11 @@
                                 <a2-facebook-login-button class="btn-block"
                                                           on-signed-in="controller.oAuthLogin('facebook', user)"></a2-facebook-login-button>
                             </div>
+                            <br />
+                            <small class="text-info inline-block text-justify">
+                                Note: Arbimon requires a separate account from the other Rainforest Connection applications
+                                (you cannot use your existing Rainforest Connection account).
+                            </small>
                         </form>
                     </div>
                 </div>
