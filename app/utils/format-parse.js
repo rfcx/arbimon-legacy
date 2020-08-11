@@ -21,8 +21,7 @@ var formatParse = function(formatName, filename) {
         Wildlife: /(.*(\d{4})(\d{2})(\d{2})[_|\$](\d{2})(\d{2})\d{2}.*)(\.\w+)$/,
         Arbimon: /(.*(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})(-(\d{2}))?.*)(\.\w+)$/,
         'AudioMoth 1.0.0': /([0-9A-F]{8})(\.\w+)$/,
-        'AudioMoth 1.2.2': /((\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/,
-        'RFCx Edge': /((.*)-(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/
+        'AudioMoth 1.2.2': /((\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/
     };
     var parsed, errors=[];
 
@@ -57,12 +56,6 @@ var formatParse = function(formatName, filename) {
                     filetype: results[8]
                 };
                 console.log(parsed);
-            } else if (formatName == 'RFCx Edge') {
-                parsed = {
-                    filename: results[1],
-                    datetime: new Date(results[3], results[4], results[5], results[6], results[7], results[8]),
-                    filetype: results[9]
-                };
             } else {
                 parsed = {
                     filename: results[1],

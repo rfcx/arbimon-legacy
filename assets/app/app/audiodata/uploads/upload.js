@@ -226,8 +226,7 @@ angular.module('a2.audiodata.uploads.upload', [
         { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" },
         { name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
         { name: "AudioMoth 1.0.0", format: "(Unix Time code in Hex)" },
-        { name: "AudioMoth 1.2.2", format: "(YYYYMMDD_HHMMSS)" },
-        { name: "RFCx Edge", format: "(*-YYYYMMDD_HHMMSS)" },
+        { name: "AudioMoth 1.2.2", format: "(YYYYMMDD_HHMMSS)" }
     ];
     
     Project.getSites(function(sites) {
