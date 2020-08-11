@@ -1,6 +1,11 @@
+/*
+ * Bootstrap variables
+*/
+@import "../variables.less";
+
 .visualizer {
     position: absolute;
-    top: 52px;
+    top: 62px;
     bottom: 0;
     left: 0;
     right: 0;
@@ -111,7 +116,7 @@
     @media (min-width: @screen-md-min) {
         left: @sidebar-width;
     }
-    border-left: 1px solid #d0d0d0;
+    border-left: 1px solid @gray;
     left: 0;
     right: 0;
     top: 0;
@@ -138,7 +143,7 @@
 @layer-zebra-even: #fff;
 @layer-zebra-odd: #f0f0f0;
 @layer-selection: #e7e7e7;
-@layer-bg: #f8f8f8;
+@layer-bg: @val-color-default; //#f8f8f8;
 .layers {
     .layer {
         padding: @layer-padding-v @layer-padding-right @layer-padding-v @layer-padding-left;
@@ -152,7 +157,7 @@
         position: relative;
         min-height: 2em;
         background-color: @layer-bg;
-        border-bottom: 1px solid #d0d0d0;
+        border-bottom: 1px solid @gray;
 
         &.selected {
             // background-color: @layer-selection;
@@ -236,12 +241,13 @@
     > svg {
         z-index:10;
         > .bg{
-            fill: #ffffff;
+            fill: @gray-darker;
         }
         > .axis {
+            fill: @text-color;
             path, line {
                 fill: none;
-                stroke: black;
+                stroke: @text-color;
                 shape-rendering: crispEdges;
             }
             text {
@@ -265,7 +271,7 @@
 
     > .mask-panel, > .a2-visualizer-spectrogram-affixed.mask-panel{
         z-index:5;
-        background:white;
+        background:@gray-darker;
     }
 
 
@@ -412,6 +418,7 @@
             position: relative;
             height:162px;
             padding : 6px;
+            color: #000;
             &:nth-child(even){
                 background-color: @layer-zebra-even;
             }

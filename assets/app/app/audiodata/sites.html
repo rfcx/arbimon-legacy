@@ -1,6 +1,6 @@
 <div class="row">
     <div class="col-md-7">
-        
+
 
 <div class="row">
     <div class="col-md-push-6 col-md-6 toolbar">
@@ -8,11 +8,11 @@
     </div>
     <div class="col-md-6 col-md-pull-6 toolbar">
         <button class="btn btn-default"
-            ng-click="create() | trackEvent:'Dashboard-sites':'add site'" 
+            ng-click="create() | trackEvent:'Dashboard-sites':'add site'"
             tooltip="Create a new site">
             <i class="fa fa-plus"></i>
         </button>
-        
+
         <!-- <div class="btn-group" dropdown>
             <button class="btn btn-default dropdown-toggle"
                 id="addsite"
@@ -53,7 +53,7 @@
     <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
         <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
             <field title="Name" key="name">
-                {{ row.name }} 
+                {{ row.name }}
             </field>
             <!-- <field>
                 <i ng-show="row.published && !row.imported" class="fa fa-globe"  title="Site is Published"></i>
@@ -109,8 +109,8 @@
                 </div>
                 <!-- <div class="checkbox">
                     <label>
-                        <input type="checkbox" ng-model="temp.published"> 
-                        publish site 
+                        <input type="checkbox" ng-model="temp.published">
+                        publish site
                         <i class="text-info fa fa-info-circle"
                             tooltip-placement="right"
                             tooltip="when this option is checked, the site recordings become available to use in other projects"></i>
@@ -120,11 +120,11 @@
                     <label>Location:</label>
                     <div class="input-group">
                         <span class="input-group-addon">Lat</span>
-                        <input class="form-control" 
-                            name="lat" 
-                            type="text" 
-                            ng-model="temp.lat" 
-                            placeholder="Latitude" 
+                        <input class="form-control"
+                            name="lat"
+                            type="text"
+                            ng-model="temp.lat"
+                            placeholder="Latitude"
                             pattern="^-?\d+\.?\d*$"
                             required>
                     </div>
@@ -132,11 +132,11 @@
                 <div class="form-group">
                     <div class="input-group">
                         <span class="input-group-addon">Lon</span>
-                        <input class="form-control" 
-                            name="lon" 
-                            type="text" 
-                            ng-model="temp.lon" 
-                            placeholder="Longitude" 
+                        <input class="form-control"
+                            name="lon"
+                            type="text"
+                            ng-model="temp.lon"
+                            placeholder="Longitude"
                             pattern="^-?\d+\.?\d*$"
                             required>
                     </div>
@@ -144,11 +144,11 @@
                 <div class="form-group">
                     <div class="input-group">
                         <span class="input-group-addon">Alt</span>
-                        <input class="form-control" 
-                            name="alt" 
-                            type="text" 
-                            ng-model="temp.alt" 
-                            placeholder="Altitude" 
+                        <input class="form-control"
+                            name="alt"
+                            type="text"
+                            ng-model="temp.alt"
+                            placeholder="Altitude"
                             pattern="^-?\d+\.?\d*$"
                             required>
                     </div>
@@ -156,7 +156,7 @@
                 <button class="btn btn-primary">
                     <i class="fa fa-floppy-o"></i> Save
                 </button>
-                <button class="btn btn-default" 
+                <button class="btn btn-default"
                     type="button"
                     ng-click="close() | trackEvent:'Dashboard-sites':'close site edit create'">
                     <i class="fa fa-times"></i> Close
@@ -171,11 +171,11 @@
                 ng-change="status_controller.set_series(status_controller.selected.series) | trackEvent:'Audiodata-Site-Status':'set series'" >
                     <ui-select-match placeholder="Series">
                         <i ng-class="$select.selected.icon"></i>
-                        {{$select.selected.name}} 
+                        {{$select.selected.name}}
                     </ui-select-match>
                     <ui-select-choices repeat="series in status_controller.data.series | filter:$select.search" group-by="status_controller.itemGroup">
                         <i ng-class="series.icon"></i>
-                        {{series.name}} 
+                        {{series.name}}
                     </ui-select-choices>
                 </ui-select>
             </div>
@@ -184,10 +184,10 @@
                 ng-change="status_controller.set_time_range(status_controller.selected.time_range) | trackEvent:'Audiodata-Site-Status':'set time range'" >
                     <ui-select-match placeholder="View">
                         <i class="fa fa-clock-o"></i>
-                        {{$select.selected.text}} 
+                        {{$select.selected.text}}
                     </ui-select-match>
                     <ui-select-choices repeat="time_range in status_controller.data.time_ranges | filter:$select.search" group-by="status_controller.itemGroup">
-                        {{time_range.text}} 
+                        {{time_range.text}}
                     </ui-select-choices>
                 </ui-select>
             </div>
@@ -196,10 +196,10 @@
                 ng-change="status_controller.set_period(status_controller.selected.period) | trackEvent:'Audiodata-Site-Status':'set period'" >
                     <ui-select-match placeholder="Detail">
                         <i class="fa fa-hourglass-3"></i>
-                        {{$select.selected.text}} 
+                        {{$select.selected.text}}
                     </ui-select-match>
                     <ui-select-choices repeat="period in status_controller.data.periods | filter:$select.search" group-by="status_controller.itemGroup">
-                        {{period.text}} 
+                        {{period.text}}
                     </ui-select-choices>
                 </ui-select>
             </div>

@@ -5,65 +5,79 @@
     <% include head %>
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ARBIMON II</title>
+    <title>Arbimon</title>
 </head>
 
 <body ng-controller="LoginCtrl as controller">
-    <div class="login-top">
+    <nav class="navbar navbar-default" role="navigation">
         <div class="container">
-            <a href="/"><img src="/images/logo.svg"></a>
+            <div class="navbar-header">
+                <a href="/" class="navbar-brand">
+                    <img src="/images/rfcx-logo.png">
+                    Arbimon
+                </a>
+            </div>
         </div>
-    </div>
+    </nav>
     <div class="jumbotron login-banner">
         <div class="container">
             <div class="row">
                 <!--  visible-md-block visible-lg-block hide only on small and x-small screens -->
-                <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-4 col-md-4 col-lg-offset-4 col-lg-3" ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
-                    <div class="login-form">
-                        <h3>Arbimon II login</h3>
+                <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-4 col-md-4 col-lg-offset-4 col-lg-4"
+                     ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
+                    <div class="login-form card-container">
+                        <h3 class="margin-xs">Arbimon login</h3>
                         <form role="form" ng-submit="login()">
                             <div class="form-group">
                                 <label class="sr-only" for="user">Username</label>
                                 <input id="user"
-                                    class="form-control" 
-                                    name="username" 
-                                    type="text" 
-                                    placeholder="Username" 
-                                    ng-model="username"
-                                    required />
+                                       class="form-control"
+                                       name="username"
+                                       type="text"
+                                       placeholder="Username"
+                                       ng-model="username"
+                                       required/>
                             </div>
                             <div class="form-group">
                                 <label class="sr-only" for="pass">Password</label>
-                                <input id="pass" 
-                                    class="form-control" 
-                                    name="password" 
-                                    type="password" 
-                                    placeholder="Password" 
-                                    ng-model="password"
-                                    required />
+                                <input id="pass"
+                                       class="form-control"
+                                       name="password"
+                                       type="password"
+                                       placeholder="Password"
+                                       ng-model="password"
+                                       required/>
                             </div>
                             <div ng-show="showCaptcha" g-recaptcha
-                                sitekey="6LffYQETAAAAAAeEN-dJHFMHxlVVSGsL-tlWWFpE"
-                                response="captchaResp"
-                                reset-widget="resetCaptcha">
+                                 sitekey="6LffYQETAAAAAAeEN-dJHFMHxlVVSGsL-tlWWFpE"
+                                 response="captchaResp"
+                                 reset-widget="resetCaptcha">
                             </div>
-                            <button class="btn btn-primary btn-block" type="submit"><i class="fa fa-sign-in"></i> log in</button>
-                            <div class=""><a href="/forgot_request" class="forgot-text">forgot password?</a></div>
+                            <button class="btn btn-primary btn-block" type="submit"><i class="fa fa-sign-in"></i> Login
+                            </button>
+                            <div class="text-right margin-xs"><a href="/forgot_request">forgot password?</a></div>
 
-                            <div class="form-group oauth-buttons">
-                                <a2-google-login-button class="btn-block" on-signed-in="controller.oAuthLogin('google', user)"></a2-google-login-button>
-                                <a2-facebook-login-button class="btn-block" on-signed-in="controller.oAuthLogin('facebook', user)"></a2-facebook-facebook-button>
+                            <div class="form-group oauth-buttons text-center">
+                                <a2-google-login-button class="btn-block"
+                                                        on-signed-in="controller.oAuthLogin('google', user)"></a2-google-login-button>
+                                <a2-facebook-login-button class="btn-block"
+                                                          on-signed-in="controller.oAuthLogin('facebook', user)"></a2-facebook-login-button>
                             </div>
+                            <br />
+                            <small class="text-info inline-block text-justify">
+                                Note: Arbimon requires a separate account from the other Rainforest Connection applications
+                                (you cannot use your existing Rainforest Connection account).
+                            </small>
                         </form>
                     </div>
                 </div>
             </div>
-            
+
         </div>
-        
+
     </div>
-    
-    <% include footer %>
+
+<% include footer %>
 </body>
 
 </html>
