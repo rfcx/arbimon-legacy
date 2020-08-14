@@ -1078,6 +1078,7 @@ a.ui-select-choices-row-inner {
 .row.gutter-4 {
   margin-left: -2px;
   margin-right: -2px;
+
   [class*="col-"] {
     padding-left: 2px;
     padding-right: 2px;
@@ -1102,6 +1103,7 @@ a.ui-select-choices-row-inner {
     }
   }
 }
+
 .custom-select-ui {
   .ui-select-choices {
     width: auto !important;
@@ -1111,7 +1113,7 @@ a.ui-select-choices-row-inner {
     padding-right: 50px;
   }
 
-  .ui-select-match-text{
+  .ui-select-match-text {
     width: 90% !important;
     white-space: nowrap;
     overflow: hidden;
@@ -1147,12 +1149,24 @@ a.ui-select-choices-row-inner {
 
 /* END: Override plotly-plot chart style */
 
-/* START: Override ng-table chart style */
-.ng-table th.sortable.sort-desc, .ng-table th.sortable.sort-asc {
-  background-color: @val-color-default !important;
+/* START: Override ng-table style */
+.ng-table {
+  th.sortable.sort-desc, th.sortable.sort-asc {
+    background-color: @val-color-default !important;
+  }
+
+  thead > tr > th{
+    border-bottom: none !important;
+  }
+  .ng-table-filters {
+    .filter {
+      border-top: none !important;
+    }
+  }
 }
 
-/* END: Override ng-table chart style */
+
+/* END: Override ng-table style */
 .border-default {
   border: 1px solid @gray-light;
 

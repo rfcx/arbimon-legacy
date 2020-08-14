@@ -4,17 +4,17 @@
         Soundscape Composition
     </h5>
     <div class="content" ng-show="layer.is_open">
-        <div ng-repeat="classType in layer.controller.classTypes">
+        <div class="classType-container" ng-repeat="classType in layer.controller.classTypes">
             <div class="row">
                 <div class="col-sm-12">
                     <b>{{ classType.type }}</b>
                 </div>
             </div>
-            <div class="row no-gutter" ng-repeat="cls in classType.list" >
+            <div class="row no-gutter classType-row" ng-repeat="cls in classType.list" >
                     <div class="no-select col-sm-8">
                         {{ cls.name }}
                     </div>
-                    <div class="col-sm-3 text-center btn-toolbar">
+                    <div class="col-sm-4 text-right btn-toolbar">
                         <div class="btn-group btn-group-xs" ng-repeat="btnGroup in layer.controller.annotationToolbar">
                             <button class="btn btn-default btn-fade-inactive" ng-repeat="btn in btnGroup"
                             ng-class="layer.controller.annotations[cls.id] == btn.value ? 'active': ''"
