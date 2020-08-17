@@ -1,18 +1,18 @@
-<div class="row no-gutter">
+<div class="row gutter-4">
     <div class="col-sm-7">
         <ui-select ng-model="browser.$type.site" theme="bootstrap"
-            class="has-badges"
+            class="has-badges custom-select-ui"
             on-select="browser.$type.set_site($select.selected) | trackEvent:'Visualizer-Recordings-By-Site':'open site'"
             append-to-body="true"
         >
             <ui-select-match class="a2-uism-btn-icon {{browser.$type.loading.sites ? 'icon-loader' : 'icon-site'}}"
-                placeholder="{{browser.$type.loading.sites ? 'Loading sites' : 'Select site'}}"
+                placeholder="{{browser.$type.loading.sites ? 'Loading sites' : 'Select site'}}" title="{{ browser.$type.site.name }}"
             >
                 {{ browser.$type.site.name }}
             </ui-select-match>
             <ui-select-choices repeat="site in browser.$type.sites | filter:$select.search">
                 <i class="fa fa-map-marker" ></i>
-                {{ site.name }}
+                <span class="select-ui-option">{{ site.name }}</span>
                 <span class="badge">{{site.rec_count}}</span>
             </ui-select-choices>
         </ui-select>
