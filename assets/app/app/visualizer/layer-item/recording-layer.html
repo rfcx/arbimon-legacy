@@ -65,7 +65,7 @@
                     <div class="btn-group">
                         <button class="btn btn-default btn-sm" 
                             ng-disabled="!audio_player.has_recording" 
-                            ng-click="audio_player.download() | trackEvent:'Visualizer-RecordingLayer':'AudioControl prev rec'" >
+                            ng-click="audio_player.download() | trackEvent:'Visualizer-RecordingLayer':'AudioControl download rec'" >
                             
                             <i class="fa fa-download"></i>
                         </button>
@@ -73,7 +73,7 @@
                 </div>
             </div>
         </div>
-        <div class="no-pad-r">
+        <div class="col-sm-3 no-pad-r">
             <div class="">
                 <i class="fa fa-sm fa-play"></i>
                 {{ audio_player.getCurrentTime() | number:2 }} s
