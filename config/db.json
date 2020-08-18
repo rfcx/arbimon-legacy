@@ -1,8 +1,8 @@
 {
     "host": "",
     "user": "",
-    "port": "",
+    "port": "3306",
     "password": "",
     "database": "",
-    "timezone": ""
+    "timezone": "Z"
 }
