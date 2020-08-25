@@ -4,32 +4,48 @@ Bio-Acoustic Analyzer
 ---
 
 ### Local Development Setup
-- Windows
-  - Recommended to use WSL (Windows Subsystem for Linux)
-    - Ubuntu 18.04
-    - [https://docs.microsoft.com/en-us/windows/wsl/install-win10](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
-- Clone Repo
-  - Clone this repository into a suitable location. If on linux or Mac this could be a directory in the home directory, on Windows with WSL it is often good to use `/mnt/c/Users/YourUserName/` as this is a shared folder between the Windows and WSL systems.
-- Install Dependencies
-  - Node (8.10.0 works, higher such as 12 will not. Unknown exactly where the cutoff is.)
-  - npm
-  - `npm i`
-  - `bower i`
-  - `gulp build`
-- Change Config Files
-  - `config/db.json`
-    - use `db.local.json` to not have secrets committed to the repo
-  - `www` (optional)
-  - hosts file (optional)
-- Setup SSH Tunnel to SQL Database
-  - ssh pem file
-  - tunnel command
-    - `ssh -N -L 3306:arbimon-dev-cluster.cluster-ctjyvabp9jnq.us-east-1.rds.amazonaws.com:3306 ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem`
-  - check with MySQL Workbench (or other sql explorer) (optional)
-- Run Development Server
-  - `gulp watch`
-    - if port 80 is being used:
-      - `sudo gulp watch`
+If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [https://docs.microsoft.com/en-us/windows/wsl/install-win10](https://docs.microsoft.com/en-us/windows/wsl/install-win10). Ubuntu 18.04 is recommended.
+
+
+1. Clone Repo
+
+    Clone this repository into a suitable location. If on linux or Mac this could be a directory in the home directory, on Windows with WSL it is often good to use `/mnt/c/Users/YourUserName/` as this is a shared folder between the Windows and WSL systems.
+
+2. Install Dependencies
+
+    App requires [https://nodejs.org/](node.js) to be installed (8.10.0 works, higher such as 12 will not. Unknown exactly where the cutoff is.) If you use `nvm` tool, you can run `nvm use` to switch node to required version (uses `.nvmrc` file).
+
+    Install node modules:
+    ```sh
+    npm i
+    ```
+    App requires [https://bower.io/](bower) to be installed.
+
+    Then install client-side dependencies:
+    ```sh
+    bower i
+    ```
+    Build client-side part:
+    ```sh
+    ./node_modules/gulp/bin/gulp.js build
+    ```
+
+3. Change Config Files
+    - `config/db.json`
+      - use `db.local.json` to not have secrets committed to the repo
+    - `www` (optional)
+    - hosts file (optional)
+
+4. Setup SSH Tunnel to SQL Database
+    - ssh pem file
+    - tunnel command
+      - `ssh -N -L 3306:arbimon-dev-cluster.cluster-ctjyvabp9jnq.us-east-1.rds.amazonaws.com:3306 ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem`
+    - check with MySQL Workbench (or other sql explorer) (optional)
+
+5. Run Development Server
+    - `gulp watch`
+      - if port 80 is being used:
+        - `sudo gulp watch`
 
 ### Debugging
 - Can run in debug output mode
@@ -143,7 +159,7 @@ Bio-Acoustic Analyzer
  - individual python dependencies (`sudo pip install`):
     - MySQL-python
     - boto
-    - pypng  
+    - pypng
     - matplotlib
     - virtualenv
 
