@@ -85,7 +85,7 @@
                                         <div>{{ recsQty | number }} recordings of {{ project.storage_limit | number }} ({{ (recsQty/project.storage_limit*100) | number: 0 }}%)</div>
                                     </li>
                                     <li class="list-group-item">
-                                        Species:
+                                        Species (Validated: {{ valsQty }}, Templates: {{ templateQty }}) :
                                         <ul>
                                             <li ng-repeat="s in species | limitTo: 5">
                                                 {{ s.species_name }}

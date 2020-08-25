@@ -15,7 +15,7 @@ angular.module('a2.app.dashboard',[
         templateUrl: '/app/dashboard/index.html',
     });
 })
-.controller('SummaryCtrl', function($scope, Project, a2GoogleMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
+.controller('SummaryCtrl', function($scope, Project, a2Templates, a2GoogleMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
     $scope.loading = 9;
     
     var done = function() {
@@ -100,5 +100,10 @@ angular.module('a2.app.dashboard',[
         $scope.recsQty = data;
         done();
     });
+
+    a2Templates.getList().then(data => {
+        $scope.templateQty = data.length;
+        done();
+    })
 })
 ;
