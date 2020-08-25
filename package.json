@@ -45,11 +45,14 @@
     "validator": "~5.5.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.11.4",
+    "@babel/preset-env": "^7.11.0",
     "chai": "~3.5.0",
     "chai-as-promised": "~5.3.0",
     "chai-subset": "^1.0.0",
     "gulp": "^3.9.1",
     "gulp-angular-templatecache": "^2.0.0",
+    "gulp-babel": "^8.0.0",
     "gulp-clean-css": "^2.0.12",
     "gulp-concat": "^2.6.0",
     "gulp-gzip": "^1.4.0",

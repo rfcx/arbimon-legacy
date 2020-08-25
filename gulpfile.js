@@ -2,6 +2,7 @@ var concat = require('gulp-concat');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var uglify = require('gulp-uglify');
+var babel = require('gulp-babel');
 var livereload = require('gulp-livereload');
 var less = require('gulp-less');
 var gzip = require('gulp-gzip');
@@ -96,6 +97,7 @@ gulp.task('app:watch', function(){
 gulp.task('app:code', function(done){
     pump([
         gulp.src(app.code.src),
+        babel({ presets: ['@babel/env'] }),
         sourcemaps.init(),
         ngAnnotate(),
         concat(app.code.name),
