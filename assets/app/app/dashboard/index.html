@@ -85,10 +85,10 @@
                                         <div>{{ recsQty | number }} recordings of {{ project.storage_limit | number }} ({{ (recsQty/project.storage_limit*100) | number: 0 }}%)</div>
                                     </li>
                                     <li class="list-group-item">
-                                        Species (Validated: {{ valsQty }}, Templates: {{ templateQty }}) :
+                                        Species (Validated: {{ validatedSpecies + "/" + species.length }}, Templates: {{ templateQty }}) :
                                         <ul>
                                             <li ng-repeat="s in species | limitTo: 5">
-                                                {{ s.species_name }}
+                                                {{ s.species_name }} <span ng-if="s.validate">*</span>
                                             </li>
                                             <p ng-show="species.length > 5">...</p>
                                         </ul>

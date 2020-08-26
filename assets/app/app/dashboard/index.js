@@ -16,7 +16,7 @@ angular.module('a2.app.dashboard',[
     });
 })
 .controller('SummaryCtrl', function($scope, Project, a2Templates, a2GoogleMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
-    $scope.loading = 9;
+    $scope.loading = 10;
     
     var done = function() {
         if($scope.loading > 0) --$scope.loading;
@@ -28,8 +28,33 @@ angular.module('a2.app.dashboard',[
     });
     
     Project.getClasses(function(species){
-        $scope.species = species;
-        done();
+        species = [...species];
+        $scope.species = species
+        let i = -1;
+        let count = 0;
+        const getValitateData = () => {
+            i++;
+            if (i < species.length) {
+                const s = species[i]
+                try {
+                    Project.validationBySpeciesSong(s.species, s.songtype, data => {
+                        const idx = $scope.species.findIndex(sp => sp.species === s.species && sp.songtype === s.songtype)
+                        if(idx > -1) {
+                            $scope.species[idx].validate = data.total > 0
+                            if (data.total > 0) count ++
+                        }
+                        getValitateData()
+                    }) 
+                } catch (e) {
+                    console.log("validate error:", e)
+                    getValitateData()
+                }
+            } else {
+                $scope.validatedSpecies = count
+                done()
+            }
+        }
+        getValitateData()
     });
     
     Project.getModels(function(err, models){
@@ -92,6 +117,7 @@ angular.module('a2.app.dashboard',[
     });
 
     Project.getUsage().success(function(data) {
+        console.log("Usage", data)
         $scope.recMins = data.min_usage;
         done();
     });
