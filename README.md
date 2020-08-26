@@ -19,7 +19,8 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
     ```sh
     npm i
     ```
-    App requires [https://bower.io/](bower) to be installed.
+    
+    App requires [https://bower.io/](bower) to be installed. To install using npm: `npm install bower --global`.
 
     Then install client-side dependencies:
     ```sh
