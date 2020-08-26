@@ -88,7 +88,7 @@
                                         Species (Validated: {{ validatedSpecies + "/" + species.length }}, Templates: {{ templateQty }}) :
                                         <ul>
                                             <li ng-repeat="s in species | limitTo: 5">
-                                                {{ s.species_name }} <span ng-if="s.validate">*</span>
+                                                {{ s.species_name }} ({{ s.songtype_name }}) <span ng-if="s.validate">*</span>
                                             </li>
                                             <p ng-show="species.length > 5">...</p>
                                         </ul>
