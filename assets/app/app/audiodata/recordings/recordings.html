@@ -33,19 +33,8 @@
         </div>
     </div>
 </div>
-<div class="row">
-    <div class="col-sm-4 reclist-pagination-row">
-        <pagination total-items="totalRecs"
-            ng-model="currentPage" ng-change="controller.setCurrentPage(currentPage)"
-            class="pagination-sm"
-            boundary-links="true"
-            max-size="10"
-            rotate="false"
-            num-pages="totalPages"
-            items-per-page="limitPerPage">
-        </pagination>
-    </div>
-    <div class="col-sm-4 reclist-total text-center">{{ totalRecs }} Recordings</div>
+<div class="row reclist-wrapper">
+    <div class="col-sm-4 reclist-total text-left">{{ totalRecs }} Recordings</div>
     <div class="col-sm-4 reclist-pagelimit text-right">
         <div class="btn-group">
             <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="10">10</button>
@@ -108,6 +97,6 @@
             num-pages="totalPages"
             items-per-page="limitPerPage">
         </pagination>
-        
+
     </div>
 </div>
