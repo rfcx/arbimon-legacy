@@ -97,7 +97,9 @@ gulp.task('app:watch', function(){
 gulp.task('app:code', function(done){
     pump([
         gulp.src(app.code.src),
-        babel({ presets: ['@babel/env'] }),
+        babel({
+            plugins: ["@babel/plugin-transform-arrow-functions"]
+        }),
         sourcemaps.init(),
         ngAnnotate(),
         concat(app.code.name),
