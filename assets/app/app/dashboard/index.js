@@ -28,33 +28,35 @@ angular.module('a2.app.dashboard',[
     });
     
     Project.getClasses(function(species){
-        species = [...species];
+        species = [...species]
         $scope.species = species
-        let i = -1;
-        let count = 0;
-        const getValitateData = () => {
-            i++;
-            if (i < species.length) {
-                const s = species[i]
-                try {
-                    Project.validationBySpeciesSong(s.species, s.songtype, data => {
-                        const idx = $scope.species.findIndex(sp => sp.species === s.species && sp.songtype === s.songtype)
-                        if(idx > -1) {
-                            $scope.species[idx].validate = data.total > 0
-                            if (data.total > 0) count ++
-                        }
-                        getValitateData()
-                    }) 
-                } catch (e) {
-                    console.log("validate error:", e)
-                    getValitateData()
-                }
-            } else {
-                $scope.validatedSpecies = count
+        $scope.validatedSpecies = 0
+        let loopCount = 0
+
+        const checkFinish = () => {
+            if (loopCount == $scope.species.length) {
                 done()
             }
         }
-        getValitateData()
+
+        for (let i = 0; i < $scope.species.length; i++) {
+            const s = $scope.species[i]
+            try {
+                Project.validationBySpeciesSong(s.species, s.songtype, data => {
+                    const idx = $scope.species.findIndex(sp => sp.species === s.species && sp.songtype === s.songtype)
+                    if(idx > -1) {
+                        $scope.species[idx].validate = data.total > 0
+                        if (data.total > 0) $scope.validatedSpecies ++
+                    }
+                    loopCount++
+                    checkFinish()
+                })
+            } catch (e) {
+                console.log("validate error:", e)
+                loopCount++
+                checkFinish()
+            }
+        }
     });
     
     Project.getModels(function(err, models){
