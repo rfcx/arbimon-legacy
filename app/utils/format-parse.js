@@ -20,8 +20,8 @@ var formatParse = function(formatName, filename) {
         Cornell : /(.*(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})\d{2}.*)(\.\w+)$/,
         Wildlife: /(.*(\d{4})(\d{2})(\d{2})[_|\$](\d{2})(\d{2})\d{2}.*)(\.\w+)$/,
         Arbimon: /(.*(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})(-(\d{2}))?.*)(\.\w+)$/,
-        'AudioMoth 1.0.0': /([0-9A-F]{8})(\.\w+)$/,
-        'AudioMoth 1.2.2': /((\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/
+        'AudioMoth legacy': /([0-9A-F]{8})(\.\w+)$/,
+        AudioMoth: /((\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/
     };
     var parsed, errors=[];
 
@@ -43,13 +43,13 @@ var formatParse = function(formatName, filename) {
                     new Date(results[2], (results[3]-1), results[4], results[5], results[6]),
                     filetype: results[9]
                 };
-            } else if (formatName == 'AudioMoth 1.0.0') {
+            } else if (formatName == 'AudioMoth legacy') {
                 parsed = {
                     filename: results[1],
                     datetime: new Date(parseInt(results[1], 16)*1000),
                     filetype: results[2]
                 };
-            } else if (formatName == 'AudioMoth 1.2.2') {
+            } else if (formatName == 'AudioMoth') {
                 parsed = {
                     filename: results[1],
                     datetime: new Date(results[2], results[3], results[4], results[5], results[6], results[7]),
