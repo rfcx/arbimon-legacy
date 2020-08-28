@@ -4,9 +4,9 @@
             <div class="panel-body">
                 <div class="uploads title">
                     Batch Info
-                    <a class="clickable" ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
-                        <i class="fa fa-pencil-square-o"></i>
-                    </a>
+					<div class="btn btn-primary btn-detail"  ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
+						<i class="fa fa-plus"></i> Details
+					</div>
                 </div>
                 <p ng-hide="info"><small>You need to fill the batch info before you can start uploading</small></p>
                 <div ng-show="info">
