@@ -119,7 +119,6 @@ angular.module('a2.app.dashboard',[
     });
 
     Project.getUsage().success(function(data) {
-        console.log("Usage", data)
         $scope.recMins = data.min_usage;
         done();
     });
