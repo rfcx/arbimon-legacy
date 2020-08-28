@@ -68,6 +68,14 @@
     }
 }
 
+.btn-default {
+    &:hover,
+    &:focus,
+    &:active {
+        outline: none !important;
+    }
+}
+
 .btn-primary {
     background-color: @brand-primary !important;
     border-color: @brand-primary !important;
@@ -102,13 +110,13 @@
 }
 
 .btn-info {
-    background-color: @gray-medium;
-    border-color: @gray-medium;
+    background-color: @gray;
+    border-color: @gray;
     &:hover,
     &:focus,
     &:active {
-        background-color: @gray-medium-darken;
-        border-color: @gray-medium-darken;
+        background-color: @gray-darken;
+        border-color: @gray-darken;
     }
 }
 
@@ -130,7 +138,7 @@
     }
     &.title {
         display: inline-block;
-        font-size: 1.5em;
+        font-size: 1.4em;
     }
 
     &.list {
