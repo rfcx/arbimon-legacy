@@ -93,16 +93,21 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
 ### Deployment
 1. SSH into the Bastion tunnel server
     - `ssh ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem`
-2. SSH into dev/prod server
-  - Keys for these servers are on Bastion server and there are shortcuts defined in the `.bashrc` file.
+2. From inside the Bastion server, SSH into dev/prod server
+    - `ssh-web-dev` for arbimon-dev.sieve-analytics.com
+    - `ssh-web` for arbimon.sieve-analytics.com 
+    - Both these connections are defined in the `.bashrc` file rely on the `.ssh/arbimon2-app.pem` key.
     - `ssh-web-dev`, etc.
-3. change to app directory
-    - `/home/ubuntu/apps/arbimon2`
-4. Update local git in this directory to current version of branch to deploy
-    - run `gulp build` to update css etc.
-5. restart process
-    - `pm2 restart 0`
-        - `pm2 list` for list of running processes
+3. Change to app directory
+    - `cd apps/arbimon2`
+4. Pull the latest changes from git
+    - `git fetch -p` and `git pull`
+4. Perform any dependency installs and rebuild the source code (same as local install)
+    - `npm i` and `bower i`
+    - `gulp build` to build css, and ?
+5. Restart the web server/app
+    - `pm2 restart 0` to perform restart
+    - `pm2 list` to check that the arbimon2 process is running
 
 ---
 ## Legacy README
