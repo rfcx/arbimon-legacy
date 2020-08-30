@@ -96,8 +96,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
 2. From inside the Bastion server, SSH into dev/prod server
     - `ssh-web-dev` for arbimon-dev.sieve-analytics.com
     - `ssh-web` for arbimon.sieve-analytics.com 
-    - Both these connections are defined in the `.bashrc` file rely on the `.ssh/arbimon2-app.pem` key.
-    - `ssh-web-dev`, etc.
+    - Both these connections are defined in the `.bashrc` file and rely on the same `.ssh/arbimon2-app.pem` key.
 3. Change to app directory
     - `cd apps/arbimon2`
 4. Pull the latest changes from git
