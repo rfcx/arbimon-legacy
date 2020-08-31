@@ -22,12 +22,11 @@
 @roi-annotation-green-border-color: rgb(83, 255, 64);
 @roi-annotation-green-bg-color: rgba(83, 255, 64, 0.2);
 
-
 @selbox-border-color: #fff;
-@selbox-bg-color: rgba(0, 0, 0, 0.30);
+@selbox-bg-color: rgba(0, 0, 0, 0.3);
 @rect-color: #fff;
 @rect-border-color: #080035;
-@rect-bg-color: rgba(0, 0, 0, 0.30);
+@rect-bg-color: rgba(0, 0, 0, 0.3);
 @rect-select-color: #4f0;
 @rect-select-border-color: #4f0;
 @rect-select-bg-color: rgba(10, 30, 4, 0.36);
@@ -37,7 +36,6 @@
 @thumbnail-viewer-axis-width: 20px;
 @thumbnail-viewer-axis-height: 20px;
 @roi-div-thumbnail-viewer-height: 150px;
-
 
 /*
  * additions to bootstrap styles
@@ -71,7 +69,10 @@
 @import "branding.less";
 
 // ui-bootstrap no href fix
-.nav, .pagination, .carousel, .panel-title a {
+.nav,
+.pagination,
+.carousel,
+.panel-title a {
   cursor: pointer;
 }
 
@@ -88,23 +89,6 @@
   margin-bottom: 5px;
   text-align: center;
 }
-
-.pagination {
-	> li > a {
-		background-color: @gray;
-		&:hover,
-		&:focus,
-		&:active {
-			background-color: @gray-darker;
-		}
-	}
-	> .active > a, > .active > a:hover {
-		background-color: @gray-darker;
-	}
-	> .disabled > a, > .disabled > a:hover {
-		background-color: @gray-dark;
-	}
-} 
 
 // .inline -> newmodel.html, frequency-adjust-layer.html
 // .a2-block-inline -> (directive)a2TrainingSetDataImage
@@ -137,7 +121,6 @@
 //     margin-top: -5px;
 // }
 
-
 @banner-padding: 40px;
 
 // -> register.ejs
@@ -167,7 +150,6 @@
   @media (max-width: @screen-sm-min) {
     padding: 20px 20px 30px 20px;
   }
-
 }
 
 // -> validator-main.html, recordings-by-playlist.html, recordings-by-site.html,
@@ -178,12 +160,10 @@
   max-height: 7 * (2 * @nav-link-padding-v + 14);
 }
 
-
 // -> login.ejs
 .login-form {
   & h3 {
     margin: 0 0 15px 0;
-
   }
 }
 
@@ -204,7 +184,6 @@
 .top-buffer {
   margin-top: 8px;
 }
-
 
 // -> createnewclassification.html
 .scrollul {
@@ -238,7 +217,7 @@
   // .box-shadow(inset 0 1px 1px rgba(0,0,0,.05));
   blockquote {
     border-color: #ddd;
-    border-color: rgba(0, 0, 0, .15);
+    border-color: rgba(0, 0, 0, 0.15);
   }
 }
 
@@ -291,7 +270,8 @@
     background-color: @gray-darkest;
   }
 
-  a.active, li.active > a {
+  a.active,
+  li.active > a {
     color: @gray-lighter;
     background-color: @brand-primary;
   }
@@ -324,7 +304,6 @@
       }
     }
   }
-
 }
 
 .container-sidenav {
@@ -334,7 +313,8 @@
   }
 }
 
-.navbar-hide-collapsed, .open > .dropdown-menu.navbar-hide-collapsed {
+.navbar-hide-collapsed,
+.open > .dropdown-menu.navbar-hide-collapsed {
   @media (min-width: @grid-float-breakpoint) {
     display: none;
   }
@@ -352,7 +332,6 @@
     //        background-color: @background-color;
   }
 }
-
 
 // -> project-form.html
 textarea.fixed-width {
@@ -504,7 +483,12 @@ textarea.fixed-width {
 
 // -> recordings-by-playlist.html, recordings-by-site.html,
 //    soundscapes.html, edit_soundscape_visual_scale.html
-.ui-select-container.has-badges .dropdown-menu > li.ui-select-choices-group > div.ui-select-choices-row > a, .dropdown-menu.has-badges > li {
+.ui-select-container.has-badges
+  .dropdown-menu
+  > li.ui-select-choices-group
+  > div.ui-select-choices-row
+  > a,
+.dropdown-menu.has-badges > li {
   position: relative;
 
   div {
@@ -559,10 +543,9 @@ textarea.fixed-width {
   text {
     font-family: @font-family-sans-serif;
     font-size: 11px;
-    fill: @text-color
+    fill: @text-color;
   }
 }
-
 
 // use as .text-danger on -> createnewclassification.html,
 //                           newmodel.html, createnewsoundscape.html
@@ -574,9 +557,9 @@ textarea.fixed-width {
 // directive a2DrawPeakThreshold
 a2-draw-peak-threshold {
   text {
-    font-family:  @font-family-sans-serif;
+    font-family: @font-family-sans-serif;
     font-size: 11px;
-    fill: @text-color
+    fill: @text-color;
   }
 }
 
@@ -589,16 +572,16 @@ a2-draw-peak-threshold {
   }
 
   text {
-    font-family:  @font-family-sans-serif;
+    font-family: @font-family-sans-serif;
     font-size: 11px;
-    fill: @text-color
+    fill: @text-color;
   }
 }
 
 // directive a2ThresholdSelector
 // resize text
 .thresholdtext {
-  font-family:  @font-family-sans-serif;
+  font-family: @font-family-sans-serif;
   font-size: 12px;
 }
 
@@ -637,7 +620,6 @@ a2-draw-peak-threshold {
 
 // end  -----------------------------------
 
-
 // -> createnewsoundscape.html
 .spacedhz {
   padding-left: 11px;
@@ -656,7 +638,6 @@ a2-draw-peak-threshold {
   padding-bottom: 40px;
 }
 
-
 // not sure
 .label > .btn.btn-close {
   &:last-child {
@@ -669,7 +650,7 @@ a2-draw-peak-threshold {
 
   > .badge {
     background-color: #fff;
-    background-color: rgba(255, 255, 255, .2);
+    background-color: rgba(255, 255, 255, 0.2);
   }
 }
 
@@ -687,16 +668,16 @@ a2-draw-peak-threshold {
 
 // -> zoom-input-layer
 .text-shadow {
-  text-shadow: 1px 1px rgba(255, 255, 255, .5);
+  text-shadow: 1px 1px rgba(255, 255, 255, 0.5);
 
   &.inverted {
-    text-shadow: 1px 1px rgba(0, 0, 0, .5);
+    text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
   }
 }
 
 // -> visualizer-spectrogram
 .ghost-like {
-  opacity: 0.50;
+  opacity: 0.5;
   // pointer-events:none;
   // * {
   //     pointer-events:auto;
@@ -734,7 +715,8 @@ a2-draw-peak-threshold {
 
 // hides tooltips on large screens
 @media (min-width: 1200px) {
-  .hide-tooltip-lg .tooltip, .hide-tooltip-lg.tooltip {
+  .hide-tooltip-lg .tooltip,
+  .hide-tooltip-lg.tooltip {
     display: none !important;
   }
 }
@@ -794,7 +776,6 @@ a2-draw-peak-threshold {
   }
 }
 
-
 // transition button on table to fade in on hover, focus or active
 .table-hide-btns {
   tr .btn {
@@ -833,7 +814,6 @@ a2-draw-peak-threshold {
   }
 }
 
-
 .capacity-slider {
   position: relative;
   height: 50px;
@@ -841,7 +821,7 @@ a2-draw-peak-threshold {
   display: inline-block;
   vertical-align: middle;
 
-  input[type=range] {
+  input[type="range"] {
     -webkit-appearance: none;
     position: absolute;
     z-index: 2;
@@ -854,18 +834,21 @@ a2-draw-peak-threshold {
     }
 
     .slider-track(@rules) {
-      &::-moz-range-track { @rules();
+      &::-moz-range-track {
+        @rules();
       }
-      &::-ms-track { @rules();
+      &::-ms-track {
+        @rules();
       }
-      &::-webkit-slider-runnable-track { @rules();
+      &::-webkit-slider-runnable-track {
+        @rules();
       }
     }
 
     .slider-track({
       background-color: transparent;
       cursor: pointer;
-    })
+    });
   }
 
   svg {
@@ -876,7 +859,6 @@ a2-draw-peak-threshold {
   }
 }
 
-
 .feature-list {
   margin-left: 53px;
 
@@ -885,7 +867,6 @@ a2-draw-peak-threshold {
     padding: 10px 0px;
   }
 }
-
 
 .oauth-buttons {
   padding-top: 15px;
@@ -916,18 +897,17 @@ label.normal {
   font-weight: normal;
 }
 
-
 .explainer {
   float: right;
   font-size: 0.9em;
   font-weight: normal;
 
   ::before {
-    content: '(';
+    content: "(";
   }
 
   ::after {
-    content: ')';
+    content: ")";
   }
 }
 
@@ -939,7 +919,6 @@ label.no-bold {
   font-weight: normal !important;
 }
 
-
 .padding-left {
   padding-left: 20px;
 }
@@ -947,7 +926,6 @@ label.no-bold {
 .padding-leftx2 {
   padding-left: 40px;
 }
-
 
 .panel.panel-dropdown {
   min-width: 300px;
@@ -966,7 +944,8 @@ label.no-bold {
 }
 
 .accordion-group {
-  > .panel-group, table.table {
+  > .panel-group,
+  table.table {
     margin-bottom: 0;
   }
 }
@@ -983,20 +962,20 @@ label.no-bold {
   position: absolute;
   top: 0;
   right: 0;
-  font-size: .9em;
+  font-size: 0.9em;
   padding-right: 4px;
   color: gray;
 }
-
 
 body .ngrs-range-slider {
   margin: 0;
 }
 
-input, select, textarea {
-  color: #fff
+input,
+select,
+textarea {
+  color: #fff;
 }
-
 
 label.row {
   display: block;
@@ -1006,7 +985,9 @@ label.row {
   margin-right: 14px;
 }
 
-.btn.disabled, .btn[disabled], fieldset[disabled] .btn {
+.btn.disabled,
+.btn[disabled],
+fieldset[disabled] .btn {
   opacity: 0.5;
 }
 
@@ -1018,9 +999,9 @@ label.row {
   vertical-align: middle !important;
 }
 
-
 .ui-select-6em {
-  .ui-select-toggle, .ui-select-search {
+  .ui-select-toggle,
+  .ui-select-search {
     height: 6em;
   }
 }
@@ -1035,7 +1016,7 @@ label.row {
 }
 
 .item-description {
-  font-size: .75em;
+  font-size: 0.75em;
   white-space: normal;
   word-break: break-word;
   color: purple;
@@ -1060,7 +1041,7 @@ a.ui-select-choices-row-inner {
   background: transparent;
 
   &:after {
-    content: ' ';
+    content: " ";
     background: @val-color-1;
     width: 100%;
     height: 3px;
@@ -1078,8 +1059,9 @@ a.ui-select-choices-row-inner {
   color: #fff;
 }
 
-.pager li > a, .pager li > span {
-  color: @text-color
+.pager li > a,
+.pager li > span {
+  color: @text-color;
 }
 
 .row.gutter-4 {
@@ -1098,7 +1080,8 @@ a.ui-select-choices-row-inner {
     > a {
       color: @text-color !important;
 
-      &:focus, &:hover {
+      &:focus,
+      &:hover {
         background-color: @val-color-1 !important;
       }
     }
@@ -1126,14 +1109,14 @@ a.ui-select-choices-row-inner {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
 }
 
 /* END: Override ui-select style */
 
 /* START: Override c3 chart style */
 .c3 {
-  line, path {
+  line,
+  path {
     stroke: @text-color !important;
   }
 
@@ -1158,26 +1141,29 @@ a.ui-select-choices-row-inner {
 
 /* START: Override ng-table style */
 .ng-table {
-  th.sortable.sort-desc, th.sortable.sort-asc {
-	background-color: @val-color-default !important;
-	text-shadow: unset !important;
+  th.sortable.sort-desc,
+  th.sortable.sort-asc {
+    background-color: @val-color-default !important;
+    text-shadow: unset !important;
   }
 }
-
 
 /* END: Override ng-table style */
 .border-default {
   border: 1px solid @gray-light;
 
-  &:hover, &.active {
+  &:hover,
+  &.active {
     border: 1px solid @text-color;
   }
 }
 
 .form-control:focus {
   border-color: #65698a;
-  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(255, 255, 255, 0.3);
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075),
+    0 0 8px rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075),
+    0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 ::placeholder {

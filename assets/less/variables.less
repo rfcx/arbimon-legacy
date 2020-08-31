@@ -18,6 +18,7 @@
 @brand-default: @gray;
 @brand-primary: #31984f;
 @brand-success: #60d280;
+@brand-info: #5bc0de;
 @brand-warning: #ffcd00;
 @brand-danger: #e12323;
 
@@ -35,10 +36,10 @@
 //** Background color for `<body>`.
 @body-bg: @gray-darkest;
 //** Global text color on `<body>`.
-@text-color:#e0e0f8;
+@text-color: #e0e0f8;
 
 //** Global textual link color.
-@link-color:#fff;
+@link-color: #fff;
 
 //** Link hover color set via `darken()` function.
 @link-hover-color: @link-color;
@@ -444,20 +445,20 @@
 //
 //##
 
-@pagination-color: #fff;
-@pagination-bg: @brand-primary;
+@pagination-color: @text-color;
+@pagination-bg: @gray;
 @pagination-border: transparent;
 
-@pagination-hover-color: #fff;
-@pagination-hover-bg: lighten(@brand-primary, 6%);
+@pagination-hover-color: @text-color;
+@pagination-hover-bg: @gray-darker;
 @pagination-hover-border: transparent;
 
-@pagination-active-color: #fff;
-@pagination-active-bg: lighten(@brand-primary, 6%);
+@pagination-active-color: @text-color;
+@pagination-active-bg: @gray-darker;
 @pagination-active-border: transparent;
 
-@pagination-disabled-color: #fff;
-@pagination-disabled-bg: darken(@brand-primary, 15%);
+@pagination-disabled-color: @text-color;
+@pagination-disabled-bg: @gray-dark;
 @pagination-disabled-border: transparent;
 
 //== Pager
