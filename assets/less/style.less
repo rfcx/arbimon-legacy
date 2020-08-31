@@ -89,6 +89,22 @@
   text-align: center;
 }
 
+.pagination {
+	> li > a {
+		background-color: @gray;
+		&:hover,
+		&:focus,
+		&:active {
+			background-color: @gray-darker;
+		}
+	}
+	> .active > a, > .active > a:hover {
+		background-color: @gray-darker;
+	}
+	> .disabled > a, > .disabled > a:hover {
+		background-color: @gray-dark;
+	}
+} 
 
 // .inline -> newmodel.html, frequency-adjust-layer.html
 // .a2-block-inline -> (directive)a2TrainingSetDataImage
@@ -288,7 +304,7 @@
 
   a:hover,
   a:active {
-    background-color: @gray-darker;
+    background-color: @gray-darkest;
   }
 
   a.active, li.active > a {
@@ -784,6 +800,14 @@ a2-draw-peak-threshold {
 // -> upload.html
 .clickable {
   cursor: pointer;
+  color: @gray-lighter;
+  text-decoration: none;
+  &:hover,
+  &:focus,
+  &:active {
+    color: @gray-lighter;
+    text-decoration: none;
+  }
 }
 
 

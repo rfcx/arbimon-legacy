@@ -35,7 +35,7 @@
                         {{ row.date_created | moment: 'll' }}
                     </field>
                     <field>
-                        <button class="btn btn-danger"
+                        <button class="btn btn-default"
                             ng-click="controller.deleteTemplate(row.id) | trackEvent:'Audiodata-template':'del clicked'"
                             tooltip="Delete Template"
                             tooltip-trigger="mouseenter">
