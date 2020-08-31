@@ -3,6 +3,6 @@
     <p ng-repeat="msg in popup.messages" ng-bind-html="msg"></p>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-danger" ng-click="$close(true)  | trackEvent:'PopUp':'clicked ok'">{{ popup.btnOk }}</button>
+    <button class="btn btn-default" ng-click="$close(true)  | trackEvent:'PopUp':'clicked ok'">{{ popup.btnOk }}</button>
     <button class="btn btn-default" ng-click="$dismiss()  | trackEvent:'PopUp':'clicked cancel'">{{ popup.btnCancel }}</button>
 </div>

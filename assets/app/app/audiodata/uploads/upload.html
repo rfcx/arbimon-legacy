@@ -2,7 +2,7 @@
     <div class="col-sm-12">
         <div class="panel panel-default uploads info-panel">
             <div class="panel-body">
-                <div class="btn uploads title btn-info">
+                <div class="btn uploads title btn-default">
                     <a class="clickable" ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
                         <i class="fa fa-pencil-square-o"></i>
                         Batch Info
@@ -38,7 +38,7 @@
             <i class="fa fa-ban"></i> Stop all
         </button>
         <div class="btn-group" dropdown>
-            <button type="button" class="btn btn-danger dropdown-toggle"
+            <button type="button" class="btn btn-default dropdown-toggle"
                 dropdown-toggle>
                 <i class="fa fa-trash"></i> Remove
                 <i class="fa fa-caret-down"></i>
@@ -114,7 +114,7 @@
                             <button type="button" class="btn btn-warning btn-xs" ng-click="item.cancel() | trackEvent:'Audiodata-Upload':'item.cancel'" ng-disabled="!item.isUploading">
                                 <i class="fa fa-ban"></i> Stop
                             </button>
-                            <button type="button" class="btn btn-danger btn-xs" ng-click="item.remove() | trackEvent:'Audiodata-Upload':'item.remove'">
+                            <button type="button" class="btn btn-default btn-xs" ng-click="item.remove() | trackEvent:'Audiodata-Upload':'item.remove'">
                                 <i class="fa fa-trash"></i> Remove
                             </button>
                         </td>

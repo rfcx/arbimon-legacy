@@ -16,7 +16,7 @@
                             <span class="badge">{{scClass.tally || ''}}</span>
                         </div>
                         <div class="pull-right" ng-if="!scClass.system && controller.canManageClasses">
-                            <button class="btn btn-xs btn-danger" ng-click="controller.removeClass(scClass)"><i class="fa fa-trash"></i></button>
+                            <button class="btn btn-xs btn-default" ng-click="controller.removeClass(scClass)"><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
                     <form class="input-group" ng-submit="controller.addNewClass(classGroup)" ng-if="controller.canManageClasses">
@@ -31,5 +31,5 @@
             </div>
         </div>
     </div>
-    
+
 </div>

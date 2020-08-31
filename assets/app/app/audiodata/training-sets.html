@@ -3,7 +3,7 @@
     <div class="col-lg-5 col-sm-12">
         <div class="row">
             <div class="col-sm-6">
-                <button ng-click="controller.addNewTrainingSet() | trackEvent:'Audiodata-Training Sets':'add_new_tset'" class="btn btn-default" 
+                <button ng-click="controller.addNewTrainingSet() | trackEvent:'Audiodata-Training Sets':'add_new_tset'" class="btn btn-default"
                     tooltip="Create Training Set">
                     <i class="fa fa-plus"></i>
                 </button>
@@ -13,7 +13,7 @@
                     tooltip="Edit Training Set">
                     <i class="fa fa-pencil"></i>
                 </button>
-                <button class="btn btn-danger"
+                <button class="btn btn-default"
                     ng-click="controller.deleteSelectedTrainingSet() | trackEvent:'Audiodata-Training Sets':'delete training set'"
                     ng-disabled="!controller.selected.trainingSet"
                     tooltip="Remove Training Set">
@@ -24,7 +24,7 @@
                 <input class="form-control" type="text" placeholder="Search" ng-model="search.name">
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col-md-12">
                 <a2-table search="search" rows="controller.trainingSets" no-checkbox on-select="controller.selectTrainingSet(row)">
@@ -48,14 +48,14 @@
         </div>
 
     </div>
-    
+
     <div class="col-lg-7 col-sm-12">
         <div class="panel panel-default" ng-show="controller.loaderDisplay">
             <div class="panel-body">
                 Loading <loader></loader>
-            </div> 
-        </div> 
-        
+            </div>
+        </div>
+
         <div class="panel panel-default" ng-show="controller.selected.trainingSet && !controller.loaderDisplay">
                 <div class="panel-heading">
                     <h3 class="panel-title">
@@ -103,7 +103,7 @@
                     <div class="clearfix form-group" ng-if="!controller.selected.trainingSet.edit">
                         <div class="col-sm-3"></div>
                         <div class="col-sm-3">
-                            <i class="fa val-1"></i> present: {{ controller.selected.trainingSet.validations.present }} 
+                            <i class="fa val-1"></i> present: {{ controller.selected.trainingSet.validations.present }}
                         </div>
                         <div class="col-sm-6">
                              <i class="fa val-0"></i> absent: {{ controller.selected.trainingSet.validations.absent }}
@@ -114,18 +114,18 @@
                         <div class="col-sm-9">{{ controller.rois.length }}</div>
                     </div>
                 </div>
-                
+
                 <div class="panel-body" ng-hide="controller.rois.length">
                     <div class="well">
-                        This training set is empty. 
+                        This training set is empty.
                         <a ui-sref="visualizer" href="#/visualizer">
                             To add data go to <i class="fa fa-cubes"></i> Visualizer.
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="panel-body" ng-show="controller.rois.length">
-                    
+
                     <div class="row">
                         <div class="col-sm-offset-2 col-sm-8">
                             <div class="toolbar pull-right">
@@ -135,7 +135,7 @@
                                     <a class="btn btn-default" ng-show="controller.detailedView">{{controller.selected.roi_index + 1}} of {{controller.total.rois}}</a>
                                     <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Audiodata-Training Sets':'nextPage'">Next</a>
                                 </div>
-                                
+
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-default" ng-click="controller.setDetailedView(true)"
                                         tooltip="Detail view" tooltip-append-to-body="true">
@@ -146,7 +146,7 @@
                                         <i class="fa fa-th"></i>
                                     </button>
                                 </div>
-                                
+
                                 <div class="btn-group">
                                     <a class="btn btn-default"
                                         ng-href="{{controller.selected.trainingSet.export_url}}"
@@ -171,22 +171,22 @@
                         >
                             <button ng-click="controller.removeRoi(roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'"
                                 class="roi-btn-tr roi-delete"
-                                tooltip-placement="left" 
+                                tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="Delete ROI">
                                 <i class="fa fa-times"></i>
                             </button>
                             <a class="roi-btn-br" ng-href="{{controller.getROIVisualizerUrl(roi)}}">
-                                <i tooltip-placement="left" 
+                                <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
-                                    tooltip="View in Visualizer" 
+                                    tooltip="View in Visualizer"
                                     class="fa fa-cubes">
                                 </i>
                             </a>
                             <img ng-src="{{ roi.uri }}" class="roi-img"/>
                         </div>
                     </div>
-                    
+
                     <div ng-show="controller.detailedView">
                         <div class="row">
                             <div class="col-sm-offset-2 col-sm-8" >
@@ -201,7 +201,7 @@
                                         </div>
                                         <div class="col-sm-1" class="roi-div-inline-remove-detail" >
                                             <button class="roi-delete"
-                                                ng-click="controller.removeRoi(controller.selected.roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'" 
+                                                ng-click="controller.removeRoi(controller.selected.roi.id) | trackEvent:'Audiodata-Training Sets':'removeRoi'"
                                                 tooltip="Delete ROI">
                                                 <i class="fa fa-times"></i>
                                             </button>
@@ -210,7 +210,7 @@
                                 </div>
                                 <div class="thumbnail-viewer v-axis-wide roi-div-inline-img-detail has-vaxis has-haxis" ng-if="controller.selected.roi">
                                     <axis type="v" class="v-axis" data="{
-                                        range:[controller.selected.roi.y1, controller.selected.roi.y2], 
+                                        range:[controller.selected.roi.y1, controller.selected.roi.y2],
                                         count:5, unit:'Hz',  font:'7px', color:'#333333'}
                                     "></axis>
                                     <axis type="h" class="h-axis" data="{
@@ -218,15 +218,15 @@
                                         count:5, unit:'s',  font:'7px', color:'#333333'}
                                     "></axis>
                                     <div class="img-holder positioned"><img class="crisp-image" ng-src="{{controller.selected.roi.uri}}"/></div>
-                                </div>                                
-                                
+                                </div>
+
                                 <div class="bordeder-empy-div"></div>
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
-            
+
         </div>
     </div>
 </div>
