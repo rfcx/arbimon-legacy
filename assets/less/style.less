@@ -89,6 +89,22 @@
   text-align: center;
 }
 
+.pagination {
+	> li > a {
+		background-color: @gray;
+		&:hover,
+		&:focus,
+		&:active {
+			background-color: @gray-darken;
+		}
+	}
+	> .active > a, > .active > a:hover {
+		background-color: @gray-darken;
+	}
+	> .disabled > a, > .disabled > a:hover {
+		background-color: @gray-dark;
+	}
+} 
 
 // .inline -> newmodel.html, frequency-adjust-layer.html
 // .a2-block-inline -> (directive)a2TrainingSetDataImage
