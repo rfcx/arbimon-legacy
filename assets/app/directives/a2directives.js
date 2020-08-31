@@ -953,7 +953,7 @@ angular.module('a2.directives', [
                 var parentEl = element.parent();
                 saveBtn = angular.element(
                     '<div class="input-group-btn">' +
-                    '    <button class="btn btn-success"><i class="fa fa-save"></i></button>' +
+                    '    <button class="btn btn-primary"><i class="fa fa-save"></i></button>' +
                     '</div>'
                 );
                 saveBtn.find('button.btn').on('click', function(){

@@ -5,7 +5,7 @@
 <div class="modal-body">
     <p>
         This option allows you to create an access token for this site.
-        Using this token, an ARBIMON recorder can upload its recordings to 
+        Using this token, an ARBIMON recorder can upload its recordings to
         this site automatically.
     </p>
 </div>
@@ -24,7 +24,7 @@
             <a2-qr-code data="{{token}}"></a2-qr-code>
         </div>
         <p>
-            Scan this token with the ARBIMON recorder or 
+            Scan this token with the ARBIMON recorder or
             <a ng-href="data:text/plain;base64,{{ base64 }}" download="token.txt">
                 download as a file.
             </a>
@@ -32,13 +32,13 @@
     </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" 
-        ng-disabled="loading.generate || token" 
+    <button class="btn btn-primary"
+        ng-disabled="loading.generate || token"
         ng-click="generateToken() | trackEvent:'PopUp':'generate'">
         {{ loading.generate ? "Generating token..." : (token ? "Token generated" : "Generate new token") }}
     </button>
-    <button class="btn btn-danger" 
-        ng-disabled="!site.token_created_on || loading.revoke" 
+    <button class="btn btn-default"
+        ng-disabled="!site.token_created_on || loading.revoke"
         ng-click="revokeToken() | trackEvent:'SiteToken':'revoke'">
             {{ loading.revoke ? "Revoking token..." : "Revoke existing token"}}
     </button>
