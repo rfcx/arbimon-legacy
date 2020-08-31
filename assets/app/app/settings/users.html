@@ -3,13 +3,13 @@
         <div class="row">
             <div class="col-sm-6">
                 <h4>
-                    Project Users 
+                    Project Users
                 </h4>
             </div>
             <div class="col-sm-6">
                 <div class="input-group">
-                    <input class="form-control" 
-                        type="text" 
+                    <input class="form-control"
+                        type="text"
                         placeholder="Search: username, email"
                         ng-model="userToAdd"
                         typeahead="user as user.username for user in findUser($viewValue)"
@@ -31,7 +31,7 @@
                     <tbody>
                         <tr ng-repeat="user in users">
                             <td>
-                                <img class="user-avatar" ng-src="{{ user.imageUrl }}" alt="user avatar"> 
+                                <img class="user-avatar" ng-src="{{ user.imageUrl }}" alt="user avatar">
                                 <span class="username">{{ user.username }}</span>
                             </td>
                             <td class="text-right">
@@ -40,8 +40,8 @@
                                     <select ng-model="user.rolename" class="btn btn-default" ng-change="changeRole($index)">
                                         <option ng-repeat="role in roles">{{ role.name }}</option>
                                     </select>
-                                    <button class="btn btn-danger"
-                                        ng-click="del($index) | trackEvent:'Dashboard-users':'delete user'" 
+                                    <button class="btn btn-default"
+                                        ng-click="del($index) | trackEvent:'Dashboard-users':'delete user'"
                                         tooltip="Remove user"
                                         tooltip-trigger="mouseenter">
                                         <i class="fa fa-times"></i>

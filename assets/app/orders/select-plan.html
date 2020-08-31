@@ -41,14 +41,14 @@
                 <p><b>Storage capacity:</b> {{ plan.storage | number }} minutes of audio</p>
                 <p><b>Processing capacity:</b> {{ plan.processing | number }} minutes of audio per year</p>
                 <p>
-                    <b>Cost:</b> 
-                    ${{ plan.cost/plan.duration | number : 2 }} 
-                    <i class="fa fa-times"></i> 
+                    <b>Cost:</b>
+                    ${{ plan.cost/plan.duration | number : 2 }}
+                    <i class="fa fa-times"></i>
                     {{ plan.duration }} year<span ng-if="planYears > 1">s</span>
                 </p>
                 <p ng-hide="upgradeOnly">
                     Arbimon Recorder
-                    <i class="fa fa-info-circle" 
+                    <i class="fa fa-info-circle"
                         tooltip="you can buy one recorder for every 10,000 minutes per year on your plan"
                         tooltip-append-to-body="true">
                     </i>
@@ -63,8 +63,9 @@
                 </p>
                 <p class="text-warning" ng-if="!autoPaymentsEnabled || plan.cost + (125 * recorderQty) > 10000">
                     <span ng-if="!autoPaymentsEnabled">Currently we are not able to process orders online.</span>
+                    <!-- TODO: Update email in MySQL system_settings from `tmaide@sieve-analytics.com` to `support@rfcx.org` -->
                     <span ng-if="autoPaymentsEnabled && plan.cost + (125 * recorderQty) > 10000">Only orders up to $10,000 can be done online.</span>
-                    Please <a ng-href="mailto:{{ordersContact.email}}">contact us</a> to place your order for a project plan, we will then 
+                    Please <a ng-href="mailto:{{ordersContact.email}}">contact us</a> to place your order for a project plan, we will then
                     give you a coupon code for {{upgradeOnly ? 'upgrading' : 'creating'}} your project.
                 </p>
             </div>
@@ -73,7 +74,7 @@
             <p><b>Storage capacity:</b> {{ plan.storage | number }} minutes of audio</p>
             <p><b>Processing capacity:</b> {{ plan.processing | number }} minutes of audio</p>
             <p>
-                <b>Cost:</b> 
+                <b>Cost:</b>
                 FREE!
             </p>
         </div>

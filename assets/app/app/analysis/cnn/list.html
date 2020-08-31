@@ -48,7 +48,7 @@
                         >
                                 Show Details
                         </button>
-                        <button class="btn btn-danger"
+                        <button class="btn btn-default"
                             ng-click="deleteCNN(cnn, $event) | trackEvent:'Analysis-CNN-list':'delete cnn'"
                             tooltip="Delete"
                             tooltip-trigger="mouseenter">
@@ -58,7 +58,7 @@
                 </tr>
             </table>
             <div class="jumbotron" ng-show="(!cnnOriginal || !cnnOriginal.length > 0) && !loading">
-                <h3>{{ infopanedata }}  
+                <h3>{{ infopanedata }}
                     <a ng-click="createNewCNN()">
                         Create a cnn
                     </a>

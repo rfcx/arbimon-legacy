@@ -20,21 +20,17 @@
     max-width:700px;
 }
 
-.reclist-pagination-row {
-    // float:left;
-    >.pagination{
-        margin: 0;
-    }
+.reclist-wrapper {
+    display: flex;
+    justify-content: space-between;
 }
-.reclist-pagelimit {
-    // float:right;
-    // margin: 20px;
-}
+
+.reclist-wrapper div:last-child {
+    margin-left: auto;
+  }
+
 .reclist-total {
-    // display: inline-block;
-    // margin: 20px;
-    // padding: 5px;
-    font-weight:bold;
+    font-weight: bold;
 }
 
 .btn-file {
@@ -52,6 +48,17 @@
         outline: none;
         cursor: inherit;
         display: block;
+    }
+}
+
+.btn-default,
+.btn-success,
+.btn-primary,
+.btn-warning {
+    &:hover,
+    &:focus,
+    &:active {
+        outline: none !important;
     }
 }
 
@@ -73,7 +80,7 @@
     }
     &.title {
         display: inline-block;
-        font-size: 1.5em;
+        font-size: 1.4em;
     }
 
     &.list {
@@ -245,7 +252,7 @@
 }
 
 .roi-delete {
-    .roi-icon-btn(@btn-danger-bg);
+    .roi-icon-btn(@btn-default-bg);
 }
 .roi-info {
     .roi-icon-btn(@btn-primary-bg);
