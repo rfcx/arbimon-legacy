@@ -22,17 +22,17 @@
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <div class="btn btn-primary btn-file">
+        <div class="btn btn-default btn-file">
             <i class="fa fa-plus"></i> Add files
             <input accept="audio/*,.flac"
                 nv-file-select uploader="uploader" type="file" multiple>
         </div>
-        <button type="button" class="btn btn-success"
+        <button type="button" class="btn btn-default"
             ng-click="verifyAndUpload() | trackEvent:'Audiodata-Upload':'verifyAndUpload'"
             ng-disabled="!uploader.getNotUploadedItems().length || !info || uploading">
             <i class="fa fa-cloud-upload"></i> Start
         </button>
-        <button type="button" class="btn btn-warning"
+        <button type="button" class="btn btn-default"
             ng-click="stopQueue() | trackEvent:'Audiodata-Upload':'uploader.cancelAll'"
             ng-disabled="!uploading">
             <i class="fa fa-ban"></i> Stop all
