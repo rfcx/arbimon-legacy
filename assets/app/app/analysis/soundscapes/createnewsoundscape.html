@@ -10,7 +10,7 @@
         <span ng-bind="nameMsg" class="nameExistsSpan"></span>
       </div>
       <div class="form-group">
-        <label for="classifier">Select playlist:</label> <span ng-hide="playlists" class="red"><em>No playlists found <a ng-click="cancel('/audiodata/recordings') | trackEvent:'Analysis-Soundscapes-new':'cancel go to recordings'" >Create one.</a></em></span></em></span>
+        <label for="classifier">Select playlist:</label> <span ng-hide="playlists" class="text-danger small pull-right"><em>No playlists found <a ng-click="cancel('/audiodata/recordings') | trackEvent:'Analysis-Soundscapes-new':'cancel go to recordings'" >Create one.</a></em></span></em></span>
         <ui-select ng-model="datasubmit.playlist" theme="selectize" ng-disabled="disabled">
         <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
             <ui-select-choices repeat="playlist in playlists | filter: $select.search">
