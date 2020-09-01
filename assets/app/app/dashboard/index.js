@@ -47,8 +47,6 @@ angular.module('a2.app.dashboard',[
                     if (data.total > 0) $scope.validatedSpecies ++
                 }
                 loopCount++ 
-                    loopCount++
-                loopCount++ 
                 checkFinish()
             })
         })
