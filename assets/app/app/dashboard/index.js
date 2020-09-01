@@ -39,24 +39,20 @@ angular.module('a2.app.dashboard',[
             }
         }
 
-        for (let i = 0; i < $scope.species.length; i++) {
-            const s = $scope.species[i]
-            try {
-                Project.validationBySpeciesSong(s.species, s.songtype, data => {
-                    const idx = $scope.species.findIndex(sp => sp.species === s.species && sp.songtype === s.songtype)
-                    if(idx > -1) {
-                        $scope.species[idx].validate = data.total > 0
-                        if (data.total > 0) $scope.validatedSpecies ++
-                    }
+        const promises = species.map(s => {
+            return Project.validationBySpeciesSong(s.species, s.songtype, data => {
+                const idx = $scope.species.findIndex(sp => sp.species === s.species && sp.songtype === s.songtype)
+                if(idx > -1) {
+                    $scope.species[idx].validate = data.total > 0
+                    if (data.total > 0) $scope.validatedSpecies ++
+                }
+                loopCount++ 
                     loopCount++
-                    checkFinish()
-                })
-            } catch (e) {
-                console.log("validate error:", e)
-                loopCount++
+                loopCount++ 
                 checkFinish()
-            }
-        }
+            })
+        })
+        Promise.all(promises)
     });
     
     Project.getModels(function(err, models){
