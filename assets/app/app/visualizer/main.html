@@ -2,14 +2,14 @@
     <div>
         <visualizer-sidebar closed="sidebarClosed">
             <div class="layers" >
-                <div class="layer hide-btns">
+                <div class="layer hide-btns layer_gray-dark">
                     <a2-vis-object-browser name="browser" on-vis-object="setVisObject(visobject, type, location)" location="location.current" ></a2-vis-object-browser>
                 </div>
             </div>
             <div class="layers" >
-                <a2-visualizer-layer-item 
-                    class="layer" 
-                    ng-show="isSidebarVisible(layer)" 
+                <a2-visualizer-layer-item
+                    class="layer"
+                    ng-show="isSidebarVisible(layer)"
                     ng-repeat="layer in layers | filter: canDisplayInSidebar"
                 ></a2-visualizer-layer-item>
             </div>
