@@ -15,8 +15,8 @@ angular.module('a2.app.dashboard',[
         templateUrl: '/app/dashboard/index.html',
     });
 })
-.controller('SummaryCtrl', function($scope, Project, a2GoogleMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
-    $scope.loading = 9;
+.controller('SummaryCtrl', function($scope, Project, a2Templates, a2GoogleMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch) {
+    $scope.loading = 10;
     
     var done = function() {
         if($scope.loading > 0) --$scope.loading;
@@ -28,8 +28,28 @@ angular.module('a2.app.dashboard',[
     });
     
     Project.getClasses(function(species){
-        $scope.species = species;
-        done();
+        $scope.species = species
+        done()
+        $scope.validatedSpecies = -1
+
+        const promises = species.map(s => {
+            return new Promise((resolve) => 
+                Project.validationBySpeciesSong(s.species, s.songtype, data => {
+                    const idx = $scope.species.findIndex(sp => sp.species === s.species && sp.songtype === s.songtype)
+                    if (idx > -1) {
+                        $scope.species[idx].validate = data.total > 0
+                    }
+                    resolve()
+                })
+            )
+        })
+        Promise.all(promises).then(() => {
+            $scope.$apply(() => {
+                $scope.validatedSpecies = $scope.species.reduce((acc, val) => acc + (val.validate ? 1 : 0),0)
+            });
+        }).catch((e) => {
+            console.log("getClasses error", e)
+        })
     });
     
     Project.getModels(function(err, models){
@@ -100,5 +120,10 @@ angular.module('a2.app.dashboard',[
         $scope.recsQty = data;
         done();
     });
+
+    a2Templates.getList().then(data => {
+        $scope.templateQty = data.length;
+        done();
+    })
 })
 ;
