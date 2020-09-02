@@ -28,29 +28,28 @@ angular.module('a2.app.dashboard',[
     });
     
     Project.getClasses(function(species){
-        species = [...species]
         $scope.species = species
-        $scope.validatedSpecies = 0
-        let loopCount = 0
-
-        const checkFinish = () => {
-            if (loopCount == $scope.species.length) {
-                done()
-            }
-        }
+        done()
+        $scope.validatedSpecies = -1
 
         const promises = species.map(s => {
-            return Project.validationBySpeciesSong(s.species, s.songtype, data => {
-                const idx = $scope.species.findIndex(sp => sp.species === s.species && sp.songtype === s.songtype)
-                if(idx > -1) {
-                    $scope.species[idx].validate = data.total > 0
-                    if (data.total > 0) $scope.validatedSpecies ++
-                }
-                loopCount++ 
-                checkFinish()
-            })
+            return new Promise((resolve) => 
+                Project.validationBySpeciesSong(s.species, s.songtype, data => {
+                    const idx = $scope.species.findIndex(sp => sp.species === s.species && sp.songtype === s.songtype)
+                    if (idx > -1) {
+                        $scope.species[idx].validate = data.total > 0
+                    }
+                    resolve()
+                })
+            )
         })
-        Promise.all(promises)
+        Promise.all(promises).then(() => {
+            $scope.$apply(() => {
+                $scope.validatedSpecies = $scope.species.reduce((acc, val) => acc + (val.validate ? 1 : 0),0)
+            });
+        }).catch((e) => {
+            console.log("getClasses error", e)
+        })
     });
     
     Project.getModels(function(err, models){
