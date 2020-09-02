@@ -8,7 +8,7 @@
                 tooltip-trigger="mouseenter">
                 <i class="fa fa-plus"></i>
             </button>
-            <button class="btn btn-danger"
+            <button class="btn btn-default"
                 ng-disabled="!checked || !checked.length"
                 ng-click="del() | trackEvent:'Dashboard-species':'delete species'"
                 tooltip="Remove species sound"
@@ -35,5 +35,5 @@
         </div>
         <loader ng-hide="!loading"></loader>
     </div>
-    
+
 </div>

@@ -13,8 +13,8 @@
         </div>
         <div class="form-group">
             <label for="classifier">Classifier:</label>
-            <span class="classifiers-change">
-                <em>Classifiers may change without notice. <a ng-href="/classifiers">Read more information.</a></em>
+            <span class="pull-right small">
+                <em>Classifiers may change without notice. <a ng-href="/classifiers">More information.</a></em>
             </span>
             <ui-select ng-model="data.classifier" theme="bootstrap" ng-disabled="disabled">
                 <ui-select-match placeholder="Select a classifier">{{$select.selected.name}}</ui-select-match>
@@ -30,7 +30,7 @@
         </div>
         <div class="form-group">
             <label for="trainingSet">Training Set:</label>
-            <span ng-hide="trainings.length" value="-1" class="red">
+            <span ng-hide="trainings.length" value="-1" class="pull-right small">
                 <em>No training sets found. <a ng-click="cancel('/audiodata/training-sets') | trackEvent:'Analysis-Newmodel':'cancel goto training-sets'">Create one.</a></em>
             </span>
             <ui-select ng-model="data.training" theme="/common/templates/a2-ui-select" ng-disabled="disabled">

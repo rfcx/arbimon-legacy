@@ -222,10 +222,11 @@ angular.module('a2.audiodata.uploads.upload', [
     }
     
     $scope.formats = [
-        { name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
-        { name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" },
-        { name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
-        { name: "AudioMoth", format: "(Unix Time code in Hex)" },
+		{ name: "Arbimon", format: "(*-YYYY-MM-DD_HH-MM)" },
+		{ name: "AudioMoth", format: "(YYYYMMDD_HHMMSS)" },
+		{ name: "AudioMoth legacy", format: "(Unix Time code in Hex)" },
+		{ name: "Cornell" , format: "(*_YYYYMMDD_HHMMSSZ)" },
+		{ name: "Wildlife", format: "(YYYYMMDD_HHMMSS)" }
     ];
     
     Project.getSites(function(sites) {
