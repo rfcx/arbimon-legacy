@@ -557,23 +557,23 @@
     &:before{
         content: "\f00c"
     }
-    color: @val-color-1;
+    color: #fff;
 }
 
 .fa.val-0, .fa.a2-absent{
     &:before{
         content: "\f00d"
     }
-    color: @val-color-0;
+    color: #fff;
 }
 
 .btn.btn-fade-inactive:not(.active) {
     .fa.val-1, .fa.a2-present{
-        color: lighten(@val-color-1, 25%);
+        color: @val-color-2;
     }
 
     .fa.val-0, .fa.a2-absent{
-        color: lighten(@val-color-0, 25%);
+        color: @val-color-2
     }
 }
 
