@@ -27,15 +27,8 @@ var mailTemplates = {
     resetPass: ejs.compile(fs.readFileSync(path.resolve(__dirname, '../views/mail/reset-password.ejs')).toString())
 };
 
-var transport = nodemailer.createTransport({
-    host: config('email').host,
-    port: config('email').port,
-    auth: config('email').auth,
-    greetingTimeout: 60000, 
-    tls: {
-        rejectUnauthorized: false
-    }
-});
+const mandrill = require('mandrill-api/mandrill');
+const mandrill_client = new mandrill.Mandrill(config('mandrill-key').key)
 
 router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
     if(req.session && !req.session.loggedIn && (!req.session.isAnonymousGuest || !req.session.user)){
@@ -346,33 +339,39 @@ router.post('/register', function(req, res, next) {
         },
         // send confirmation
         function(hash, requestId, callback) {
-            var mailOptions = {
-                from: 'Sieve-Analytics <support@sieve-analytics.com>', 
-                to: user.email, 
-                subject: 'Arbimon II: Account activation',
-                html: mailTemplates.activate({
+			var mailOptions = {
+				text:'Arbimon II: Account activation',
+				subject: 'Arbimon II: Account activation',
+				html: mailTemplates.activate({
                     fullName: user.firstName + ' ' + user.lastName,
                     username: user.username,
                     email: user.email,
                     hash: hash
-                })
-            };
-            
-            transport.sendMail(mailOptions, function(error, info){
-                if(error){
-                    debug('sendmail error', error);
+                }),
+				from_email: 'contact@rfcx.org',
+				to: [{
+				  "email": user.email,
+				  "name": user.username,
+				  "type": "to"
+				}],
+				"auto_html": true
+			};
+				
+			mandrill_client.messages.send({"message": mailOptions, "async": true}, function() {
+				debug('email sent to:', user.email);
+                res.json({ success: true });
+				callback(null);
+			}, function(error){
+				if(error){
+					debug('sendmail error', error);
                     model.users.removeRequest(requestId, function(err, info) {
                         if(err)  return next(err);
                         
                         res.status(500).json({ error: "Could not send confirmation email." });
                     });
                     return;
-                }
-                
-                debug('email sent to:', user.email);
-                res.json({ success: true });
-                callback(null);
-            });
+				}
+			})
         },
         // call subscribe to newsletter
         function(callback) {
@@ -425,27 +424,32 @@ router.post('/forgot_request', function(req, res, next) {
         var salt = Math.ceil(new Date().getTime() / 1000).toString();
         var hash = sha256(salt+user.username+user.firstname+user.lastname+user.email);
         
-        var mailOptions = {
-            from: 'Sieve-Analytics <support@sieve-analytics.com>', 
-            to: user.email, 
-            subject: 'Arbimon II: Password reset',
-            html: mailTemplates.resetPass({
+		var mailOptions = {
+            text:'Arbimon II: Password reset',
+			subject: 'Arbimon II: Password reset',
+			html: mailTemplates.resetPass({
                 fullName: user.firstname + ' ' + user.lastname,
                 username: user.login,
                 hash: hash
-            })
+            }),
+            from_email: 'contact@rfcx.org',
+            to: [{
+              "email": user.email,
+              "name": user.firstname + ' ' + user.lastname,
+              "type": "to"
+            }],
+            "auto_html": true
         };
-        
-        transport.sendMail(mailOptions, function(error, info){
-            if(error) return next(error);
-            
-            model.users.newPasswordResetRequest(user.user_id, hash, function(err, results) {
+				
+		mandrill_client.messages.send({"message": mailOptions, "async": true}, function() {
+			model.users.newPasswordResetRequest(user.user_id, hash, function(err, results) {
                 if(err) return next(err);
                 
                 res.json({ success: true });
             });
-            
-        });
+        }, function(error){
+			if(error) return next(error);        
+		})
     });
 });
 
