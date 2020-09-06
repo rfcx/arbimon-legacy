@@ -58,8 +58,9 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
         wherePresent: req.query.search == 'present',
         whereNotPresent: req.query.search == 'not_present',
         whereUnvalidated: req.query.search == 'unvalidated',
-        bestPerSite: req.query.search == 'best_per_site', 
-        bestPerSiteDay: req.query.search == 'best_per_site_day', 
+        bestPerSite: req.query.search == 'best_per_site',
+        bestPerSiteDay: req.query.search == 'best_per_site_day',
+        allByScore: req.query.search == 'all_by_score',
         limit: req.paging.limit || 100,
         offset: req.paging.offset || 0,
     }).then(function(rois) {
