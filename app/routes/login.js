@@ -340,15 +340,15 @@ router.post('/register', function(req, res, next) {
         // send confirmation
         function(hash, requestId, callback) {
 			var mailOptions = {
-				text:'Arbimon II: Account activation',
-				subject: 'Arbimon II: Account activation',
+				text:'RFCx Arbimon: Account activation',
+				subject: 'RFCx Arbimon: Account activation',
 				html: mailTemplates.activate({
                     fullName: user.firstName + ' ' + user.lastName,
                     username: user.username,
                     email: user.email,
                     hash: hash
                 }),
-				from_email: 'contact@rfcx.org',
+				from_email: 'support@rfcx.org',
 				to: [{
 				  "email": user.email,
 				  "name": user.username,
@@ -425,14 +425,14 @@ router.post('/forgot_request', function(req, res, next) {
         var hash = sha256(salt+user.username+user.firstname+user.lastname+user.email);
         
 		var mailOptions = {
-            text:'Arbimon II: Password reset',
-			subject: 'Arbimon II: Password reset',
+            text:'RFCx Arbimon: Password reset',
+			subject: 'RFCx Arbimon: Password reset',
 			html: mailTemplates.resetPass({
                 fullName: user.firstname + ' ' + user.lastname,
                 username: user.login,
                 hash: hash
             }),
-            from_email: 'contact@rfcx.org',
+            from_email: 'support@rfcx.org',
             to: [{
               "email": user.email,
               "name": user.firstname + ' ' + user.lastname,
