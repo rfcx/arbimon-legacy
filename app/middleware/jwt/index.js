@@ -29,7 +29,7 @@ const verifyToken = function() {
   return function(req, res, next) {
     let token = req.headers['authorization'];
     if (!token) {
-      return res.sendStatus(403);
+      return res.sendStatus(401);
     }
     if (token.startsWith('Bearer ')) { // Remove Bearer from string
       token = token.slice(7, token.length);
@@ -42,7 +42,7 @@ const verifyToken = function() {
       return res.sendStatus(401)
     }
     if (!decodedToken) {
-      res.sendStatus(403)
+      res.sendStatus(401)
     }
     else {
       req.user = decodedToken;
