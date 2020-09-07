@@ -165,6 +165,7 @@ angular.module('a2.analysis.patternmatching', [
             {value:'unvalidated', text:'Unvalidated', description: 'Show all rois without validation.'},
             {value:'best_per_site', text:'Best per Site', description: 'Show the best scored roi per site.'},
             {value:'best_per_site_day', text:'Best per Site, Day', description: 'Show the best scored roi per site and day.'},
+            {value:'all_by_score', text:'All Sites, by Score', description: 'Show all sites, ordered by score.'},
         ],
         selection: [
             {value:'all', text:'All'},
