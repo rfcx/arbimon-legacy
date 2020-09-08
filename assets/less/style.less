@@ -1190,3 +1190,24 @@ a.ui-select-choices-row-inner {
 ::placeholder {
   color: #999 !important;
 }
+
+.panel-body {
+  &_combined {
+    padding-top: 60px;
+  }
+}
+
+.pattern-matching-site {
+  display: inline;
+  font-size: 0; // a hack to remove empty space between spans
+  &_block {
+    display: block;
+  }
+  .roi-thumbnail {
+    font-size: 14px; // set font-size back to previous after reset
+  }
+}
+
+.loading {
+  text-align: center;
+}
