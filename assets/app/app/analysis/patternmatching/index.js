@@ -34,9 +34,10 @@ angular.module('a2.analysis.patternmatching', [
     }
 
     $scope.loadPatternMatchings = function() {
-        $scope.loading = true;
+        $scope.loading = false;
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
+        $scope.splitAllSites = false;
 
         return a2PatternMatching.list().then(function(data) {
             $scope.patternmatchingsOriginal = data;
@@ -165,6 +166,8 @@ angular.module('a2.analysis.patternmatching', [
             {value:'unvalidated', text:'Unvalidated', description: 'Show all rois without validation.'},
             {value:'best_per_site', text:'Best per Site', description: 'Show the best scored roi per site.'},
             {value:'best_per_site_day', text:'Best per Site, Day', description: 'Show the best scored roi per site and day.'},
+            {value:'by_score', text:'Score', description: 'Show all rois ranked by score.'},
+            {value:'by_score_per_site', text:'Score per Site', description: 'Show all rois ranked by score per site.'},
         ],
         selection: [
             {value:'all', text:'All'},
@@ -241,7 +244,9 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     loadPage: function(pageNumber){
+        this.rois = [];
         this.loading.rois = true;
+        this.splitAllSites = this.search && this.search.value === 'by_score';
         return a2PatternMatching.getRoisFor(
             this.id,
             this.limit,
@@ -249,21 +254,28 @@ angular.module('a2.analysis.patternmatching', [
             { search: this.search && this.search.value }
         ).then((function(rois){
             this.loading.rois = false;
-            this.rois = rois.reduce(function(_, roi){
-                var site_id = roi.site_id;
-                var sitename = roi.site;
-                var recname = roi.recording;
+            if (this.splitAllSites) {
+                this.rois = [{
+                    list: rois
+                }]
+            }
+            else {
+                this.rois = rois.reduce(function(_, roi){
+                    var site_id = roi.site_id;
+                    var sitename = roi.site;
+                    var recname = roi.recording;
 
-                if(!_.idx[sitename]){
-                    _.idx[sitename] = {list:[], idx:{}, name:sitename, id:site_id};
-                    _.list.push(_.idx[sitename]);
-                }
+                    if(!_.idx[sitename]){
+                        _.idx[sitename] = {list:[], idx:{}, name:sitename, id:site_id};
+                        _.list.push(_.idx[sitename]);
+                    }
 
-                var site = _.idx[sitename];
-                site.list.push(roi);
+                    var site = _.idx[sitename];
+                    site.list.push(roi);
 
-                return _;
-            }, {list:[], idx:{}}).list;
+                    return _;
+                }, {list:[], idx:{}}).list;
+            }
             this.selected.roi = Math.min()
             return rois;
         }).bind(this)).catch((function(err){

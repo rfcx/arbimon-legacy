@@ -240,6 +240,8 @@ var PatternMatchings = {
         whereUnvalidated: joi.boolean(),
         bestPerSite: joi.boolean(),
         bestPerSiteDay: joi.boolean(),
+        byScorePerSite: joi.boolean(),
+        byScore: joi.boolean(),
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
@@ -491,7 +493,14 @@ var PatternMatchings = {
         );
     },
 
-    getRoisForId(options){
+    getRoisForId(options) {
+        let sortBy = [['S.name', 1], ['R.datetime', 1]] // default sorting
+        if (options.byScorePerSite) {
+            sortBy = [['S.name', 1], ['PMR.score', 0]]
+        }
+        else if (options.byScore) {
+            sortBy = [['PMR.score', 0]]
+        }
         return this.buildRoisQuery({
             patternMatching: options.patternMatchingId,
             perSiteCount: options.perSiteCount,
@@ -512,7 +521,7 @@ var PatternMatchings = {
             limit: options.limit,
             offset: options.offset,
             show: { patternMatchingId: true, datetime: true, names: options.showNames },
-            sortBy: [['S.name', 1], ['R.datetime', 1]],
+            sortBy,
         }).then(
             builder => dbpool.query(builder.getSQL())
         );
