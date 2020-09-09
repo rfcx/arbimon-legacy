@@ -104,7 +104,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
     - `git fetch -p` and `git pull`
 4. Perform any dependency installs and rebuild the source code (same as local install)
     - `npm i` and `bower i`
-    - `gulp build` to build css, and ?
+    - `gulp build` to build css (in production use `./node_modules/.bin/gulp build`)
 5. Restart the web server/app
     - `pm2 restart 0` to perform restart
     - `pm2 list` to check that the arbimon2 process is running
