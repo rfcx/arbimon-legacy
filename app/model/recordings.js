@@ -27,7 +27,8 @@ var tyler        = require('../utils/tyler.js');
 
 
 // local variables
-var s3 = new AWS.S3();
+var s3, s3RFCx;
+defineS3Clients();
 var queryHandler = dbpool.queryHandler;
 
 
@@ -39,6 +40,23 @@ var getUTC = function (date) {
 
 var fileExtPattern = /\.(wav|flac)$/;
 var freqFilterPrecision = 100;
+
+function defineS3Clients () {
+    if (!s3) {
+        s3 = new AWS.S3(getS3ClientConfig('aws'))
+    }
+    if (!s3RFCx) {
+        s3RFCx = new AWS.S3(getS3ClientConfig('aws-rfcx'))
+    }
+}
+
+function getS3ClientConfig (type) {
+    return {
+        accessKeyId: config(type).accessKeyId,
+        secretAccessKey: config(type).secretAccessKey,
+        region: config(type).region
+    }
+}
 
 function arrayOrSingle(x){
     return joi.alternatives(x, joi.array().items(x));
@@ -190,6 +208,11 @@ var Recordings = {
 
         q = dbpool.format(q, [recId]);
         queryHandler(q, callback);
+    },
+
+    findByIdAsync: function(recId) {
+        let find = util.promisify(this.findById)
+        return find(recId)
     },
 
     /** Finds recordings matching the given url and project id.
@@ -376,21 +399,40 @@ var Recordings = {
         return queryHandler(query, callback);
     },
 
+    /**
+     * Checks whether recording belongs to Arbimon (legacy) or RFCx platform
+     * @param {*} recording object containing the recording's data, like the ones returned in findByUrlMatch.
+     */
+    isLegacy: async function(recording) {
+        if (!recording.site_id) {
+            let recs = await this.findByIdAsync(recording.id)
+            recording.site_id = recs[0].site_id
+        }
+        let sites = await models.sites.findByIdAsync(recording.site_id)
+        if (sites && sites.length) {
+            var site = sites[0]
+        }
+        return site && site.legacy
+    },
+
     /** Downloads a recording from the bucket, storing it in a temporary file cache, and returns its path.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
      * @param {Function} callback(err, path) function to call back with the recording's path.
      */
-    fetchRecordingFile: function(recording, callback){
-        tmpfilecache.fetch(recording.uri, function(cache_miss){
+    fetchRecordingFile: async function(recording, callback){
+        tmpfilecache.fetch(recording.uri, async (cache_miss) => {
             debug('fetching ', recording.uri, ' from the bucket.');
-            if(!s3){
-                s3 = new AWS.S3();
+            if(!s3 || !s3RFCx){
+                defineS3Clients()
             }
-            s3.getObject({
-                Bucket : config('aws').bucketName,
+            const legacy = await this.isLegacy(recording)
+            let s3Client = legacy? s3 : s3RFCx
+            const opts = {
+                Bucket : config(legacy? 'aws' : 'aws-rfcx').bucketName,
                 Key    : recording.uri
-            }, function(err, data){
+            }
+            s3Client.getObject(opts, function(err, data){
                 if(err) { callback(err); return; }
                 cache_miss.set_file_data(data.Body);
             });

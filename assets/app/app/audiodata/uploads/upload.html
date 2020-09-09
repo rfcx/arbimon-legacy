@@ -52,19 +52,6 @@
             class="btn btn-default">
             Help
         </button>
-        <div class="btn-group pull-right" dropdown ng-if="controller.uploaderAppListing.length">
-            <button type="button" class="btn btn-primary dropdown-toggle"
-                dropdown-toggle>
-                <i class="fa fa-download"></i> Desktop App
-                <i class="fa fa-caret-down"></i>
-            </button>
-            <ul class="dropdown-menu" role="menu">
-                <li ng-repeat="listing in controller.uploaderAppListing"><a ng-href="{{listing.url}}">
-                    <i class="fa" ng-class="'fa-' + listing.type"></i>
-                    {{listing.type | caps:'title-case'}}
-                </a></li>
-            </ul>
-        </div>
     </div>
 </div>
 <div class="uploads list">
