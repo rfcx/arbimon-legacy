@@ -115,8 +115,12 @@ Additional steps for production (to support auto-scaling of the frontend)
 6. In the EC2 console, create an image of the current `web` instance.
     - Name: arbimon-web-2020-09-09
     - No reboot: true
+    
+    ![production-deployment-1](https://user-images.githubusercontent.com/1175362/92625187-8c6a3700-f2f2-11ea-869e-bc39b7c502a6.png)
 
 7. After the image is created, open "Auto scaling" -> "Launch configurations". Find the last launch configuration and make a copy ("Actions" -> "Copy launch configuration").
+
+    ![production-deployment-2](https://user-images.githubusercontent.com/1175362/92625432-d3582c80-f2f2-11ea-97ca-09f235a74183.png)
 
 8. Choose the AMI that was created in step 6 and create the launch configuration.
     - Name: arbimon-web-2020-09-09
@@ -125,6 +129,8 @@ Additional steps for production (to support auto-scaling of the frontend)
 
 9. Open "Auto scaling groups", and edit the `arbimon` group. Select the newly created launch configuration and then "Update".
     - Launch configuration: arbimon-web-2020-09-09
+    
+    ![production-deployment-3](https://user-images.githubusercontent.com/1175362/92625454-db17d100-f2f2-11ea-8089-8e85e9c999f9.png)
 
 10. To test the auto scaling is working, terminate the current `web` instance.
 
