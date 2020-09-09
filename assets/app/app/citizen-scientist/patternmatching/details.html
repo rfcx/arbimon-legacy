@@ -69,7 +69,7 @@
 
                         <div class="btn-group">
                             <button class="btn btn-default" >Validate as:</button>
-                            <ui-select ng-model="controller.validation" theme="bootstrap" style="display:inline-block; width:9em;">
+                            <ui-select ng-model="controller.validation" theme="bootstrap" class="btn-group-item border-left-radius">
                                 <ui-select-match>
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
@@ -86,9 +86,7 @@
                     <div class="toolbar pull-right">
                         <div class="btn-group" ng-show="controller.total.pages > 1">
                             <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
-                            <ui-select class="btn-group-item" ng-model="controller.selected.page" theme="bootstrap" style="display:inline-block; width:7em;"
-                                ng-change="controller.setPage($select.selected, true)"
-                            >
+                            <ui-select class="btn-group-item border-radius" ng-model="controller.selected.page" theme="bootstrap" ng-change="controller.setPage($select.selected, true)">
                                 <ui-select-match>
                                     {{$select.selected | a2PageNumberToTitle}} of {{controller.total.pages}}
                                 </ui-select-match>

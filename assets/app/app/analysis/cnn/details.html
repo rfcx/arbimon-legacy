@@ -70,9 +70,7 @@
                 <div class="toolbar pull-right">
                         <div class="btn-group">
                             <button class="btn btn-default" ><i class="fa fa-search"></i></button>
-                            <ui-select ng-model="selected.search" theme="bootstrap" style="display:inline-block; width:9em;"
-                                on-select="onSearchChanged()"
-                            >
+                            <ui-select ng-model="selected.search" class="btn-group-item border-left-radius" theme="bootstrap" on-select="onSearchChanged()">
                                 <ui-select-match>
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
@@ -96,7 +94,7 @@
 
                     <div class="btn-group cnn-filter-btns">
                         <button class="btn btn-default" >Validate as:</button>
-                        <ui-select ng-model="validation.current" theme="bootstrap" style="display:inline-block; width:9em;">
+                        <ui-select ng-model="validation.current" class="btn-group-item border-left-radius" theme="bootstrap">
                             <ui-select-match>
                                 <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                             </ui-select-match>
