@@ -19,7 +19,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
     ```sh
     npm i
     ```
-    
+
     App requires [https://bower.io/](bower) to be installed. To install using npm: `npm install bower --global`.
 
     Then install client-side dependencies:
@@ -34,8 +34,9 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
 3. Add config Files
     - Clone `config/db.json` to `config/db.local.json` and fill it with required values
     - Clone `config/aws.json` to `config/aws.local.json` and fill it with required values
+    - Clone `config/aws-rfcx.json` to `config/aws-rfcx.local.json` and fill it with required values
 
-    :exclamation: You must not change any original config file (like `db.json` or `aws.json`) to avoid commiting secrets to repository.
+    :exclamation: You must not change any original config file (like `db.json`, `aws.json` or `aws-rfcx.json`) to avoid commiting secrets to repository.
 
 4. Setup SSH Tunnel to SQL Database
 
@@ -95,7 +96,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
     - `ssh ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem`
 2. From inside the Bastion server, SSH into dev/prod server
     - `ssh-web-dev` for arbimon-dev.sieve-analytics.com
-    - `ssh-web` for arbimon.sieve-analytics.com 
+    - `ssh-web` for arbimon.sieve-analytics.com
     - Both these connections are defined in the `.bashrc` file and rely on the same `.ssh/arbimon2-app.pem` key.
 3. Change to app directory
     - `cd apps/arbimon2`

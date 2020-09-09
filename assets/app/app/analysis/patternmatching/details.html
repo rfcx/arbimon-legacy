@@ -62,11 +62,11 @@
                     <div class="pull-right">
                     <div class="toolbar pull-right">
                         <div class="btn-group">
-                            <button class="btn btn-default" ><i class="fa fa-search"></i></button>
+                            <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
                             <ui-select ng-model="controller.search" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="controller.onSearchChanged()"
                             >
-                                <ui-select-match>
+                                <ui-select-match class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.lists.search | filter:$select.search">
@@ -89,9 +89,9 @@
                         </div>
 
                         <div class="btn-group">
-                            <button class="btn btn-default" >Validate as:</button>
+                            <button class="btn btn-default not-active" >Validate as:</button>
                             <ui-select ng-model="controller.validation" theme="bootstrap" style="display:inline-block; width:9em;">
-                                <ui-select-match>
+                                <ui-select-match class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.lists.validation | filter:$select.search">
