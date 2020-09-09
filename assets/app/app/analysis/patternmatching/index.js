@@ -166,8 +166,8 @@ angular.module('a2.analysis.patternmatching', [
             {value:'unvalidated', text:'Unvalidated', description: 'Show all rois without validation.'},
             {value:'best_per_site', text:'Best per Site', description: 'Show the best scored roi per site.'},
             {value:'best_per_site_day', text:'Best per Site, Day', description: 'Show the best scored roi per site and day.'},
-            {value:'all_by_score', text:'All Sites, by Score', description: 'Show all sites, ordered by score.'},
-            {value:'rois_by_score', text:'All Rois, by Score', description: 'Show rois ranked by score.'},
+            {value:'by_score', text:'Score', description: 'Show all rois ranked by score.'},
+            {value:'by_score_per_site', text:'Score per Site', description: 'Show all rois ranked by score per site.'},
         ],
         selection: [
             {value:'all', text:'All'},
@@ -246,7 +246,7 @@ angular.module('a2.analysis.patternmatching', [
     loadPage: function(pageNumber){
         this.rois = [];
         this.loading.rois = true;
-        this.splitAllSites = this.search && this.search.value === 'rois_by_score';
+        this.splitAllSites = this.search && this.search.value === 'by_score';
         return a2PatternMatching.getRoisFor(
             this.id,
             this.limit,

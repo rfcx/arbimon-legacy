@@ -240,8 +240,8 @@ var PatternMatchings = {
         whereUnvalidated: joi.boolean(),
         bestPerSite: joi.boolean(),
         bestPerSiteDay: joi.boolean(),
-        allByScore: joi.boolean(),
-        roisByScore: joi.boolean(),
+        byScorePerSite: joi.boolean(),
+        byScore: joi.boolean(),
         show: joi.object().keys({
             patternMatchingId: joi.boolean(),
             names: joi.boolean(),
@@ -495,10 +495,10 @@ var PatternMatchings = {
 
     getRoisForId(options) {
         let sortBy = [['S.name', 1], ['R.datetime', 1]] // default sorting
-        if (options.allByScore) {
+        if (options.byScorePerSite) {
             sortBy = [['S.name', 1], ['PMR.score', 0]]
         }
-        else if (options.roisByScore) {
+        else if (options.byScore) {
             sortBy = [['PMR.score', 0]]
         }
         return this.buildRoisQuery({
