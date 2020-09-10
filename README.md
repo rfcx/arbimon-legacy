@@ -35,6 +35,8 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
     - Clone `config/db.json` to `config/db.local.json` and fill it with required values
     - Clone `config/aws.json` to `config/aws.local.json` and fill it with required values
     - Clone `config/aws-rfcx.json` to `config/aws-rfcx.local.json` and fill it with required values
+    - Clone `config/mandrill-key.json` to `config/mandrill-key.local.json` and fill it with required values
+    - Clone `config/auth0.json` to `config/auth0.local.json` and fill it with required values
 
     :exclamation: You must not change any original config file (like `db.json`, `aws.json` or `aws-rfcx.json`) to avoid commiting secrets to repository.
 
