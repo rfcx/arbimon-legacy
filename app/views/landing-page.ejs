@@ -91,6 +91,7 @@
                             <div class="form-group oauth-buttons text-center">
                                 <a2-google-login-button class="btn-block" on-signed-in="controller.oAuthLogin('google', user)"></a2-google-login-button>
                                 <a2-facebook-login-button class="btn-block" on-signed-in="controller.oAuthLogin('facebook', user)"></a2-facebook-login-button>
+                                <a class="btn btn-primary btn-block" href="<%- auth0UniversalLoginUrl %>">Login with RFCx</a>
                             </div>
                             <br />
                             <small class="text-info inline-block text-justify margin-xs">

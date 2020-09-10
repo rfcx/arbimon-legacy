@@ -1,24 +1,24 @@
 angular.module('a2.login', [
-    'humane', 
-    'ui.bootstrap', 
+    'humane',
+    'ui.bootstrap',
     'templates-arbimon2',
     'g-recaptcha',
     'a2.utils.google-login-button',
     'a2.utils.facebook-login-button'
 ])
 .controller('LoginCtrl', function($scope, $http, $window, $modal, notify) {
-    
-    // $scope.mode have the String value of the next mode and 
+
+    // $scope.mode have the String value of the next mode and
     // is used as text for the mode button
-    
+
     if(/login/i.exec($window.location.pathname) !== null){
         $scope.mode = "Sign up";
     }
     else {
         $scope.mode = "Login";
     }
-    
-    
+
+
     $scope.switchMode = function() {
         if($scope.mode === "Sign up") {
             $scope.mode = "Login";
@@ -27,12 +27,12 @@ angular.module('a2.login', [
             $scope.mode = "Sign up";
         }
     };
-    
+
     $scope.login = function() {
-        
+
         var path = '/login' + $window.location.search;
-        
-        $http.post(path, { 
+
+        $http.post(path, {
             username: $scope.username,
             password: $scope.password,
             captcha: $scope.captchaResp,
@@ -40,16 +40,16 @@ angular.module('a2.login', [
         .success(function(data) {
             if(data.error) {
                 notify.error(data.error);
-                
+
                 if(data.captchaNeeded) {
                     $scope.showCaptcha = true;
                 }
-                
+
                 $scope.resetCaptcha();
                 $scope.captchaResp = '';
                 return;
             }
-            
+
             if(data.success) {
                 $window.location.assign(data.redirect);
             }
@@ -58,7 +58,7 @@ angular.module('a2.login', [
             notify.error(error || 'Something went wrong, try again later');
         });
     };
-    
+
 
     this.oAuthLogin = function(type, user){
         var oauthData;
@@ -75,7 +75,7 @@ angular.module('a2.login', [
         } else {
             return;
         }
-        
+
         $http.post('/oauth-login' + $window.location.search, oauthData).then(function(response){
             var data = response.data;
             if(data.error) {
@@ -91,7 +91,7 @@ angular.module('a2.login', [
             }
         }).bind(this));
     };
-    
+
     this.showEnableOAuthModal = function(oauthData){
         var modalData={};
         $modal.open({
@@ -136,7 +136,7 @@ angular.module('a2.login', [
 })
 .controller('RedirectToLoginCtrl', function($scope, $window) {
     var redirect = $window.location.pathname + $window.location.search + $window.location.hash;
-    
+
     $scope.loginUrl = "/login?redirect=" + encodeURIComponent(redirect);
 })
 ;

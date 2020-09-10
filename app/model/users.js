@@ -15,6 +15,7 @@ var gravatar = require('gravatar');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 var sha256 = require('../utils/sha256');
+const generator = require('generate-password')
 
 var models = require('./index');
 
@@ -157,6 +158,11 @@ var Users = {
 
         q = util.format(q, values.join(", "));
         queryHandler(q, callback);
+    },
+
+    insertAsync: function(userData) {
+        let insert = util.promisify(this.insert)
+        return insert(userData)
     },
 
     projectList: function(user_id, callback) {
@@ -382,7 +388,6 @@ var Users = {
         });
     },
 
-
     /** Executes a user login challenge, returning its promised results.
      * @params auth
      * @params auth.username
@@ -549,6 +554,26 @@ var Users = {
         });
     },
 
+    createFromAuth0: async function(profile) {
+        const password = generator.generate({
+            length: 20,
+            numbers: true,
+            symbols: true,
+            uppercase: true,
+            excludeSimilarCharacters: true
+        })
+        const attrs = {
+            login: profile.nickname,
+            password: hashPassword(password),
+            firstname: profile.given_name,
+            lastname: profile.family_name,
+            email: profile.email,
+            created_on: new Date()
+        }
+        const insertData = await this.insertAsync(attrs)
+        return this.findById(insertData.insertId).get(0)
+    },
+
     makeUserObject: function(user, options){
         options = options || {};
         var userObj = {
@@ -627,6 +652,29 @@ var Users = {
                 return authenticatedUser;
             });
         });
+    },
+
+    auth0Login: async function(req, profile) {
+        let user = await q.ninvoke(Users, "findByEmail", profile.email).get(0).get(0)
+        if(!user){
+            user = await Users.createFromAuth0(profile)
+        }
+        this.refreshLastLogin(user.user_id)
+
+        // set session
+        req.session.loggedIn = true;
+        req.session.isAnonymousGuest = false;
+        req.session.user = Users.makeUserObject(user, {secure: req.secure, all:true});
+
+        return user
+    },
+
+    refreshLastLogin: function(user_id) {
+        q.ninvoke(Users, "update", {
+            user_id,
+            last_login: new Date(),
+            login_tries: 0
+        }).catch(console.error.bind(console));
     },
 
     queryPermission: function(user_id, project_id, permission_name) {
