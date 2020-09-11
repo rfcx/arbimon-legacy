@@ -20,6 +20,11 @@ var ordersUtils = require('../../utils/orders.js');
 var countries = require('../../utils/countries.js');
 var shippingCalculator = require('../../utils/shipping-calculator.js');
 
+const authentication = require('../../middleware/jwt')
+const verifyToken = authentication.verifyToken
+const hasRole = authentication.hasRole
+const { httpErrorHandler } = require('../../utils/http-error-handler.js')
+
 /**
     creates a new project an create news about project creation
 */
@@ -274,6 +279,33 @@ router.post('/create-project', function(req, res, next) {
     }).catch(next);
 });
 
+// Ensures that user with specified Auth0 token exists in MySQL and creates a project for him
+router.post('/rfcx/user-project', verifyToken(), hasRole(['appUser']), function(req, res) {
+    try {
+        const user = await model.users.ensureUserExistFromAuth0(req.user)
+        const project = {
+            is_private: true,
+            plan: freePlan,
+            name: `${user.firstname}'s project`,
+            url: `${user.user_id}-${user.firstname.replace(/[^a-z0-9A-Z-]/g, '-').replace(/-+/g,'-').replace(/(^-)|(-$)/g, '').toLowerCase()}-project`,
+            description: `${user.firstname}'s personal project`,
+            project_type_id: 1
+        }
+        await q.ninvoke(joi, 'validate', project, projectSchema, {
+            stripUnknown: true,
+            presence: 'required',
+        })
+        let existingNames = await model.projects.find({name: project.name})
+        let existingUrls = await model.projects.find({url: project.url})
+        if ((existingNames && existingNames.length) || (existingUrls && existingUrls.length)) {
+            return res.sendStatus(200)
+        }
+        await createProject(project, user.user_id)
+        res.sendStatus(201)
+    } catch (e) {
+        httpErrorHandler(req, res, 'Failed creating a project')(e)
+    }
+})
 
 
 router.post('/update-project', function(req, res, next) {

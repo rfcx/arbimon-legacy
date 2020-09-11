@@ -33,6 +33,7 @@
     "mailchimp-api": "~2.0.7",
     "mandrill-api": "^1.0.45",
     "moment": "^2.10.6",
+    "moment-timezone": "^0.5.31",
     "morgan": "~1.7.0",
     "mysql": "~2.11.1",
     "node-uuid": "^1.4.3",

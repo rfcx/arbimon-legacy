@@ -655,10 +655,7 @@ var Users = {
     },
 
     auth0Login: async function(req, profile) {
-        let user = await q.ninvoke(Users, "findByEmail", profile.email).get(0).get(0)
-        if(!user){
-            user = await Users.createFromAuth0(profile)
-        }
+        const user = await this.ensureUserExistFromAuth0(profile)
         this.refreshLastLogin(user.user_id)
 
         // set session
@@ -666,6 +663,14 @@ var Users = {
         req.session.isAnonymousGuest = false;
         req.session.user = Users.makeUserObject(user, {secure: req.secure, all:true});
 
+        return user
+    },
+
+    ensureUserExistFromAuth0: async function(profile) {
+        let user = await q.ninvoke(Users, "findByEmail", profile.email).get(0).get(0)
+        if(!user){
+            user = await Users.createFromAuth0(profile)
+        }
         return user
     },
 
