@@ -347,7 +347,7 @@ router.post('/register', function(req, res, next) {
                     username: user.username,
                     email: user.email,
 					hash: hash,
-					host: req.headers.host
+					host: config('hosts').publicUrl
                 }),
 				from_email: 'support@rfcx.org',
 				to: [{
@@ -432,7 +432,7 @@ router.post('/forgot_request', function(req, res, next) {
                 fullName: user.firstname + ' ' + user.lastname,
                 username: user.login,
 				hash: hash,
-				host: req.headers.host
+				host: config('hosts').publicUrl
             }),
             from_email: 'support@rfcx.org',
             to: [{
