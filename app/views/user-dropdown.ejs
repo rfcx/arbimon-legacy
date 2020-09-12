@@ -1,8 +1,7 @@
 <li class="dropdown" dropdown>
     <a class="dropdown-toggle" dropdown-toggle>
+		<span class="visible-lg-inline visible-xs-inline"><%= user.username %></span>
         <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>" style="background-image:url('<%- user.imageUrl %>')"></i>
-        <span class="visible-lg-inline visible-xs-inline"><%= user.username %></span>
-        <i class="fa fa-caret-down"></i>
     </a>
     <% if(user.isAnonymousGuest) { %>
         <ul class="dropdown-menu" role="menu">
