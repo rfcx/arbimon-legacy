@@ -265,12 +265,12 @@
 
   a:hover,
   a:active {
-    background-color: @gray-darker;
+    background-color: @gray;
   }
 
   a.active, li.active > a {
-	background-color: @gray-darker;
-	border-right: 4px solid @brand-primary;
+    background-color: @gray;
+	  border-right: 4px solid @brand-primary;
   }
 
   @media (max-width: @grid-float-breakpoint) {
@@ -1125,6 +1125,49 @@ a.ui-select-choices-row-inner {
   }
 }
 
+:focus {
+  outline: none;
+}
+
+.right-corners .btn {
+  border-radius: 0 4px 4px 0 !important;
+}
+
+.left-corners .btn {
+  border-radius: 4px 0 0 4px !important;
+}
+
+.prev-right {
+  border-radius: 0 4px 4px 0;
+}
+
+.next-all {
+  border-radius: 4px;
+}
+
+.all-corners .btn {
+  border-radius: 4px !important;
+}
+
+.ui-select-match {
+  &.btn-default-focus {
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 255, 255, 0.3);
+    outline: none;
+    background-color: unset;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.not-active {
+  cursor: default;
+  &:hover,
+  &:active {
+    background-color: @gray;
+    border-color: @gray;
+  }
+}
+
 .ui-select-match-text {
   width: 90%;
   white-space: nowrap;
@@ -1189,4 +1232,36 @@ a.ui-select-choices-row-inner {
 
 ::placeholder {
   color: #999 !important;
+}
+
+.panel-body {
+  &_combined {
+    padding-top: 60px;
+  }
+}
+
+.pattern-matching-site {
+  display: inline;
+  font-size: 0; // a hack to remove empty space between spans
+  &_block {
+    display: block;
+  }
+  .roi-thumbnail {
+    font-size: 14px; // set font-size back to previous after reset
+  }
+}
+
+.loading {
+  text-align: center;
+}
+
+.roi-thumbnail {
+  background-color: @gray-lighter;
+  border-color: @gray-lighter;
+  &:hover,
+  &:active,
+  &:focus {
+      background-color: @gray-medium;
+      border-color: @gray-medium;
+  }
 }

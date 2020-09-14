@@ -62,9 +62,9 @@
                     <div class="pull-right">
                     <div class="pull-right">
                         <div class="btn-group">
-                            <button class="btn btn-default" ><i class="fa fa-search"></i></button>
+                            <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
                             <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()">
-                                <ui-select-match>
+                                <ui-select-match class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.lists.search | filter:$select.search">
@@ -87,9 +87,9 @@
                         </div>
 
                         <div class="btn-group">
-                            <button class="btn btn-default" >Validate as:</button>
+                            <button class="btn btn-default  not-active" >Validate as:</button>
                             <ui-select ng-model="controller.validation" class="btn-group-item border-left-radius" theme="bootstrap">
-                                <ui-select-match>
+                                <ui-select-match  class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.lists.validation | filter:$select.search">
@@ -151,41 +151,42 @@
                 </div>
             </div>
         </div>
-        <div class="panel-body">
-            <div ng-show="loading-rois">Loading...</div>
-            <div ng-repeat="site in controller.rois">
-                <div class="h3" id="site-{{site.id}}"><i class="fa fa-map-marker"></i> {{site.name}}</div>
-                    <div ng-repeat="roi in site.list"
-                        class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
-                        ng-click="roi.selected = !roi.selected"
-                        popover-html="'Recording: {{roi.recording}}<br>
-                                 Site: {{roi.site}}<br>
-                                 Time: {{roi.datetime | date:'medium':'UTC'}} <br>
-                                 Score: {{(roi.score | number) || '(Missing)'}}'"
-                        popover-trigger="mouseenter"
-                        popover-append-to-body="true"
-                    >
-                        <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
-                        <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
-                            <i class="fa val-{{roi.validated}}"></i>
-                        </div>
-                        <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();"">
-                            <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="View in Visualizer"
-                                class="fa fa-cubes">
-                            </i>
-                        </a>
-                        <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi, $event)">
-                            <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="Play Audio"
-                                class="fa fa-play">
-                            </i>
-                        </a>
-                        <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
+        <div class="panel-body" ng-class="{ 'panel-body_combined': controller.splitAllSites }">
+            <div ng-if="controller.loading.rois" class="loading">Loading <loader></loader></div>
+            <span class="pattern-matching-site" ng-repeat="site in controller.rois" ng-class="{ 'pattern-matching-site_block': !controller.splitAllSites }">
+                <div ng-if="!controller.splitAllSites && site.name" class="h3" id="site-{{site.id}}"><i class="fa fa-map-marker"></i> {{site.name}}</div>
+
+                <span ng-repeat="roi in site.list"
+                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                    ng-click="roi.selected = !roi.selected"
+                    popover-html="'Recording: {{roi.recording}}<br>
+                                Site: {{roi.site}}<br>
+                                Time: {{roi.datetime | date:'medium':'UTC'}} <br>
+                                Score: {{(roi.score | number) || '(Missing)'}}'"
+                    popover-trigger="mouseenter"
+                    popover-append-to-body="true"
+                >
+                    <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
+                    <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
+                        <i class="fa val-{{roi.validated}}"></i>
                     </div>
-            </div>
+                    <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();"">
+                        <i tooltip-placement="left"
+                            tooltip-append-to-body="true"
+                            tooltip="View in Visualizer"
+                            class="fa fa-cubes">
+                        </i>
+                    </a>
+                    <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi, $event)">
+                        <i tooltip-placement="left"
+                            tooltip-append-to-body="true"
+                            tooltip="Play Audio"
+                            class="fa fa-play">
+                        </i>
+                    </a>
+                    <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
+                </span>
+            </span>
         </div>
     </div>
 

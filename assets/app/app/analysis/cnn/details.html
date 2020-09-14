@@ -67,18 +67,19 @@
 
             <div class="col-sm-5 flex-self-align-bottom" ng-show="viewType=='rois'">
                 <div class="pull-right">
-					<div class="pull-right btn-group" role="group">
-						<button class="btn btn-default" ><i class="fa fa-search"></i></button>
-						<ui-select ng-model="selected.search" class="btn-group-item border-left-radius" theme="bootstrap" on-select="onSearchChanged()">
-							<ui-select-match>
-								<i ng-class="$select.selected.class"></i> {{$select.selected.text}}
-							</ui-select-match>
-							<ui-select-choices repeat="$item in lists.search | filter:$select.search">
-								<i ng-class="$item.class"></i> {{$item.text}}
-							</ui-select-choices>
-						</ui-select>
+					<div class="pull-right btn-group">
+						<button class="btn btn-default not-active"><i class="fa fa-search"></i></button>
+                            <ui-select ng-model="selected.search" theme="bootstrap" style="display:inline-block; width:9em;"
+                                on-select="onSearchChanged()"
+                            >
+                                <ui-select-match class="right-corners">
+                                    <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
+                                </ui-select-match>
+                                <ui-select-choices repeat="$item in lists.search | filter:$select.search">
+                                    <i ng-class="$item.class"></i> {{$item.text}}
+                                </ui-select-choices>
+                            </ui-select>
 					</div>
-					
 					
                 <div class="pull-right">
                     <div class="btn-group">
@@ -91,11 +92,11 @@
                             </ui-select-choices>
                         </ui-select>
                     </div>
-
                     <div class="btn-group">
-                        <button class="btn btn-default" >Validate as:</button>
+                        <button class="btn btn-default not-active" >Validate as:</button>
                         <ui-select ng-model="validation.current" class="btn-group-item border-left-radius" theme="bootstrap">
-                            <ui-select-match>
+                            <ui-select-match class="right-corners">
+
                                 <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                             </ui-select-match>
                             <ui-select-choices repeat="$item in lists.validation | filter:$select.search">
@@ -110,20 +111,19 @@
                 </div>
                 <div class="pull-right">
                     <div class="btn-group" ng-show="total.pages > 1"> 
-                            <a class="btn btn-default" ng-click="moveROIPage(-1) | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
+                            <a class="btn btn-default prev-right" ng-click="moveROIPage(-1) | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
                             <ui-select class="btn-group-item border-radius" ng-model="selected.page"
                                 ng-change="setPage($select.selected, true)"
                             >
-                                <ui-select-match>
+                                <ui-select-match class="left-corners">
                                     {{$select.selected | a2PageNumberToTitle}} of {{total.pages}}
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in total.pages | a2Range | filter:($select.search | a2PageTitleToNumber)">
                                     {{$item | a2PageNumberToTitle}}
                                 </ui-select-choices>
                             </ui-select>
-                            <a class="btn btn-default" ng-click="moveROIPage(1) | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
+                            <a class="btn btn-default next-all" ng-click="moveROIPage(1) | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
                         </div>
-
                     <div class="btn-group" ng-show="false">
                         <ui-select class="btn-group-item" ng-model="selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
                             ng-change="setSiteBookmark($select.selected)"
@@ -185,7 +185,7 @@
             <div ng-repeat="species in rois_species">
                 <div class="h3" id="site-{{species.species_id}}"><i class="fa fa-map-marker"></i> {{species.scientific_name}}</div>
                 <div ng-repeat="roi in species.rois"
-                    class="btn roi-custom-state roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                    class="btn roi-thumbnail {{roi.selected ? 'active' : ''}}"
                     ng-click="roi.selected = !roi.selected"
                     popover-html="'Recording: {{roi.recording}}<br>
                             Site: {{roi.site}}<br>
