@@ -60,7 +60,7 @@
                 </div>
                 <div class="col-sm-5 flex-self-align-bottom">
                     <div class="pull-right">
-                    <div class="toolbar pull-right">
+                    <div class="pull-right">
                         <div class="btn-group">
                             <button class="btn btn-default" ><i class="fa fa-search"></i></button>
                             <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()">
@@ -74,7 +74,7 @@
                             </ui-select>
                         </div>
                     </div>
-                    <div class="toolbar pull-right">
+                    <div class="pull-right">
                         <div class="btn-group">
                             <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="controller.onSelect($select.selected)"
@@ -102,10 +102,10 @@
                             <button class="btn btn-primary" ng-click="controller.validate()">Submit</button>
                         </div>
                     </div>
-                    <div class="toolbar pull-right">
+                    <div class="pull-right">
                         <div class="btn-group" ng-show="controller.total.pages > 1">
                             <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
-                            <ui-select class="btn-group-item" ng-model="controller.selected.page" theme="bootstrap" style="display:inline-block; width:7em;"
+                            <ui-select class="btn-group-item border-radius" ng-model="controller.selected.page" theme="bootstrap"
                                 ng-change="controller.setPage($select.selected, true)"
                             >
                                 <ui-select-match>
@@ -115,27 +115,19 @@
                                     {{$item | a2PageNumberToTitle}}
                                 </ui-select-choices>
                             </ui-select>
-                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
-                                ng-change="controller.setSiteBookmark($select.selected)"
-                            >
-                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
-                                <ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
-                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
-                                </ui-select-choices>
-                            </ui-select>
                             <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
-                        </div>
-
-                        <div class="btn-group" ng-show="controller.total.pages <= 1">
-                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
-                                ng-change="controller.setSiteBookmark($select.selected)"
-                            >
-                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
-                                <ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
-                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
-                                </ui-select-choices>
-                            </ui-select>
-                        </div>
+						</div>
+						
+						<div class="btn-group">
+							<ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width:4em;"
+							ng-change="controller.setSiteBookmark($select.selected)"
+						>
+							<ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
+							<ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
+								<span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
+							</ui-select-choices>
+						</ui-select>
+						</div>
 
                         <div class="btn-group">
                             <button class="btn btn-default"
@@ -145,7 +137,7 @@
                             ><i ng-class="item.class"></i></button>
                         </div>
 
-                        <div class="btn-group">
+                        <div class="export-url pull-right">
                                 <a class="btn btn-default"
                                 ng-href="{{controller.patternMatchingExportUrl}}"
                                 ng-click="true | trackEvent:'Pattern Matching Details':'export'"
