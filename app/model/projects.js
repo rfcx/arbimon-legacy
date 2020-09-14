@@ -405,6 +405,11 @@ var Projects = {
         });
     },
 
+    insertNewsAsync: function(news) {
+        let insertNews = util.promisify(this.insertNews)
+        return insertNews(news)
+    },
+
     /** Fetches a project's classes.
      * @param {{Object}} project project object.
      * @param {{Integer}} project.project_id
@@ -569,6 +574,11 @@ var Projects = {
 
         q = util.format(q, project_id);
         queryHandler(q, callback);
+    },
+
+    getUsersAsync: function(project_id) {
+        let getUsers = util.promisify(this.getUsers)
+        return getUsers(project_id)
     },
 
     addUser: function(userProjectRole, callback) {

@@ -33,7 +33,7 @@ var Sites = {
             lon: joi.number(),
             alt: joi.number(),
             site_type_id: joi.number().optional().default(2), // default mobile recorder
-            legacy: joi.boolean().default(true), // wheter this site belongs to Arbimon (true) or RFCx platform (false)
+            legacy: joi.boolean().optional().default(true), // wheter this site belongs to Arbimon (true) or RFCx platform (false)
         };
 
         var result = joi.validate(site, schema, {
@@ -61,6 +61,11 @@ var Sites = {
 
         q = util.format(q, values.join(", "));
         queryHandler(q, callback);
+    },
+
+    insertAsync: function(site) {
+        let insert = util.promisify(this.insert)
+        return insert(site)
     },
 
     update: function(site, callback) {
