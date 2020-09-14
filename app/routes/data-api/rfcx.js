@@ -13,6 +13,7 @@ const hasRole = authentication.hasRole
 const { httpErrorHandler } = require('../../utils/http-error-handler.js')
 const Converter = require('../../utils/converter/converter')
 const EmptyResultError = require('../../utils/converter/empty-result-error')
+const ValidationError = require('../../utils/converter/validation-error')
 const ForbiddenError = require('../../utils/converter/forbidden-error')
 
 var projectSchema = joi.object().keys({
@@ -81,11 +82,12 @@ router.post('/project/:uri/sites/create', verifyToken(), hasRole(['appUser', 'rf
       const user = await model.users.ensureUserExistFromAuth0(req.user)
       const hasPermission = !!projectUsers.find(x => x.id === user.user_id)
       if (!hasPermission) {
-        throw new ForbiddenError(`You dont have permission to manage project sites`)
+        throw new ForbiddenError(`You don't have permission to manage project sites`)
       }
       const convertedParams = {}
       const params = new Converter(req.body, convertedParams)
       params.convert('name').toString()
+      params.convert('external_id').toString()
       params.convert('lat').toFloat().minimum(-90).maximum(90)
       params.convert('lon').toFloat().minimum(-180).maximum(180)
       params.convert('alt').toFloat().minimum(0)
@@ -93,11 +95,16 @@ router.post('/project/:uri/sites/create', verifyToken(), hasRole(['appUser', 'rf
       await params.validate()
       const siteData = {
         name: convertedParams.name,
+        external_id: convertedParams.external_id,
         lat: convertedParams.lat,
         lon: convertedParams.lon,
         alt: convertedParams.alt,
         project_id: project.project_id,
         legacy: false
+      }
+      const existingSite = await model.sites.find({ external_id: siteData.external_id, project_id: siteData.project_id }).get(0)
+      if (existingSite) {
+        return res.json(existingSite)
       }
       const insertData = await model.sites.insertAsync(siteData)
       const site = await model.sites.findByIdAsync(insertData.insertId)
@@ -111,6 +118,73 @@ router.post('/project/:uri/sites/create', verifyToken(), hasRole(['appUser', 'rf
     } catch (e) {
         httpErrorHandler(req, res, 'Failed creating a site')(e)
     }
+})
+
+router.post('/recordings/create', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
+  try {
+    const convertedParams = {}
+    const params = new Converter(req.body, convertedParams)
+    params.convert('project_id').toString()
+    params.convert('site_external_id').toString()
+    params.convert('uri').toString()
+    params.convert('datetime').toMomentUtc()
+    params.convert('sample_rate').toInt()
+    params.convert('precision').toInt()
+    params.convert('duration').toFloat()
+    params.convert('samples').toInt()
+    params.convert('file_size').toInt()
+    params.convert('bit_rate').toString()
+    params.convert('sample_encoding').toString()
+    params.convert('nameformat').toString().optional().default('AudioMoth')
+    params.convert('recorder').toString().optional().default('Unknown')
+    params.convert('mic').toString().optional().default('Unknown')
+    params.convert('sver').toString().optional().default('Unknown')
+
+    await params.validate()
+    const project = await model.projects.find({id: convertedParams.project_id}).get(0)
+    if (!project) {
+      throw new EmptyResultError('Project with given id not found.')
+    }
+    const site = await model.sites.find({ external_id: convertedParams.site_external_id }).get(0)
+    if (!site) {
+      throw new EmptyResultError('Site with given external_id not found.')
+    }
+    const projectUsers = await model.projects.getUsersAsync(project.project_id)
+    const user = await model.users.ensureUserExistFromAuth0(req.user)
+    const hasPermission = !!projectUsers.find(x => x.id === user.user_id)
+    if (!hasPermission) {
+      throw new ForbiddenError(`You don't have permission to add recordings into this site`)
+    }
+    const fileExists = await model.recordings.existsAsync({
+      site_id: site.site_id,
+      filename: convertedParams.uri
+    })
+    if (fileExists) {
+      throw new ValidationError('File with given uri already exists')
+    }
+    const recordingData = {
+      site_id: site.site_id,
+      uri: convertedParams.uri,
+      datetime: convertedParams.datetime.toDate(),
+      mic: convertedParams.mic,
+      recorder: convertedParams.recorder,
+      version: convertedParams.sver,
+      sample_rate: convertedParams.sample_rate,
+      precision: convertedParams.precision,
+      duration: convertedParams.duration,
+      samples: convertedParams.samples,
+      file_size: convertedParams.file_size,
+      bit_rate: convertedParams.bit_rate,
+      sample_encoding: convertedParams.sample_encoding,
+      upload_time: new Date()
+    }
+    const insertData = await model.recordings.insertAsync(recordingData)
+    const recording = await model.recordings.findByIdAsync(insertData.insertId)
+    res.status(201).json(recording)
+  } catch (e) {
+    httpErrorHandler(req, res, 'Failed creating a recording')(e)
+  }
+
 })
 
 module.exports = router;

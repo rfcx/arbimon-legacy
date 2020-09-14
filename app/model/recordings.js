@@ -771,6 +771,11 @@ var Recordings = {
         });
     },
 
+    insertAsync: function(recording) {
+        let insert = util.promisify(this.insert)
+        return insert(recording)
+    },
+
     update: function(recording, callback) {
 
         if(recording.id) {
@@ -819,7 +824,6 @@ var Recordings = {
     },
 
     exists: function(recording, callback) {
-
         if(!recording.site_id || !recording.filename)
             callback(new Error("Missing fields"));
 
@@ -835,6 +839,11 @@ var Recordings = {
         return dbpool.query(q).then(function(rows){
             return rows[0].count > 0;
         }).nodeify(callback);
+    },
+
+    existsAsync: function(recording) {
+        let exists = util.promisify(this.exists)
+        return exists(recording)
     },
 
     __compute_thumbnail_path : function(recording, callback){
