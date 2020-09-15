@@ -140,8 +140,8 @@ var planSchema = joi.object().keys({
 
 var freePlan = {
     cost: 0,
-    storage: 100,
-    processing: 1000,
+    storage: 50000,
+    processing: 5000000,
     tier: 'free'
 };
 

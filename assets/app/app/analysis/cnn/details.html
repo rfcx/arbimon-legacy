@@ -67,7 +67,7 @@
 
             <div class="col-sm-5 flex-self-align-bottom" ng-show="viewType=='rois'">
                 <div class="pull-right">
-					<div class="pull-right btn-group">
+					<div class="pull-right btn-group btn-group-margin">
 						<button class="btn btn-default not-active"><i class="fa fa-search"></i></button>
                             <ui-select ng-model="selected.search" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="onSearchChanged()"
@@ -82,7 +82,7 @@
 					</div>
 					
                 <div class="pull-right">
-                    <div class="btn-group">
+                    <div class="btn-group btn-group-margin">
                         <ui-select ng-model="_selection" theme="bootstrap" style="display:inline-block; width:9em;"
                             on-select="onSelect($select.selected)"
                         >
@@ -92,7 +92,7 @@
                             </ui-select-choices>
                         </ui-select>
                     </div>
-                    <div class="btn-group">
+                    <div class="btn-group btn-group-margin">
                         <button class="btn btn-default not-active" >Validate as:</button>
                         <ui-select ng-model="validation.current" class="btn-group-item border-left-radius" theme="bootstrap">
                             <ui-select-match class="right-corners">
@@ -105,17 +105,15 @@
                         </ui-select>
                     </div>
 
-                    <div class="btn-group">
+                    <div class="btn-group btn-group-margin">
                         <button class="btn btn-primary" ng-click="validate()">Submit</button>
                     </div>
                 </div>
                 <div class="pull-right">
-                    <div class="btn-group" ng-show="total.pages > 1"> 
-                            <a class="btn btn-default prev-right" ng-click="moveROIPage(-1) | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
-                            <ui-select class="btn-group-item border-radius" ng-model="selected.page"
-                                ng-change="setPage($select.selected, true)"
-                            >
-                                <ui-select-match class="left-corners">
+                    <div class="btn-group btn-group-margin" ng-show="total.pages > 1"> 
+                            <a class="btn btn-default right-corners" ng-click="moveROIPage(-1) | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
+                            <ui-select class="btn-group-item border-radius" ng-model="selected.page" ng-change="setPage($select.selected, true)">
+                                <ui-select-match>
                                     {{$select.selected | a2PageNumberToTitle}} of {{total.pages}}
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in total.pages | a2Range | filter:($select.search | a2PageTitleToNumber)">
@@ -124,7 +122,7 @@
                             </ui-select>
                             <a class="btn btn-default next-all" ng-click="moveROIPage(1) | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
                         </div>
-                    <div class="btn-group" ng-show="false">
+                    <div class="btn-group btn-group-margin" ng-show="false">
                         <ui-select class="btn-group-item" ng-model="selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
                             ng-change="setSiteBookmark($select.selected)"
                         >
@@ -135,7 +133,7 @@
                         </ui-select>
                     </div>
 
-                    <div class="btn-group">
+                    <div class="btn-group btn-group-margin">
                         <button class="btn btn-default"
                             ng-repeat="item in lists.thumbnails"
                             ng-click="lists.current.thumbnailClass = item.value"
@@ -155,7 +153,7 @@
 				</div>
 				
 				<div class="pull-right">
-					<div class="btn-group" ng-show="total.pages > 1">
+					<div class="btn-group btn-group-margin" ng-show="total.pages > 1">
                         <ui-select class="btn-group-item" ng-model="selected.species" ng-change="setSpecies($select.selected)">
                             <ui-select-match>{{$select.selected.scientific_name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
                             <ui-select-choices repeat="$item in counts.roi_species_counts | filter:$select.search">
@@ -164,7 +162,7 @@
 						</ui-select>
 					</div>
 						
-					<div class="btn-group" ng-show="total.pages > 1">
+					<div class="btn-group btn-group-margin" ng-show="total.pages > 1">
 						<ui-select class="btn-group-item" ng-model="selected.site" ng-change="setSite($select.selected)">
 							<ui-select-match>{{$select.selected.name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
 							<ui-select-choices repeat="$item in counts.roi_sites_counts | filter:$select.search">
