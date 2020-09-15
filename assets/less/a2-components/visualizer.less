@@ -560,23 +560,23 @@
     &:before{
         content: "\f00c"
     }
-    color: #fff;
+    color: @brand-present;
 }
 
 .fa.val-0, .fa.a2-absent{
     &:before{
         content: "\f00d"
     }
-    color: #fff;
+    color: @brand-warning;
 }
 
 .btn.btn-fade-inactive:not(.active) {
     .fa.val-1, .fa.a2-present{
-        color: @val-color-2;
-    }
+		color: lighten(@brand-present, 25%);
+	}
 
     .fa.val-0, .fa.a2-absent{
-        color: @val-color-2
+        color: lighten(@brand-warning, 25%);
     }
 }
 
