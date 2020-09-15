@@ -47,8 +47,8 @@ angular.module('a2.orders.plan-selection', [
     
     $scope.freePlan = { 
         cost: 0, 
-		storage: 50000,
-		processing: 5000000, 
+        storage: 50000,
+        processing: 5000000, 
     };
     $scope.recorderOptions = 0;
     $scope.planMinutes = $scope.planMinutes || 10000;

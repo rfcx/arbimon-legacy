@@ -67,8 +67,8 @@
 
             <div class="col-sm-5 flex-self-align-bottom" ng-show="viewType=='rois'">
                 <div class="pull-right">
-					<div class="pull-right btn-group btn-group-margin">
-						<button class="btn btn-default not-active"><i class="fa fa-search"></i></button>
+                    <div class="pull-right btn-group btn-group-margin">
+                        <button class="btn btn-default not-active"><i class="fa fa-search"></i></button>
                             <ui-select ng-model="selected.search" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="onSearchChanged()"
                             >
@@ -79,8 +79,8 @@
                                     <i ng-class="$item.class"></i> {{$item.text}}
                                 </ui-select-choices>
                             </ui-select>
-					</div>
-					
+                    </div>
+                    
                 <div class="pull-right">
                     <div class="btn-group btn-group-margin">
                         <ui-select ng-model="_selection" theme="bootstrap" style="display:inline-block; width:9em;"
@@ -111,17 +111,17 @@
                 </div>
                 <div class="pull-right">
                     <div class="btn-group btn-group-margin" ng-show="total.pages > 1"> 
-                            <a class="btn btn-default right-corners" ng-click="moveROIPage(-1) | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
-                            <ui-select class="btn-group-item border-radius" ng-model="selected.page" ng-change="setPage($select.selected, true)">
-                                <ui-select-match>
-                                    {{$select.selected | a2PageNumberToTitle}} of {{total.pages}}
-                                </ui-select-match>
-                                <ui-select-choices repeat="$item in total.pages | a2Range | filter:($select.search | a2PageTitleToNumber)">
-                                    {{$item | a2PageNumberToTitle}}
-                                </ui-select-choices>
-                            </ui-select>
-                            <a class="btn btn-default next-all" ng-click="moveROIPage(1) | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
-                        </div>
+                        <a class="btn btn-default right-corners" ng-click="moveROIPage(-1) | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
+                        <ui-select class="btn-group-item border-radius" ng-model="selected.page" ng-change="setPage($select.selected, true)">
+                            <ui-select-match>
+                                {{$select.selected | a2PageNumberToTitle}} of {{total.pages}}
+                            </ui-select-match>
+                            <ui-select-choices repeat="$item in total.pages | a2Range | filter:($select.search | a2PageTitleToNumber)">
+                                {{$item | a2PageNumberToTitle}}
+                            </ui-select-choices>
+                        </ui-select>
+                        <a class="btn btn-default next-all" ng-click="moveROIPage(1) | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
+                    </div>
                     <div class="btn-group btn-group-margin" ng-show="false">
                         <ui-select class="btn-group-item" ng-model="selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
                             ng-change="setSiteBookmark($select.selected)"
