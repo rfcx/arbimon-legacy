@@ -7,6 +7,9 @@ services:
       - "3001:3001"
     volumes:
       - $PWD:/app
+    environment:
+      - NODE_ENV=development
+    command: ["./node_modules/.bin/gulp", "watch"]
   mysql:
     image: "mariadb:10.4"
     ports:
