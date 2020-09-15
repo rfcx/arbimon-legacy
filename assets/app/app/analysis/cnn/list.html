@@ -43,12 +43,12 @@
                         {{ cnn.user }}
                     </td>
                     <td class="is-v-middle">
-                        <button class="btn btn-default"
+                        <button class="btn btn-default btn-xs"
                             ng-click="selectItem(cnn.job_id) | trackEvent:'Analysis-CNN-List':' show cnn details'"
                         >
                                 Show Details
                         </button>
-                        <button class="btn btn-default"
+                        <button class="btn btn-default btn-xs"
                             ng-click="deleteCNN(cnn, $event) | trackEvent:'Analysis-CNN-list':'delete cnn'"
                             tooltip="Delete"
                             tooltip-trigger="mouseenter">
