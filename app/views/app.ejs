@@ -23,10 +23,16 @@
 
             <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
                 <ul class="nav navbar-nav hide-tooltip-lg">
+					<li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
+                        <a class="dropdown-toggle text-overflow" dropdown-toggle>
+                            <i class="fa fa-sitemap"></i>
+                            <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>
+                        </a>
+                    </li>
                     <li ui-sref-active="active">
-                        <a ui-sref="dashboard" tooltip="Dashboard" tooltip-placement="bottom">
+                        <a ui-sref="dashboard" tooltip="Summary" tooltip-placement="bottom">
                             <i class="fa fa-dashboard"></i>
-                            <span class="visible-lg-inline visible-xs-inline">Dashboard</span>
+                            <span class="visible-lg-inline visible-xs-inline">Summary</span>
                         </a>
                     </li>
                     <li ui-sref-active="open" tooltip="Data" tooltip-placement="bottom">
@@ -76,16 +82,7 @@
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right hide-tooltip-lg">
-                    <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
-                        <a class="dropdown-toggle" dropdown-toggle>
-                            <i class="fa fa-sitemap"></i>
-                            <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>
-                        </a>
-                    </li>
-
                     <% include user-dropdown %>
-
-                    <% include help-dropdown %>
                 </ul>
             </div>
         </div>
