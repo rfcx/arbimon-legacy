@@ -56,7 +56,7 @@
                 <div class="col-sm-5 flex-self-align-bottom">
                     <div class="pull-right">
                     <div class="pull-right">
-                        <div class="btn-group">
+                        <div class="btn-group btn-group-margin">
                             <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="controller.onSelect($select.selected)"
                             >
@@ -67,7 +67,7 @@
                             </ui-select>
                         </div>
 
-                        <div class="btn-group">
+                        <div class="btn-group btn-group-margin">
                             <button class="btn btn-default" >Validate as:</button>
                             <ui-select ng-model="controller.validation" theme="bootstrap" class="btn-group-item border-left-radius">
                                 <ui-select-match>
@@ -79,12 +79,12 @@
                             </ui-select>
                         </div>
 
-                        <div class="btn-group">
+                        <div class="btn-group btn-group-margin">
                             <button class="btn btn-primary" ng-click="controller.validate()">Submit</button>
                         </div>
                     </div>
                     <div class="pull-right">
-                        <div class="btn-group" ng-show="controller.total.pages > 1">
+                        <div class="btn-group btn-group-margin" ng-show="controller.total.pages > 1">
                             <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
                             <ui-select class="btn-group-item border-radius" ng-model="controller.selected.page" theme="bootstrap" ng-change="controller.setPage($select.selected, true)">
                                 <ui-select-match>
@@ -97,7 +97,7 @@
                             <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
                         </div>
 
-                        <div class="btn-group">
+                        <div class="btn-group btn-group-margin">
                             <button class="btn btn-default"
                                 ng-repeat="item in controller.lists.thumbnails"
                                 ng-click="controller.thumbnailClass = item.value"
