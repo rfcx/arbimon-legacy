@@ -44,7 +44,7 @@ var createProject = function(project, userId) {
 };
 
 // Ensures that user with specified Auth0 token exists in MySQL and creates a project for him
-router.post('/user-project', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
+router.get('/user-project', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
   try {
       const user = await model.users.ensureUserExistFromAuth0(req.user)
       const project = {
@@ -72,9 +72,9 @@ router.post('/user-project', verifyToken(), hasRole(['appUser', 'rfcxUser']), as
   }
 })
 
-router.post('/project/:uri/sites/create', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
+router.post('/project/:id/sites/create', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
     try {
-      const project = await model.projects.find({url: req.params.uri}).get(0)
+      const project = await model.projects.find({id: req.params.id}).get(0)
       if (!project) {
         throw new EmptyResultError('Project with given uri not found.')
       }
@@ -120,11 +120,10 @@ router.post('/project/:uri/sites/create', verifyToken(), hasRole(['appUser', 'rf
     }
 })
 
-router.post('/recordings/create', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
+router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async function(req, res) {
   try {
     const convertedParams = {}
     const params = new Converter(req.body, convertedParams)
-    params.convert('project_id').toString()
     params.convert('site_external_id').toString()
     params.convert('uri').toString()
     params.convert('datetime').toMomentUtc()
@@ -141,19 +140,9 @@ router.post('/recordings/create', verifyToken(), hasRole(['appUser', 'rfcxUser']
     params.convert('sver').toString().optional().default('Unknown')
 
     await params.validate()
-    const project = await model.projects.find({id: convertedParams.project_id}).get(0)
-    if (!project) {
-      throw new EmptyResultError('Project with given id not found.')
-    }
     const site = await model.sites.find({ external_id: convertedParams.site_external_id }).get(0)
     if (!site) {
       throw new EmptyResultError('Site with given external_id not found.')
-    }
-    const projectUsers = await model.projects.getUsersAsync(project.project_id)
-    const user = await model.users.ensureUserExistFromAuth0(req.user)
-    const hasPermission = !!projectUsers.find(x => x.id === user.user_id)
-    if (!hasPermission) {
-      throw new ForbiddenError(`You don't have permission to add recordings into this site`)
     }
     const fileExists = await model.recordings.existsAsync({
       site_id: site.site_id,
