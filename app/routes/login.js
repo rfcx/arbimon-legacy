@@ -32,6 +32,9 @@ var mailTemplates = {
 const mandrill = require('mandrill-api/mandrill');
 const mandrill_client = new mandrill.Mandrill(config('mandrill-key').key)
 
+const auth0UniversalLoginUrl = `https://${auth0Conf.auth0Domain}/authorize?audience=${auth0Conf.audience}&scope=openid%20email%20profile%20offline_access` +
+    `&response_type=code&client_id=${auth0Conf.clientId}&redirect_uri=${auth0Conf.redirectUri}&theme=dark`
+
 router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
     if(req.session && !req.session.loggedIn && (!req.session.isAnonymousGuest || !req.session.user)){
 
@@ -113,8 +116,6 @@ router.get('/', function(req, res) {
         if(req.session.loggedIn) return res.redirect('/home');
     }
     console.log("google_oauth_client:", config('google-api').oauthId);
-    const auth0UniversalLoginUrl = `https://${auth0Conf.auth0Domain}/authorize?audience=${auth0Conf.audience}&scope=openid%20email%20profile%20offline_access` +
-        `&response_type=code&client_id=${auth0Conf.clientId}&redirect_uri=${auth0Conf.redirectUri}&theme=dark`
     res.render('landing-page', {
         message: '',
         auth0UniversalLoginUrl,
@@ -132,6 +133,7 @@ router.get('/login', function(req, res) {
     }
     res.render('login', {
         message: '',
+        auth0UniversalLoginUrl,
         inject_data: {
             facebook_api: config('facebook-api').public,
             google_oauth_client: config('google-api').oauthId
