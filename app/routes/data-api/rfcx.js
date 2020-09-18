@@ -6,6 +6,7 @@ var router = express.Router();
 var joi = require('joi');
 var q = require('q');
 var model = require('../../model');
+const request = require('request')
 
 const authentication = require('../../middleware/jwt')
 const verifyToken = authentication.verifyToken
@@ -15,6 +16,10 @@ const Converter = require('../../utils/converter/converter')
 const EmptyResultError = require('../../utils/converter/empty-result-error')
 const ValidationError = require('../../utils/converter/validation-error')
 const ForbiddenError = require('../../utils/converter/forbidden-error')
+
+const config = require('../../config');
+const rfcxConfig = config('rfcx')
+const auth0Service = require('../../model/auth0')
 
 var projectSchema = joi.object().keys({
   name: joi.string(),
@@ -154,7 +159,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
     const recordingData = {
       site_id: site.site_id,
       uri: convertedParams.uri,
-      datetime: convertedParams.datetime.toDate(),
+      datetime: convertedParams.datetime.format('YYYY-MM-DD HH:mm:ss.SSS'), // required format to avoid timezone issues in joi
       mic: convertedParams.mic,
       recorder: convertedParams.recorder,
       version: convertedParams.sver,
@@ -174,6 +179,16 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
     httpErrorHandler(req, res, 'Failed creating a recording')(e)
   }
 
+})
+
+router.get('/recordings/:attr', async function(req, res) {
+  const token = await auth0Service.getToken()
+  const apiUrl = `${rfcxConfig.mediaBaseUrl}/internal/assets/streams/${req.params.attr}`
+  request.get(apiUrl, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  }).pipe(res)
 })
 
 module.exports = router;
