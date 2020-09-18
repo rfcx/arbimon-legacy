@@ -1087,6 +1087,9 @@ var Recordings = {
                     } else if(output == 'list'){
                         for (let _1 of r) {
                             Recordings.__compute_thumbnail_path_async(_1)
+                            if (!!_1.legacy !== true) {
+                                _1.file = `${moment.utc(_1.datetime).format('YYYY-MM-DD HH:mm:ss')}${path.extname(_1.file)}`
+                            }
                         }
                     } else if(output != 'list'){
                         r = r[0];
