@@ -1,5 +1,5 @@
 const config = require('../config');
-const jwtDecode = require('jwt-decode')
+const jsonwebtoken = require('jsonwebtoken')
 const auth0Config = config('auth0')
 const auth0BackendConfig = config('auth0-backend')
 const request = require('request')
@@ -35,7 +35,7 @@ async function getTokensByCode(code) {
 }
 
 function parseTokens (tokens) {
-  return jwtDecode(tokens.id_token)
+  return jsonwebtoken.decode(tokens.id_token)
 }
 
 let tokenData;
