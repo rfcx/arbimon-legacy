@@ -17,32 +17,30 @@
         </button>
         
         <div ng-hide="loading">
-            <table ng-table="tableParams" class="table table-hide-btns"  show-filter="true" >
-                <tr ng-repeat="model in modelsData" >
-                    <td data-title="'Date'" data-sortable="'date'">
-                        {{ model.date | moment : 'lll' }}
-                    </td>
-                    <td data-title="'Name'" class="hidelongtext widthtd" data-sortable="'mname'"  filter="{ 'mname': 'text' }">
-                        {{model.mname}}
-                    </td>
-                    <td data-title="'Type'" data-sortable="'mtname'" filter="{ 'mtname': 'text' }">
-                        {{model.mtname}}
-                    </td>
-                    <td data-title="'User'" data-sortable="'muser'" filter="{ 'muser': 'text' }" class="no-wrap-table-cell">
-                        {{model.muser}}
-                    </td>
-                    <td>
-                        <button class="btn btn-default btn-xs" 
-                            ui-sref="analysis.modeldetails({ modelId: model.model_id })">
-                            Show details
-                        </button>
-                        <button class="btn btn-default btn-xs" 
-                            ng-click="deleteModel(model.model_id,model.mname) | trackEvent:'Analysis-Model list':'delete model'">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            </table>
+            <a2-table rows="modelsData" no-checkbox="true">
+                <field title="Date" key="date">
+                    {{ row.date | moment : 'lll' }}
+                </field>
+                <field title="Name" class="hidelongtext widthtd" key="mname" filter>
+                    {{row.mname}}
+                </field>
+                <field title="Type" key="mtname" filter>
+                    {{row.mtname}}
+                </field>
+                <field title="User" key="muser" class="no-wrap-table-cell" filter>
+                    {{row.muser}}
+                </field>
+                <field>
+                    <button class="btn btn-default btn-xs" 
+                        ui-sref="analysis.modeldetails({ modelId: model.model_id })">
+                        Show details
+                    </button>
+                    <button class="btn btn-default btn-xs" 
+                        ng-click="deleteModel(model.model_id,model.mname) | trackEvent:'Analysis-Model list':'delete model'">
+                        Delete
+                    </button>
+                </field>
+            </a2-table>
         </div>
         <div class="jumbotron" ng-show="(!modelsDataOrig || !modelsDataOrig.length > 0) && !loading">
             <h3>{{ infopanedata }}  
