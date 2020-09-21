@@ -17,35 +17,33 @@
         </button>
         
         <div ng-hide="loading">
-            <table ng-table="tableParams" class="table" show-filter="true" >
-                <tr ng-repeat="classification in classificationsData" >
-                    <td data-title="'Name'" class="hidelongtext widthtd" data-sortable="'cname'" filter="{ 'cname': 'text' }">
-                        {{classification.cname}}
-                    </td>
-                    <td data-title="'Date'" data-sortable="'date'" >
-                        {{ classification.date | moment : 'lll' }}
-                    </td>
-                    <td data-title="'Model'" data-sortable="'modname'" filter="{ 'modname': 'text' }" class="no-wrap-table-cell">
-                        {{classification.modname}}
-                    </td>
-                    <td data-title="'Playlist'" data-sortable="'playlist_name'" filter="{ 'playlist_name': 'text' }" class="no-wrap-table-cell">
-                        {{classification.playlist_name}}
-                    </td>
-                    <td data-title="'User'" data-sortable="'muser'" filter="{ 'muser': 'text' }" class="no-wrap-table-cell">
-                        {{classification.muser}}
-                    </td>
-                    <td>
-                        <button class="btn btn-default btn-xs" 
-                            ng-click="showClassificationDetails(classification) | trackEvent:'Analysis-Classification-List':' show classification details'">
-                                Show details
-                        </button>
-                        <button class="btn btn-default btn-xs" 
-                            ng-click="deleteClassification(classification.job_id,classification.cname) | trackEvent:'Analysis-Classification list':'delete classification'">
-                                Delete
-                        </button>
-                    </td>
-                </tr>
-            </table>
+            <a2-table rows="classificationsData" no-checkbox="true">
+                <field title="Name" class="hidelongtext widthtd" key="cname" filter>
+                    {{row.cname}}
+                </field>
+                <field title="Date" key="date" class="is-v-middle">
+                    {{ row.date | moment : 'lll' }}
+                </field>
+                <field title="Model" key="modname" filter class="no-wrap-table-cell">
+                    {{row.modname}}
+                </field>
+                <field title="Playlist" key="playlist_name" filter class="no-wrap-table-cell">
+                    {{row.playlist_name}}
+                </field>
+                <field title="User" key="muser" filter class="no-wrap-table-cell">
+                    {{ row.muser }}
+                </field>
+                <field>
+                    <button class="btn btn-default btn-xs" 
+                        ng-click="showClassificationDetails(row) | trackEvent:'Analysis-Classification-List':' show classification details'">
+                            Show details
+                    </button>
+                    <button class="btn btn-default btn-xs" 
+                        ng-click="deleteClassification(row.job_id,row.cname) | trackEvent:'Analysis-Classification list':'delete classification'">
+                            Delete
+                    </button>
+                </field>
+            </a2-table>
         </div>
         <div class="jumbotron" ng-show="(!classificationsOriginal || !classificationsOriginal.length > 0) && !loading">
             <h3>
