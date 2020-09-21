@@ -32,11 +32,11 @@
                 </field>
                 <field>
                     <button class="btn btn-default btn-xs" 
-                        ui-sref="analysis.modeldetails({ modelId: model.model_id })">
+                        ui-sref="analysis.modeldetails({ modelId: row.model_id })">
                         Show details
                     </button>
                     <button class="btn btn-default btn-xs" 
-                        ng-click="deleteModel(model.model_id,model.mname) | trackEvent:'Analysis-Model list':'delete model'">
+                        ng-click="deleteModel(row.model_id,row.mname) | trackEvent:'Analysis-Model list':'delete model'">
                         Delete
                     </button>
                 </field>
