@@ -47,12 +47,12 @@
                     {{ row.user }}
                 </field>
                 <field class="is-v-middle">
-                    <button class="btn btn-default"
+                    <button class="btn btn-default btn-xs"
                         ng-click="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
                     >
                             Show Details
                     </button>
-                    <button class="btn btn-default"
+                    <button class="btn btn-default btn-xs"
                         ng-click="deletePatternMatching(row, $event) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
                         tooltip="Delete"
                         tooltip-trigger="mouseenter">
