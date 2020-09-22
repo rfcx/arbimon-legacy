@@ -1272,7 +1272,7 @@ var Recordings = {
                         ]);
                         builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("cr<" + classification.cname + ">"));
                         if(classification.threshold){
-                            builder.addProjection("IF(ISNULL("+clsid+".max_vector_value), '---', "+clsid+".max_vector_value > " + dbpool.escape(classification.threshold) + ")  AS " + dbpool.escapeId("cr<" + classification.cname + "> threshold (" + classification.threshold + ")"));
+                            builder.addProjection("IF(ISNULL("+clsid+".max_vector_value), '---', "+clsid+".max_vector_value > " + dbpool.escape(classification.threshold) + ")  AS " + dbpool.escapeId("cr<" + classification.cname + "> threshold (" + String(classification.threshold).replace('.',',') + ")"));
                         }
                     });
                 }));
