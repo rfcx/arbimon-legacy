@@ -17,7 +17,7 @@
         </button>
             
         <div ng-hide="loading">
-            <table ng-table="tableParams" class="table table-hide-btns" show-filter="true" >
+            <table ng-table="tableParams" class="table" show-filter="true" >
                 <tr ng-repeat="soundscape in soundscapesData" >
                     <td data-title="'Date'" class="no-wrap-table-cell" data-sortable="'date'" >
                         {{soundscape.date | moment : 'lll' }} 
