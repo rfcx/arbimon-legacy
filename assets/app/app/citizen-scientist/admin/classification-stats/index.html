@@ -13,7 +13,7 @@
 </div>
 <div class="row">
     <div class="col-sm-12" ng-show="!controller.speciesId">
-        <a2-table class="table-hide-btns"
+        <a2-table
             rows="controller.stats" no-checkbox="true"
             ext-sort="sortRecs(sortBy, reverse)"
             default-sort="site"
@@ -37,7 +37,7 @@
         <loader ng-hide="!controller.loading"></loader>
     </div>
     <div class="col-sm-12" ng-show="controller.speciesId">
-        <a2-table class="table-hide-btns"
+        <a2-table
             ng-show="!controller.loadingForSpecies"
             rows="controller.speciesStats" no-checkbox="true"
             ext-sort="sortRecs(sortBy, reverse)"
@@ -57,7 +57,7 @@
                 />
             </field>
             <field>
-                <a class="btn btn-default"
+                <a class="btn btn-default btn-xs"
                     ng-href="{{controller.patternMatchingExportUrl(row)}}"
                     ng-click="true | trackEvent:'CS Pattern Matching':'export'"
                     popover-html="'Export Citizen Scientist<br />Pattern Matching Data'"
@@ -66,7 +66,7 @@
                 >
                     <i class="fa fa-download"></i>
                 </a>
-                <a class="btn btn-default"
+                <a class="btn btn-default btn-xs"
                     ng-href="{{controller.patternMatchingExportUrl(row, true)}}"
                     ng-click="true | trackEvent:'CS Pattern Matching':'export'"
                     popover-html="'Export Citizen Scientist<br />Per User<br />Pattern Matching Data'"

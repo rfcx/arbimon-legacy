@@ -30,7 +30,7 @@
 </div> -->
 <div class="row">
     <div class="col-sm-12">
-        <a2-table class="table-hide-btns" rows="controller.list" no-checkbox="true" ext-sort="sortRecs(sortBy, reverse)" default-sort="site" no-select>
+        <a2-table rows="controller.list" no-checkbox="true" ext-sort="sortRecs(sortBy, reverse)" default-sort="site" no-select>
             <field title="Filename"   key="filename" >{{ row.filename  }}</field>
             <field title="Site"       key="site"     >{{ row.site     }}</field>
             <field title="Time"       key="datetime" >{{ (row.datetime | momentUtc: 'lll') || '(Empty)'}}</field>

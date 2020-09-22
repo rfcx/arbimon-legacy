@@ -22,7 +22,7 @@
 </div></div>
 <div class="row">
     <div class="col-sm-12" ng-if="!controller.userId">
-        <a2-table class="table-hide-btns"
+        <a2-table
             rows="controller.stats" no-checkbox="true"
             default-sort="user"
             on-select="controller.setUser(row.user_id)"
@@ -38,7 +38,7 @@
         <loader ng-hide="!loading"></loader>
     </div>
     <div class="col-sm-12" ng-if="controller.userId">
-        <a2-table class="table-hide-btns"
+        <a2-table
             rows="controller.userStats" no-checkbox="true"
             default-sort="species"
             no-select
