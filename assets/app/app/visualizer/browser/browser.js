@@ -3,7 +3,6 @@ angular.module('a2.visobjectsbrowser', [
     'a2.browser_common',
     'a2.browser_recordings',
     'a2.browser_soundscapes',
-    'a2.browser_audio-event-detections',
     'a2.service.serialize-promised-fn',
 ])
 /**
