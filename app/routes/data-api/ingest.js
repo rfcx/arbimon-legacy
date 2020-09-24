@@ -11,8 +11,7 @@ const request = require('request');
 const authentication = require('../../middleware/jwt');
 const verifyToken = authentication.verifyToken;
 const hasRole = authentication.hasRole;
-const { httpErrorHandler } = require('../../utils/http-error-handler.js');
-const { Converter, ValidationError, EmptyResultError, ForbiddenError } = require('@rfcx/http-utils');
+const { Converter, ValidationError, EmptyResultError, ForbiddenError, httpErrorHandler } = require('@rfcx/http-utils');
 
 const config = require('../../config');
 const rfcxConfig = config('rfcx');

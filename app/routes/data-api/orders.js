@@ -20,11 +20,6 @@ var ordersUtils = require('../../utils/orders.js');
 var countries = require('../../utils/countries.js');
 var shippingCalculator = require('../../utils/shipping-calculator.js');
 
-const authentication = require('../../middleware/jwt')
-const verifyToken = authentication.verifyToken
-const hasRole = authentication.hasRole
-const { httpErrorHandler } = require('../../utils/http-error-handler.js')
-
 /**
     creates a new project an create news about project creation
 */
