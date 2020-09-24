@@ -7,7 +7,7 @@ var router = express.Router();
 var project = require('./project');
 var dataApi = require('./data-api');
 var uploads = require('./uploads');
-var core = require('./core');
+var site = require('./site');
 var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
 var dbpool = require('../utils/dbpool');
@@ -54,7 +54,6 @@ router.use('/', acmeChallenge);
 
 router.use('/uploads', uploads);
 
-router.use('/core', core);
 // all routes after this middleware
 // are available only to logged users
 router.use(function(req, res, next) {
@@ -93,6 +92,7 @@ router.get('/user-settings', function(req, res) {
 
 router.use('/api', dataApi);
 router.use('/project', project);
+router.use('/site', site);
 router.use('/citizen-scientist', require('./citizen-scientist'));
 router.use('/visualizer', require('./visualizer'));
 router.use('/', require('./access-token'));
