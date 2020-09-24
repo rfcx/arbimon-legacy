@@ -96,6 +96,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
       - `ssh-web` for production web server
 
 ### Deployment
+
 1. SSH into the Bastion tunnel server
     - `ssh ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem`
 2. From inside the Bastion server, SSH into dev/prod server
@@ -108,10 +109,34 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
     - `git fetch -p` and `git pull`
 4. Perform any dependency installs and rebuild the source code (same as local install)
     - `npm i` and `bower i`
-    - `gulp build` to build css, and ?
+    - `gulp build` to build css (in production use `./node_modules/.bin/gulp build`)
 5. Restart the web server/app
     - `pm2 restart 0` to perform restart
     - `pm2 list` to check that the arbimon2 process is running
+
+Additional steps for production (to support auto-scaling of the frontend)
+
+6. In the EC2 console, create an image of the current `web` instance.
+    - Name: arbimon-web-2020-09-09
+    - No reboot: true
+    
+    ![production-deployment-1](https://user-images.githubusercontent.com/1175362/92625187-8c6a3700-f2f2-11ea-869e-bc39b7c502a6.png)
+
+7. After the image is created, open "Auto scaling" -> "Launch configurations". Find the last launch configuration and make a copy ("Actions" -> "Copy launch configuration").
+
+    ![production-deployment-2](https://user-images.githubusercontent.com/1175362/92625432-d3582c80-f2f2-11ea-97ca-09f235a74183.png)
+
+8. Choose the AMI that was created in step 6 and create the launch configuration.
+    - Name: arbimon-web-2020-09-09
+    - AMI: arbimon-web-2020-09-09
+    - (everything else the same)
+
+9. Open "Auto scaling groups", and edit the `arbimon` group. Select the newly created launch configuration and then "Update".
+    - Launch configuration: arbimon-web-2020-09-09
+    
+    ![production-deployment-3](https://user-images.githubusercontent.com/1175362/92625454-db17d100-f2f2-11ea-8089-8e85e9c999f9.png)
+
+10. To test the auto scaling is working, terminate the current `web` instance.
 
 ---
 ## Legacy README

@@ -25,8 +25,8 @@ var Projects = {
     plans: {
         free: {
             cost: 0,
-            storage: 100,
-            processing: 1000,
+            storage: 5000000,
+            processing: 5000000,
             tier: 'free'
         }
     },

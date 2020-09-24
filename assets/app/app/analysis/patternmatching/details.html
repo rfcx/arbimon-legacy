@@ -9,13 +9,7 @@
         <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
         <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader }">
             <div class="row row-flex flex-align-middle">
-                <div class="col-sm-2 flex-self-align-top">
-                    <button class="btn btn-default"
-                        ng-click="onGoBack({}) | trackEvent:'Analysis-Pattern-Matching-List':' go back'">
-                        &lt;  Go Back
-                    </button>
-                </div>
-                <div class="col-sm-2" style="padding-bottom:5px">
+                <div class="col-sm-3" style="padding-bottom:5px">
                     <div class="roi-thumbnail" >
                         <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
                         <a class="roi-btn-bl" ng-href="{{controller.getTemplateVisualizerUrl(controller.patternMatching.template)}}" ng-click="$event.stopPropagation();">
@@ -46,7 +40,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-5 is-v-middle">
+                <div class="col-sm-4 is-v-middle">
                     <b>{{controller.patternMatching.name}}</b><br />
                     {{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}<br />
                     {{controller.patternMatching.template.name }}<br />
@@ -60,13 +54,11 @@
                 </div>
                 <div class="col-sm-5 flex-self-align-bottom">
                     <div class="pull-right">
-                    <div class="toolbar pull-right">
-                        <div class="btn-group">
-                            <button class="btn btn-default" ><i class="fa fa-search"></i></button>
-                            <ui-select ng-model="controller.search" theme="bootstrap" style="display:inline-block; width:9em;"
-                                on-select="controller.onSearchChanged()"
-                            >
-                                <ui-select-match>
+                    <div class="pull-right">
+                        <div class="btn-group btn-group-margin">
+                            <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
+                            <ui-select ng-model="controller.search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="controller.onSearchChanged()">
+                                <ui-select-match class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.lists.search | filter:$select.search">
@@ -76,8 +68,8 @@
                             </ui-select>
                         </div>
                     </div>
-                    <div class="toolbar pull-right">
-                        <div class="btn-group">
+                    <div class="pull-right">
+                        <div class="btn-group btn-group-margin">
                             <ui-select ng-model="controller._selection" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="controller.onSelect($select.selected)"
                             >
@@ -88,10 +80,10 @@
                             </ui-select>
                         </div>
 
-                        <div class="btn-group">
-                            <button class="btn btn-default" >Validate as:</button>
-                            <ui-select ng-model="controller.validation" theme="bootstrap" style="display:inline-block; width:9em;">
-                                <ui-select-match>
+                        <div class="btn-group btn-group-margin">
+                            <button class="btn btn-default  not-active" >Validate as:</button>
+                            <ui-select ng-model="controller.validation" class="btn-group-item border-left-radius" theme="bootstrap">
+                                <ui-select-match  class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in controller.lists.validation | filter:$select.search">
@@ -100,14 +92,14 @@
                             </ui-select>
                         </div>
 
-                        <div class="btn-group">
+                        <div class="btn-group btn-group-margin">
                             <button class="btn btn-primary" ng-click="controller.validate()">Submit</button>
                         </div>
                     </div>
-                    <div class="toolbar pull-right">
-                        <div class="btn-group" ng-show="controller.total.pages > 1">
+                    <div class="pull-right">
+                        <div class="btn-group btn-group-margin" ng-show="controller.total.pages > 1">
                             <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
-                            <ui-select class="btn-group-item" ng-model="controller.selected.page" theme="bootstrap" style="display:inline-block; width:7em;"
+                            <ui-select class="btn-group-item border-radius" ng-model="controller.selected.page" theme="bootstrap"
                                 ng-change="controller.setPage($select.selected, true)"
                             >
                                 <ui-select-match>
@@ -117,29 +109,21 @@
                                     {{$item | a2PageNumberToTitle}}
                                 </ui-select-choices>
                             </ui-select>
-                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
-                                ng-change="controller.setSiteBookmark($select.selected)"
-                            >
-                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
-                                <ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
-                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
-                                </ui-select-choices>
-                            </ui-select>
                             <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
-                        </div>
+						</div>
+						
+						<div class="btn-group btn-group-margin">
+							<ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width:4em;"
+							ng-change="controller.setSiteBookmark($select.selected)"
+						>
+							<ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
+							<ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
+								<span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
+							</ui-select-choices>
+						</ui-select>
+						</div>
 
-                        <div class="btn-group" ng-show="controller.total.pages <= 1">
-                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
-                                ng-change="controller.setSiteBookmark($select.selected)"
-                            >
-                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
-                                <ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
-                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
-                                </ui-select-choices>
-                            </ui-select>
-                        </div>
-
-                        <div class="btn-group">
+                        <div class="btn-group btn-group-margin">
                             <button class="btn btn-default"
                                 ng-repeat="item in controller.lists.thumbnails"
                                 ng-click="controller.thumbnailClass = item.value"
@@ -147,7 +131,7 @@
                             ><i ng-class="item.class"></i></button>
                         </div>
 
-                        <div class="btn-group">
+                        <div class="export-url pull-right">
                                 <a class="btn btn-default"
                                 ng-href="{{controller.patternMatchingExportUrl}}"
                                 ng-click="true | trackEvent:'Pattern Matching Details':'export'"
@@ -161,41 +145,42 @@
                 </div>
             </div>
         </div>
-        <div class="panel-body">
-            <div ng-show="loading-rois">Loading...</div>
-            <div ng-repeat="site in controller.rois">
-                <div class="h3" id="site-{{site.id}}"><i class="fa fa-map-marker"></i> {{site.name}}</div>
-                    <div ng-repeat="roi in site.list"
-                        class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
-                        ng-click="roi.selected = !roi.selected"
-                        popover-html="'Recording: {{roi.recording}}<br>
-                                 Site: {{roi.site}}<br>
-                                 Time: {{roi.datetime | date:'medium':'UTC'}} <br>
-                                 Score: {{(roi.score | number) || '(Missing)'}}'"
-                        popover-trigger="mouseenter"
-                        popover-append-to-body="true"
-                    >
-                        <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
-                        <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
-                            <i class="fa val-{{roi.validated}}"></i>
-                        </div>
-                        <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();"">
-                            <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="View in Visualizer"
-                                class="fa fa-cubes">
-                            </i>
-                        </a>
-                        <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi, $event)">
-                            <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="Play Audio"
-                                class="fa fa-play">
-                            </i>
-                        </a>
-                        <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
+        <div class="panel-body" ng-class="{ 'panel-body_combined': controller.splitAllSites }">
+            <div ng-if="controller.loading.rois" class="loading">Loading <loader></loader></div>
+            <span class="pattern-matching-site" ng-repeat="site in controller.rois" ng-class="{ 'pattern-matching-site_block': !controller.splitAllSites }">
+                <div ng-if="!controller.splitAllSites && site.name" class="h3" id="site-{{site.id}}"><i class="fa fa-map-marker"></i> {{site.name}}</div>
+
+                <span ng-repeat="roi in site.list"
+                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                    ng-click="roi.selected = !roi.selected"
+                    popover-html="'Recording: {{roi.recording}}<br>
+                                Site: {{roi.site}}<br>
+                                Time: {{roi.datetime | date:'medium':'UTC'}} <br>
+                                Score: {{(roi.score | number) || '(Missing)'}}'"
+                    popover-trigger="mouseenter"
+                    popover-append-to-body="true"
+                >
+                    <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
+                    <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
+                        <i class="fa val-{{roi.validated}}"></i>
                     </div>
-            </div>
+                    <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();"">
+                        <i tooltip-placement="left"
+                            tooltip-append-to-body="true"
+                            tooltip="View in Visualizer"
+                            class="fa fa-cubes">
+                        </i>
+                    </a>
+                    <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi, $event)">
+                        <i tooltip-placement="left"
+                            tooltip-append-to-body="true"
+                            tooltip="Play Audio"
+                            class="fa fa-play">
+                        </i>
+                    </a>
+                    <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
+                </span>
+            </span>
         </div>
     </div>
 

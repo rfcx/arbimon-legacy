@@ -16,11 +16,6 @@
                     </h3>
                 </div>
                 <div class="row row-flex flex-align-middle cnn-selection-btns">
-                    <button class="btn btn-default non-active-cnn-selection"
-                        onclick="this.blur();"
-                        ng-click="onGoBack({}) | trackEvent:'Analysis-CNN-List':' go back'">
-                        &lt;  Go Back
-                    </button>
                     <button class="btn btn-default"
                         onclick="this.blur();"
                         ng-class="viewType=='rois' ? 'active-cnn-selection' : 'non-active-cnn-selection'"
@@ -67,23 +62,22 @@
 
             <div class="col-sm-5 flex-self-align-bottom" ng-show="viewType=='rois'">
                 <div class="pull-right">
-                <div class="toolbar pull-right">
-                        <div class="btn-group">
-                            <button class="btn btn-default" ><i class="fa fa-search"></i></button>
+                    <div class="pull-right btn-group btn-group-margin">
+                        <button class="btn btn-default not-active"><i class="fa fa-search"></i></button>
                             <ui-select ng-model="selected.search" theme="bootstrap" style="display:inline-block; width:9em;"
                                 on-select="onSearchChanged()"
                             >
-                                <ui-select-match>
+                                <ui-select-match class="right-corners">
                                     <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in lists.search | filter:$select.search">
                                     <i ng-class="$item.class"></i> {{$item.text}}
                                 </ui-select-choices>
                             </ui-select>
-                        </div>
                     </div>
-                <div class="toolbar pull-right">
-                    <div class="btn-group cnn-filter-btns">
+                    
+                <div class="pull-right">
+                    <div class="btn-group btn-group-margin">
                         <ui-select ng-model="_selection" theme="bootstrap" style="display:inline-block; width:9em;"
                             on-select="onSelect($select.selected)"
                         >
@@ -93,11 +87,11 @@
                             </ui-select-choices>
                         </ui-select>
                     </div>
+                    <div class="btn-group btn-group-margin">
+                        <button class="btn btn-default not-active" >Validate as:</button>
+                        <ui-select ng-model="validation.current" class="btn-group-item border-left-radius" theme="bootstrap">
+                            <ui-select-match class="right-corners">
 
-                    <div class="btn-group cnn-filter-btns">
-                        <button class="btn btn-default" >Validate as:</button>
-                        <ui-select ng-model="validation.current" theme="bootstrap" style="display:inline-block; width:9em;">
-                            <ui-select-match>
                                 <i ng-class="$select.selected.class"></i> {{$select.selected.text}}
                             </ui-select-match>
                             <ui-select-choices repeat="$item in lists.validation | filter:$select.search">
@@ -106,45 +100,24 @@
                         </ui-select>
                     </div>
 
-                    <div class="btn-group">
+                    <div class="btn-group btn-group-margin">
                         <button class="btn btn-primary" ng-click="validate()">Submit</button>
                     </div>
                 </div>
-                <div class="toolbar pull-right">
-                    <div class="btn-group">
-                        <div ng-show="total.pages > 1" class="cnn-filter-btns cnn-filter-btns__space">
-                            <a class="btn btn-default" ng-click="moveROIPage(-1) | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
-                            <ui-select class="btn-group-item" ng-model="selected.page" theme="bootstrap" style="display:inline-block; width:7em;"
-                                ng-change="setPage($select.selected, true)"
-                            >
-                                <ui-select-match>
-                                    {{$select.selected | a2PageNumberToTitle}} of {{total.pages}}
-                                </ui-select-match>
-                                <ui-select-choices repeat="$item in total.pages | a2Range | filter:($select.search | a2PageTitleToNumber)">
-                                    {{$item | a2PageNumberToTitle}}
-                                </ui-select-choices>
-                            </ui-select>
-                            <a class="btn btn-default" ng-click="moveROIPage(1) | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
-                        </div>
-                        <ui-select class="btn-group-item cnn-filter-btns" ng-model="selected.species" theme="bootstrap" style="display:inline-block;"
-                        ng-change="setSpecies($select.selected)"
-                        >
-                            <ui-select-match>{{$select.selected.scientific_name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
-                            <ui-select-choices repeat="$item in counts.roi_species_counts | filter:$select.search">
-                                <span class="text-wrap">{{$item.scientific_name}}({{$item.N}})</span>
+                <div class="pull-right">
+                    <div class="btn-group btn-group-margin" ng-show="total.pages > 1"> 
+                        <a class="btn btn-default right-corners" ng-click="moveROIPage(-1) | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
+                        <ui-select class="btn-group-item border-radius" ng-model="selected.page" ng-change="setPage($select.selected, true)">
+                            <ui-select-match>
+                                {{$select.selected | a2PageNumberToTitle}} of {{total.pages}}
+                            </ui-select-match>
+                            <ui-select-choices repeat="$item in total.pages | a2Range | filter:($select.search | a2PageTitleToNumber)">
+                                {{$item | a2PageNumberToTitle}}
                             </ui-select-choices>
                         </ui-select>
-                        <ui-select class="btn-group-item cnn-filter-btns" ng-model="selected.site" theme="bootstrap" style="display:inline-block;"
-                        ng-change="setSite($select.selected)"
-                        >
-                            <ui-select-match>{{$select.selected.name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
-                            <ui-select-choices repeat="$item in counts.roi_sites_counts | filter:$select.search">
-                                <span class="text-wrap">{{$item.name}}({{$item.N}})</span>
-                            </ui-select-choices>
-                        </ui-select>
+                        <a class="btn btn-default next-all" ng-click="moveROIPage(1) | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
                     </div>
-
-                    <div class="btn-group" ng-show="false">
+                    <div class="btn-group btn-group-margin" ng-show="false">
                         <ui-select class="btn-group-item" ng-model="selected.siteBookmark" theme="bootstrap" style="display:inline-block;"
                             ng-change="setSiteBookmark($select.selected)"
                         >
@@ -155,7 +128,7 @@
                         </ui-select>
                     </div>
 
-                    <div class="btn-group cnn-filter-btns cnn-filter-btns__space">
+                    <div class="btn-group btn-group-margin">
                         <button class="btn btn-default"
                             ng-repeat="item in lists.thumbnails"
                             ng-click="lists.current.thumbnailClass = item.value"
@@ -163,8 +136,8 @@
                         ><i ng-class="item.class"></i></button>
                     </div>
 
-                    <div class="btn-group cnn-filter-btns__space">
-                            <a class="btn btn-default"
+                    <div class="export-url pull-right">
+                        <a class="btn btn-default"
                             ng-href="{{CNNExportUrl}}"
                             ng-click="true | trackEvent:'CNN Details':'export'"
                             ng-disabled="!CNNExportUrl"
@@ -172,7 +145,28 @@
                             <i class="fa fa-download"></i>
                         </a>
                     </div>
-                </div>
+				</div>
+				
+				<div class="pull-right">
+					<div class="btn-group btn-group-margin" ng-show="total.pages > 1">
+                        <ui-select class="btn-group-item" ng-model="selected.species" ng-change="setSpecies($select.selected)">
+                            <ui-select-match>{{$select.selected.scientific_name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
+                            <ui-select-choices repeat="$item in counts.roi_species_counts | filter:$select.search">
+                                <span class="text-wrap">{{$item.scientific_name}}({{$item.N}})</span>
+                            </ui-select-choices>
+						</ui-select>
+					</div>
+						
+					<div class="btn-group btn-group-margin" ng-show="total.pages > 1">
+						<ui-select class="btn-group-item" ng-model="selected.site" ng-change="setSite($select.selected)">
+							<ui-select-match>{{$select.selected.name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
+							<ui-select-choices repeat="$item in counts.roi_sites_counts | filter:$select.search">
+								<span class="text-wrap">{{$item.name}}({{$item.N}})</span>
+							</ui-select-choices>
+						</ui-select>
+                    </div>
+				</div>
+				
                 </div>
             </div>
             <!--{"job_id":11906,"name":"switchTest1-fake","cnn_id":1,"playlist_id":8406,"project_id":1,"timestamp":"2019-08-02T23:06:19.000Z","parameters":{}}-->
@@ -184,7 +178,7 @@
             <div ng-repeat="species in rois_species">
                 <div class="h3" id="site-{{species.species_id}}"><i class="fa fa-map-marker"></i> {{species.scientific_name}}</div>
                 <div ng-repeat="roi in species.rois"
-                    class="btn roi-custom-state roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                    class="btn roi-thumbnail {{roi.selected ? 'active' : ''}}"
                     ng-click="roi.selected = !roi.selected"
                     popover-html="'Recording: {{roi.recording}}<br>
                             Site: {{roi.site}}<br>
@@ -241,7 +235,7 @@
                         {{ specie.count }}
                     </td>
                     <td class="is-v-middle">
-                        <button class="btn btn-default"
+                        <button class="btn btn-default btn-xs"
                             ng-click="showHist(specie.species_id)"
                         >
                                 Show Details

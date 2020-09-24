@@ -372,7 +372,8 @@ router.post('/register', function(req, res, next) {
                     fullName: user.firstName + ' ' + user.lastName,
                     username: user.username,
                     email: user.email,
-                    hash: hash
+					hash: hash,
+					host: config('hosts').publicUrl
                 }),
 				from_email: 'support@rfcx.org',
 				to: [{
@@ -456,7 +457,8 @@ router.post('/forgot_request', function(req, res, next) {
 			html: mailTemplates.resetPass({
                 fullName: user.firstname + ' ' + user.lastname,
                 username: user.login,
-                hash: hash
+				hash: hash,
+				host: config('hosts').publicUrl
             }),
             from_email: 'support@rfcx.org',
             to: [{

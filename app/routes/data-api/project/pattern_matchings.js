@@ -60,7 +60,8 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
         whereUnvalidated: req.query.search == 'unvalidated',
         bestPerSite: req.query.search == 'best_per_site',
         bestPerSiteDay: req.query.search == 'best_per_site_day',
-        allByScore: req.query.search == 'all_by_score',
+        byScorePerSite: req.query.search == 'by_score_per_site',
+        byScore: req.query.search == 'by_score',
         limit: req.paging.limit || 100,
         offset: req.paging.offset || 0,
     }).then(function(rois) {

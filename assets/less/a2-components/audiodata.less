@@ -88,17 +88,6 @@
     }
 }
 
-.roi-custom-state {
-    background-color: @gray-lighter;
-    border-color: @gray-lighter;
-    &:hover,
-    &:active,
-    &:focus {
-        background-color: @gray-medium;
-        border-color: @gray-medium;
-    }
-}
-
 .roi-thumbnail-container{
     display: inline-block;
 }
@@ -116,7 +105,8 @@
     }
 
     &.btn{
-        padding: 2px;
+		padding: 0px;
+		border-radius: 0px;
         &.active .roi-img{
             filter: brightness(50%);
         }
