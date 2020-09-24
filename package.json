@@ -24,7 +24,6 @@
     "express-jwt": "~3.4.0",
     "express-mysql-session": "~1.1.1",
     "express-session": "~1.14.0",
-    "generate-password": "^1.5.1",
     "gravatar": "~1.5.2",
     "jimp": "^0.4.0",
     "joi": "~9.0.4",

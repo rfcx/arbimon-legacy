@@ -15,7 +15,7 @@ var gravatar = require('gravatar');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 var sha256 = require('../utils/sha256');
-const generator = require('generate-password')
+var generator = require('../utils/generator');
 
 var models = require('./index');
 
@@ -555,13 +555,7 @@ var Users = {
     },
 
     createFromAuth0: async function(profile) {
-        const password = generator.generate({
-            length: 20,
-            numbers: true,
-            symbols: true,
-            uppercase: true,
-            excludeSimilarCharacters: true
-        })
+        const password = generator.generate(20)
         const attrs = {
             login: profile.nickname,
             password: hashPassword(password),
