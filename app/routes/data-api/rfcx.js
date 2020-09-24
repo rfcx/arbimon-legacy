@@ -12,10 +12,7 @@ const authentication = require('../../middleware/jwt')
 const verifyToken = authentication.verifyToken
 const hasRole = authentication.hasRole
 const { httpErrorHandler } = require('../../utils/http-error-handler.js')
-const Converter = require('../../utils/converter/converter')
-const EmptyResultError = require('../../utils/converter/empty-result-error')
-const ValidationError = require('../../utils/converter/validation-error')
-const ForbiddenError = require('../../utils/converter/forbidden-error')
+const { Converter, ValidationError, EmptyResultError, ForbiddenError } = require('@rfcx/http-utils');
 
 const config = require('../../config');
 const rfcxConfig = config('rfcx')

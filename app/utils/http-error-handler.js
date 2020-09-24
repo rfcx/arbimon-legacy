@@ -1,7 +1,5 @@
 const httpError = require('./http-errors')
-const ValidationError = require('./converter/validation-error')
-const ForbiddenError = require('./converter/forbidden-error')
-const EmptyResultError = require('./converter/empty-result-error')
+const { ValidationError, ForbiddenError, EmptyResultError } = require('@rfcx/http-utils')
 
 function httpErrorHandler (req, res, fallbackMessage) {
   return (err) => {
