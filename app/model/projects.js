@@ -22,6 +22,15 @@ var s3;
 
 var Projects = {
 
+    plans: {
+        free: {
+            cost: 0,
+            storage: 100,
+            processing: 1000,
+            tier: 'free'
+        }
+    },
+
     listAll: function(callback) {
         var q = "SELECT project_id as id, name, url, description, is_private, is_enabled \n"+
                 "FROM projects";

@@ -25,12 +25,7 @@ var projectSchema = joi.object().keys({
   is_private: joi.boolean(),
 });
 
-var freePlan = {
-  cost: 0,
-  storage: 100,
-  processing: 1000,
-  tier: 'free'
-};
+var freePlan = { ...model.projects.plans.free };
 
 var createProject = function(project, userId) {
   return q.ninvoke(model.projects, "create", project, userId).then(function(projectId) {

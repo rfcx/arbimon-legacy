@@ -143,12 +143,7 @@ var planSchema = joi.object().keys({
     duration: joi.number().optional(),
 });
 
-var freePlan = {
-    cost: 0,
-    storage: 100,
-    processing: 1000,
-    tier: 'free'
-};
+var freePlan = { ...model.projects.plans.free };
 
 
 router.post('/create-project', function(req, res, next) {
