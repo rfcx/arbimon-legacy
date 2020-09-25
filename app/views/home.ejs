@@ -58,7 +58,7 @@
                                 {{ project.name }}
                                 <i class="fa" ng-class="project.is_private ? 'fa-lock' :'fa-globe'"></i>
                             </dt>
-                            <dd class="word-wrap">{{ project.description }}</dd>
+                            <dd class="word-wrap line-ellipsis">{{ project.description }}</dd>
                         </button>
                     </dl>
                     <pagination ng-show="results.length > 10" total-items="results.length" ng-model="controller.currentPage" max-size="5" rotate="false"></pagination>
