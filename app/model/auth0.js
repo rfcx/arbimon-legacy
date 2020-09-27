@@ -1,10 +1,13 @@
 const config = require('../config');
-const jsonwebtoken = require('jsonwebtoken')
-const auth0Config = config('auth0')
-const auth0BackendConfig = config('auth0-backend')
-const request = require('request')
-const { promisify } = require('util')
-const rp = promisify(request)
+const jsonwebtoken = require('jsonwebtoken');
+const auth0Config = config('auth0');
+const auth0BackendConfig = config('auth0-backend');
+const request = require('request');
+const { promisify } = require('util');
+const rp = promisify(request);
+
+const universalLoginUrl = `https://${auth0Config.auth0Domain}/authorize?audience=${auth0Config.audience}&scope=openid%20email%20profile%20offline_access` +
+    `&response_type=code&client_id=${auth0Config.clientId}&redirect_uri=${auth0Config.redirectUri}&theme=dark`;
 
 async function getTokensByCode(code) {
   const exchangeOptions = {
@@ -80,6 +83,7 @@ async function createToken() {
 }
 
 module.exports = {
+  universalLoginUrl,
   getTokensByCode,
   parseTokens,
   getToken,
