@@ -25,6 +25,7 @@ var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
 
+const moment = require('moment');
 
 // local variables
 var s3, s3RFCx;
@@ -399,11 +400,7 @@ var Recordings = {
         return queryHandler(query, callback);
     },
 
-    /**
-     * Checks whether recording belongs to Arbimon (legacy) or RFCx platform
-     * @param {*} recording object containing the recording's data, like the ones returned in findByUrlMatch.
-     */
-    isLegacy: async function(recording) {
+    getSiteModel: async function(recording) {
         if (!recording.site_id) {
             let recs = await this.findByIdAsync(recording.id)
             recording.site_id = recs[0].site_id
@@ -412,6 +409,15 @@ var Recordings = {
         if (sites && sites.length) {
             var site = sites[0]
         }
+        return site
+    },
+
+    /**
+     * Checks whether recording belongs to Arbimon (legacy) or RFCx platform
+     * @param {*} recording object containing the recording's data, like the ones returned in findByUrlMatch.
+     */
+    isLegacy: async function(recording) {
+        const site = await this.getSiteModel(recording)
         return site && site.legacy
     },
 
@@ -771,6 +777,11 @@ var Recordings = {
         });
     },
 
+    insertAsync: function(recording) {
+        let insert = util.promisify(this.insert)
+        return insert(recording)
+    },
+
     update: function(recording, callback) {
 
         if(recording.id) {
@@ -819,7 +830,6 @@ var Recordings = {
     },
 
     exists: function(recording, callback) {
-
         if(!recording.site_id || !recording.filename)
             callback(new Error("Missing fields"));
 
@@ -837,9 +847,38 @@ var Recordings = {
         }).nodeify(callback);
     },
 
-    __compute_thumbnail_path : function(recording, callback){
-        recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
+    existsAsync: function(recording) {
+        let exists = util.promisify(this.exists)
+        return exists(recording)
+    },
+
+    __compute_thumbnail_path : async function(recording, callback){
+        await Recordings.__compute_thumbnail_path_async(recording)
         callback();
+    },
+    __compute_thumbnail_path_async : async function(recording){
+        if (recording.site_id && recording.legacy !== undefined && recording.site_external_id !== undefined) {
+            var site = {
+                site_id: recording.site_id,
+                legacy: !!recording.legacy,
+                external_id: recording.site_external_id
+            }
+        }
+        else {
+            var site = await Recordings.getSiteModel(recording)
+        }
+        const legacy = site && site.legacy
+        if (legacy) {
+            recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
+        }
+        else {
+            const momentStart = moment.utc(recording.datetime)
+            const momentEnd = momentStart.clone().add(recording.duration, 'seconds')
+            const dateFormat = 'YYYYMMDDTHHmmssSSS'
+            const start = momentStart.format(dateFormat)
+            const end = momentEnd.format(dateFormat)
+            recording.thumbnail = `/api/rfcx/recordings/${site.external_id}_t${start}Z.${end}Z_z95_wdolph_g1_fspec_mtrue_d420.154.png`
+        }
     },
     __compute_spectrogram_tiles : function(recording, callback){
         Recordings.fetchSpectrogramTiles(recording, callback);
@@ -874,11 +913,15 @@ var Recordings = {
                 list: "SELECT DISTINCT r.recording_id AS id, \n"+
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
                       "       s.name as site, \n"+
+                      "       s.legacy as legacy, \n"+
+                      "       s.external_id as site_external_id, \n"+
                       "       r.uri, \n"+
                       "       r.datetime, \n"+
+                      "       r.duration, \n"+
                       "       r.mic, \n"+
                       "       r.recorder, \n"+
                       "       r.version, \n"+
+                      "       r.site_id, \n"+
                       "       s.project_id != " + parameters.project_id + " as imported \n",
 
                 date_range: "SELECT DATE(MIN(r.datetime)) AS min_date, \n"+
@@ -1042,9 +1085,12 @@ var Recordings = {
                     if(output == "count"){
                         r = r[0].count;
                     } else if(output == 'list'){
-                        r.forEach(function(_1){
-                            _1.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(_1.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
-                        });
+                        for (let _1 of r) {
+                            Recordings.__compute_thumbnail_path_async(_1)
+                            if (!!_1.legacy !== true) {
+                                _1.file = `${moment.utc(_1.datetime).format('YYYY-MM-DD HH:mm:ss')}${path.extname(_1.file)}`
+                            }
+                        }
                     } else if(output != 'list'){
                         r = r[0];
                     }

@@ -50,17 +50,17 @@ router.post('/create', function(req, res, next) {
     });
 });
 
-// router.post('/import', function(req, res, next) { 
+// router.post('/import', function(req, res, next) {
 //     var project = req.project;
 //     var site = req.body.site;
-//     
+//
 //     if(!req.haveAccess(project.project_id, "manage project sites")) {
 //         return res.json({ error: "you dont have permission to 'manage project sites'" });
 //     }
-//     
+//
 //     model.sites.importSiteToProject(site.id, project.project_id, function(err, rows) {
 //         if(err) return next(err);
-//         
+//
 //         debug(rows);
 //         res.json({ msg: "site imported", success: true });
 //     });
@@ -70,15 +70,15 @@ router.post('/update', function(req, res, next) {
     res.type('json');
     var project = req.project;
     var site = req.body.site;
-    
+
     console.log(req.body);
-    
+
     if(!req.haveAccess(project.project_id, "manage project sites")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
 
     site.project_id = project.project_id;
-    
+
     model.sites.update(site, function(err, rows) {
         if(err) return next(err);
 
@@ -101,7 +101,7 @@ router.post('/delete', function(req, res, next) {
     if(!req.haveAccess(project.project_id, "manage project sites")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
-    
+
     model.sites.removeFromProject(site.id, project.project_id, function(err, rows) {
         if(err) return next(err);
 
@@ -117,7 +117,7 @@ router.post('/delete', function(req, res, next) {
 });
 
 router.param('siteid', function(req, res, next, siteid){
-    model.sites.findById(siteid, 
+    model.sites.findById(siteid,
     function(err, sites) {
         if(err) return next(err);
 
@@ -150,10 +150,10 @@ router.get('/:siteid/uploads.txt', function(req, res, next){
             groupby='dates';
         } else {
             if(req.query.from){
-                options.from = new Date(+req.query.from); 
+                options.from = new Date(+req.query.from);
             }
             if(req.query.to){
-                options.to = new Date(+req.query.to); 
+                options.to = new Date(+req.query.to);
             }
             if (req.query.date) {
                 options.dates = req.query.date.split(',');
@@ -190,7 +190,7 @@ router.get('/:siteid/uploads.txt', function(req, res, next){
                     res.type('text/plain');
                     datastream
                         .pipe(csv_stringify({
-                            header:true, 
+                            header:true,
                             columns:fields
                         }))
                         .pipe(res);
@@ -208,10 +208,10 @@ router.get('/:siteid/data.txt', function(req, res, next){
             groupby='dates';
         } else {
             if(req.query.from){
-                options.from = new Date(+req.query.from); 
+                options.from = new Date(+req.query.from);
             }
             if(req.query.to){
-                options.to = new Date(+req.query.to); 
+                options.to = new Date(+req.query.to);
             }
             if (req.query.date) {
                 options.dates = req.query.date.split(',');
@@ -248,7 +248,7 @@ router.get('/:siteid/data.txt', function(req, res, next){
                     res.type('text/plain');
                     datastream
                         .pipe(csv_stringify({
-                            header:true, 
+                            header:true,
                             columns:fields
                         }))
                         .pipe(res);
@@ -265,14 +265,14 @@ router.get('/:siteid/log/data.txt', function(req, res, next){
             output='json';
             groupby='dates';
         } else {
-            if(req.query.stat){ 
-                options.stat = req.query.stat.split(','); 
+            if(req.query.stat){
+                options.stat = req.query.stat.split(',');
             }
             if(req.query.from){
-                options.from = new Date(+req.query.from); 
+                options.from = new Date(+req.query.from);
             }
             if(req.query.to){
-                options.to = new Date(+req.query.to); 
+                options.to = new Date(+req.query.to);
             }
             if (req.query.date) {
                 options.dates = req.query.date.split(',');
@@ -309,7 +309,7 @@ router.get('/:siteid/log/data.txt', function(req, res, next){
                     res.type('text/plain');
                     datastream
                         .pipe(csv_stringify({
-                            header:true, 
+                            header:true,
                             columns:fields
                         }))
                         .pipe(res);
@@ -340,10 +340,10 @@ router.post('/generate-token', function(req, res, next){
             }
         }
     ], function(err, tokenData){
-        if(err) return next(err); 
-        
+        if(err) return next(err);
+
         tokenData.base64token = new Buffer(tokenData.token).toString('base64');
-        
+
         res.json(tokenData);
     });
 });
@@ -352,10 +352,10 @@ router.post('/revoke-token', function(req, res, next){
     res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage project sites")) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
-    } 
+    }
     else if(!req.haveAccess(req.project.project_id, "manage project recordings")) {
         return res.json({ error: "you dont have permission to 'manage project recordings'" });
-    } 
+    }
     else {
         var siteid = req.body.site;
         async.waterfall([

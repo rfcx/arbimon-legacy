@@ -12,6 +12,41 @@ var queryHandler = dbpool.queryHandler;
 var site_log_processor = require('../utils/site_log_processor');
 
 var Sites = {
+
+    find: function (query, callback) {
+        var whereExp = [], data=[];
+        var selectExtra = '';
+        var joinExtra = '';
+
+        if(query.hasOwnProperty("id")) {
+            whereExp.push("s.site_id = ?");
+            data.push(query.id);
+        }
+        if(query.hasOwnProperty("project_id")) {
+            whereExp.push("s.project_id = ?");
+            data.push(query.project_id);
+        }
+        if(query.hasOwnProperty("external_id")) {
+            whereExp.push("s.external_id = ?");
+            data.push(query.external_id);
+        }
+        if(query.hasOwnProperty("name")) {
+            whereExp.push("s.name = ?");
+            data.push(query.name);
+        }
+
+        if(!whereExp.length) {
+            return q.reject(new Error('no query params'));
+        }
+
+        return dbpool.query(
+            "SELECT s.*" + (selectExtra ? ", \n" + selectExtra : "\n") +
+            "FROM sites AS s \n" + joinExtra +
+            "WHERE (" + whereExp.join(") \n" +
+            "  AND (") + ")", data
+        ).nodeify(callback);
+    },
+
     findById: function (site_id, callback) {
         var query = "SELECT * FROM sites WHERE site_id = " + dbpool.escape(site_id);
 
@@ -33,7 +68,8 @@ var Sites = {
             lon: joi.number(),
             alt: joi.number(),
             site_type_id: joi.number().optional().default(2), // default mobile recorder
-            legacy: joi.boolean().default(true), // wheter this site belongs to Arbimon (true) or RFCx platform (false)
+            legacy: joi.boolean().optional().default(true), // wheter this site belongs to Arbimon (true) or RFCx platform (false)
+            external_id: joi.string().optional().default(null),
         };
 
         var result = joi.validate(site, schema, {
@@ -61,6 +97,11 @@ var Sites = {
 
         q = util.format(q, values.join(", "));
         queryHandler(q, callback);
+    },
+
+    insertAsync: function(site) {
+        let insert = util.promisify(this.insert)
+        return insert(site)
     },
 
     update: function(site, callback) {

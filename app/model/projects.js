@@ -22,6 +22,15 @@ var s3;
 
 var Projects = {
 
+    plans: {
+        free: {
+            cost: 0,
+            storage: 5000000,
+            processing: 5000000,
+            tier: 'free'
+        }
+    },
+
     listAll: function(callback) {
         var q = "SELECT project_id as id, name, url, description, is_private, is_enabled \n"+
                 "FROM projects";
@@ -405,6 +414,11 @@ var Projects = {
         });
     },
 
+    insertNewsAsync: function(news) {
+        let insertNews = util.promisify(this.insertNews)
+        return insertNews(news)
+    },
+
     /** Fetches a project's classes.
      * @param {{Object}} project project object.
      * @param {{Integer}} project.project_id
@@ -569,6 +583,11 @@ var Projects = {
 
         q = util.format(q, project_id);
         queryHandler(q, callback);
+    },
+
+    getUsersAsync: function(project_id) {
+        let getUsers = util.promisify(this.getUsers)
+        return getUsers(project_id)
     },
 
     addUser: function(userProjectRole, callback) {
