@@ -181,10 +181,15 @@ router.get('/auth0-login', async function(req, res, next) {
             return next(new Error('Invalid authentication data'))
         }
         const profile = auth0Service.parseTokens(tokens)
-        await model.users.auth0Login(req, profile);
+        if (!req.session || !req.session.user || req.session.user.username === 'guest') { // user user is not logged in and is authenticating with Auth0
+            await model.users.auth0Login(req, profile);
+        }
+        else {
+            await model.users.connectRFCx(req, profile); // if user is logged in and is authenticating with Auth0 ("Connect with RFCx feature")
+        }
         res.redirect('/home');
     } catch (e) {
-        next(new Error('Error in process of authentication'))
+        next(e)
     }
 });
 
