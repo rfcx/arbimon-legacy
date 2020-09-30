@@ -1,0 +1,53 @@
+<div class="modal-header">
+    <h3 class="modal-title">Create a new audio event detection job</h3>
+</div>
+<div class="modal-body">
+    <form role="form">
+        <div class="form-group">
+            <label for="modelName">Name</label>
+            <input id-"modelName" class="form-control" ng-model="controller.data.name" type="text"/>
+        </div>
+        <div class="form-group">
+            <label for="playlist">Playlist</label>
+            <span class="red" ng-hide="controller.loading.playlists || controller.list.playlists.length">
+                <em>No playlists found.
+                    <a ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-Clustering-new clustering model':'Cancel-Go to playlists'">
+                        Create one.
+                    </a>
+                </em>
+            </span>
+            <ui-select ng-disabled="disabled" ng-model="controller.data.playlist" theme="/common/templates/a2-ui-select">
+                <ui-select-match placeholder="Select or search a playlist...">
+                    {{$select.selected.name}}
+                </ui-select-match>
+                <ui-select-choices repeat="playlist in controller.list.playlists | filter: $select.search">
+                    {{playlist.name}}
+                    <span class="pull-right">
+                        <small>
+                            <em>
+                                <strong >Count:</strong>({{playlist.count}})
+                            </em>
+                        </small>
+                    </span>
+                </ui-select-choices>
+            </ui-select>
+        </div>
+        <label>Optional parameters</label>
+        <div class="form-group clearfix">
+            <label class="col-sm-2" style="padding-left:0; margin-top:5px;">Frequency</label>
+            <label class="col-sm-1" style="margin-top:6px;" for="freq-min">min</label>
+            <div class="col-sm-4">
+                <input id="freq-min" class="form-control" ng-model="controller.data.params.frequencyMin" type="number"/>
+            </div>
+            <label class="col-sm-1" style="margin-top:6px;" for="freq-max">max</label>
+            <div class="col-sm-4">
+                <input id="freq-max" class="form-control" ng-model="controller.data.params.frequencyMax" type="number"/>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="controller.create() | trackEvent:'Analysis-Clustering-new clustering model':'Submit'" ng-disabled="!controller.data.name">
+        Run
+    </button>
+</div>
