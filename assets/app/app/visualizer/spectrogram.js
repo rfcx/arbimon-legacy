@@ -1,31 +1,31 @@
 
 angular.module('visualizer-spectrogram', [
-    'visualizer-services', 
+    'visualizer-services',
     'a2.filter.round',
     'a2.utils',
 ])
 .service('a2AffixCompute', function(){
     return function($viewport, $el, layout){
         var v;
-        
+
         var affix_c = $el.attr('data-affix-container');
         if(affix_c){
             v = layout[affix_c];
         }
-        
+
         if(!v){
             v = {
-                left : 0, top : 0, 
-                width  : $viewport.width(), 
+                left : 0, top : 0,
+                width  : $viewport.width(),
                 height : $viewport.height()
             };
         }
-        
+
         var e = {
             width  : $el.width(),
             height : $el.height()
         };
-        
+
         var affix_left    = $el.attr('data-affix-left') | 0;
         var affix_right   = $el.attr('data-affix-right');
         var affix_align_h = $el.attr('data-affix-align-h');
@@ -46,7 +46,7 @@ angular.module('visualizer-spectrogram', [
         } else {
             affix_top += v.top;
         }
-        $el.css({position:'absolute', left : affix_left + $viewport.scrollLeft(), top  : affix_top  + $viewport.scrollTop()});
+        $el.css({position:'absolute', left: Math.round(affix_left + $viewport.scrollLeft()), top: Math.round(affix_top  + $viewport.scrollTop())});
     };
 })
 .directive('a2VisualizerSpectrogram', function(a2BrowserMetrics, a2AffixCompute){
@@ -59,8 +59,8 @@ angular.module('visualizer-spectrogram', [
             var views = {
                 viewport : $element.children('.spectrogram-container')
             };
-            
-            
+
+
             $scope.onPlaying = function(e){
                 $scope.layout.y_axis.left = $element.scrollLeft();
                 $element.children('.axis-y').css({left: $scope.layout.y_axis.left + 'px'});
@@ -70,7 +70,7 @@ angular.module('visualizer-spectrogram', [
                 );
                 $element.children('.axis-x').css({top: $scope.layout.x_axis.top + 'px'});
             };
-            
+
             $scope.onScrolling = function(e){
                 var layout = $scope.layout;
                 var max_s_h = layout.spectrogram.height - layout.viewport.height;
@@ -96,17 +96,17 @@ angular.module('visualizer-spectrogram', [
                 $element.children('.axis-y').css({left: layout.y_axis.left + 'px'});
                 layout.x_axis.top = $element.scrollTop() + $element.height() - layout_tmp.axis_sizeh - layout_tmp.gutter;
                 $element.children('.axis-x').css({top: (layout.x_axis.top-1) + 'px'});
-                
+
                 if(layout.legend){
                     layout.legend.left = $element.scrollLeft() + $element.width() - a2BrowserMetrics.scrollSize.width - layout_tmp.legend_width - layout_tmp.legend_gutter;
                     $element.children('.legend').css({left: layout.legend.left + 'px'});
                 }
-                
+
                 $element.find('.a2-visualizer-spectrogram-affixed').each(function(i, el){
                     a2AffixCompute($element, $(el), layout);
                 });
             };
-            
+
             $scope.onMouseMove = function (e) {
                 var elOff = $element.offset();
                 var x = e.pageX - elOff.left + $element.scrollLeft() - $scope.layout.spectrogram.left;
@@ -118,7 +118,7 @@ angular.module('visualizer-spectrogram', [
                 $scope.pointer.sec = $scope.layout.x2sec(x);
                 $scope.pointer.hz  = $scope.layout.y2hz(y);
             };
-        
+
 
             var make_axis  = function(domain, scale, orientation){
                 var axis = d3.svg.axis();
@@ -137,10 +137,10 @@ angular.module('visualizer-spectrogram', [
             $scope.layout.listeners.push(function(layout, container, $scope, width, height, fix_scroll_center){
                 doLayout(layout, container, $scope, width, height, fix_scroll_center);
             });
-            
+
             function doLayout(layout, container, $scope, width, height, fix_scroll_center){
                 var domain = layout.l.domain || {};
-                
+
                 var components = {
                     visualizer_root: container,
                     spectrogram : container.children('.spectrogram-container'),
@@ -148,7 +148,7 @@ angular.module('visualizer-spectrogram', [
                     x_axis      : domain.x && container.children('.axis-x'),
                     legend      : domain.legend && container.children('.legend'),
                 };
-                
+
                 Object.keys(components).forEach(function(i){
                     var component = components[i];
                     if(component){
@@ -158,7 +158,7 @@ angular.module('visualizer-spectrogram', [
                         if(li.attr){ $li.attr(li.attr); }
                     }
                 });
-                
+
                 if(domain.x){
                     doXAxisLayout(layout);
                 }
@@ -182,7 +182,7 @@ angular.module('visualizer-spectrogram', [
                 var spec_h = layout.spectrogram.height;
                 var domain = layout.l.domain;
                 var scalex = layout.l.scale.x;
-                
+
                 d3_x_axis.append("rect").attr({
                     class : 'bg',
                     x : 0, y : 1,
@@ -199,7 +199,7 @@ angular.module('visualizer-spectrogram', [
                 var spec_h = layout.spectrogram.height;
                 var domain = layout.l.domain;
                 var scaley = layout.l.scale.y;
-                
+
                 d3_y_axis.style('width', 61);
                 d3_y_axis.append("rect").attr({
                     class : 'bg',
@@ -222,7 +222,7 @@ angular.module('visualizer-spectrogram', [
                 var d3_legend = d3.select($element.children('.legend').empty()[0]);
                 var spec_h = layout.spectrogram.height;
                 var domain = layout.l.domain;
-                
+
                 d3_legend.append("rect").attr({
                     class : 'bg',
                     x : layout_tmp.axis_lead, y : 0,
@@ -246,21 +246,21 @@ angular.module('visualizer-spectrogram', [
                 d3_legend.append("g").
                     attr('class', 'axis').
                     attr('transform', 'translate('+ layout_tmp.legend_axis_w +', '+(layout_tmp.axis_lead+1)+')').
-                    call(make_axis(domain.legend, layout.l.scale.legend, "left"));                
+                    call(make_axis(domain.legend, layout.l.scale.legend, "left"));
             }
 
             $scope.getRecordingPlaybackTime = function () {
                 return $scope.audio_player.getCurrentTime();
             };
-            
+
             $scope.$watch(function () {
-                return { 
+                return {
                     'h': $element.height(), 'w': $element.width()
                 };
             }, function (newValue, oldValue) {
                 $scope.layout.apply($element, $scope, newValue.w, newValue.h, true);
             }, true);
-            
+
             $scope.$watch(function(){
                 return ($scope.layout.scale.sec2px * $scope.getRecordingPlaybackTime()) | 0;
             }, function (newValue, oldValue) {
@@ -273,25 +273,25 @@ angular.module('visualizer-spectrogram', [
                     }
                 }
             }, true);
-            
+
             $scope.$watch('visobject', function (newValue, oldValue) {
                 $element.scrollLeft(0);
                 $element.scrollTop(999999);
                 $scope.layout.apply($element, $scope, $element.width(), $element.height());
             }, true);
-            
+
             $element.bind('resize', function () {
                 $scope.$apply();
             });
-            
+
             $scope.$watch('layout.scale.zoom.x', function (newValue, oldValue) {
                 $scope.layout.apply($element, $scope, $element.width(), $element.height(), true);
             });
-            
+
             $scope.$watch('layout.scale.zoom.y', function (newValue, oldValue) {
                 $scope.layout.apply($element, $scope, $element.width(), $element.height(), true);
             });
-            
+
             $scope.layout.apply($element, $scope, $element.width(), $element.height());
             $scope.onScrolling();
         }
@@ -321,7 +321,7 @@ angular.module('visualizer-spectrogram', [
     return {
         restrict :'A',
         link     : function($scope, $element, $attrs){
-            
+
             $element.addClass('a2-visualizer-spectrogram-affixed');
             var $root = $element.closest('.visualizer-root');
             var $eloff = $element.offset(), $roff = $root.offset();
