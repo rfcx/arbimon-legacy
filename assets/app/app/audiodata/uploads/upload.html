@@ -52,6 +52,19 @@
             class="btn btn-default">
             Help
         </button>
+        <div class="btn-group pull-right" dropdown>
+            <button type="button" class="btn btn-primary" class="btn btn-primary dropdown-toggle" dropdown-toggle>
+                <i class="fa fa-download"></i> Desktop App
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li ng-repeat="app in controller.uploaderApps">
+                    <a ng-href="{{app.url}}">
+                        {{app.title}}
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 <div class="uploads list">
