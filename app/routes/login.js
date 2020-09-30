@@ -172,8 +172,11 @@ router.post('/oauth-login', function(req, res, next) {
 router.get('/auth0-login', async function(req, res, next) {
     res.type('html');
     try {
-        const query = req.query
-        if (!query || !query.code) {
+        const query = req.query || {}
+        if (query.error) {
+            return next(new Error(query.error_description))
+        }
+        if (!query.code) {
             return next(new Error('Invalid authentication data'))
         }
         const tokens = await auth0Service.getTokensByCode(query.code)
