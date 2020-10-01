@@ -12,6 +12,7 @@ var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
+const auth0Service = require('../model/auth0')
 
 
 router.get('/alive', function(req, res, next) { // for health checks
@@ -50,6 +51,12 @@ router.get('/classifiers', function(req, res) {
     res.render('classifiers');
 });
 
+router.get('/connect-with-rfcx', function(req, res) {
+    res.type('html');
+    res.render('connect-with-rfcx');
+});
+
+
 router.use('/', acmeChallenge);
 
 router.use('/uploads', uploads);
@@ -77,7 +84,11 @@ router.get('/process-order/:orderId', function(req, res, next) {
 
 router.get('/home', function(req, res) {
     res.type('html');
-    res.render('home', { title: "Home", user: req.session.user });
+    res.render('home', {
+        title: "Home",
+        user: req.session.user,
+        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
+    });
 });
 
 

@@ -1,6 +1,39 @@
-<h1><%= message %></h1>
-<% if(error.stack) { %>
-<pre><%= error.stack %></pre>
-<% } else { %>
-<p> please contact: <a href="mailto:support@rfcx.org">support@rfcx.org</p>
-<% } %>
+<!DOCTYPE html>
+<html ng-app="a2.login">
+
+<head>
+    <% include head %>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RFCx Arbimon</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <a href="/" class="navbar-brand">
+                    <img src="/images/rfcx-logo.png">
+                    Arbimon
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+          <div class="col-md-12">
+            <h1><%= message %></h1>
+            <% if(error.stack) { %>
+            <pre><%= error.stack %></pre>
+            <% } else { %>
+            <p> please contact: <a href="mailto:support@rfcx.org">support@rfcx.org</p>
+            <% } %>
+          </div>
+      </div>
+    </div>
+
+<% include footer %>
+</body>
+
+</html>
