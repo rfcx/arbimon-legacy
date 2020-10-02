@@ -19,7 +19,6 @@ var dd = console.log;
 var config = require('../config');
 var model = require('../model/');
 var sha256 = require('../utils/sha256');
-const auth0Conf = config('auth0')
 const auth0Service = require('../model/auth0')
 
 var mc = new mcapi.Mailchimp(config('mailchimp').key);
@@ -31,9 +30,6 @@ var mailTemplates = {
 
 const mandrill = require('mandrill-api/mandrill');
 const mandrill_client = new mandrill.Mandrill(config('mandrill-key').key)
-
-const auth0UniversalLoginUrl = `https://${auth0Conf.auth0Domain}/authorize?audience=${auth0Conf.audience}&scope=openid%20email%20profile%20offline_access` +
-    `&response_type=code&client_id=${auth0Conf.clientId}&redirect_uri=${auth0Conf.redirectUri}&theme=dark`
 
 router.use(function create_anonymous_guest_if_not_logged_in(req, res, next){
     if(req.session && !req.session.loggedIn && (!req.session.isAnonymousGuest || !req.session.user)){
@@ -118,7 +114,7 @@ router.get('/', function(req, res) {
     console.log("google_oauth_client:", config('google-api').oauthId);
     res.render('landing-page', {
         message: '',
-        auth0UniversalLoginUrl,
+        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
         inject_data: {
             facebook_api: config('facebook-api').public,
             google_oauth_client: config('google-api').oauthId
@@ -133,7 +129,7 @@ router.get('/login', function(req, res) {
     }
     res.render('login', {
         message: '',
-        auth0UniversalLoginUrl,
+        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
         inject_data: {
             facebook_api: config('facebook-api').public,
             google_oauth_client: config('google-api').oauthId
@@ -176,8 +172,11 @@ router.post('/oauth-login', function(req, res, next) {
 router.get('/auth0-login', async function(req, res, next) {
     res.type('html');
     try {
-        const query = req.query
-        if (!query || !query.code) {
+        const query = req.query || {}
+        if (query.error) {
+            return next(new Error(query.error_description))
+        }
+        if (!query.code) {
             return next(new Error('Invalid authentication data'))
         }
         const tokens = await auth0Service.getTokensByCode(query.code)
@@ -185,10 +184,15 @@ router.get('/auth0-login', async function(req, res, next) {
             return next(new Error('Invalid authentication data'))
         }
         const profile = auth0Service.parseTokens(tokens)
-        await model.users.auth0Login(req, profile);
+        if (!req.session || !req.session.user || req.session.user.username === 'guest') { // user user is not logged in and is authenticating with Auth0
+            await model.users.auth0Login(req, profile);
+        }
+        else {
+            await model.users.connectRFCx(req, profile); // if user is logged in and is authenticating with Auth0 ("Connect with RFCx feature")
+        }
         res.redirect('/home');
     } catch (e) {
-        next(new Error('Error in process of authentication'))
+        next(e)
     }
 });
 

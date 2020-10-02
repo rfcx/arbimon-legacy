@@ -153,9 +153,7 @@ app.use(function(err, req, res, next) {
     res.status(err.status || 500);
 
     // json APIs have more error-handling possibilities
-    if(
-        /application\/json/.test(res.getHeader('Content-Type'))
-    ){
+    if (/application\/json/.test(res.getHeader('Content-Type'))) {
         if(err instanceof APIError){
             res.json(err.message);
         } else {

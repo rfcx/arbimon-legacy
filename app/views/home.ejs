@@ -9,6 +9,9 @@
 
 <body ng-controller="HomeCtrl as controller">
 <% include home-nav %>
+<%if (!user.rfcx_id && user.username !== 'guest') { %>
+    <% include connect-with-rfcx-alert %>
+<% } %>
 
 <div class="container">
     <div class="row">
