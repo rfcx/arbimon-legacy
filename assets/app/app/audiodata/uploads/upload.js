@@ -130,16 +130,10 @@ angular.module('a2.audiodata.uploads.upload', [
 
     $scope.uploader = uploads.getUploader();
     $scope.info = uploads.getBatchInfo();
-    this.uploaderApps = [
-        {
-            url: 'https://rf.cx/ingest-app-latest-mac',
-            title: 'Ingest App for Mac'
-        },
-        {
-            url: 'https://rf.cx/ingest-app-latest-win',
-            title: 'Ingest App for Windows'
-        }
-    ];
+    this.uploaderApps = {
+        mac: 'https://rf.cx/ingest-app-latest-mac',
+        windows: 'https://rf.cx/ingest-app-latest-win',
+    };
     Project.getInfo(function(info) {
         $scope.project = info;
     });

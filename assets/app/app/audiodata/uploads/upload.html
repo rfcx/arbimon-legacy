@@ -53,17 +53,18 @@
             Help
         </button>
         <div class="btn-group pull-right" dropdown>
-            <button type="button" class="btn btn-primary" class="btn btn-primary dropdown-toggle" dropdown-toggle>
-                <i class="fa fa-download"></i> Desktop App
+            <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle>
+                <i class="fa fa-download"></i> Ingest App
                 <i class="fa fa-caret-down"></i>
             </button>
-            <ul class="dropdown-menu" role="menu">
-                <li ng-repeat="app in controller.uploaderApps">
-                    <a ng-href="{{app.url}}">
-                        {{app.title}}
-                    </a>
-                </li>
-            </ul>
+            <div class="dropdown-menu uploads-app-wrapper" role="menu">
+                <span>Looking for a faster alternative?</span>
+                <span>Try the Ingest App for fast, resumable uploads.</span>
+                <span>Download for:
+                    <a ng-href="{{controller.uploaderApps.mac}}">Mac</a>,
+                    <a ng-href="{{controller.uploaderApps.windows}}">Windows</a>
+                </span>
+            </div>
         </div>
     </div>
 </div>
