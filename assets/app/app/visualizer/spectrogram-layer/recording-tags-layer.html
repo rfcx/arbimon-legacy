@@ -18,7 +18,7 @@
     
     <div a2-visualizer-spectrogram-affixed data-affix-top="20" class="text-dark-gray">
         Click to add tags to this recording.
-        <div class="text-dark-gray" ng-show="layer.controller.bbox.bbox && !layer.controller.bbox.bbox.id" 
+        <div ng-show="layer.controller.bbox.bbox && !layer.controller.bbox.bbox.id" 
             a2-global-keyup="($event.which == 27) && layer.controller.bbox.reset()">
             Press <kbd>esc</kbd> to cancel tag addition.
         </div>
