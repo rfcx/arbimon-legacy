@@ -43,8 +43,11 @@
                 <!--  visible-md-block visible-lg-block hide only on small and x-small screens -->
                 <div class="col-sm-12 col-md-7 col-lg-6" ng-class="mode === 'Sign up' ? 'visible-md-block visible-lg-block' : '' ">
                     <h1 class="hidden-xs hidden-sm">Arbimon</h1>
-                    <p>
+                    <p class="no-margin-bottom">
                         Bio-acoustics analysis platform
+                        <div class="margin-xs " >
+                            <a class="btn btn-default" href="<%- auth0UniversalLoginUrl %>">Start analyzing now</a>
+                        </div>
                         <ul class="feature-list fa-ul">
                             <li><i class="fa fa-li fa-2x fa-cloud"></i>Store and manage your acoustic monitoring recordings on our cloud</li>
                             <li><i class="fa fa-li fa-2x fa-pencil-square"></i>Browse, visualize and annotate recordings</li>
