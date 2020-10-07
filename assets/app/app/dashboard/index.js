@@ -88,6 +88,7 @@ angular.module('a2.app.dashboard',[
                 
                 $scope.map = new google.maps.Map($window.document.getElementById('summary-map'), {
                     center: { lat: 18.3, lng: -66.5},
+                    mapTypeId: google.maps.MapTypeId.SATELLITE,
                     zoom: 8
                 });
                 
