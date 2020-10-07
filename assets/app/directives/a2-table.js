@@ -12,6 +12,7 @@ angular.module('a2.directive.a2-table', [
             return {
                 title: clone.attr('title'),
                 key: clone.attr('key'),
+                className: clone.attr('className'),
                 tdclass: clone.attr('tdclass'),
                 width: clone.attr('width'),
                 filter: clone.attr('filter') !== undefined ? (clone.attr('filter') || clone.attr('key')) : undefined,
@@ -62,7 +63,7 @@ angular.module('a2.directive.a2-table', [
             options.selectExpand = compileSelectExpand(element, options);
             options.fields.forEach(function(field, index){
                 tplHead.append(
-                    angular.element('<th ng-click="a2TableController.sortBy(' + index+ ')"></th>').text(field.title).append(
+                    angular.element('<th ng-click="a2TableController.sortBy(' + index+ ')"></th>').addClass(field.className).text(field.title).append(
                         field.key ?
                         '    <i ng-if="sortKey == ' + index + '" class="fa" ng-class="reverse ? \'fa-chevron-up\': \'fa-chevron-down\'"></i>\n' :
                         ''
@@ -77,7 +78,7 @@ angular.module('a2.directive.a2-table', [
                     )
                 );
                 tplBody.append(
-                    angular.element('<td ' + (field.width ? 'width="' + field.width + '"' : '') + '>').addClass(field.tdclass).html(field.content)
+                    angular.element('<td ' + (field.title === 'Name' ? 'title="' + field.content +'"' : '') + (field.width ? 'width="' + field.width + '"' : '') + '>').addClass(field.className).addClass(field.tdclass).html(field.content)
                 );
             });
 
