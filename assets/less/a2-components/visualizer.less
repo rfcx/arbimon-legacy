@@ -194,6 +194,12 @@
                 background: transparent;
             }
         }
+        .layer-btn {
+            opacity: 0.5;
+            &_active {
+                opacity: 1;
+            }
+        }
         .detail {
             padding-left: @layer-padding-left;
             // bootstrap-depend
@@ -708,7 +714,7 @@
 a2-img {
     display : inline-block;
 	position:relative;
-	image-rendering: -webkit-optimize-contrast; 
+	image-rendering: -webkit-optimize-contrast;
     > img {
         position : absolute;
         width    : 100%;
