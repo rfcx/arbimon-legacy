@@ -1,0 +1,25 @@
+version: "3.2"
+services:
+  app:
+    image: "arbimon"
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - $PWD:/app
+    environment:
+      - NODE_ENV=development
+    command: ["./node_modules/.bin/gulp", "watch"]
+  mysql:
+    image: "mariadb:10.4"
+    ports:
+      - "3306:3306"
+    volumes:
+      - data-mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root-secret
+      - MYSQL_DATABASE=arbimon2
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=admin-secret
+volumes:
+  data-mysql:

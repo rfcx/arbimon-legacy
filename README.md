@@ -3,7 +3,32 @@ Bio-Acoustic Analyzer
 
 ---
 
-### Local Development Setup
+### Local Dev Setup (with Docker)
+
+1. Build the docker image
+
+   ```sh
+   docker build -t arbimon .
+   ```
+
+2. Run the containers (web and database)
+
+   ```sh
+   docker-compose up
+   ```
+
+   (To stop the server, press Ctrl-C.)
+
+3. After the app container is running, open your browser at http://localhost:3000
+
+4. Create and seed the database
+
+   ```sh
+   ./scripts/db/create-local.sh
+   ```
+
+
+### Alternative Local Dev Setup (no docker)
 If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [https://docs.microsoft.com/en-us/windows/wsl/install-win10](https://docs.microsoft.com/en-us/windows/wsl/install-win10). Ubuntu 18.04 is recommended.
 
 
