@@ -43,21 +43,24 @@
                 <!--  visible-md-block visible-lg-block hide only on small and x-small screens -->
                 <div class="col-sm-12 col-md-7 col-lg-6" ng-class="mode === 'Sign up' ? 'visible-md-block visible-lg-block' : '' ">
                     <h1 class="hidden-xs hidden-sm">Arbimon</h1>
-                    <p>
+                    <p class="no-margin-bottom">
                         Bio-acoustics analysis platform
-                        <ul class="feature-list fa-ul">
-                            <li><i class="fa fa-li fa-2x fa-cloud"></i>Store and manage your acoustic monitoring recordings on our cloud</li>
-                            <li><i class="fa fa-li fa-2x fa-pencil-square"></i>Browse, visualize and annotate recordings</li>
-                            <li><i class="fa fa-li fa-2x fa-paw"></i>Use Pattern Matching models to detect specific species</li>
-                            <li><i class="fa fa-li fa-2x fa-map"></i>Create soundscapes to assess the acoustic activity in a set of recordings</li>
-                            <li><i class="fa fa-li fa-2x fa-share-alt"></i>Share data and results from your public project</li>
+                        <div class="login-form">
+                            <a class="btn btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Start analyzing audio</a>
+                        </div>
+                        <ul class="feature-padding">
+                            <li>Store and manage your acoustic monitoring recordings on our cloud</li>
+                            <li>Browse, visualize and annotate recordings</li>
+                            <li>Use Pattern Matching models to detect specific species</li>
+                            <li>Create soundscapes to assess the acoustic activity in a set of recordings</li>
+                            <li>Share data and results from your public project</li>
                         </ul>
                     </p>
                 </div>
 
                 <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-1 col-md-4 col-lg-offset-2 col-lg-4" ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
                     <div class="login-form card-container">
-                        <!-- <h3>Already a user?</h3> -->
+                        <div class="login-form text-center">Existing Arbimon II Users</div>
                         <form role="form" ng-submit="login()">
                             <div class="form-group">
                                 <label class="sr-only" for="user">Username</label>
@@ -84,11 +87,13 @@
                                 response="captchaResp"
                                 reset-widget="resetCaptcha">
                             </div>
-                            <button class="btn btn-primary btn-block" type="submit"><i class="fa fa-sign-in"></i> Login</button>
+                            <button class="btn btn-default btn-block" type="submit"><i class="fa fa-sign-in"></i> Login</button>
                             <div class="text-right margin-xs"><a href="/forgot_request">forgot password?</a></div>
 
+                            <hr class="hr-text" data-content="OR">
+
                             <div class="form-group oauth-buttons text-center">
-                                <a class="btn btn-primary btn-block" href="<%- auth0UniversalLoginUrl %>">Login with RFCx account</a>
+                                <a class="btn btn-default btn-block" href="<%- auth0UniversalLoginUrl %>">Login with RFCx account</a>
                             </div>
                             <br />
                             <small class="text-info inline-block text-justify margin-xs">
