@@ -46,21 +46,21 @@
                     <p class="no-margin-bottom">
                         Bio-acoustics analysis platform
                         <div class="margin-s">
-                            <a class="btn btn-primary btn-lg" href="<%- auth0UniversalLoginUrl %>">Start analyzing now</a>
+                            <a class="btn btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Start analyzing audio</a>
                         </div>
                         <ul class="feature-list fa-ul">
-                            <li><i class="fa fa-circle"></i>Store and manage your acoustic monitoring recordings on our cloud</li>
-                            <li><i class="fa fa-circle"></i>Browse, visualize and annotate recordings</li>
-                            <li><i class="fa fa-circle"></i>Use Pattern Matching models to detect specific species</li>
-                            <li><i class="fa fa-circle"></i>Create soundscapes to assess the acoustic activity in a set of recordings</li>
-                            <li><i class="fa fa-circle"></i>Share data and results from your public project</li>
+                            <li><i class="fa fa-circle fa-xs"></i>Store and manage your acoustic monitoring recordings on our cloud</li>
+                            <li><i class="fa fa-circle fa-xs"></i>Browse, visualize and annotate recordings</li>
+                            <li><i class="fa fa-circle fa-xs"></i>Use Pattern Matching models to detect specific species</li>
+                            <li><i class="fa fa-circle fa-xs"></i>Create soundscapes to assess the acoustic activity in a set of recordings</li>
+                            <li><i class="fa fa-circle fa-xs"></i>Share data and results from your public project</li>
                         </ul>
                     </p>
                 </div>
 
                 <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-1 col-md-4 col-lg-offset-2 col-lg-4" ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
                     <div class="login-form card-container">
-                        <p class="margin-xs text-center">Existing Arbimon II Users</p>
+                        <div class="margin-s text-center">Existing Arbimon II Users</div>
                         <form role="form" ng-submit="login()">
                             <div class="form-group">
                                 <label class="sr-only" for="user">Username</label>
