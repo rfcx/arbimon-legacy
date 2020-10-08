@@ -43,6 +43,7 @@
 @import "bs-additions.less";
 @import "fa-additions.less";
 @import "flex.less";
+@import "spacing.less";
 /*
  * app modules styles
 */
@@ -135,9 +136,10 @@
   .banner();
   padding-top: @banner-padding;
   padding-bottom: @banner-padding;
-  @media (max-width: @screen-md-min) {
-    padding: 0;
-  }
+}
+
+.login-form {
+    margin-top: 60px;
 }
 
 // adds transparent white background to div
@@ -159,13 +161,6 @@
 .dropdown-height-7 {
   overflow-y: auto;
   max-height: 7 * (2 * @nav-link-padding-v + 14);
-}
-
-// -> login.ejs
-.login-form {
-  & h3 {
-    margin: 0 0 15px 0;
-  }
 }
 
 .dropdown-menu {
@@ -357,10 +352,6 @@ textarea.fixed-width {
 // -> visualizer-spectrogram.html
 .no-wrap {
   white-space: nowrap;
-}
-
-.no-margin-bottom {
-  margin-bottom: 0 !important;
 }
 
 // classinfo.html
@@ -794,7 +785,6 @@ a2-draw-peak-threshold {
   text-align: center;
   height: 1.5em;
   opacity: .9;
-  margin-bottom: 0;
   &:before {
     content: '';
     background: #fff;
@@ -1132,6 +1122,16 @@ a.ui-select-choices-row-inner {
 
 .jumbotron {
   background: transparent;
+  p {
+    font-size: 18px;
+  }
+  li {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .button-group {
+    margin: 18px 0;
+  }
 }
 
 .input-group-addon {
