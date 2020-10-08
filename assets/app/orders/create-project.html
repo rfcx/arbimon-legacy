@@ -11,18 +11,12 @@
         <plan-select project="project" plan="project.plan" auto-payments-enabled="autoPaymentsEnabled" orders-contact="ordersContact" recorder-qty="recorderQty"></plan-select>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" type="submit" ng-disabled="!autoPaymentsEnabled && project.plan.tier != 'free' && !project.plan.coupon">
-            {{
-                project.plan.tier == 'free' ? 'Create FREE Project' : (
-                    project.plan.coupon ? 'Redeem Coupon' : (
-                        recorderQty > 0 ? 'Enter shipping info' : 'Review order'
-                    )
-                )
-            }}
+        <button class="btn btn-primary" type="submit">
+            Create FREE Project
         </button>
         <button class="btn btn-default" type="button" 
             ng-click="$dismiss() | trackEvent:'Home-Create-Project':'close'">
-            Close
+            Cancel
         </button>
     </div>
 </form>

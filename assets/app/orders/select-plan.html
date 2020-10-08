@@ -1,75 +1,9 @@
 <!-- <pre>{{ currentPlan | json }}</pre>
 <pre>{{ plan | json }}</pre> -->
 <tier-select tier="plan.tier" disable-free="upgradeOnly"></tier-select>
-<div class="panel panel-default" ng-show="plan.tier">
+<div class="panel panel-default">
     <div class="panel-body">
-        <div ng-show="plan.tier == 'paid'">
-            <div class="form-group" ng-class="{
-                'has-error': controller.coupon.validation && !controller.coupon.validation.valid,
-                'has-success': controller.coupon.validation && controller.coupon.validation.valid,
-            }">
-                <label>
-                    Have a coupon code?
-                </label>
-                <div class="input-group">
-                    <input class="form-control" ng-model="controller.coupon.code" placeholder="Enter your coupon code here."
-                        ng-change="controller.checkCouponCode()"
-                    />
-                    <span class="input-group-addon">
-                        <i ng-class="controller.coupon.validation.class"></i>
-                    </span>
-                </div>
-            </div>
-            <div ng-show="controller.coupon.payload" class="bg-success">
-                <plan-capacity disabled="true" minutes="controller.coupon.payload.recordings"></plan-capacity>
-                <p>
-                    <b>Plan duration:</b>
-                    <select ng-model="controller.coupon.payload.duration" ng-disabled="true" ng-options="year for year in controller.planData.yearOptions">
-                    </select>
-                    year<span ng-if="controller.coupon.payload.duration > 1">s</span>
-                </p>
-                <p><b>Storage capacity:</b> {{ controller.coupon.payload.recordings | number }} minutes of audio</p>
-                <p><b>Processing capacity:</b> {{ controller.coupon.payload.processing | number }} minutes of audio per year</p>
-            </div>
-            <div ng-show="!controller.coupon.payload">
-                <plan-capacity minutes="planMinutes"></plan-capacity>
-                <p>
-                    <b>Plan duration:</b>
-                    <select ng-model="planYears" ng-disabled="upgradeOnly" ng-options="year for year in controller.planData.yearOptions"></select>
-                    year<span ng-if="planYears > 1">s</span>
-                </p>
-                <p><b>Storage capacity:</b> {{ plan.storage | number }} minutes of audio</p>
-                <p><b>Processing capacity:</b> {{ plan.processing | number }} minutes of audio per year</p>
-                <p>
-                    <b>Cost:</b>
-                    ${{ plan.cost/plan.duration | number : 2 }}
-                    <i class="fa fa-times"></i>
-                    {{ plan.duration }} year<span ng-if="planYears > 1">s</span>
-                </p>
-                <p ng-hide="upgradeOnly">
-                    Arbimon Recorder
-                    <i class="fa fa-info-circle"
-                        tooltip="you can buy one recorder for every 10,000 minutes per year on your plan"
-                        tooltip-append-to-body="true">
-                    </i>
-                    (+$125)
-                    <select ng-model="recorderQty">
-                        <option ng-repeat="i in recorderOptions track by $index">{{$index}}</option>
-                    </select>
-                </p>
-                <p>
-                    <b>Total:</b>
-                    ${{ plan.cost + (125 *recorderQty) | number : 2 }}
-                </p>
-                <p class="text-warning" ng-if="!autoPaymentsEnabled || plan.cost + (125 * recorderQty) > 10000">
-                    <span ng-if="!autoPaymentsEnabled">Currently we are not able to process orders online.</span>
-                    <span ng-if="autoPaymentsEnabled && plan.cost + (125 * recorderQty) > 10000">Only orders up to $10,000 can be done online.</span>
-                    Please <a ng-href="mailto:support@rfcx.org">contact us</a> to place your order for a project plan, we will then
-                    give you a coupon code for {{upgradeOnly ? 'upgrading' : 'creating'}} your project.
-                </p>
-            </div>
-        </div>
-        <div ng-show="plan.tier == 'free'">
+        <div>
             <p><b>Storage capacity:</b> {{ plan.storage | number }} minutes of audio</p>
             <p><b>Processing capacity:</b> {{ plan.processing | number }} minutes of audio</p>
             <p>
