@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html ng-app="a2.app">
     <%if(url_base){%><base href="<%= url_base %>"/><%}%>
-    <% include head %>
+    <% include fragments/header %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <% include ng-permissions %>
     <title>RFCx Arbimon - <%= project.name %><% if(card && card.name){ %> - <%= card.name %><%} %></title>
@@ -81,7 +81,7 @@
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right hide-tooltip-lg">
-                    <% include user-dropdown %>
+                    <% include fragments/user-dropdown %>
                 </ul>
             </div>
         </div>

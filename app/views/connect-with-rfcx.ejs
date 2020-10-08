@@ -2,21 +2,13 @@
 <html>
 
 <head>
-    <% include head %>
+    <% include fragments/header %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RFCx Arbimon - Connect with RFCx</title>
 </head>
 
 <body>
-    <nav class="navbar navbar-default" role="navigation">
-        <div class="container">
-            <div class="navbar-header">
-                <a href="/" class="navbar-brand">
-                    <img src="/images/rfcx-logo.png">Arbimon
-                </a>
-            </div>
-        </div>
-    </nav>
+    <% include fragments/home-nav %>
 
     <div class="container">
         <div class="row">
@@ -30,7 +22,7 @@
         </div>
     </div>
 
-    <% include footer %>
+    <% include fragments/footer %>
 </body>
 
 </html>
