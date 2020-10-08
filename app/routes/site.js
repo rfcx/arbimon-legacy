@@ -10,7 +10,7 @@ router.get('/:externalId', async (req, res) => {
     return res.redirect(`/project/${project.url}/dashboard`)
   }
   catch (e) {
-    res.status(404).render('not-found');
+    res.status(404).render('not-found', { user: req.session.user });
   }
 });
 

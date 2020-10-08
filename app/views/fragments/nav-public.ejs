@@ -1,31 +1,23 @@
 <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
         <div class="navbar-header">
-            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
+            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button"
+                class="navbar-toggle collapsed">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-        <% if (!user || user.isAnonymousGuest) { %>
+            <button class="navbar-toggle collapsed" ng-click="switchMode()">
+                {{ mode }}
+            </button>
             <a href="/" class="navbar-brand">
                 <img src="/images/rfcx-logo.png">Arbimon
             </a>
-        <% } else { %>
-            <a href="/home" class="navbar-brand">
-                <img src="/images/rfcx-logo.png">
-                Arbimon
-            </a>
-        <% } %>
         </div>
         <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
-            <% if (user && user.isSuper) { %>
             <ul class="nav navbar-nav">
-                <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>
-            </ul>
-            <% } %>
-            <ul class="nav navbar-nav navbar-right">
-                <% include user-dropdown %>
+                <li><a href="/home">Public projects</a></li>
             </ul>
         </div>
     </div>
