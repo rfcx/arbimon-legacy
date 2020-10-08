@@ -31,16 +31,6 @@ router.get('/alive', function(req, res, next) { // for health checks
 
 router.use('/', login);
 
-router.get('/terms', function(req, res) {
-    res.type('html');
-    res.render('post-page', { title: "Terms of use", content: 'terms' });
-});
-
-router.get('/privacy', function(req, res) {
-    res.type('html');
-    res.render('post-page', { title: "Privacy policy", content: 'privacy' });
-});
-
 router.get('/support', function(req, res) {
     res.type('html');
     res.render('post-page', { title: "Support", content: 'support' });
