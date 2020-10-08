@@ -9,6 +9,9 @@ services:
       - $PWD:/app
     environment:
       - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_USER=admin
+      - DB_PASSWORD=admin-secret
     command: ["./node_modules/.bin/gulp", "watch"]
   mysql:
     image: "mariadb:10.4"
