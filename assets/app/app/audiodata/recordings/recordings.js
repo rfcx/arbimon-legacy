@@ -61,8 +61,10 @@ angular.module('a2.audiodata.recordings', [
                 $scope.totalRecs = data.count;
             }
             if(expect.date_range) {
-                $scope.minDate = new Date(data.date_range.min_date);
-                $scope.maxDate = new Date(data.date_range.max_date);
+                if(data.date_range.min_date !== null && data.date_range.max_date !== null) {
+                    $scope.minDate = new Date(data.date_range.min_date);
+                    $scope.maxDate = new Date(data.date_range.max_date);
+                }
             }
         });
     };
