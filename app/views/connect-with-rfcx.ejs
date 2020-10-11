@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="a2.login">
 
 <head>
     <% include fragments/header %>
@@ -37,7 +37,7 @@
                                <p class="my-4"><a class="btn btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Create an RFCx account</a></p>
                             </li>
                             <li>If you have an RFCx account:
-                                <p class="my-4"><a class="btn btn-primary" href="<%- auth0UniversalLoginUrl %>">Connect with RFCx account</a></p>
+                                <p class="my-4"><a class="btn btn-default" href="<%- auth0UniversalLoginUrl %>">Connect with RFCx account</a></p>
                             </li>
                         </ul>
                     <% } %>
@@ -46,21 +46,45 @@
                 
                 <h1>Arbimon II account migration</h1>
                 
-                <p>As an Arbimon user, you are now part of a comprehensive technology ecosystem to support bioacoustics research! Our goal
+                <p style="font-size:large">As an Arbimon user, you are now part of a comprehensive technology ecosystem to support bioacoustics research! Our goal
                 is to make Arbimon the best platform for your research, conservation, and management projects. With one single login,
                 you will now have access to the following applications:</p>
 
-                <ul>
-                    <li><strong>Companion</strong> - used in conjunction with your AudioMoth devices to mark deployment location (with photos), manage large
+                <ul style="font-size:large">
+                    <li class="mb-4"><strong>Companion</strong> - used in conjunction with your AudioMoth devices to mark deployment location (with photos), manage large
                 numbers of devices, and streamline ingestion into Arbimon for analysis.</li>
-                    <li><strong>Ingest</strong> - upload large volumes of audio as a background process while you continue to work in Arbimon.</li>
-                    <li><strong>Edge</strong> (coming soon!) - upgraded version of AudioMoth with exceptional battery life that’s solar powered, allowing you to
+                    <li class="mb-4"><strong>Ingest</strong> - upload large volumes of audio as a background process while you continue to work in Arbimon.</li>
+                    <li class="mb-4"><strong>Edge</strong> (coming soon!) - upgraded version of AudioMoth with exceptional battery life that’s solar powered, allowing you to
                 leave it in the field for long periods of time before retrieving it.</li>
-                    <li><strong>Explorer</strong> (coming soon!) - engage your audio in a captivating, colorful spectrogram format and share snippets with other
+                    <li class="mb-4"><strong>Explorer</strong> (coming soon!) - engage your audio in a captivating, colorful spectrogram format and share snippets with other
                 colleagues in the community.</li>
                 </ul>
 
-                <h4>Migrating your current Arbimon account is simple! Follow these steps:</h4>
+                <h3 class="mb-4">Migrating your current Arbimon account is simple! Follow these steps:</h3>
+
+                <ol style="font-size:large">
+                    <li class="mb-4">Ensure you are logged in with your existing Arbimon II username and password.
+                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step1.png"></div>
+                    </li>
+                    <li class="mb-4">Click the link at the top to start migration.
+                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step2.png"></div>
+                    </li>
+                    <li class="mb-4">On the right hand side, select one of the options to start migrating.
+                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step3a.png">
+                        <img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step3b.png">
+                        <img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step3c.png"></div>
+                    </li>
+                    <li class="mb-4">If you created a new RFCx account then <strong>check your email and click on the link in the verification email</strong>.
+                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step4a.png">
+                        <img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step4b.png"></div>
+                    </li>
+                    <li class="mb-4">After verification is complete, continue the login.
+                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step5.png"></div>
+                    </li>
+                    <li class="mb-4">You should be redirected back to this page and the status will be complete.
+                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step6.png"></div>
+                    </li>
+                </ol>
             </div>
         </div>
     </div>
