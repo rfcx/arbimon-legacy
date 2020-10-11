@@ -33,7 +33,11 @@ router.use('/', login);
 
 router.get('/support', function(req, res) {
     res.type('html');
-    res.render('post-page', { title: "Support", content: 'support' });
+    res.render('post-page', {
+        title: "Support",
+        content: 'support',
+        user: req.session.user
+    });
 });
 
 router.get('/classifiers', function(req, res) {
@@ -43,7 +47,10 @@ router.get('/classifiers', function(req, res) {
 
 router.get('/connect-with-rfcx', function(req, res) {
     res.type('html');
-    res.render('connect-with-rfcx', { user: req.session.user });
+    res.render('connect-with-rfcx', {
+        user: req.session.user,
+        auth0UniversalLoginUrl: auth0Service.universalLoginUrl
+    });
 });
 
 
@@ -76,8 +83,7 @@ router.get('/home', function(req, res) {
     res.type('html');
     res.render('home', {
         title: "Home",
-        user: req.session.user,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
+        user: req.session.user
     });
 });
 
