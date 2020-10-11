@@ -1,5 +1,5 @@
 <div class="layer">
-    <h5 class="collapse-title" ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Training-Data':'open template layer'">
+    <h5 class="collapse-title" tooltip="Used for Pattern Matching Analysis" ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Training-Data':'open template layer'">
         <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
         Templates (Pattern Matching Analysis)
     </h5>
@@ -17,7 +17,7 @@
             </h5>
         </div> -->
         <div ng-hide="layer.templates.recordingTemplates.length">
-            Used for Pattern Matching Analysis.
+            There are no templates in this recording.   Used for Pattern Matching Analysis.
         </div>
         <div ng-show="layer.templates.recordingTemplates.length || layer.templates.editor.roi">
             <table class="bg table table-condensed">
