@@ -69,6 +69,10 @@
 */
 @import "branding.less";
 
+b, strong {
+  font-weight: 900;
+}
+
 // ui-bootstrap no href fix
 .nav,
 .pagination,
@@ -90,6 +94,20 @@
   padding-right: 10px;
   margin-bottom: 5px;
   text-align: center;
+}
+
+.alert-info {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.alert-dismissable .close {
+  opacity: 0.4;
+}
+
+.alert .alert-link {
+  color: #fff;
+  font-weight: 900;
 }
 
 // .inline -> newmodel.html, frequency-adjust-layer.html
@@ -136,10 +154,6 @@
   .banner();
   padding-top: @banner-padding;
   padding-bottom: @banner-padding;
-}
-
-.login-form {
-    margin-top: 60px;
 }
 
 // adds transparent white background to div
@@ -1338,45 +1352,6 @@ a.ui-select-choices-row-inner {
   }
 }
 
-.alert {
-  padding: @padding-large-vertical @padding-large-horizontal;
-  margin-bottom: 20px;
-  color: @text-color;
-  border: 1px solid @text-color;
-  border-radius: @border-radius-base;
-  &_warning {
-    color: @brand-warning;
-    border-color: @brand-warning;
-  }
-}
-
-.alert-connect-rfcx {
-  position: relative;
-  padding-right: 175px;
-  .text {
-    display: inline-block;
-    padding-top: 7px;
-    padding-bottom: 7px;
-    margin-right: 10px;
-  }
-  .link, .btn {
-    color: @brand-warning;
-  }
-  .link {
-    display: inline-block;
-    text-decoration: underline;
-  }
-  .btn {
-    color: @brand-warning;
-    background: transparent;
-    border: 1px solid @btn-warning-border;
-    border-radius: @border-radius-large;
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    &:hover {
-      color: @brand-warning;
-    }
-  }
+img.outlined {
+  border: 3px solid @gray-light;
 }

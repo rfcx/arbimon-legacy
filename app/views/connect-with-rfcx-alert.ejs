@@ -1,10 +1,11 @@
 <div class="container">
   <div class="row">
     <div class="col-md-12">
-      <div class="alert alert_warning alert-connect-rfcx">
-        <span class="text">Your account is not yet linked to RFCx.</span>
-        <a class="link" href="/connect-with-rfcx">Learn more.</a>
-        <a class="btn" href="<%- auth0UniversalLoginUrl %>">Connect with RFCx</a>
+      <div class="alert alert-info alert-dismissable" role="alert" ng-hide="hideAlertBar">
+        <a href="#" class="close" data-dismiss="alert" aria-label="close" ng-click="hideAlertBar = true">&times;</a>
+        <h4>Arbimon II account migration</h4>
+        Upgrade your account now to access the RFCx platform.
+        <a href="/connect-with-rfcx" class="alert-link" >Find out more and start migration</a>.
       </div>
     </div>
   </div>
