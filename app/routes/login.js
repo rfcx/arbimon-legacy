@@ -111,9 +111,9 @@ router.get('/', function(req, res) {
     if(req.session) {
         if(req.session.loggedIn) return res.redirect('/home');
     }
-    console.log("google_oauth_client:", config('google-api').oauthId);
     res.render('landing-page', {
         message: '',
+        user: null,
         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
         inject_data: {
             facebook_api: config('facebook-api').public,
@@ -129,6 +129,7 @@ router.get('/login', function(req, res) {
     }
     res.render('login', {
         message: '',
+        user: null,
         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
         inject_data: {
             facebook_api: config('facebook-api').public,
@@ -222,6 +223,7 @@ router.get('/activate/:hash', function(req, res, next) {
         if(!data.length)
         {
             res.render('activate', {
+                user: null,
                 login: false,
                 status: 'Invalid activation link.'
             });
@@ -234,6 +236,7 @@ router.get('/activate/:hash', function(req, res, next) {
                 if(err) return next(err);
 
                 res.render('activate', {
+                    user: null,
                     login: false,
                     status: 'Your activation link has expired. You need to register again.'
                 });
@@ -256,6 +259,7 @@ router.get('/activate/:hash', function(req, res, next) {
                 if(err) return next(err);
 
                 res.render('activate',{
+                    user: null,
                     login: true,
                     status:'<b>'+userInfo.login+'</b> your account has been activated.'
                 });
@@ -435,7 +439,7 @@ router.post('/register', function(req, res, next) {
 
 router.get('/forgot_request', function(req, res) {
     res.type('html');
-    res.render('forgot-request');
+    res.render('forgot-request', { user: null });
 });
 
 router.post('/forgot_request', function(req, res, next) {

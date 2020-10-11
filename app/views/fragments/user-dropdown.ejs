@@ -3,7 +3,7 @@
 		<span class="visible-lg-inline visible-xs-inline"><%= user.username %></span>
         <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>" style="background-image:url('<%- user.imageUrl %>')"></i>
     </a>
-    <% if(user.isAnonymousGuest) { %>
+    <% if (!user || user.isAnonymousGuest) { %>
         <ul class="dropdown-menu" role="menu">
             <li class="" ng-controller="RedirectToLoginCtrl">
                 <a ng-href="{{ loginUrl }}">
