@@ -38,12 +38,12 @@ router.get('/support', function(req, res) {
 
 router.get('/classifiers', function(req, res) {
     res.type('html');
-    res.render('classifiers');
+    res.render('classifiers', { user: req.session.user });
 });
 
 router.get('/connect-with-rfcx', function(req, res) {
     res.type('html');
-    res.render('connect-with-rfcx');
+    res.render('connect-with-rfcx', { user: req.session.user });
 });
 
 

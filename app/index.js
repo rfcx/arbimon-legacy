@@ -165,13 +165,15 @@ app.use(function(err, req, res, next) {
         if(app.get('env') === 'development') {
             res.render('error', {
                 message: err.message,
-                error: err
+                error: err,
+                user: req.session.user
             });
         }
         else {
             res.render('error', {
                 message: err.message || "Something went wrong",
-                error: {}
+                error: {},
+                user: req.session.user
             });
         }
     }
