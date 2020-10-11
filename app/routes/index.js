@@ -90,7 +90,7 @@ router.get('/home', function(req, res) {
 
 router.get('/user-settings', function(req, res) {
     res.type('html');
-    if(req.session.user && req.session.loggedIn){
+    if (req.session.user && req.session.loggedIn) {
         res.render('user-settings', { title: "User settings", user: req.session.user });
     } else {
         res.redirect('/home');

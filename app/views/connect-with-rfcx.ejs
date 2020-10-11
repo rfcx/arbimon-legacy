@@ -13,12 +13,25 @@
     <div class="container">
         <div class="row">
             <div class="col-sm-12">
-                <div class="panel panel-default pull-right" style="max-width:500px;min-width:320px;margin-left:50px">
+                <div class="panel panel-default pull-right my-5 ml-5" style="max-width:500px;min-width:320px">
                     <div class="panel-heading">
-                        <h3 class="my-2">Status &nbsp;<span class="label label-warning">Not started</span></h3>
+                        <h3 class="my-2">Status &nbsp;
+                        <% if (!user || user.isAnonymousGuest) { %>
+                            <span class="label">Unknown</span>
+                        <% } else if (user.rfcx_id) { %>
+                            <span class="label label-success">Complete</span>
+                        <% } else { %>
+                            <span class="label label-warning">Not started</span>
+                        <% } %>
+                        </h3>
                     </div>
                     <div class="panel-body">
-                        <h2 class="panel-title mb-2">Start migration now</h2>
+                    <% if (!user || user.isAnonymousGuest) { %>
+                        <p><a href="/login">Login</a> to check your status.</p>
+                    <% } else if (user.rfcx_id) { %>
+                        <p>Your account is already connected to RFCx.</p>
+                    <% } else { %>
+                        <h2 class="panel-title mb-4">Start migration now</h2>
                         <ul>
                             <li>If you do not have an RFCx account:
                                <p class="my-4"><a class="btn btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Create an RFCx account</a></p>
@@ -27,6 +40,7 @@
                                 <p class="my-4"><a class="btn btn-primary" href="<%- auth0UniversalLoginUrl %>">Connect with RFCx account</a></p>
                             </li>
                         </ul>
+                    <% } %>
                     </div>
                 </div>
                 
@@ -35,6 +49,18 @@
                 <p>As an Arbimon user, you are now part of a comprehensive technology ecosystem to support bioacoustics research! Our goal
                 is to make Arbimon the best platform for your research, conservation, and management projects. With one single login,
                 you will now have access to the following applications:</p>
+
+                <ul>
+                    <li><strong>Companion</strong> - used in conjunction with your AudioMoth devices to mark deployment location (with photos), manage large
+                numbers of devices, and streamline ingestion into Arbimon for analysis.</li>
+                    <li><strong>Ingest</strong> - upload large volumes of audio as a background process while you continue to work in Arbimon.</li>
+                    <li><strong>Edge</strong> (coming soon!) - upgraded version of AudioMoth with exceptional battery life that’s solar powered, allowing you to
+                leave it in the field for long periods of time before retrieving it.</li>
+                    <li><strong>Explorer</strong> (coming soon!) - engage your audio in a captivating, colorful spectrogram format and share snippets with other
+                colleagues in the community.</li>
+                </ul>
+
+                <h4>Migrating your current Arbimon account is simple! Follow these steps:</h4>
             </div>
         </div>
     </div>

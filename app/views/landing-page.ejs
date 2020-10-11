@@ -30,47 +30,8 @@
             </div>
 
             <div class="col-sm-12 col-md-5 col-lg-4" ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
-                <div class="login-form card-container">
-                    <hr class="hr-text mb-4 mt-0" data-content="EXISTING ARBIMON II USERS">
-                    <form role="form" ng-submit="login()">
-                        <div class="form-group">
-                            <label class="sr-only" for="user">Username</label>
-                            <input id="user"
-                                class="form-control"
-                                name="username"
-                                type="text"
-                                placeholder="Username"
-                                ng-model="username"
-                                required />
-                        </div>
-                        <div class="form-group">
-                            <label class="sr-only" for="pass">Password</label>
-                            <input id="pass"
-                                class="form-control"
-                                name="password"
-                                type="password"
-                                placeholder="Password"
-                                ng-model="password"
-                                required />
-                        </div>
-                        <div ng-show="showCaptcha" g-recaptcha
-                            sitekey="6Lf_yb4ZAAAAAC9j8pxSlW06k51qQVn7GZd7PKil"
-                            response="captchaResp"
-                            reset-widget="resetCaptcha">
-                        </div>
-                        <button class="btn btn-default btn-block" type="submit"><i class="fa fa-sign-in"></i> Login</button>
-                        <div class="text-right mt-2"><a href="/forgot_request">forgot password?</a></div>
-
-                        <hr class="hr-text mb-0" data-content="OR">
-
-                        <div class="form-group oauth-buttons text-center">
-                            <a class="btn btn-default btn-block" href="<%- auth0UniversalLoginUrl %>">Login with RFCx account</a>
-                        </div>
-                        <br />
-                        <small class="text-info inline-block text-justify mt-1">
-                            Note: if you use the same email address for logging in with RFCx, you still will be able to use your old Arbimon profile.
-                        </small>
-                    </form>
+                <div class="card-container mt-5">
+                    <% include fragments/login-form %>
                 </div>
             </div>
         </div>
