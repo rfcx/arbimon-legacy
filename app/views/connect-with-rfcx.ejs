@@ -33,58 +33,77 @@
                     <% } else { %>
                         <h2 class="panel-title mb-4">Start migration now</h2>
                         <ul>
-                            <li>If you do not have an RFCx account:
-                               <p class="my-4"><a class="btn btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Create an RFCx account</a></p>
+                            <li>If you do not have a RFCx account:
+                               <p class="my-4"><a class="btn btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Create RFCx account</a></p>
                             </li>
-                            <li>If you have an RFCx account:
-                                <p class="my-4"><a class="btn btn-default" href="<%- auth0UniversalLoginUrl %>">Connect with RFCx account</a></p>
+                            <li>If you have a RFCx account:
+                                <p class="my-4"><a class="btn btn-default" href="<%- auth0UniversalLoginUrl %>">Login with RFCx</a></p>
                             </li>
                         </ul>
                     <% } %>
                     </div>
                 </div>
                 
-                <h1>Arbimon II account migration</h1>
-                
-                <p style="font-size:large">As an Arbimon user, you are now part of a comprehensive technology ecosystem to support bioacoustics research! Our goal
-                is to make Arbimon the best platform for your research, conservation, and management projects. With one single login,
-                you will now have access to the following applications:</p>
+                <div style="font-size:large">
+                    <h1>Arbimon II account migration</h1>
+                    
+                    <p>As an Arbimon user, you are now part of a comprehensive technology ecosystem to support bioacoustics research! Our goal
+                    is to make Arbimon the best platform for your research, conservation, and management projects. With one single login,
+                    you will now have access to the following applications:</p>
 
-                <ul style="font-size:large">
-                    <li class="mb-4"><strong>Companion</strong> - used in conjunction with your AudioMoth devices to mark deployment location (with photos), manage large
-                numbers of devices, and streamline ingestion into Arbimon for analysis.</li>
-                    <li class="mb-4"><strong>Ingest</strong> - upload large volumes of audio as a background process while you continue to work in Arbimon.</li>
-                    <li class="mb-4"><strong>Edge</strong> (coming soon!) - upgraded version of AudioMoth with exceptional battery life that’s solar powered, allowing you to
-                leave it in the field for long periods of time before retrieving it.</li>
-                    <li class="mb-4"><strong>Explorer</strong> (coming soon!) - engage your audio in a captivating, colorful spectrogram format and share snippets with other
-                colleagues in the community.</li>
-                </ul>
+                    <ul>
+                        <li class="mb-4"><strong>Companion</strong> - used in conjunction with your AudioMoth devices to mark deployment location (with photos), manage large
+                    numbers of devices, and streamline ingestion into Arbimon for analysis.</li>
+                        <li class="mb-4"><strong>Ingest</strong> - upload large volumes of audio as a background process while you continue to work in Arbimon.</li>
+                        <li class="mb-4"><strong>Edge</strong> (coming soon!) - upgraded version of AudioMoth with exceptional battery life that’s solar powered, allowing you to
+                    leave it in the field for long periods of time before retrieving it.</li>
+                        <li class="mb-4"><strong>Explorer</strong> (coming soon!) - engage your audio in a captivating, colorful spectrogram format and share snippets with other
+                    colleagues in the community.</li>
+                    </ul>
 
-                <h3 class="mb-4">Migrating your current Arbimon account is simple! Follow these steps:</h3>
+                    <h3 class="mb-4">Migrating your current Arbimon account is simple! Follow these steps:</h3>
 
-                <ol style="font-size:large">
-                    <li class="mb-4">Ensure you are logged in with your existing Arbimon II username and password.
-                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step1.png"></div>
-                    </li>
-                    <li class="mb-4">Click the link at the top to start migration.
-                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step2.png"></div>
-                    </li>
-                    <li class="mb-4">On the right hand side, select one of the options to start migrating.
-                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step3a.png">
-                        <img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step3b.png">
-                        <img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step3c.png"></div>
-                    </li>
-                    <li class="mb-4">If you created a new RFCx account then <strong>check your email and click on the link in the verification email</strong>.
-                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step4a.png">
-                        <img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step4b.png"></div>
-                    </li>
-                    <li class="mb-4">After verification is complete, continue the login.
-                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step5.png"></div>
-                    </li>
-                    <li class="mb-4">You should be redirected back to this page and the status will be complete.
-                        <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step6.png"></div>
-                    </li>
-                </ol>
+                    <ol>
+                        <li class="mb-4">Ensure you are logged in with your existing Arbimon II username and password.
+                            <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step1.png"></div>
+                        </li>
+                        <li class="mb-4">Click the link at the top to start migration.
+                            <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step2.png"></div>
+                        </li>
+                        <li class="mb-4">On the right hand side, select one of the options to start migrating.
+                            <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step3a.png">
+                            <img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step3b.png">
+                            <img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step3c.png"></div>
+                        </li>
+                        <li class="mb-4">If you created a new RFCx account then <strong>check your email and click on the link in the verification email</strong>.
+                            <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step4a.png">
+                            <img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step4b.png"></div>
+                        </li>
+                        <li class="mb-4">After verification is complete, continue the login.
+                            <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step5.png"></div>
+                        </li>
+                        <li class="mb-4">You should be redirected back to this page and the status will be complete.
+                            <div class="mt-2"><img class="outlined" style="max-width:300px" src="/images/docs/connect-with-rfcx-step6.png"></div>
+                        </li>
+                    </ol>
+
+                    <h3>How to access all RFCx apps:</h3>
+
+                    <ul>
+                        <li class="mb-4">Ingest app for uploading audio - download Windows version and Mac version</li>
+                        <li>Companion for deploying RFCx and AudioMoth devices - download Android app</li>
+                    </ul>
+                    <p>Add yourself to our distribution list to receive important updates about the Edge and the Explorer app by scrolling to
+                    the bottom of <a href="https://www.rfcx.org">www.rfcx.org</a> and adding your email.</p>
+                    
+                    <h3>Questions?</h3>
+
+                    <p>In order to best support you during this exciting expansion, we’ve added a direct line to our support team - which can
+                    be accessed via chat inside Arbimon or by email at <a href="mailto:support@rfcx.org">support@rfcx.org</a>. If you have any questions, concerns or ideas that
+                    we can assist with, please don’t hesitate to reach out to us.</p>
+                    <p>We are very excited to continue to work with you to make Arbimon the best platform for your research, conservation, and
+                    management projects. Thank you for your continued work in improving biodiversity monitoring around the world!</p>
+                </div>
             </div>
         </div>
     </div>
