@@ -1,21 +1,29 @@
 <div class="row">
-    <div class="col-sm-12">
-        <div class="panel panel-default uploads info-panel">
+    <div class="col-sm-12 uploads-wrapper">
+        <div class="panel uploads info-panel">
+            <div class="uploads title">
+                Audio uploads
+                <div class="btn btn-default btn-sm"  ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
+                    Choose site
+                </div>
+            </div>
+            <p ng-hide="info"><small>Please choose a site before starting uploads</small></p>
+            <div ng-show="info">
+                <div class="uploads info">Site: <span class="label label-default">{{ info.site.name }}</span></div>
+                <div class="uploads info">Recorder: <span class="label label-default">{{ info.recorder }}</span></div>
+                <div class="uploads info">Microphone: <span class="label label-default">{{ info.mic }} </span></div>
+                <div class="uploads info">Software version: <span class="label label-default">{{ info.sver }} </span></div>
+                <div class="uploads info">Filename format: <span class="label label-default">{{ info.format.name }}</span></div>
+            </div>
+        </div>
+        <div class="panel panel-default uploads app-panel">
             <div class="panel-body">
-                <div class="uploads title">
-                    Batch Info
-					<div class="btn btn-default btn-sm"  ng-click="batchInfo() | trackEvent:'Audiodata-Upload':'batchInfo'">
-						<i class="fa fa-plus"></i> Details
-					</div>
-                </div>
-                <p ng-hide="info"><small>You need to fill the batch info before you can start uploading</small></p>
-                <div ng-show="info">
-                    <div class="uploads info">Site: <span class="label label-default">{{ info.site.name }}</span></div>
-                    <div class="uploads info">Recorder: <span class="label label-default">{{ info.recorder }}</span></div>
-                    <div class="uploads info">Microphone: <span class="label label-default">{{ info.mic }} </span></div>
-                    <div class="uploads info">Software version: <span class="label label-default">{{ info.sver }} </span></div>
-                    <div class="uploads info">Filename format: <span class="label label-default">{{ info.format.name }}</span></div>
-                </div>
+                <span>Looking for a faster alternative?</span>
+                <span>Try the Ingest App for fast, resumable uploads.</span>
+                <span>Download for:
+                    <a ng-href="{{controller.uploaderApps.mac}}">Mac</a>,
+                    <a ng-href="{{controller.uploaderApps.windows}}">Windows</a>
+                </span>
             </div>
         </div>
     </div>
@@ -52,20 +60,6 @@
             class="btn btn-default">
             Help
         </button>
-        <div class="btn-group pull-right" dropdown>
-            <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle>
-                <i class="fa fa-download"></i> Ingest App
-                <i class="fa fa-caret-down"></i>
-            </button>
-            <div class="dropdown-menu uploads-app-wrapper" role="menu">
-                <span>Looking for a faster alternative?</span>
-                <span>Try the Ingest App for fast, resumable uploads.</span>
-                <span>Download for:
-                    <a ng-href="{{controller.uploaderApps.mac}}">Mac</a>,
-                    <a ng-href="{{controller.uploaderApps.windows}}">Windows</a>
-                </span>
-            </div>
-        </div>
     </div>
 </div>
 <div class="uploads list">
