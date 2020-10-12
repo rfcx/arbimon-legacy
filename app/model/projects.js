@@ -236,6 +236,7 @@ var Projects = {
 
         project.storage_usage = 0;
         project.processing_usage = 0;
+        project.pattern_matching_enabled = 1;
 
         var q = 'INSERT INTO projects \n'+
                 'SET ?';
