@@ -45,6 +45,12 @@ angular.module('a2.orders.plan-selection', [
         }
     };
     
+    $scope.plan = {
+        tier: 'free',
+        cost: 0, 
+        storage: 50000,
+        processing: 5000000
+    };
     $scope.freePlan = { 
         cost: 0, 
         storage: 50000,
