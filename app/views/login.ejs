@@ -2,7 +2,7 @@
 <html ng-app="a2.login">
 
 <head>
-    <% include head %>
+    <% include fragments/header %>
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RFCx Arbimon</title>
@@ -25,46 +25,8 @@
                 <!--  visible-md-block visible-lg-block hide only on small and x-small screens -->
                 <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-4 col-md-4 col-lg-offset-4 col-lg-4"
                      ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
-                    <div class="login-form card-container">
-                        <h3 class="margin-xs">Arbimon login</h3>
-                        <form role="form" ng-submit="login()">
-                            <div class="form-group">
-                                <label class="sr-only" for="user">Username</label>
-                                <input id="user"
-                                       class="form-control"
-                                       name="username"
-                                       type="text"
-                                       placeholder="Username"
-                                       ng-model="username"
-                                       required/>
-                            </div>
-                            <div class="form-group">
-                                <label class="sr-only" for="pass">Password</label>
-                                <input id="pass"
-                                       class="form-control"
-                                       name="password"
-                                       type="password"
-                                       placeholder="Password"
-                                       ng-model="password"
-                                       required/>
-                            </div>
-                            <div ng-show="showCaptcha" g-recaptcha
-                                 sitekey="6Lf_yb4ZAAAAAC9j8pxSlW06k51qQVn7GZd7PKil"
-                                 response="captchaResp"
-                                 reset-widget="resetCaptcha">
-                            </div>
-                            <button class="btn btn-primary btn-block" type="submit"><i class="fa fa-sign-in"></i> Login
-                            </button>
-                            <div class="text-right margin-xs"><a href="/forgot_request">forgot password?</a></div>
-
-                            <div class="form-group oauth-buttons text-center">
-                                <a class="btn btn-primary btn-block" href="<%- auth0UniversalLoginUrl %>">Login with RFCx account</a>
-                            </div>
-                            <br />
-                            <small class="text-info inline-block text-justify">
-                                Note: if you use the same email address for logging in with RFCx, you still will be able to use your old Arbimon profile.
-                            </small>
-                        </form>
+                    <div class="card-container">
+                        <% include fragments/login-form %>
                     </div>
                 </div>
             </div>
@@ -73,7 +35,7 @@
 
     </div>
 
-<% include footer %>
+<% include fragments/footer %>
 </body>
 
 </html>

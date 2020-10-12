@@ -2,13 +2,16 @@
 <html ng-app="a2.home">
 
 <head>
-    <% include head %>
+    <% include fragments/header %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>RFCx Arbimon - <%= title %></title>
 </head>
 
 <body ng-controller="HomeCtrl as controller">
-<% include home-nav %>
+<% include fragments/home-nav %>
+<%if (!user.rfcx_id && user.username !== 'guest') { %>
+    <% include connect-with-rfcx-alert %>
+<% } %>
 
 <div class="container">
     <div class="row">
@@ -75,7 +78,7 @@
     </div>
 </div>
 
-<% include footer %>
+<% include fragments/footer %>
 </body>
 
 </html>

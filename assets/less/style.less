@@ -43,6 +43,7 @@
 @import "bs-additions.less";
 @import "fa-additions.less";
 @import "flex.less";
+@import "spacing.less";
 /*
  * app modules styles
 */
@@ -68,6 +69,10 @@
 */
 @import "branding.less";
 
+b, strong {
+  font-weight: 900;
+}
+
 // ui-bootstrap no href fix
 .nav,
 .pagination,
@@ -89,6 +94,20 @@
   padding-right: 10px;
   margin-bottom: 5px;
   text-align: center;
+}
+
+.alert-info {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.alert-dismissable .close {
+  opacity: 0.4;
+}
+
+.alert .alert-link {
+  color: #fff;
+  font-weight: 900;
 }
 
 // .inline -> newmodel.html, frequency-adjust-layer.html
@@ -135,9 +154,6 @@
   .banner();
   padding-top: @banner-padding;
   padding-bottom: @banner-padding;
-  @media (max-width: @screen-md-min) {
-    padding: 0;
-  }
 }
 
 // adds transparent white background to div
@@ -159,13 +175,6 @@
 .dropdown-height-7 {
   overflow-y: auto;
   max-height: 7 * (2 * @nav-link-padding-v + 14);
-}
-
-// -> login.ejs
-.login-form {
-  & h3 {
-    margin: 0 0 15px 0;
-  }
 }
 
 .dropdown-menu {
@@ -365,6 +374,11 @@ textarea.fixed-width {
   border-top: 1px solid #ddd;
 }
 
+// recording-tags-layer.html
+.text-dark-gray {
+  color:@gray-dark
+}
+
 .border{
   padding: 5px;
   border-top: 1px solid @gray;
@@ -475,6 +489,22 @@ textarea.fixed-width {
   & td {
     .no-select;
     white-space: nowrap;
+  }
+}
+
+.sites .a2-table {
+  margin-left: 15px;
+  margin-right: 15px;
+  table-layout: fixed;
+  td, th {
+    width: 10%;
+  }
+  td.name,
+  th.name {
+    width: 30%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
 }
 
@@ -734,6 +764,10 @@ a2-draw-peak-threshold {
     font-size: 16px;
     padding-bottom: 14px;
   }
+  
+  & > li {
+    font-size: 16px;
+  }
 }
 
 // add icon in the inner right part of an input
@@ -757,6 +791,36 @@ a2-draw-peak-threshold {
 // -> activate.ejs, forgot-request.ejs, register.ejs
 .activation-text {
   font-size: 1.2em;
+}
+
+// login.ejs, landing-page.ejs
+.hr-text {
+  line-height: 1em;
+  position: relative;
+  outline: 0;
+  border: 0;
+  color: black;
+  text-align: center;
+  height: 1.5em;
+  opacity: .9;
+  &:before {
+    content: '';
+    background: #fff;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+  }
+  &:after {
+    content: attr(data-content);
+    position: relative;
+    display: inline-block;
+    padding: 0 .5em;
+    line-height: 1.5em;
+    color: #fff;
+    background-color: @gray-dark;
+  }
 }
 
 // -> login.ejs
@@ -847,13 +911,15 @@ a2-draw-peak-threshold {
   }
 }
 
-.feature-list {
-  margin-left: 53px;
+.feature-padding {
+    padding-inline-start: 15px !important;
+    li {
+        padding: 10px 0px;
+    }
+}
 
-  li {
-    font-size: 1.2em;
-    padding: 10px 0px;
-  }
+.fa-circle:before {
+    margin: 10px;
 }
 
 .oauth-buttons {
@@ -996,7 +1062,7 @@ fieldset[disabled] .btn {
 
 .text-overflow {
   display:block;
-  max-width: 200px;
+  max-width: 300px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1074,6 +1140,16 @@ a.ui-select-choices-row-inner {
 
 .jumbotron {
   background: transparent;
+  p {
+    font-size: 18px;
+  }
+  li {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .button-group {
+    margin: 18px 0;
+  }
 }
 
 .input-group-addon {
@@ -1182,6 +1258,13 @@ a.ui-select-choices-row-inner {
   text-overflow: ellipsis;
 }
 
+.ui-select-match-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 280px;
+}
+
 /* END: Override ui-select style */
 
 /* START: Override c3 chart style */
@@ -1271,4 +1354,8 @@ a.ui-select-choices-row-inner {
       background-color: @gray-medium;
       border-color: @gray-medium;
   }
+}
+
+img.outlined {
+  border: 3px solid @gray-light;
 }

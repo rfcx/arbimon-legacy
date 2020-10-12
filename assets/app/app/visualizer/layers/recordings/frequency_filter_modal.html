@@ -7,7 +7,7 @@
         filter-min="filter.min" filter-max="filter.max" max-freq="max_freq"
     ></a2-visualizer-frequency-filter-range-control>
     <button class="btn btn-default" style="position:absolute;top:0;right:0"
-     ng-click="remove_filter()" ng-if="has_previous_filter" tooltip="Remove Frequency Filter">
+        ng-click="$dismiss()" tooltip="Close the Modal">
         <i class="fa fa-times-circle-o"></i>
     </button>
 </div>
@@ -15,7 +15,7 @@
     <button class="btn btn-primary" ng-click="apply_filter()">
             <i class="fa fa-filter"></i> Apply Filter
     </button>
-    <button class="btn btn-default" ng-click="$dismiss()">
+    <button class="btn btn-default" ng-click="remove_filter()" ng-if="has_previous_filter" tooltip="Remove Frequency Filter">
         <i class="fa fa-close"></i> Cancel
     </button>
 </div>

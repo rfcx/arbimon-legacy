@@ -69,7 +69,10 @@ router.get('/:projecturl?/', function(req, res, next) {
             var project = rows[0];
 
             if(!project.is_enabled) {
-                return res.render('project_disabled', { project: project });
+                return res.render('project_disabled', {
+                    project: project,
+                    user: req.session.user
+                });
             }
 
 

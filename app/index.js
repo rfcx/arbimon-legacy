@@ -153,9 +153,7 @@ app.use(function(err, req, res, next) {
     res.status(err.status || 500);
 
     // json APIs have more error-handling possibilities
-    if(
-        /application\/json/.test(res.getHeader('Content-Type'))
-    ){
+    if (/application\/json/.test(res.getHeader('Content-Type'))) {
         if(err instanceof APIError){
             res.json(err.message);
         } else {
@@ -167,13 +165,15 @@ app.use(function(err, req, res, next) {
         if(app.get('env') === 'development') {
             res.render('error', {
                 message: err.message,
-                error: err
+                error: err,
+                user: req.session ? req.session.user : undefined
             });
         }
         else {
             res.render('error', {
                 message: err.message || "Something went wrong",
-                error: {}
+                error: {},
+                user: req.session.user
             });
         }
     }

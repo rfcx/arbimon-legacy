@@ -49,20 +49,18 @@
         </button>
     </div>
 </div>
-<div class="row">
+<div class="row sites">
     <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
         <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
-            <field title="Name" key="name">
+            <field title="Name" key="name" className="name">
                 {{ row.name }}
             </field>
-            <!-- <field>
-                <i ng-show="row.published && !row.imported" class="fa fa-globe"  title="Site is Published"></i>
-                <i ng-show="row.imported" class="fa fa-users" title="Site is Imported"></i>
-            </field> -->
-            <field>
-                <i ng-show="row.has_logs && !row.imported" class="fa fa-book" title="Has status logs"></i>
-                <i ng-show="row.token_created_on && !row.imported" class="fa fa-link" title="Has a Token"></i>
-            </field>
+            <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
+                <field>
+                    <i ng-if="row.has_logs" class="fa fa-book" title="Has status logs"></i>
+                    <i ng-if="row.token_created_on" class="fa fa-link" title="Has a Token"></i>
+                </field>
+            </ng-container>
             <field title="No. of recordings" key="rec_count">
                 {{ row.rec_count }}
             </field>

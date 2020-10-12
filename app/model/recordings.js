@@ -877,7 +877,7 @@ var Recordings = {
             const dateFormat = 'YYYYMMDDTHHmmssSSS'
             const start = momentStart.format(dateFormat)
             const end = momentEnd.format(dateFormat)
-            recording.thumbnail = `/api/rfcx/recordings/${site.external_id}_t${start}Z.${end}Z_z95_wdolph_g1_fspec_mtrue_d420.154.png`
+            recording.thumbnail = `/api/ingest/recordings/${site.external_id}_t${start}Z.${end}Z_z95_wdolph_g1_fspec_mtrue_d420.154.png`
         }
     },
     __compute_spectrogram_tiles : function(recording, callback){

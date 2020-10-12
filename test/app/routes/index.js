@@ -10,34 +10,6 @@ var sinon = require('sinon');
 var routes = require('../../../app/routes');
 
 describe('index.js', function(){
-    describe('GET /terms', function(){
-        it('Should show the terms and conditions page.', function(done){
-            routes.handle({method:'get', url:'/terms'}, {
-                render: function(page, options){
-                    page.should.equal('post-page');
-                    expect(options).to.exist;
-                    options.content.should.equal('terms');
-                    done();
-                }
-            }, function(err){
-                done(err || new Error("Request was wrongly handled"));
-            });
-        });
-    });
-    describe('GET /privacy', function(){
-        it('Should show the privacy page.', function(done){
-            routes.handle({ method:'get', url:'/privacy'}, {
-                render: function(page, options){
-                    page.should.equal('post-page');
-                    expect(options).to.exist;
-                    options.content.should.equal('privacy');
-                    done();
-                }
-            }, function(err){
-                done(err || new Error("Request was wrongly handled"));
-            });
-        });
-    });
     describe('GET /classifiers', function(){
         it('Should show the classifiers page.', function(done){
             routes.handle({ method:'get', url:'/classifiers'}, {
