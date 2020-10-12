@@ -679,7 +679,7 @@ var Users = {
         const userId = req.session.user.id;
         const email = this.getEmailFromAuth0Profile(profile);
         // if user authenticates with different email, check if there is another user with this email
-        if ((req.session.user.email || 'email 1').toLowerCase() !== (email || 'email 2').toLowerCase()) {
+        if ((req.session.user.email || '').toLowerCase() !== email.toLowerCase()) {
             const foreignUser = await q.ninvoke(Users, "findByEmail", email).get(0).get(0);
             if (foreignUser) {
                 throw new Error('This email address is already used by another user.')
