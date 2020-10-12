@@ -678,10 +678,11 @@ var Users = {
     connectRFCx: async function(req, profile) {
         const userId = req.session.user.id;
         const email = this.getEmailFromAuth0Profile(profile);
-        if (req.session.user.email !== email) { // if user authenticates with different email, check if there is another user with this email
+        // if user authenticates with different email, check if there is another user with this email
+        if ((req.session.user.email || 'email 1').toLowerCase() !== (email || 'email 2').toLowerCase()) {
             const foreignUser = await q.ninvoke(Users, "findByEmail", email).get(0).get(0);
             if (foreignUser) {
-                throw new Error('You cannot use this email address.')
+                throw new Error('This email address is already used by another user.')
             }
         }
         await q.ninvoke(Users, "update", {
