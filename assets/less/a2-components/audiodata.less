@@ -64,27 +64,11 @@
 
 .drophere {
     border: 1px solid;
-
 }
 
-.uploads {
-    &.info-panel {
-        position:relative;
-        max-width: 1000px;
-        margin-bottom: 10px;
-    }
-
-    &.info {
-        display: inline-block;
-        padding: 2px 5px;
-    }
-    &.title {
-        display: inline-block;
-        font-size: 1.4em;
-    }
-
-    &.list {
-        margin-top:22px;
+.upload-info-panel {
+    @media (min-width: @screen-desktop) {
+        margin-bottom: 0;
     }
 }
 
