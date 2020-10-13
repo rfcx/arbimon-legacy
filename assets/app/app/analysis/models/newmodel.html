@@ -59,7 +59,7 @@
                 </div>
                 <div class="row top-buffer">
                     <div class="col-xs-12">
-                        <table class="table">
+                        <table class="table form-inline">
                                 <tr>
                                     <td class="text-right">Total: </td>
                                     <td>{{data.totalValidations}}</td>
@@ -70,20 +70,20 @@
                                     <td class="text-right">Present: </td>
                                     <td>{{data.presentValidations}}</td>
                                     <td>
-                                        <input size="10" type="text" name="usePresentTraining" ng-model="data.usePresentTraining" />
+                                        <input class="form-control" size="10" type="text" name="usePresentTraining" ng-model="data.usePresentTraining" />
                                     </td>
                                     <td>
-                                        <input size="10" type="text" name="usePresentValidation" ng-model="data.usePresentValidation" />/{{totalPresentValidation}}
+                                        <input class="form-control" size="10" type="text" name="usePresentValidation" ng-model="data.usePresentValidation" />/{{totalPresentValidation}}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="text-right">Absent: </td>
                                     <td>{{data.absentsValidations}}</td>
                                     <td>
-                                        <input size="10" type="text" name="usePresentTraining" ng-model="data.useNotPresentTraining" />
+                                        <input class="form-control" size="10" type="text" name="usePresentTraining" ng-model="data.useNotPresentTraining" />
                                     </td>
                                     <td>
-                                        <input size="10" type="text" name="usePresentValidation" ng-model="data.useNotPresentValidation" />/{{totalNotPresentValidation}}
+                                        <input class="form-control" size="10" type="text" name="usePresentValidation" ng-model="data.useNotPresentValidation" />/{{totalNotPresentValidation}}
                                     </td>
                                 </tr>
                         </table>
