@@ -682,7 +682,7 @@ var Users = {
         if ((req.session.user.email || '').toLowerCase() !== email.toLowerCase()) {
             const foreignUser = await q.ninvoke(Users, "findByEmail", email).get(0).get(0);
             if (foreignUser) {
-                throw new Error('This email address is already used by another user.')
+                throw new Error('The email address associated with this RFCx account is already used by another Arbimon user. Please use a different RFCx account.')
             }
         }
         await q.ninvoke(Users, "update", {
