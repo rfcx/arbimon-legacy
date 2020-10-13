@@ -8,10 +8,10 @@
         </h3>
         <p ng-hide="info"><small>Please choose a site before starting uploads</small></p>
         <div ng-show="info">
-            Site: <span class="label label-default">{{ info.site.name }}</span>
-            Recorder: <span class="label label-default">{{ info.recorder }}</span>
-            Microphone: <span class="label label-default">{{ info.mic }} </span>
-            Software version: <span class="label label-default">{{ info.sver }} </span>
+            Site: <span class="label label-default mr-2">{{ info.site.name }}</span>
+            Recorder: <span class="label label-default mr-2">{{ info.recorder }}</span>
+            Microphone: <span class="label label-default mr-2">{{ info.mic }}</span>
+            Software version: <span class="label label-default mr-2">{{ info.sver }}</span>
             Filename format: <span class="label label-default">{{ info.format.name }}</span>
         </div>
     </div>
