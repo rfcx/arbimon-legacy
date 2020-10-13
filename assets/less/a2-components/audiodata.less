@@ -64,69 +64,11 @@
 
 .drophere {
     border: 1px solid;
-
 }
 
-.uploads-wrapper {
-    position: relative;
-}
-
-.uploads {
-    &.info-panel {
-        position: relative;
-        margin-bottom: 5px;
-        padding: 0;
-        background-color: transparent;
-        @media (max-width: @screen-desktop) {
-            display: block;
-            width: 100%;
-        }
-        @media (max-width: @screen-tablet) {
-            display: block;
-            width: 100%;
-        }
-    }
-    &.app-panel {
-        position: absolute;
-        top: 0;
-        right: 20px;
-        padding: 0;
+.upload-info-panel {
+    @media (min-width: @screen-desktop) {
         margin-bottom: 0;
-        span {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 12px;
-            &:last-child {
-                margin-bottom: 0;
-            }
-            a {
-                text-decoration: underline;
-            }
-        }
-        @media (max-width: @screen-desktop) {
-            display: block;
-            position: static;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        @media (max-width: @screen-tablet) {
-            display: block;
-            position: static;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-    }
-    &.info {
-        display: inline-block;
-        padding: 2px 5px;
-    }
-    &.title {
-        display: inline-block;
-        font-size: 1.4em;
-    }
-
-    &.list {
-        margin-top:22px;
     }
 }
 
