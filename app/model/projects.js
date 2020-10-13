@@ -25,8 +25,8 @@ var Projects = {
     plans: {
         free: { // Changes must be matched in assets/app/orders/plan-selection.js
             cost: 0,
-            storage: 50000,
-            processing: 5000000,
+            storage: 100000,
+            processing: 10000000,
             tier: 'free'
         }
     },

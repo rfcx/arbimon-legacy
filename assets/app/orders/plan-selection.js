@@ -11,8 +11,8 @@ angular.module('a2.orders.plan-selection', [
     const freePlan = { // Changes must be matched in app/model/projects.js
         tier: 'free',
         cost: 0, 
-        storage: 50000,
-        processing: 5000000, 
+        storage: 100000,
+        processing: 10000000, 
     };
 
     this.coupon = {
