@@ -7,11 +7,8 @@
     }, n.readyQueue = [], "complete" === t.readyState) return a(); e.attachEvent ? e.attachEvent("onload", a) : e.addEventListener("load", a, !1)
 }(window, document, window.Beacon || function () { });</script>
 <script type="text/javascript">
-window.Beacon('init', 'e8099523-e6e9-4e30-af5e-1e4bf43fbf02')
+window.Beacon('init', 'e8099523-e6e9-4e30-af5e-1e4bf43fbf02');
 <% if (user && !user.isAnonymousGuest) { %>
-    window.Beacon('identify', {
-        name: '<%= user.firstname %>',
-        email: '<%= user.email %>',
-    })
+window.Beacon('identify', { name: '<%= user.firstname %>', email: '<%= user.email %>' });
 <% } %>
 </script>
