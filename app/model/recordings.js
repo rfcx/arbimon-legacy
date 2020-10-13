@@ -39,7 +39,7 @@ var getUTC = function (date) {
     return d;
 };
 
-var fileExtPattern = /\.(wav|flac)$/;
+var fileExtPattern = /\.(wav|flac|opus)$/;
 var freqFilterPrecision = 100;
 
 function defineS3Clients () {
