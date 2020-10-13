@@ -568,8 +568,8 @@ var Users = {
         const attrs = {
             login: profile.nickname,
             password: hashPassword(password),
-            firstname: profile.given_name,
-            lastname: profile.family_name,
+            firstname: profile.given_name || (profile.user_metadata ? profile.user_metadata.given_name : ''),
+            lastname: profile.family_name || (profile.user_metadata ? profile.user_metadata.family_name : ''),
             email: email,
             created_on: new Date(),
             rfcx_id: email,
