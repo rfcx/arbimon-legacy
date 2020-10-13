@@ -7,7 +7,8 @@
     "setup": "./scripts/setup/setup.sh",
     "dev": "node_modules/gulp/bin/gulp.js watch",
     "dep-graph": "madge -i backend.png  --config madge.conf.json -M app.js model/ utils/ routes/ config/ bin/",
-    "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -r test/app"
+    "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -r test/app",
+    "preinstall": "npx npm-force-resolutions"
   },
   "dependencies": {
     "@rfcx/http-utils": "^1.0.1",
@@ -85,5 +86,8 @@
     "rimraf": "^2.5.4",
     "sinon": "~1.17.5",
     "supertest": "~2.0.0"
+  },
+  "resolutions": {
+    "graceful-fs": "^4.2.4"
   }
 }
