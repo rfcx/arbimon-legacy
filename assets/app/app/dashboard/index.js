@@ -96,7 +96,7 @@ angular.module('a2.app.dashboard',[
                 var bounds = new google.maps.LatLngBounds();
                     
                 angular.forEach($scope.sites, function(site){
-                    if (site.lat > 89.999999 || site.lat < -89.999999 || site.lon > 179.999999 || site.lon < -179.999999) {
+                    if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
                         return;
                     }
                     
