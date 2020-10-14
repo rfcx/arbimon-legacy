@@ -43,9 +43,9 @@ angular.module('a2.audiodata.sites', [
     
     a2GoogleMapsLoader.then(function(google){
         $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
-            center: { lat: 18.3, lng: -66.5},
+            center: { lat: 0, lng: 0},
             mapTypeId: google.maps.MapTypeId.SATELLITE,
-            zoom: 8
+            zoom: 8, minZoom: 2
         });
     });
     

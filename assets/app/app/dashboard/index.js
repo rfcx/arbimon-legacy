@@ -87,10 +87,9 @@ angular.module('a2.app.dashboard',[
             a2GoogleMapsLoader.then(function(google){
                 
                 $scope.map = new google.maps.Map($window.document.getElementById('summary-map'), {
-                    center: { lat: 18.3, lng: -66.5},
+                    center: { lat: 0, lng: 0},
                     mapTypeId: google.maps.MapTypeId.SATELLITE,
-                    zoom: 8,
-                    minZoom: 2
+                    zoom: 8, minZoom: 2
                 });
                 
                 var bounds = new google.maps.LatLngBounds();
