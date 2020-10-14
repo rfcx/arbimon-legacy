@@ -1,15 +1,17 @@
 <div class="row" style="margin-top:10px;">
-    <div class="col-sm-2">
+    <div class="col-md-2">
         <div class="big-count">
-            <span>{{ newUsers }}</span>
-            New users today
+            <i ng-if="newUsers === undefined" class="fa fa-spinner fa-spin"></i>
+            <span class="number" ng-if="newUsers !== undefined" title="{{newUsers}}">{{ newUsers }}</span>
+            <span class="text">New users today</span>
         </div>
         <div class="big-count">
-            <span>{{ newProjects }}</span>
-            New projects today
+            <i ng-if="newProjects === undefined" class="fa fa-spinner fa-spin"></i>
+            <span class="number" ng-if="newProjects !== undefined" title="{{ newProjects }}">{{ newProjects }}</span>
+            <span class="text">New projects today</span>
         </div>
     </div>
-    <div class="col-sm-10">
+    <div class="col-md-10">
         <!-- <div style="background-color:#bbb; height:300px; margin: 10px">
             Activity on the last 7 days
         </div> -->

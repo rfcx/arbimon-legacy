@@ -765,7 +765,7 @@ a2-draw-peak-threshold {
     font-size: 16px;
     padding-bottom: 14px;
   }
-  
+
   & > li {
     font-size: 16px;
   }
@@ -845,10 +845,11 @@ a2-draw-peak-threshold {
 }
 
 .big-count {
-  width: 180px;
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%; // makes it squared
   text-align: center;
   border-radius: 10px;
-  padding: 10px;
   margin: 5px;
   background-color: @val-color-default;
   color: @text-color;
@@ -856,14 +857,41 @@ a2-draw-peak-threshold {
   -moz-user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
-
-  & > span {
-    font-size: 120px;
+  @media (max-width: 991px) {
+    display: inline-block;
+    width: 33%;
+    padding-bottom: 33%;
+  }
+  .number,
+  .fa,
+  .text {
     display: block;
-    margin-bottom: -29px;
+    position: absolute;
     text-align: center;
-    margin-top: -29px;
-    line-height: 137%;
+  }
+  .fa {
+    font-size: 28px;
+    top: ~"calc(40% - 14px)";
+    left: ~"calc(50% - 14px)";
+  }
+  .number {
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 100px; // fallback
+    font-size: 5vw;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    @media (max-width: @screen-desktop) {
+      font-size: 10vw;
+    }
+  }
+  .text {
+    left: 0;
+    bottom: 10px;
+    width: 100%;
   }
 }
 
