@@ -224,7 +224,7 @@ router.post('/create-project', function(req, res, next) {
 
                     // check if user own another free project
                     return model.users.findOwnedProjects(req.session.user.id, { free: true }).then(function(rows) {
-                        if(rows.length > 0 && !req.session.user.isSuper) {
+                        if (rows.length >= req.session.user.project_limit && !req.session.user.isSuper) {
                             throw new APIError({freeProjectLimit: true}, 422);
                         }
                     }).then(function(){

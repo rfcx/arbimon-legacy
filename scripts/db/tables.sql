@@ -922,7 +922,7 @@ create table if not exists users
     email          varchar(255)               not null,
     last_login     datetime                   null,
     is_super       tinyint(1)       default 0 not null,
-    project_limit  int unsigned     default 1 not null,
+    project_limit  int unsigned     default 100 not null,
     created_on     datetime                   null,
     login_tries    tinyint unsigned default 0 not null,
     disabled_until datetime                   null,
