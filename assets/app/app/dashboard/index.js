@@ -96,6 +96,10 @@ angular.module('a2.app.dashboard',[
                 var bounds = new google.maps.LatLngBounds();
                     
                 angular.forEach($scope.sites, function(site){
+                    if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
+                        return;
+                    }
+                    
                     var position = new google.maps.LatLng(site.lat, site.lon);
                     
                     var marker = new google.maps.Marker({
