@@ -78,6 +78,16 @@ angular.module('a2.audiodata.sites', [
     $scope.save = function() {
         var action = $scope.editing ? 'update' : 'create';
         
+        if($scope.temp.lat > 85 || $scope.temp.lat < -85){
+            notify.log('Please enter latitude number between -85 to 85');
+            return
+        }
+        
+        if($scope.temp.lon > 180 || $scope.temp.lon < -180) {
+            notify.log('Please enter longitude number between -180 to 180');
+            return
+        }
+        
         if($scope.siteForm.$invalid) return;
         
         a2Sites[action]($scope.temp, function(data) {
