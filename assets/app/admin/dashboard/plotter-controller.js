@@ -34,12 +34,12 @@ angular.module('a2.admin.dashboard.plotter-controller', [
             if(value.apply){
                 value.apply(this);
             }
-            
+
             return this.refresh_logs();
-                    
+
         };
     }
-    
+
     this.data = {
         series:[
             {tag:'activity', name:'Activity', icon:'fa fa-fw fa-ra'},
@@ -55,7 +55,7 @@ angular.module('a2.admin.dashboard.plotter-controller', [
             {tag:'3-days' , text:'Last 3 Days'   , range:mk_time_range_fn('now', - 3*24*3600*1000)},
             {tag:'1-week' , text:'Last Week'     , range:mk_time_range_fn('now', - 7*24*3600*1000)},
             {tag:'2-weeks', text:'Last 2 Weeks'  , range:mk_time_range_fn('now', -14*24*3600*1000)},
-            {tag:'1-month', text:'Last Month'    , range:mk_time_range_fn('now', -31*24*3600*1000)}            
+            {tag:'1-month', text:'Last Month'    , range:mk_time_range_fn('now', -31*24*3600*1000)}
         ],
         periods:[
             {tag:'1-minute'   , text:'1 Minute'   , sampling:'1 min'  , granularity:       1 * 60 * 1000},
@@ -76,7 +76,7 @@ angular.module('a2.admin.dashboard.plotter-controller', [
         time_range: get_by_tag(this.data.time_ranges, '1-week'),
         period: get_by_tag(this.data.periods, '1-day'),
     };
-    
+
     this.set_series      = make_setter({data:'series'     , sel:'series'    , def:'activity' });
     this.set_time_range  = make_setter({data:'time_ranges', sel:'time_range', def:'1-week'});
     this.set_period      = make_setter({data:'periods'    , sel:'period'    , def:'1-day'});
@@ -89,7 +89,7 @@ angular.module('a2.admin.dashboard.plotter-controller', [
             return {x:'datetime', url:data};
         });
     };
-    
+
     this.make_chart_struct = function(data){
         return $q(function(resolve, reject){
             $window.Plotly.d3.csv(data.url, function(err, data){
@@ -101,6 +101,9 @@ angular.module('a2.admin.dashboard.plotter-controller', [
                 data: [{
                     type:'scatter',
                     mode:'lines',
+                    marker: {
+                       color:'#31984f'
+                    },
                     x : data.map(function(_){ return new Date(+_.datetime).toString(); }),
                     y : data.map(function(_){ return +_.activity; }),
                 }],
@@ -111,8 +114,8 @@ angular.module('a2.admin.dashboard.plotter-controller', [
                 // axes : {
                 //     x : {
                 //         tick: {
-                //             format: function (x) { 
-                //                 return moment(new Date(x)).utc().format('MM-DD-YYYY HH:mm'); 
+                //             format: function (x) {
+                //                 return moment(new Date(x)).utc().format('MM-DD-YYYY HH:mm');
                 //             }
                 //         }
                 //     }
@@ -122,14 +125,14 @@ angular.module('a2.admin.dashboard.plotter-controller', [
         }).bind(this));
     };
 
-    
+
     this.refresh_logs = function(){
         var d = $q.defer(), promise=d.promise;
         d.resolve();
         var series = this.selected.series;
         var time_range = this.selected.time_range;
         var period = this.selected.period;
-        
+
         if(series && time_range && period) {
             var range = time_range.range();
             var granularity = period.granularity;
@@ -139,7 +142,7 @@ angular.module('a2.admin.dashboard.plotter-controller', [
                         series.data.range[0] - granularity >= range[0] && range[1] <= series.data.range[1] + granularity
                     )){
                         series.data = null;
-                    } 
+                    }
                 }
                 if(!series.data){
                     return this.load_data(series, range, period).then(function(data){
@@ -156,9 +159,9 @@ angular.module('a2.admin.dashboard.plotter-controller', [
                 }
             }).bind(this));
         }
-        
+
         return promise;
-        
+
     };
 
     $q.when().then(this.refresh_logs.bind(this));

@@ -1,6 +1,6 @@
-<div class="modal-header">  
-    <h3 class="modal-title">Soundscape Details</h3>  
-</div>  
+<div class="modal-header">
+    <h3 class="modal-title">Soundscape Details</h3>
+</div>
 <div class="modal-body">
     <div class="row">
         <div class="col-xs-6">
@@ -10,7 +10,7 @@
                 <li><strong>Bin bandwidth:</strong> {{ soundscape.bin_size }}Hz</li>
                 <li>
                     <p><strong>Aggregation:</strong> {{ soundscape.aggregation.name }}</p>
-                    <div class="btn btn-default disabled">
+                    <div class="btn btn-default border-default disabled">
                         <a2-draw-aggregation aggregation="soundscape.aggregation"></a2-draw-aggregation>
                     </div>
                 </li>
@@ -19,7 +19,7 @@
         <div class="col-xs-6" ng-show="soundscape.threshold || soundscape.frequency">
             <h4>Peak Filtering</h4>
             <ul class="list-unstyled details-list">
-                <li><strong>Amplitude:</strong> {{ soundscape.threshold }} 
+                <li><strong>Amplitude:</strong> {{ soundscape.threshold }}
                     <span tooltip="{{controller.amplitudeReferences[soundscape.threshold_type].description}}" tooltip-append-to-body="true">
                         {{controller.amplitudeReferences[soundscape.threshold_type].caption}}
                         <i class="fa fa-question-circle"></i>
@@ -36,7 +36,7 @@
             <h3>Acoustic Indices
                 <div class="pull-right" ng-csv="indices" filename="{{ soundscape.name }}_indices.csv">
                     <button ng-if="showDownload"
-                        class="btn btn-default" 
+                        class="btn btn-default"
                         tooltip="Download Indices">
                         <i class="fa fa-download"></i>
                     </button>
@@ -57,6 +57,6 @@
         </div>
     </div>
 </div>
-<div class="modal-footer">  
-    <button class="btn btn-primary" ng-click="$close()">Close</button>  
-</div>  
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="$close()">Close</button>
+</div>

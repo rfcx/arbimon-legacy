@@ -8,6 +8,13 @@ angular.module('a2.orders.plan-selection', [
     'a2.services',
 ])
 .controller('PlanSelectionCtrl', function($scope, a2orderUtils) {
+    const freePlan = { // Changes must be matched in app/model/projects.js
+        tier: 'free',
+        cost: 0, 
+        storage: 100000,
+        processing: 10000000, 
+    };
+
     this.coupon = {
         code:'',
         validation:null,
@@ -45,13 +52,9 @@ angular.module('a2.orders.plan-selection', [
         }
     };
     
-    $scope.freePlan = { 
-        cost: 0, 
-        storage: 100, 
-        processing: 1000, 
-    };
+    $scope.plan = freePlan;
     $scope.recorderOptions = 0;
-    $scope.planMinutes = $scope.planMinutes || 10000;
+    $scope.planMinutes = $scope.planMinutes || freePlan.storage;
     $scope.planYears = $scope.planYears || 1;
     $scope.upgradeOnly = false;
     $scope.recorderQty = $scope.recorderQty || 0;
@@ -69,7 +72,7 @@ angular.module('a2.orders.plan-selection', [
         due.setFullYear(due.getFullYear()+$scope.currentPlan.duration);
         
         $scope.planYears = $scope.currentPlan.duration || 1;
-        $scope.planMinutes = $scope.currentPlan.storage >= 10000 ? $scope.currentPlan.storage : 10000;
+        $scope.planMinutes = $scope.currentPlan.storage >= freePlan.storage ? $scope.currentPlan.storage : freePlan.storage;
         
         if($scope.currentPlan.tier == 'paid' && (!$scope.currentPlan.activation || (new Date()) < due) ) {
             $scope.upgradeOnly = true;
@@ -98,9 +101,9 @@ angular.module('a2.orders.plan-selection', [
             console.log($scope.plan);
         }
         else if($scope.plan.tier == 'free'){
-            $scope.plan.cost = $scope.freePlan.cost;
-            $scope.plan.storage = $scope.freePlan.storage;
-            $scope.plan.processing = $scope.freePlan.processing;
+            $scope.plan.cost = freePlan.cost;
+            $scope.plan.storage = freePlan.storage;
+            $scope.plan.processing = freePlan.processing;
             $scope.plan.duration =  undefined;
         }
     });

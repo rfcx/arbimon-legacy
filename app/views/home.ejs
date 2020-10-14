@@ -2,13 +2,16 @@
 <html ng-app="a2.home">
 
 <head>
-    <% include head %>
+    <% include fragments/header %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Arbimon II - <%= title %></title>
+	<title>RFCx Arbimon - <%= title %></title>
 </head>
 
 <body ng-controller="HomeCtrl as controller">
-<% include home-nav %>
+<% include fragments/home-nav %>
+<%if (!user.rfcx_id && user.username !== 'guest') { %>
+    <% include connect-with-rfcx-alert %>
+<% } %>
 
 <div class="container">
     <div class="row">
@@ -16,8 +19,8 @@
             <div class="row no-gutter">
                 <div class="col-xs-5">
                     <h3>
-                        Projects 
-                        <button class="btn btn-sm btn-default" 
+                        Projects
+                        <button class="btn btn-sm btn-default"
                             tooltip="Create a project"
                             tooltip-trigger="mouseenter"
                             ng-click="controller.createProject() | trackEvent:'Home':'createProject'"
@@ -46,9 +49,9 @@
             <div class="row">
                 <div class="col-md-12">
                     <dl class="list-group projects-list">
-                        <button ng-class="{'disabled': !project.is_enabled }" 
+                        <button ng-class="{'disabled': !project.is_enabled }"
                             ng-click="controller.selectProject(project)"
-                           class="list-group-item btn-block text-left list-item-project" 
+                           class="list-group-item btn-block text-left list-item-project"
                            ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort | filter: controller.search ) | paginate: controller.currentPage : 10"
                         >
                             <div class="last-accessed" title="{{ project.lastAccessed | moment:'lll' }}">
@@ -58,7 +61,7 @@
                                 {{ project.name }}
                                 <i class="fa" ng-class="project.is_private ? 'fa-lock' :'fa-globe'"></i>
                             </dt>
-                            <dd class="word-wrap">{{ project.description }}</dd>
+                            <dd class="word-wrap line-ellipsis">{{ project.description }}</dd>
                         </button>
                     </dl>
                     <pagination ng-show="results.length > 10" total-items="results.length" ng-model="controller.currentPage" max-size="5" rotate="false"></pagination>
@@ -75,7 +78,8 @@
     </div>
 </div>
 
-<% include footer %>
+<% include fragments/footer %>
 </body>
 
 </html>
+

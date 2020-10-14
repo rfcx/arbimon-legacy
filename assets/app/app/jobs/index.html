@@ -23,8 +23,10 @@
                     
 
                     <a2-table rows="jobs" search="search" selected="selected" no-checkbox>
-                        <field class="hidelongtext" title="Name" key="name">
+                        <field>
                             <i class="fa fa-circle" ng-style="{ color: job_types.for[row.job_type_id].color}"></i>
+                        </field>
+                        <field class="hidelongtext" title="Name" key="name">
                             {{ row.name }}
                         </field>
                         <field title="Type" key="type">
@@ -46,7 +48,7 @@
                                 </div>
                             </div>
                         </field>
-                        <field title="" key="">
+                        <field>
                             <button class="btn btn-default btn-xs" ng-click="hide(row) | trackEvent:'Jobs':'hide job'">Hide</button>
                         </field>
 

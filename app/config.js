@@ -39,6 +39,13 @@ module.exports = function(config_file){
             }
         }
     }
+
+    Object.keys(cache[config_file]).forEach(key => {
+        const envVarName = `${config_file.toUpperCase()}_${key.toUpperCase()}`;
+        if (process.env[envVarName]) {
+            cache[config_file][key] = process.env[envVarName];
+        }
+    })
     
     return cache[config_file];
 };

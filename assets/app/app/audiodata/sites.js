@@ -44,6 +44,7 @@ angular.module('a2.audiodata.sites', [
     a2GoogleMapsLoader.then(function(google){
         $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
             center: { lat: 18.3, lng: -66.5},
+            mapTypeId: google.maps.MapTypeId.SATELLITE,
             zoom: 8
         });
     });
@@ -76,6 +77,16 @@ angular.module('a2.audiodata.sites', [
     
     $scope.save = function() {
         var action = $scope.editing ? 'update' : 'create';
+        
+        if($scope.temp.lat > 85 || $scope.temp.lat < -85){
+            notify.log('Please enter latitude number between -85 to 85');
+            return
+        }
+        
+        if($scope.temp.lon > 180 || $scope.temp.lon < -180) {
+            notify.log('Please enter longitude number between -180 to 180');
+            return
+        }
         
         if($scope.siteForm.$invalid) return;
         

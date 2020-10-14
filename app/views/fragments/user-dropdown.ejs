@@ -1,0 +1,26 @@
+<% if (!user || user.isAnonymousGuest) { %>
+    <li class="">
+        <a href="/login">
+            Login
+        </a>
+    </li>
+<% } else { %>
+    <li class="dropdown" dropdown>
+        <a class="dropdown-toggle" dropdown-toggle>
+            <span class="visible-lg-inline visible-xs-inline"><%= user.username %></span>
+            <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>" style="background-image:url('<%- user.imageUrl %>')"></i>
+        </a>
+        <ul class="dropdown-menu" role="menu">
+            <li class="">
+                <a href="/user-settings">
+                    <i class="fa fa-wrench"></i> Account Settings
+                </a>
+            </li>
+            <li class="">
+                <a href="/logout">
+                    <i class="fa fa-sign-out"></i> Log out
+                </a>
+            </li>
+        </ul>
+    </li>
+<% } %>

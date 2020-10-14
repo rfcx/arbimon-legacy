@@ -31,7 +31,7 @@ var createProject = function(project, userId) {
             project_id: projectId,
             data: JSON.stringify({})
         });
-        
+
         return projectId;
     });
 };
@@ -41,7 +41,7 @@ var findLinkObject = function(links, linkRelation) {
         if(link.rel == linkRelation)
             return link;
     });
-    
+
     return approvalLink[0] || null;
 };
 
@@ -49,25 +49,25 @@ var createOrder = function(user, order, addendum, appHost) {
     if(systemSettings.setting('feature.payments') == 'off') {
         throw new APIError({ error: 'payments are unavailable, please try again later'}, 503);
     }
-    
+
     var orderId = uuid.v4();
-    
+
     var projectPayment = ordersUtils.createPayment({
         planType: order.planType,
         plan: order.data.plan,
-        recorderQty: addendum.recorderQty, 
+        recorderQty: addendum.recorderQty,
         shippingAddress: addendum.address,
         redirect_urls: {
             return_url: appHost + "/process-order/"+ orderId,
             cancel_url: appHost + "/api/orders/cancel/" + orderId,
         },
     });
-    
+
     console.log(projectPayment, '\n\n');
     console.log(projectPayment.transactions[0], '\n\n');
     console.log(projectPayment.transactions[0].item_list, '\n\n');
     var paypal_response;
-    
+
     q.ninvoke(paypal.payment, "create", projectPayment).then(function(resp){
         paypal_response = resp;
         console.log(paypal_response);
@@ -97,8 +97,8 @@ var createOrder = function(user, order, addendum, appHost) {
 
 router.get('/payments-status', function(req, res) {
     res.type('json');
-    res.json({ 
-        payments_enable: req.systemSettings('feature.payments') == 'on' 
+    res.json({
+        payments_enable: req.systemSettings('feature.payments') == 'on'
     });
 });
 
@@ -138,12 +138,7 @@ var planSchema = joi.object().keys({
     duration: joi.number().optional(),
 });
 
-var freePlan = {
-    cost: 0,
-    storage: 100,
-    processing: 1000,
-    tier: 'free'
-};
+var freePlan = { ...model.projects.plans.free };
 
 
 router.post('/create-project', function(req, res, next) {
@@ -151,14 +146,14 @@ router.post('/create-project', function(req, res, next) {
     if(req.session.user && req.session.user.isAnonymousGuest) {
         return res.status(401).json({ error: "unauthorized"});
     }
-    
+
     if(!req.body.project) {
         return res.status(400).json({ error: "missing parameters" });
     }
-    
+
     req.body.recorderQty = +req.body.recorderQty || 0;
-    
-    
+
+
     var project = req.body.project;
     var plan = project.plan;
     var couponHash = req.body.coupon;
@@ -180,9 +175,9 @@ router.post('/create-project', function(req, res, next) {
         var project = all[0];
         var plan    = all[1];
         var coupon  = all[2];
-        
+
         console.log(project, plan, coupon);
-        
+
         return q.all([
             model.projects.find({name:project.name}).then(function(rows){
                 if(rows.length){
@@ -198,7 +193,7 @@ router.post('/create-project', function(req, res, next) {
             console.log('project:', project);
             // assign project_type_id to normal type
             project.project_type_id = 1;
-            
+
             if(couponHash){
                 if(coupon){
                     if(coupon.consumed){
@@ -215,7 +210,7 @@ router.post('/create-project', function(req, res, next) {
                     return createProject(project, req.session.user.id).then(function() {
                         return model.ActivationCodes.consumeCode(coupon, req.session.user.id);
                     }).then(function(){
-                        res.json({ 
+                        res.json({
                             message: util.format("Project '%s' successfully created!", project.name)
                         });
                     });
@@ -226,7 +221,7 @@ router.post('/create-project', function(req, res, next) {
             } else {
                 if(plan.tier == 'free') {
                     plan = freePlan;
-                    
+
                     // check if user own another free project
                     return model.users.findOwnedProjects(req.session.user.id, { free: true }).then(function(rows) {
                         if(rows.length > 0 && !req.session.user.isSuper) {
@@ -236,19 +231,19 @@ router.post('/create-project', function(req, res, next) {
                         project.plan = plan;
                         return createProject(project, req.session.user.id);
                     }).then(function(result) {
-                        res.json({ 
+                        res.json({
                             message: util.format("Project '%s' successfully created!", project.name)
                         });
                     });
-                } else if(project.plan.tier == 'paid') {                
+                } else if(project.plan.tier == 'paid') {
                     // set plan cost base on selected plan minutes
                     plan.cost = plan.storage * plan.duration_period * 0.03;
                     plan.processing = plan.storage * 100;
                     plan.duration_period = plan.duration;
                     delete plan.duration;
-                    
+
                     console.log('plan:', plan);
-                    
+
                     var order = req.order = {
                         action: 'create-project',
                         planType: 'new',
@@ -257,12 +252,12 @@ router.post('/create-project', function(req, res, next) {
                             project: project
                         }
                     };
-                    
+
                     var addendum = {
                         recorderQty: req.body.recorderQty,
                         address: req.body.address
                     };
-                    
+
                     return createOrder(req.session.user, order, addendum, req.appHost).then(function(orderHandle){
                         res.json(orderHandle);
                     });
@@ -275,49 +270,48 @@ router.post('/create-project', function(req, res, next) {
 });
 
 
-
 router.post('/update-project', function(req, res, next) {
     res.type('json');
     console.log(req.body);
-    
+
     var newPlan = req.body.project.plan;
     req.body.recorderQty = +req.body.recorderQty || 0;
-    
+
     if(!req.haveAccess(req.body.project.project_id, "manage project billing")) {
-        res.status(401).json({ 
-            error: "you dont have permission to 'manage project billing'" 
+        res.status(401).json({
+            error: "you dont have permission to 'manage project billing'"
         });
         return;
     }
-    
+
     model.projects.find({ id: req.body.project.project_id }).get(0).then(function(project) {
         if(!project) {
             throw new APIError({ error: 'invalid project id' }, 400);
         }
-        
+
         console.log(project);
-        // verify upgrade type (created new plan or upgrade current)        
+        // verify upgrade type (created new plan or upgrade current)
         if(project.plan_period) {
             project.plan_due = new Date(project.plan_activated || project.plan_created);
             project.plan_due.setFullYear(project.plan_due.getFullYear() + project.plan_period);
         }
-        
-        console.log(project.plan_due, (new Date()));        
-        
+
+        console.log(project.plan_due, (new Date()));
+
         var planType;
         // calculate cost
         if(project.plan_due && project.plan_due > (new Date()) ) {
             console.log('upgrade current plan');
             planType = 'upgrade';
-            
+
             var monthsLeft = ordersUtils.monthsUntilDue(
-                project.plan_activated || project.plan_created, 
+                project.plan_activated || project.plan_created,
                 project.plan_period
             );
-            
+
             console.log(monthsLeft);
-            
-            
+
+
             if(newPlan.storage < project.storage_limit) {
                 throw new APIError({
                     error: (
@@ -326,7 +320,7 @@ router.post('/update-project', function(req, res, next) {
                     ),
                 }, 403);
             }
-            
+
             newPlan.cost = (newPlan.storage - project.storage_limit) * monthsLeft * (0.03/12);
             newPlan.tier = 'paid';
         } else {
@@ -334,11 +328,11 @@ router.post('/update-project', function(req, res, next) {
             planType = 'new';
             newPlan.cost = newPlan.storage * 0.03;
         }
-        
+
         newPlan.processing = newPlan.storage * 100;
         newPlan.duration_period = newPlan.duration;
         delete newPlan.duration;
-        
+
         var order = req.order = {
             action: planType + '-plan',
             planType: planType,
@@ -351,9 +345,9 @@ router.post('/update-project', function(req, res, next) {
             recorderQty: req.body.recorderQty,
             address: req.body.address
         };
-        
+
         console.log(req.order);
-        
+
         return createOrder(req.session.user, order, addendum, req.appHost).then(function(orderHandle){
             res.json(orderHandle);
         });
@@ -364,18 +358,18 @@ router.post('/calculate-shipping', function(req, res, next) {
     res.type('json');
     if(!req.body.address || !req.body.recorderQty)
         return res.status(400).json({ error: "missing parameters" });
-    
-    
+
+
     var address = req.body.address;
-    
+
     var result = shippingCalculator(address, req.body.recorderQty);
-    
+
     if(result.error) {
         return res.status(400).json(result);
     }
-    
+
     console.log(result);
-    
+
     model.users.updateAddress(
         {
             user_id: req.session.user.id,
@@ -389,9 +383,9 @@ router.post('/calculate-shipping', function(req, res, next) {
             telephone: address.telephone,
         },
         function(err, result2) {
-            res.json({ 
-                shipping_cost: result.cost, 
-                address: address 
+            res.json({
+                shipping_cost: result.cost,
+                address: address
             });
         }
     );
@@ -417,25 +411,25 @@ router.param('orderId', function(req, res, next, orderId) {
         req.order = rows[0];
         req.order.data = JSON.parse(req.order.data);
         req.order.payment_data = JSON.parse(req.order.payment_data);
-        
+
         if(req.order.user_id !== req.session.user.id) {
             res.sendStatus(403);
         }
-        
+
         req.order.number = (
-            moment(req.order.datetime).format("YYMMDDHHmm") + 
+            moment(req.order.datetime).format("YYMMDDHHmm") +
             req.order.user_id
         );
-        
+
         return next();
     });
 });
 
 // // DUMMY
-// router.post('/process/:orderId', function(req, res, next) { 
-//     
-//     res.json({ 
-//         success: true, 
+// router.post('/process/:orderId', function(req, res, next) {
+//
+//     res.json({
+//         success: true,
 //         action: req.order.action,
 //         invoice: req.order.payment_data,
 //         orderNumber: req.order.number,
@@ -448,16 +442,16 @@ router.param('orderId', function(req, res, next, orderId) {
 
 router.post('/process/:orderId', function(req, res, next) {
     res.type('json');
-    
+
     if(!req.query.PayerID) {
         return res.status(400).json({ error: 'MISSING_PARAMS'});
     }
     var payer = { payer_id : req.query.PayerID };
-    
+
     if(req.order.status != 'created') {
         return res.status(400).json({ error: 'ALREADY_PROCESSED' });
     }
-    
+
     async.series([
         function executePayment(cb) {
             paypal.payment.execute(req.order.paypal_payment_id, payer, {}, function(err, resp) {
@@ -471,8 +465,8 @@ router.post('/process/:orderId', function(req, res, next) {
                             }
                             console.log(resp);
                             var approvalLink = findLinkObject(resp.links, 'approval_url');
-                            
-                            res.status(400).json({ 
+
+                            res.status(400).json({
                                 error: 'APPROVAL_NEEDED',
                                 approvalLink: approvalLink.href,
                             });
@@ -486,13 +480,13 @@ router.post('/process/:orderId', function(req, res, next) {
                         },
                         function(err, result) {
                             if(err) return next(err);
-                            
+
                             res.status(500).json({ error: 'ERROR' });
                         });
                     }
                     return;
                 }
-                
+
                 console.log(resp);
                 cb();
             });
@@ -504,31 +498,31 @@ router.post('/process/:orderId', function(req, res, next) {
             }, cb);
         },
         function performAction(cb) {
-            
+
             if(req.order.data.plan.cost) {
                 delete req.order.data.plan.cost;
             }
-            
+
             // perform action required by order:
-            
+
             // create project and plan for it
             if(req.order.action == 'create-project') {
                 createProject(
-                    req.order.data.project, 
+                    req.order.data.project,
                     req.session.user.id
                 ).nodeify(cb);
             }
-            
+
             // update project plan
             else if(req.order.action == 'update-plan') {
                 // get Project
                 model.projects.find({ id: req.order.data.project_id }, function(err, rows) {
                     if(err) return cb(err);
-                    
+
                     if(!rows.length) return cb(new Error('project not found'));
-                    
+
                     var project = rows[0];
-                    
+
                     // update current plan with order.data
                     model.plans.update(project.current_plan, req.order.data.plan, function(err) {
                         if(err) return cb(err);
@@ -538,18 +532,18 @@ router.post('/process/:orderId', function(req, res, next) {
                 // TODO add event to project_audit table
             }
             else if(req.order.action == 'new-plan') {
-                
+
                 var plan = req.order.data.plan;
                 plan.project_id = req.order.data.project_id;
                 plan.created_on = new Date();
-                
+
                 // create new plans
                 model.plans.insert(plan, function(err, result) {
                     if(err) return cb(err);
-                    
+
                     var planId = result.insertId;
                     // assign plan_id to project.current_plan
-                    
+
                     model.projects.update({
                         project_id: req.order.data.project_id,
                         current_plan: planId,
@@ -570,9 +564,9 @@ router.post('/process/:orderId', function(req, res, next) {
     ], function(err) {
         console.log(err);
         if(err) return next(err);
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             action: req.order.action,
             invoice: req.order.payment_data,
             orderNumber: req.order.number,
@@ -587,19 +581,19 @@ router.post('/process/:orderId', function(req, res, next) {
 router.get('/cancel/:orderId', function(req, res, next) {
     res.type('json');
     // set order as canceled
-    
+
     if(req.order.status != 'created') {
         return res.redirect('/home');
     }
-        
+
     model.orders.update(
         {
             order_id: req.order.order_id,
             status: 'canceled'
-        }, 
+        },
         function(err, result) {
             if(err) return next(err);
-            
+
             res.redirect('/home');
         }
     );

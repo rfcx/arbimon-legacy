@@ -2,6 +2,7 @@ var concat = require('gulp-concat');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var uglify = require('gulp-uglify');
+var babel = require('gulp-babel');
 var livereload = require('gulp-livereload');
 var less = require('gulp-less');
 var gzip = require('gulp-gzip');
@@ -96,6 +97,9 @@ gulp.task('app:watch', function(){
 gulp.task('app:code', function(done){
     pump([
         gulp.src(app.code.src),
+        babel({
+            plugins: ["@babel/plugin-transform-arrow-functions"]
+        }),
         sourcemaps.init(),
         ngAnnotate(),
         concat(app.code.name),
@@ -148,7 +152,7 @@ gulp.task('app:dependencies', function(done){
             var dep = dependencies[depkey];
             var dsrc = path.join(src, depkey);
             var ddst = path.join(dest, depkey);
-            
+
             if('object' == typeof dep){
                 return copy_deps(dsrc, ddst,  dep);
             } else if('string' == typeof dep){
@@ -162,7 +166,7 @@ gulp.task('app:dependencies', function(done){
             }
         }));
     }
-        
+
     copy_deps(
         app.dependencies.src,
         app.dependencies.dest,
@@ -199,9 +203,9 @@ gulp.task('app:server', function(done){
 
         newServer.waitProcessEnd = q.Promise(function(resolve, reject){
             newServer.process.on('close', function(code, signal){
-                var status = 
-                ((code !== null) ? " with code " + code : "") + 
-                (signal ? " due to signal " + signal : "") + 
+                var status =
+                ((code !== null) ? " with code " + code : "") +
+                (signal ? " due to signal " + signal : "") +
                 (newServer.expectKill ? " (expected)" : "")
                 ;
                 gutil.log("Server process (pid: #" + gutil.colors.yellow(newServer.process.pid) + ") exited" + status + ".");
@@ -213,7 +217,7 @@ gulp.task('app:server', function(done){
                 reject(err);
             });
         });
-        
+
         server = newServer;
     }).nodeify(done);
 });

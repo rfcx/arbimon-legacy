@@ -79,16 +79,12 @@
                                         </div>
                                     </li>
                                     <li class="list-group-item">Sites: {{ sites.length }}</li>
+                                    <li class="list-group-item">Storage: {{ recsQty | number }} recordings of unlimited</li>
                                     <li class="list-group-item">
-                                        <div>Storage:</div>
-                                        <div><a2-percentage-bars class="is-inline is-small" data="[recsQty]" total="project.storage_limit" ></a2-percentage-bars></div>
-                                        <div>{{ recsQty | number }} recordings of {{ project.storage_limit | number }} ({{ (recsQty/project.storage_limit*100) | number: 0 }}%)</div>
-                                    </li>
-                                    <li class="list-group-item">
-                                        Species:
+                                        Species (Validated*: {{ (validatedSpecies === -1 ? "-" : validatedSpecies) + "/" + species.length }}, Templates: {{ templateQty }}):
                                         <ul>
                                             <li ng-repeat="s in species | limitTo: 5">
-                                                {{ s.species_name }}
+                                                {{ s.species_name }} ({{ s.songtype_name }}){{ s.validate ? "*" :"" }}
                                             </li>
                                             <p ng-show="species.length > 5">...</p>
                                         </ul>

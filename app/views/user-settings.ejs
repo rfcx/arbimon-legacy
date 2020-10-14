@@ -2,23 +2,30 @@
 <html ng-app="a2.user-settings">
 
 <head>
-    <% include head %>
+    <% include fragments/header %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Arbimon II - <%= title %>
+    <title>RFCx Arbimon - <%= title %>
     </title>
 </head>
 
 <body ng-controller="UserSettingsCtrl as controller">
-    <% include home-nav %>
+    <% include fragments/home-nav %>
     <div class="container">
         <div class="col-sm-6 panel panel-default">
             <div class="panel-heading row">
                 <img class="user-avatar col-sm-2 img-responsive" ng-src="{{controller.user.imageUrl}}" alt="user avatar">
-                <h3 class="col-sm-10">{{controller.user.name}} {{controller.user.lastname}}'s Profile</h3>
+                <h3 class="col-sm-10">
+                    My account &nbsp;
+                    <% if (user.rfcx_id) { %>
+                        <span class="label label-primary">RFCx</span>
+                    <% } else { %>
+                        <span class="label label-warning">Arbimon II</span>
+                    <% } %>
+                </h3>
             </div>
             <div class="panel-body">
                 <div class="form-group">
-                    <label class="control-label">Username</label>
+                    <label class="control-label">Arbimon username</label>
                     <p class="form-control-static">{{controller.user.username}}</p>
                 </div>
                 <!-- <div class="form-group">
@@ -42,24 +49,6 @@
                     <password-input ng-model="controller.data.password" user-inputs="[controller.user.username, controller.user.name, controller.user.lastname, controller.data.username, controller.data.name, controller.data.lastname]" validation="controller.data.passResult"></password-input>
                 </div>
 
-                <div class="form-group">
-                    <label for="new_password">3<sup>rd</sup> Party Login Authorization</label>
-                    <div class="checkbox">
-                        <label class="v-center">
-                            <input type="checkbox" ng-model="controller.data.oauth.google" ng-true-value="1" ng-false-value="0"/>
-                            <i class="icon icon-google"></i>
-                            <span>Google account</span>
-                        </label>
-                    </div>
-                    <div class="checkbox">
-                        <label class="v-center">
-                            <input type="checkbox" ng-model="controller.data.oauth.facebook" ng-true-value="1" ng-false-value="0"/>
-                            <i class="icon icon-facebook inlined"></i>
-                            <span>Facebook account</span>
-                        </label>
-                    </div>
-                </div>
-                
                 <div class="row">
                     <div class="col-sm-6">
                         <button class="btn btn-block btn-primary" ng-click="controller.save()">
@@ -71,10 +60,12 @@
                             <i class="fa fa-rotate-left"></i> Reset
                         </button>
                     </div>
-                </div>                
+                </div>
             </div>
         </div>
     </div>
+
+    <% include fragments/footer %>
 </body>
 
 </html>

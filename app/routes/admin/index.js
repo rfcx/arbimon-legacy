@@ -21,7 +21,7 @@ router.use(function(req, res, next) {
         return next();
     }
     
-    res.status(404).render('not-found');
+    res.status(404).render('not-found', { user: req.session.user });
 });
 
 

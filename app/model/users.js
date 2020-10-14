@@ -15,6 +15,7 @@ var gravatar = require('gravatar');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 var sha256 = require('../utils/sha256');
+var generator = require('../utils/generator');
 
 var models = require('./index');
 
@@ -37,6 +38,14 @@ var Users = {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
                 'WHERE email = %s';
+        q = util.format(q, dbpool.escape(email));
+        queryHandler(q, callback);
+    },
+
+    findByRfcxId: function(email, callback) {
+        var q = 'SELECT * \n' +
+                'FROM users \n' +
+                'WHERE rfcx_id = %s';
         q = util.format(q, dbpool.escape(email));
         queryHandler(q, callback);
     },
@@ -157,6 +166,11 @@ var Users = {
 
         q = util.format(q, values.join(", "));
         queryHandler(q, callback);
+    },
+
+    insertAsync: function(userData) {
+        let insert = util.promisify(this.insert)
+        return insert(userData)
     },
 
     projectList: function(user_id, callback) {
@@ -382,7 +396,6 @@ var Users = {
         });
     },
 
-
     /** Executes a user login challenge, returning its promised results.
      * @params auth
      * @params auth.username
@@ -549,6 +562,26 @@ var Users = {
         });
     },
 
+    createFromAuth0: async function(profile) {
+        const password = generator.generate(20)
+        const email = this.getEmailFromAuth0Profile(profile)
+        const attrs = {
+            login: profile.nickname,
+            password: hashPassword(password),
+            firstname: profile.given_name || (profile.user_metadata ? profile.user_metadata.given_name : ''),
+            lastname: profile.family_name || (profile.user_metadata ? profile.user_metadata.family_name : ''),
+            email: email,
+            created_on: new Date(),
+            rfcx_id: email,
+        }
+        const insertData = await this.insertAsync(attrs)
+        return this.findById(insertData.insertId).get(0)
+    },
+
+    getEmailFromAuth0Profile: function (profile) {
+        return profile.email || `${profile.guid}@rfcx.org`;
+    },
+
     makeUserObject: function(user, options){
         options = options || {};
         var userObj = {
@@ -566,6 +599,7 @@ var Users = {
                 google: user.oauth_google,
                 facebook: user.oauth_facebook
             };
+            userObj.rfcx_id = user.rfcx_id
         }
         return userObj;
     },
@@ -627,6 +661,63 @@ var Users = {
                 return authenticatedUser;
             });
         });
+    },
+
+    auth0Login: async function(req, profile) {
+        const user = await this.ensureUserExistFromAuth0(profile)
+        this.refreshLastLogin(user.user_id)
+
+        // set session
+        req.session.loggedIn = true;
+        req.session.isAnonymousGuest = false;
+        req.session.user = Users.makeUserObject(user, {secure: req.secure, all:true});
+
+        return user
+    },
+
+    connectRFCx: async function(req, profile) {
+        const userId = req.session.user.id;
+        const email = this.getEmailFromAuth0Profile(profile);
+        // if user authenticates with different email, check if there is another user with this email
+        if ((req.session.user.email || '').toLowerCase() !== email.toLowerCase()) {
+            const foreignUser = await q.ninvoke(Users, "findByEmail", email).get(0).get(0);
+            if (foreignUser) {
+                throw new Error('The email address associated with this RFCx account is already used by another Arbimon user. Please use a different RFCx account.')
+            }
+        }
+        await q.ninvoke(Users, "update", {
+            user_id: userId,
+            rfcx_id: email
+        })
+        const user = await q.ninvoke(Users, "findById", userId).get(0);
+        req.session.loggedIn = true;
+        req.session.isAnonymousGuest = false;
+        req.session.user = Users.makeUserObject(user, { secure: req.secure, all: true });
+    },
+
+    ensureUserExistFromAuth0: async function(profile) {
+        const email = this.getEmailFromAuth0Profile(profile);
+        const userByRfcxId = await q.ninvoke(Users, "findByRfcxId", email).get(0).get(0);
+        if (userByRfcxId) {
+            return userByRfcxId;
+        }
+        let userByEmail = await q.ninvoke(Users, "findByEmail", email).get(0).get(0);
+        if (userByEmail) {
+            await q.ninvoke(Users, "update", {
+                user_id: userByEmail.user_id,
+                rfcx_id: email
+            })
+            return await q.ninvoke(Users, "findByEmail", email).get(0).get(0);
+        }
+        return await Users.createFromAuth0(profile)
+    },
+
+    refreshLastLogin: function(user_id) {
+        q.ninvoke(Users, "update", {
+            user_id,
+            last_login: new Date(),
+            login_tries: 0
+        }).catch(console.error.bind(console));
     },
 
     queryPermission: function(user_id, project_id, permission_name) {

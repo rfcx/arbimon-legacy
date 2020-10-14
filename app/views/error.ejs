@@ -1,6 +1,30 @@
-<h1><%= message %></h1>
-<% if(error.stack) { %> 
-<pre><%= error.stack %></pre>
-<% } else { %> 
-<p> please contact: <a href="mailto:support@sieve-analytics.com">support@sieve-analytics.com</p>
-<% } %>
+<!DOCTYPE html>
+<html ng-app="a2.login">
+
+<head>
+    <% include fragments/header %>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RFCx Arbimon</title>
+</head>
+
+<body>
+    <% include fragments/nav-public %>
+
+    <div class="container">
+      <div class="row">
+          <div class="col-md-12">
+            <h3><%= message %></h3>
+            <% if(error.stack) { %>
+            <pre><%= error.stack %></pre>
+            <% } else { %>
+            <p>You should have received a verification email in your inbox. If you do not receive one, please contact <a href="mailto:support@rfcx.org">support@rfcx.org</a>. Thank you!</p>
+            <% } %>
+          </div>
+      </div>
+    </div>
+
+<% include fragments/footer %>
+</body>
+
+</html>

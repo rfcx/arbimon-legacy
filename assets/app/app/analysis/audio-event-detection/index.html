@@ -17,7 +17,7 @@
         <loader ng-show="controller.loading"></loader>
             
         <div ng-hide="controller.loading || !controller.audioEventDetectionsList.length">
-            <table ng-table="tableParams" class="table table-hide-btns" show-filter="true" >
+            <table ng-table="tableParams" class="table" show-filter="true" >
                 <tr ng-repeat="audioEventDetection in controller.audioEventDetectionsList" >
                     <td data-title="'Date'" class="no-wrap-table-cell" data-sortable="'date'" >
                         {{audioEventDetection.date | moment : 'lll' }}

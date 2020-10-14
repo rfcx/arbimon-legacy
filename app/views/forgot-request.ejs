@@ -2,29 +2,33 @@
 <html ng-app="a2.reset-password">
 
 <head>
-    <% include head %>
-        <title>ARBIMON II - Forgot credentials</title>
+    <% include fragments/header %>
+        <title>RFCx Arbimon - Forgot credentials</title>
 </head>
 
 <body ng-controller="ResetRequestCtrl">
-    <div class="login-top">
-        <div class="container">
-            <a href="/"><img src="/images/logo.svg"></a>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a href="/" class="navbar-brand">
+                    <img src="/images/rfcx-logo.png">Arbimon
+                </a>
+            </div>
         </div>
-    </div>
+    </nav>
     <div class="login-banner">
         <div class="container">
             <div class="row">
-                <div class="col-sm-offset-3 col-sm-6 registration">
+                <div class="col-sm-offset-3 col-sm-6 card-container">
                     <div class="panel-body">
                         <h3>Reset your password</h3>
                         <form ng-submit="request()" ng-hide="requestComplete || loading">
                             <div class="form-group">
-                                <input ng-model="email" 
-                                    type="email" 
-                                    name="email" 
-                                    id="email" 
-                                    class="form-control" 
+                                <input ng-model="email"
+                                    type="email"
+                                    name="email"
+                                    id="email"
+                                    class="form-control"
                                     placeholder="Email Address"
                                     required />
                             </div>
@@ -35,8 +39,8 @@
                                 <loader></loader> Processing request
                             </span>
                             <span ng-show="requestComplete">
-                                A email with the instructions to reset your 
-                                password had been sent to <b>{{ email }}</b> 
+                                A email with the instructions to reset your
+                                password had been sent to <b>{{ email }}</b>
                             </span>
                         </p>
                     </div>

@@ -25,9 +25,11 @@ var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
 
+const moment = require('moment');
 
 // local variables
-var s3 = new AWS.S3();
+var s3, s3RFCx;
+defineS3Clients();
 var queryHandler = dbpool.queryHandler;
 
 
@@ -37,8 +39,25 @@ var getUTC = function (date) {
     return d;
 };
 
-var fileExtPattern = /\.(wav|flac)$/;
+var fileExtPattern = /\.(wav|flac|opus)$/;
 var freqFilterPrecision = 100;
+
+function defineS3Clients () {
+    if (!s3) {
+        s3 = new AWS.S3(getS3ClientConfig('aws'))
+    }
+    if (!s3RFCx) {
+        s3RFCx = new AWS.S3(getS3ClientConfig('aws-rfcx'))
+    }
+}
+
+function getS3ClientConfig (type) {
+    return {
+        accessKeyId: config(type).accessKeyId,
+        secretAccessKey: config(type).secretAccessKey,
+        region: config(type).region
+    }
+}
 
 function arrayOrSingle(x){
     return joi.alternatives(x, joi.array().items(x));
@@ -190,6 +209,11 @@ var Recordings = {
 
         q = dbpool.format(q, [recId]);
         queryHandler(q, callback);
+    },
+
+    findByIdAsync: function(recId) {
+        let find = util.promisify(this.findById)
+        return find(recId)
     },
 
     /** Finds recordings matching the given url and project id.
@@ -376,21 +400,45 @@ var Recordings = {
         return queryHandler(query, callback);
     },
 
+    getSiteModel: async function(recording) {
+        if (!recording.site_id) {
+            let recs = await this.findByIdAsync(recording.id)
+            recording.site_id = recs[0].site_id
+        }
+        let sites = await models.sites.findByIdAsync(recording.site_id)
+        if (sites && sites.length) {
+            var site = sites[0]
+        }
+        return site
+    },
+
+    /**
+     * Checks whether recording belongs to Arbimon (legacy) or RFCx platform
+     * @param {*} recording object containing the recording's data, like the ones returned in findByUrlMatch.
+     */
+    isLegacy: async function(recording) {
+        const site = await this.getSiteModel(recording)
+        return site && site.legacy
+    },
+
     /** Downloads a recording from the bucket, storing it in a temporary file cache, and returns its path.
      * @param {Object} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      * @param {Object} recording.uri url containing the recording's path in the bucket.
      * @param {Function} callback(err, path) function to call back with the recording's path.
      */
-    fetchRecordingFile: function(recording, callback){
-        tmpfilecache.fetch(recording.uri, function(cache_miss){
+    fetchRecordingFile: async function(recording, callback){
+        tmpfilecache.fetch(recording.uri, async (cache_miss) => {
             debug('fetching ', recording.uri, ' from the bucket.');
-            if(!s3){
-                s3 = new AWS.S3();
+            if(!s3 || !s3RFCx){
+                defineS3Clients()
             }
-            s3.getObject({
-                Bucket : config('aws').bucketName,
+            const legacy = await this.isLegacy(recording)
+            let s3Client = legacy? s3 : s3RFCx
+            const opts = {
+                Bucket : config(legacy? 'aws' : 'aws-rfcx').bucketName,
                 Key    : recording.uri
-            }, function(err, data){
+            }
+            s3Client.getObject(opts, function(err, data){
                 if(err) { callback(err); return; }
                 cache_miss.set_file_data(data.Body);
             });
@@ -729,6 +777,11 @@ var Recordings = {
         });
     },
 
+    insertAsync: function(recording) {
+        let insert = util.promisify(this.insert)
+        return insert(recording)
+    },
+
     update: function(recording, callback) {
 
         if(recording.id) {
@@ -777,7 +830,6 @@ var Recordings = {
     },
 
     exists: function(recording, callback) {
-
         if(!recording.site_id || !recording.filename)
             callback(new Error("Missing fields"));
 
@@ -795,9 +847,38 @@ var Recordings = {
         }).nodeify(callback);
     },
 
-    __compute_thumbnail_path : function(recording, callback){
-        recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
+    existsAsync: function(recording) {
+        let exists = util.promisify(this.exists)
+        return exists(recording)
+    },
+
+    __compute_thumbnail_path : async function(recording, callback){
+        await Recordings.__compute_thumbnail_path_async(recording)
         callback();
+    },
+    __compute_thumbnail_path_async : async function(recording){
+        if (recording.site_id && recording.legacy !== undefined && recording.site_external_id !== undefined) {
+            var site = {
+                site_id: recording.site_id,
+                legacy: !!recording.legacy,
+                external_id: recording.site_external_id
+            }
+        }
+        else {
+            var site = await Recordings.getSiteModel(recording)
+        }
+        const legacy = site && site.legacy
+        if (legacy) {
+            recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
+        }
+        else {
+            const momentStart = moment.utc(recording.datetime)
+            const momentEnd = momentStart.clone().add(recording.duration, 'seconds')
+            const dateFormat = 'YYYYMMDDTHHmmssSSS'
+            const start = momentStart.format(dateFormat)
+            const end = momentEnd.format(dateFormat)
+            recording.thumbnail = `/api/ingest/recordings/${site.external_id}_t${start}Z.${end}Z_z95_wdolph_g1_fspec_mtrue_d420.154.png`
+        }
     },
     __compute_spectrogram_tiles : function(recording, callback){
         Recordings.fetchSpectrogramTiles(recording, callback);
@@ -832,11 +913,15 @@ var Recordings = {
                 list: "SELECT DISTINCT r.recording_id AS id, \n"+
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
                       "       s.name as site, \n"+
+                      "       s.legacy as legacy, \n"+
+                      "       s.external_id as site_external_id, \n"+
                       "       r.uri, \n"+
                       "       r.datetime, \n"+
+                      "       r.duration, \n"+
                       "       r.mic, \n"+
                       "       r.recorder, \n"+
                       "       r.version, \n"+
+                      "       r.site_id, \n"+
                       "       s.project_id != " + parameters.project_id + " as imported \n",
 
                 date_range: "SELECT DATE(MIN(r.datetime)) AS min_date, \n"+
@@ -1000,9 +1085,12 @@ var Recordings = {
                     if(output == "count"){
                         r = r[0].count;
                     } else if(output == 'list'){
-                        r.forEach(function(_1){
-                            _1.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(_1.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
-                        });
+                        for (let _1 of r) {
+                            Recordings.__compute_thumbnail_path_async(_1)
+                            if (!!_1.legacy !== true) {
+                                _1.file = `${moment.utc(_1.datetime).format('YYYY-MM-DD HH:mm:ss')}${path.extname(_1.file)}`
+                            }
+                        }
                     } else if(output != 'list'){
                         r = r[0];
                     }
@@ -1230,7 +1318,7 @@ var Recordings = {
                         ]);
                         builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("cr<" + classification.cname + ">"));
                         if(classification.threshold){
-                            builder.addProjection("IF(ISNULL("+clsid+".max_vector_value), '---', "+clsid+".max_vector_value > " + dbpool.escape(classification.threshold) + ")  AS " + dbpool.escapeId("cr<" + classification.cname + "> threshold (" + classification.threshold + ")"));
+                            builder.addProjection("IF(ISNULL("+clsid+".max_vector_value), '---', "+clsid+".max_vector_value > " + dbpool.escape(classification.threshold) + ")  AS " + dbpool.escapeId("cr<" + classification.cname + "> threshold (" + String(classification.threshold).replace('.',',') + ")"));
                         }
                     });
                 }));

@@ -22,6 +22,15 @@ var s3;
 
 var Projects = {
 
+    plans: {
+        free: { // Changes must be matched in assets/app/orders/plan-selection.js
+            cost: 0,
+            storage: 100000,
+            processing: 10000000,
+            tier: 'free'
+        }
+    },
+
     listAll: function(callback) {
         var q = "SELECT project_id as id, name, url, description, is_private, is_enabled \n"+
                 "FROM projects";
@@ -227,6 +236,7 @@ var Projects = {
 
         project.storage_usage = 0;
         project.processing_usage = 0;
+        project.pattern_matching_enabled = 1;
 
         var q = 'INSERT INTO projects \n'+
                 'SET ?';
@@ -405,6 +415,11 @@ var Projects = {
         });
     },
 
+    insertNewsAsync: function(news) {
+        let insertNews = util.promisify(this.insertNews)
+        return insertNews(news)
+    },
+
     /** Fetches a project's classes.
      * @param {{Object}} project project object.
      * @param {{Integer}} project.project_id
@@ -569,6 +584,11 @@ var Projects = {
 
         q = util.format(q, project_id);
         queryHandler(q, callback);
+    },
+
+    getUsersAsync: function(project_id) {
+        let getUsers = util.promisify(this.getUsers)
+        return getUsers(project_id)
     },
 
     addUser: function(userProjectRole, callback) {

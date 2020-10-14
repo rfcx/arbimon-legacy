@@ -13,8 +13,8 @@
         </div>
         <div class="form-group">
             <label for="classifier">Classifier:</label>
-            <span class="classifiers-change">
-                <em>Classifiers may change without notice. <a ng-href="/classifiers">Read more information.</a></em>
+            <span class="pull-right small">
+                <em>Classifiers may change without notice. <a ng-href="/classifiers">More information.</a></em>
             </span>
             <ui-select ng-model="data.classifier" theme="bootstrap" ng-disabled="disabled">
                 <ui-select-match placeholder="Select a classifier">{{$select.selected.name}}</ui-select-match>
@@ -30,7 +30,7 @@
         </div>
         <div class="form-group">
             <label for="trainingSet">Training Set:</label>
-            <span ng-hide="trainings.length" value="-1" class="red">
+            <span ng-hide="trainings.length" value="-1" class="pull-right small">
                 <em>No training sets found. <a ng-click="cancel('/audiodata/training-sets') | trackEvent:'Analysis-Newmodel':'cancel goto training-sets'">Create one.</a></em>
             </span>
             <ui-select ng-model="data.training" theme="/common/templates/a2-ui-select" ng-disabled="disabled">
@@ -59,7 +59,7 @@
                 </div>
                 <div class="row top-buffer">
                     <div class="col-xs-12">
-                        <table class="table">
+                        <table class="table form-inline">
                                 <tr>
                                     <td class="text-right">Total: </td>
                                     <td>{{data.totalValidations}}</td>
@@ -70,20 +70,20 @@
                                     <td class="text-right">Present: </td>
                                     <td>{{data.presentValidations}}</td>
                                     <td>
-                                        <input size="10" type="text" name="usePresentTraining" ng-model="data.usePresentTraining" />
+                                        <input class="form-control" size="10" type="text" name="usePresentTraining" ng-model="data.usePresentTraining" />
                                     </td>
                                     <td>
-                                        <input size="10" type="text" name="usePresentValidation" ng-model="data.usePresentValidation" />/{{totalPresentValidation}}
+                                        <input class="form-control" size="10" type="text" name="usePresentValidation" ng-model="data.usePresentValidation" />/{{totalPresentValidation}}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="text-right">Absent: </td>
                                     <td>{{data.absentsValidations}}</td>
                                     <td>
-                                        <input size="10" type="text" name="usePresentTraining" ng-model="data.useNotPresentTraining" />
+                                        <input class="form-control" size="10" type="text" name="usePresentTraining" ng-model="data.useNotPresentTraining" />
                                     </td>
                                     <td>
-                                        <input size="10" type="text" name="usePresentValidation" ng-model="data.useNotPresentValidation" />/{{totalNotPresentValidation}}
+                                        <input class="form-control" size="10" type="text" name="usePresentValidation" ng-model="data.useNotPresentValidation" />/{{totalNotPresentValidation}}
                                     </td>
                                 </tr>
                         </table>

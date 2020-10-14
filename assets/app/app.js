@@ -47,7 +47,13 @@ var a2 = angular.module('a2.app', [
     $rootScope.Math = Math; // export math library to angular :-)
     Angularytics.init();
 
-    $rootScope.$on('$stateChangeStart', function(e, to, params) {
+    $rootScope.$on('$stateChangeStart', function (e, to, params) {
+        if (to.name.startsWith('visualizer')) {
+            document.getElementById('footer').style.display = "none";
+        } else {
+            document.getElementById('footer').style.display = "block";
+        }
+        
         // only check permissions if state have allowAccess
         if(!angular.isFunction(to.allowAccess)) return;
 

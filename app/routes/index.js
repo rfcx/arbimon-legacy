@@ -7,10 +7,12 @@ var router = express.Router();
 var project = require('./project');
 var dataApi = require('./data-api');
 var uploads = require('./uploads');
+var site = require('./site');
 var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
+const auth0Service = require('../model/auth0')
 
 
 router.get('/alive', function(req, res, next) { // for health checks
@@ -29,25 +31,28 @@ router.get('/alive', function(req, res, next) { // for health checks
 
 router.use('/', login);
 
-router.get('/terms', function(req, res) {
-    res.type('html');
-    res.render('post-page', { title: "Terms of use", content: 'terms' });
-});
-
-router.get('/privacy', function(req, res) {
-    res.type('html');
-    res.render('post-page', { title: "Privacy policy", content: 'privacy' });
-});
-
 router.get('/support', function(req, res) {
     res.type('html');
-    res.render('post-page', { title: "Support", content: 'support' });
+    res.render('post-page', {
+        title: "Support",
+        content: 'support',
+        user: req.session.user
+    });
 });
 
 router.get('/classifiers', function(req, res) {
     res.type('html');
-    res.render('classifiers');
+    res.render('classifiers', { user: req.session.user });
 });
+
+router.get('/connect-with-rfcx', function(req, res) {
+    res.type('html');
+    res.render('connect-with-rfcx', {
+        user: req.session.user,
+        auth0UniversalLoginUrl: auth0Service.universalLoginUrl
+    });
+});
+
 
 router.use('/', acmeChallenge);
 
@@ -76,13 +81,16 @@ router.get('/process-order/:orderId', function(req, res, next) {
 
 router.get('/home', function(req, res) {
     res.type('html');
-    res.render('home', { title: "Home", user: req.session.user });
+    res.render('home', {
+        title: "Home",
+        user: req.session.user
+    });
 });
 
 
 router.get('/user-settings', function(req, res) {
     res.type('html');
-    if(req.session.user && req.session.loggedIn){
+    if (req.session.user && req.session.loggedIn) {
         res.render('user-settings', { title: "User settings", user: req.session.user });
     } else {
         res.redirect('/home');
@@ -91,6 +99,7 @@ router.get('/user-settings', function(req, res) {
 
 router.use('/api', dataApi);
 router.use('/project', project);
+router.use('/site', site);
 router.use('/citizen-scientist', require('./citizen-scientist'));
 router.use('/visualizer', require('./visualizer'));
 router.use('/', require('./access-token'));

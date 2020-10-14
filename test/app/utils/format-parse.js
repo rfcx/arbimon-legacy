@@ -19,9 +19,9 @@ describe('format-parse', function(){
         });
     });
 
-    describe('AudioMoth format', function(){
+    describe('AudioMoth 1.0.0 format', function(){
         it('should parse datetime formats correctly', function(){
-            var result = formatParse('AudioMoth','592D42A3.wav');
+            var result = formatParse('AudioMoth 1.0.0','592D42A3.wav');
 
             result.should.deep.equal({
                 filename: '592D42A3',

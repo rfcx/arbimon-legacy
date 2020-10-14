@@ -2,14 +2,14 @@
     <div class="col-sm-10 col-md-8">
         <div class="row">
             <div class="col-sm-3">
-                <button class="btn btn-default" 
+                <button class="btn btn-default"
                     ng-click="edit() | trackEvent:'Audiodata-playlists':'edit clicked'"
                     tooltip="Edit Name"
                     tooltip-trigger="mouseenter">
                     <i class="fa fa-pencil"></i>
                 </button>
-                
-                <button class="btn btn-danger"
+
+                <button class="btn btn-default"
                     ng-click="del() | trackEvent:'Audiodata-playlists':'del clicked'"
                     tooltip="Delete"
                     tooltip-trigger="mouseenter">
@@ -18,7 +18,7 @@
             </div>
             <div class="col-sm-5">
                 <span class="dropdown" dropdown dropdown-append-to-body="true" a2-auto-close-on-outside-click>
-                    <button class="btn btn-primary" dropdown-toggle><i class="fa a2-combine"></i> <i class="fa fa-caret-down"></i></button>
+                    <button class="btn btn-default" dropdown-toggle><i class="fa a2-combine"></i> <i class="fa fa-caret-down"></i></button>
                     <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
                         <playlist-arithmetic on-expression-selected="controller.operate(expression)"></playlist-arithmetic>
                     </div>
@@ -43,7 +43,7 @@
                             Type : {{selected.type}}
                         </p>
                         <div ng-if="selected.soundscape">
-                            <img ng-src="{{selected.soundscape_thumbnail}}" alt="" 
+                            <img ng-src="{{selected.soundscape_thumbnail}}" alt=""
                             class="crisp-image"
                             width="300"
                             height="154"

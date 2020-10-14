@@ -1,7 +1,8 @@
 {
-    "host"     : ""        ,
-    "user"     : ""   ,
-    "password" : "",
-    "database" : "",
-    "timezone" : ""
+    "host": "",
+    "user": "",
+    "port": "3306",
+    "password": "",
+    "database": "",
+    "timezone": "Z"
 }

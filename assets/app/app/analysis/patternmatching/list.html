@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="!selectedPatternMatchingId">
         <h3>
-            Pattern Matchings
+            Pattern Matching
             <a class="btn btn-sm btn-default"
                 tooltip="Create New Pattern Matching"
                 tooltip-placement="right"
@@ -47,12 +47,12 @@
                     {{ row.user }}
                 </field>
                 <field class="is-v-middle">
-                    <button class="btn btn-default"
+                    <button class="btn btn-default btn-xs"
                         ng-click="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'"
                     >
                             Show Details
                     </button>
-                    <button class="btn btn-danger"
+                    <button class="btn btn-default btn-xs"
                         ng-click="deletePatternMatching(row, $event) | trackEvent:'Analysis-Pattern-Matching-list':'delete pattern matching'"
                         tooltip="Delete"
                         tooltip-trigger="mouseenter">

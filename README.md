@@ -2,6 +2,170 @@
 Bio-Acoustic Analyzer
 
 ---
+
+### Local Dev Setup (with Docker)
+
+1. Build the docker image
+
+   ```sh
+   docker build -t arbimon .
+   ```
+
+2. Run the containers (web and database)
+
+   ```sh
+   docker-compose up
+   ```
+
+   (To stop the server, press Ctrl-C.)
+
+3. After the app container is running, open your browser at http://localhost:3000
+
+4. Create and seed the database
+
+   ```sh
+   ./scripts/db/create-local.sh
+   ```
+
+
+### Alternative Local Dev Setup (no docker)
+If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [https://docs.microsoft.com/en-us/windows/wsl/install-win10](https://docs.microsoft.com/en-us/windows/wsl/install-win10). Ubuntu 18.04 is recommended.
+
+
+1. Clone Repo
+
+    Clone this repository into a suitable location. If on linux or Mac this could be a directory in the home directory, on Windows with WSL it is often good to use `/mnt/c/Users/YourUserName/` as this is a shared folder between the Windows and WSL systems.
+
+2. Install Dependencies
+
+    App requires [https://nodejs.org/](node.js) to be installed (8.10.0 works, higher such as 12 will not. Unknown exactly where the cutoff is.) If you use `nvm` tool, you can run `nvm use` to switch node to required version (uses `.nvmrc` file).
+
+    Install node modules:
+    ```sh
+    npm i
+    ```
+
+    App requires [https://bower.io/](bower) to be installed. To install using npm: `npm install bower --global`.
+
+    Then install client-side dependencies:
+    ```sh
+    bower i
+    ```
+    Build client-side part:
+    ```sh
+    ./node_modules/gulp/bin/gulp.js build
+    ```
+
+3. Add config Files
+    - Clone `config/db.json` to `config/db.local.json` and fill it with required values
+    - Clone `config/aws.json` to `config/aws.local.json` and fill it with required values
+    - Clone `config/aws-rfcx.json` to `config/aws-rfcx.local.json` and fill it with required values
+    - Clone `config/mandrill-key.json` to `config/mandrill-key.local.json` and fill it with required values
+    - Clone `config/auth0.json` to `config/auth0.local.json` and fill it with required values
+    - Clone `config/auth0-backend.json` to `config/auth0-backend.local.json` and fill it with required values
+    - Clone `config/rfcx.json` to `config/rfcx.local.json` and fill it with required values
+
+    :exclamation: You must not change any original config file (like `db.json`, `aws.json` or `aws-rfcx.json`) to avoid commiting secrets to repository.
+
+4. Setup SSH Tunnel to SQL Database
+
+    Get ssh pem file (`arbimon2-bastion.pem`) from Admin or Team lead and put it into `~/.ssh` folder
+
+    Change file permissions if needed:
+    ```sh
+    chmod 400 ~/.ssh/arbimon2-bastion.pem
+    ```
+    Run the following command in a separate terminal tab:
+    ```sh
+    ssh -N -L 3306:arbimon-dev-cluster.cluster-ctjyvabp9jnq.us-east-1.rds.amazonaws.com:3306 ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem
+    ```
+    If you already have another database running at `3306` port, you will need to run the above command with a different local port like:
+    ```sh
+    ssh -N -L 3307:arbimon-dev-cluster.cluster-ctjyvabp9jnq.us-east-1.rds.amazonaws.com:3306 ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem
+    ```
+
+    [optional] Check database connection with MySQL Workbench (or other DB administration tool)
+
+5. Run Development Server
+    ```sh
+    ./node_modules/gulp/bin/gulp.js watch
+    ```
+
+6. Open app in browser at `http://localhost:3000` or at url which you can set in `hosts` file (check below).
+
+### Debugging
+- Can run in debug output mode
+  - `sudo DEBUG=mysql-connection-manager,http,express:* node bin/www`
+    - This will output all debug messages from the express framework as well as the mysql connections and http packages. Other node packages can be added, or subtracted from the list as needed.
+
+### Information
+- URLs
+  - Production server [https://arbimon.sieve-analytics.com/](https://arbimon.sieve-analytics.com/)
+  - Public Development server [https://arbimon-dev.sieve-analytics.com/](https://arbimon-dev.sieve-analytics.com/)
+  - Local Development server [http://dev.arbimon.sieve-analytics.com/](http://dev.arbimon.sieve-analytics.com/) **Requires hosts file entry**
+    - Update OS's `hosts` file with the following line:
+      ```
+      127.0.0.1 dev.arbimon.sieve-analytics.com
+      ```
+    - Set `APP_PORT` env var to `80` when you run the app:
+      ```sh
+      export APP_PORT=80; ./node_modules/gulp/bin/gulp.js watch
+      ```
+- Database Info
+  - MySQL
+  - Production has a db and the development enviroments share a secondary db.
+- Servers and Networking
+  - the production and dev servers are on a private network together and not directly reachable from the outside. There is a jump/tunnel server that can be used to get into these. Tunnel server adress: [54.159.71.198](54.159.71.198) with user `ec2user` and the private key file for authentication (obtain this from another member of the team).
+    - This can be used to create a port forward to use with the database connection or can be directly connected to by ssh and then ssh to the other servers. Once on this server there are aliases setup to ssh to the other servers:
+      - `ssh-web-dev` for development web server
+      - `ssh-web` for production web server
+
+### Deployment
+
+1. SSH into the Bastion tunnel server
+    - `ssh ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem`
+2. From inside the Bastion server, SSH into dev/prod server
+    - `ssh-web-dev` for arbimon-dev.sieve-analytics.com
+    - `ssh-web` for arbimon.sieve-analytics.com
+    - Both these connections are defined in the `.bashrc` file and rely on the same `.ssh/arbimon2-app.pem` key.
+3. Change to app directory
+    - `cd apps/arbimon2`
+4. Pull the latest changes from git
+    - `git fetch -p` and `git pull`
+4. Perform any dependency installs and rebuild the source code (same as local install)
+    - `npm i` and `bower i`
+    - `gulp build` to build css (in production use `./node_modules/.bin/gulp build`)
+5. Restart the web server/app
+    - `pm2 restart 0` to perform restart
+    - `pm2 list` to check that the arbimon2 process is running
+
+Additional steps for production (to support auto-scaling of the frontend)
+
+6. In the EC2 console, create an image of the current `web` instance.
+    - Name: arbimon-web-2020-09-09
+    - No reboot: true
+    
+    ![production-deployment-1](https://user-images.githubusercontent.com/1175362/92625187-8c6a3700-f2f2-11ea-869e-bc39b7c502a6.png)
+
+7. After the image is created, open "Auto scaling" -> "Launch configurations". Find the last launch configuration and make a copy ("Actions" -> "Copy launch configuration").
+
+    ![production-deployment-2](https://user-images.githubusercontent.com/1175362/92625432-d3582c80-f2f2-11ea-97ca-09f235a74183.png)
+
+8. Choose the AMI that was created in step 6 and create the launch configuration.
+    - Name: arbimon-web-2020-09-09
+    - AMI: arbimon-web-2020-09-09
+    - (everything else the same)
+
+9. Open "Auto scaling groups", and edit the `arbimon` group. Select the newly created launch configuration and then "Update".
+    - Launch configuration: arbimon-web-2020-09-09
+    
+    ![production-deployment-3](https://user-images.githubusercontent.com/1175362/92625454-db17d100-f2f2-11ea-8089-8e85e9c999f9.png)
+
+10. To test the auto scaling is working, terminate the current `web` instance.
+
+---
+## Legacy README
+
 ### Quick Setup:
  - install system dependencies all
    ```
@@ -77,7 +241,7 @@ Bio-Acoustic Analyzer
  - individual python dependencies (`sudo pip install`):
     - MySQL-python
     - boto
-    - pypng  
+    - pypng
     - matplotlib
     - virtualenv
 
@@ -138,3 +302,7 @@ How to install the python virtual environment
     pip install -r requirements.txt
     echo `realpath lib` > .env/lib/python2.7/site-packages/arbimon-server-libs.pth
 ```
+### Git Workflow
+
+1. Branch from dev
+  - `

@@ -1,6 +1,6 @@
-<div class="modal-header">  
-    <h3 class="modal-title">Create a new soundscape</h3>  
-</div>  
+<div class="modal-header">
+    <h3 class="modal-title">Create a new soundscape</h3>
+</div>
 <div class="modal-body">
 
     <form role="form">
@@ -10,11 +10,11 @@
         <span ng-bind="nameMsg" class="nameExistsSpan"></span>
       </div>
       <div class="form-group">
-        <label for="classifier">Select playlist:</label> <span ng-hide="playlists" class="red"><em>No playlists found <a ng-click="cancel('/audiodata/recordings') | trackEvent:'Analysis-Soundscapes-new':'cancel go to recordings'" >Create one.</a></em></span></em></span>
-        <ui-select ng-model="datasubmit.playlist" theme="selectize" ng-disabled="disabled">
+        <label for="classifier">Select playlist:</label> <span ng-hide="playlists" class="text-danger small pull-right"><em>No playlists found <a ng-click="cancel('/audiodata/recordings') | trackEvent:'Analysis-Soundscapes-new':'cancel go to recordings'" >Create one.</a></em></span></em></span>
+        <ui-select ng-model="datasubmit.playlist" ng-disabled="disabled">
         <ui-select-match placeholder="Select or search a playlist...">{{$select.selected.name}}</ui-select-match>
             <ui-select-choices repeat="playlist in playlists | filter: $select.search">
-              {{playlist.name}} <span class="pull-right"><small><em> <strong >Count:</strong>({{playlist.count}})</em></small></span> 
+              {{playlist.name}} <span class="pull-right"><small><em> <strong >Count:</strong>({{playlist.count}})</em></small></span>
             </ui-select-choices>
         </ui-select>
       </div>
@@ -30,7 +30,7 @@
         <div class="col-sm-6">
             <div class="row container-fluid " >
                 <input type="checkbox" ng-model="datasubmit.normalize"/><label for="aggregation">Normalize Data</label>
-                <i class="fa fa-question-circle" 
+                <i class="fa fa-question-circle"
                     tooltip="Check to normalize each value in the soundscape using the number of recordings in the playlist that fall in that column."
                     tooltip-placement="right">
                 </i>
@@ -38,23 +38,23 @@
             <div class="row container-fluid " >
                 <label for="aggregation">Bin bandwidth (Hz):</label>
                 <ol id="" class="btn-group binhzpadding">
-                  <li btn-radio="21" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">21</span></li>
-                  <li btn-radio="43" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">43</span></li>
-                  <li btn-radio="86" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">86</span></li>
-                  <li btn-radio="172" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">172</span></li>
-                  <li btn-radio="344" ng-model="datasubmit.bin" class="btn btn-default btn-xs"><span class="spacedhz">344</span></li>
+                  <li btn-radio="21" ng-model="datasubmit.bin" class="btn btn-default border-default btn-xs"><span class="spacedhz">21</span></li>
+                  <li btn-radio="43" ng-model="datasubmit.bin" class="btn btn-default border-default btn-xs"><span class="spacedhz">43</span></li>
+                  <li btn-radio="86" ng-model="datasubmit.bin" class="btn btn-default border-default btn-xs"><span class="spacedhz">86</span></li>
+                  <li btn-radio="172" ng-model="datasubmit.bin" class="btn btn-default border-default btn-xs"><span class="spacedhz">172</span></li>
+                  <li btn-radio="344" ng-model="datasubmit.bin" class="btn btn-default border-default btn-xs"><span class="spacedhz">344</span></li>
                 </ol>
             </div>
             <div class="row container-fluid" >
                 <label for="aggregation">Peak filtering:</label>
-                <i class="fa fa-question-circle" 
-                    tooltip="Only peaks above the amplitude threshold will be considered. 
-                            If the frequency difference of two successive peaks is less than the frequency threshold, 
-                            then only the peak of highest amplitude will be kept." 
+                <i class="fa fa-question-circle"
+                    tooltip="Only peaks above the amplitude threshold will be considered.
+                            If the frequency difference of two successive peaks is less than the frequency threshold,
+                            then only the peak of highest amplitude will be kept."
                     tooltip-placement="right">
                 </i>
                 <a2-threshold-selector threshold="datasubmit.threshold" threshold-reference="datasubmit.thresholdReference" bandwidth="datasubmit.bandwidth" ></a2-threshold-selector>
-                
+
                 <!--
                 <div>Flatness</div>
                 -->
@@ -62,12 +62,12 @@
         </div>
       </div>
     </form>
-</div>  
-<div class="modal-footer">  
+</div>
+<div class="modal-footer">
     <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Soundscapes-new':'OK'"  ng-disabled="buttonEnable()">
         <i class="fa fa-cogs"></i> Create
-    </button>  
+    </button>
     <button class="btn btn-default" ng-click="cancel() | trackEvent:'Analysis-Soundscapes-new':'cancel'">
         <i class="fa fa-times"></i> Close
-    </button>  
-</div>  
+    </button>
+</div>

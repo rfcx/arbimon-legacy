@@ -10,7 +10,7 @@
         </div>
         <div class="form-group">
             <label for="classifier">Select Model:</label>
-            <span class="red" ng-hide="data">
+            <span class="text-danger small pull-right" ng-hide="data">
                 <em>No models found.
                     <a ng-click="cancel('/analysis/models') | trackEvent:'Analysis-Classification-new classification modal':'Cancel-Go to models'">Create one.</a>
                 </em>
@@ -42,7 +42,7 @@
       -->
         <div class="form-group">
             <label for="classifier">Select Playlist:</label>
-            <span class="red" ng-hide="playlists">
+            <span class="text-danger small pull-right" ng-hide="playlists">
                 <em>No playlists found.
                     <a ng-click="cancel('/audiodata/recordings') | trackEvent:'Analysis-Classification-new classification modal':'Cancel-Go to recordings'">
                         Create one.

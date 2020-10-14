@@ -16,17 +16,17 @@
                     <ul class="list-group">
                         <li class="list-group-item">Storage: {{ minUsage | number }} / {{ currentPlan.storage | number }} minutes</li>
                         <li class="list-group-item">Processing: {{ currentPlan.processing }} minutes</li>
-                        <li class="list-group-item" 
+                        <li class="list-group-item"
                             ng-show="project.plan_period"
                             ng-class="{ 'list-group-item-danger': (currentPlan.due < today) }">
-                            Due on: 
+                            Due on:
                             <span>{{ currentPlan.due | moment: 'll' }}</span>
                             <span ng-show="!currentPlan.due">
-                                This plan does not have a due date yet 
+                                This plan does not have a due date yet
                                 <i class="fa fa-info-circle"
                                     tooltip=
-                                        "The plan's due date is set on the first 
-                                        upload or after 30 days of its creation, 
+                                        "The plan's due date is set on the first
+                                        upload or after 30 days of its creation,
                                         whichever happens first">
                                 </i>
                             </span>
@@ -34,19 +34,19 @@
                     </ul>
                 </div>
                 <p ng-if="mode == 'new'">
-                    Your free plan can be upgraded to a paid plan 
+                    Your free plan can be upgraded to a paid plan
                     for more storage and processing capacity
                 </p>
                 <p ng-if="mode == 'upgrade'">
-                    Your current plan has not ended, and can only be upgraded. 
+                    Your current plan has not ended, and can only be upgraded.
                     The upgrade price is prorated on a monthly basis
                 </p>
                 <p ng-if="mode == 'renew'">
-                    Your current plan has ended, please select a new plan. 
+                    Your current plan has ended, please select a new plan.
                     The minumum plan is limited by the project storage usage.
                 </p>
                 <p ng-if="autoPaymentsEnabled === false" class="text-danger">
-                    Please <a ng-href="mailto:{{ordersContact.email}}">contact us</a> if you need to change your plan.
+                    Please contact us at <a ng-href="mailto:support@rfcx.org">support@rfcx.org</a>.
                 </p>
             </div>
         </div>
@@ -54,7 +54,7 @@
             current-plan="currentPlan"
             usage="minUsage"
             plan="project.plan"
-            auto-payments-enabled="autoPaymentsEnabled" 
+            auto-payments-enabled="autoPaymentsEnabled"
             orders-contact="ordersContact"
             recorder-qty="recorderQty">
         </plan-select>
@@ -64,7 +64,7 @@
             <span ng-show="recorderQty <= 0 || project.plan.tier == 'free'">Review order</span>
             <span ng-show="recorderQty > 0 && project.plan.tier != 'free'">Enter shipping info</span>
         </button>
-        <button class="btn btn-default" type="button" 
+        <button class="btn btn-default" type="button"
             ng-click="$dismiss()">
             Close
         </button>

@@ -2,17 +2,21 @@
 <html>
 
 <head>
-    <% include head %>
+    <% include fragments/header %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ARBIMON II - Project <%= project.name %> is disabled</title>
+    <title>RFCx Arbimon - Project <%= project.name %> is disabled</title>
 </head>
 
 <body>
-    <div class="login-top">
-        <div class="container">
-            <a href="/"><img src="/images/logo.svg"></a>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a href="/" class="navbar-brand">
+                    <img src="/images/rfcx-logo.png">Arbimon
+                </a>
+            </div>
         </div>
-    </div>
+    </nav>
     <div class="jumbotron login-banner">
         <div class="container">
             <div class="row">
@@ -24,7 +28,7 @@
                         <div class="panel-body">
                             The project <%= project.name %> has been disabled.
                             <br />
-                            Please <a href="mailto:support@sieve-analytics.com">contact us</a> if you feel this project should be enabled.
+                            Please <a href="mailto:support@rfcx.org">contact us</a> if you feel this project should be enabled.
                         </div>
                     </div>
                 </div>
@@ -32,7 +36,7 @@
         </div>
     </div>
 
-<% include footer %>
+<% include fragments/footer %>
 </body>
 
 </html>

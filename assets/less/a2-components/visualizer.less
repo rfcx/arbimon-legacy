@@ -1,6 +1,11 @@
+/*
+ * Bootstrap variables
+*/
+@import "../variables.less";
+
 .visualizer {
     position: absolute;
-    top: 52px;
+    top: 62px;
     bottom: 0;
     left: 0;
     right: 0;
@@ -111,7 +116,7 @@
     @media (min-width: @screen-md-min) {
         left: @sidebar-width;
     }
-    border-left: 1px solid #d0d0d0;
+    border-left: 1px solid @gray;
     left: 0;
     right: 0;
     top: 0;
@@ -135,10 +140,10 @@
 @layer-padding-left: 15px;
 @layer-padding-right: 40px;
 @layer-padding-v: 10px;
-@layer-zebra-even: #fff;
-@layer-zebra-odd: #f0f0f0;
+@layer-zebra-even: @gray-darkest;
+@layer-zebra-odd: @gray-dark;
 @layer-selection: #e7e7e7;
-@layer-bg: #f8f8f8;
+@layer-bg: @val-color-default; //#f8f8f8;
 .layers {
     .layer {
         padding: @layer-padding-v @layer-padding-right @layer-padding-v @layer-padding-left;
@@ -152,7 +157,7 @@
         position: relative;
         min-height: 2em;
         background-color: @layer-bg;
-        border-bottom: 1px solid #d0d0d0;
+        border-bottom: 1px solid @gray;
 
         &.selected {
             // background-color: @layer-selection;
@@ -189,6 +194,12 @@
                 background: transparent;
             }
         }
+        .layer-btn {
+            opacity: 0.5;
+            &_active {
+                opacity: 1;
+            }
+        }
         .detail {
             padding-left: @layer-padding-left;
             // bootstrap-depend
@@ -216,6 +227,27 @@
 
             }
         }
+
+        .classType-container{
+            margin-bottom: 10px;
+        .classType-row{
+            padding-top: 5px;
+            padding-bottom: 5px;
+
+            &:hover{
+                background: @gray;
+            }
+
+            .btn-toolbar {
+                .btn-group{
+                    float: none;
+                }
+            }
+        }
+        }
+        &_gray-dark {
+            background-color: @gray-dark;
+        }
     }
 }
 
@@ -236,16 +268,17 @@
     > svg {
         z-index:10;
         > .bg{
-            fill: #ffffff;
+            fill: @gray-darkest;
         }
         > .axis {
+            fill: @text-color;
             path, line {
                 fill: none;
-                stroke: black;
+                stroke: @text-color;
                 shape-rendering: crispEdges;
             }
             text {
-                font-family: sans-serif;
+                font-family:  @font-family-sans-serif;
                 font-size: 11px;
             }
         }
@@ -257,24 +290,25 @@
         }
     }
     > .axis-y{
-        z-index : 15;
+        z-index: 15;
     }
     > .axis-x{
-        z-index : 10;
+        z-index: 10;
     }
 
     > .mask-panel, > .a2-visualizer-spectrogram-affixed.mask-panel{
-        z-index:5;
-        background:white;
+        z-index: 5;
+        background: @gray-darkest;
     }
 
 
     > .btn-toolbar{
-        z-index : 50;
+        z-index: 50;
     }
 
     > .spectrogram-container{
         z-index:1;
+        cursor:crosshair;
         > .spectrogram-layer {
             position:absolute;
             pointer-events: none;
@@ -410,8 +444,9 @@
         overflow-y: auto;
         > .visobj-list-item{
             position: relative;
-            height:162px;
+            min-height:162px;
             padding : 6px;
+            color: #fff;
             &:nth-child(even){
                 background-color: @layer-zebra-even;
             }
@@ -471,6 +506,9 @@
         left: 0;
         width: @thumbnail-viewer-axis-width;
         height: @thumbnail-viewer-height;
+        img{
+            -webkit-filter: invert(100%)
+        }
     }
     > .h-axis{
         position: absolute;
@@ -529,23 +567,23 @@
     &:before{
         content: "\f00c"
     }
-    color: @val-color-1;
+    color: @brand-present;
 }
 
 .fa.val-0, .fa.a2-absent{
     &:before{
         content: "\f00d"
     }
-    color: @val-color-0;
+    color: @brand-warning;
 }
 
 .btn.btn-fade-inactive:not(.active) {
     .fa.val-1, .fa.a2-present{
-        color: lighten(@val-color-1, 25%);
-    }
+		color: lighten(@brand-present, 25%);
+	}
 
     .fa.val-0, .fa.a2-absent{
-        color: lighten(@val-color-0, 25%);
+        color: lighten(@brand-warning, 25%);
     }
 }
 
@@ -676,7 +714,8 @@
 
 a2-img {
     display : inline-block;
-    position:relative;
+	position:relative;
+	image-rendering: -webkit-optimize-contrast;
     > img {
         position : absolute;
         width    : 100%;
@@ -731,18 +770,14 @@ img.visobj-soundscape{
     .a2-crisp-image();
 }
 
-.margin-xs{
-    margin: 5px 0px;
-}
-
 .accordion-group .panel-group .panel {
-    border-color: #d0d0d0;
+    border-color: @gray;
     margin-top: 0px;
-    margin-bottom: 0px;
-    border-radius: 0px;
+    margin-bottom: 2px;
+    border-radius: 4px;
 
     .panel-heading {
-        background-color:#f8f8f8;
+        background-color:@gray;
         border-radius: 0px;
         .panel-title {
             font-size: 14px;

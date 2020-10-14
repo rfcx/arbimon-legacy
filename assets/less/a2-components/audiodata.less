@@ -20,21 +20,17 @@
     max-width:700px;
 }
 
-.reclist-pagination-row {
-    // float:left;
-    >.pagination{
-        margin: 0;
-    }
+.reclist-wrapper {
+    display: flex;
+    justify-content: space-between;
 }
-.reclist-pagelimit {
-    // float:right;
-    // margin: 20px;
-}
+
+.reclist-wrapper div:last-child {
+    margin-left: auto;
+  }
+
 .reclist-total {
-    // display: inline-block;
-    // margin: 20px;
-    // padding: 5px;
-    font-weight:bold;
+    font-weight: bold;
 }
 
 .btn-file {
@@ -55,29 +51,24 @@
     }
 }
 
-.drophere {
-    border: 1px solid;
-
+.btn-default,
+.btn-success,
+.btn-primary,
+.btn-warning {
+    &:hover,
+    &:focus,
+    &:active {
+        outline: none !important;
+    }
 }
 
-.uploads {
-    &.info-panel {
-        position:relative;
-        max-width: 1000px;
-        margin-bottom: 10px;
-    }
+.drophere {
+    border: 1px solid;
+}
 
-    &.info {
-        display: inline-block;
-        padding: 2px 5px;
-    }
-    &.title {
-        display: inline-block;
-        font-size: 1.5em;
-    }
-
-    &.list {
-        margin-top:22px;
+.upload-info-panel {
+    @media (min-width: @screen-desktop) {
+        margin-bottom: 0;
     }
 }
 
@@ -98,7 +89,8 @@
     }
 
     &.btn{
-        padding: 2px;
+		padding: 0px;
+		border-radius: 0px;
         &.active .roi-img{
             filter: brightness(50%);
         }
@@ -245,7 +237,7 @@
 }
 
 .roi-delete {
-    .roi-icon-btn(@btn-danger-bg);
+    .roi-icon-btn(@btn-default-bg);
 }
 .roi-info {
     .roi-icon-btn(@btn-primary-bg);
@@ -285,11 +277,13 @@ loader.block{
 }
 
 .sidenav li a {
-    padding-left: 3px;
+    padding-left: 16px;
+    padding-right: 16px;
 }
 
 .sidenav .subnav li a, .sidenav .open .subnav.dropdown-menu li a {
-    padding-left: 3px;
+    padding-left: 32px;
+    padding-right: 16px;
 }
 
 .collapse.expanded{

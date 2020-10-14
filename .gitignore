@@ -25,9 +25,6 @@ a2.komodoproject
 # python compiled binaries
 *.pyc
 
-# docs (?)
-docs
-
 #test coverage results
 coverage
 

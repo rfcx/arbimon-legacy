@@ -2,106 +2,42 @@
 <html ng-app="a2.login">
 
 <head>
-    <% include head %>
+    <% include fragments/header %>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ARBIMON II</title>
+    <title>RFCx Arbimon</title>
 </head>
 
 <body ng-controller="LoginCtrl as controller">
-    <nav class="navbar navbar-default" role="navigation">
-        <div class="container">
-            <div class="navbar-header">
-                <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <button class="navbar-toggle collapsed" ng-click="switchMode()">
-                    {{ mode }}
-                </button>
-                <a href="/" class="navbar-brand">
-                    <img src="/images/logo.svg">
-                </a>
-            </div>
-            <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
-                
-                <ul class="nav navbar-nav">
-                    <li><a href="/home">Explore public projects</a></li>
-                </ul>
-                <ul class="nav navbar-nav pull-right">
-                    <li class="hidden-sm hidden-xs btn" ><a href="/login">Log in</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    
-    
-    <div class="jumbotron login-banner">
-        <div class="container">
-            <div class="row">
-                <!--  visible-md-block visible-lg-block hide only on small and x-small screens -->
-                <div class="col-sm-12 col-md-7 col-lg-7" ng-class="mode === 'Sign up' ? 'visible-md-block visible-lg-block' : '' ">
-                    <h1 class="hidden-xs hidden-sm">Arbimon II</h1>
-                    <p>
-                        Bio-acoustics analysis platform
-                        <ul class="feature-list fa-ul">
-                            <li><i class="fa fa-li fa-2x fa-cloud"></i>Store and manage your acoustic monitoring recordings on our cloud</li>
-                            <li><i class="fa fa-li fa-2x fa-pencil-square"></i>Browse, visualize and annotate recordings</li>
-                            <li><i class="fa fa-li fa-2x fa-paw"></i>Use Pattern Matching models to detect specific species</li>
-                            <li><i class="fa fa-li fa-2x fa-map"></i>Create soundscapes to assess the acoustic activity in a set of recordings</li>
-                            <li><i class="fa fa-li fa-2x fa-share-alt"></i>Share data and results from your public project</li>
-                        </ul>
-                    </p>
-                    <a href="/register" class="btn btn-success btn-lg">Sign up today, it's free!!!</a> 
+    <% include fragments/nav-public %>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 col-md-7 col-lg-8 jumbotron" ng-class="mode === 'Sign up' ? 'visible-md-block visible-lg-block' : '' ">
+                <h1 class="hidden-xs hidden-sm">Arbimon</h1>
+                <h2>Bio-acoustics analysis platform</h2>
+                <div class="button-group">
+                    <a class="btn btn-lg btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Start analyzing audio</a>
                 </div>
-                
-                <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-1 col-md-4 col-lg-offset-2 col-lg-3" ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
-                    <div class="login-form">
-                        <h3>Already a user?</h3>
-                        <form role="form" ng-submit="login()">
-                            <div class="form-group">
-                                <label class="sr-only" for="user">Username</label>
-                                <input id="user"
-                                    class="form-control" 
-                                    name="username" 
-                                    type="text" 
-                                    placeholder="Username" 
-                                    ng-model="username"
-                                    required />
-                            </div>
-                            <div class="form-group">
-                                <label class="sr-only" for="pass">Password</label>
-                                <input id="pass" 
-                                    class="form-control" 
-                                    name="password" 
-                                    type="password" 
-                                    placeholder="Password" 
-                                    ng-model="password"
-                                    required />
-                            </div>
-                            <div ng-show="showCaptcha" g-recaptcha
-                                sitekey="6LffYQETAAAAAAeEN-dJHFMHxlVVSGsL-tlWWFpE"
-                                response="captchaResp"
-                                reset-widget="resetCaptcha">
-                            </div>
-                            <button class="btn btn-primary btn-block" type="submit"><i class="fa fa-sign-in"></i> log in</button>
-                            <div class="text-right"><a href="/forgot_request" class="forgot-text">forgot password?</a></div>
-                            
-                            <div class="form-group oauth-buttons">
-                                <a2-google-login-button class="btn-block" on-signed-in="controller.oAuthLogin('google', user)"></a2-google-login-button>
-                                <a2-facebook-login-button class="btn-block" on-signed-in="controller.oAuthLogin('facebook', user)"></a2-facebook-facebook-button>
-                            </div>
-                        </form>
-                    </div>
+                <p>
+                    Key features:
+                    <ul>
+                        <li>Store, manage and share acoustic recordings</li>
+                        <li>Listen, visualize and annotate recordings</li>
+                        <li>Detect species with pattern matching and machine learning</li>
+                        <li>Create soundscapes based on acoustic activity</li>
+                    </ul>
+                </p>
+            </div>
+
+            <div class="col-sm-12 col-md-5 col-lg-4" ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
+                <div class="card-container mt-5">
+                    <% include fragments/login-form %>
                 </div>
             </div>
-            
         </div>
-        
     </div>
-    
-    <% include footer %>
+
+    <% include fragments/footer %>
 </body>
 
 </html>

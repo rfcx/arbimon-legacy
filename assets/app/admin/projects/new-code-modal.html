@@ -24,7 +24,7 @@
                 </select>
             </div>
         </div>
-    </div>    
+    </div>
     <hr />
     <p>
         Please add the project parameters given by this code:
@@ -32,15 +32,15 @@
     <div class="form-horizontal">
         <div class="form-group">
             <label for="recordings" class="col-sm-3">Recordings</label>
-            <div class="col-sm-9">
-                <input id="recordings" type="number" ng-model="popup.data.recordings" ng-change="popup.computeProcessingAmount()"/>
+            <div class="col-sm-9 form-inline">
+                <input class="form-control" id="recordings" type="number" ng-model="popup.data.recordings" ng-change="popup.computeProcessingAmount()"/>
                 minutes
             </div>
         </div>
         <div class="form-group">
             <label for="processing" class="col-sm-3">Processing</label>
-            <div class="col-sm-9">
-                <input id="processing" type="number" ng-model="popup.data.processing"  ng-change="popup.processingCountChanged()"/><br />
+            <div class="col-sm-9 form-inline">
+                <input id="processing" class="form-control" type="number" ng-model="popup.data.processing"  ng-change="popup.processingCountChanged()"/><br />
                 <label class="v-center normal">
                     <input type="checkbox" ng-model="popup.data.tieProcessingWithRecordings" ng-change="popup.computeProcessingAmount()"/>
                     <div class="inlined">
@@ -51,12 +51,12 @@
         </div>
         <div class="form-group">
             <label for="duration" class="col-sm-3">Duration</label>
-            <div class="col-sm-9">
-                <input id="duration" type="number" ng-model="popup.data.duration" min="1" max="10" />
+            <div class="col-sm-9 form-inline">
+                <input id="duration" class="form-control" type="number" ng-model="popup.data.duration" min="1" max="10" />
                 {{popup.data.duration > 1 ? "years" : "year"}}
             </div>
         </div>
-    </div>    
+    </div>
 </div>
 <div class="modal-footer">
     <button class="btn btn-primary" ng-click="$close(popup.data)">Create Code</button>

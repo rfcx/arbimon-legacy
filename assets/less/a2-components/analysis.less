@@ -5,17 +5,17 @@
     position: relative;
     margin-top:10px;
     margin-bottom:10px;
-    
-    
+
+
     & > .zoomDivClass {
         position: absolute;
         top: 10px;
     }
-    
+
     & > .patternDiv{
         height:100px;
         width:@pattern-img-width;
-        
+
         & > .yaxiscontainer {
             height: 100%;
             position: absolute;
@@ -23,14 +23,14 @@
             & > .yaxisrelative {
                 height: 100%;
                 position: relative;
-                
+
                 & > .lowfreq{
                     position: absolute;
                     bottom: -18px;
                 }
             }
         }
-        
+
         & > .patternWidth{
             height: 100%;
             width:100%;
@@ -41,8 +41,8 @@
                 width:100%;
             }
         }
-        
-            
+
+
         & > .patternWidthAxis{
             margin-top:10px;
             margin-left:65px;
@@ -59,7 +59,7 @@
         }
     }
 
-    
+
     & > .axisy1 {
         position: absolute;bottom: -18px;
     }
@@ -71,7 +71,7 @@
     height: 200px;
     margin-top: 10px;
     margin-bottom: 10px;
-    
+
     & > .pattern {
         position: absolute;
         top: 0px;
@@ -79,7 +79,7 @@
         width:@pattern-img-width;
         height: 100%;
     }
-    
+
     & > .axis-y1 {
         position: absolute;
         bottom: 0px;
@@ -121,17 +121,17 @@
 
 .confusion-matrix {
     padding-top: 10px;
-    
+
     & > table {
         padding: 10px;
         text-align:center;
         width:100%;
-        
+
         & > tbody > tr:nth-child(even) {
             border-bottom:1px solid;
             border-bottom-color: #ddd;
         }
-        
+
         & > tbody > tr:not(:first-child) > td:first-child {
             border-right:1px solid;
             border-right-color: #ddd;
@@ -143,7 +143,7 @@
 .details-list > li {
     margin-bottom: 10px;
     border-bottom: solid 1px #aaa;
-    
+
     &:last-child {
         border-bottom: none 0px;
     }
@@ -159,19 +159,22 @@
     }
 }
 
-.active-cnn-selection{
-    transform: scale(1.25);
-}
-
 .cnn-selection-btns > button {
     transition: 0.75s all;
+    margin-right: 5px;
+    :last-child {
+        margin-right: 0;
+    }
 }
-/*
-.non-active-cnn-selection{
-    
-}
-.non-active-cnn-selection:hover {
-    transform: scale(1.5);
-}
-*/
 
+.cnn-selection-btns {
+    margin-bottom: 5px;
+    :last-child {
+        margin-bottom: 0;
+    }
+}
+
+.active-cnn-selection {
+    background-color: @gray-darker;
+    border-color: @gray-darker;
+}
