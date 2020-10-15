@@ -35,15 +35,11 @@
     </div>
     <div class="form-group" ng-class="{'has-error': errorDesc }">
         <label class="control-label" for="description">Description:</label>
-        <span class="explainer" ng-class="errorDesc ? 'text-danger' : ''">
-            50 characters or more.  (You have {{+project.description.length}}).
-        </span>
         <textarea class="form-control fixed-width" 
             id="description" 
             name="description" 
             ng-model="project.description"
-            ng-change="verify()"
-            placeholder="this project is about... (mininum 50 characters)" required>
+            placeholder="this project is about...">
         </textarea>
     </div>
     <div class="radio">
