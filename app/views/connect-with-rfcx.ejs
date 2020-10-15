@@ -21,11 +21,16 @@
                         <% } else if (user.rfcx_id) { %>
                             <span class="label label-success">Complete</span>
                         <% } else { %>
-                            <span class="label label-warning">Not started</span>
+                            <span class="label label-warning">Not completed</span>
                         <% } %>
                         </h3>
                     </div>
                     <div class="panel-body">
+                    <% if (error) { %>
+                        <div class="alert alert-info">
+                            <strong>Warning!</strong> <%- error %>
+                        </div>
+                    <% } %>
                     <% if (!user || user.isAnonymousGuest) { %>
                         <p><a href="/login">Login</a> to check your status.</p>
                     <% } else if (user.rfcx_id) { %>
@@ -43,10 +48,10 @@
                     <% } %>
                     </div>
                 </div>
-                
+
                 <div>
                     <h2>Arbimon II account migration</h2>
-                    
+
                     <p>As an Arbimon user, you are now part of a comprehensive technology ecosystem to support bioacoustics research! Our goal
                     is to make Arbimon the best platform for your research, conservation, and management projects. With one single login,
                     you will now have access to the following applications:</p>
@@ -63,7 +68,7 @@
 
                     <p>Add yourself to our distribution list to receive important updates about the Edge and the Explorer app by scrolling to
                     the bottom of <a href="https://www.rfcx.org">www.rfcx.org</a> and adding your email.</p>
-                    
+
                     <h3>Questions?</h3>
 
                     <p>In order to best support you during this exciting expansion, we’ve added a direct line to our support team - which can
