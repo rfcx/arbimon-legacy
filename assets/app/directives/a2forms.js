@@ -167,7 +167,6 @@ angular.module('a2.forms',['templates-arbimon2'])
                 var good = true;
                 $scope.errorName = '';
                 $scope.errorUrl = '';
-                $scope.errorDesc = '';
                 
                 // check name
                 if(!$scope.project.name) {
