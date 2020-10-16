@@ -1,7 +1,7 @@
 @cal-level-cl-0: white;
-@cal-level-cl-1: #adef9c;
-@cal-level-cl-50: #70dd3a;
-@cal-level-cl-100: #1EAD01;
+@cal-level-cl-1: lighten(@brand-primary, 50%);
+@cal-level-cl-50: lighten(@brand-primary, 25%);
+@cal-level-cl-100: @brand-primary;
 @cal-sel-cl: #003455;
 
 .calendar {
@@ -31,7 +31,7 @@
     cursor: pointer;
 
     text {
-      fill: @text-color;
+      fill: @gray;
     }
 
     rect {
