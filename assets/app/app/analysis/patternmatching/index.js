@@ -13,7 +13,12 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/disabled.html'
     });
     $stateProvider.state('analysis.patternmatching', {
-        url: '/patternmatching/:patternMatchingId??show',
+        url: '/patternmatching',
+        controller: 'PatternMatchingCtrl',
+        templateUrl: '/app/analysis/patternmatching/list.html'
+    });
+    $stateProvider.state('analysis.patternmatching-details', {
+        url: '/patternmatching/:patternMatchingId',
         controller: 'PatternMatchingCtrl',
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
@@ -28,10 +33,16 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     $scope.selectItem = function(patternmatchingId){
-        $state.go('analysis.patternmatching', {
-            patternMatchingId: patternmatchingId ? patternmatchingId : undefined
-        });
+        $scope.selectedPatternMatchingId = patternmatchingId;
+            if (!patternmatchingId){
+            $state.go('analysis.patternmatching', {});
+        } else {
+            $state.go('analysis.patternmatching-details', {
+                patternMatchingId: patternmatchingId
+            });
+        }
     }
+
 
     $scope.loadPatternMatchings = function() {
         $scope.loading = false;
@@ -182,6 +193,7 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     fetchDetails: function(){
+		console.log('selected', this.id);
         this.loading.details = true;
         return a2PatternMatching.getDetailsFor(this.id).then((function(patternMatching){
             this.loading.details = false;
