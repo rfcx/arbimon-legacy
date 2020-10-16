@@ -14,6 +14,7 @@ var request = require('request');
 var ejs = require('ejs');
 var fs = require('fs');
 var path = require('path');
+var url = require('url');
 var dd = console.log;
 
 var config = require('../config');
@@ -175,6 +176,14 @@ router.get('/auth0-login', async function(req, res, next) {
     try {
         const query = req.query || {}
         if (query.error) {
+            if (req.session.user && req.session.user.username !== 'guest') {
+                return res.redirect(url.format({
+                    pathname: '/connect-with-rfcx',
+                    query: {
+                        error: query.error_description
+                    }
+                }));
+            }
             return next(new Error(query.error_description))
         }
         if (!query.code) {
