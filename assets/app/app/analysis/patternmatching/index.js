@@ -193,7 +193,6 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     fetchDetails: function(){
-		console.log('selected', this.id);
         this.loading.details = true;
         return a2PatternMatching.getDetailsFor(this.id).then((function(patternMatching){
             this.loading.details = false;
