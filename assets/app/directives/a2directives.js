@@ -411,20 +411,31 @@ angular.module('a2.directives', [
                     .data(['1','50','100'])
                     .enter()
                     .append('g')
-                    .attr('transform', 'translate(20,0)');
+                    .attr('transform', function(d, i) {
+                        switch (d) {
+                            case '50': return 'translate(18,0)';
+                            default: return 'translate(20,0)';
+                        }
+                    })
 
                 icon.append('rect')
-                    .attr('width', cubesize)
-                    .attr('height', cubesize)
-                    .attr('y', height-cubesize-10)
+                    .attr('width', cubesize*0.63)
+                    .attr('height', cubesize*0.63)
+                    .attr('y', (height + 7 - cubesize))
                     .attr('x', function(d, i) { return i*45+22; })
                     .attr('class', function(d) { return 'cal-level-'+d; });
 
                 icon.append('text')
                     .attr('text-anchor', 'middle')
                     .attr('font-size', 10)
-                    .attr('y', height-15)
-                    .attr('x', function(d, i) { return i*45+10; })
+                    .attr('y', height - 2)
+                    .attr('x', function(d, i) {
+                        switch (d) {
+                            case '1': return i*45+11;
+                            case '50': return i*45+9;
+                            case '100': return i*45+6;
+                        }
+                    })
                     .text(function(d, i) { return '+'+d; });
             }
 
