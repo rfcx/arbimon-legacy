@@ -580,7 +580,7 @@ CREATE TABLE `projects` (
   `project_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `url` varchar(255) NOT NULL,
-  `description` text NOT NULL,
+  `description` text NULL,
   `project_type_id` int(10) unsigned NOT NULL,
   `is_private` tinyint(1) NOT NULL,
   `is_enabled` tinyint(4) NOT NULL DEFAULT '1',

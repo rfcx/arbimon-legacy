@@ -167,7 +167,6 @@ angular.module('a2.forms',['templates-arbimon2'])
                 var good = true;
                 $scope.errorName = '';
                 $scope.errorUrl = '';
-                $scope.errorDesc = '';
                 
                 // check name
                 if(!$scope.project.name) {
@@ -198,17 +197,6 @@ angular.module('a2.forms',['templates-arbimon2'])
                 }
                 else if($scope.project.url.length > 50) {
                     $scope.errorUrl = 'URL too long, 50 characters max';
-                    good = false;
-                }
-                
-                // check description
-                if(!$scope.project.description) {
-                    good = false;
-                }
-                else if($scope.project.description.length < 50 && $scope.project.description.length > 0) {
-                    $scope.errorDesc = 'Description needs to be at least 50 characters '+
-                                       'long, you have ' + $scope.project.description.length;
-                    
                     good = false;
                 }
                 

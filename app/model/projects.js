@@ -209,7 +209,7 @@ var Projects = {
         var schema = joi.object().keys({
             name: joi.string(),
             url: joi.string(),
-            description: joi.string(),
+            description: joi.string().optional(),
             project_type_id: joi.number(),
             is_private: joi.boolean(),
             plan: joi.object().keys({
@@ -323,7 +323,7 @@ var Projects = {
             project_id: joi.number().required(),
             name: joi.string(),
             url: joi.string(),
-            description: joi.string(),
+            description: joi.string().optional(),
             project_type_id: joi.number(),
             is_private: [joi.number().valid(0,1), joi.boolean()],
             is_enabled: [joi.number().valid(0,1), joi.boolean()],
