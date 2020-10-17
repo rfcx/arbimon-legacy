@@ -24,7 +24,7 @@
             <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
                 <ul class="nav navbar-nav hide-tooltip-lg">
                     <li ui-sref="citizen-scientist.my-stats" ui-sref-active="active"><a>My Stats</a></li>
-                    <li ui-sref="citizen-scientist.patternmatching" ui-sref-active="active"><a>Pattern Matchings</a></li>
+                    <li ui-sref="citizen-scientist.patternmatching" ng-class="{active: $state.includes('citizen-scientist.patternmatching-details') || $state.includes('citizen-scientist.patternmatching')}"><a>Pattern Matching</a></li>
                     <li ui-sref="citizen-scientist.expert" ng-class=" ('citizen-scientist.expert' | includedByState) ? 'active' : ''"
                         ng-if="userPermit.can(['manage pattern matchings', 'view citizen scientist expert interface'])"
                     ><a>Expert</a></li>
