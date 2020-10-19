@@ -78,7 +78,7 @@ var Templates = {
 
         if(options.showRecordingUri){
             tables.push('JOIN recordings R ON T.recording_id = R.recording_id');
-            select.push('R.uri as recUri');
+            select.push('R.uri as recUri, R.site_id as recSiteId');
         }
 
         if(constraints.length === 0){
@@ -185,7 +185,10 @@ var Templates = {
                 return;
             }
 
-            return q.ninvoke(Recordings, 'fetchAudioFile', {uri: template.recUri}, {
+            return q.ninvoke(Recordings, 'fetchAudioFile', {
+                uri: template.recUri,
+                site_id: template.recSiteId
+            }, {
                 maxFreq: Math.max(template.y1, template.y2),
                 minFreq: Math.min(template.y1, template.y2),
                 gain: options.gain,
