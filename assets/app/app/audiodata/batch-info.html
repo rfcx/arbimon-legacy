@@ -14,9 +14,9 @@
         </div>
         <div class="form-group">
             <label class="control-label" for="format" >
-                Filename time format: 
+                Filename time format:
             </label>
-                <i tooltip="the system get the recording's date and time from 
+                <i tooltip="the system get the recording's date and time from
                     the filename by searching one of the patterns below"
                     class="fa fa-info-circle"></i>
             <ui-select ng-model="info.format" theme="bootstrap">
@@ -30,13 +30,13 @@
         </div>
         <div class="form-group">
             <label class="control-label" for="recorder">Recorder: </label>
-            <input class="form-control" name="recorder" id="recorder" type="text"  
+            <input class="form-control" name="recorder" id="recorder" type="text"
                 ng-model="info.recorder"
                 required>
         </div>
         <div class="form-group">
             <label class="control-label" for="mic">Microphone: </label>
-            <input class="form-control" name="mic" id="mic" type="text" 
+            <input class="form-control" name="mic" id="mic" type="text"
                 ng-model="info.mic"
                 required>
         </div>
@@ -45,14 +45,18 @@
             <input class="form-control" name="sver" id="sver" type="text"  ng-model="info.sver"
                 required>
         </div>
+        <div ng-if="sites && !sites.length" class="alert alert-danger" role="alert">
+            You need to <a ng-href="/project/{{projectUrl}}/audiodata/sites" class="alert-link" ng-click="$dismiss()">create a site
+            </a> first
+        </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" 
-        type="submit" 
+    <button class="btn btn-primary"
+        type="submit"
         ng-click="close() | trackEvent:'Audiodata-Batchinfo':'Save clicked'">
-            <i class="fa fa-floppy-o"></i> Save &amp; Close 
+            <i class="fa fa-floppy-o"></i> Save &amp; Close
     </button>
-    <button class="btn btn-default" 
+    <button class="btn btn-default"
         type="button"
         ng-click="$dismiss() | trackEvent:'Audiodata-Batchinfo':'Close clicked'">
             <i class="fa fa-times"></i> Close

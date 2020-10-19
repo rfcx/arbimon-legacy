@@ -235,10 +235,14 @@ angular.module('a2.audiodata.uploads.upload', [
         $scope.sites = sites;
     });
 
+    $scope.projectUrl = Project.getUrl();
 
     $scope.close = function(){
         if($scope.uploadInfo.$valid && $scope.info.site) {
             return $modalInstance.close($scope.info);
+        }
+        else if(!$scope.info.site) {
+            return notify.error(`You need to create a site first`);
         }
 
         notify.error('all fields are required');
