@@ -1,11 +1,11 @@
 <div>
-    <div class="roi" ng-repeat="roi in layer.training_data.data.rois"
+    <div class="roi set" ng-repeat="roi in layer.training_data.data.rois"
         ng-class="{'roi-selected':layer.training_data.data.selected == roi}"
         ng-click="$event.stopPropagation(); layer.training_data.data.selected = roi  | trackEvent:'Visualizer-Roi-Set':'setting roi'"
         ng-style="{
-            left:layout.sec2x(roi.x1, 1) + 'px', 
-            top:layout.hz2y(roi.y2, 1) + 'px', 
-            width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px', 
+            left:layout.sec2x(roi.x1, 1) + 'px',
+            top:layout.hz2y(roi.y2, 1) + 'px',
+            width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px',
             height:layout.dhz2height(roi.y2, roi.y1) + 'px'
         }">
     </div>
@@ -13,27 +13,27 @@
 
 <div class="input-source"
     ng-style="{height: layout.spectrogram.height, width: layout.spectrogram.width}"
-    a2-visualizer-fit-spectrogram ng-show="selection.layer == layer" 
+    a2-visualizer-fit-spectrogram ng-show="selection.layer == layer"
     ng-mousedown="($event.which == 1) && layer.training_data.data.editor.add_point(pointer)"
     ng-mousemove="($event.buttons == 1) && layer.training_data.data.editor.add_tracer_point(pointer)"
     ng-mouseup  ="($event.which == 1) && layer.training_data.data.editor.add_point(pointer)">
-    
+
     <div a2-visualizer-spectrogram-affixed data-affix-top="20" class="text-dark-gray pl-5">
         Click to add training data to this recording.
-        <div ng-show="layer.training_data.data.editor.roi && !layer.training_data.data.editor.roi.id" 
+        <div ng-show="layer.training_data.data.editor.roi && !layer.training_data.data.editor.roi.id"
             a2-global-keyup="($event.which == 27) && layer.training_data.data.editor.reset()">
             Press <kbd>esc</kbd> to cancel training data addition.
         </div>
     </div>
     <div class="roi roi-current" ng-show="layer.training_data.data.editor.roi"
         ng-style="{
-            left: layout.sec2x(layer.training_data.data.editor.roi.x1, 1) + 'px', 
-            top:layout.hz2y(layer.training_data.data.editor.roi.y2, 1) + 'px', 
-            width:layout.dsec2width(layer.training_data.data.editor.roi.x2, 
-            layer.training_data.data.editor.roi.x1, 1) + 'px', 
+            left: layout.sec2x(layer.training_data.data.editor.roi.x1, 1) + 'px',
+            top:layout.hz2y(layer.training_data.data.editor.roi.y2, 1) + 'px',
+            width:layout.dsec2width(layer.training_data.data.editor.roi.x2,
+            layer.training_data.data.editor.roi.x1, 1) + 'px',
             height:layout.dhz2height(layer.training_data.data.editor.roi.y2, layer.training_data.data.editor.roi.y1) + 'px'
         }">
-            
+
         <i class="fa fa-circle-o control-point cp-resize-tl" style="position:absolute;    top:-7px;  left:-6px" ></i>
         <i class="fa fa-circle-o control-point cp-resize-tr" style="position:absolute;    top:-7px; right:-6px" ></i>
         <i class="fa fa-circle-o control-point cp-resize-bl" style="position:absolute; bottom:-7px;  left:-6px" ></i>
@@ -42,8 +42,8 @@
     <div a2-insert-in=".visualizer-root">
         <div class="popover right confirm-roi"
             ng-style="{
-                display: layer.training_data.data.editor.valid ? 'block' : 'none', 
-                left:(layout.viewport.left + layout.sec2x(layer.training_data.data.editor.roi.x2, 1)) + 'px', 
+                display: layer.training_data.data.editor.valid ? 'block' : 'none',
+                left:(layout.viewport.left + layout.sec2x(layer.training_data.data.editor.roi.x2, 1)) + 'px',
                 top:(layout.spectrogram.top + layout.hz2y((layer.training_data.data.editor.roi.y1 + layer.training_data.data.editor.roi.y2)/2, 1)) + 'px'
             }">
             <div class="arrow"></div>
@@ -54,11 +54,11 @@
                 </small>
             </h3>
             <div class="popover-content">
-                <button class="btn btn-sm btn-default" 
+                <button class="btn btn-sm btn-default"
                     ng-click=" $event.stopPropagation(); layer.training_data.data.editor.submit() | trackEvent:'Visualizer-Roi-Set':'add roi'">
                     <i class="fa fa-plus text-success"></i> Add Data
                 </button>
-                <button class="btn btn-sm btn-default" 
+                <button class="btn btn-sm btn-default"
                     ng-click=" $event.stopPropagation(); layer.training_data.data.editor.reset() | trackEvent:'Visualizer-Roi-Set':'cancel roi'">
                     <i class="fa fa-ban text-danger"></i> Cancel
                 </button>
