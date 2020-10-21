@@ -243,7 +243,7 @@ angular.module('a2.audiodata.uploads.upload', [
             return $modalInstance.close($scope.info);
         }
         else if(!$scope.info.site) {
-            return notify.error(`You need to create a site first`);
+            return notify.error('You need to create a site first');
         }
 
         notify.error('all fields are required');
