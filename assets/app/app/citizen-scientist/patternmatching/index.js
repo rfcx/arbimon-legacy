@@ -10,6 +10,11 @@ angular.module('a2.citizen-scientist.patternmatching', [
 ])
 .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('citizen-scientist.patternmatching', {
+        url: '/patternmatching',
+        controller: 'CitizenScientistPatternMatchingCtrl',
+        templateUrl: '/app/citizen-scientist/patternmatching/list.html'
+    });
+    $stateProvider.state('citizen-scientist.patternmatching-details', {
         url: '/patternmatching/:patternMatchingId?',
         controller: 'CitizenScientistPatternMatchingCtrl',
         templateUrl: '/app/citizen-scientist/patternmatching/list.html'
@@ -60,9 +65,14 @@ angular.module('a2.citizen-scientist.patternmatching', [
     },
 
     $scope.selectItem = function(patternmatchingId){
-        $state.go('citizen-scientist.patternmatching', {
-            patternMatchingId: patternmatchingId ? patternmatchingId : undefined
-        });
+        $scope.selectedPatternMatchingId = patternmatchingId;
+        if (!patternmatchingId){
+            $state.go('citizen-scientist.patternmatching', {});
+        } else {
+            $state.go('citizen-scientist.patternmatching-details', {
+                patternMatchingId: patternmatchingId
+            });
+        }
     }
 
     $scope.loadPatternMatchings = function() {

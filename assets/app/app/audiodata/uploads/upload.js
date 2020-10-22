@@ -130,9 +130,10 @@ angular.module('a2.audiodata.uploads.upload', [
 
     $scope.uploader = uploads.getUploader();
     $scope.info = uploads.getBatchInfo();
+    var randomString = Math.round(Math.random() * 100000000)
     this.uploaderApps = {
-        mac: 'https://rf.cx/ingest-app-latest-mac',
-        windows: 'https://rf.cx/ingest-app-latest-win',
+        mac: 'https://rf.cx/ingest-app-latest-mac?r=' + randomString,
+        windows: 'https://rf.cx/ingest-app-latest-win?r=' + randomString,
     };
     Project.getInfo(function(info) {
         $scope.project = info;
@@ -235,10 +236,14 @@ angular.module('a2.audiodata.uploads.upload', [
         $scope.sites = sites;
     });
 
+    $scope.projectUrl = Project.getUrl();
 
     $scope.close = function(){
         if($scope.uploadInfo.$valid && $scope.info.site) {
             return $modalInstance.close($scope.info);
+        }
+        else if(!$scope.info.site) {
+            return notify.error('You need to create a site first');
         }
 
         notify.error('all fields are required');

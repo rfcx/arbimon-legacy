@@ -128,7 +128,7 @@ router.post('/check-coupon', function(req, res, next) {
 var projectSchema = joi.object().keys({
     name: joi.string(),
     url: joi.string(),
-    description: joi.string(),
+    description: joi.string().optional(),
     is_private: joi.boolean(),
 });
 
