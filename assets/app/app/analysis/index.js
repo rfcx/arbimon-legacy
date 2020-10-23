@@ -6,7 +6,7 @@ angular.module('a2.analysis', [
     'a2.analysis.cnn',
     'a2.analysis.soundscapes',
     'a2.analysis.audio-event-detection',
-    'a2.analysis.clustering-model',
+    'a2.analysis.audio-event-detections-clustering',
     'ui.router',
     'ct.ui.router.extras'
 ]).config(function($stateProvider, $urlRouterProvider) {
