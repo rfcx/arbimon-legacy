@@ -161,7 +161,8 @@ Additional steps for production (to support auto-scaling of the frontend)
     
     ![production-deployment-3](https://user-images.githubusercontent.com/1175362/92625454-db17d100-f2f2-11ea-8089-8e85e9c999f9.png)
 
-10. To test the auto scaling is working, terminate the current `web` instance.
+10. If there were more than 1 EC2 instances before deployment, terminate rest instances (but not the one that was used for image creation).
+    ![production-deployment-4](https://user-images.githubusercontent.com/2122991/96923854-84d5aa80-14ba-11eb-996d-97cb6cb9a604.png)
 
 ---
 ## Legacy README
