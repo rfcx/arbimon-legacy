@@ -5,6 +5,8 @@ Bio-Acoustic Analyzer
 
 ### Local Dev Setup (with Docker)
 
+The recommended dev setup is to use docker-compose to create your web and database containers. By default, docker-compose will create and seed a new database using the migrations and seeds in `scripts/db`.
+
 1. Build the docker image
 
    ```sh
@@ -92,27 +94,6 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
   - `sudo DEBUG=mysql-connection-manager,http,express:* node bin/www`
     - This will output all debug messages from the express framework as well as the mysql connections and http packages. Other node packages can be added, or subtracted from the list as needed.
 
-### Information
-- URLs
-  - Production server [https://arbimon.sieve-analytics.com/](https://arbimon.sieve-analytics.com/)
-  - Public Development server [https://arbimon-dev.sieve-analytics.com/](https://arbimon-dev.sieve-analytics.com/)
-  - Local Development server [http://dev.arbimon.sieve-analytics.com/](http://dev.arbimon.sieve-analytics.com/) **Requires hosts file entry**
-    - Update OS's `hosts` file with the following line:
-      ```
-      127.0.0.1 dev.arbimon.sieve-analytics.com
-      ```
-    - Set `APP_PORT` env var to `80` when you run the app:
-      ```sh
-      export APP_PORT=80; ./node_modules/gulp/bin/gulp.js watch
-      ```
-- Database Info
-  - MySQL
-  - Production has a db and the development enviroments share a secondary db.
-- Servers and Networking
-  - the production and dev servers are on a private network together and not directly reachable from the outside. There is a jump/tunnel server that can be used to get into these. Tunnel server adress: [54.159.71.198](54.159.71.198) with user `ec2user` and the private key file for authentication (obtain this from another member of the team).
-    - This can be used to create a port forward to use with the database connection or can be directly connected to by ssh and then ssh to the other servers. Once on this server there are aliases setup to ssh to the other servers:
-      - `ssh-web-dev` for development web server
-      - `ssh-web` for production web server
 
 ### Deployment
 
@@ -156,6 +137,20 @@ Additional steps for production (to support auto-scaling of the frontend)
     ![production-deployment-3](https://user-images.githubusercontent.com/1175362/92625454-db17d100-f2f2-11ea-8089-8e85e9c999f9.png)
 
 10. To test the auto scaling is working, terminate the current `web` instance.
+
+---
+
+## Development
+
+### Database migrations
+
+Create an SQL file in `scripts/db` starting with an incremented number -- see `001-example-migrations.sql` for an example. Migrations may contain SQL statements to modify the data.
+
+Periodically merge all the migrations into a single file `000-base-tables.sql`.
+
+### Database seeds
+
+The seed files in `scripts/db` are separated into reference data, species data and test data. The seed files must be kept up-to-date with any migrations that are added because they are always run after all the migrations (in docker-compose local environment).
 
 ---
 ## Legacy README
