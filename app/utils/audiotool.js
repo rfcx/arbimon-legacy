@@ -201,7 +201,7 @@ var audiotools = {
         audiotools.sox(args, {}, callback);
     },
 
-    /** split a file longer than 120 seconds to to 1 minute files
+    /** split a file longer than 1 minute into 1 minute files
      * @method splitter
      * @param {String} sourcePath path to the source audio file.
      * @param {Number} duration of the recording in secon.
@@ -217,11 +217,11 @@ var audiotools = {
 
         var files = [];
 
-        // splits only if recording is longer than 2 mins
-        if(duration < 120) return callback(null, []);
+        // splits only if recording is longer than 1 min
+        if(duration < 61) return callback(new Error('File duration is not greater than 1 minute'), []);
 
-        var oneMinPieces = Math.floor(duration/60)-1;
-        var lastPieceLength = duration - (oneMinPieces*60);
+        var oneMinPieces = Math.floor(duration / 60);
+        var lastPieceLength = duration - (oneMinPieces * 60);
 
         for(var i=0; i < oneMinPieces; i++) {
             files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, i+1, rec.ext));
@@ -233,12 +233,6 @@ var audiotools = {
         debug('splitter:', splitCommand);
 
         var split = childProcess.exec(splitCommand, function(error, stdout, stderr) {
-            // console.log('stdout: ' + stdout);
-            // console.log('stderr: ' + stderr);
-            // if (error !== null) {
-            //     console.log('exec error: ' + error);
-            // }
-            // console.log('splits', oneMinPieces+1);
             callback(error, files);
         });
     }
