@@ -11,8 +11,17 @@ var APIError = require('../../utils/apierror');
 
 router.get('/projectlist', function(req, res, next) {
     res.type('json');
+    var type = req.query.type
+    var user = req.session.user
     // super user list all projects
-    if(req.session.user.isSuper === 1) {
+    if (!user.isAnonymousGuest && type && type === 'my') {
+        model.projects.find({ owner_id: req.session.user.id }, function(err, rows) {
+            if(err) return next(err);
+
+            res.json(rows);
+        });
+    }
+    else if(req.session.user.isSuper === 1) {
         model.projects.listAll(function(err, rows) {
             if(err) return next(err);
 

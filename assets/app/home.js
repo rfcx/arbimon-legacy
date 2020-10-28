@@ -1,25 +1,26 @@
 angular.module('a2.home', [
-    'templates-arbimon2', 
-    'ui.bootstrap', 
-    'a2.utils', 
+    'templates-arbimon2',
+    'ui.bootstrap',
+    'a2.utils',
     'a2.forms',
     'a2.orders',
     'a2.login',
     'a2.srv.news',
     'humane',
-    'angularytics', 
+    'angularytics',
+    'ui.router',
     'a2.srv.local-storage',
     'a2.filter.time-from-now',
     'a2.directive.news-feed-item',
 ])
-.config(function(AngularyticsProvider) {
-        AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
+.config(function(AngularyticsProvider, $locationProvider) {
+    AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
 })
 .run(function(Angularytics) {
     Angularytics.init();
 })
 .controller('HomeCtrl', function(
-    $http, $modal, 
+    $http, $modal,
     $window,
     $localStorage,
     a2NewsService,
@@ -40,27 +41,33 @@ angular.module('a2.home', [
             // meh..
         }
     }
-        
+
     this.loadProjectList = function() {
+        var config = {
+            params: {}
+        };
+        if ($window.location.pathname === '/home') {
+            config.params.type = 'my'
+        }
         var psCache = getProjectSelectCache();
-        $http.get('/api/user/projectlist').success((function(data) {
+        $http.get('/api/user/projectlist', config).success((function(data) {
             data.forEach(function(p, $index){
                 p.lastAccessed = psCache[p.id] || 0;
             });
             this.projects = data;
         }).bind(this));
     };
-    
+
     this.loadNewsPage = function() {
         a2NewsService.loadPage(nextNewsPage).then((function(data) {
             this.newsFeed = this.newsFeed.concat(data);
             nextNewsPage++;
         }).bind(this));
     };
-        
+
     this.createProject = function() {
         var modalInstance = a2order.createProject({});
-        
+
         modalInstance.result.then((function(message) {
             if(message){
                 notify.log(message);
@@ -70,6 +77,9 @@ angular.module('a2.home', [
     };
 
     this.selectProject = function(project) {
+        if (!project.is_enabled) {
+            return;
+        }
         var psCache = getProjectSelectCache();
         psCache[project.id] = new Date().getTime();
         setProjectSelectCache(psCache);
@@ -91,7 +101,21 @@ angular.module('a2.home', [
         this.projectSort = sorting || projectSorts.default;
     };
 
-    
+    this.toggleSearchVis = function() {
+        this.showSearch = !this.showSearch;
+        if (!this.showSearch) {
+            this.search = '';
+        }
+        else {
+            setTimeout(function() { // if we do it immidiately, element is not yet shown
+                var el = document.getElementById('projectsSearch')
+                if (el) {
+                    el.focus();
+                }
+            }, 100)
+        }
+    };
+
     var projectSorts = [
         {key:'alpha-down', sort:'+name'},
         {key:'alpha-up', sort:'-name'},
@@ -107,17 +131,18 @@ angular.module('a2.home', [
         }
         return _;
     }, {});
-    
+
     this.projectSort = projectSorts['history-down'];
-    
-    
+
+
     this.currentPage = 1;
     this.isAnonymousGuest = true;
+    this.showSearch = false;
     var nextNewsPage = 0;
     this.newsFeed = [];
     this.loadProjectList();
     this.loadNewsPage();
-    
+
     $http.get('/api/user/info').success((function(data) {
         this.isAnonymousGuest = data.isAnonymousGuest;
     }).bind(this));

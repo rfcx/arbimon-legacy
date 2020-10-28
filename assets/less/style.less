@@ -1025,6 +1025,9 @@ label.no-bold {
     padding-top: 5px;
     padding-bottom: 5px;
     border-width: 0px;
+    &.active {
+      background: @gray-darker;
+    }
   }
 }
 
@@ -1390,4 +1393,88 @@ a.ui-select-choices-row-inner {
 
 img.outlined {
   border: 3px solid @gray-light;
+}
+
+.homepage {
+  & > .row {
+    & > .col-md-12 {
+      max-width: 1280px;
+      margin: 0 auto;
+      @media (min-width: 1200px) {
+        padding: 0;
+      }
+    }
+  }
+  @media (max-width: @screen-tablet) {
+    .form-control[type="search"] {
+      display: inline-block;
+      vertical-align: middle;
+      max-width: 100px;
+    }
+  }
+}
+
+.projects-list {
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 0 3px;
+  justify-content: left;
+  min-height: 600px;
+  @media (max-width: 1200px) {
+    justify-content: center;
+  }
+  .projects-list-item {
+    position: relative;
+    width: 274px;
+    margin: 0 12px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 160px;
+    padding: 24px 20px 12px;
+    background: @gray-medium-darken;
+    color: @text-color;
+    border-radius: 8px;
+    box-shadow: 0px 0px 6px 3px rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+    &.projects-list-item-add {
+      padding-top: 36px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      .title {
+        font-size: 32px;
+        margin-bottom: 4px;
+      }
+    }
+    .title {
+      font-weight: bold;
+      font-size: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .project-type {
+      position: absolute;
+      top: 4px;
+      left: 5px;
+    }
+    .last-accessed {
+      color: @text-color;
+      top: 3px;
+      right: 3px;
+    }
+    &.disabled {
+      background: @gray;
+      opacity: 0.5;
+      cursor: default;
+      &:hover {
+        background: @gray;
+      }
+    }
+  }
 }

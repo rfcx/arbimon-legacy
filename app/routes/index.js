@@ -85,7 +85,17 @@ router.get('/home', function(req, res) {
     res.type('html');
     res.render('home', {
         title: "Home",
-        user: req.session.user
+        user: req.session.user,
+        state: 'home.my'
+    });
+});
+
+router.get('/home/all', function(req, res) {
+    res.type('html');
+    res.render('home', {
+        title: "Home",
+        user: req.session.user,
+        state: 'home.all'
     });
 });
 

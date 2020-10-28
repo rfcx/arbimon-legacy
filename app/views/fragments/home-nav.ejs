@@ -19,11 +19,15 @@
         <% } %>
         </div>
         <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
-            <% if (user && user.isSuper) { %>
             <ul class="nav navbar-nav">
+                <% if (user && !user.isAnonymousGuest) { %>
+                    <li class="<%- state === 'home.my'? 'active' : '' %>"><a href="/home" >My projects</a></li>
+                    <li class="<%- state === 'home.all'? 'active' : '' %>"><a href="/home/all">All projects</a></li>
+                <% } %>
+                <% if (user && user.isSuper) { %>
                 <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>
+                <% } %>
             </ul>
-            <% } %>
             <ul class="nav navbar-nav navbar-right">
                 <% include user-dropdown %>
             </ul>
