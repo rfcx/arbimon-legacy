@@ -233,7 +233,7 @@ angular.module('a2.srv.project', [
                     .success(callback);
             },
             getProjectsList: function(ownershipType, callback) {
-                let config = {
+                var config = {
                     params: {}
                 };
                 if (ownershipType) {
