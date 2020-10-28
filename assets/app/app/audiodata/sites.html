@@ -151,6 +151,18 @@
                             required>
                     </div>
                 </div>
+                <div ng-if="editing" class="form-group">
+                    <div class="input-group" style="width: 100%;">
+                        <label>Project:</label>
+                        <ui-select ng-model="temp.project" theme="bootstrap"
+                            on-select="onSelect($select.selected)">
+                            <ui-select-match class="edit-site-dropdown" placeholder="Project">{{$select.selected.name}}</ui-select-match>
+                            <ui-select-choices repeat="project in projects | filter:$select.search">
+                                {{project.name}}
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                </div>
                 <button class="btn btn-primary">
                     <i class="fa fa-floppy-o"></i> Save
                 </button>
