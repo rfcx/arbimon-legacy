@@ -47,7 +47,8 @@
                             <div>New Project</div>
                         </li>
                         <li class="projects-list-item" ng-class="{'disabled': !project.is_enabled }"
-                            ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort | filter: controller.search ) | paginate: controller.currentPage : 11">
+                            ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort | filter: controller.search ) | paginate: controller.currentPage : (controller.isAnonymousGuest? 12 : 11)"
+                            style="background: url({{project.mapUrl}}) no-repeat top center; background-size: cover;">
                             <div class="text-left" ng-click="controller.selectProject(project)">
                                 <div class="last-accessed" title="{{ project.lastAccessed | moment:'lll' }}">
                                     {{project.lastAccessed | timeFromNow}}

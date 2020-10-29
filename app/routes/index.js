@@ -12,6 +12,7 @@ var login = require('./login');
 var acmeChallenge = require('./acme-challenge');
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
+var config = require('../config');
 const auth0Service = require('../model/auth0')
 
 
@@ -86,7 +87,10 @@ router.get('/home', function(req, res) {
     res.render('home', {
         title: "Home",
         user: req.session.user,
-        state: 'home.my'
+        state: 'home.my',
+        inject_data: {
+            mapbox_access_token: config('mapbox-api').accessToken
+        },
     });
 });
 
@@ -95,7 +99,10 @@ router.get('/home/all', function(req, res) {
     res.render('home', {
         title: "Home",
         user: req.session.user,
-        state: 'home.all'
+        state: 'home.all',
+        inject_data: {
+            mapbox_access_token: config('mapbox-api').accessToken
+        },
     });
 });
 
