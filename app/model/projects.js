@@ -55,6 +55,11 @@ var Projects = {
             whereExp.push("p.name = ?");
             data.push(query.name);
         }
+        if(query.hasOwnProperty("owner_id")) {
+            joinExtra += 'JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n'
+            whereExp.push("upr.user_id = ?");
+            data.push(query.owner_id);
+        }
 
         if(!whereExp.length) {
             return q.reject(new Error('no query params'));
@@ -70,7 +75,7 @@ var Projects = {
                           "   p.pattern_matching_enabled, \n"+
                           "   p.cnn_enabled, \n"+
                           "   pp.duration_period AS plan_period \n";
-            joinExtra   = "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
+            joinExtra   += "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
         } else {
             selectExtra = "p.project_id as id \n";
         }
