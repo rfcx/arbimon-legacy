@@ -22,6 +22,7 @@ exports.classifications = require('./classifications');
 exports.patternMatchings = require('./pattern_matchings');
 exports.CNN = require('./cnns');
 exports.AudioEventDetectionsClustering = require('./audio-event-detections-clustering');
+exports.ClusteringJobs = require('./clustering-jobs');
 exports.oauth           = require('./oauth');
 exports.AudioEventDetections = require('./audio-event-detections');
 exports.ActivationCodes = require('./activation-codes');
