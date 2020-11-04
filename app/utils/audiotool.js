@@ -227,8 +227,10 @@ var audiotools = {
             files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, i+1, rec.ext));
             splitCommand += ' trim 0 60 : newfile :';
         }
-        files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, oneMinPieces+1, rec.ext));
-        splitCommand += ' trim 0 '+ lastPieceLength;
+        if (lastPieceLength > 0) {
+            files.push(sprintf("%s/%s.p%d%s", rec.dir, rec.filename, oneMinPieces+1, rec.ext));
+            splitCommand += ' trim 0 '+ lastPieceLength;
+        }
 
         debug('splitter:', splitCommand);
 
