@@ -26,7 +26,7 @@ var ClusteringJobs = {
             "JP.`name` as `name_aed`",
             "JP.`job_id` as `job_id`",
         );
-        tables.push("JOIN job_params_audio_event_detection_clustering JP ON C.job_id = JP.job_id");
+        tables.push("JOIN job_params_audio_event_detection_clustering JP ON C.audio_event_detection_job_id = JP.job_id");
         select.push("J.`date_created` as `timestamp`");
         tables.push("JOIN jobs J ON C.job_id = J.job_id");
 
