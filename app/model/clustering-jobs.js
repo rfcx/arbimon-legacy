@@ -38,9 +38,7 @@ var ClusteringJobs = {
             rows.forEach(row => {
                 try {
                     row.parameters = JSON.parse(row.parameters);
-                } catch(e) {
-                    row.parameters = row.parameters;
-                }
+                } catch(e) {}
             })
             return rows;
         });
