@@ -7,8 +7,6 @@ var ClusteringJobs = {
     find: function (options) {
         var constraints=['1=1'];
         var postprocess=[];
-        var groupby = [];
-        var data=[];
         var select = [];
         var tables = [
             "job_params_audio_event_clustering C"
@@ -19,6 +17,7 @@ var ClusteringJobs = {
         select.push(
             "C.`name` as `name`",
             "C.`audio_event_detection_job_id` as `aed_job_id`",
+            "C.`parameters` as `parameters`",
             "C.user_id",
             "CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) AS user"
         );
@@ -26,7 +25,6 @@ var ClusteringJobs = {
         select.push(
             "JP.`name` as `name_aed`",
             "JP.`job_id` as `job_id`",
-            "JP.`parameters` as `parameters`"
         );
         tables.push("JOIN job_params_audio_event_detection_clustering JP ON C.job_id = JP.job_id");
         select.push("J.`date_created` as `timestamp`");
@@ -41,23 +39,18 @@ var ClusteringJobs = {
                 try {
                     row.parameters = JSON.parse(row.parameters);
                 } catch(e) {
-                    row.parameters = {error: row.parameters};
+                    row.parameters = row.parameters;
                 }
             })
-
             return rows;
         });
-
 
         return postprocess.reduce((_, fn) => {
             return _.then(fn);
         }, dbpool.query(
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
-            "WHERE " + constraints.join(" \n  AND ") + (
-                groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : ""
-            ),
-            data
+            "WHERE " + constraints.join(" AND ")
         ))
     },
 };

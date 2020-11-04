@@ -9,7 +9,7 @@ router.get('/', function(req, res, next) {
     res.type('json');
 
     return model.ClusteringJobs.find({
-        project: req.project.project_id
+        project_id: req.project.project_id
     })
     .then(function(data){
         res.json(data);
