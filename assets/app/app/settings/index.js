@@ -110,10 +110,6 @@ angular.module('a2.settings',[
             return;
         }
 
-        if ($scope.users.find(user => {return user.username === $scope.userToAdd.username})) {
-            return notify.error('User is alreary attached to the project');
-        }
-
         Project.addUser({
             project_id: $scope.project.project_id,
             user_id: $scope.userToAdd.id
