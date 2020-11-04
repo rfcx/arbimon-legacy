@@ -180,8 +180,7 @@ angular.module('a2.srv.project', [
                         callback(err);
                     });
             },
-            // TODO should rename delUser to removeUser
-            delUser: function(data, callback){
+            removeUser: function(data, callback){
                 $http.post('/api/project/'+url+'/user/del', data)
                 .success(function(response){
                     callback(null, response);
