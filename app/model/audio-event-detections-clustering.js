@@ -78,8 +78,9 @@ var AudioEventDetectionsClustering = {
         name       : joi.string(),
         playlist   : joi.number().integer(),
         params     : joi.object().keys({
-            frequencyMin: joi.number(),
-            frequencyMax: joi.number()
+            amplitudeThreshold: joi.number(),
+            sizeThreshold: joi.number(),
+            filterSize: joi.number()
         }),
     }),
 
@@ -89,8 +90,9 @@ var AudioEventDetectionsClustering = {
             user_id: data.user,
             playlist_id: data.playlist,
             name: data.name,
-            frequency_min: data.params.frequencyMin,
-            frequency_max: data.params.frequencyMax,
+            amplitude_threshold: data.params.amplitudeThreshold,
+            size_threshold: data.params.sizeThreshold,
+            filter_size: data.params.filterSize
         })
         return q.ninvoke(joi, 'validate', data, AudioEventDetectionsClustering.JOB_SCHEMA).then(() => lambda.invoke({
             FunctionName: config('lambdas').audio_event_detections,
