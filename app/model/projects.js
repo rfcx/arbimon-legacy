@@ -15,7 +15,7 @@ var config = require('../config');
 var dbpool = require('../utils/dbpool');
 var sqlutil = require('../utils/sqlutil');
 var queryHandler = dbpool.queryHandler;
-
+var APIError = require('../utils/apierror');
 var species = require('./species');
 var songtypes = require('./songtypes');
 var s3;
@@ -610,11 +610,23 @@ var Projects = {
             var project_id = dbpool.escape(upr.project_id);
             var role_id = dbpool.escape(upr.role_id);
 
-            var q = 'INSERT INTO user_project_role \n'+
-                    'SET user_id = %s, role_id = %s, project_id = %s';
+            var qFind = 'SELECT * FROM user_project_role WHERE user_id = %s';
 
-            q = util.format(q, user_id, role_id, project_id);
-            queryHandler(q, callback);
+            qFind = util.format(qFind, user_id);
+            queryHandler(qFind, (err, d) => {
+                if (err) {
+                    return callback(err)
+                }
+                if (d) {
+                    if (d && d.length) {
+                        return callback(new APIError("User already attached to the project", 404));
+                    }
+                    var q = 'INSERT INTO user_project_role \n'+
+                    'SET user_id = %s, role_id = %s, project_id = %s';
+                    q = util.format(q, user_id, role_id, project_id);
+                    queryHandler(q, callback);
+                }
+            });
         });
 
     },

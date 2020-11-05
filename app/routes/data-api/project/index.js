@@ -289,7 +289,12 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
         role_id: 2 // default to normal user
     },
     function(err, result){
-        if(err) return next(err);
+        if (err) {
+            if (err.status === 404) {
+                return res.json({ error: err.message});
+            }
+            return next(err);
+        }
 
         debug("add user:", result);
         res.json({ success: true });
