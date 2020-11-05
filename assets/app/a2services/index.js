@@ -9,5 +9,7 @@ angular.module('a2.services', [
     'a2.srv.users',
     'a2.srv.training-sets',
     'a2.srv.templates',
+    'a2.srv.audio-event-detections-clustering',
+    'a2.srv.clustering-jobs',
 ])
 ;

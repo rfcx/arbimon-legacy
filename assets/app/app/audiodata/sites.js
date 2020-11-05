@@ -1,18 +1,19 @@
 angular.module('a2.audiodata.sites', [
-    'a2.services', 
-    'a2.directives', 
+    'a2.services',
+    'a2.directives',
     'ui.bootstrap',
     'humane',
     'a2.qr-js',
-    'a2.googlemaps'
+    'a2.googlemaps',
+    'a2.srv.project'
 ])
 .controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader) {
     $scope.loading = true;
-    
+
     Project.getInfo(function(info){
         $scope.project = info;
     });
-    
+
     var p={
         site : $state.params.site,
         show : $state.params.show
@@ -21,11 +22,11 @@ angular.module('a2.audiodata.sites', [
         p.show_path = p.show.split(':');
         p.show = p.show_path.shift();
     }
-    
+
     Project.getSites(function(sites) {
         $scope.sites = sites;
         $scope.loading = false;
-        
+
         if(p.site){
             var site = sites.filter(function(s){return s.id == p.site;}).shift();
             if(site){
@@ -38,9 +39,9 @@ angular.module('a2.audiodata.sites', [
         }
 // )
     });
-    
+
     $scope.editing = false;
-    
+
     a2GoogleMapsLoader.then(function(google){
         $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
             center: { lat: 0, lng: 0},
@@ -48,7 +49,7 @@ angular.module('a2.audiodata.sites', [
             zoom: 8, minZoom: 2
         });
     });
-    
+
     $scope.close = function() {
         $scope.creating = false;
         $scope.editing = false;
@@ -70,56 +71,56 @@ angular.module('a2.audiodata.sites', [
             $state.transitionTo($state.current.name, {site:$state.params.site, show:new_show}, {notify:false});
         }
     });
-    
+
     $scope.$on('$destroy', function(){
         $scope.status_controller.off('logs-refreshed', onLogsRefreshed);
     });
-    
+
     $scope.save = function() {
         var action = $scope.editing ? 'update' : 'create';
-        
+
         if($scope.temp.lat > 85 || $scope.temp.lat < -85){
             notify.log('Please enter latitude number between -85 to 85');
             return
         }
-        
+
         if($scope.temp.lon > 180 || $scope.temp.lon < -180) {
             notify.log('Please enter longitude number between -180 to 180');
             return
         }
-        
+
         if($scope.siteForm.$invalid) return;
-        
+
         a2Sites[action]($scope.temp, function(data) {
             if(data.error)
                 return notify.error(data.error);
-                
+
             if(action === 'create') {
                 $scope.creating = false;
             }
             else {
                 $scope.editing = false;
             }
-            
+
             Project.getSites(function(sites) {
                 $scope.sites = sites;
             });
-            
+
             var message = (action == "update") ? "site updated" : "site created";
-            
+
             notify.log(message);
         });
     };
-    
+
     $scope.del = function() {
         if(!$scope.selected)
             return;
-        
+
         if(!a2UserPermit.can('manage project sites')) {
             notify.log("You do not have permission to remove sites");
             return;
         }
-        
+
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
@@ -133,12 +134,12 @@ angular.module('a2.audiodata.sites', [
             },
             controllerAs: 'popup'
         });
-        
+
         modalInstance.result.then(function() {
             a2Sites.delete($scope.selected, function(data) {
                 if(data.error)
                     return notify.error(data.error);
-                
+
                 Project.getSites(function(sites) {
                     $scope.sites = sites;
                 });
@@ -146,10 +147,10 @@ angular.module('a2.audiodata.sites', [
             });
         });
     };
-    
+
     $scope.show = {map:false, status:false};
     $scope.show[p.show || 'map'] = true;
-    
+
     $scope.set_show = function(new_show, show_path){
         var d=$q.defer(), promise=d.promise;
         d.resolve();
@@ -164,14 +165,14 @@ angular.module('a2.audiodata.sites', [
                 new_show='map';
             });
         }
-        
+
         return promise.then(function(){
             for(var i in $scope.show){
                 $scope.show[i] = false;
             }
-            
+
             $scope.show[new_show] = true;
-            
+
             return $state.transitionTo($state.current.name, {site:$state.params.site, show:show_state_param}, {notify:false});
         });
     };
@@ -188,7 +189,7 @@ angular.module('a2.audiodata.sites', [
     //             }
     //         }
     //     });
-    //     
+    //
     //     modalInstance.result.then(function(data) {
     //         Project.getSites(function(sites) {
     //             $scope.sites = sites;
@@ -202,17 +203,17 @@ angular.module('a2.audiodata.sites', [
     //         }
     //     });
     // };
-    
+
     $scope.create = function() {
-        
+
         if(!a2UserPermit.can('manage project sites')) {
             notify.log("You do not have permission to add sites");
             return;
         }
-        
+
         $scope.temp = {};
         $scope.set_show('map');
-        
+
         a2GoogleMapsLoader.then(function(google){
             if(!$scope.marker) {
                     $scope.marker = new google.maps.Marker({
@@ -224,10 +225,10 @@ angular.module('a2.audiodata.sites', [
             else {
                 $scope.marker.setPosition($scope.map.getCenter());
             }
-                    
+
             $scope.marker.setDraggable(true);
             $scope.creating = true;
-            
+
             google.maps.event.addListener($scope.marker, 'dragend', function(position) {
                 $scope.$apply(function () {
                     $scope.temp.lat = position.latLng.lat();
@@ -235,24 +236,35 @@ angular.module('a2.audiodata.sites', [
                 });
             });
         });
-                
+
         $scope.creating = true;
     };
 
     $scope.edit = function() {
         if(!$scope.selected) return;
-        
+
         if(!a2UserPermit.can('manage project sites')) {
             notify.log("You do not have permission to edit sites");
             return;
         }
-        
+
         $scope.set_show('map');
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
-        
+        Project.getProjectsList(null, function(data) {
+            $scope.projects = data.map(project => {
+                return {
+                    project_id: project.id,
+                    name: project.name,
+                    url: project.url
+                }
+            })
+        });
+        Project.getInfo(function(data) {
+            $scope.temp.project = data;
+        });
         $scope.marker.setDraggable(true);
-        
+
         google.maps.event.addListener($scope.marker, 'dragend', function(position) {
             $scope.$apply(function () {
                 $scope.temp.lat = position.latLng.lat();
@@ -262,34 +274,38 @@ angular.module('a2.audiodata.sites', [
         $scope.editing = true;
     };
 
+    $scope.onSelect = function($item) {
+        $scope.temp.project = $item;
+    };
+
     $scope.site_token = function() {
-        
+
         if(!$scope.selected || $scope.selected.imported)
             return;
-        
+
         if(!a2UserPermit.can('manage project sites')) {
             notify.log("You do not have permission to edit sites");
             return;
         }
-        
+
         var modalInstance = $modal.open({
             templateUrl: '/app/audiodata/site-tokens-popup.html',
             controller: 'SitesTokenGenaratorCtrl',
             scope: $scope
         });
     };
-    
+
     $scope.sel = function(site) {
         return $state.transitionTo($state.current.name, {site:site.id, show:$state.params.show}, {notify:false}).then(function(){
             $scope.close();
-            
-            $scope.selected = site;
-            
 
-            
+            $scope.selected = site;
+
+
+
             a2GoogleMapsLoader.then(function(google){
                 var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
-                
+
                 if(!$scope.marker) {
                     $scope.marker = new google.maps.Marker({
                         position: position,
@@ -302,59 +318,59 @@ angular.module('a2.audiodata.sites', [
                     $scope.marker.setPosition(position);
                     $scope.marker.setTitle($scope.selected.name);
                 }
-                
-                $scope.map.panTo(position); 
-            });      
-        });             
+
+                $scope.map.panTo(position);
+            });
+        });
     };
-    
+
 })
 // TODO remove properly published
 // .controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {
 //     var geocoder = new $window.google.maps.Geocoder();
-//     
+//
 //     a2Sites.listPublished(function(sites) {
-//         
+//
 //         sites.forEach(function(site) {
-//             geocoder.geocode({ 
-//                     location: { 
-//                         lat: site.lat, 
-//                         lng: site.lon 
-//                     } 
+//             geocoder.geocode({
+//                     location: {
+//                         lat: site.lat,
+//                         lng: site.lon
+//                     }
 //             }, function(result, status) {
-//                 
+//
 //                 if(result.length){
 //                     site.location = result[1].formatted_address;
 //                 }
 //                 else {
 //                     site.location = 'unknown';
 //                 }
-//                 
+//
 //                 $scope.$apply();
 //             });
-//             
+//
 //         });
-//         
+//
 //         $scope.sites = sites;
 //     });
-//     
-//     
+//
+//
 //     $scope.addSite = function(site) {
-//         
+//
 //         if(site.project_id === project.project_id) {
 //             $modalInstance.dismiss("site is owned by this project");
 //             return;
 //         }
-//         
+//
 //         var result = project.sites.filter(function(value) {
 //             return value.id === site.id;
 //         });
-//         
+//
 //         if(result.length > 0) {
 //             $modalInstance.dismiss("site is already on this project");
 //             return;
 //         }
-//         
+//
 //         a2Sites.import(site, function(data) {
 //             $modalInstance.close(data);
 //         });
@@ -363,15 +379,15 @@ angular.module('a2.audiodata.sites', [
 .controller('SitesTokenGenaratorCtrl', function($scope, a2Sites, $modal, notify){
         $scope.site = $scope.selected;
         $scope.loading = {};
-        
+
         var confirmRevoke = function(title, btnOk) {
             var modalInstance = $modal.open({
                 templateUrl: '/common/templates/pop-up.html',
                 controller : function(){
                     this.title = title;
                     this.messages = [
-                        "This action will revoke the current token for the site <b>" + 
-                        $scope.site.name + "</b>. " + 
+                        "This action will revoke the current token for the site <b>" +
+                        $scope.site.name + "</b>. " +
                         "Are you sure you want to do this?"
                     ];
                     this.btnOk = btnOk;
@@ -381,7 +397,7 @@ angular.module('a2.audiodata.sites', [
             });
             return modalInstance;
         };
-        
+
         var genToken = function() {
             a2Sites.generateToken($scope.site)
                 .success(function(data) {
@@ -405,17 +421,17 @@ angular.module('a2.audiodata.sites', [
                     notify.serverError();
                 });
         };
-        
-        
+
+
         $scope.generateToken = function(){
             $scope.loading.generate = true;
-            
+
             if($scope.site.token_created_on) {
                 var modalInstance = confirmRevoke(
                     "<h4>Confirm revoke and generate token</h4>",
                     "Yes, revoke and generate a new token"
                 );
-                
+
                 modalInstance.result.then(function ok() {
                     genToken();
                 }, function cancel() {
@@ -425,20 +441,20 @@ angular.module('a2.audiodata.sites', [
             else {
                 genToken();
             }
-            
-            
+
+
         };
-        
+
         $scope.revokeToken = function(){
-            
+
             var modalInstance = confirmRevoke(
-                "<h4>Confirm revoke token</h4>", 
+                "<h4>Confirm revoke token</h4>",
                 "Yes, revoke token"
             );
-            
+
             modalInstance.result.then(function() {
                 $scope.loading.revoke = true;
-                
+
                 a2Sites.revokeToken($scope.site)
                     .success(function(data) {
                         $scope.loading.revoke = false;
@@ -485,17 +501,17 @@ angular.module('a2.audiodata.sites', [
             if(value.apply){
                 value.apply(this);
             }
-            
+
             return dontRefreshLogs ? $q.resolve() : this.refresh_logs();
-                    
+
         };
     }
-    
+
     var events = new a2EventEmitter();
     this.on = events.on.bind(events);
     this.off = events.off.bind(events);
-    
-    
+
+
     this.itemGroup = function (item){
       return item.group;
     };
@@ -541,11 +557,11 @@ angular.module('a2.audiodata.sites', [
         time_range: get_by_tag(this.data.time_ranges, '1-week'),
         period: get_by_tag(this.data.periods, '1-hour'),
     };
-    
+
     this.set_series      = make_setter({data:'series'     , sel:'series'    , def:'power' });
     this.set_time_range  = make_setter({data:'time_ranges', sel:'time_range', def:'1-week'});
     this.set_period      = make_setter({data:'periods'    , sel:'period'    , def:'7-days'});
-    
+
     this.activate = function(selected_site, plot_uri){
         this.selected.site = selected_site;
         if(plot_uri){
@@ -571,17 +587,17 @@ angular.module('a2.audiodata.sites', [
             data.axis = series.axis;
             data.empty = {
                 label: {text: "No data to show."}
-            };           
+            };
             return data;
         });
     };
-    
+
     this.make_chart_struct = function(data){
         var axes = {
             x : {
                 tick: {
-                    format: function (x) { 
-                        return moment(new Date(x)).utc().format('MM-DD-YYYY HH:mm'); 
+                    format: function (x) {
+                        return moment(new Date(x)).utc().format('MM-DD-YYYY HH:mm');
                     }
                 }
             }
@@ -595,7 +611,7 @@ angular.module('a2.audiodata.sites', [
         };
     };
 
-    
+
     this.refresh_logs = $debounce(function(){
         var d = $q.defer(), promise=d.promise;
         d.resolve();
@@ -603,7 +619,7 @@ angular.module('a2.audiodata.sites', [
         var series = this.selected.series;
         var time_range = this.selected.time_range;
         var period = this.selected.period;
-        
+
         if(site && series && time_range && period) {
             var range = time_range.range();
             var granularity = period.granularity;
@@ -613,7 +629,7 @@ angular.module('a2.audiodata.sites', [
                         series.data.range[0] - granularity >= range[0] && range[1] <= series.data.range[1] + granularity
                     )){
                         series.data = null;
-                    } 
+                    }
                 }
                 if(!series.data){
                     return this.load_data(site, series, range, period).then(function(data){
@@ -636,9 +652,9 @@ angular.module('a2.audiodata.sites', [
                 ]);
             });
         }
-        
+
         return promise;
-        
+
     }, 10);
 })
 ;
