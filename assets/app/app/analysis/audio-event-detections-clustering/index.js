@@ -6,15 +6,17 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
   'humane',
 ])
 .config(function($stateProvider) {
-    $stateProvider.state('analysis.audio-event-detections-clustering', {
-        url: '/audio-event-detections-clustering/',
-        controller: 'AudioEventDetectionsClusteringModelCtrl',
-        templateUrl: '/app/analysis/audio-event-detections-clustering/list.html'
-    })
+    $stateProvider
+        .state('analysis.audio-event-detections-clustering', {
+            url: '/audio-event-detections-clustering/',
+            controller: 'AudioEventDetectionsClusteringModelCtrl',
+            templateUrl: '/app/analysis/audio-event-detections-clustering/list.html'
+        })
 })
 .controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering) {
     $scope.loadAudioEventDetections = function() {
         $scope.loading = true;
+        $scope.projectUrl = Project.getUrl();
 
         return a2AudioEventDetectionsClustering.list().then(function(data) {
             $scope.audioEventDetectionsOriginal = data;
@@ -29,10 +31,6 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
     };
 
     $scope.loadAudioEventDetections();
-
-    $scope.selectItem = function(audioEventDetectionId) {
-
-    }
 
     $scope.createNewClusteringModel = function () {
       var modalInstance = $modal.open({

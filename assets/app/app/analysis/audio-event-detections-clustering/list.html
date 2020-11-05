@@ -33,17 +33,16 @@
                     {{ row.user }}
                 </field>
                 <field class="is-v-middle">
-                    <button class="btn btn-default btn-xs"
-                        ng-click="selectItem(row.id) | trackEvent:'Analysis-Audio-Event-Detections-Clustering-Data-List':' show audio event detection details'"
-                    >
-                            Show Details
-                    </button>
+                    <a class="btn btn-default btn-xs"
+                        ng-href="/project/{{projectUrl}}/visualizer/rec/{{row.rec_id}}"
+                        title="View in Visualizer">
+                        <i class="fa fa-cubes"></i>
+                    </a>
                 </field>
             </a2-table>
             <div class="jumbotron seconds-div-center" ng-show="(!audioEventDetectionsOriginal || !audioEventDetectionsOriginal.length > 0) && !loading">
                 <h3>{{ infopanedata }}</h3>
             </div>
         </div>
-    </div>
     </div>
 </div>
