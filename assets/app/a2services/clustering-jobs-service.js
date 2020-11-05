@@ -10,6 +10,16 @@ angular.module('a2.srv.clustering-jobs', [
                 return response.data;
             }).catch(notify.serverError);
         },
+        audioEventDetections: function(callback) {
+            return $http.get('/api/project/'+Project.getUrl()+'/clustering-jobs/audio-event-detections').then(function(response){
+                return response.data;
+            }).catch(notify.serverError);
+        },
+        create: function(data) {
+            return $http.post('/api/project/'+Project.getUrl()+'/clustering-jobs/new', data).then(function(response){
+                return response.data;
+            });
+        },
     };
 })
 ;
