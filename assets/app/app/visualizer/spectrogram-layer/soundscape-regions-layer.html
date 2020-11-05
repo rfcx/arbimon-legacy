@@ -8,24 +8,24 @@
     <div class="selection-rect"
         ng-show="layer.soundscape.selection.bbox && !layer.soundscape.selection.bbox.id"
         ng-style="{
-            left   : layout.sec2x(layer.soundscape.selection.bbox.x1, 1, 0) + 'px', 
-            top    : layout.hz2y(layer.soundscape.selection.bbox.y2 , 1) + 'px', 
-            width  : layout.dsec2width(layer.soundscape.selection.bbox.x2, layer.soundscape.selection.bbox.x1, 1, 1) + 'px', 
+            left   : layout.sec2x(layer.soundscape.selection.bbox.x1, 1, 0) + 'px',
+            top    : layout.hz2y(layer.soundscape.selection.bbox.y2 , 1) + 'px',
+            width  : layout.dsec2width(layer.soundscape.selection.bbox.x2, layer.soundscape.selection.bbox.x1, 1, 1) + 'px',
             height : layout.dhz2height(layer.soundscape.selection.bbox.y2, layer.soundscape.selection.bbox.y1, 1) + 'px'
         }"
     >
     </div>
     <div>
-        <div class="rect-holder" 
+        <div class="rect-holder"
         ng-click="$event.stopPropagation(); layer.soundscape.selection.select(region) | trackEvent:'Visualizer-Soundscapes-Layer':'setting selection region'"
         ng-class="{selected : region == layer.soundscape.selection.bbox}"
         ng-hide="region.__hide"
         ng-repeat="region in layer.soundscape.regions" ng-style="{
-            left   : layout.sec2x(region.x1, 1) + 'px', 
+            left   : layout.sec2x(region.x1, 1) + 'px',
             top    : layout.hz2y (region.y2, 1, 1) + 'px'
         }" >
             <div class="rect" ng-style="{
-                width  : layout.dsec2width(region.x2, region.x1, 1, 1) + 'px', 
+                width  : layout.dsec2width(region.x2, region.x1, 1, 1) + 'px',
                 height : layout.dhz2height(region.y2, region.y1, 1, 1) + 'px'
             }" ></div>
             <div class="text" style="min-width:200px;"
@@ -49,7 +49,7 @@
             ng-style="{
                 display : (layer.soundscape.selection.bbox.id ? !layer.soundscape.selection.bbox.__hide : layer.soundscape.selection.valid) ? 'block' : 'none',
                 left : (
-                    layout.viewport.left + 
+                    layout.viewport.left +
                     (
                             layout.sec2x(layer.soundscape.selection.bbox.x1, 1, 0)+
                             layout.sec2x(layer.soundscape.selection.bbox.x2, 1, 1)
@@ -67,8 +67,8 @@
         >
             <div class="arrow"></div>
             <div class="popover-content" ng-hide="layer.soundscape.selection.bbox.id">
-                <input class="form-control" ng-model="layer.soundscape.selection.bbox.name" 
-                    placeholder="Selected Region" 
+                <input class="form-control" ng-model="layer.soundscape.selection.bbox.name"
+                    placeholder="Selected Region"
                 /><br/>
                 <br />
                 {{
@@ -88,7 +88,7 @@
                 <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.submit() | trackEvent:'Visualizer-Soundscapes-Layer':'Add selection'"><i class="fa fa-plus text-success"></i> Add</button>
                 <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset() | trackEvent:'Visualizer-Soundscapes-Layer':'Cancel selection'"><i class="fa fa-ban text-danger"></i> Cancel</button>
             </div>
-            
+
             <div class="popover-content" ng-show="layer.soundscape.selection.bbox.id">
                 {{layer.soundscape.selection.bbox.name}}<br />
                 <br />
@@ -113,8 +113,8 @@
                     <button class="btn btn-sm btn-default" ng-click="$event.stopPropagation(); layer.soundscape.selection.reset()| trackEvent:'Visualizer-Soundscapes-Layer':'cancel view samples'"><i class="fa fa-ban text-danger"></i> Cancel</button>
                 </div>
                 <div style="position:absolute;top:0;right:0">
-                    <button class="btn btn-sm"
-                        ng-click="layer.soundscape.selection.bbox.__hide = !layer.soundscape.selection.bbox.__hide | trackEvent:'Visualizer-Soundscapes-Region':'toggle region visibility'" 
+                    <button class="btn btn-default btn-sm"
+                        ng-click="layer.soundscape.selection.bbox.__hide = !layer.soundscape.selection.bbox.__hide | trackEvent:'Visualizer-Soundscapes-Region':'toggle region visibility'"
                     ><i class="fa" ng-class="layer.soundscape.selection.bbox.__hide ? 'fa-eye-slash' : 'fa-eye'" ></i></button>
                 </div>
             </div>
