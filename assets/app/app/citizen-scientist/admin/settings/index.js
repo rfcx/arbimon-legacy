@@ -23,6 +23,7 @@ angular.module('a2.citizen-scientist.admin.settings', [
     };
 
     this.save = function(){
+        this.saving = true;
         var settings = this.patternmatchings.filter(function (pm){
             return pm.citizen_scientist || pm.cs_expert;
         }).map(function (pm){
@@ -34,9 +35,15 @@ angular.module('a2.citizen-scientist.admin.settings', [
             };
         });
 
-        return a2CitizenScientistAdminService.setSettings(settings).then((function(data){
-            notify.log("Settings Saved.");
-        }).bind(this));
+        return a2CitizenScientistAdminService.setSettings(settings)
+            .then((function(data){
+                this.saving = false;
+                notify.log("Settings Saved.");
+            }).bind(this))
+            .catch((function () {
+                this.saving = false;
+                notify.log("An error occured.");
+            }).bind(this));
     };
 
     this.loadPage();
