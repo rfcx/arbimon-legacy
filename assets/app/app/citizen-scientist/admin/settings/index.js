@@ -13,7 +13,7 @@ angular.module('a2.citizen-scientist.admin.settings', [
         templateUrl: '/app/citizen-scientist/admin/settings/index.html'
     });
 })
-.controller('A2CitizenScientistAdminSettingsCtrl', function($scope, a2CitizenScientistAdminService) {
+.controller('A2CitizenScientistAdminSettingsCtrl', function($scope, a2CitizenScientistAdminService, notify) {
     this.loadPage = function(){
         this.loading = true;
         a2CitizenScientistAdminService.getSettings().then((function(data){
