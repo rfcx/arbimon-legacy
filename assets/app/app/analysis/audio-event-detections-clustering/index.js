@@ -13,7 +13,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             templateUrl: '/app/analysis/audio-event-detections-clustering/list.html'
         })
 })
-.controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering) {
+.controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering, Project) {
     $scope.loadAudioEventDetections = function() {
         $scope.loading = true;
         $scope.projectUrl = Project.getUrl();

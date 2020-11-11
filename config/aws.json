@@ -1,6 +1,7 @@
-{ 
-    "accessKeyId": "", 
-    "secretAccessKey": "", 
+{
+    "accessKeyId": "",
+    "secretAccessKey": "",
     "region": "",
-    "bucketName" : ""
+    "bucketName" : "",
+    "env": "prod"
 }
