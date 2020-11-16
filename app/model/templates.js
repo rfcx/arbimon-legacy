@@ -70,18 +70,36 @@ var Templates = {
             constraints.push('T.`name` = ' + dbpool.escape(options.name));
         }
 
-        if(options.showSpecies){
+        if (options.showSpecies){
             tables.push('JOIN species Sp ON T.species_id = Sp.species_id');
             tables.push('JOIN songtypes St ON T.songtype_id = St.songtype_id');
             select.push('Sp.scientific_name as species_name', 'St.songtype as songtype_name');
         }
 
-        if(options.showRecordingUri){
+        if (options.showRecordingUri){
             tables.push('JOIN recordings R ON T.recording_id = R.recording_id');
-            select.push('R.uri as recUri, R.site_id as recSiteId');
+            select.push('R.uri as recUri, R.site_id as recSiteId, R.sample_rate');
         }
 
-        if(constraints.length === 0){
+        if (options.showOwner || options.allAccessibleProjects) {
+            if (!options.user_id) return q.reject(new Error("User id is required.")).nodeify(callback);
+            tables.push('JOIN projects P ON T.project_id = P.project_id');
+            tables.push('LEFT JOIN user_project_role UPR ON T.project_id = UPR.project_id AND UPR.role_id = 4');
+            tables.push('LEFT JOIN users U ON UPR.user_id = U.user_id');
+        }
+
+        if (options.showOwner) {
+            select.push(
+                "CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) AS author",
+                "P.`name` as `project_name`",
+            );
+        }
+
+        if (options.allAccessibleProjects) {
+            constraints.push('P.is_private = 0 OR (UPR.user_id = ' + dbpool.escape(options.user_id) + ' AND P.is_private = 1)');
+        }
+
+        if (constraints.length === 0){
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }
 

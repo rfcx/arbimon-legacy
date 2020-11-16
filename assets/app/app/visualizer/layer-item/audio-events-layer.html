@@ -4,7 +4,7 @@
       Audio Events
   </h5>
   <div ng-show="layer.is_open">
-      <div ng-if="!layer.audio_events.audioEvents">
+      <div ng-if="layer.audio_events.audioEvents && !layer.audio_events.audioEvents.length">
           There are no audio events in this recording.
       </div>
       <div ng-if="layer.audio_events.audioEvents && layer.audio_events.audioEvents.length">
