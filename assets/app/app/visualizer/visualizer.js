@@ -30,6 +30,7 @@ angular.module('a2.visualizer', [
     'a2.visualizer.layers.soundscape-composition-tool',
     'a2.visualizer.layers.training-sets',
     'a2.visualizer.layers.templates',
+    'a2.visualizer.layers.audio-events-layer',
     'visualizer-spectrogram',
     'visualizer-services',
     'a2.visualizer.audio-player',
@@ -253,7 +254,8 @@ angular.module('a2.visualizer', [
         'training-data',
         'templates',
         'soundscape-composition-tool',
-        'zoom-input-layer'
+        'zoom-input-layer',
+        'audio-events-layer'
     );
 
     $scope.visobject = null;

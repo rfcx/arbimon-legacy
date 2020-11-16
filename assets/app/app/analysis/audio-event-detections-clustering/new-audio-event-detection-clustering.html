@@ -5,13 +5,13 @@
     <form role="form">
         <div class="form-group">
             <label for="modelName">Name</label>
-            <input id-"modelName" class="form-control" ng-model="controller.data.name" type="text"/>
+            <input id="modelName" class="form-control" ng-model="controller.data.name" type="text"/>
         </div>
         <div class="form-group">
             <label for="playlist">Playlist</label>
             <span class="red" ng-hide="controller.loading.playlists || controller.list.playlists.length">
                 <em>No playlists found.
-                    <a ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-Clustering-new clustering model':'Cancel-Go to playlists'">
+                    <a ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-Audio-Event-Detection-new audio event detection clustering model':'Cancel-Go to playlists'">
                         Create one.
                     </a>
                 </em>
@@ -32,22 +32,22 @@
                 </ui-select-choices>
             </ui-select>
         </div>
-        <label>Optional parameters</label>
-        <div class="form-group clearfix">
-            <label class="col-sm-2" style="padding-left:0; margin-top:5px;">Frequency</label>
-            <label class="col-sm-1" style="margin-top:6px;" for="freq-min">min</label>
-            <div class="col-sm-4">
-                <input id="freq-min" class="form-control" ng-model="controller.data.params.frequencyMin" type="number"/>
-            </div>
-            <label class="col-sm-1" style="margin-top:6px;" for="freq-max">max</label>
-            <div class="col-sm-4">
-                <input id="freq-max" class="form-control" ng-model="controller.data.params.frequencyMax" type="number"/>
-            </div>
+        <div class="form-group">
+            <label for="amplitude">Amplitude Threshold</label>
+            <input id="amplitude" class="form-control" style="text-align:left;" min="0.5" step="0.1" ng-model="controller.data.params.amplitudeThreshold" type="number"/>
+        </div>
+        <div class="form-group">
+            <label for="size">Size Threshold</label>
+            <input id="size" class="form-control" style="text-align:left;" min="0.05" step="0.05" ng-model="controller.data.params.sizeThreshold" type="number"/>
+        </div>
+        <div class="form-group">
+            <label for="filterSize">Filter Size</label>
+            <input id="filterSize" class="form-control" style="text-align:left;" min="1" step="1" ng-model="controller.data.params.filterSize" type="number"/>
         </div>
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="controller.create() | trackEvent:'Analysis-Clustering-new clustering model':'Submit'" ng-disabled="!controller.data.name">
+    <button class="btn btn-primary" ng-click="controller.create() | trackEvent:'Analysis-Audio-Event-Detection-new audio event detection clustering model':'Submit'" ng-disabled="!controller.isJobValid()">
         Run
     </button>
 </div>

@@ -11,20 +11,23 @@ var APIError = require('../../utils/apierror');
 
 router.get('/projectlist', function(req, res, next) {
     res.type('json');
-    // super user list all projects
-    if(req.session.user.isSuper === 1) {
-        model.projects.listAll(function(err, rows) {
+    var user = req.session.user;
+    var type = req.query.type;
+    var includeLocation = req.query.include_location === 'true';
+    if ((user.isAnonymousGuest || user.isSuper !== 1) && !type) {
+        model.users.projectList(req.session.user.id, function(err, rows) {
             if(err) return next(err);
-
             res.json(rows);
         });
     }
     else {
-        model.users.projectList(req.session.user.id, function(err, rows) {
+        model.projects.find({
+            ...type === 'my' && { owner_id: user.id },
+            ...includeLocation && { include_location: true }
+        }, function(err, rows) {
             if(err) return next(err);
-
             res.json(rows);
-        });
+        })
     }
 });
 

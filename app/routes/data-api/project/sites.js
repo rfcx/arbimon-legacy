@@ -77,7 +77,7 @@ router.post('/update', function(req, res, next) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
 
-    site.project_id = project.project_id;
+    site.project_id = site.project? site.project.project_id : project.project_id;
 
     model.sites.update(site, function(err, rows) {
         if(err) return next(err);
@@ -85,7 +85,7 @@ router.post('/update', function(req, res, next) {
         model.projects.insertNews({
             news_type_id: 3, // site updated
             user_id: req.session.user.id,
-            project_id: project.project_id,
+            project_id: site.project_id,
             data: JSON.stringify({ site: site.name })
         });
 

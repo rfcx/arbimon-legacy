@@ -120,7 +120,7 @@ INSERT INTO `roles` VALUES (3,'Guest ','Guest user - can only view the project',
 INSERT INTO `roles` VALUES (4,'Owner','Project Owner - can do anything on the project','',1);
 INSERT INTO `roles` VALUES (5,'Data Entry','Data Entry user - can manage project data but can only view the analysis section','',5);
 INSERT INTO `roles` VALUES (6,'Expert','Expert User - can do anything a user can do plus can invalidate species from recordings','',3);
-INSERT INTO `roles` VALUES (7,'Citizen Scientist','Citizen Scientist - User can only see the Citizen Scientist interface and add validattions to the pattern matchings','',6);
+INSERT INTO `roles` VALUES (7,'Citizen Scientist','Citizen Scientist - User can only see the Citizen Scientist interface and add validations to the pattern matchings','',6);
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
 
 --

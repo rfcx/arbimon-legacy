@@ -15,7 +15,7 @@ var config = require('../config');
 var dbpool = require('../utils/dbpool');
 var sqlutil = require('../utils/sqlutil');
 var queryHandler = dbpool.queryHandler;
-
+var APIError = require('../utils/apierror');
 var species = require('./species');
 var songtypes = require('./songtypes');
 var s3;
@@ -55,13 +55,23 @@ var Projects = {
             whereExp.push("p.name = ?");
             data.push(query.name);
         }
+        if(query.hasOwnProperty("owner_id")) {
+            joinExtra += 'JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n'
+            whereExp.push("upr.user_id = ?");
+            data.push(query.owner_id);
+        }
+        if(query.hasOwnProperty("include_location")) {
+            selectExtra += 'site.lat as lat, site.lon as lon, '
+            joinExtra += 'LEFT JOIN (SELECT project_id, lat, lon, MAX(site_id) as maxSiteId FROM sites GROUP BY project_id) site ON p.project_id = site.project_id \n'
+            whereExp.push("1 = 1");
+        }
 
         if(!whereExp.length) {
             return q.reject(new Error('no query params'));
         }
 
         if(!query.basicInfo){
-            selectExtra = "   pp.tier, \n"+
+            selectExtra += "   pp.tier, \n"+
                           "   pp.storage AS storage_limit, \n"+
                           "   pp.processing AS processing_limit, \n"+
                           "   pp.created_on AS plan_created, \n"+
@@ -70,17 +80,16 @@ var Projects = {
                           "   p.pattern_matching_enabled, \n"+
                           "   p.cnn_enabled, \n"+
                           "   pp.duration_period AS plan_period \n";
-            joinExtra   = "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
+            joinExtra   += "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
         } else {
-            selectExtra = "p.project_id as id \n";
+            selectExtra += "p.project_id as id \n";
         }
 
-        return dbpool.query(
-            "SELECT p.*" + (selectExtra ? ", \n" + selectExtra : "\n") +
-            "FROM projects AS p \n" + joinExtra +
-            "WHERE (" + whereExp.join(") \n" +
-            "  AND (") + ")", data
-        ).nodeify(callback);
+        let que = "SELECT p.*" + (selectExtra ? ", \n" + selectExtra : "\n") +
+        "FROM projects AS p \n" + joinExtra +
+        "WHERE (" + whereExp.join(") \n" +
+        "  AND (") + ")";
+        return dbpool.query(que, data).nodeify(callback);
     },
 
     // DEPRACATED use find()
@@ -605,11 +614,23 @@ var Projects = {
             var project_id = dbpool.escape(upr.project_id);
             var role_id = dbpool.escape(upr.role_id);
 
-            var q = 'INSERT INTO user_project_role \n'+
-                    'SET user_id = %s, role_id = %s, project_id = %s';
+            var qFind = 'SELECT * FROM user_project_role WHERE user_id = %s';
 
-            q = util.format(q, user_id, role_id, project_id);
-            queryHandler(q, callback);
+            qFind = util.format(qFind, user_id);
+            queryHandler(qFind, (err, d) => {
+                if (err) {
+                    return callback(err)
+                }
+                if (d) {
+                    if (d && d.length) {
+                        return callback(new APIError("User already attached to the project", 404));
+                    }
+                    var q = 'INSERT INTO user_project_role \n'+
+                    'SET user_id = %s, role_id = %s, project_id = %s';
+                    q = util.format(q, user_id, role_id, project_id);
+                    queryHandler(q, callback);
+                }
+            });
         });
 
     },
