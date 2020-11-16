@@ -19,7 +19,7 @@
         <div class="panel panel-default upload-info-panel">
             <div class="panel-body">
                 <p>Looking for a faster alternative?</p>
-                <p>Try the Ingest App for fast, resumable uploads.</p>
+                <p>Try the RFCx Uploader for fast, resumable uploads.</p>
                 <div>Download for:
                     <a ng-href="{{controller.uploaderApps.mac}}">Mac</a>,
                     <a ng-href="{{controller.uploaderApps.windows}}">Windows</a>
@@ -70,7 +70,7 @@
     </div>
     <div class="row">
         <div class="col-sm-12" nv-file-over  nv-file-drop  uploader="uploader" over-class="drophere">
-            <table class="table">
+            <table class="table table-upload">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -90,15 +90,15 @@
                             </div>
                         </td>
                         <td>
-                            <span ng-show="item.isUploading"><i class="fa fa-cloud-upload"></i> Uploading</span>
-                            <span ng-show="item.isSuccess"><i class="fa fa-check"></i> Success</span>
-                            <span ng-show="item.isError">
+                            <span ng-if="item.isUploading"><i class="fa fa-cloud-upload"></i> Uploading</span>
+                            <span ng-if="item.isSuccess"><i class="fa fa-check"></i> Success</span>
+                            <span ng-if="item.isError">
                                 Error
-                                <i ng-show="item.errorMsg"
+                                <i ng-if="item.errorMsg"
                                     class="fa fa-exclamation-circle"
                                     tooltip="{{ item.errorMsg }}"></i>
                             </span>
-                            <span ng-show="item.isDuplicate">
+                            <span ng-if="item.isDuplicate">
                                 <i class="fa fa-files-o"></i> Duplicate
                                 <i class="fa fa-info-circle"
                                     tooltip="A file with the same name have already been uploaded to this site">

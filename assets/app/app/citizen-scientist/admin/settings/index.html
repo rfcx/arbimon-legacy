@@ -20,8 +20,11 @@
                 <input id="param-cn-{{row.id}}" ng-model="row.consensus_number" type="number" ng-disabled="!row.citizen_scientist" />
             </field>
         </a2-table>
-        <button class="btn btn-primary" type="submit" ng-click="controller.save()">
+        <button class="btn btn-primary" type="submit" ng-click="controller.save()" ng-disabled="!!controller.saving">
             <i class="fa fa-floppy-o"></i> Save
         </button>
+        <span class="pl-3" ng-if="!!controller.saving">
+            <i class="fa fa-spinner fa-spin is-v-middle" style="font-size: 22px;"></i>
+        </span>
     </div>
 </div>

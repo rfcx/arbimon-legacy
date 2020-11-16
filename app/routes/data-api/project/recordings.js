@@ -57,7 +57,7 @@ router.get('/recordings-export.csv', function(req, res, next) {
     }
 
     try{
-        var filters = JSON.parse(req.query.filters) || {};
+        var filters = req.query.filters ? JSON.parse(req.query.filters) : {}
     } catch(e){
         return next(e);
     }

@@ -43,5 +43,32 @@ router.get('/:job_id/clustering-details', function (req, res, next) {
     });
 });
 
+router.get('/audio-event-detections', function(req, res, next) {
+    res.type('json');
+
+    return model.ClusteringJobs.audioEventDetections({
+        project_id: req.project.project_id
+    })
+    .then(function(data){
+        res.json(data);
+    }).catch(next);
+});
+
+router.post('/new', function(req, res, next) {
+    res.type('json');
+
+    var project_id = req.project.project_id;
+
+    return model.ClusteringJobs.requestNewClusteringJob({
+        project: project_id,
+        name: req.body.name,
+        audioEventDetectionJob: req.body.aed_job,
+        params: req.body.params,
+    })
+    .then(function(result){
+        res.json({ create: true, result: result });
+    }).catch(next);
+});
+
 module.exports = router;
 

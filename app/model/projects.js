@@ -60,13 +60,18 @@ var Projects = {
             whereExp.push("upr.user_id = ?");
             data.push(query.owner_id);
         }
+        if(query.hasOwnProperty("include_location")) {
+            selectExtra += 'site.lat as lat, site.lon as lon, '
+            joinExtra += 'LEFT JOIN (SELECT project_id, lat, lon, MAX(site_id) as maxSiteId FROM sites GROUP BY project_id) site ON p.project_id = site.project_id \n'
+            whereExp.push("1 = 1");
+        }
 
         if(!whereExp.length) {
             return q.reject(new Error('no query params'));
         }
 
         if(!query.basicInfo){
-            selectExtra = "   pp.tier, \n"+
+            selectExtra += "   pp.tier, \n"+
                           "   pp.storage AS storage_limit, \n"+
                           "   pp.processing AS processing_limit, \n"+
                           "   pp.created_on AS plan_created, \n"+
@@ -77,15 +82,14 @@ var Projects = {
                           "   pp.duration_period AS plan_period \n";
             joinExtra   += "JOIN project_plans AS pp ON pp.plan_id = p.current_plan \n";
         } else {
-            selectExtra = "p.project_id as id \n";
+            selectExtra += "p.project_id as id \n";
         }
 
-        return dbpool.query(
-            "SELECT p.*" + (selectExtra ? ", \n" + selectExtra : "\n") +
-            "FROM projects AS p \n" + joinExtra +
-            "WHERE (" + whereExp.join(") \n" +
-            "  AND (") + ")", data
-        ).nodeify(callback);
+        let que = "SELECT p.*" + (selectExtra ? ", \n" + selectExtra : "\n") +
+        "FROM projects AS p \n" + joinExtra +
+        "WHERE (" + whereExp.join(") \n" +
+        "  AND (") + ")";
+        return dbpool.query(que, data).nodeify(callback);
     },
 
     // DEPRACATED use find()

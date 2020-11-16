@@ -5,6 +5,8 @@ Bio-Acoustic Analyzer
 
 ### Local Dev Setup (with Docker)
 
+The recommended dev setup is to use docker-compose to create your web and database containers. By default, docker-compose will create and seed a new database using the migrations and seeds in `scripts/db`.
+
 1. Build the docker image
 
    ```sh
@@ -20,12 +22,6 @@ Bio-Acoustic Analyzer
    (To stop the server, press Ctrl-C.)
 
 3. After the app container is running, open your browser at http://localhost:3000
-
-4. Create and seed the database
-
-   ```sh
-   ./scripts/db/create-local.sh
-   ```
 
 
 ### Alternative Local Dev Setup (no docker)
@@ -53,7 +49,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
     ```
     Build client-side part:
     ```sh
-    ./node_modules/gulp/bin/gulp.js build
+    npm run build
     ```
 
 3. Add config Files
@@ -98,27 +94,6 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
   - `sudo DEBUG=mysql-connection-manager,http,express:* node bin/www`
     - This will output all debug messages from the express framework as well as the mysql connections and http packages. Other node packages can be added, or subtracted from the list as needed.
 
-### Information
-- URLs
-  - Production server [https://arbimon.sieve-analytics.com/](https://arbimon.sieve-analytics.com/)
-  - Public Development server [https://arbimon-dev.sieve-analytics.com/](https://arbimon-dev.sieve-analytics.com/)
-  - Local Development server [http://dev.arbimon.sieve-analytics.com/](http://dev.arbimon.sieve-analytics.com/) **Requires hosts file entry**
-    - Update OS's `hosts` file with the following line:
-      ```
-      127.0.0.1 dev.arbimon.sieve-analytics.com
-      ```
-    - Set `APP_PORT` env var to `80` when you run the app:
-      ```sh
-      export APP_PORT=80; ./node_modules/gulp/bin/gulp.js watch
-      ```
-- Database Info
-  - MySQL
-  - Production has a db and the development enviroments share a secondary db.
-- Servers and Networking
-  - the production and dev servers are on a private network together and not directly reachable from the outside. There is a jump/tunnel server that can be used to get into these. Tunnel server adress: [54.159.71.198](54.159.71.198) with user `ec2user` and the private key file for authentication (obtain this from another member of the team).
-    - This can be used to create a port forward to use with the database connection or can be directly connected to by ssh and then ssh to the other servers. Once on this server there are aliases setup to ssh to the other servers:
-      - `ssh-web-dev` for development web server
-      - `ssh-web` for production web server
 
 ### Deployment
 
@@ -134,7 +109,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
     - `git fetch -p` and `git pull`
 4. Perform any dependency installs and rebuild the source code (same as local install)
     - `npm i` and `bower i`
-    - `gulp build` to build css (in production use `./node_modules/.bin/gulp build`)
+    - `npm run build` to build css
 5. Restart the web server/app
     - `pm2 restart 0` to perform restart
     - `pm2 list` to check that the arbimon2 process is running
@@ -144,7 +119,7 @@ Additional steps for production (to support auto-scaling of the frontend)
 6. In the EC2 console, create an image of the current `web` instance.
     - Name: arbimon-web-2020-09-09
     - No reboot: true
-    
+
     ![production-deployment-1](https://user-images.githubusercontent.com/1175362/92625187-8c6a3700-f2f2-11ea-869e-bc39b7c502a6.png)
 
 7. After the image is created, open "Auto scaling" -> "Launch configurations". Find the last launch configuration and make a copy ("Actions" -> "Copy launch configuration").
@@ -158,11 +133,25 @@ Additional steps for production (to support auto-scaling of the frontend)
 
 9. Open "Auto scaling groups", and edit the `arbimon` group. Select the newly created launch configuration and then "Update".
     - Launch configuration: arbimon-web-2020-09-09
-    
+
     ![production-deployment-3](https://user-images.githubusercontent.com/1175362/92625454-db17d100-f2f2-11ea-8089-8e85e9c999f9.png)
 
 10. If there were more than 1 EC2 instances before deployment, terminate rest instances (but not the one that was used for image creation).
     ![production-deployment-4](https://user-images.githubusercontent.com/2122991/96923854-84d5aa80-14ba-11eb-996d-97cb6cb9a604.png)
+
+---
+
+## Development
+
+### Database migrations
+
+Create an SQL file in `scripts/db` starting with an incremented number -- see `001-example-migrations.sql` for an example. Migrations may contain SQL statements to modify the data.
+
+Periodically merge all the migrations into a single file `000-base-tables.sql`.
+
+### Database seeds
+
+The seed files in `scripts/db` are separated into reference data, species data and test data. The seed files must be kept up-to-date with any migrations that are added because they are always run after all the migrations (in docker-compose local environment).
 
 ---
 ## Legacy README

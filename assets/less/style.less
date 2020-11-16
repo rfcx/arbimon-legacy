@@ -61,6 +61,7 @@
 @import "a2-components/analysis.less";
 @import "a2-components/notifications.less";
 @import "a2-components/orders.less";
+@import "a2-components/projects-list.less";
 @import "a2-components/stackedbars.less";
 @import "a2-icons.less";
 @import "a2-tags.less";
@@ -520,6 +521,13 @@ textarea.fixed-width {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+  }
+}
+
+.table-upload {
+  table-layout: fixed;
+  .progress {
+    max-width: 80%;
   }
 }
 
@@ -1037,6 +1045,9 @@ label.no-bold {
     padding-top: 5px;
     padding-bottom: 5px;
     border-width: 0px;
+    &.active {
+      background: @gray-darker;
+    }
   }
 }
 
@@ -1410,4 +1421,23 @@ a.ui-select-choices-row-inner {
 
 img.outlined {
   border: 3px solid @gray-light;
+}
+
+.homepage {
+  & > .row {
+    & > .col-md-12 {
+      max-width: 1280px;
+      margin: 0 auto;
+      @media (min-width: 1200px) {
+        padding: 0;
+      }
+    }
+  }
+  @media (max-width: @screen-tablet) {
+    .form-control[type="search"] {
+      display: inline-block;
+      vertical-align: middle;
+      max-width: 100px;
+    }
+  }
 }
