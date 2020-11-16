@@ -1,9 +1,21 @@
 angular.module('a2.srv.templates', ['a2.srv.project'])
 .factory('a2Templates', function(Project, $http) {
     return {
-        getList: function() {
+        getList: function(opts) {
             var projectName = Project.getUrl();
-            return $http.get('/api/project/'+projectName+'/templates').then(function(response) {
+            var config = {
+                params: {}
+            };
+            if (opts && opts.showRecordingUri) {
+                config.params.showRecordingUri = opts.showRecordingUri;
+            }
+            if (opts && opts.showOwner) {
+                config.params.showOwner = opts.showOwner;
+            }
+            if (opts && opts.allAccessibleProjects) {
+                config.params.allAccessibleProjects = opts.allAccessibleProjects;
+            }
+            return $http.get('/api/project/'+projectName+'/templates', config).then(function(response) {
                 return response.data;
             });
         },
