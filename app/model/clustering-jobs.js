@@ -1,7 +1,12 @@
 /* jshint node:true */
 "use strict";
 
-var dbpool = require('../utils/dbpool');
+var joi = require('joi');
+var AWS = require('aws-sdk');
+var q = require('q');
+var lambda = new AWS.Lambda();
+var config = require('../config');
+var dbpool       = require('../utils/dbpool');
 
 var ClusteringJobs = {
     find: function (options) {
@@ -50,6 +55,60 @@ var ClusteringJobs = {
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" AND ")
         ))
+    },
+
+    audioEventDetections: function (options) {
+        var constraints=['1=1'];
+        var select = [];
+        var tables = [
+            "job_params_audio_event_detection_clustering JP"
+        ];
+        if(!options){
+            options = {};
+        }
+        select.push(
+            "JP.`name` as `name`",
+            "JP.`job_id` as `job_id`",
+        );
+
+        if (options.project_id) {
+            constraints.push('JP.project_id = ' + dbpool.escape(options.project_id));
+        }
+
+        return dbpool.query(
+            "SELECT " + select.join(",\n    ") + "\n" +
+            "FROM " + tables.join("\n") + "\n" +
+            "WHERE " + constraints.join(" AND ")
+        )
+    },
+
+    JOB_SCHEMA : joi.object().keys({
+        project: joi.number().integer(),
+        name : joi.string(),
+        audioEventDetectionJob: joi.object().keys({
+            name: joi.string(),
+            jobId: joi.number()
+        }),
+        params: joi.object().keys({
+            minPoints: joi.number(),
+            distanceThreshold: joi.number()
+        }),
+    }),
+
+    requestNewClusteringJob: function(data){
+        let payload = JSON.stringify({
+            project_id: data.project,
+            name: data.name,
+            aed_job_name: data.audioEventDetectionJob.name,
+            aed_job_id: data.audioEventDetectionJob.jobId,
+            min_points: data.params.minPoints,
+            distance_threshold: data.params.distanceThreshold,
+        })
+        return q.ninvoke(joi, 'validate', data, ClusteringJobs.JOB_SCHEMA).then(() => lambda.invoke({
+            FunctionName: config('lambdas').clustering_jobs,
+            InvocationType: 'Event',
+            Payload: payload,
+        }).promise());
     },
 };
 
