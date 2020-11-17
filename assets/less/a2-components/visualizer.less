@@ -21,7 +21,7 @@
     display: block;
     height: @audio-seek-bar-height + 2 * @audio-seek-bar-padding;
     position: relative;
-    margin-bottom: 2px
+    margin-bottom: 2px;
     width: 100%;
 
     &.clickable{
@@ -321,6 +321,10 @@
                 &.set {
                     border-color: @roi-set-border-color;
                     background-color: @roi-set-bg-color;
+                }
+                &.audio-event {
+                    border-color: @roi-audio-event-border-color;
+                    background-color: @roi-audio-event-color;
                 }
                 &.roi-current{
                     border-color: @roi-current-border-color;

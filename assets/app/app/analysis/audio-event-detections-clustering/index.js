@@ -6,15 +6,17 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
   'humane',
 ])
 .config(function($stateProvider) {
-    $stateProvider.state('analysis.audio-event-detections-clustering', {
-        url: '/audio-event-detections-clustering/',
-        controller: 'AudioEventDetectionsClusteringModelCtrl',
-        templateUrl: '/app/analysis/audio-event-detections-clustering/list.html'
-    })
+    $stateProvider
+        .state('analysis.audio-event-detections-clustering', {
+            url: '/audio-event-detections-clustering/',
+            controller: 'AudioEventDetectionsClusteringModelCtrl',
+            templateUrl: '/app/analysis/audio-event-detections-clustering/list.html'
+        })
 })
-.controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, JobsData, notify, a2AudioEventDetectionsClustering) {
+.controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering) {
     $scope.loadAudioEventDetections = function() {
         $scope.loading = true;
+        $scope.projectUrl = Project.getUrl();
 
         return a2AudioEventDetectionsClustering.list().then(function(data) {
             $scope.audioEventDetectionsOriginal = data;
@@ -29,10 +31,6 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
     };
 
     $scope.loadAudioEventDetections();
-
-    $scope.selectItem = function(audioEventDetectionId) {
-
-    }
 
     $scope.createNewClusteringModel = function () {
       var modalInstance = $modal.open({
@@ -54,42 +52,49 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
   };
 })
 .controller('CreateNewAudioEventDetectionClusteringCtrl', function($modalInstance, a2AudioEventDetectionsClustering, a2Playlists, notify) {
-  Object.assign(this, {
-      initialize: function(){
-          this.loading = {
-              playlists: false
-          };
+    Object.assign(this, {
+        initialize: function(){
+            this.loading = {
+                playlists: false
+            };
 
-          var list = this.list = {};
+            var list = this.list = {};
 
-          this.data = {
-              name: null,
-              playlist: null,
-              params: { },
-          };
+            this.data = {
+                name: null,
+                playlist: null,
+                params: {
+                    amplitudeThreshold: 1,
+                    sizeThreshold: 0.2,
+                    filterSize: 10
+                }
+            };
 
-          this.loading.playlists = true;
-          a2Playlists.getList().then((function(playlists){
-              this.loading.playlists = false;
-              list.playlists = playlists;
-          }).bind(this));
-      },
-      create: function () {
-          try {
-              return a2AudioEventDetectionsClustering.create({
-                  playlist_id: this.data.playlist.id,
-                  name: this.data.name,
-                  params: this.data.params
-              }).then(function(clusteringModel) {
-                  $modalInstance.close({create:true, clusteringModel: clusteringModel});
-              }).catch(notify.serverError);
-          } catch(error) {
-              console.error("a2AudioEventDetectionsClustering.create error: " + error);
-          }
-      },
-      cancel: function (url) {
-           $modalInstance.close({ cancel: true, url: url });
-      },
-  });
-  this.initialize();
+            this.loading.playlists = true;
+            a2Playlists.getList().then((function(playlists){
+                this.loading.playlists = false;
+                list.playlists = playlists;
+            }).bind(this));
+        },
+        create: function () {
+            try {
+                return a2AudioEventDetectionsClustering.create({
+                    playlist_id: this.data.playlist.id,
+                    name: this.data.name,
+                    params: this.data.params
+                }).then(function(clusteringModel) {
+                    $modalInstance.close({create:true, clusteringModel: clusteringModel});
+                }).catch(notify.serverError);
+            } catch(error) {
+                console.error("a2AudioEventDetectionsClustering.create error: " + error);
+            }
+        },
+        cancel: function (url) {
+            $modalInstance.close({ cancel: true, url: url });
+        },
+        isJobValid: function () {
+            return this.data && this.data.name && this.data.name.length > 3 && this.data.playlist;
+        }
+    });
+    this.initialize();
 })

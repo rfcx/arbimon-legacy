@@ -22,12 +22,13 @@ var AudioEventDetectionsClustering = {
             options = {};
         }
         select.push(
+            "A.`recording_id` as `rec_id`",
             "JP.`name` as `name`",
             "JP.`parameters` as `parameters`"
         );
         tables.push("JOIN job_params_audio_event_detection_clustering JP ON A.job_id = JP.job_id");
 
-        select.push("J.`date_created` as `timestamp`");
+        select.push("J.`date_created` as `timestamp`",);
         tables.push("JOIN jobs J ON A.job_id = J.job_id");
 
         select.push(
@@ -42,9 +43,21 @@ var AudioEventDetectionsClustering = {
         );
         tables.push("JOIN users U ON JP.user_id = U.user_id");
 
-        if (options.project) {
-            constraints.push('JP.project_id = ?');
-            data.push(options.project);
+        if (options.project_id) {
+            tables.push("JOIN recordings R ON A.recording_id = R.recording_id");
+            tables.push("JOIN sites S ON R.site_id = S.site_id");
+            constraints.push('S.project_id = ' + dbpool.escape(options.project_id));
+        }
+
+        if (options.rec_id) {
+            select.push(
+                "A.`time_min` as `time_min`",
+                "A.`time_max` as `time_max`",
+                "A.`frequency_min` as `frec_min`",
+                "A.`frequency_max` as `frec_max`"
+            );
+            constraints.push('A.recording_id = ?');
+            data.push(options.rec_id);
         }
 
         postprocess.push((rows) => {
@@ -78,8 +91,9 @@ var AudioEventDetectionsClustering = {
         name       : joi.string(),
         playlist   : joi.number().integer(),
         params     : joi.object().keys({
-            frequencyMin: joi.number(),
-            frequencyMax: joi.number()
+            amplitudeThreshold: joi.number(),
+            sizeThreshold: joi.number(),
+            filterSize: joi.number()
         }),
     }),
 
@@ -89,8 +103,9 @@ var AudioEventDetectionsClustering = {
             user_id: data.user,
             playlist_id: data.playlist,
             name: data.name,
-            frequency_min: data.params.frequencyMin,
-            frequency_max: data.params.frequencyMax,
+            amplitude_threshold: data.params.amplitudeThreshold,
+            size_threshold: data.params.sizeThreshold,
+            filter_size: data.params.filterSize
         })
         return q.ninvoke(joi, 'validate', data, AudioEventDetectionsClustering.JOB_SCHEMA).then(() => lambda.invoke({
             FunctionName: config('lambdas').audio_event_detections,

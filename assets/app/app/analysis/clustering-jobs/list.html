@@ -1,30 +1,30 @@
 <div class="row">
     <div class="col-sm-12 col-lg-11 padded-view-div">
         <h3>
-            Audio Event Detections
+            Clustering Jobs
             <a class="btn btn-sm btn-default"
-                tooltip="Create Audio Event Detection"
+                tooltip="Create Clustering Job"
                 tooltip-placement="right"
-                ng-click="createNewClusteringModel() | trackEvent:'Analysis-ClusteringModel-List':'Create new Audio Event Detection'" >
+                ng-click="createNewClusteringModel() | trackEvent:'Analysis-ClusteringModel-List':'Create new Clustering Job'" >
                 <i class="fa fa-plus" ></i>
             </a>
         </h3>
         <loader ng-if="loading"></loader>
         <button class="btn btn-default pull-right"
             tooltip="Refresh list"
-            ng-click="loadAudioEventDetections()">
+            ng-click="loadClusteringJobs()">
                 <i class="fa fa-refresh"></i>
         </button>
         <div ng-if="!loading">
-            <a2-table rows="audioEventDetectionsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Audio-Event-Detections-Clustering-Data-List':' show audio event detection details'">
+            <a2-table rows="clusteringJobsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Clustering-Data-List':' show clustering job details'">
                 <field title="Name" key="name" class="is-v-middle">
                     {{row.name}}
                 </field>
                 <field title="Timestamp" key="timestamp" class="is-v-middle">
                     {{ row.timestamp | moment : 'lll' }}
                 </field>
-                <field title="Playlist" key="playlist_name" filter class="no-wrap-table-cell is-v-middle">
-                    {{row.playlist_name}}
+                <field title="Audio Event Detection Job" key="aed_job" filter class="no-wrap-table-cell is-v-middle">
+                    {{row.name_aed}}
                 </field>
                 <field title="Parameters" key="parameters" filter="parameters.$" class="no-wrap-table-cell is-v-middle">
                     {{row.parameters | asCSV }}
@@ -33,16 +33,17 @@
                     {{ row.user }}
                 </field>
                 <field class="is-v-middle">
-                    <a class="btn btn-default btn-xs"
-                        ng-href="/project/{{projectUrl}}/visualizer/rec/{{row.rec_id}}"
-                        title="View in Visualizer">
-                        <i class="fa fa-cubes"></i>
-                    </a>
+                    <button class="btn btn-default btn-xs"
+                        ng-click="selectItem(row) | trackEvent:'Analysis-Clustering-Data-List':' show clustering job details'"
+                    >
+                            Show Details
+                    </button>
                 </field>
             </a2-table>
-            <div class="jumbotron seconds-div-center" ng-show="(!audioEventDetectionsOriginal || !audioEventDetectionsOriginal.length > 0) && !loading">
+            <div class="jumbotron seconds-div-center" ng-show="(!clusteringJobsOriginal || !clusteringJobsOriginal.length > 0) && !loading">
                 <h3>{{ infopanedata }}</h3>
             </div>
         </div>
+    </div>
     </div>
 </div>

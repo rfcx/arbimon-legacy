@@ -26,6 +26,7 @@ var patternMatchingRoutes = require('./pattern_matchings');
 var cnnRoutes = require('./cnns');
 var tagRoutes = require('./tags');
 var audioEventDetectionsClusteringRoutes = require('./audio-event-detections-clustering');
+var clusteringRoutes = require('./clustering-jobs');
 
 router.param('projectUrl', function(req, res, next, project_url){
     res.type('json');
@@ -288,7 +289,12 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
         role_id: 2 // default to normal user
     },
     function(err, result){
-        if(err) return next(err);
+        if (err) {
+            if (err.status === 404) {
+                return res.json({ error: err.message});
+            }
+            return next(err);
+        }
 
         debug("add user:", result);
         res.json({ success: true });
@@ -388,6 +394,7 @@ router.use('/:projectUrl/classifications', classiRoutes);
 router.use('/:projectUrl/pattern-matchings', patternMatchingRoutes);
 router.use('/:projectUrl/cnn', cnnRoutes);
 router.use('/:projectUrl/audio-event-detections-clustering', audioEventDetectionsClusteringRoutes);
+router.use('/:projectUrl/clustering-jobs', clusteringRoutes);
 router.use('/:projectUrl/tags', tagRoutes);
 router.use('/:projectUrl/audio-event-detections', require('./audio-event-detections'));
 router.use('/:projectUrl/soundscape-composition', require('./soundscape-composition'));

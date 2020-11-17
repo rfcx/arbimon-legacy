@@ -15,7 +15,8 @@
 
 @roi-set-border-color: fade(@brand-present, 50%);
 @roi-set-bg-color: fade(@brand-present, 10%);
-
+@roi-audio-event-border-color: fade(@brand-danger, 30%);
+@roi-audio-event-color: fade(@brand-danger, 20%);
 @roi-annotation-border-color: rgb(255, 166, 0);
 @roi-annotation-bg-color: rgba(255, 174, 0, 0.2);
 @roi-annotation-red-border-color: rgb(255, 83, 64);
@@ -60,6 +61,7 @@
 @import "a2-components/analysis.less";
 @import "a2-components/notifications.less";
 @import "a2-components/orders.less";
+@import "a2-components/projects-list.less";
 @import "a2-components/stackedbars.less";
 @import "a2-icons.less";
 @import "a2-tags.less";
@@ -1025,6 +1027,9 @@ label.no-bold {
     padding-top: 5px;
     padding-bottom: 5px;
     border-width: 0px;
+    &.active {
+      background: @gray-darker;
+    }
   }
 }
 
@@ -1386,11 +1391,13 @@ a.ui-select-choices-row-inner {
 .roi-thumbnail {
   background-color: @gray-lighter;
   border-color: @gray-lighter;
+  color: @gray;
   &:hover,
   &:active,
   &:focus {
       background-color: @gray-medium;
       border-color: @gray-medium;
+      color: @text-color;
   }
 }
 
@@ -1424,4 +1431,23 @@ img.outlined {
 
 .loading {
   text-align: center;
+}
+
+.homepage {
+  & > .row {
+    & > .col-md-12 {
+      max-width: 1280px;
+      margin: 0 auto;
+      @media (min-width: 1200px) {
+        padding: 0;
+      }
+    }
+  }
+  @media (max-width: @screen-tablet) {
+    .form-control[type="search"] {
+      display: inline-block;
+      vertical-align: middle;
+      max-width: 100px;
+    }
+  }
 }

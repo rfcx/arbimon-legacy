@@ -71,6 +71,8 @@ CREATE TABLE `classification_stats` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+ALTER TABLE `classification_stats` ADD INDEX `idx_job_id` (`job_id` ASC);
+
 --
 -- Table structure for table `invalid_logins`
 --

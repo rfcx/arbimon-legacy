@@ -52,7 +52,7 @@ var formatParse = function(formatName, filename) {
             } else if (formatName == 'AudioMoth') {
                 parsed = {
                     filename: results[1],
-                    datetime: new Date(results[2], results[3], results[4], results[5], results[6], results[7]),
+                    datetime: new Date(results[2], results[3]-1, results[4], results[5], results[6], results[7]),
                     filetype: results[8]
                 };
                 console.log(parsed);
