@@ -52,7 +52,8 @@ router.get('/connect-with-rfcx', function(req, res) {
     res.render('connect-with-rfcx', {
         user: req.session.user,
         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        error: query.error || null
+        error: query.error || null,
+        state: ''
     });
 });
 
