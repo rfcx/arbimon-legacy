@@ -148,7 +148,7 @@
             <div ng-repeat="site in controller.rois">
                 <div class="h3"><i class="fa fa-map-marker"></i> {{site.name}}</div>
                     <div ng-repeat="roi in site.list"
-                        class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                        class="btn btn-default roi-thumbnail fixed-size {{roi.selected ? 'active' : ''}}"
                         ng-click="roi.selected = !roi.selected"
                         popover-html="'Recording: {{roi.recording}}<br>
                                  Site: {{roi.site}}<br>
