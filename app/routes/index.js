@@ -52,7 +52,8 @@ router.get('/connect-with-rfcx', function(req, res) {
     res.render('connect-with-rfcx', {
         user: req.session.user,
         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        error: query.error || null
+        error: query.error || null,
+        state: ''
     });
 });
 
@@ -110,7 +111,11 @@ router.get('/home/all', function(req, res) {
 router.get('/user-settings', function(req, res) {
     res.type('html');
     if (req.session.user && req.session.loggedIn) {
-        res.render('user-settings', { title: "User settings", user: req.session.user });
+        res.render('user-settings', {
+            title: "User settings",
+            user: req.session.user,
+            state: ''
+        });
     } else {
         res.redirect('/home');
     }
