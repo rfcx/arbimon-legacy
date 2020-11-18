@@ -275,7 +275,7 @@ var CNN = {
     getRoiAudioFile(cnnId, roiId, options){
         options = options || {};
 
-        var query = "SELECT CRR.x1, CRR.x2, CRR.y1, CRR.y2, CRR.uri as imgUri, R.uri as recUri\n" +
+        var query = "SELECT CRR.x1, CRR.x2, CRR.y1, CRR.y2, CRR.uri as imgUri, R.uri as recUri, R.site_id as recSiteId\n" +
         "FROM cnn_results_rois CRR\n" +
         "JOIN recordings R ON CRR.recording_id = R.recording_id\n" +
         "WHERE CRR.cnn_result_roi_id = ?";
@@ -289,7 +289,10 @@ var CNN = {
                 return;
             }
 
-            return q.ninvoke(Recordings, 'fetchAudioFile', {uri: crr.recUri}, {
+            return q.ninvoke(Recordings, 'fetchAudioFile', {
+                uri: crr.recUri,
+                site_id: crr.recSiteId
+            }, {
                 maxFreq: Math.max(crr.y1, crr.y2),
                 minFreq: Math.min(crr.y1, crr.y2),
                 gain: options.gain || 15,
