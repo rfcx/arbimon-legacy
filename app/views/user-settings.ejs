@@ -56,9 +56,11 @@
                         </button>
                     </div>
                 </div>
-                <small class="text-info inline-block text-justify mt-3" ng-show="user.rfcx_id">
-                    Note: to change your password, use the Forgotten Password link on the RFCx login page.
-                </small>
+                <% if (user.rfcx_id) { %>
+                    <small class="text-info inline-block text-justify mt-3">
+                        Note: to change your password, use the Forgotten Password link on the RFCx login page.
+                    </small>                
+                <% } %>
             </div>
         </div>
     </div>

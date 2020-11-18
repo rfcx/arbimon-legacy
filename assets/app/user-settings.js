@@ -37,8 +37,7 @@ angular.module('a2.user-settings', [
                 userData: {
                     name     : data.name,
                     lastname : data.lastname,
-                    oauth    : data.oauth,
-                    password : data.password
+                    oauth    : data.oauth
                 },
                 password: pass
             }).then(function(response){
