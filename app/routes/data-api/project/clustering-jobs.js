@@ -26,6 +26,25 @@ router.get('/:job_id/job-details', function (req, res, next) {
         res.json(data);
     }).catch(next);
 });
+router.get('/:job_id/rois-details', function(req, res, next) {
+    res.type('json');
+
+    return model.ClusteringJobs.findRois({
+        aed: req.query.aed
+    })
+    .then(function(data){
+        res.json(data);
+    }).catch(next);
+});
+router.get('/:recId/audio', function(req, res, next) {
+    model.ClusteringJobs.getRoiAudioFile({ recId: req.params.recId, gain: req.query.gain }).then(function(roiAudio) {
+        if(!roiAudio){
+            res.sendStatus(404);
+        } else {
+            res.sendFile(roiAudio.path);
+        }
+    }).catch(next);
+});
 router.get('/:job_id/clustering-details', function (req, res, next) {
     res.type('json');
     var uri = `audio_events/${config('aws').env}/clustering/${req.params.job_id}.json`;

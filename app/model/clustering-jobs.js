@@ -6,7 +6,8 @@ var AWS = require('aws-sdk');
 var q = require('q');
 var lambda = new AWS.Lambda();
 var config = require('../config');
-var dbpool       = require('../utils/dbpool');
+var dbpool = require('../utils/dbpool');
+var Recordings = require('./recordings');
 
 var ClusteringJobs = {
     find: function (options) {
@@ -60,14 +61,68 @@ var ClusteringJobs = {
             "WHERE " + constraints.join(" AND ")
         ))
     },
-  
-    findOne: function (job_id, options) {
+
+    findOne: function (job_id, options, callback) {
         options.job_id = job_id;
         return ClusteringJobs.find(options).then(function(rows){
             return rows[0];
-        });
+        }).nodeify(callback);
     },
-  
+
+    findRois: function (options) {
+        var constraints=['1=1'];
+        var select = [];
+        var tables = [
+            "audio_event_detections_clustering A"
+        ];
+        if(!options){
+            options = {};
+        }
+        select.push(
+            "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id, A.`uri_image` as `uri`"
+        );
+
+        if (options.aed) {
+            constraints.push('A.aed_id IN (' + dbpool.escape(options.aed) + ')');
+        }
+        return dbpool.query(
+            "SELECT " + select.join(",\n    ") + "\n" +
+            "FROM " + tables.join("\n") + "\n" +
+            "WHERE " + constraints.join(" AND ")
+        )
+    },
+
+    getRoiAudioFile: function (options) {
+        options = options || {};
+
+        var query = "SELECT A.time_min, A.time_max, A.frequency_min, A.frequency_max, R.`uri` as `rec_uri`, R.site_id\n" +
+        "FROM audio_event_detections_clustering A\n" +
+        "JOIN recordings R ON A.recording_id = R.recording_id\n" +
+        "WHERE A.recording_id = ?";
+
+        return dbpool.query(
+            query, [
+                options.recId
+            ]
+        ).get(0).then(function(rec) {
+            if (!rec) {
+                return;
+            }
+            return q.ninvoke(Recordings, 'fetchAudioFile', {
+                uri: rec.rec_uri,
+                site_id: rec.site_id
+            }, {
+                maxFreq: rec.frequency_min,
+                minFreq: rec.frequency_max,
+                gain: options.gain || 15,
+                trim: {
+                    from: rec.time_min,
+                    to: rec.time_max
+                },
+            });
+        })
+    },
+
     audioEventDetections: function (options) {
         var constraints=['1=1'];
         var select = [];

@@ -2,12 +2,12 @@
     <div ng-if="loading">
         Loading... <loader></loader>
     </div>
-    <div class="jumbotron seconds-div-center" ng-if="!job_details && !loading">
+    <div class="jumbotron seconds-div-center" ng-if="infopanedata">
         <h3>{{ infopanedata }}</h3>
     </div>
-    <div ng-if="job_details && !loading" class="panel-body a2-page-header clearfix" ng-class="{ 'is-fixed': scrolledPastHeader }">
+    <div ng-if="job_details && showDetailsPage()" class="panel-body a2-page-header clearfix">
         <div class="row row-flex flex-align-top">
-            <div class="col-sm-3 flex-self-align-top" ng-show="job_details">
+            <div class="col-sm-3 flex-self-align-top">
                 <div class="row row-flex flex-align-top">
                     Job Name: {{ job_details.name }}
                     <br>User: {{ job_details.user }}
@@ -18,11 +18,11 @@
             </div>
         </div>
     </div>
-    <div ng-if="job_details && !loading" id="plotly" style="position: relative;">
+    <div id="plotly" style="position: relative;">
         <div ng-if="shapeSelected" class="popup-chart panel panel-default">
             <ul class="list-group">
                 <li class="list-group-item"><a>Context View</a></li>
-                <li class="list-group-item"><a>Grid View</a></li>
+                <li class="list-group-item" ng-click="onGridViewSelected()"><a>Grid View</a></li>
             </ul>
         </div>
     </div>
