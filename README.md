@@ -88,7 +88,7 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
 
 5. Run Development Server
     ```sh
-    ./node_modules/gulp/bin/gulp.js watch
+    npm run dev
     ```
 
 6. Open app in browser at `http://localhost:3000` or at url which you can set in `hosts` file (check below).
