@@ -5,7 +5,7 @@
     <div class="jumbotron seconds-div-center" ng-if="infopanedata">
           <h3>{{ infopanedata }}</h3>
     </div>
-    <div ng-if="!loading" class="panel-body a2-page-header clearfix">
+    <div ng-if="!loading && !infopanedata" class="panel-body a2-page-header clearfix">
         <div class="row row-flex flex-align-top">
             <div class="col-sm-3 flex-self-align-top">
                 <div class="row row-flex flex-align-top">
@@ -18,7 +18,7 @@
             </div>
         </div>
     </div>
-    <div ng-if="!loading">
+    <div ng-if="!loading && !infopanedata">
         <span ng-repeat="roi in rois"
             class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
             ng-click="roi.selected = !roi.selected"
