@@ -85,6 +85,7 @@ angular.module('a2.visualizer.layers.templates', [
                 roi : this.roi
             }).then((function(new_template){
                 console.log('new_template', new_template)
+                if (new_template.id === 0) return notify.error('The template with that name already exists for this record.');
                 $timeout((function(){
                     this.reset();
                     self.templates.push(new_template);

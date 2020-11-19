@@ -23,6 +23,7 @@ router.get('/', function(req, res, next) {
     }
     if (req.query.allAccessibleProjects === 'true') {
         params.allAccessibleProjects = req.query.allAccessibleProjects;
+        params.user_id = req.session.user.id;
     }
     else {
         params.project = req.project.project_id;

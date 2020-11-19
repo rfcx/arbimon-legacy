@@ -1,16 +1,21 @@
 
 <div class="row">
     <div class="col-lg-5 col-sm-12">
-        <div class="row">
+        <div class="row panel-body">
+            <ul class="nav nav-tabs col-md-12">
+                <li class="nav-item" ng-class="{ active: controller.currentTab === 'showOwner' }">
+                    <a class="nav-link" href=""
+                        ng-click="controller.importTemplates('showOwner')">Project Templates</a>
+                </li>
+                <li class="nav-item" ng-class="{ active: controller.currentTab === 'allAccessibleProjects' }">
+                    <a class="nav-link" href=""
+                        ng-click="controller.importTemplates('allAccessibleProjects')">Public Templates</a>
+                </li>
+              </ul>
+        </div>
+        <div class="row mb-4">
             <div class="col-sm-6">
                 <input class="form-control" type="text" placeholder="Search" ng-model="search.name">
-            </div>
-            <div class="col-sm-2">
-                <button class="btn btn-default"
-                    tooltip="Import from species library"
-                    ng-click="controller.importTemplates()">
-                    <span class="glyphicon glyphicon-import"></span>
-                </button>
             </div>
         </div>
 
@@ -45,19 +50,26 @@
                     <field title="Species" key="species_name" tdclass="is-v-middle">
                         {{ row.species_name }}
                     </field>
-                    <field title="Song type" key="songtype_name" tdclass="is-v-middle">
+                    <field title="Song type" key="songtype_name" tdclass="is-v-middle" className="no-wrap">
                         {{ row.songtype_name }}
                     </field>
-                    <field title="Date created" key="date_created" tdclass="is-v-middle">
+                    <field title="Date created" key="date_created" tdclass="is-v-middle" className="no-wrap">
                         {{ row.date_created | moment: 'll' }}
                     </field>
                     <field tdclass="is-v-middle">
                         <button class="btn btn-default"
-                            ng-if="row.project === projectData.project_id"
+                            ng-if="controller.currentTab === 'showOwner'"
                             ng-click="controller.deleteTemplate(row.id) | trackEvent:'Audiodata-template':'del clicked'"
                             tooltip="Delete Template"
                             tooltip-trigger="mouseenter">
                             <i class="fa fa-trash"></i>
+                        </button>
+                        <button class="btn btn-default"
+                            ng-if="controller.currentTab === 'allAccessibleProjects'"
+                            ng-click="controller.addTemplate(row) | trackEvent:'Audiodata-template':'add clicked'"
+                            tooltip="Add Template"
+                            tooltip-trigger="mouseenter">
+                            <i class="fa fa-plus"></i>
                         </button>
                     </field>
                 </a2-table>
