@@ -1,5 +1,6 @@
 angular.module('a2.analysis.cnn', [
     'ui.bootstrap',
+    'a2.directive.audio-bar',
     'a2.srv.cnn',
     'a2.services',
     'a2.permissions',
@@ -268,7 +269,7 @@ angular.module('a2.analysis.cnn', [
         templateUrl: '/app/analysis/cnn/details.html'
     };
 })
-.controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, a2AudioPlayer, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, notify) {
+.controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, a2AudioPlayer, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, a2AudioBarService, notify) {
 
     var projecturl = Project.getUrl();
 
@@ -525,9 +526,7 @@ angular.module('a2.analysis.cnn', [
             $event.preventDefault();
             $event.stopPropagation();
         }
-        audio_player.load(a2CNN.getAudioUrlFor(roi)).then(function(){
-            audio_player.play();
-        })
+        a2AudioBarService.loadUrl(a2CNN.getAudioUrlFor(roi), true);
     };
 
 
