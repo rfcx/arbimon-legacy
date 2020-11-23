@@ -1,0 +1,42 @@
+<div class="modal-header">
+    <h3 class="modal-title">Create a new clustering job</h3>
+</div>
+<div class="modal-body">
+    <form role="form">
+        <div class="form-group">
+            <label for="jobName">Name</label>
+            <input id="jobName" class="form-control" ng-model="controller.data.name" type="text"/>
+        </div>
+        <div class="form-group">
+            <label for="playlist">Audio Event Detection Job</label>
+            <span class="red" ng-hide="controller.loading.jobs || controller.list.jobs.length">
+                <em>No jobs found.
+                    <a ng-click="controller.cancel('/analysis/audio-event-detections-clustering/') | trackEvent:'Analysis-Clustering-new clustering model':'Cancel-Go to AED jobs'">
+                        Create one.
+                    </a>
+                </em>
+            </span>
+            <ui-select ng-disabled="disabled" ng-model="controller.data.aed_job" theme="/common/templates/a2-ui-select">
+                <ui-select-match placeholder="Select or search a job...">
+                    {{$select.selected.name}}
+                </ui-select-match>
+                <ui-select-choices repeat="job in controller.list.jobs | filter: $select.search">
+                    {{job.name}}
+                </ui-select-choices>
+            </ui-select>
+        </div>
+        <div class="form-group">
+            <label for="minPoints">Min. Points</label>
+            <input id="minPoints" class="form-control" style="text-align:left;" min="0" step="1" ng-model="controller.data.params.minPoints" type="number"/>
+        </div>
+        <div class="form-group">
+            <label for="distance">Distance Threshold</label>
+            <input id="distance" class="form-control" style="text-align:left;" min="0" step="1" ng-model="controller.data.params.distanceThreshold" type="number"/>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="controller.create() | trackEvent:'Analysis-Clustering-new clustering model':'Submit'" ng-disabled="!controller.isJobValid()">
+        Run
+    </button>
+</div>

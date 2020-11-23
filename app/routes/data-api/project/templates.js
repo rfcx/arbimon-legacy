@@ -10,7 +10,24 @@ var model = require('../../../model');
  */
 router.get('/', function(req, res, next) {
     res.type('json');
-    model.templates.find({ project:req.project.project_id, deleted:0, showSpecies:true }).then(function(count) {
+    var params = {
+        deleted: 0,
+        showSpecies: true
+    }
+    if (req.query.showRecordingUri === 'true') {
+        params.showRecordingUri = req.query.showRecordingUri;
+    }
+    if (req.query.showOwner === 'true') {
+        params.showOwner = req.query.showOwner;
+        params.user_id = req.session.user.id;
+    }
+    if (req.query.allAccessibleProjects === 'true') {
+        params.allAccessibleProjects = req.query.allAccessibleProjects;
+    }
+    else {
+        params.project = req.project.project_id;
+    }
+    model.templates.find(params).then(function(count) {
         res.json(count);
         return null;
     }).catch(next);

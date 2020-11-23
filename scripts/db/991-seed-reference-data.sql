@@ -1,13 +1,7 @@
--- MySQL dump 10.13  Distrib 5.6.25, for debian-linux-gnu (x86_64)
---
--- Host: localhost    Database: arbimon2
--- ------------------------------------------------------
--- Server version	5.6.25-0ubuntu0.15.04.1
-
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
+/*!50503 SET NAMES utf8mb4 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -20,19 +14,31 @@
 --
 
 /*!40000 ALTER TABLE `job_types` DISABLE KEYS */;
-INSERT INTO `job_types` VALUES (1,'Model training','training','Fitting of a model using training data. Model results are then validated using a validation data set.',1,'PatternMatching/train.py');
-INSERT INTO `job_types` VALUES (2,'Model classification','classification','Classification of project data using a specified model and parameters.',1,'PatternMatching/classify.py');
-INSERT INTO `job_types` VALUES (4,'Soundscape analysis','peak-soundscape','The creation of a peak soundscape using a playlist, an aggregation function and a thershold or peak limiting value.',1,'Soundscapes/playlist2soundscape.py');
+INSERT INTO `job_types` VALUES (1,'Model training','training','Fitting of a model using training data. Model results are then validated using a validation data set.',1,'PatternMatching/train.py','manual');
+INSERT INTO `job_types` VALUES (2,'Model classification','classification','Classification of project data using a specified model and parameters.',1,'PatternMatching/classification.py','script');
+INSERT INTO `job_types` VALUES (4,'Soundscape analysis','peak-soundscape','The creation of a peak soundscape using a playlist, an aggregation function and a thershold or peak limiting value.',1,'Soundscapes/playlist2soundscape.py','script');
+INSERT INTO `job_types` VALUES (5,'Audio Event Detection','audio-event-detection','Detection of audio events from recordings in a given playlist.',1,'AudioEventDetection/audio_event_detection.py','script');
+INSERT INTO `job_types` VALUES (6,'Pattern Matching','pattern-matching','Matching of template roi on recordings on a playlist',0,'PatternMatching/pattern_matching.py','');
+INSERT INTO `job_types` VALUES (7,'Convolutional Neural Network','cnn','Convolutional neural network based detections and verifications.',0,'CNN/cnn.py','');
 /*!40000 ALTER TABLE `job_types` ENABLE KEYS */;
+
+--
+-- Dumping data for table `training_set_types`
+--
+
+/*!40000 ALTER TABLE `training_set_types` DISABLE KEYS */;
+INSERT INTO `training_set_types` VALUES (1,'ROI set','roi_set','Regions of interest (ROI) used to create a pattern matching model');
+/*!40000 ALTER TABLE `training_set_types` ENABLE KEYS */;
 
 --
 -- Dumping data for table `model_types`
 --
 
 /*!40000 ALTER TABLE `model_types` DISABLE KEYS */;
-INSERT INTO `model_types` VALUES (1,'Pattern Matching (slow)','Pattern Matching using ROIs. Matrix comparisons computed using SSIM (Structural similarity index).',1,1,0,0);
-INSERT INTO `model_types` VALUES (2,'Pattern Matching (fast)','Pattern Matching using ROIs. Matrix comparisons computed using matrix norms.',1,0,0,1);
-INSERT INTO `model_types` VALUES (3,'Search and Match','Pattern Matching using ROIs. Search interesting areas and compute matrix comparisons using SSIM (Structural similarity index).',1,0,1,1);
+INSERT INTO `model_types` VALUES (1,'Pattern Matching (slow)','Pattern Matching using ROIs. Matrix comparisons computed using SSIM (Structural similarity index measurement).',1,1,0,0);
+INSERT INTO `model_types` VALUES (2,'Pattern Matching (fast)','Pattern Matching using ROIs. Matrix comparisons computed using matrix norms.',1,0,0,0);
+INSERT INTO `model_types` VALUES (3,'Search and Match','Pattern Matching using ROIs. Search interesting areas and compute matrix comparisons using SSIM (Structural similarity index).',1,0,1,0);
+INSERT INTO `model_types` VALUES (4,'Pattern Matching with Random Forests','Pattern Matching using OpenCV matchTemplate procedure and a trained Random Forest.',1,0,0,1);
 /*!40000 ALTER TABLE `model_types` ENABLE KEYS */;
 
 --
@@ -50,11 +56,17 @@ INSERT INTO `permissions` VALUES (8,'manage playlists','user can edit and delete
 INSERT INTO `permissions` VALUES (9,'manage project recordings','user can upload, edit and remove recordings',0);
 INSERT INTO `permissions` VALUES (10,'manage project jobs','user can view jobs and cancel them',0);
 INSERT INTO `permissions` VALUES (11,'validate species','user can validate species in project recordings',0);
-INSERT INTO `permissions` VALUES (12,'invalidate species','user can invalidate species from project recordings validated by other users',0);
+INSERT INTO `permissions` VALUES (12,'invalidate species','user can invalidate species from project recordings',0);
 INSERT INTO `permissions` VALUES (13,'manage models and classification','user can create, edit and run models',0);
 INSERT INTO `permissions` VALUES (14,'manage validation sets','user can create, edit and delete validation sets',0);
 INSERT INTO `permissions` VALUES (15,'manage training sets','user can create, edit and delete training sets',0);
 INSERT INTO `permissions` VALUES (16,'manage soundscapes','user can create and work with soundscapes',0);
+INSERT INTO `permissions` VALUES (17,'manage templates','user can create templates',0);
+INSERT INTO `permissions` VALUES (18,'manage pattern matchings','user can create pattern matchings',0);
+INSERT INTO `permissions` VALUES (19,'validate pattern matchings','user can validate matches in a pattern matching',0);
+INSERT INTO `permissions` VALUES (20,'use citizen scientist interface','user can validate pattern matchings through the citizen scientist interface',0);
+INSERT INTO `permissions` VALUES (23,'view citizen scientist expert interface','user can view citizen scientist expert interface',0);
+INSERT INTO `permissions` VALUES (24,'view citizen scientist admin interface','user can view citizen scientist admin interface',0);
 /*!40000 ALTER TABLE `permissions` ENABLE KEYS */;
 
 --
@@ -64,6 +76,9 @@ INSERT INTO `permissions` VALUES (16,'manage soundscapes','user can create and w
 /*!40000 ALTER TABLE `playlist_types` DISABLE KEYS */;
 INSERT INTO `playlist_types` VALUES (1,'normal');
 INSERT INTO `playlist_types` VALUES (2,'soundscape region');
+INSERT INTO `playlist_types` VALUES (3,'union');
+INSERT INTO `playlist_types` VALUES (4,'intersection');
+INSERT INTO `playlist_types` VALUES (5,'subtraction');
 /*!40000 ALTER TABLE `playlist_types` ENABLE KEYS */;
 
 --
@@ -82,6 +97,8 @@ INSERT INTO `project_news_types` VALUES (8,'model trained ','user created and tr
 INSERT INTO `project_news_types` VALUES (9,'model run','user run a model over a set of recordings','run classification \"%(classi)s\" of model\"%(model)s\" on project \"%(project)s\"');
 INSERT INTO `project_news_types` VALUES (10,'playlist created','user created a playlist','created playlist \"%(playlist)s\" on project \"%(project)s\"');
 INSERT INTO `project_news_types` VALUES (11,'soundscape created','user created soundscape','created soundscape \"%(soundscape)s\" on project \"%(project)s\"');
+INSERT INTO `project_news_types` VALUES (12,'training set edited','Training set edited','edited training set \"%(training_set)s\" on project \"%(project)s\"');
+INSERT INTO `project_news_types` VALUES (13,'training set removed','Training set removed','removed training set \"%(training_set)s\" from project \"%(project)s\"');
 /*!40000 ALTER TABLE `project_news_types` ENABLE KEYS */;
 
 --
@@ -89,8 +106,7 @@ INSERT INTO `project_news_types` VALUES (11,'soundscape created','user created s
 --
 
 /*!40000 ALTER TABLE `project_types` DISABLE KEYS */;
-INSERT INTO `project_types` VALUES (1,'free','free project ');
-INSERT INTO `project_types` VALUES (2,'paid','paid project');
+INSERT INTO `project_types` VALUES (1,'testType','testing type');
 /*!40000 ALTER TABLE `project_types` ENABLE KEYS */;
 
 --
@@ -100,10 +116,11 @@ INSERT INTO `project_types` VALUES (2,'paid','paid project');
 /*!40000 ALTER TABLE `roles` DISABLE KEYS */;
 INSERT INTO `roles` VALUES (1,'Admin','Project Administrator - can do anything but delete the project','',2);
 INSERT INTO `roles` VALUES (2,'User','Normal user - can do anything except manage settings, billing or delete the project','',4);
-INSERT INTO `roles` VALUES (3,'Guest ','Guest user - can only view the project','',6);
+INSERT INTO `roles` VALUES (3,'Guest ','Guest user - can only view the project','',7);
 INSERT INTO `roles` VALUES (4,'Owner','Project Owner - can do anything on the project','',1);
 INSERT INTO `roles` VALUES (5,'Data Entry','Data Entry user - can manage project data but can only view the analysis section','',5);
 INSERT INTO `roles` VALUES (6,'Expert','Expert User - can do anything a user can do plus can invalidate species from recordings','',3);
+INSERT INTO `roles` VALUES (7,'Citizen Scientist','Citizen Scientist - User can only see the Citizen Scientist interface and add validations to the pattern matchings','',6);
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
 
 --
@@ -167,6 +184,32 @@ INSERT INTO `role_permissions` VALUES (1,16);
 INSERT INTO `role_permissions` VALUES (2,16);
 INSERT INTO `role_permissions` VALUES (4,16);
 INSERT INTO `role_permissions` VALUES (6,16);
+INSERT INTO `role_permissions` VALUES (1,17);
+INSERT INTO `role_permissions` VALUES (2,17);
+INSERT INTO `role_permissions` VALUES (4,17);
+INSERT INTO `role_permissions` VALUES (5,17);
+INSERT INTO `role_permissions` VALUES (6,17);
+INSERT INTO `role_permissions` VALUES (1,18);
+INSERT INTO `role_permissions` VALUES (2,18);
+INSERT INTO `role_permissions` VALUES (4,18);
+INSERT INTO `role_permissions` VALUES (6,18);
+INSERT INTO `role_permissions` VALUES (1,19);
+INSERT INTO `role_permissions` VALUES (2,19);
+INSERT INTO `role_permissions` VALUES (4,19);
+INSERT INTO `role_permissions` VALUES (5,19);
+INSERT INTO `role_permissions` VALUES (6,19);
+INSERT INTO `role_permissions` VALUES (1,20);
+INSERT INTO `role_permissions` VALUES (2,20);
+INSERT INTO `role_permissions` VALUES (3,20);
+INSERT INTO `role_permissions` VALUES (4,20);
+INSERT INTO `role_permissions` VALUES (5,20);
+INSERT INTO `role_permissions` VALUES (6,20);
+INSERT INTO `role_permissions` VALUES (7,20);
+INSERT INTO `role_permissions` VALUES (1,23);
+INSERT INTO `role_permissions` VALUES (4,23);
+INSERT INTO `role_permissions` VALUES (6,23);
+INSERT INTO `role_permissions` VALUES (1,24);
+INSERT INTO `role_permissions` VALUES (4,24);
 /*!40000 ALTER TABLE `role_permissions` ENABLE KEYS */;
 
 --
@@ -192,14 +235,6 @@ INSERT INTO `soundscape_aggregation_types` VALUES (6,'year','Year by year','[\"2
 /*!40000 ALTER TABLE `soundscape_aggregation_types` ENABLE KEYS */;
 
 --
--- Dumping data for table `training_set_types`
---
-
-/*!40000 ALTER TABLE `training_set_types` DISABLE KEYS */;
-INSERT INTO `training_set_types` VALUES (1,'ROI set','roi_set','Regions of interest (ROI) used to create a pattern matching model');
-/*!40000 ALTER TABLE `training_set_types` ENABLE KEYS */;
-
---
 -- Dumping data for table `user_account_support_type`
 --
 
@@ -207,8 +242,8 @@ INSERT INTO `training_set_types` VALUES (1,'ROI set','roi_set','Regions of inter
 INSERT INTO `user_account_support_type` VALUES (1,'account_activation','Activates a new user\'s account.',259200);
 INSERT INTO `user_account_support_type` VALUES (2,'password_recovery','Allows a user to change it\'s forgotten passwords',86400);
 /*!40000 ALTER TABLE `user_account_support_type` ENABLE KEYS */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
@@ -216,5 +251,3 @@ INSERT INTO `user_account_support_type` VALUES (2,'password_recovery','Allows a 
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2015-08-24 11:16:24

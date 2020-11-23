@@ -40,6 +40,5 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
             });
         }
     };
-    $scope.$watch(function(){ return self.audioEvents; }, fetchAudioEvents);
     $scope.$watch('visobject', fetchAudioEvents);
 });

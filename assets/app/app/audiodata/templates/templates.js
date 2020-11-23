@@ -13,9 +13,12 @@ angular.module('a2.audiodata.templates', [
 })
 .controller('TemplatesCtrl', function($state, $scope, a2Templates, Project, $q, a2UserPermit, notify, $modal) {
     var self = this;
+    Project.getInfo(function(data) {
+        $scope.projectData = data;
+    });
     Object.assign(this, {
         initialize: function(){
-            this.loading = {list:false};
+            this.loading = false;
             this.templates = [];
             this.getList();
             this.projecturl = Project.getUrl();
@@ -25,13 +28,10 @@ angular.module('a2.audiodata.templates', [
             return template ? "/project/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
         },
         getList: function(){
-            this.loading.list = true;
-            return a2Templates.getList().then((function(data){
-                this.loading.list = false;
-                this.templates = data;//.map(function(d) {
-                    // d.date_created = new Date(d.date_created);
-                    // return d;
-                // });
+            self.loading = true;
+            return a2Templates.getList({ showOwner: true, showRecordingUri: true }).then((function(data){
+                self.loading = false;
+                self.templates = data;
             }.bind(this)));
         },
         deleteTemplate: function(templateId){
@@ -60,6 +60,13 @@ angular.module('a2.audiodata.templates', [
                 }
             });
 
+        },
+        importTemplates: function() {
+            self.loading = true;
+            a2Templates.getList({ allAccessibleProjects: true, showOwner: true, showRecordingUri: true }).then(function(data){
+                self.loading = false;
+                self.templates = data;
+            });
         },
     });
     this.initialize();

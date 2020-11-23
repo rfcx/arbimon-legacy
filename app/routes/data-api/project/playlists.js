@@ -132,6 +132,13 @@ router.post('/create', function(req, res, next) {
     });
 });
 
+router.post('/rename', function(req, res, next) {
+    model.playlists.rename(req.body, function(err, results) {
+        if(err) return next(err);
+        
+        res.json({ success: true });
+    })
+})
 
 /** Combine playlists into a new one.
  */

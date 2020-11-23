@@ -5,12 +5,20 @@
             <div class="col-sm-6">
                 <input class="form-control" type="text" placeholder="Search" ng-model="search.name">
             </div>
+            <div class="col-sm-2">
+                <button class="btn btn-default"
+                    tooltip="Import from species library"
+                    ng-click="controller.importTemplates()">
+                    <span class="glyphicon glyphicon-import"></span>
+                </button>
+            </div>
         </div>
 
         <div class="row">
             <div class="col-md-12">
-                <a2-table search="search" rows="controller.templates" no-checkbox>
-                    <field>
+                <loader ng-if="controller.loading"></loader>
+                <a2-table ng-if="!controller.loading" search="search" rows="controller.templates" no-checkbox>
+                    <field tdclass="is-v-middle">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{row.uri}}" class="roi-img is-small"/>
                             <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}">
@@ -22,20 +30,30 @@
                             </a>
                         </div>
                     </field>
-                    <field title="Name" key="name">
+                    <field title="Name" key="name" tdclass="is-v-middle">
                         {{ row.name }}
                     </field>
-                    <field title="Species" key="species_name">
+                    <field title="Author" key="author" tdclass="is-v-middle">
+                        {{ row.author }}
+                    </field>
+                    <field title="Project" key="project" tdclass="is-v-middle">
+                        {{ row.project_name }}
+                    </field>
+                    <field title="Sampling rate" key="sampling_rate" tdclass="is-v-middle" className="no-wrap">
+                        {{ row.sample_rate }}
+                    </field>
+                    <field title="Species" key="species_name" tdclass="is-v-middle">
                         {{ row.species_name }}
                     </field>
-                    <field title="Songtype" key="songtype_name">
+                    <field title="Song type" key="songtype_name" tdclass="is-v-middle">
                         {{ row.songtype_name }}
                     </field>
-                    <field title="Date created" key="date_created">
+                    <field title="Date created" key="date_created" tdclass="is-v-middle">
                         {{ row.date_created | moment: 'll' }}
                     </field>
-                    <field>
+                    <field tdclass="is-v-middle">
                         <button class="btn btn-default"
+                            ng-if="row.project === projectData.project_id"
                             ng-click="controller.deleteTemplate(row.id) | trackEvent:'Audiodata-template':'del clicked'"
                             tooltip="Delete Template"
                             tooltip-trigger="mouseenter">
@@ -43,8 +61,7 @@
                         </button>
                     </field>
                 </a2-table>
-                <loader ng-show="controller.loading.list"></loader>
-                <div class="jumbotron" ng-show="(!controller.templates || controller.templates.length == 0) && !controller.loading.list">
+                <div class="jumbotron" ng-show="(!controller.templates || controller.templates.length == 0) && !controller.loading">
                     <h3>
                         No templates found.
                     </h3>
