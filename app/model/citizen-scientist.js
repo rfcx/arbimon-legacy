@@ -284,39 +284,55 @@ var CitizenScientist = {
         });
     },
 
-    computeUserStatsForProjectSpeciesSongtype(project_id, species_id, songtype_id){
-        return dbpool.query(
-            "INSERT INTO pattern_matching_user_statistics(\n" +
-            "    user_id, project_id, species_id, songtype_id,\n" +
-            "    validated, correct, incorrect, pending,\n" +
-            "    confidence,\n" +
-            "    last_update\n" +
-            ") SELECT \n" +
-            "    Q.user_id, Q.project_id, Q.species_id, Q.songtype_id, \n" +
-            "    Q.validated, Q.correct, Q.incorrect, Q.pending,\n" +
-            "    (Q.correct + 1) / (Q.correct + Q.incorrect + 1),\n" +
-            "    NOW()\n" +
-            "FROM (\n" +
-            "    SELECT PMV.user_id, P.project_id, P.species_id, P.songtype_id,\n" +
-            "        COUNT(PMV.validated) as validated,\n" +
-            "        SUM(IF(PMV.validated = COALESCE(PMR.expert_validated, PMR.consensus_validated), 1, 0)) as correct,\n" +
-            "        SUM(IF(PMV.validated != COALESCE(PMR.expert_validated, PMR.consensus_validated), 1, 0)) as incorrect,\n" +
-            "        SUM(IF(PMV.validated IS NOT NULL AND PMR.expert_validated IS NULL AND PMR.consensus_validated IS NULL, 1, 0)) as pending\n" +
-            "    FROM pattern_matchings P\n" +
-            "    JOIN pattern_matching_rois PMR ON P.pattern_matching_id = PMR.pattern_matching_id\n" +
-            "    JOIN pattern_matching_validations PMV ON PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id\n" +
-            "    WHERE P.project_id = ? AND P.species_id = ? AND P.songtype_id = ?\n" +
-            "    GROUP BY PMV.user_id\n" +
-            ") Q\n" +
-            "ON DUPLICATE KEY UPDATE\n" +
-            "    validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect),\n" +
-            "    pending=VALUES(pending),\n" +
-            "    confidence=VALUES(confidence),\n" +
-            "    last_update=VALUES(last_update)\n" +
-            "", [
-                project_id, species_id, songtype_id,
-            ]
-        );
+    async computeUserStatsForProjectSpeciesSongtype(project_id, species_id, songtype_id) {
+        // get all possible validations from all users (using DB indexes)
+        let q1 = `SELECT PMR.*, PMV.user_id, PMV.validated as validated
+                    FROM pattern_matching_rois PMR
+                    JOIN pattern_matchings P ON P.pattern_matching_id = PMR.pattern_matching_id
+                    JOIN pattern_matching_validations PMV ON PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id
+                    WHERE P.project_id = ? AND P.species_id = ? AND P.songtype_id = ?;`;
+        let stats = await dbpool.query(q1, [ project_id, species_id, songtype_id ]);
+        // collect statistics data per each user
+        let userStats = {};
+        stats.forEach((stat) => {
+            let userId = `${stat.user_id}`;
+            if (!userStats[userId]) {
+                userStats[userId] = {
+                    validated: 0,
+                    correct: 0,
+                    incorrect: 0,
+                    pending: 0
+                }
+            }
+            if (stat.validated !== null) {
+                userStats[userId].validated++;
+            }
+            let othersValidated = (stat.expert_validated !== null || stat.consensus_validated !== null)? stat.expert_validated === 1 || stat.consensus_validated === 1 : null;
+            if (othersValidated !== null) {
+                if (!!stat.validated === othersValidated) {
+                    userStats[userId].correct++;
+                }
+                if (!!stat.validated !== othersValidated) {
+                    userStats[userId].incorrect++;
+                }
+            }
+            else {
+                if (stat.validated !== null) {
+                    userStats[userId].pending++;
+                }
+            }
+        })
+        // save statistics data for each user
+        for (let key in userStats) {
+            let stat = userStats[key];
+            let confidence = (stat.correct + 1) / (stat.correct + stat.incorrect + 1);
+            let q2 = `INSERT INTO pattern_matching_user_statistics (user_id, project_id, species_id,
+                            songtype_id, validated, correct, incorrect, pending, confidence, last_update)
+                      VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                      ON DUPLICATE KEY UPDATE validated=VALUES(validated), correct=VALUES(correct), incorrect=VALUES(incorrect), pending=VALUES(pending),
+                            confidence=VALUES(confidence), last_update=VALUES(last_update)`;
+            await dbpool.query(q2, [parseInt(key), project_id, species_id, songtype_id, stat.validated, stat.correct, stat.incorrect, stat.pending, confidence])
+        }
     },
 
 };
