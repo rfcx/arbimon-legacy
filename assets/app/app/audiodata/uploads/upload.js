@@ -65,8 +65,7 @@ angular.module('a2.audiodata.uploads.upload', [
             if(item.isSuccess) // file uploaded on current batch
                 return next();
 
-            Project.recExists($scope.info.site.id, item.file.name.split('.')[0], function(exists) {
-
+            Project.recExists($scope.info.site.id, item.file.name, function(exists) {
                 if(exists) {
                     console.log('duplicated');
                     item.isDuplicate = true;
