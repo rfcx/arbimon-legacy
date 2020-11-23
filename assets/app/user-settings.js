@@ -24,32 +24,23 @@ angular.module('a2.user-settings', [
         this.data = angular.copy(this.user);
     };
     
-    var confirmPass = function() {
-        return $modal.open({
-            templateUrl: '/user-settings/confirm-password.html'
-        }).result;
-    };
-    
     this.save = function() {
         var data = this.data;
-        return confirmPass().then(function(pass) {
-            return $http.post('/api/user/update', {
-                userData: {
-                    name     : data.name,
-                    lastname : data.lastname,
-                    oauth    : data.oauth
-                },
-                password: pass
-            }).then(function(response){
-                if(response.data.error){
-                    notify.error(response.data.error);
-                } else {
-                    notify.log(response.data.message);
-                }
-            }).catch(function(err){
-                console.log("err", err);
-                notify.serverError();
-            });
+        return $http.post('/api/user/update', {
+            userData: {
+                name     : data.name,
+                lastname : data.lastname,
+                oauth    : data.oauth
+            }
+        }).then(function(response){
+            if(response.data.error){
+                notify.error(response.data.error);
+            } else {
+                notify.log(response.data.message);
+            }
+        }).catch(function(err){
+            console.log("err", err);
+            notify.serverError();
         });
     };
         

@@ -139,22 +139,14 @@ router.post('/update/password', function(req, res, next){
 router.post('/update', function(req, res, next){
     res.type('json');
     var userData = req.body.userData;
-    var password = req.body.password || '';
 
     model.users.findById(req.session.user.id).get(0).then(function(user){
-        if(model.users.hashPassword(password) != user.password){
-            throw new APIError({ error: "Invalid confirmation password" }, 200);
-        }
-
         if(userData){
             var updateData = {
                 user_id: req.session.user.id,
                 firstname: userData.name,
                 lastname: userData.lastname
             };
-            if(userData.password){
-                updateData.password = userData.password;
-            }
             if(userData.oauth){
                 updateData.oauth_google = userData.oauth.google;
                 updateData.oauth_facebook = userData.oauth.facebook;
