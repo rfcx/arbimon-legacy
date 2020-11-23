@@ -11,7 +11,7 @@ angular.module('a2.audiodata.templates', [
         templateUrl: '/app/audiodata/templates/templates.html'
     });
 })
-.controller('TemplatesCtrl', function($state, $scope, a2Templates, Project, $q, a2UserPermit, notify, $modal) {
+.controller('TemplatesCtrl', function($state, $scope, a2Templates, Project, $q, a2UserPermit, notify, $modal, $window) {
     var self = this;
     Object.assign(this, {
         initialize: function(){
@@ -24,6 +24,14 @@ angular.module('a2.audiodata.templates', [
         getTemplateVisualizerUrl: function(template){
             var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
             return template ? "/project/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        },
+        goToSourceProject: function(projectId) {
+            if (!projectId) return;
+            Project.getProjectById(projectId, function(data) {
+                if (data) {
+                    $window.location.pathname = "/project/"+data.url+"/audiodata/templates";
+                }
+            });
         },
         getList: function() {
             self.loading = true;
@@ -89,7 +97,8 @@ angular.module('a2.audiodata.templates', [
                     y1: template.y1,
                     x2: template.x2,
                     y2: template.y2,
-                }
+                },
+                source_project_id: template.project
             }).then((function(template){
                 console.log('new template', template);
                 if (template.id === 0) notify.error('The template already exists in the project templates.')
@@ -101,5 +110,4 @@ angular.module('a2.audiodata.templates', [
         }
     });
     this.initialize();
-})
-;
+});

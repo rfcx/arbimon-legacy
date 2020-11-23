@@ -96,6 +96,10 @@ var Templates = {
             constraints.push('NOT (UPR.user_id = ' + dbpool.escape(options.user_id) + ') AND P.is_private = 0');
         }
 
+        if (options.showOwner) {
+            select.push('T.source_project_id');
+        }
+
         if (constraints.length === 0){
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }
@@ -116,6 +120,7 @@ var Templates = {
         project: joi.number().integer(), recording: joi.number().integer(),
         species: joi.number().integer(), songtype: joi.number().integer(),
         x1: joi.number(), y1: joi.number(), x2: joi.number(), y2: joi.number(),
+        source_project_id: joi.number(),
     }),
 
     /** Finds templates, given a (non-empty) query.
@@ -143,9 +148,9 @@ var Templates = {
         "    `project_id`, `recording_id`,\n" +
         "    `species_id`, `songtype_id`,\n" +
         "    `x1`, `y1`, `x2`, `y2`,\n" +
-        "    `date_created`\n" +
+        "    `date_created`, `source_project_id`\n" +
         ") SELECT " + `'${data.name}', null, ${data.project}, ${data.recording}, ${data.species}, ${data.songtype}, ${data.x1},
-        ${data.y1}, ${data.x2}, ${data.y2}, NOW()` + " FROM DUAL\n" +
+        ${data.y1}, ${data.x2}, ${data.y2}, NOW(), ${data.source_project_id? data.source_project_id : null}` + " FROM DUAL\n" +
         "WHERE NOT EXISTS (SELECT * FROM `templates`\n" +
         "WHERE `name`=" + `'${data.name}'` + " AND `project_id`=" + `${data.project}` + " AND `recording_id`=" + `${data.recording}` + " AND `deleted`=0 LIMIT 1)";
 

@@ -78,7 +78,7 @@ angular.module('a2.directive.a2-table', [
                     )
                 );
                 tplBody.append(
-                    angular.element('<td ' + (field.title === 'Name' ? 'title="' + field.content +'"' : '') + (field.width ? 'width="' + field.width + '"' : '') + '>').addClass(field.className).addClass(field.tdclass).html(field.content)
+                    angular.element('<td ' + (['Project', 'Species'].includes(field.title) ? 'title="' + field.content +'"' : '') + (field.width ? 'width="' + field.width + '"' : '') + '>').addClass(field.className).addClass(field.tdclass).html(field.content)
                 );
             });
 

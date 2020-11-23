@@ -1,6 +1,6 @@
 
 <div class="row">
-    <div class="col-lg-5 col-sm-12">
+    <div class="col-sm-12">
         <div class="row panel-body">
             <ul class="nav nav-tabs col-md-12">
                 <li class="nav-item" ng-class="{ active: controller.currentTab === 'showOwner' }">
@@ -13,13 +13,7 @@
                 </li>
               </ul>
         </div>
-        <div class="row mb-4">
-            <div class="col-sm-6">
-                <input class="form-control" type="text" placeholder="Search" ng-model="search.name">
-            </div>
-        </div>
-
-        <div class="row">
+        <div class="row templates">
             <div class="col-md-12">
                 <loader ng-if="controller.loading"></loader>
                 <a2-table ng-if="!controller.loading" search="search" rows="controller.templates" no-checkbox>
@@ -35,22 +29,29 @@
                             </a>
                         </div>
                     </field>
-                    <field title="Name" key="name" tdclass="is-v-middle">
-                        {{ row.name }}
+                    <field title="Name" key="name" filter tdclass="is-v-middle" className="name">
+                        <div>
+                            <p class="m-0 is-v-middle no-wrap hidelongtext">{{ row.name }}</p>
+                            <a class="is-v-middle"
+                                ng-if="controller.currentTab === 'showOwner' && row.project !== row.source_project_id && row.source_project_id !== null"
+                                ng-click="controller.goToSourceProject(row.source_project_id)">
+                                <i aria-hidden="true" class="glyphicon glyphicon-link pl-2"></i>linked
+                            </a>
+                        </div>
                     </field>
-                    <field title="Author" key="author" tdclass="is-v-middle">
+                    <field title="Author" key="author" filter tdclass="is-v-middle no-wrap hidelongtext">
                         {{ row.author }}
                     </field>
-                    <field title="Project" key="project" tdclass="is-v-middle">
+                    <field title="Project" key="project_name" filter tdclass="is-v-middle no-wrap hidelongtext">
                         {{ row.project_name }}
                     </field>
                     <field title="Sampling rate" key="sampling_rate" tdclass="is-v-middle" className="no-wrap">
                         {{ row.sample_rate }}
                     </field>
-                    <field title="Species" key="species_name" tdclass="is-v-middle">
+                    <field title="Species" key="species_name" filter tdclass="is-v-middle no-wrap hidelongtext">
                         {{ row.species_name }}
                     </field>
-                    <field title="Song type" key="songtype_name" tdclass="is-v-middle" className="no-wrap">
+                    <field title="Song type" key="songtype_name" tdclass="is-v-middle no-wrap hidelongtext" className="no-wrap">
                         {{ row.songtype_name }}
                     </field>
                     <field title="Date created" key="date_created" tdclass="is-v-middle" className="no-wrap">
