@@ -23,8 +23,7 @@ var AudioEventDetectionsClustering = {
         }
         select.push(
             "A.`recording_id` as `rec_id`",
-            "JP.`name` as `name`",
-            "JP.`parameters` as `parameters`"
+            "JP.name, JP.parameters",
         );
         tables.push("JOIN job_params_audio_event_detection_clustering JP ON A.job_id = JP.job_id");
 
@@ -32,8 +31,7 @@ var AudioEventDetectionsClustering = {
         tables.push("JOIN jobs J ON A.job_id = J.job_id");
 
         select.push(
-            "P.`playlist_id` as `playlist_id`",
-            "P.`name` as `playlist_name`"
+            "P.playlist_id, P.`name` as `playlist_name`",
         );
         tables.push("JOIN playlists P ON JP.playlist_id = P.playlist_id");
 
@@ -53,8 +51,8 @@ var AudioEventDetectionsClustering = {
             select.push(
                 "A.`time_min` as `time_min`",
                 "A.`time_max` as `time_max`",
-                "A.`frequency_min` as `frec_min`",
-                "A.`frequency_max` as `frec_max`"
+                "A.`frequency_min` as `freq_min`",
+                "A.`frequency_max` as `freq_max`"
             );
             constraints.push('A.recording_id = ?');
             data.push(options.rec_id);
@@ -83,6 +81,40 @@ var AudioEventDetectionsClustering = {
             ),
             data
         ))
+    },
+
+    findClusteredRecords: function (options) {
+        var constraints=['1=1'];
+        var select = [];
+        var tables = [
+            "audio_event_detections_clustering A"
+        ];
+        if(!options){
+            options = {};
+        }
+        select.push(
+            'A.aed_id, A.`recording_id` as `rec_id`',
+            "A.`time_min` as `time_min`",
+            "A.`time_max` as `time_max`",
+            "A.`frequency_min` as `freq_min`",
+            "A.`frequency_max` as `freq_max`"
+        );
+
+        if (options.aed_id) {
+            constraints.push('A.aed_id = ' + dbpool.escape(options.aed_id));
+        } else if (options.aed_id_in) {
+            if(!options.aed_id_in.length){
+                constraints.push('1 = 0');
+            } else {
+                let arr = options.aed_id_in.map(x => parseInt(x));
+                constraints.push('A.aed_id IN (' + dbpool.escape(arr) + ')');
+            }
+        }
+        return dbpool.query(
+            "SELECT " + select.join(",\n    ") + "\n" +
+            "FROM " + tables.join("\n") + "\n" +
+            "WHERE " + constraints.join(" AND ")
+        )
     },
 
     JOB_SCHEMA : joi.object().keys({

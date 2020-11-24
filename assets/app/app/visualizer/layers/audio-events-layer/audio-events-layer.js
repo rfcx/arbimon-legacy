@@ -24,15 +24,15 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
         var aset= self.audioEvents && self.audioEvents.length;
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
         if (rec && !aset) {
-            a2AudioEventDetectionsClustering.list(rec).then(function(audioEvents) {
+            a2AudioEventDetectionsClustering.list({rec_id: rec}).then(function(audioEvents) {
                 if (audioEvents) {
                     self.audioEvents = audioEvents.map(event => {
                         return {
                             rec_id: event.rec_id,
                             x1: event.time_min,
                             x2: event.time_max,
-                            y1: event.frec_min,
-                            y2: event.frec_max
+                            y1: event.freq_min,
+                            y2: event.freq_max
                         }
                     });
                     return audioEvents;

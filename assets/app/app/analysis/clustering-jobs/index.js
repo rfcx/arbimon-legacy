@@ -93,7 +93,7 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/details.html'
     };
 })
-.controller('ClusteringDetailsCtrl' , function($scope, $state, a2ClusteringJobs) {
+.controller('ClusteringDetailsCtrl' , function($scope, $state, a2ClusteringJobs, a2AudioEventDetectionsClustering, $window, Project) {
     $scope.loading = true;
     $scope.shapeSelected = false;
     $scope.infopanedata = '';
@@ -240,6 +240,26 @@ angular.module('a2.analysis.clustering-jobs', [
             clusteringJobId: $scope.clusteringJobId,
             gridContext: $scope.gridContext
         });
+    };
+    $scope.showClustersInVisualizer = function () {
+        $scope.shapeSelected = false;
+        $scope.clusters = $scope.originalData.find(shape => {
+            return shape.x.includes($scope.point.x) && shape.y.includes($scope.point.y);
+        });
+        console.log('clusters', $scope.clusters);
+        if ($scope.clusters && $scope.clusters.aed && $scope.clusters.aed.length) {
+            return a2AudioEventDetectionsClustering.getClusteredRecords($scope.clusters.aed.length === 1 ?
+                {aed_id: $scope.clusters.aed} : {aed_id_in: $scope.clusters.aed})
+                .then(function(data) {
+                    console.log('records', data);
+                    // TO DO move all records to visualizer page
+                    if (data && data.length) {
+                        var box = ['box', data[0].time_min, data[0].freq_max, data[0].time_max, data[0].freq_max].join(',');
+                        $window.location.href = '/project/'+Project.getUrl()+'/#/visualizer/rec/'+data[0].rec_id+'?a='+box;
+                    }
+                }
+            );
+        }
     };
     $scope.showDetailsPage = function () {
         return !$scope.loading && !$scope.infopanedata && !$scope.gridViewSelected;
