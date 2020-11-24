@@ -149,31 +149,18 @@ var Templates = {
         "    `species_id`, `songtype_id`,\n" +
         "    `x1`, `y1`, `x2`, `y2`,\n" +
         "    `date_created`, `source_project_id`\n" +
-        ") SELECT " + `'${data.name}', null, ${data.project}, ${data.recording}, ${data.species}, ${data.songtype}, ${data.x1},
-        ${data.y1}, ${data.x2}, ${data.y2}, NOW(), ${data.source_project_id? data.source_project_id : null}` + " FROM DUAL\n" +
+        ") SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ? FROM DUAL\n" +
         "WHERE NOT EXISTS (SELECT * FROM `templates`\n" +
-        "WHERE `name`=" + `'${data.name}'` + " AND `project_id`=" + `${data.project}` + " AND `recording_id`=" + `${data.recording}` + " AND `deleted`=0 LIMIT 1)";
+        "WHERE `name`=? AND `project_id`=? AND `recording_id`=? AND `deleted`=0 LIMIT 1)";
 
         return q.ninvoke(joi, 'validate', data, this.SCHEMA).then(
             () => dbpool.query(
-                query
-                // "INSERT INTO templates (\n" +
-                // "    `name`, `uri`,\n" +
-                // "    `project_id`, `recording_id`,\n" +
-                // "    `species_id`, `songtype_id`,\n" +
-                // "    `x1`, `y1`, `x2`, `y2`,\n" +
-                // "    `date_created`\n" +
-                // ") VALUES (\n" +
-                // "    ?, ?,\n" +
-                // "    ?, ?, ?, ?,\n" +
-                // "    ?, ?, ?, ?,\n" +
-                // "    NOW()\n" +
-                // ")", [
-                //     query, [
-                //     data.name, null,
-                //     data.project, data.recording, data.species, data.songtype,
-                //     data.x1, data.y1, data.x2, data.y2,
-                // ]
+                    query, [
+                    data.name, null,
+                    data.project, data.recording, data.species, data.songtype,
+                    data.x1, data.y1, data.x2, data.y2, data.source_project_id? data.source_project_id : null,
+                    data.name,  data.project, data.recording
+                ]
             ).then(result => {
                 data.id = result.insertId
             })
