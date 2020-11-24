@@ -8,7 +8,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
 .config(function($stateProvider) {
     $stateProvider
         .state('analysis.audio-event-detections-clustering', {
-            url: '/audio-event-detections-clustering/',
+            url: '/audio-event-detections-clustering',
             controller: 'AudioEventDetectionsClusteringModelCtrl',
             templateUrl: '/app/analysis/audio-event-detections-clustering/list.html'
         })

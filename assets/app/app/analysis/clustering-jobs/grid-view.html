@@ -1,0 +1,46 @@
+<div>
+    <div ng-if="loading">
+        Loading... <loader></loader>
+    </div>
+    <div class="jumbotron seconds-div-center" ng-if="infopanedata">
+          <h3>{{ infopanedata }}</h3>
+    </div>
+    <div ng-if="!loading && !infopanedata" class="panel-body a2-page-header clearfix">
+        <div class="row row-flex flex-align-top">
+            <div class="col-sm-3 flex-self-align-top">
+                <div class="row row-flex flex-align-top">
+                    Job Name: {{ job_details.name }}
+                    <br>User: {{ job_details.user }}
+                    <br>Date: {{ job_details.timestamp | moment : 'lll' }}
+                    <br>Number of audio event detected: {{ gridContext.aed.length || 'no data' }}
+                    <br>Number of clusters detected: {{ gridContext.length || 'no data' }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div ng-if="!loading && !infopanedata">
+        <span ng-repeat="roi in rois"
+            class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+            ng-click="roi.selected = !roi.selected"
+            popover-trigger="mouseenter"
+            popover-append-to-body="true"
+        >
+            <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
+            <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
+                <i tooltip-placement="left"
+                    tooltip-append-to-body="true"
+                    tooltip="View in Visualizer"
+                    class="fa fa-cubes">
+                </i>
+            </a>
+            <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, $event)">
+                <i tooltip-placement="left"
+                    tooltip-append-to-body="true"
+                    tooltip="Play Audio"
+                    class="fa fa-play">
+                </i>
+            </a>
+            <img ng-src="{{ roi.uri }}" class="roi-img"/>
+        </span>
+    </div>
+</div>
