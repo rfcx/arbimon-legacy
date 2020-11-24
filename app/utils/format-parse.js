@@ -21,7 +21,7 @@ var formatParse = function(formatName, filename) {
         Wildlife: /(.*(\d{4})(\d{2})(\d{2})[_|\$](\d{2})(\d{2})\d{2}.*)(\.\w+)$/,
         Arbimon: /(.*(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})(-(\d{2}))?.*)(\.\w+)$/,
         'AudioMoth legacy': /([0-9A-F]{8})(\.\w+)$/,
-        AudioMoth: /((\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/
+        AudioMoth: /(.*(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}))(\.\w+)$/
     };
     var parsed, errors=[];
 
