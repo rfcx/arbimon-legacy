@@ -1,19 +1,54 @@
-FROM node:8
+FROM node:8.17.0-buster
 RUN npm install -g bower
 
-RUN  add-apt-repository ppa:jonathonf/ffmpeg-4 && \
-     apt-get update && \
+RUN apt-get update && \
+    apt-get install -y \
+        curl \
+        gnupg \
+        gcc \
+        g++ \
+        make \
+        sox \
+        pngcrush \
+        imagemagick \
+        python-minimal \
+        software-properties-common \
+        libsox-fmt-all \
+        libsox-dev \
+        libvorbis-dev \
+        libogg-dev \
+        vorbis-tools \
+        libopus-dev \
+        libopusfile-dev \
+        libtool \
+        opus-tools \
+        pkg-config \
+        libflac-dev \
+        autoconf \
+        automake \
+        git \
+        libvorbis-ocaml \
+        libpng-tools \
+        libpng-dev \
+        libmagic-dev \
+        libsndfile1-dev \
+        libmp3lame-dev \
+        libwavpack-dev
+
+RUN apt-get update && \
+    apt-get -y install software-properties-common
+RUN apt-get update && \
      apt-get install -y libsox-fmt-all && \
      apt-get update && \
-     curl -o /tmp/sox-14.4.2.tar.gz https://jztkft.dl.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2.tar.gz && \
+     wget -O /tmp/sox-14.4.2.tar.gz https://jztkft.dl.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2.tar.gz && \
      tar xzf /tmp/sox-14.4.2.tar.gz -C /tmp && \
-     curl -o /tmp/libogg-1.3.4.tar.gz https://ftp.osuosl.org/pub/xiph/releases/ogg/libogg-1.3.4.tar.gz && \
+     wget -O /tmp/libogg-1.3.4.tar.gz https://ftp.osuosl.org/pub/xiph/releases/ogg/libogg-1.3.4.tar.gz && \
      tar xzf /tmp/libogg-1.3.4.tar.gz -C /tmp && \
-     curl -o /tmp/libvorbis-1.3.6.tar.gz https://ftp.osuosl.org/pub/xiph/releases/vorbis/libvorbis-1.3.6.tar.gz && \
+     wget -O /tmp/libvorbis-1.3.6.tar.gz https://ftp.osuosl.org/pub/xiph/releases/vorbis/libvorbis-1.3.6.tar.gz && \
      tar xzf /tmp/libvorbis-1.3.6.tar.gz -C /tmp && \
-     curl -o /tmp/flac-1.3.2.tar.xz https://ftp.osuosl.org/pub/xiph/releases/flac/flac-1.3.2.tar.xz && \
+     wget -O /tmp/flac-1.3.2.tar.xz https://ftp.osuosl.org/pub/xiph/releases/flac/flac-1.3.2.tar.xz && \
      tar xf /tmp/flac-1.3.2.tar.xz -C /tmp && \
-     curl -o /tmp/vorbis-tools-1.4.0.tar.gz https://ftp.osuosl.org/pub/xiph/releases/vorbis/vorbis-tools-1.4.0.tar.gz && \
+     wget -O /tmp/vorbis-tools-1.4.0.tar.gz https://ftp.osuosl.org/pub/xiph/releases/vorbis/vorbis-tools-1.4.0.tar.gz && \
      tar xf /tmp/vorbis-tools-1.4.0.tar.gz -C /tmp && \
      apt-get -y remove sox && \
      rm -f /usr/local/bin/sox /usr/bin/sox /usr/bin/soxi /usr/local/bin/soxi
