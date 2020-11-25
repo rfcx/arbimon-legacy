@@ -27,6 +27,14 @@ angular.module('a2.srv.clustering-jobs', [
             if (opts.aed) {
                 config.params.aed = opts.aed;
             }
+            if (opts.search && opts.search == 'by_site')  {
+                config.params.perSiteCount = true;
+            }
+            else if (opts.search && opts.search == 'by_date') {
+                config.params.perDateCount = true;
+            }
+            else config.params.all = true;
+
             return $http.get('/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.jobId + '/rois-details', config).then(function(response){
                 return response.data;
             });

@@ -28,13 +28,16 @@ router.get('/:job_id/job-details', function (req, res, next) {
 });
 router.get('/:job_id/rois-details', function(req, res, next) {
     res.type('json');
-
-    return model.ClusteringJobs.findRois({
+    var params = {
         aed: req.query.aed
-    })
-    .then(function(data){
-        res.json(data);
-    }).catch(next);
+    };
+    if (req.query.perSiteCount) params.perSiteCount = req.query.perSiteCount;
+    if (req.query.perDateCount) params.perDateCount = req.query.perDateCount;
+    else params.all = req.query.all;
+    return model.ClusteringJobs.findRois(params)
+        .then(function(data){
+            res.json(data);
+        }).catch(next);
 });
 router.get('/:recId/audio', function(req, res, next) {
     model.ClusteringJobs.getRoiAudioFile({ recId: req.params.recId, gain: req.query.gain }).then(function(roiAudio) {

@@ -314,20 +314,42 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.loading = true;
     $scope.infopanedata = '';
 
+    $scope.lists = {
+        search: [
+            {value:'all', text:'All', description: 'Show all matched rois.'},
+            {value:'by_site', text:'Sort per Site', description: 'Show all rois ranked per Site.'},
+            {value:'by_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
+        ]
+    };
+    $scope.search = $scope.lists.search[0];
+
     a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
         if (data) $scope.job_details = data;
     }).catch(err => {
         console.log(err);
     });
 
-    a2ClusteringJobs.getRoisDetails({ jobId: $scope.clusteringJobId, aed: $scope.gridContext.aed }).then(function(data) {
-        $scope.loading = false;
-        if (data) $scope.rois = data;
-    }).catch(err => {
-        console.log(err);
-        $scope.loading = false;
-        $scope.infopanedata = 'No data for clustering job found.';
-    });
+    $scope.onSearchChanged = function(value) {
+        $scope.search.value = value;
+        $scope.getRoisDetails();
+    }
+
+    $scope.getRoisDetails = function() {
+        return a2ClusteringJobs.getRoisDetails({
+            jobId: $scope.clusteringJobId,
+            aed: $scope.gridContext.aed,
+            search: $scope.search.value
+        }).then(function(data) {
+            $scope.loading = false;
+            if (data) $scope.rois = data;
+        }).catch(err => {
+            console.log(err);
+            $scope.loading = false;
+            $scope.infopanedata = 'No data for clustering job found.';
+        });
+    }
+
+    $scope.getRoisDetails();
 
     $scope.playRoiAudio = function(recId, $event) {
         if ($event) {
