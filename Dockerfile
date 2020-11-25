@@ -4,7 +4,6 @@ RUN npm install -g bower
 RUN  add-apt-repository ppa:jonathonf/ffmpeg-4 && \
      apt-get update && \
      apt-get install -y libsox-fmt-all && \
-     curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
      apt-get update && \
      curl -o /tmp/sox-14.4.2.tar.gz https://jztkft.dl.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2.tar.gz && \
      tar xzf /tmp/sox-14.4.2.tar.gz -C /tmp && \
@@ -45,8 +44,7 @@ RUN ./configure --with-opus=yes  --with-flac=yes --with-oggvorbis=yes && \
     make install && \
     ln -s /usr/local/bin/sox /usr/bin/sox && \
     ln -s /usr/local/bin/sox /usr/bin/soxi && \
-    apt-get -y upgrade && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* /tmp/*
 
 WORKDIR /app
 ADD . /app
