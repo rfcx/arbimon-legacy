@@ -39,23 +39,26 @@
                             </a>
                         </div>
                     </field>
-                    <field title="Author" key="author" filter tdclass="is-v-middle no-wrap hidelongtext">
-                        {{ row.author }}
-                    </field>
-                    <field title="Project" key="project_name" filter tdclass="is-v-middle no-wrap hidelongtext">
-                        {{ row.project_name }}
-                    </field>
-                    <field title="Sampling rate" key="sampling_rate" tdclass="is-v-middle" className="no-wrap">
-                        {{ row.sample_rate }}
-                    </field>
                     <field title="Species" key="species_name" filter tdclass="is-v-middle no-wrap hidelongtext">
                         {{ row.species_name }}
                     </field>
                     <field title="Song type" key="songtype_name" tdclass="is-v-middle no-wrap hidelongtext" className="no-wrap">
                         {{ row.songtype_name }}
                     </field>
+                    <field title="Author" key="author" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'allAccessibleProjects'">
+                        {{ row.author }}
+                    </field>
+                    <field title="Project" key="project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'allAccessibleProjects'">
+                        {{ row.project_name }}
+                    </field>
+                    <field title="Sampling" key="sampling_rate" tdclass="is-v-middle" className="no-wrap" show="controller.currentTab === 'allAccessibleProjects'">
+                        {{ row.sample_rate }}
+                    </field>
                     <field title="Date created" key="date_created" tdclass="is-v-middle" className="no-wrap">
                         {{ row.date_created | moment: 'll' }}
+                    </field>
+                    <field title="Source" key="source_project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'showOwner'">
+                        {{ row.project !== row.source_project_id && row.source_project_id !== null ? row.author + ' / ' + row.source_project_name : '-' }}
                     </field>
                     <field tdclass="is-v-middle">
                         <button class="btn btn-default"

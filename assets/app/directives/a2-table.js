@@ -16,7 +16,8 @@ angular.module('a2.directive.a2-table', [
                 tdclass: clone.attr('tdclass'),
                 width: clone.attr('width'),
                 filter: clone.attr('filter') !== undefined ? (clone.attr('filter') || clone.attr('key')) : undefined,
-                content: clone.html()
+                content: clone.html(),
+                show: clone.attr('show')
             };
         });
     }
@@ -63,7 +64,7 @@ angular.module('a2.directive.a2-table', [
             options.selectExpand = compileSelectExpand(element, options);
             options.fields.forEach(function(field, index){
                 tplHead.append(
-                    angular.element('<th ng-click="a2TableController.sortBy(' + index+ ')"></th>').addClass(field.className).text(field.title).append(
+                    angular.element('<th ng-click="a2TableController.sortBy(' + index+ ')"' + (field && field.show !== undefined ? ' ng-if="' + field.show + '"' : '') + '></th>').addClass(field.className).text(field.title).append(
                         field.key ?
                         '    <i ng-if="sortKey == ' + index + '" class="fa" ng-class="reverse ? \'fa-chevron-up\': \'fa-chevron-down\'"></i>\n' :
                         ''
@@ -71,14 +72,14 @@ angular.module('a2.directive.a2-table', [
                 );
                 hasFilters |= field.filter !== undefined;
                 tplFilters.append(
-                    angular.element('<th></th>').append(
+                    angular.element('<th' + (field && field.show !== undefined ? ' ng-if="' + field.show + '"' : '') + '></th>').append(
                         (field.filter !== undefined) ?
                         '   <input type="text" class="a2-table-filter form-control" ng-model="a2TableController.filter['+index+']" ng-change="a2TableController.onFilterChanged(' + index + ')">\n' :
                         ''
                     )
                 );
                 tplBody.append(
-                    angular.element('<td ' + (['Project', 'Species'].includes(field.title) ? 'title="' + field.content +'"' : '') + (field.width ? 'width="' + field.width + '"' : '') + '>').addClass(field.className).addClass(field.tdclass).html(field.content)
+                    angular.element('<td ' + (['Project', 'Species'].includes(field.title) ? 'title="' + field.content +'"' : '') + (field.width ? 'width="' + field.width + '"' : '') + (field && field.show !== undefined ? ' ng-if="' + field.show + '"' : '') + '>').addClass(field.className).addClass(field.tdclass).html(field.content)
                 );
             });
 

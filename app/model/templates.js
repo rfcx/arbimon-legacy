@@ -97,7 +97,14 @@ var Templates = {
         }
 
         if (options.showOwner) {
-            select.push('T.source_project_id');
+            select.push(
+                "T.`source_project_id` as `source_project_id`, P2.`name` as `source_project_name`",
+                "IF (source_project_id IS NULL, U2.`firstname`, U.`firstname`) as author",
+                "CONCAT(CONCAT(UCASE(LEFT( U2.`firstname` , 1)), SUBSTRING( U2.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U2.`lastname` , 1)), SUBSTRING( U2.`lastname` , 2))) AS author"
+            );
+            tables.push('LEFT JOIN projects P2 ON T.source_project_id = P2.project_id');
+            tables.push('LEFT JOIN user_project_role UPR2 ON T.source_project_id = UPR2.project_id AND UPR2.role_id = 4');
+            tables.push('LEFT JOIN users U2 ON UPR2.user_id = U2.user_id');
         }
 
         if (constraints.length === 0){
