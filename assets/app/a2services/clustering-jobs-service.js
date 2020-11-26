@@ -27,11 +27,11 @@ angular.module('a2.srv.clustering-jobs', [
             if (opts.aed) {
                 config.params.aed = opts.aed;
             }
-            if (opts.search && opts.search == 'by_site')  {
-                config.params.perSiteCount = true;
+            if (opts.search && opts.search == 'per_site')  {
+                config.params.perSite = true;
             }
-            else if (opts.search && opts.search == 'by_date') {
-                config.params.perDateCount = true;
+            else if (opts.search && opts.search == 'per_date') {
+                config.params.perDate = true;
             }
             else config.params.all = true;
 

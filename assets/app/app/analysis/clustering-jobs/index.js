@@ -317,8 +317,8 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.lists = {
         search: [
             {value:'all', text:'All', description: 'Show all matched rois.'},
-            {value:'by_site', text:'Sort per Site', description: 'Show all rois ranked per Site.'},
-            {value:'by_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
+            {value:'per_site', text:'Sort per Site', description: 'Show all rois ranked per Site.'},
+            {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
         ]
     };
     $scope.search = $scope.lists.search[0];
@@ -341,7 +341,33 @@ angular.module('a2.analysis.clustering-jobs', [
             search: $scope.search.value
         }).then(function(data) {
             $scope.loading = false;
-            if (data) $scope.rois = data;
+            if (data && $scope.search.value === 'per_site') {
+                var sites = {};
+                data.forEach((item) => {
+                    if (!sites[item.site_id]) {
+                        sites[item.site_id] = {
+                            id: item.site_id,
+                            site: item.site,
+                            rois: [item]
+                        }
+                    }
+                    else {
+                        sites[item.site_id].rois.push(item);
+                    }
+                })
+                $scope.rows = Object.values(sites);
+            }
+            else {
+                if ($scope.search.value === 'per_date') {
+                    data.sort(function(a, b) {
+                        return (a.date_created < b.date_created) ? 1 : -1;
+                    });
+                }
+                $scope.rows = [];
+                $scope.rows.push({
+                    rois: data
+                });
+            }
         }).catch(err => {
             console.log(err);
             $scope.loading = false;

@@ -87,15 +87,16 @@ var ClusteringJobs = {
             constraints.push('A.aed_id IN (' + dbpool.escape(options.aed) + ')');
         }
 
-        if (options.perSiteCount){
-            select.push(
-                'S.site_id',
-                'S.`name` as `site`',
-                'COUNT(*) as `count`'
-            )
+        if (options.perSite) {
+            select.push('S.site_id, S.`name` as `site`');
             tables.push("JOIN recordings R ON A.recording_id = R.recording_id");
             tables.push("JOIN sites S ON R.site_id = S.site_id");
-            groupby.push('S.site_id');
+        }
+
+        if (options.perDate) {
+            select.push('C.`date_created`');
+            tables.push("JOIN job_params_audio_event_clustering C ON A.job_id = C.audio_event_detection_job_id");
+            groupby.push('A.aed_id');
         }
 
         return dbpool.query(

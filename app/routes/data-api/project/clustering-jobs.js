@@ -31,8 +31,8 @@ router.get('/:job_id/rois-details', function(req, res, next) {
     var params = {
         aed: req.query.aed
     };
-    if (req.query.perSiteCount) params.perSiteCount = req.query.perSiteCount;
-    if (req.query.perDateCount) params.perDateCount = req.query.perDateCount;
+    if (req.query.perSite) params.perSite = req.query.perSite;
+    if (req.query.perDate) params.perDate = req.query.perDate;
     else params.all = req.query.all;
     return model.ClusteringJobs.findRois(params)
         .then(function(data){

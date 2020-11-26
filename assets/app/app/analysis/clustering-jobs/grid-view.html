@@ -34,29 +34,32 @@
             </div>
         </div>
     </div>
-    <div ng-if="!loading && !infopanedata">
-        <span ng-repeat="roi in rois"
-            class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
-            ng-click="roi.selected = !roi.selected"
-            popover-trigger="mouseenter"
-            popover-append-to-body="true"
-        >
-            <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
-            <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
-                <i tooltip-placement="left"
-                    tooltip-append-to-body="true"
-                    tooltip="View in Visualizer"
-                    class="fa fa-cubes">
-                </i>
-            </a>
-            <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, $event)">
-                <i tooltip-placement="left"
-                    tooltip-append-to-body="true"
-                    tooltip="Play Audio"
-                    class="fa fa-play">
-                </i>
-            </a>
-            <img ng-src="{{ roi.uri }}" class="roi-img"/>
+    <div ng-if="!loading && !infopanedata && rows && rows.length">
+        <span ng-repeat="row in rows">
+            <div ng-if="row.site" class="h3" id="site-{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>
+            <span ng-repeat="roi in row.rois"
+                class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                ng-click="roi.selected = !roi.selected"
+                popover-trigger="mouseenter"
+                popover-append-to-body="true"
+            >
+                <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
+                <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
+                    <i tooltip-placement="left"
+                        tooltip-append-to-body="true"
+                        tooltip="View in Visualizer"
+                        class="fa fa-cubes">
+                    </i>
+                </a>
+                <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, $event)">
+                    <i tooltip-placement="left"
+                        tooltip-append-to-body="true"
+                        tooltip="Play Audio"
+                        class="fa fa-play">
+                    </i>
+                </a>
+                <img ng-src="{{ roi.uri }}" class="roi-img"/>
+            </span>
         </span>
     </div>
 </div>
