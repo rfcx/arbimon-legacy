@@ -25,14 +25,10 @@
                     <% } %>
                 </div>
                 <div class="col-xs-7 col-md-7 pt-4 pb-1">
-                        <div class="form-inline pull-right">
-                        <div class="form-group">
-                            <input id="projectsSearch" ng-if="controller.showSearch" type="search" class="form-control input-sm"
-                                    ng-model="controller.search" placeholder="Search projects">
-                            <button class="btn btn-sm btn-default" tooltip="Search for a project" tooltip-trigger="mouseenter"
-                                    ng-click="controller.toggleSearchVis() | trackEvent:'Home':'searchProject'">
-                                <i class="fa fa-search"></i>
-                            </button>
+                    <div class="form-inline pull-right">
+                        <div class="form-group has-feedback">
+                            <input id="projectsSearch" type="search" class="form-control input-sm" ng-model="controller.search" placeholder="Search projects">
+                            <i class="fa fa-search form-control-feedback"></i>
                         </div>
                     </div>
                 </div>
