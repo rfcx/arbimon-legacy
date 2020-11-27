@@ -20,6 +20,18 @@ angular.module('a2.srv.project', [
                     callback(data);
                 });
             },
+            getProjectById: function(projectId, callback) {
+                var config = {
+                    params: {}
+                };
+                if (projectId) {
+                    config.params.project_id = projectId;
+                }
+                $http.get('/api/project/'+url+'/info/source-project', config)
+                    .success(function(data) {
+                        callback(data);
+                    });
+            },
             updateInfo: function(info, callback) {
                 $http.post('/api/project/'+url+'/info/update', info)
                 .success(function(data){

@@ -92,10 +92,10 @@ var Projects = {
         return dbpool.query(que, data).nodeify(callback);
     },
 
-    // DEPRACATED use find()
     findById: function (project_id, callback) {
-        console.info('projects.findById DEPRECATED');
-        return Projects.find({id: project_id}, callback);
+        return Projects.find({id: project_id}).then(function(rows){
+            return rows[0];
+        }).nodeify(callback);
     },
 
     // DEPRACATED use find()

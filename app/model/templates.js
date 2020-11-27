@@ -32,7 +32,7 @@ var Templates = {
      * @param {Object} options.name    find templates with the given name (must also provide a project id);
      * @param {Function} callback called back with the queried results.
      */
-    find: function (options) {
+    find: function (options, callback) {
         options = options || {}
         var constraints = [];
         var tables = ['templates T'];
@@ -83,20 +83,28 @@ var Templates = {
 
         if (options.showOwner || options.allAccessibleProjects) {
             if (!options.user_id) return q.reject(new Error("User id is required.")).nodeify(callback);
+            select.push(
+                "CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) AS author",
+                "P.`name` as `project_name`",
+            );
             tables.push('JOIN projects P ON T.project_id = P.project_id');
             tables.push('LEFT JOIN user_project_role UPR ON T.project_id = UPR.project_id AND UPR.role_id = 4');
             tables.push('LEFT JOIN users U ON UPR.user_id = U.user_id');
         }
 
-        if (options.showOwner) {
-            select.push(
-                "CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) AS author",
-                "P.`name` as `project_name`",
-            );
+        if (options.allAccessibleProjects) {
+            constraints.push('NOT (UPR.user_id = ' + dbpool.escape(options.user_id) + ') AND P.is_private = 0');
         }
 
-        if (options.allAccessibleProjects) {
-            constraints.push('P.is_private = 0 OR (UPR.user_id = ' + dbpool.escape(options.user_id) + ' AND P.is_private = 1)');
+        if (options.showOwner) {
+            select.push(
+                "T.`source_project_id` as `source_project_id`, P2.`name` as `source_project_name`",
+                "IF (source_project_id IS NULL, U2.`firstname`, U.`firstname`) as author",
+                "CONCAT(CONCAT(UCASE(LEFT( U2.`firstname` , 1)), SUBSTRING( U2.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U2.`lastname` , 1)), SUBSTRING( U2.`lastname` , 2))) AS author"
+            );
+            tables.push('LEFT JOIN projects P2 ON T.source_project_id = P2.project_id');
+            tables.push('LEFT JOIN user_project_role UPR2 ON T.source_project_id = UPR2.project_id AND UPR2.role_id = 4');
+            tables.push('LEFT JOIN users U2 ON UPR2.user_id = U2.user_id');
         }
 
         if (constraints.length === 0){
@@ -119,6 +127,7 @@ var Templates = {
         project: joi.number().integer(), recording: joi.number().integer(),
         species: joi.number().integer(), songtype: joi.number().integer(),
         x1: joi.number(), y1: joi.number(), x2: joi.number(), y2: joi.number(),
+        source_project_id: joi.number(),
     }),
 
     /** Finds templates, given a (non-empty) query.
@@ -140,25 +149,28 @@ var Templates = {
         var x1 = Math.min(data.x1, data.x2), y1 = Math.min(data.y1, data.y2);
         var x2 = Math.max(data.x1, data.x2), y2 = Math.max(data.y1, data.y2);
         console.log('data', data);
+        var query =
+        "INSERT INTO templates (\n" +
+        "    `name`, `uri`,\n" +
+        "    `project_id`, `recording_id`,\n" +
+        "    `species_id`, `songtype_id`,\n" +
+        "    `x1`, `y1`, `x2`, `y2`,\n" +
+        "    `date_created`, `source_project_id`\n" +
+        ") SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ? FROM DUAL\n" +
+        "WHERE NOT EXISTS (SELECT * FROM `templates`\n" +
+        "WHERE `name`=? AND `project_id`=? AND `recording_id`=? AND `deleted`=0 LIMIT 1)";
+
         return q.ninvoke(joi, 'validate', data, this.SCHEMA).then(
             () => dbpool.query(
-                "INSERT INTO templates (\n" +
-                "    `name`, `uri`,\n" +
-                "    `project_id`, `recording_id`,\n" +
-                "    `species_id`, `songtype_id`,\n" +
-                "    `x1`, `y1`, `x2`, `y2`,\n" +
-                "    `date_created`\n" +
-                ") VALUES (\n" +
-                "    ?, ?,\n" +
-                "    ?, ?, ?, ?,\n" +
-                "    ?, ?, ?, ?,\n" +
-                "    NOW()\n" +
-                ")", [
+                    query, [
                     data.name, null,
                     data.project, data.recording, data.species, data.songtype,
-                    data.x1, data.y1, data.x2, data.y2,
+                    data.x1, data.y1, data.x2, data.y2, data.source_project_id? data.source_project_id : null,
+                    data.name,  data.project, data.recording
                 ]
-            ).then(result => data.id = result.insertId)
+            ).then(result => {
+                data.id = result.insertId
+            })
         ).then(
             () => this.createTemplateImage(data)
         ).nodeify(callback);
