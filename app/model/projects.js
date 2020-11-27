@@ -614,9 +614,9 @@ var Projects = {
             var project_id = dbpool.escape(upr.project_id);
             var role_id = dbpool.escape(upr.role_id);
 
-            var qFind = 'SELECT * FROM user_project_role WHERE user_id = %s';
+            var qFind = 'SELECT * FROM user_project_role WHERE user_id = %s AND project_id = %s';
 
-            qFind = util.format(qFind, user_id);
+            qFind = util.format(qFind, user_id, project_id);
             queryHandler(qFind, (err, d) => {
                 if (err) {
                     return callback(err)
