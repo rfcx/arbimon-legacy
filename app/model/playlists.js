@@ -56,7 +56,7 @@ var Playlists = {
         if(constraints.length === 0){
             callback(new Error("Playlists.find called with invalid query."));
         }
-        
+
         if(options.count){
             // agregate = true;
             projection.push("(\n" +
@@ -67,7 +67,7 @@ var Playlists = {
 
         projection.push("PLT.name as type");
         joins.push("JOIN playlist_types PLT ON PL.playlist_type_id = PLT.playlist_type_id");
-        
+
 
         return dbpool.query(
             "SELECT PL.playlist_id as id, PL.name, PL.project_id, PL.uri, PL.metadata \n" +
@@ -81,7 +81,7 @@ var Playlists = {
             rows.forEach(function(row){
                 row.metadata = row.metadata ? JSON.parse(row.metadata) : null;
             });
-            
+
             if(options.show_info){
                 return q.all(rows.map(function(playlist){
                     return Playlists.getInfo(playlist);
@@ -151,7 +151,7 @@ var Playlists = {
         // } else if (query.project) {
         //     constraints.push('PL.project_id = ' + dbpool.escape(query.project));
         // }
-        
+
         var limit_clause = '';
         if(query.limit){
             var qlimit = query.limit;
@@ -194,7 +194,7 @@ var Playlists = {
             }));
         }).nodeify(callback);
     },
-    
+
     fetchRecordingsAround: function(playlist, recording, radius, callback){
         async.waterfall([
             (function(next){
@@ -229,7 +229,7 @@ var Playlists = {
             },
         ], callback);
     },
-    
+
     fetchRecordingPosition: function(playlist, recording, callback){
         async.waterfall([
             function(next){
@@ -273,7 +273,7 @@ var Playlists = {
             }
         ], callback);
     },
-    
+
     /** Creates a new playlist.
      * @param {Object} data - object describing playlist to create.
      * @param {Function} callback - callback function (optional)
@@ -281,24 +281,23 @@ var Playlists = {
      */
     create: function(data, callback) {
         data.params.project_id = data.project_id;
+        var paramsProm = data.is_manually_created ? Promise.resolve(data.params) : model.recordings.findProjectRecordings(data.params).then(function(rows) {
+            return rows.map(function(rec){
+                return rec.id;
+            });
+        })
         return q.all([
             dbpool.query(
                 "INSERT INTO playlists(project_id, name, playlist_type_id) \n"+
-                "VALUES (?, ?, 1)", [
-                data.project_id, data.name
-            ]).get('insertId'),
-            model.recordings.findProjectRecordings(data.params).then(function(rows) {
-                return rows.map(function(rec){
-                    return rec.id;
-                });
-            })
+                "VALUES (?, ?, 1)", [ data.project_id, data.name ]).get('insertId'),
+            paramsProm
         ]).spread(function (playlist_id, rec_ids){
             return Playlists.addRecs(playlist_id, rec_ids).thenResolve({
                 id: playlist_id
             });
         }).nodeify(callback);
     },
-    
+
     /** Combines two playlists (from the same project) into one.
      * @param {Object} data - object describing playlist to create.
      * @return {Promise} resolving to created playlists' insert_id
@@ -311,7 +310,7 @@ var Playlists = {
             term1: Joi.number().required(),
             term2: Joi.number().required(),
         };
-        
+
         return q.ninvoke(Joi, 'validate', data, schema).catch(function(err){
             throw new APIError(err.message);
         }).then(function() {
@@ -331,7 +330,7 @@ var Playlists = {
             if(!operation){
                 throw new APIError('Invalid playlist operation requested.');
             }
-            
+
             return dbpool.query(
                 "INSERT INTO playlists(project_id, name, playlist_type_id, metadata) \n"+
                 "VALUES (?, ?, ?, ?)", [
@@ -344,7 +343,7 @@ var Playlists = {
             });
         });
     },
-    
+
     combineOperations: {
         union: {
             type: 3,
@@ -352,7 +351,7 @@ var Playlists = {
                 return dbpool.query(
                 "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
                 "SELECT DISTINCT ?, recording_id\n" +
-                "FROM playlist_recordings\n" + 
+                "FROM playlist_recordings\n" +
                 "WHERE playlist_id IN (?, ?)", [
                     result, term1, term2
                 ]);
@@ -364,7 +363,7 @@ var Playlists = {
                 return dbpool.query(
                 "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
                 "SELECT ?, P1.recording_id\n" +
-                "FROM playlist_recordings P1\n" + 
+                "FROM playlist_recordings P1\n" +
                 "JOIN playlist_recordings P2 ON P1.recording_id = P2.recording_id\n" +
                 "WHERE P1.playlist_id = ? AND P2.playlist_id = ?", [
                     result, term1, term2
@@ -377,8 +376,8 @@ var Playlists = {
                 return dbpool.query(
                 "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
                 "SELECT DISTINCT ?, P1.recording_id\n" +
-                "FROM playlist_recordings P1\n" + 
-                "LEFT JOIN playlist_recordings P2 ON (\n" + 
+                "FROM playlist_recordings P1\n" +
+                "LEFT JOIN playlist_recordings P2 ON (\n" +
                 "   P1.recording_id = P2.recording_id\n" +
                 "   AND P2.playlist_id = ?\n" +
                 ")\n" +
@@ -397,7 +396,7 @@ var Playlists = {
      */
     addRecs: function(playlist_id, rec_ids, callback) {
         var schema =  Joi.array().items(Joi.number());
-        
+
         return q.ninvoke(Joi, 'validate', rec_ids, schema).then(function(recs) {
             return dbpool.query(
                 "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
@@ -407,30 +406,30 @@ var Playlists = {
             );
         }).nodeify(callback);
     },
-    
+
     rename: function(playlist, callback) {
         var schema = {
             id: Joi.number().required(),
             name: Joi.string().required()
         };
-        
+
         Joi.validate(playlist, schema, function(err, pls) {
             var q = "UPDATE playlists \n"+
                     "SET name = %s \n"+
                     "WHERE playlist_id = %s";
-                    
+
             q = util.format(q, dbpool.escape(pls.name), dbpool.escape(pls.id));
             queryHandler(q, callback);
         });
     },
-    
+
     remove: function(playlist_ids, callback) {
         var schema = Joi.array().items(Joi.number());
-        
+
         Joi.validate(playlist_ids, schema, function(err, ids) {
             var q = "DELETE FROM playlists \n"+
                     "WHERE playlist_id IN (%s)";
-                    
+
             q = util.format(q, dbpool.escape(ids));
             queryHandler(q, callback);
         });
