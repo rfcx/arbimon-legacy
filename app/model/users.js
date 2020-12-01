@@ -568,7 +568,7 @@ var Users = {
         const password = generator.generate(20)
         const email = this.getEmailFromAuth0Profile(profile)
         const attrs = {
-            login: profile.nickname,
+            login: profile.sub,
             password: hashPassword(password),
             firstname: profile.given_name || (profile.user_metadata ? profile.user_metadata.given_name : ''),
             lastname: profile.family_name || (profile.user_metadata ? profile.user_metadata.family_name : ''),

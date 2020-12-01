@@ -1,5 +1,5 @@
 angular.module('a2.srv.templates', ['a2.srv.project'])
-.factory('a2Templates', function(Project, $http) {
+.factory('a2Templates', function(Project, $http, notify) {
     return {
         getList: function(opts) {
             var projectName = Project.getUrl();
@@ -24,7 +24,7 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             var projectName = Project.getUrl();
             return $http.post('/api/project/'+projectName+'/templates/add', template_data).then(function(response) {
                 return response.data;
-            });
+            }).catch(notify.serverError);
         },
 
         getAudioUrlFor: function(template){

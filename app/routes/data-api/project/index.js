@@ -75,6 +75,15 @@ router.get('/:projectUrl/info', function(req, res, next) {
     res.json(req.project);
 });
 
+router.get('/:projectUrl/info/source-project', function(req, res, next) {
+    res.type('json');
+    model.projects.findById(req.query.project_id, function(err, result){
+        if(err) return next(err);
+        res.json(result);
+    });
+
+});
+
 router.post('/:projectUrl/info/update', function(req, res, next) {
     res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {

@@ -4,6 +4,7 @@
 var express = require('express');
 var router = express.Router();
 var model = require('../../../model');
+const { options } = require('joi');
 
 
 /** Return a list of all the templates in a project.
@@ -23,6 +24,7 @@ router.get('/', function(req, res, next) {
     }
     if (req.query.allAccessibleProjects === 'true') {
         params.allAccessibleProjects = req.query.allAccessibleProjects;
+        params.user_id = req.session.user.id;
     }
     else {
         params.project = req.project.project_id;
@@ -64,7 +66,7 @@ router.use(function(req, res, next) {
 */
 router.post('/add', function(req, res, next) {
     res.type('json');
-    model.templates.insert({
+    var opts = {
         name: req.body.name,
         project : req.project.project_id,
         recording: req.body.recording,
@@ -74,16 +76,14 @@ router.post('/add', function(req, res, next) {
         y1: req.body.roi.y1,
         x2: req.body.roi.x2,
         y2: req.body.roi.y2,
-    }).then(function(new_template) {
-        // model.projects.insertNews({
-        //     news_type_id: 7, // template created
-        //     user_id: req.session.user.id,
-        //     project_id: req.project.project_id,
-        //     data: JSON.stringify({ training_set: req.body.name })
-        // });
-
-        res.json(new_template);
-    }).catch(next);
+    };
+    if (req.body.source_project_id) {
+        opts.source_project_id = req.body.source_project_id;
+    }
+    model.templates.insert(opts)
+        .then(function(new_template) {
+            res.json(new_template);
+        }).catch(next);
 });
 
 router.post('/:template/remove', function(req, res, next) {
