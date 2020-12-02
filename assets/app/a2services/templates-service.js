@@ -6,6 +6,9 @@ angular.module('a2.srv.templates', ['a2.srv.project'])
             var config = {
                 params: {}
             };
+            if (opts && opts.firstByDateCreated) {
+                config.params.firstByDateCreated = opts.firstByDateCreated;
+            }
             if (opts && opts.showRecordingUri) {
                 config.params.showRecordingUri = opts.showRecordingUri;
             }
