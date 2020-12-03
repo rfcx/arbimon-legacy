@@ -250,7 +250,17 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             options.playlists = playlists;
         });
         a2Tags.getForType('recording').then((function(tags){
-            options.tags = tags;
+            var tagsList = [];
+            tags.map(function(item) {
+                if(tagsList.some(obj => obj.tag === item.tag)){
+                    var index = tagsList.findIndex(i => i.tag === item.tag);
+                    tagsList[index].tag_id.push(item.tag_id);
+                    tagsList[index].count += 1;
+                } else {
+                    tagsList.push({'tag_id': [item.tag_id], 'tag': item.tag, 'count': 1});
+                }
+            })
+            options.tags = tagsList;
         }).bind(this));
         a2Classi.list((function(classifications) {
             options.classifications = classifications.map(function(c){
