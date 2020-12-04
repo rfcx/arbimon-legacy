@@ -5,11 +5,25 @@ angular.module('a2.audiodata.sites', [
     'humane',
     'a2.qr-js',
     'a2.googlemaps',
+    'angularFileUpload',
     'a2.srv.project'
 ])
-.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader) {
+.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, FileUploader) {
     $scope.loading = true;
-
+    var uploader = $scope.uploader = new FileUploader()
+    
+    uploader.onAfterAddingFile = function (fileItem) {
+        console.info('onAfterAddingFile', fileItem);
+    };
+    
+    uploader.onAfterAddingAll = function (addedFileItems) {
+        console.info('onAfterAddingAll', addedFileItems);
+    };
+    
+    uploader.onBeforeUploadItem = function (item) {
+        console.info('onBeforeUploadItem', item);
+    };
+    
     Project.getInfo(function(info){
         $scope.project = info;
     });
