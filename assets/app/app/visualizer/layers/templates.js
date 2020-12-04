@@ -27,7 +27,6 @@ angular.module('a2.visualizer.layers.templates', [
     self.selected = null;
     self.templates = [];
     self.recordingTemplates = [];
-    self.showLoading = false;
 
     Project.getClasses(function(project_classes){
         self.project_classes = project_classes;
@@ -73,14 +72,17 @@ angular.module('a2.visualizer.layers.templates', [
             return this.project_class ? (this.project_class.species_name + ' ' + this.project_class.songtype_name) : 'Template Name';
         },
         submit: function(){
-            self.showLoading = true;
-            document.getElementById("submit-btn").disabled = true;
-            
             if(!a2UserPermit.can('manage templates')) {
                 notify.log('You do not have permission to add a template');
                 return;
             }
-
+            
+            if(!this.project_class.songtype_name && !this.project_class.species_name){
+                return;
+            }
+            
+            this.submitting = true;
+            
             a2Templates.add({
                 name : this.template_name || (this.project_class.species_name + " " + this.project_class.songtype_name),
                 recording : this.recording,
@@ -89,8 +91,7 @@ angular.module('a2.visualizer.layers.templates', [
                 roi : this.roi
             }).then((function(new_template){
                 console.log('new_template', new_template)
-                self.showLoading = false;
-                document.getElementById("submit-btn").disabled = false;
+                this.submitting = false;
                 
                 if (new_template.id === 0) return notify.error('The template with that name already exists for this record.');
                 $timeout((function(){
