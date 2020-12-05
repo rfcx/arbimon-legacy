@@ -59,10 +59,11 @@ angular.module('a2.visualizer', [
         sticky: true,
     })
     .state('visualizer.view', {
-        url: '/:type/:idA/:idB/:idC?gain&filter&a',
+        url: '/:type/:idA/:idB/:idC?gain&filter&a&clusters',
         params:{
             type:'',
             a:'',
+            clusters:'',
             gain:'',
             filter:'',
             idA: {
@@ -190,6 +191,7 @@ angular.module('a2.visualizer', [
     $q,
     $location, $state,
     $scope,
+    $localStorage,
     $timeout,
     itemSelection,
     Project,
@@ -215,7 +217,7 @@ angular.module('a2.visualizer', [
 
 
     $scope.parseAnnotations = function(annotationsString){
-        $scope.annotations = annotationsString ? annotationsString.split('|').map(function(item){
+        $scope.annotations = annotationsString ? (annotationsString.length ? annotationsString : annotationsString.split('|')).map(function(item){
             var comps = item.split(',');
             var parsed = {type: comps.shift(), value:[]};
             comps.forEach(function(comp){
@@ -231,6 +233,9 @@ angular.module('a2.visualizer', [
         }) : [];
     }
 
+    if ($state.params.clusters) {
+        $localStorage.setItem('analysis.clusters.playlist', $state.params.idA);
+    }
     $scope.parseAnnotations($state.params.a);
 
     $scope.layers = layers.list; // current layers in the visualizer
@@ -291,8 +296,18 @@ angular.module('a2.visualizer', [
                 $scope.loading_visobject = visobject_loader.getCaptionFor(visobject);
                 return visobject_loader.load(visobject, $scope).then((function (visobject){
                     console.log('VisObject loaded : ', visobject);
-                    this.parseAnnotations($location.search().a);
-
+                    if ($localStorage.getItem('analysis.clusters.playlist') === $state.params.idA) {
+                        var boxes = JSON.parse($localStorage.getItem('analysis.clusters'));
+                        if (boxes && $state.params.idB) {
+                            this.parseAnnotations(boxes[$state.params.idB]);
+                        }
+                    }
+                    else {
+                        $localStorage.setItem('analysis.clusters', null);
+                        $localStorage.setItem('analysis.clusters.playlist', null);
+                        $state.params.clusters = '';
+                        this.parseAnnotations($location.search().a);
+                    }
                     $scope.loading_visobject = false;
                     $scope.visobject = visobject;
                     $scope.visobject_type = visobject.type;

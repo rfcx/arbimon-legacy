@@ -93,7 +93,7 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/details.html'
     };
 })
-.controller('ClusteringDetailsCtrl' , function($scope, $state, a2ClusteringJobs, a2AudioEventDetectionsClustering, $window, Project, a2Playlists) {
+.controller('ClusteringDetailsCtrl' , function($scope, $state, a2ClusteringJobs, a2AudioEventDetectionsClustering, $window, Project, a2Playlists, $localStorage) {
     $scope.loading = true;
     $scope.toggleMenu = false;
     $scope.infopanedata = '';
@@ -321,15 +321,16 @@ angular.module('a2.analysis.clustering-jobs', [
                         // collect selected points to boxes
                         $scope.clusters.boxes = {};
                         data.forEach(rec => {
-                            var box = ['box', rec.time_min, rec.freq_max, rec.time_max, rec.freq_max].join(',');
+                            var box = ['box', rec.time_min, rec.freq_min, rec.time_max, rec.freq_max].join(',');
                             if (!$scope.clusters.boxes[rec.rec_id]) {
-                                $scope.clusters.boxes[rec.rec_id] = ['?a='+box];
+                                $scope.clusters.boxes[rec.rec_id] = [box];
                             }
                             else {
-                                $scope.clusters.boxes[rec.rec_id].push('?a='+box);
+                                $scope.clusters.boxes[rec.rec_id].push(box);
                             }
                         })
                         console.log('boxes', $scope.clusters.boxes);
+                        $localStorage.setItem('analysis.clusters',  JSON.stringify($scope.clusters.boxes));
                         // add related records to a playlist
                         var recIds = data
                             .map(rec => {
@@ -349,7 +350,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.savePlaylist = function(opts) {
         a2Playlists.create(opts,
         function(data) {
-            $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id;
+            $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
         }
     )};
     $scope.showDetailsPage = function () {
