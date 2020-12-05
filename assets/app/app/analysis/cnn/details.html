@@ -75,7 +75,7 @@
                                 </ui-select-choices>
                             </ui-select>
                     </div>
-                    
+
                 <div class="pull-right">
                     <div class="btn-group btn-group-margin">
                         <ui-select ng-model="_selection" theme="bootstrap" style="display:inline-block; width:9em;"
@@ -105,7 +105,7 @@
                     </div>
                 </div>
                 <div class="pull-right">
-                    <div class="btn-group btn-group-margin" ng-show="total.pages > 1"> 
+                    <div class="btn-group btn-group-margin" ng-show="total.pages > 1">
                         <a class="btn btn-default right-corners" ng-click="moveROIPage(-1) | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
                         <ui-select class="btn-group-item border-radius" ng-model="selected.page" ng-change="setPage($select.selected, true)">
                             <ui-select-match>
@@ -146,7 +146,7 @@
                         </a>
                     </div>
 				</div>
-				
+
 				<div class="pull-right">
 					<div class="btn-group btn-group-margin" ng-show="total.pages > 1">
                         <ui-select class="btn-group-item" ng-model="selected.species" ng-change="setSpecies($select.selected)">
@@ -156,7 +156,7 @@
                             </ui-select-choices>
 						</ui-select>
 					</div>
-						
+
 					<div class="btn-group btn-group-margin" ng-show="total.pages > 1">
 						<ui-select class="btn-group-item" ng-model="selected.site" ng-change="setSite($select.selected)">
 							<ui-select-match>{{$select.selected.name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
@@ -166,7 +166,7 @@
 						</ui-select>
                     </div>
 				</div>
-				
+
                 </div>
             </div>
             <!--{"job_id":11906,"name":"switchTest1-fake","cnn_id":1,"playlist_id":8406,"project_id":1,"timestamp":"2019-08-02T23:06:19.000Z","parameters":{}}-->
@@ -180,6 +180,7 @@
                 <div ng-repeat="roi in species.rois"
                     class="btn roi-thumbnail {{roi.selected ? 'active' : ''}}"
                     ng-click="roi.selected = !roi.selected"
+                    ng-style="{'border-width': '2px'}"
                     popover-html="'Recording: {{roi.recording}}<br>
                             Site: {{roi.site}}<br>
                             Time: {{roi.datetime | date:'medium': 'UTC'}} <br>
@@ -207,7 +208,7 @@
                             style="cursor:pointer">
                         </i>
                     </a>
-                    <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img-cnn {{lists.current.thumbnailClass}}"/>
+                    <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img-original"/>
                 </div>
             </div>
         </div>
