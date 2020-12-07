@@ -77,9 +77,9 @@
                     </ui-select>
                 </div>
             </div>
-            <button class="btn btn-sm btn-default"
-                ng-click=" $event.stopPropagation(); layer.templates.editor.submit() | trackEvent:'Visualizer-Templates':'create template'">
-                <i class="fa fa-plus text-success"></i> Create Template
+            <button id="submit-btn" class="btn btn-sm btn-default"
+                ng-click=" $event.stopPropagation(); layer.templates.editor.submit() | trackEvent:'Visualizer-Templates':'create template'" ng-disabled="!!layer.templates.editor.submitting">
+                <i class="fa text-success" ng-class="{'fa-plus' : !layer.templates.editor.submitting , 'fa-spinner fa-spin': layer.templates.editor.submitting }"></i> Create Template
             </button>
             <button class="btn btn-sm btn-default"
                 ng-click=" $event.stopPropagation(); layer.templates.editor.reset() | trackEvent:'Visualizer-Templates':'cancel template'">
