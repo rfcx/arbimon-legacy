@@ -217,7 +217,7 @@ angular.module('a2.visualizer', [
 
 
     $scope.parseAnnotations = function(annotationsString){
-        $scope.annotations = annotationsString ? (annotationsString.length ? annotationsString : annotationsString.split('|')).map(function(item){
+        $scope.annotations = annotationsString ? (Array.isArray(annotationsString) ? annotationsString : annotationsString.split('|')).map(function(item){
             var comps = item.split(',');
             var parsed = {type: comps.shift(), value:[]};
             comps.forEach(function(comp){
@@ -232,7 +232,7 @@ angular.module('a2.visualizer', [
             return parsed;
         }) : [];
     }
-
+    // check selected clusters in query
     if ($state.params.clusters) {
         $localStorage.setItem('analysis.clusters.playlist', $state.params.idA);
     }
@@ -296,6 +296,7 @@ angular.module('a2.visualizer', [
                 $scope.loading_visobject = visobject_loader.getCaptionFor(visobject);
                 return visobject_loader.load(visobject, $scope).then((function (visobject){
                     console.log('VisObject loaded : ', visobject);
+                    // check playlist with clusters in local storage else clear local storage
                     if ($localStorage.getItem('analysis.clusters.playlist') === $state.params.idA) {
                         var boxes = JSON.parse($localStorage.getItem('analysis.clusters'));
                         if (boxes && $state.params.idB) {
@@ -303,9 +304,7 @@ angular.module('a2.visualizer', [
                         }
                     }
                     else {
-                        $localStorage.setItem('analysis.clusters', null);
-                        $localStorage.setItem('analysis.clusters.playlist', null);
-                        $state.params.clusters = '';
+                        $scope.removeFromLocalStorage();
                         this.parseAnnotations($location.search().a);
                     }
                     $scope.loading_visobject = false;
@@ -319,6 +318,12 @@ angular.module('a2.visualizer', [
             events.emit('visobject', $scope.visobject);
         });
     };
+
+    $scope.removeFromLocalStorage = function () {
+        $localStorage.setItem('analysis.clusters', null);
+        $localStorage.setItem('analysis.clusters.playlist', null);
+        $state.params.clusters = '';
+    }
 
     $scope.audio_player = new a2AudioPlayer($scope, initial_state_params);
 
