@@ -1,5 +1,5 @@
 <div>
-    <div ng-if="loading">
+    <div class="ml-4" ng-if="loading">
         Loading... <loader></loader>
     </div>
     <div
@@ -9,7 +9,7 @@
     <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': scrolledPastHeader }" />
     <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': scrolledPastHeader }">
         <div class="row row-flex flex-align-top">
-            <div class="col-sm-4 flex-self-align-top">
+            <div class="col-sm-4 flex-self-align-top ml-4">
                 <div class="row row-flex flex-align-top">
                     <h3>
                         {{ job_details.name }}
