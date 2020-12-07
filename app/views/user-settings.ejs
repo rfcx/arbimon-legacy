@@ -24,10 +24,10 @@
                 </h3>
             </div>
             <div class="panel-body">
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <label class="control-label">Arbimon username</label>
                     <p class="form-control-static">{{controller.user.username}}</p>
-                </div>
+                </div> -->
                 <!-- <div class="form-group">
                     <h5><strong>Avatar</strong></h5>
                     <img class="user-avatar" src="<%- user.imageUrl %>" alt="user avatar">
@@ -44,11 +44,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="new_password">Password</label>
-                    <password-input ng-model="controller.data.password" user-inputs="[controller.user.username, controller.user.name, controller.user.lastname, controller.data.username, controller.data.name, controller.data.lastname]" validation="controller.data.passResult"></password-input>
-                </div>
-
                 <div class="row">
                     <div class="col-sm-6">
                         <button class="btn btn-block btn-primary" ng-click="controller.save()">
@@ -61,6 +56,11 @@
                         </button>
                     </div>
                 </div>
+                <% if (user.rfcx_id) { %>
+                    <small class="text-info inline-block text-justify mt-3">
+                        Note: to change your password, use the Forgotten Password link on the RFCx login page.
+                    </small>                
+                <% } %>
             </div>
         </div>
     </div>

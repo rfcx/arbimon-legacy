@@ -535,7 +535,7 @@ DROP TABLE IF EXISTS `job_stats_by_month`;
 /*!50001 DROP VIEW IF EXISTS `job_stats_by_month`*/;
 SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
-/*!50001 CREATE VIEW `job_stats_by_month` AS SELECT 
+/*!50001 CREATE VIEW `job_stats_by_month` AS SELECT
  1 AS `month_date`,
  1 AS `jobs`,
  1 AS `job_type_id`,
@@ -666,10 +666,10 @@ CREATE TABLE `jobs` (
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`admin`@`%`*/ /*!50003 TRIGGER `arbimon2`.`jobs_BEFORE_UPDATE` BEFORE UPDATE ON `jobs` FOR EACH ROW
 BEGIN
-   IF (NEW.progress >= OLD.progress_steps) 
+   IF (NEW.progress >= OLD.progress_steps)
    THEN
 	   SET NEW.state = "completed";
-                
+
 	   IF (NEW.job_type_id = 6)
        THEN
             SELECT pattern_matching_id
@@ -678,7 +678,7 @@ BEGIN
             WHERE job_id = NEW.job_id;
             CALL pattern_matching_postprocess(@pattern_matching_id);
        END IF;
-       
+
    END IF;
 END */;;
 DELIMITER ;
@@ -1127,7 +1127,7 @@ DROP TABLE IF EXISTS `project_plan_owner`;
 /*!50001 DROP VIEW IF EXISTS `project_plan_owner`*/;
 SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
-/*!50001 CREATE VIEW `project_plan_owner` AS SELECT 
+/*!50001 CREATE VIEW `project_plan_owner` AS SELECT
  1 AS `name`,
  1 AS `firstname`,
  1 AS `lastname`,
@@ -1898,15 +1898,18 @@ CREATE TABLE `templates` (
   `y2` double NOT NULL,
   `date_created` timestamp NULL DEFAULT NULL,
   `deleted` tinyint(1) DEFAULT '0',
+  `source_project_id` INT(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`template_id`),
   KEY `fk_templates_1_idx` (`project_id`),
   KEY `fk_templates_2_idx` (`recording_id`),
   KEY `fk_templates_3_idx` (`species_id`),
   KEY `fk_templates_4_idx` (`songtype_id`),
+  KEY `fk_templates_5_idx` (`source_project_id`),
   CONSTRAINT `fk_templates_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_templates_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`) ON DELETE CASCADE ON UPDATE NO ACTION,
   CONSTRAINT `fk_templates_3` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_templates_4` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `fk_templates_4` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_templates_5` FOREIGN KEY (`source_project_id`) REFERENCES `projects` (`project_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=3758 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

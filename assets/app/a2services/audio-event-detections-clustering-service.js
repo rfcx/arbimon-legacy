@@ -5,14 +5,28 @@ angular.module('a2.srv.audio-event-detections-clustering', [
 .factory('a2AudioEventDetectionsClustering', function($http, Project, notify) {
 
     return {
-        list: function(rec_id, callback) {
+        list: function(opts, callback) {
             var config = {
                 params: {}
             };
-            if (rec_id) {
-                config.params.rec_id = rec_id;
+            if (opts.rec_id) {
+                config.params.rec_id = opts.rec_id;
             }
             return $http.get('/api/project/'+Project.getUrl()+'/audio-event-detections-clustering', config).then(function(response){
+                return response.data;
+            }).catch(notify.serverError);
+        },
+        getClusteredRecords: function(opts, callback) {
+            var config = {
+                params: {}
+            };
+            if (opts.aed_id) {
+                config.params.aed_id = opts.aed_id;
+            }
+            if (opts.aed_id_in) {
+                config.params.aed_id_in = opts.aed_id_in;
+            }
+            return $http.get('/api/project/'+Project.getUrl()+'/audio-event-detections-clustering/records', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },
