@@ -12,7 +12,7 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
         visible: true,
     });
 })
-.controller('a2VisualizerAudioEventsController', function($scope, $modal, $controller, $timeout, a2AudioEventDetectionsClustering, a2UserPermit, a22PointBBoxEditor, Project, notify){
+.controller('a2VisualizerAudioEventsController', function($scope, a2AudioEventDetectionsClustering, Project){
     var self = this;
     self.audioEvents = null;
 
@@ -20,19 +20,18 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
         self.project_classes = project_classes;
     });
 
-    var fetchAudioEvents = function() {
-        var aset= self.audioEvents && self.audioEvents.length;
+    self.fetchAudioEvents = function() {
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
-        if (rec && !aset) {
-            a2AudioEventDetectionsClustering.list(rec).then(function(audioEvents) {
+        if (rec) {
+            a2AudioEventDetectionsClustering.list({rec_id: rec}).then(function(audioEvents) {
                 if (audioEvents) {
                     self.audioEvents = audioEvents.map(event => {
                         return {
                             rec_id: event.rec_id,
                             x1: event.time_min,
                             x2: event.time_max,
-                            y1: event.frec_min,
-                            y2: event.frec_max
+                            y1: event.freq_min,
+                            y2: event.freq_max
                         }
                     });
                     return audioEvents;
@@ -40,5 +39,5 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
             });
         }
     };
-    $scope.$watch('visobject', fetchAudioEvents);
+    $scope.$watch('visobject', self.fetchAudioEvents);
 });

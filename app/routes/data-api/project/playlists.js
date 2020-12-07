@@ -7,8 +7,8 @@ var model = require('../../../model');
  */
 router.get('/', function(req, res, next) {
     res.type('json');
-    model.playlists.find({project:req.project.project_id}, { 
-        count:true, 
+    model.playlists.find({project:req.project.project_id}, {
+        count:true,
         show_type:true,
         show_info: !!req.query.info,
     }, function(err, count) {
@@ -91,7 +91,7 @@ router.get('/:playlist/:recid/previous', function(req, res, next) {
 router.use(function(req, res, next) {
     if(!req.haveAccess(req.project.project_id, "manage playlists"))
         return res.json({ error: "you dont have permission to 'manage playlists'" });
-    
+
     next();
 });
 
@@ -100,34 +100,42 @@ router.use(function(req, res, next) {
  */
 router.post('/create', function(req, res, next) {
     res.type('json');
-    
+
     if(!req.body.playlist_name || !req.body.params)
         return res.json({ error: "missing parameters"});
-        
+
     model.playlists.find({
         name: req.body.playlist_name,
         project: req.project.project_id
     },
     function(err, rows){
         if(err) return next(err);
-        
-        if(rows.length > 0)
-            return res.json({ error: "Playlist name in use" });
-        model.playlists.create({
+
+        if(rows.length > 0) {
+            return res.json({
+                error: "Playlist name in use",
+                ...req.body.isManuallyCreated && { playlist_id: rows[0].id }
+            });
+        }
+        var opts = {
             project_id: req.project.project_id,
             name:    req.body.playlist_name,
             params:  req.body.params,
-        }).then(function(new_tset) {
+        };
+        if (req.body.isManuallyCreated) opts.is_manually_created = req.body.isManuallyCreated
+        model.playlists.create(opts).then(function(new_tset) {
             debug("playlist added", new_tset);
-            
+
             model.projects.insertNews({
                 news_type_id: 10, // playlist created
                 user_id: req.session.user.id,
                 project_id: req.project.project_id,
                 data: JSON.stringify({ playlist: req.body.playlist_name, playlist_id:new_tset.id })
             });
-            
-            res.json({ success: true });
+            res.json({
+                success: true,
+                ...req.body.isManuallyCreated && { playlist_id: new_tset.id }
+            });
         }).catch(next);
     });
 });
@@ -135,7 +143,7 @@ router.post('/create', function(req, res, next) {
 router.post('/rename', function(req, res, next) {
     model.playlists.rename(req.body, function(err, results) {
         if(err) return next(err);
-        
+
         res.json({ success: true });
     })
 })
@@ -164,14 +172,14 @@ router.post('/combine', function(req, res, next) {
         });
     }).then(function(new_tset) {
             debug("playlists " + req.body.term1 + " and " + req.body.term2 + " combined (" + req.body.operation + ") into ", new_tset);
-            
+
             model.projects.insertNews({
                 news_type_id: 10, // playlist created
                 user_id: req.session.user.id,
                 project_id: req.project.project_id,
                 data: JSON.stringify({ playlist: req.body.name, playlist_id:new_tset.id })
             });
-            
+
             res.json({ success: true });
     }).catch(next);
 });
@@ -190,14 +198,14 @@ router.post('/delete', function(req, res, next) {
     res.type('json');
     if(!req.body.playlists)
         return res.json({ error: "missing paramenters" });
-    
+
     model.playlists.remove(req.body.playlists, function(err, results) {
         if(err) return next(err);
-        
+
         debug('playlist deleted', results);
         res.json({ success: true });
     });
-    
+
 });
 
 
