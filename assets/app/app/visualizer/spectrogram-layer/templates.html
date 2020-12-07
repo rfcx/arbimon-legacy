@@ -64,6 +64,9 @@
                 />
                 Species Song
                 <div class="form-group">
+                    <span class="nameExistsSpan small" ng-hide="layer.templates.project_classes.length">
+                        <em>No species song found.<a class="ml-1" ng-style="{'cursor': 'pointer'}" ng-click="layer.templates.goToSoundscapePage()">Create one.</a></em>
+                    </span>
                     <ui-select ng-model="layer.templates.editor.project_class" theme="bootstrap">
                         <ui-select-match placeholder="Select a species sound">
                             {{ $select.selected.species_name }}<br/>{{ $select.selected.songtype_name }}

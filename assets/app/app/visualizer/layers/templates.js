@@ -22,7 +22,7 @@ angular.module('a2.visualizer.layers.templates', [
         visible: true,
     });
 })
-.controller('a2VisualizerTemplateLayerController', function($scope, $modal, $controller, $timeout, a2Templates, a2UserPermit, a22PointBBoxEditor, Project, notify) {
+.controller('a2VisualizerTemplateLayerController', function($scope, $modal, $controller, $state, $timeout, a2Templates, a2UserPermit, a22PointBBoxEditor, Project, notify) {
     var self = this;
     self.selected = null;
     self.templates = [];
@@ -46,6 +46,10 @@ angular.module('a2.visualizer.layers.templates', [
         });
         self.editor.reset();
         self.editor.recording = rec;
+    };
+
+    self.goToSoundscapePage = function () {
+        $state.go('analysis.soundscapes', {});
     };
 
     self.editor = angular.extend(
