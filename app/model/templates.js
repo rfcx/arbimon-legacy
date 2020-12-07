@@ -158,7 +158,7 @@ var Templates = {
         "    `date_created`, `source_project_id`\n" +
         ") SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ? FROM DUAL\n" +
         "WHERE NOT EXISTS (SELECT * FROM `templates`\n" +
-        "WHERE `name`=? AND `project_id`=? AND `recording_id`=? AND `deleted`=0 LIMIT 1)";
+        "WHERE `name`=? AND `project_id`=? AND `recording_id`=? AND `species_id`=? AND `deleted`=0 LIMIT 1)";
 
         return q.ninvoke(joi, 'validate', data, this.SCHEMA).then(
             () => dbpool.query(
@@ -166,7 +166,7 @@ var Templates = {
                     data.name, null,
                     data.project, data.recording, data.species, data.songtype,
                     data.x1, data.y1, data.x2, data.y2, data.source_project_id? data.source_project_id : null,
-                    data.name,  data.project, data.recording
+                    data.name,  data.project, data.recording, data.species
                 ]
             ).then(result => {
                 data.id = result.insertId

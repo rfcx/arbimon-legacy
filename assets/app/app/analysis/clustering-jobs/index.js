@@ -93,9 +93,9 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/details.html'
     };
 })
-.controller('ClusteringDetailsCtrl' , function($scope, $state, a2ClusteringJobs) {
+.controller('ClusteringDetailsCtrl' , function($scope, $state, a2ClusteringJobs, a2AudioEventDetectionsClustering, $window, Project, a2Playlists, $localStorage) {
     $scope.loading = true;
-    $scope.shapeSelected = false;
+    $scope.toggleMenu = false;
     $scope.infopanedata = '';
     var refreshDetails = function() {
         a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
@@ -107,7 +107,6 @@ angular.module('a2.analysis.clustering-jobs', [
             $scope.loading = false;
             if (res) {
                 $scope.countAudioEventDetected = res.aed_id.length;
-                $scope.countClustersDetected = res.cluster.length;
                 var el = document.getElementById('plotly');
                 var d3 = Plotly.d3;
                 var clusters = {};
@@ -124,7 +123,8 @@ angular.module('a2.analysis.clustering-jobs', [
                         clusters[item].y.push(res.y_coord[i]);
                         clusters[item].aed.push(res.aed_id[i]);
                     }
-                })
+                });
+                $scope.countClustersDetected = Object.keys(clusters).length;
                 var data = [];
                 var shapes = [];
                 $scope.originalData = [];
@@ -189,12 +189,26 @@ angular.module('a2.analysis.clustering-jobs', [
                 // make random color for shapes and points
                 layout.shapes.forEach((shape, i) => {
                     var color = random_color();
-                    data[i].line = {};
-                    data[i].line.color = color
+                    data[i].marker = {
+                        color: color
+                    };
                     shape.fillcolor = color
-                    shape.line = {};
-                    shape.line.color = color;
+                    shape.line = {
+                        color: color,
+                        'stroke-width': 1
+                    };
                 })
+
+                $scope.resetSelect = function () {
+                    $scope.toggleMenu = false;
+                    $scope.$apply();
+                    layout.shapes.forEach((shape) => {
+                        shape.line.color = shape.fillcolor;
+                        shape.line['stroke-width'] = 1;
+                    });
+                    Plotly.redraw(el);
+                    $scope.$apply();
+                };
 
                 if (el) {
                     var config = {
@@ -204,23 +218,49 @@ angular.module('a2.analysis.clustering-jobs', [
                         hoverdistance: 5
                     }
                     Plotly.newPlot(el, data, layout, config);
+                    // click on a point
                     el.on('plotly_click', function(data) {
-                        $scope.point = {
+                        console.log('plotly_click', data);
+                        $("#plotly .select-outline").remove();
+                        $scope.resetSelect();
+                        $scope.points = {
                             x: data.points[0].x,
-                            y: data.points[0].y
+                            y: data.points[0].y,
+                            name: data.points[0].fullData.name
                         };
                         layout.shapes.forEach((shape, i) => {
-                            if (($scope.point.x >= shape.x0) && ($scope.point.x <= shape.x1) &&
-                                ($scope.point.y >= shape.y0) && ($scope.point.y <= shape.y1)) {
+                            if (($scope.points.x >= shape.x0) && ($scope.points.x <= shape.x1) &&
+                                ($scope.points.y >= shape.y0) && ($scope.points.y <= shape.y1)) {
                                 layout.shapes[i].line.color = '#ffffff';
                                 Plotly.relayout(el, {
                                     'layout.shapes[i].line.color': '#ff0000',
                                     'layout.shapes[i].line.stroke-width': 4
                                 });
-                                $scope.shapeSelected = true;
+                                $scope.toggleMenu = true;
                                 $scope.$apply();
                             }
                         })
+                    });
+                    // select a group of points
+                    el.on('plotly_selected', function(data) {
+                        if (!data) {
+                            $("#plotly .select-outline").remove();
+                        };
+                        $scope.resetSelect();
+                        console.log('plotly_selected', data);
+                        $scope.points = [];
+                        if (data && data.points && data.points.length) {
+                            data.points.forEach(point => {
+                                var cluster = point.curveNumber;
+                                if (!$scope.points[cluster]) {
+                                    $scope.points[cluster] = [];
+                                };
+                                $scope.points[cluster].push(point.pointNumber);
+                            });
+                            $scope.toggleMenu = true;
+                            $scope.$apply();
+
+                        }
                     });
                 }
             }
@@ -231,16 +271,88 @@ angular.module('a2.analysis.clustering-jobs', [
         });
     };
     $scope.onGridViewSelected = function () {
-        $scope.shapeSelected = false;
+        $scope.toggleMenu = false;
         $scope.showViewGridPage = true;
-        $scope.gridContext = $scope.originalData.find(shape => {
-            return shape.x.includes($scope.point.x) && shape.y.includes($scope.point.y);
-        })
+        if ($scope.points.length) {
+            $scope.gridContext = {};
+            $scope.points.forEach((row, i) => {
+                $scope.gridContext[i] = {
+                    aed: $scope.originalData[i].aed.filter((a, i) => {
+                        return row.includes(i);
+                    })
+                }
+            })
+        }
+        else {
+            $scope.gridContext = $scope.originalData.find(shape => {
+                return shape.x.includes($scope.points.x) && shape.y.includes($scope.points.y);
+            })
+        }
         $state.go('analysis.grid-view', {
             clusteringJobId: $scope.clusteringJobId,
             gridContext: $scope.gridContext
         });
     };
+    $scope.showClustersInVisualizer = function () {
+        if ($scope.points.length) {
+            $scope.clusters = {
+                aed: []
+            };
+            Object.values($scope.points).forEach((row, i) => {
+                $scope.originalData[i].aed.forEach((a, i) => {
+                    if (row.includes(i)) {
+                        $scope.clusters.aed.push(a);
+                    };
+                })
+            })
+        }
+        else {
+            $scope.clusters = $scope.originalData.find(shape => {
+                return shape.x.includes($scope.points.x) && shape.y.includes($scope.points.y);
+            });
+        }
+        // find related records
+        if ($scope.clusters && $scope.clusters.aed && $scope.clusters.aed.length) {
+            return a2AudioEventDetectionsClustering.getClusteredRecords($scope.clusters.aed.length === 1 ?
+                {aed_id: $scope.clusters.aed} : {aed_id_in: $scope.clusters.aed})
+                .then(function(data) {
+                    console.log('records', data);
+                    if (data && data.length) {
+                        // collect selected points to boxes
+                        $scope.clusters.boxes = {};
+                        data.forEach(rec => {
+                            var box = ['box', rec.time_min, rec.freq_min, rec.time_max, rec.freq_max].join(',');
+                            if (!$scope.clusters.boxes[rec.rec_id]) {
+                                $scope.clusters.boxes[rec.rec_id] = [box];
+                            }
+                            else {
+                                $scope.clusters.boxes[rec.rec_id].push(box);
+                            }
+                        })
+                        console.log('boxes', $scope.clusters.boxes);
+                        $localStorage.setItem('analysis.clusters',  JSON.stringify($scope.clusters.boxes));
+                        // add related records to a playlist
+                        var recIds = data
+                            .map(rec => {
+                                return rec.rec_id;
+                            })
+                            .filter((id, i, a) => a.indexOf(id) === i);
+                        $scope.savePlaylist({
+                            playlist_name: 'cluster_' + recIds.join("_"),
+                            params: recIds.filter((id, i, a) => a.indexOf(id) === i),
+                            isManuallyCreated: true
+                        });
+                    }
+                }
+            );
+        }
+    };
+    $scope.savePlaylist = function(opts) {
+        a2Playlists.create(opts,
+        function(data) {
+            $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/' + data.playlist_id + '?clusters';
+        }
+    )};
     $scope.showDetailsPage = function () {
         return !$scope.loading && !$scope.infopanedata && !$scope.gridViewSelected;
     };
@@ -348,14 +460,27 @@ angular.module('a2.analysis.clustering-jobs', [
 .controller('GridViewCtrl' , function($scope, a2ClusteringJobs, a2AudioBarService, Project) {
     $scope.loading = true;
     $scope.infopanedata = '';
-
+    $scope.aedData = {
+        count: 0,
+        id: []
+    };
+    if ($scope.gridContext && $scope.gridContext.aed) {
+        $scope.aedData.count = 1;
+        $scope.gridContext.aed.forEach(i => $scope.aedData.id.push(i));
+    }
+    else {
+        $scope.gridData = Object.values($scope.gridContext);
+        $scope.aedData.count = $scope.gridData.length;
+        $scope.gridData.forEach((data) => {
+            data.aed.forEach(i => $scope.aedData.id.push(i));
+        });
+    }
     a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
         if (data) $scope.job_details = data;
     }).catch(err => {
         console.log(err);
     });
-
-    a2ClusteringJobs.getRoisDetails({ jobId: $scope.clusteringJobId, aed: $scope.gridContext.aed }).then(function(data) {
+    a2ClusteringJobs.getRoisDetails({ jobId: $scope.clusteringJobId, aed: $scope.aedData.id }).then(function(data) {
         $scope.loading = false;
         if (data) $scope.rois = data;
     }).catch(err => {
