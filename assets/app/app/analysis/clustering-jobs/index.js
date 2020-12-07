@@ -243,8 +243,43 @@ angular.module('a2.analysis.clustering-jobs', [
     };
     $scope.showDetailsPage = function () {
         return !$scope.loading && !$scope.infopanedata && !$scope.gridViewSelected;
-    }
+    };
+    $scope.openFreqFilterModal = function() {
+        $modal.open({
+            templateUrl : '/app/analysis/clustering-jobs/frequency-filter.html',
+            controller  : 'a2VisualizerFrequencyFilterModalController',
+            size        : 'sm',
+            resolve     : {
+                data : function() { return {
+                    // TO DO: get recordings and freq filter.
+                    // recording :
+                    // filter: $scope.audio_player.freq_filter
+                }; }
+            }
+        }).result.then(
+            // $scope.audio_player.setFrequencyFilter.bind($scope.audio_player)
+        ).then(function(){
+            // var filter=$scope.audio_player.freq_filter;
+            // $scope.location.updateParams({
+            //     filter: filter ? (filter.min + '-' + filter.max) : undefined
+            // });
+        });
+    };
     refreshDetails();
+})
+.controller('a2VisualizerFrequencyFilterModalController', function($scope, $modalInstance, data) {
+    $scope.recording = data.recording;
+    $scope.max_freq = data.recording.sample_rate / 2;
+
+    $scope.has_previous_filter = true; //!!data.filter;
+    $scope.filter = data.filter ? angular.copy(data.filter) : {min:0, max:$scope.max_freq};
+
+    $scope.remove_filter = function(){
+        $modalInstance.close();
+    };
+    $scope.apply_filter = function(){
+        $modalInstance.close($scope.filter);
+    };
 })
 .controller('CreateNewClusteringJobCtrl', function($modalInstance, a2ClusteringJobs, notify) {
     Object.assign(this, {
