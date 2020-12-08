@@ -8,17 +8,17 @@ var joi = require('joi');
 var q = require('q');
 var sprintf = require("sprintf-js").sprintf;
 var AWS = require('aws-sdk');
+var request = require('request');
+var rp = util.promisify(request);
 
-
-var s3 = new AWS.S3();
 var config = require('../config');
+const rfcxConfig = config('rfcx');
 var dbpool = require('../utils/dbpool');
 var sqlutil = require('../utils/sqlutil');
 var queryHandler = dbpool.queryHandler;
 var APIError = require('../utils/apierror');
 var species = require('./species');
 var songtypes = require('./songtypes');
-var s3;
 
 var Projects = {
 
@@ -848,6 +848,25 @@ var Projects = {
             ") as t;", [project_id, project_id]
         ).get(0);
     },
+
+    createInCoreAPI: async function(project, idToken) {
+        const body = {
+            name: project.name,
+            description: project.description,
+            is_public: !project.is_private,
+            external_id: project.project_id
+        }
+        const options = {
+            method: 'POST',
+            url: `${rfcxConfig.apiBaseUrl}/projects`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify(body)
+          }
+          return rp(options)
+    }
 };
 
 

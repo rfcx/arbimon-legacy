@@ -207,13 +207,19 @@ router.post('/create-project', function(req, res, next) {
                         tier : 'paid',
                     };
 
-                    return createProject(project, req.session.user.id).then(function() {
-                        return model.ActivationCodes.consumeCode(coupon, req.session.user.id);
-                    }).then(function(){
-                        res.json({
-                            message: util.format("Project '%s' successfully created!", project.name)
+                    return createProject(project, req.session.user.id)
+                        .then(async function(projectId) {
+                            await model.ActivationCodes.consumeCode(coupon, req.session.user.id);
+                            return projectId
+                        }).then(function(projectId){
+                            if (req.session.user && req.session.user.rfcx_id) {
+                                project.project_id = projectId
+                                model.projects.createInCoreAPI(project, req.session.idToken)
+                            }
+                            res.json({
+                                message: util.format("Project '%s' successfully created!", project.name)
+                            });
                         });
-                    });
 
                 } else {
                     throw new APIError("The given coupon does not exists.", 422);
@@ -230,7 +236,11 @@ router.post('/create-project', function(req, res, next) {
                     }).then(function(){
                         project.plan = plan;
                         return createProject(project, req.session.user.id);
-                    }).then(function(result) {
+                    }).then(function(projectId) {
+                        if (req.session.user && req.session.user.rfcx_id) {
+                            project.project_id = projectId
+                            model.projects.createInCoreAPI(project, req.session.idToken)
+                        }
                         res.json({
                             message: util.format("Project '%s' successfully created!", project.name)
                         });
@@ -259,6 +269,8 @@ router.post('/create-project', function(req, res, next) {
                     };
 
                     return createOrder(req.session.user, order, addendum, req.appHost).then(function(orderHandle){
+                        // If we re-implement paid plans, we need to add code which will call Core API to create a project in RFCx DB
+                        // (see the same comment in "/process/:orderId" endpoint below)
                         res.json(orderHandle);
                     });
                 } else {
@@ -555,6 +567,7 @@ router.post('/process/:orderId', function(req, res, next) {
                 // TODO add event to project_audit table
             }
         },
+        // If we re-implement paid plans, we need to add code which will call Core API to create a project in RFCx DB
         function setCompleted(cb) {
             model.orders.update({
                 order_id: req.order.order_id,

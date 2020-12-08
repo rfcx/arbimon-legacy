@@ -665,7 +665,7 @@ var Users = {
         });
     },
 
-    auth0Login: async function(req, profile) {
+    auth0Login: async function(req, profile, tokens) {
         const user = await this.ensureUserExistFromAuth0(profile)
         this.refreshLastLogin(user.user_id)
 
@@ -673,11 +673,11 @@ var Users = {
         req.session.loggedIn = true;
         req.session.isAnonymousGuest = false;
         req.session.user = Users.makeUserObject(user, {secure: req.secure, all:true});
-
+        req.session.idToken = tokens.id_token
         return user
     },
 
-    connectRFCx: async function(req, profile) {
+    connectRFCx: async function(req, profile, tokens) {
         const userId = req.session.user.id;
         const email = this.getEmailFromAuth0Profile(profile);
         // if user authenticates with different email, check if there is another user with this email
@@ -695,6 +695,7 @@ var Users = {
         req.session.loggedIn = true;
         req.session.isAnonymousGuest = false;
         req.session.user = Users.makeUserObject(user, { secure: req.secure, all: true });
+        req.session.idToken = tokens.id_token
     },
 
     ensureUserExistFromAuth0: async function(profile) {
