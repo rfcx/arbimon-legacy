@@ -5,29 +5,40 @@ angular.module('a2.audiodata.sites', [
     'humane',
     'a2.qr-js',
     'a2.googlemaps',
-    'angularFileUpload',
     'a2.srv.project'
 ])
-.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, FileUploader) {
+.directive('fileChange',['$parse', function($parse) {
+    return{
+      require:'ngModel',
+      restrict:'A',
+      link:function($scope, element, attrs) {
+        var attrHandler=$parse(attrs['fileChange']);
+        var handler=function(e){
+          $scope.$apply(function(){
+            attrHandler($scope, {$event:e, files:e.target.files});
+          });
+        };
+        element[0].addEventListener('change', handler,false);
+      }
+    }
+  }])
+.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader) {
     $scope.loading = true;
-    var uploader = $scope.uploader = new FileUploader()
-    
-    uploader.onAfterAddingFile = function (fileItem) {
-        console.info('onAfterAddingFile', fileItem);
-    };
-    
-    uploader.onAfterAddingAll = function (addedFileItems) {
-        console.info('onAfterAddingAll', addedFileItems);
-    };
-    
-    uploader.onBeforeUploadItem = function (item) {
-        console.info('onBeforeUploadItem', item);
-    };
+    $scope.files=[];
     
     Project.getInfo(function(info){
         $scope.project = info;
     });
-
+    
+    $scope.handler = function(e, files) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var string = reader.result;
+            console.log("readFile", string);
+        }
+        reader.readAsText(files[0]);
+    }
+    
     var p={
         site : $state.params.site,
         show : $state.params.show

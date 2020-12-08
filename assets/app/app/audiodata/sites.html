@@ -12,6 +12,10 @@
             tooltip="Create a new site">
             <i class="fa fa-plus"></i>
         </button>
+        <button class="btn btn-default btn-file" tooltip="Import file">
+            <i class="fa fa-file-text"></i>
+            <input accept=".csv" file-change="handler($event,files)" type="file" ng-model="files">
+        </button>
 
         <!-- <div class="btn-group" dropdown>
             <button class="btn btn-default dropdown-toggle"
@@ -47,10 +51,6 @@
             tooltip="remove site">
             <i class="fa fa-trash"></i>
         </button>
-        <div class="btn btn-default btn-file">
-            <i class="fa fa-plus"></i> Import file
-            <input accept=".csv" nv-file-select uploader="uploader" type="file" multiple>
-        </div>
     </div>
 </div>
 <div class="row sites">
