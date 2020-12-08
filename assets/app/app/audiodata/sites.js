@@ -34,10 +34,46 @@ angular.module('a2.audiodata.sites', [
         var reader = new FileReader();
         reader.onload = function(e) {
             var string = reader.result;
-            console.log("readFile", string);
+            processData(string)
         }
         reader.readAsText(files[0]);
     }
+    
+    function processData(allText) {
+        var allTextLines = allText.split(/\r\n|\n/);
+        var headers = allTextLines[0].split(',');
+        var lines = [];
+        for (var i=1; i<allTextLines.length; i++) {
+            var data = allTextLines[i].split(',');
+            var header = ""
+            if (data.length == headers.length) {
+                var tarr = {};
+                for (var j=0; j<headers.length; j++) {
+                    header = headers[j]
+                    tarr[header] = data[j]
+                }
+                lines.push({tarr});
+            }
+        }
+        createSite(lines)
+    }
+    
+    function createSite(sites) {
+        var action = 'create';
+        sites.forEach(function(element) {
+            a2Sites[action](element.tarr, function(data) {
+                if(data.error)
+                    return notify.error(data.error);
+                
+                $scope.creating = false;
+                
+                Project.getSites(function(sites) {
+                    $scope.sites = sites;
+                });
+            });
+        })
+        notify.log("site created");
+    };
     
     var p={
         site : $state.params.site,
@@ -115,7 +151,7 @@ angular.module('a2.audiodata.sites', [
         }
 
         if($scope.siteForm.$invalid) return;
-
+console.log('temp', $scope.temp)
         a2Sites[action]($scope.temp, function(data) {
             if(data.error)
                 return notify.error(data.error);
