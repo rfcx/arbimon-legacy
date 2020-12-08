@@ -677,6 +677,15 @@ angular.module('a2.analysis.cnn', [
     //$scope.calcWidth = function(roi) {
 
     //};
+    
+    $scope.onScroll = function($event, $controller){
+        this.scrollElement = $controller.scrollElement;
+        var scrollPos = $controller.scrollElement.scrollY;
+        var headerTop = $controller.anchors.header.offset().top;
+
+        this.headerTop = headerTop | 0;
+        this.scrolledPastHeader = scrollPos >= headerTop;
+    }
 
     var getSpeciesCounts = function(site, species_sites_matrix) {
         if (site==0) {

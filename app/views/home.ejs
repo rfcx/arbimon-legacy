@@ -9,26 +9,31 @@
 
 <body ng-controller="HomeCtrl as controller">
 <% include fragments/home-nav %>
-<%if (!user.rfcx_id && user.username !== 'guest') { %>
-    <% include connect-with-rfcx-alert %>
-<% } %>
+
 
 <div class="container homepage">
     <div class="row">
         <div class="col-md-12">
             <div class="row">
+                <div class="col-xs-5 col-md-5 pb-3"></div>
+                    <%if (!user.rfcx_id && user.username !== 'guest') { %>
+                        <% include connect-with-rfcx-alert %>
+                    <% } %>
+                </div>
+            </div>
+            
+            <div class="row">
                 <div class="col-xs-5 col-md-5 pb-3">
-                    <h3>Projects</h3>
+                    <% if (state === 'home.all') { %>
+                        <h3>Projects</h3>
+                    <% } else { %>
+                        <h3>My Projects</h3>
+                    <% } %>
                 </div>
                 <div class="col-xs-7 col-md-7 pt-4 pb-1">
-                        <div class="form-inline pull-right">
-                        <div class="form-group">
-                            <input id="projectsSearch" ng-if="controller.showSearch" type="search" class="form-control input-sm"
-                                    ng-model="controller.search" placeholder="Search projects">
-                            <button class="btn btn-sm btn-default" tooltip="Search for a project" tooltip-trigger="mouseenter"
-                                    ng-click="controller.toggleSearchVis() | trackEvent:'Home':'searchProject'">
-                                <i class="fa fa-search"></i>
-                            </button>
+                    <div class="form-inline pull-right">
+                        <div class="form-group has-feedback">
+                            <input id="projectsSearch" type="search" class="form-control input-sm" ng-model="controller.search" placeholder="Search projects">
                         </div>
                     </div>
                 </div>
@@ -48,8 +53,8 @@
                         </li>
                         <li class="ng-cloak projects-list-item" ng-class="{'disabled': !project.is_enabled }"
                             ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort | filter: controller.search ) | paginate: controller.currentPage : (controller.isAnonymousGuest? 12 : 11)"
-                            style="background: url({{project.mapUrl}}) no-repeat top center; background-size: cover;">
-                            <div class="text-left" ng-click="controller.selectProject(project)">
+                            style="background: url({{project.mapUrl}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project)">
+                            <div class="text-left">
                                 <div class="last-accessed" title="{{ project.lastAccessed | moment:'lll' }}">
                                     {{project.lastAccessed | timeFromNow}}
                                 </div>

@@ -18,6 +18,19 @@ router.get('/', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/records', function(req, res, next) {
+    res.type('json');
+
+    return model.AudioEventDetectionsClustering.findClusteredRecords({
+        project_id: req.project.project_id,
+        aed_id: req.query.aed_id,
+        aed_id_in: req.query.aed_id_in
+    })
+    .then(function(data){
+        res.json(data);
+    }).catch(next);
+});
+
 router.post('/new', function(req, res, next) {
     res.type('json');
 
