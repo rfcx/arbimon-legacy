@@ -45,6 +45,8 @@ router.post('/create', function(req, res, next) {
                 data: JSON.stringify({ site: site.name })
             });
 
+            model.sites.createInCoreAPI(site, req.session.idToken)
+
             res.json({ message: "New site created" });
         });
     });

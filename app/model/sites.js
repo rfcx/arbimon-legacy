@@ -4,6 +4,9 @@ var joi = require('joi');
 var q = require('q');
 var jsonwebtoken = require('jsonwebtoken');
 var config = require('../config');
+const rfcxConfig = config('rfcx');
+var request = require('request');
+var rp = util.promisify(request);
 
 var s3;
 var dbpool = require('../utils/dbpool');
@@ -615,6 +618,25 @@ var Sites = {
             "FROM site_log_files \n" +
             "WHERE site_id = " + (site.site_id | 0),
         callback);
+    },
+
+    createInCoreAPI: async function(site, idToken) {
+        const body = {
+            name: site.name,
+            latitude: site.lat,
+            longitude: site.lon,
+            project_external_id: site.project_id
+        }
+        const options = {
+            method: 'POST',
+            url: `${rfcxConfig.apiBaseUrl}/streams`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify(body)
+          }
+          return rp(options)
     }
 };
 
