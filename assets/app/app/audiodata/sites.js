@@ -102,6 +102,18 @@ angular.module('a2.audiodata.sites', [
     });
 
     $scope.editing = false;
+    
+    $scope.open = function() {
+        var modalInstance =  $modal.open({
+          templateUrl: "/app/audiodata/import.html",
+          controller: "ImportSiteInstanceCtrl"
+        });
+        
+        modalInstance.result.then(function(response){
+            $scope.result = `${response} button hitted`;
+        });
+        
+      };
 
     a2GoogleMapsLoader.then(function(google){
         $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
@@ -151,7 +163,6 @@ angular.module('a2.audiodata.sites', [
         }
 
         if($scope.siteForm.$invalid) return;
-console.log('temp', $scope.temp)
         a2Sites[action]($scope.temp, function(data) {
             if(data.error)
                 return notify.error(data.error);
@@ -385,6 +396,15 @@ console.log('temp', $scope.temp)
         });
     };
 
+})
+.controller('ImportSiteInstanceCtrl', function ($scope, $modalInstance) {
+    $scope.ok = function(){
+        $modalInstance.close("Ok");
+      }
+       
+      $scope.cancel = function(){
+        $modalInstance.dismiss();
+      } 
 })
 // TODO remove properly published
 // .controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {

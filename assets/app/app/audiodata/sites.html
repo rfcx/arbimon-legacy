@@ -12,9 +12,12 @@
             tooltip="Create a new site">
             <i class="fa fa-plus"></i>
         </button>
-        <button class="btn btn-default btn-file" tooltip="Import file">
+        <!-- <button class="btn btn-default btn-file" tooltip="Import file">
             <i class="fa fa-file-text"></i>
             <input accept=".csv" file-change="handler($event,files)" type="file" ng-model="files">
+        </button> -->
+        <button class="btn btn-default btn-file" tooltip="Import file" ng-click="open()">
+            <i class="fa fa-file-text"></i>
         </button>
 
         <!-- <div class="btn-group" dropdown>
