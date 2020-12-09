@@ -2,10 +2,9 @@
     <h3 class="modal-title">Filter Audio Frequency</h3>
 </div>
 <div class="modal-body">
-    <!-- <a2-visualizer-frequency-filter-range-control
-        img-src="recording.tiles.set[0].src | a2UpdatedUrl"
-        filter-min="filter.min" filter-max="filter.max" max-freq="max_freq"
-    ></a2-visualizer-frequency-filter-range-control> -->
+    <a2-visualizer-frequency-filter-range-control v-if="filterData.src"
+        img-src="filterData.src" filter-min="frequency.min" filter-max="frequency.max" max-freq="filterData.max_freq"
+    ></a2-visualizer-frequency-filter-range-control>
     <button class="btn btn-default" style="position:absolute;top:0;right:0"
         ng-click="$dismiss()" tooltip="Close the Modal">
         <i class="fa fa-times-circle-o"></i>
