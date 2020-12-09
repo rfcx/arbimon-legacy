@@ -103,7 +103,7 @@ def branchToConfig(branch) {
         slackChannel = "alerts-deployment"
         withCredentials([file(credentialsId: 'arbimon_staging_env', variable: 'PRIVATE_ENV')]) {
         sh "cp $PRIVATE_ENV config/db.json"
-        sh "chmod 777 functions/.env"
+        sh "chmod 777 config/db.json"
         }
         }
         echo "BRANCH:${branch} -> CONFIGURATION:${result}"
