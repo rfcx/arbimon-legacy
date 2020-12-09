@@ -24,44 +24,31 @@ angular.module('a2.audiodata.sites', [
   }])
 .controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader) {
     $scope.loading = true;
-    $scope.files=[];
     
     Project.getInfo(function(info){
         $scope.project = info;
     });
     
-    $scope.handler = function(e, files) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var string = reader.result;
-            processData(string)
-        }
-        reader.readAsText(files[0]);
-    }
-    
     function processData(allText) {
         var allTextLines = allText.split(/\r\n|\n/);
         var headers = allTextLines[0].split(',');
-        var lines = [];
+        var sites = [];
         for (var i=1; i<allTextLines.length; i++) {
             var data = allTextLines[i].split(',');
-            var header = ""
             if (data.length == headers.length) {
-                var tarr = {};
+                var site = {};
                 for (var j=0; j<headers.length; j++) {
-                    header = headers[j]
-                    tarr[header] = data[j]
+                    site[headers[j]] = data[j]
                 }
-                lines.push({tarr});
+                sites.push({site});
             }
         }
-        createSite(lines)
+        createSite(sites)
     }
     
     function createSite(sites) {
-        var action = 'create';
         sites.forEach(function(element) {
-            a2Sites[action](element.tarr, function(data) {
+            a2Sites.create(element.tarr, function(data) {
                 if(data.error)
                     return notify.error(data.error);
                 
@@ -71,8 +58,8 @@ angular.module('a2.audiodata.sites', [
                     $scope.sites = sites;
                 });
             });
-        })
-        notify.log("site created");
+        });
+        notify.log("Site created tree");
     };
     
     var p={
@@ -103,17 +90,21 @@ angular.module('a2.audiodata.sites', [
 
     $scope.editing = false;
     
-    $scope.open = function() {
+    $scope.importSite = function() {
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to add sites");
+            return;
+        }
+        
         var modalInstance =  $modal.open({
           templateUrl: "/app/audiodata/import.html",
           controller: "ImportSiteInstanceCtrl"
         });
         
         modalInstance.result.then(function(response){
-            $scope.result = `${response} button hitted`;
+            processData(response)
         });
-        
-      };
+    };
 
     a2GoogleMapsLoader.then(function(google){
         $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
@@ -398,13 +389,19 @@ angular.module('a2.audiodata.sites', [
 
 })
 .controller('ImportSiteInstanceCtrl', function ($scope, $modalInstance) {
-    $scope.ok = function(){
-        $modalInstance.close("Ok");
-      }
-       
-      $scope.cancel = function(){
+    $scope.files=[];
+
+    $scope.handler = function(e, files) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            $modalInstance.close(reader.result);
+        }
+        reader.readAsText(files[0]);
+    }
+    
+    $scope.cancel = function(){
         $modalInstance.dismiss();
-      } 
+    } 
 })
 // TODO remove properly published
 // .controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {
