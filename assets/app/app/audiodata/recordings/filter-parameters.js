@@ -100,10 +100,10 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
     var filterDefs = [
         {name:"range"                 , map: function set_range_bounds(range){
             if(range && range.from && range.to) {
-                range.from.setUTCHours(0);
-                range.from.setUTCMinutes(0);
-                range.to.setUTCHours(23);
-                range.to.setUTCMinutes(59);
+                range.from.setHours(0);
+                range.from.setMinutes(0);
+                range.to.setHours(23);
+                range.to.setMinutes(59);
             }
             return range;
         }},
@@ -250,7 +250,22 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             options.playlists = playlists;
         });
         a2Tags.getForType('recording').then((function(tags){
-            options.tags = tags;
+            var tagsObj = {}
+            tags.forEach(function(t) {
+                var key = t.tag
+                if (!tagsObj[key]) {
+                    tagsObj[key] = {
+                        tag: key,
+                        tag_id: [t.tag_id],
+                        count: 1
+                    }
+                }
+                else {
+                    tagsObj[key].tag_id.push(t.tag_id);
+                    tagsObj[key].count++
+                }
+            })
+            options.tags = Object.values(tagsObj);
         }).bind(this));
         a2Classi.list((function(classifications) {
             options.classifications = classifications.map(function(c){

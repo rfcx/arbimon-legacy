@@ -1,5 +1,5 @@
 <div>
-    <div ng-if="loading">
+    <div class="ml-4" ng-if="loading">
         Loading... <loader></loader>
     </div>
     <div
@@ -9,7 +9,7 @@
     <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': scrolledPastHeader }" />
     <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': scrolledPastHeader }">
         <div class="row row-flex flex-align-top">
-            <div class="col-sm-4 flex-self-align-top">
+            <div class="col-sm-4 flex-self-align-top ml-4">
                 <div class="row row-flex flex-align-top">
                     <h3>
                         {{ job_details.name }}
@@ -158,14 +158,14 @@
 					</div>
 
 					<div class="btn-group btn-group-margin">
-						<ui-select class="btn-group-item" ng-model="selected.site" ng-change="setSite($select.selected)" style="width:9em;">
-							<ui-select-match>{{$select.selected.name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
-							<ui-select-choices repeat="$item in counts.roi_sites_counts | filter:$select.search">
-								<span class="text-wrap">{{$item.name}}({{$item.N}})</span>
-							</ui-select-choices>
-						</ui-select>
-                    </div>
-				</div>
+              <ui-select class="btn-group-item" ng-model="selected.site" ng-change="setSite($select.selected)" style="width:9em;">
+                <ui-select-match>{{$select.selected.name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
+                <ui-select-choices repeat="$item in counts.roi_sites_counts | filter:$select.search">
+                  <span class="text-wrap">{{$item.name}}({{$item.N}})</span>
+                </ui-select-choices>
+              </ui-select>
+            </div>
+				 </div>
 
                 </div>
             </div>
@@ -180,6 +180,7 @@
                 <div ng-repeat="roi in species.rois"
                     class="btn roi-thumbnail {{roi.selected ? 'active' : ''}}"
                     ng-click="roi.selected = !roi.selected"
+                    ng-style="{'border-width': '2px'}"
                     popover-html="'Recording: {{roi.recording}}<br>
                             Site: {{roi.site}}<br>
                             Time: {{roi.datetime | date:'medium': 'UTC'}} <br>
@@ -207,7 +208,7 @@
                             style="cursor:pointer">
                         </i>
                     </a>
-                    <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img-cnn {{lists.current.thumbnailClass}}"/>
+                    <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img-original"/>
                 </div>
             </div>
         </div>
