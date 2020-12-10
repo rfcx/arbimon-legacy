@@ -163,13 +163,22 @@ router.param('oneRecUrl', function(req, res, next, recording_url){
     });
 });
 
-router.get('/tiles/:oneRecUrl/:i/:j', function(req, res, next) {
+router.get('/tiles/:recordingId/:i/:j', function(req, res, next) {
     var i = req.params.i | 0;
     var j = req.params.j | 0;
-
-    model.recordings.fetchOneSpectrogramTile(req.recording, i, j, function(err, file){
-        if(err || !file){ next(err); return; }
-        res.sendFile(file.path);
+    var recordingId = req.params.recordingId;
+    
+    model.recordings.findByRecordingId(recordingId, function(err, recording) {
+        if (err) {
+            return next(err);
+        }
+        if (recording === null){
+            return res.status(404).json({ error: "recording not found"});
+        }
+        model.recordings.fetchOneSpectrogramTile(recording, i, j, function(err, file){
+            if(err || !file){ next(err); return; }
+            res.sendFile(file.path);
+        });
     });
 });
 
