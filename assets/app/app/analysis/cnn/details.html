@@ -148,8 +148,8 @@
 				</div>
 
 				<div class="pull-right">
-					<div class="btn-group btn-group-margin" ng-show="total.pages > 1">
-                        <ui-select class="btn-group-item" ng-model="selected.species" ng-change="setSpecies($select.selected)">
+					<div class="btn-group btn-group-margin">
+                        <ui-select class="btn-group-item" ng-model="selected.species" ng-change="setSpecies($select.selected)" style="width:9em;">
                             <ui-select-match>{{$select.selected.scientific_name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
                             <ui-select-choices repeat="$item in counts.roi_species_counts | filter:$select.search">
                                 <span class="text-wrap">{{$item.scientific_name}}({{$item.N}})</span>
@@ -157,15 +157,15 @@
 						</ui-select>
 					</div>
 
-					<div class="btn-group btn-group-margin" ng-show="total.pages > 1">
-						<ui-select class="btn-group-item" ng-model="selected.site" ng-change="setSite($select.selected)">
-							<ui-select-match>{{$select.selected.name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
-							<ui-select-choices repeat="$item in counts.roi_sites_counts | filter:$select.search">
-								<span class="text-wrap">{{$item.name}}({{$item.N}})</span>
-							</ui-select-choices>
-						</ui-select>
-                    </div>
-				</div>
+					<div class="btn-group btn-group-margin">
+              <ui-select class="btn-group-item" ng-model="selected.site" ng-change="setSite($select.selected)" style="width:9em;">
+                <ui-select-match>{{$select.selected.name}}({{$select.selected.N}})&nbsp;&nbsp;</ui-select-match>
+                <ui-select-choices repeat="$item in counts.roi_sites_counts | filter:$select.search">
+                  <span class="text-wrap">{{$item.name}}({{$item.N}})</span>
+                </ui-select-choices>
+              </ui-select>
+            </div>
+				 </div>
 
                 </div>
             </div>
