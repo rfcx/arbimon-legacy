@@ -7,7 +7,7 @@
     </div>
     <div ng-if="!loading && !infopanedata" class="panel-body a2-page-header clearfix">
         <div class="row row-flex flex-align-top">
-            <div class="col-sm-3 flex-self-align-top">
+            <div class="col-sm-6 flex-self-align-top">
                 <div class="row row-flex flex-align-top">
                     Job Name: {{ job_details.name }}
                     <br>User: {{ job_details.user }}
@@ -16,31 +16,50 @@
                     <br>Number of clusters detected: {{ aedData.count || 'no data' }}
                 </div>
             </div>
+            <div class="col-sm-6 flex-self-align-bottom">
+                <div class="pull-right">
+                    <div class="btn-group btn-group-margin">
+                        <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
+                        <ui-select ng-model="search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected.value)">
+                            <ui-select-match class="right-corners">
+                                <i ng-class="$select.selected.class"></i>{{$select.selected.text}}
+                            </ui-select-match>
+                            <ui-select-choices repeat="$item in lists.search | filter:$select.search">
+                                <i ng-class="$item.class"></i> {{$item.text}}
+                                <div class="item-description">{{$item.description}}</div>
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div ng-if="!loading && !infopanedata">
-        <span ng-repeat="roi in rois"
-            class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
-            ng-click="roi.selected = !roi.selected"
-            popover-trigger="mouseenter"
-            popover-append-to-body="true"
-        >
-            <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
-            <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
-                <i tooltip-placement="left"
-                    tooltip-append-to-body="true"
-                    tooltip="View in Visualizer"
-                    class="fa fa-cubes">
-                </i>
-            </a>
-            <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, $event)">
-                <i tooltip-placement="left"
-                    tooltip-append-to-body="true"
-                    tooltip="Play Audio"
-                    class="fa fa-play">
-                </i>
-            </a>
-            <img ng-src="{{ roi.uri }}" class="roi-img"/>
+    <div ng-if="!loading && !infopanedata && rows && rows.length">
+        <span ng-repeat="row in rows">
+            <div ng-if="row.site" class="h3" id="site-{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>
+            <span ng-repeat="roi in row.rois"
+                class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                ng-click="roi.selected = !roi.selected"
+                popover-trigger="mouseenter"
+                popover-append-to-body="true"
+            >
+                <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
+                <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
+                    <i tooltip-placement="left"
+                        tooltip-append-to-body="true"
+                        tooltip="View in Visualizer"
+                        class="fa fa-cubes">
+                    </i>
+                </a>
+                <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, $event)">
+                    <i tooltip-placement="left"
+                        tooltip-append-to-body="true"
+                        tooltip="Play Audio"
+                        class="fa fa-play">
+                    </i>
+                </a>
+                <img ng-src="{{ roi.uri }}" class="roi-img"/>
+            </span>
         </span>
     </div>
 </div>

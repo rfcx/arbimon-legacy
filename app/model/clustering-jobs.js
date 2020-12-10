@@ -72,6 +72,7 @@ var ClusteringJobs = {
     findRois: function (options) {
         var constraints=['1=1'];
         var select = [];
+        var groupby = [];
         var tables = [
             "audio_event_detections_clustering A"
         ];
@@ -85,10 +86,24 @@ var ClusteringJobs = {
         if (options.aed) {
             constraints.push('A.aed_id IN (' + dbpool.escape(options.aed) + ')');
         }
+
+        if (options.perSite) {
+            select.push('S.site_id, S.`name` as `site`');
+            tables.push("JOIN recordings R ON A.recording_id = R.recording_id");
+            tables.push("JOIN sites S ON R.site_id = S.site_id");
+        }
+
+        if (options.perDate) {
+            select.push('C.`date_created`');
+            tables.push("JOIN job_params_audio_event_clustering C ON A.job_id = C.audio_event_detection_job_id");
+            groupby.push('A.aed_id');
+        }
+
         return dbpool.query(
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
-            "WHERE " + constraints.join(" AND ")
+            "WHERE " + constraints.join(" AND ")+ "\n" +
+            (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "")
         )
     },
 
