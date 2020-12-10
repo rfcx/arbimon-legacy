@@ -12,7 +12,8 @@ var uuid = require('node-uuid');
 var moment = require('moment');
 var q = require('q');
 var systemSettings = require('../../utils/settings-monitor');
-
+var config = require('../../config');
+const rfcxConfig = config('rfcx');
 
 var model = require('../../model');
 var APIError = require('../../utils/apierror.js');
@@ -214,7 +215,9 @@ router.post('/create-project', function(req, res, next) {
                         }).then(function(projectId){
                             if (req.session.user && req.session.user.rfcx_id) {
                                 project.project_id = projectId
-                                model.projects.createInCoreAPI(project, req.session.idToken)
+                                if (rfcxConfig.coreAPIEnabled) {
+                                    model.projects.createInCoreAPI(project, req.session.idToken)
+                                }
                             }
                             res.json({
                                 message: util.format("Project '%s' successfully created!", project.name)
@@ -239,7 +242,9 @@ router.post('/create-project', function(req, res, next) {
                     }).then(function(projectId) {
                         if (req.session.user && req.session.user.rfcx_id) {
                             project.project_id = projectId
-                            model.projects.createInCoreAPI(project, req.session.idToken)
+                            if (rfcxConfig.coreAPIEnabled) {
+                                model.projects.createInCoreAPI(project, req.session.idToken)
+                            }
                         }
                         res.json({
                             message: util.format("Project '%s' successfully created!", project.name)

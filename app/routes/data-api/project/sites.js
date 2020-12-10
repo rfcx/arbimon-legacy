@@ -3,6 +3,8 @@ var async = require('async');
 var express = require('express');
 var router = express.Router();
 var csv_stringify = require("csv-stringify");
+var config = require('../../../config');
+const rfcxConfig = config('rfcx');
 
 var model = require('../../../model');
 
@@ -45,7 +47,9 @@ router.post('/create', function(req, res, next) {
                 data: JSON.stringify({ site: site.name })
             });
 
-            model.sites.createInCoreAPI(site, req.session.idToken)
+            if (rfcxConfig.coreAPIEnabled) {
+                model.sites.createInCoreAPI(site, req.session.idToken)
+            }
 
             res.json({ message: "New site created" });
         });
