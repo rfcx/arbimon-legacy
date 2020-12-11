@@ -136,16 +136,58 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
     params.convert('sver').toString().optional().default('Unknown');
 
     await params.validate();
-    const site = await model.sites.find({ external_id: convertedParams.site_external_id }).get(0);
+    var site = await model.sites.find({ external_id: convertedParams.site_external_id }).get(0);
     if (!site) {
-      throw new EmptyResultError('Site with given external_id not found.');
+      if (rfcxConfig.coreAPIEnabled) {
+        try {
+          // Find info about this site (guardian) in Core API DB
+          const externalSite = await model.sites.findInCoreAPI(convertedParams.site_external_id)
+          const url = externalSite.site.guid
+          // Check if we have a project for this site in the DB
+          var project = await model.projects.find({ url }).get(0)
+          if (!project) {
+            // Find info about this project in Core API DB
+            const externalProject = await model.projects.findInCoreAPI(url)
+            // All guardian sites belong to support user by default
+            const user = (await model.users.findByEmailAsync('support@rfcx.org'))[0];
+            // Create missing project
+            project = await createProject({
+              is_private: true,
+              plan: freePlan,
+              name: externalProject.name,
+              url: externalProject.guid,
+              description: externalProject.description,
+              project_type_id: 1
+            }, user.user_id)
+          }
+          // Create missing site
+          const siteInsertData = await model.sites.insertAsync({
+            name: externalSite.shortname,
+            external_id: externalSite.guid,
+            lat: externalSite.latitude || 0,
+            lon: externalSite.longitude || 0,
+            alt: externalSite.altitude || 0,
+            project_id: project.project_id,
+            legacy: false
+          });
+          site = (await model.sites.findByIdAsync(siteInsertData.insertId))[0];
+        }
+        catch (e) {
+          console.error('/ingest/recordings/create sync error', e)
+          throw new EmptyResultError('Site with given external_id not found.');
+        }
+      }
+      else {
+        throw new EmptyResultError('Site with given external_id not found.');
+      }
     }
     const fileExists = await model.recordings.existsAsync({
       site_id: site.site_id,
       filename: convertedParams.uri
     });
     if (fileExists) {
-      throw new ValidationError('File with given uri already exists');
+      // Do nothing
+      return res.sendStatus(200);
     }
     const recordingData = {
       site_id: site.site_id,
