@@ -155,8 +155,8 @@ var Templates = {
         "    `project_id`, `recording_id`,\n" +
         "    `species_id`, `songtype_id`,\n" +
         "    `x1`, `y1`, `x2`, `y2`,\n" +
-        "    `date_created`, `source_project_id`\n" +
-        ") SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ? FROM DUAL\n" +
+        "    `date_created`, `source_project_id`, `user_id`\n" +
+        ") SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ? FROM DUAL\n" +
         "WHERE NOT EXISTS (SELECT * FROM `templates`\n" +
         "WHERE `name`=? AND `project_id`=? AND `recording_id`=? AND `species_id`=? AND `deleted`=0 LIMIT 1)";
 
@@ -165,7 +165,7 @@ var Templates = {
                     query, [
                     data.name, null,
                     data.project, data.recording, data.species, data.songtype,
-                    data.x1, data.y1, data.x2, data.y2, data.source_project_id? data.source_project_id : null,
+                    data.x1, data.y1, data.x2, data.y2, data.source_project_id? data.source_project_id : null, data.user,
                     data.name,  data.project, data.recording, data.species
                 ]
             ).then(result => {

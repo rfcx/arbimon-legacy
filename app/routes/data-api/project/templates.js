@@ -76,6 +76,7 @@ router.post('/add', function(req, res, next) {
         y1: req.body.roi.y1,
         x2: req.body.roi.x2,
         y2: req.body.roi.y2,
+        user: req.session.user
     };
     if (req.body.source_project_id) {
         opts.source_project_id = req.body.source_project_id;
