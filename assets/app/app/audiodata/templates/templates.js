@@ -35,7 +35,7 @@ angular.module('a2.audiodata.templates', [
         },
         getList: function() {
             self.loading = true;
-            return a2Templates.getList({ showOwner: true, showRecordingUri: true }).then((function(data){
+            return a2Templates.getList({ showOwner: true, showRecordingUri: true, firstByDateCreated: true }).then((function(data){
                 self.loading = false;
                 self.templates = data;
             }.bind(this))).catch((function(err){
@@ -73,7 +73,8 @@ angular.module('a2.audiodata.templates', [
         importTemplates: function(access) {
             self.currentTab = access;
             var opts = {
-                showRecordingUri: true
+                showRecordingUri: true,
+                firstByDateCreated: true
             }
             opts[access] = true;
             self.loading = true;

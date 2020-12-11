@@ -107,6 +107,12 @@ var Templates = {
             tables.push('LEFT JOIN users U2 ON UPR2.user_id = U2.user_id');
         }
 
+        if (options.firstByDateCreated) {
+            tables.push(
+                'INNER JOIN (SELECT project_id, recording_id, name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name, project_id) T2 ON T.project_id = T2.project_id AND T.recording_id = T2.recording_id AND T.name = T2.name AND T.date_created = T2.mindate'
+            );
+        }
+
         if (constraints.length === 0){
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }

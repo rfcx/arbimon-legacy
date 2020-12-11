@@ -42,6 +42,11 @@ var Users = {
         queryHandler(q, callback);
     },
 
+    findByEmailAsync: function(email) {
+        let findByEmail = util.promisify(this.findByEmail)
+        return findByEmail(email)
+    },
+
     findByRfcxId: function(email, callback) {
         var q = 'SELECT * \n' +
                 'FROM users \n' +
