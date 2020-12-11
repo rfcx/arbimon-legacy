@@ -8,10 +8,15 @@ var joi = require('joi');
 var q = require('q');
 var sprintf = require("sprintf-js").sprintf;
 var AWS = require('aws-sdk');
+var request = require('request');
+var rp = util.promisify(request);
+const auth0Service = require('../model/auth0');
+const { EmptyResultError } = require('@rfcx/http-utils');
 
 
 var s3 = new AWS.S3();
 var config = require('../config');
+const rfcxConfig = config('rfcx');
 var dbpool = require('../utils/dbpool');
 var sqlutil = require('../utils/sqlutil');
 var queryHandler = dbpool.queryHandler;
@@ -848,6 +853,45 @@ var Projects = {
             ") as t;", [project_id, project_id]
         ).get(0);
     },
+
+    createInCoreAPI: async function(project, idToken) {
+        const body = {
+            name: project.name,
+            description: project.description,
+            is_public: !project.is_private,
+            external_id: project.project_id
+        }
+        const options = {
+            method: 'POST',
+            url: `${rfcxConfig.apiBaseUrl}/projects`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify(body)
+          }
+          return rp(options)
+    },
+
+    findInCoreAPI: async function (guid) {
+        const token = await auth0Service.getToken();
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.apiBaseUrl}/v1/sites/${guid}`, // TODO: this should be changed once Core API fully migrate from MySQL to TimescaleDB
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            json: true
+          }
+
+        return rp(options).then(({ body }) => {
+            if (!body || !body.length) {
+                throw new EmptyResultError('External project with given guid not found.');
+            }
+            return body[0]
+        })
+    }
 };
 
 
