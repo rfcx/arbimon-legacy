@@ -45,7 +45,8 @@ var Templates = {
             "T.`name`",
             "CONCAT('https://s3.amazonaws.com/', '"+config('aws').bucketName+"', '/', T.`uri`) as `uri`",
             "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
-            "T.`date_created`"
+            "T.`date_created`",
+            "T.user_id"
         ];
 
         if (options.id) {
@@ -84,23 +85,27 @@ var Templates = {
         if (options.showOwner || options.allAccessibleProjects) {
             if (!options.user_id) return q.reject(new Error("User id is required.")).nodeify(callback);
             select.push(
-                "CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) AS author",
+                "IF (T.user_id IS NULL, CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))), CONCAT(CONCAT(UCASE(LEFT( U3.`firstname` , 1)), SUBSTRING( U3.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U3.`lastname` , 1)), SUBSTRING( U3.`lastname` , 2)))) AS author",
                 "P.`name` as `project_name`",
             );
             tables.push('JOIN projects P ON T.project_id = P.project_id');
-            tables.push('LEFT JOIN user_project_role UPR ON T.project_id = UPR.project_id AND UPR.role_id = 4');
-            tables.push('LEFT JOIN users U ON UPR.user_id = U.user_id');
+            // if T.user_id is not null
+            tables.push('LEFT JOIN users U3 ON T.user_id = U3.user_id AND T.user_id IS NOT NULL');
+            // else author is owner of the project
+            tables.push('LEFT JOIN user_project_role UPR ON T.project_id = UPR.project_id AND UPR.role_id = 4 AND T.user_id IS NULL');
+            tables.push('LEFT JOIN users U ON UPR.user_id = U.user_id AND T.user_id IS NULL');
         }
 
         if (options.allAccessibleProjects) {
-            constraints.push('NOT (UPR.user_id = ' + dbpool.escape(options.user_id) + ') AND P.is_private = 0');
+            // NOT (UPR.user_id = ' + dbpool.escape(options.user_id) + ') AND
+            constraints.push('P.is_private = 0');
         }
 
         if (options.showOwner) {
+            // join tables if source_project_id not null
             select.push(
                 "T.`source_project_id` as `source_project_id`, P2.`name` as `source_project_name`",
-                "IF (source_project_id IS NULL, U2.`firstname`, U.`firstname`) as author",
-                "CONCAT(CONCAT(UCASE(LEFT( U2.`firstname` , 1)), SUBSTRING( U2.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U2.`lastname` , 1)), SUBSTRING( U2.`lastname` , 2))) AS author"
+                "IF (T.user_id IS NULL, CONCAT(CONCAT(UCASE(LEFT( U2.`firstname` , 1)), SUBSTRING( U2.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U2.`lastname` , 1)), SUBSTRING( U2.`lastname` , 2))), CONCAT(CONCAT(UCASE(LEFT( U3.`firstname` , 1)), SUBSTRING( U3.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U3.`lastname` , 1)), SUBSTRING( U3.`lastname` , 2)))) AS author",
             );
             tables.push('LEFT JOIN projects P2 ON T.source_project_id = P2.project_id');
             tables.push('LEFT JOIN user_project_role UPR2 ON T.source_project_id = UPR2.project_id AND UPR2.role_id = 4');
@@ -116,7 +121,7 @@ var Templates = {
         if (constraints.length === 0){
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }
-
+        console.log(select, tables, constraints)
         return dbpool.query(
             "SELECT " + select.join(",\n") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
@@ -133,7 +138,7 @@ var Templates = {
         project: joi.number().integer(), recording: joi.number().integer(),
         species: joi.number().integer(), songtype: joi.number().integer(),
         x1: joi.number(), y1: joi.number(), x2: joi.number(), y2: joi.number(),
-        source_project_id: joi.number(),
+        source_project_id: joi.number(), user_id: joi.number()
     }),
 
     /** Finds templates, given a (non-empty) query.
@@ -171,7 +176,7 @@ var Templates = {
                     query, [
                     data.name, null,
                     data.project, data.recording, data.species, data.songtype,
-                    data.x1, data.y1, data.x2, data.y2, data.source_project_id? data.source_project_id : null, data.user,
+                    data.x1, data.y1, data.x2, data.y2, data.source_project_id? data.source_project_id : null, data.user_id,
                     data.name,  data.project, data.recording, data.species
                 ]
             ).then(result => {
