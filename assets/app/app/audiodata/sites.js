@@ -48,7 +48,7 @@ angular.module('a2.audiodata.sites', [
     
     function createSite(sites) {
         sites.forEach(function(element) {
-            a2Sites.create(element.tarr, function(data) {
+            a2Sites.create(element.site, function(data) {
                 if(data.error)
                     return notify.error(data.error);
                 
@@ -59,7 +59,7 @@ angular.module('a2.audiodata.sites', [
                 });
             });
         });
-        notify.log("Site created tree");
+        // notify.log("Site created tree");
     };
     
     var p={
@@ -102,7 +102,14 @@ angular.module('a2.audiodata.sites', [
         });
         
         modalInstance.result.then(function(response){
-            processData(response)
+            var allTextLines = response.split(/\r\n|\n/);
+            var headers = allTextLines[0].split(',');
+            
+            if(headers.includes("name") && headers.includes("lat") && headers.includes("lon") && headers.includes("alt")) {
+                processData(response)
+            } else {
+                notify.log("Wrong format of csv file")
+            }
         });
     };
 
