@@ -15,7 +15,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="row">
-                <div class="col-xs-5 col-md-5 pb-3"></div>
+                <div class="col-md-5 pb-3">
                     <%if (!user.rfcx_id && user.username !== 'guest') { %>
                         <% include connect-with-rfcx-alert %>
                     <% } %>
@@ -25,7 +25,7 @@
             <div class="row">
                 <div class="col-xs-5 col-md-5 pb-3">
                     <% if (state === 'home.all') { %>
-                        <h3>Projects</h3>
+                        <h3>Public Projects</h3>
                     <% } else { %>
                         <h3>My Projects</h3>
                     <% } %>
