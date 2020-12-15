@@ -28,40 +28,7 @@ angular.module('a2.audiodata.sites', [
     Project.getInfo(function(info){
         $scope.project = info;
     });
-    
-    function processData(allText) {
-        var allTextLines = allText.split(/\r\n|\n/);
-        var headers = allTextLines[0].split(',');
-        var sites = [];
-        for (var i=1; i<allTextLines.length; i++) {
-            var data = allTextLines[i].split(',');
-            if (data.length == headers.length) {
-                var site = {};
-                for (var j=0; j<headers.length; j++) {
-                    site[headers[j]] = data[j]
-                }
-                sites.push({site});
-            }
-        }
-        createSite(sites)
-    }
-    
-    function createSite(sites) {
-        sites.forEach(function(element) {
-            a2Sites.create(element.site, function(data) {
-                if(data.error)
-                    return notify.error(data.error);
-                
-                $scope.creating = false;
-                
-                Project.getSites(function(sites) {
-                    $scope.sites = sites;
-                });
-            });
-        });
-        // notify.log("Site created tree");
-    };
-    
+
     var p={
         site : $state.params.site,
         show : $state.params.show
@@ -101,16 +68,64 @@ angular.module('a2.audiodata.sites', [
           controller: "ImportSiteInstanceCtrl"
         });
         
-        modalInstance.result.then(function(response){
-            var allTextLines = response.split(/\r\n|\n/);
-            var headers = allTextLines[0].split(',');
-            
-            if(headers.includes("name") && headers.includes("lat") && headers.includes("lon") && headers.includes("alt")) {
-                processData(response)
-            } else {
+        modalInstance.result.then(function(response) {
+            // Check the file is valid
+            const sites = parseSitesFromCsv(response);
+            if (!sites) {
                 notify.log("Wrong format of csv file")
+                return
             }
+            
+            // Save the sites
+            createSites(sites).then(function () {
+                notify.log("Sites created");
+                
+                // Refresh data
+                Project.getSites(function(sites) {
+                    $scope.sites = sites;
+                });
+            }).catch(function (error) {
+                notify.log("Error: " + error);
+            });
         });
+    };
+    
+    function parseSitesFromCsv(allText) {
+        var allTextLines = allText.split(/\r\n|\n/);
+        var headers = allTextLines[0].split(',');
+        
+        if(!headers.includes("name") || !headers.includes("lat") || !headers.includes("lon") || !headers.includes("alt")) {
+            return false;
+        }
+        
+        var sites = [];
+        for (var i=1; i<allTextLines.length; i++) {
+            var data = allTextLines[i].split(',');
+            if (data.length == headers.length) {
+                var site = {};
+                for (var j=0; j<headers.length; j++) {
+                    site[headers[j]] = data[j]
+                }
+                sites.push(site);
+            }
+        }
+        return sites;
+    }
+    
+    function createSites(sites) {
+        return Promise.all(
+            sites.map(function (site) {
+                return new Promise(function (resolve, reject) {
+                    a2Sites.create(site, function(data) {
+                        if (data.error) {
+                            reject(data.error)
+                        } else {
+                            resolve()
+                        }
+                    });
+                })
+            })
+        )
     };
 
     a2GoogleMapsLoader.then(function(google){
@@ -176,7 +191,7 @@ angular.module('a2.audiodata.sites', [
                 $scope.sites = sites;
             });
 
-            var message = (action == "update") ? "site updated" : "site created";
+            var message = (action == "update") ? "Site updated" : "Ste created";
 
             notify.log(message);
         });
