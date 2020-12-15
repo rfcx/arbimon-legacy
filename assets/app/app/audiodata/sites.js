@@ -85,7 +85,7 @@ angular.module('a2.audiodata.sites', [
                     $scope.sites = sites;
                 });
             }).catch(function (error) {
-                notify.log("Error: " + error);
+                notify.error("Error: " + error);
             });
         });
     };
