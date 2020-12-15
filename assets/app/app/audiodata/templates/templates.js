@@ -74,7 +74,6 @@ angular.module('a2.audiodata.templates', [
             self.currentTab = access;
             var opts = {
                 showRecordingUri: true,
-                firstByDateCreated: true
             }
             opts[access] = true;
             self.loading = true;

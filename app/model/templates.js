@@ -89,20 +89,23 @@ var Templates = {
                 "P.`name` as `project_name`",
             );
             tables.push('JOIN projects P ON T.project_id = P.project_id');
-            // if T.user_id is not null
+            // get an author of a template if the user_id exists.
             tables.push('LEFT JOIN users U3 ON T.user_id = U3.user_id AND T.user_id IS NOT NULL');
-            // else author is owner of the project
+            // get an owner of a project if the user_id not exists.
             tables.push('LEFT JOIN user_project_role UPR ON T.project_id = UPR.project_id AND UPR.role_id = 4 AND T.user_id IS NULL');
             tables.push('LEFT JOIN users U ON UPR.user_id = U.user_id AND T.user_id IS NULL');
         }
 
         if (options.allAccessibleProjects) {
-            // NOT (UPR.user_id = ' + dbpool.escape(options.user_id) + ') AND
+            // find the first template by date created for all public projects grouped by name.
+            tables.push(
+                'INNER JOIN (SELECT name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name) T3 ON T.name = T3.name AND T.date_created = T3.mindate'
+            );
             constraints.push('P.is_private = 0');
         }
 
         if (options.showOwner) {
-            // join tables if source_project_id not null
+            // find the original template.
             select.push(
                 "T.`source_project_id` as `source_project_id`, P2.`name` as `source_project_name`",
                 "IF (T.user_id IS NULL, CONCAT(CONCAT(UCASE(LEFT( U2.`firstname` , 1)), SUBSTRING( U2.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U2.`lastname` , 1)), SUBSTRING( U2.`lastname` , 2))), CONCAT(CONCAT(UCASE(LEFT( U3.`firstname` , 1)), SUBSTRING( U3.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U3.`lastname` , 1)), SUBSTRING( U3.`lastname` , 2)))) AS author",
@@ -113,6 +116,7 @@ var Templates = {
         }
 
         if (options.firstByDateCreated) {
+            // find the first template by date created grouped by name and project.
             tables.push(
                 'INNER JOIN (SELECT project_id, recording_id, name, MIN(date_created) as mindate FROM templates WHERE deleted=0 GROUP BY name, project_id) T2 ON T.project_id = T2.project_id AND T.recording_id = T2.recording_id AND T.name = T2.name AND T.date_created = T2.mindate'
             );
