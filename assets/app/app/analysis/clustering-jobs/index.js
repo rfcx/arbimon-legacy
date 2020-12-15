@@ -450,7 +450,7 @@ angular.module('a2.analysis.clustering-jobs', [
             data.aed.forEach(i => $scope.aedData.id.push(i));
         });
     }
-  
+
     a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
         if (data) $scope.job_details = data;
     }).catch(err => {
@@ -465,7 +465,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.getRoisDetails = function() {
         return a2ClusteringJobs.getRoisDetails({
             jobId: $scope.clusteringJobId,
-            aed: $scope.gridContext.aed,
+            aed: $scope.aedData.id,
             search: $scope.search.value
         }).then(function(data) {
             $scope.loading = false;
