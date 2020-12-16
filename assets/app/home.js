@@ -22,8 +22,10 @@ angular.module('a2.home', [
     $window,
     $localStorage,
     notify, a2order,
-    a2InjectedData
+    a2InjectedData,
+    $scope
 ) {
+    $scope.search = '';
     function getProjectSelectCache(){
         try{
             return JSON.parse($localStorage.getItem('home.project.select.cache')) || {};
@@ -113,11 +115,43 @@ angular.module('a2.home', [
         }
     };
 
+    this.searchChanged = function() {
+        if ($scope.search === '') {
+            this.deleteAllRank();
+            this.projectSort = projectSorts['history-down'];
+            return;
+        }
+        $scope.regExp = new RegExp($scope.search, 'gi');
+        this.projectSort = projectSorts['rank-down'];
+    }
+
+    this.deleteAllRank = function() {
+        if (this.projects) {
+            this.projects.forEach(project => {
+                delete project['rank'];
+            })
+        }
+    }
+
+    this.customSearch = function(item) {
+        if (!$scope.search) return true;
+        if (item.name.match($scope.regExp)) {
+            item.rank = 1;
+            return true;
+        }
+        else if (item.description && item.description.match($scope.regExp)) {
+            item.rank = 2;
+            return true;
+        }
+        return false
+    }
+
     var projectSorts = [
         {key:'alpha-down', sort:'+name'},
         {key:'alpha-up', sort:'-name'},
-        {key:'history-down', sort:['-lastAccessed', '+name'], default:true},
-        {key:'history-up', sort:['+lastAccessed', '+name']}
+        {key:'history-down', sort:['+name','-lastAccessed'], default:true},
+        {key:'history-up', sort:['+name','+lastAccessed']},
+        {key:'rank-down', sort:['rank', '+name']}
     ].reduce(function(_, sorting){
         var m = /(\w+)-(\w+)/.exec(sorting.key);
         sorting.type = m[1];
@@ -130,7 +164,6 @@ angular.module('a2.home', [
     }, {});
 
     this.projectSort = projectSorts['history-down'];
-
 
     this.currentPage = 1;
     this.isAnonymousGuest = true;

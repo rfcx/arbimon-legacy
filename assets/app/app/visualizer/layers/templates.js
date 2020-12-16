@@ -32,7 +32,7 @@ angular.module('a2.visualizer.layers.templates', [
         self.project_classes = project_classes;
     });
 
-    var getTemplatesPromise = a2Templates.getList().then(function(templates){
+    var getTemplatesPromise = a2Templates.getList({firstByDateCreated: true}).then(function(templates){
         self.templates = templates;
         return templates;
     });
@@ -48,8 +48,8 @@ angular.module('a2.visualizer.layers.templates', [
         self.editor.recording = rec;
     };
 
-    self.goToSoundscapePage = function () {
-        $state.go('analysis.soundscapes', {});
+    self.goToSpeciesPage = function () {
+        $state.go('audiodata.species', {});
     };
 
     self.editor = angular.extend(
@@ -80,13 +80,13 @@ angular.module('a2.visualizer.layers.templates', [
                 notify.log('You do not have permission to add a template');
                 return;
             }
-            
+
             if(!this.project_class.songtype_name && !this.project_class.species_name){
                 return;
             }
-            
+
             this.submitting = true;
-            
+
             a2Templates.add({
                 name : this.template_name || (this.project_class.species_name + " " + this.project_class.songtype_name),
                 recording : this.recording,
@@ -96,7 +96,7 @@ angular.module('a2.visualizer.layers.templates', [
             }).then((function(new_template){
                 console.log('new_template', new_template)
                 this.submitting = false;
-                
+
                 if (new_template.id === 0) return notify.error('The template with that name already exists for this record.');
                 $timeout((function(){
                     this.reset();

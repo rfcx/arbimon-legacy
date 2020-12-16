@@ -10,6 +10,8 @@ var sprintf = require("sprintf-js").sprintf;
 var AWS = require('aws-sdk');
 var request = require('request');
 var rp = util.promisify(request);
+const auth0Service = require('../model/auth0');
+const { EmptyResultError } = require('@rfcx/http-utils');
 
 var config = require('../config');
 const rfcxConfig = config('rfcx');
@@ -866,6 +868,26 @@ var Projects = {
             body: JSON.stringify(body)
           }
           return rp(options)
+    },
+
+    findInCoreAPI: async function (guid) {
+        const token = await auth0Service.getToken();
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.apiBaseUrl}/v1/sites/${guid}`, // TODO: this should be changed once Core API fully migrate from MySQL to TimescaleDB
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            json: true
+          }
+
+        return rp(options).then(({ body }) => {
+            if (!body || !body.length) {
+                throw new EmptyResultError('External project with given guid not found.');
+            }
+            return body[0]
+        })
     }
 };
 

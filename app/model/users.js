@@ -11,6 +11,8 @@ var q = require('q');
 var APIError = require('../utils/apierror');
 var sprintf = require("sprintf-js").sprintf;
 var gravatar = require('gravatar');
+const rp = util.promisify(request);
+const rfcxConfig = config('rfcx');
 
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
@@ -40,6 +42,11 @@ var Users = {
                 'WHERE email = %s';
         q = util.format(q, dbpool.escape(email));
         queryHandler(q, callback);
+    },
+
+    findByEmailAsync: function(email) {
+        let findByEmail = util.promisify(this.findByEmail)
+        return findByEmail(email)
     },
 
     findByRfcxId: function(email, callback) {
@@ -713,6 +720,19 @@ var Users = {
             return await q.ninvoke(Users, "findByEmail", email).get(0).get(0);
         }
         return await Users.createFromAuth0(profile)
+    },
+
+    sendTouchAPI: function(idToken) {
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.apiBaseUrl}/v1/users/touchapi`,
+            headers: {
+              Authorization: `Bearer ${idToken}`
+            },
+            json: true
+          }
+
+          return rp(options)
     },
 
     refreshLastLogin: function(user_id) {

@@ -194,6 +194,7 @@ router.get('/auth0-login', async function(req, res, next) {
             return next(new Error('Invalid authentication data'))
         }
         const profile = auth0Service.parseTokens(tokens)
+        model.users.sendTouchAPI(tokens.id_token) // no need to wait for response
         if (!req.session || !req.session.user || req.session.user.username === 'guest') { // user user is not logged in and is authenticating with Auth0
             await model.users.auth0Login(req, profile, tokens);
             res.redirect('/home');

@@ -7,13 +7,21 @@
     </div>
     <div ng-if="job_details && showDetailsPage()" class="panel-body a2-page-header clearfix">
         <div class="row row-flex flex-align-top">
-            <div class="col-sm-3 flex-self-align-top">
+            <div class="col-sm-6 flex-self-align-top">
                 <div class="row row-flex flex-align-top">
                     Job Name: {{ job_details.name }}
                     <br>User: {{ job_details.user }}
                     <br>Date: {{ job_details.timestamp | moment : 'lll' }}
                     <br>Number of audio event detected: {{ countAudioEventDetected || 'no data' }}
                     <br>Number of clusters detected: {{ countClustersDetected || 'no data' }}
+                </div>
+            </div>
+            <div class="col-sm-6 flex-self-align-bottom">
+                <div class="pull-right">
+                    <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!clusters[0].records[0]">
+                        <i class="fa fa-filter" ></i>
+                        <span class="fa fa-ellipsis-h fa-concat-sub"></span>
+                    </button>
                 </div>
             </div>
         </div>

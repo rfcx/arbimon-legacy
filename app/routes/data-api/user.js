@@ -158,7 +158,7 @@ router.post('/update', function(req, res, next){
     }).then(function(){
         return model.users.findById(req.session.user.id).get(0);
     }).then(function(updatedUser){
-        req.session.user = model.users.makeUserObject(updatedUser, {secure: req.secure});
+        req.session.user = model.users.makeUserObject(updatedUser, {secure: req.secure, all: true});
         debug("updated data for user:", updatedUser.login);
         res.json({ message: "User data updated."});
     }).catch(next);

@@ -7,6 +7,7 @@ var config = require('../config');
 const rfcxConfig = config('rfcx');
 var request = require('request');
 var rp = util.promisify(request);
+const auth0Service = require('../model/auth0');
 
 var s3;
 var dbpool = require('../utils/dbpool');
@@ -637,6 +638,21 @@ var Sites = {
             body: JSON.stringify(body)
           }
           return rp(options)
+    },
+
+    findInCoreAPI: async function (guid) {
+        const token = await auth0Service.getToken();
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.apiBaseUrl}/v2/guardians/${guid}`, // TODO: this should be changed once Core API fully migrate from MySQL to TimescaleDB
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            json: true
+          }
+
+        return rp(options).then(({ body }) => body)
     }
 };
 

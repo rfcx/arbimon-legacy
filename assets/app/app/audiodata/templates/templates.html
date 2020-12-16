@@ -20,6 +20,13 @@
                     <field tdclass="is-v-middle">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{row.uri}}" class="roi-img is-small"/>
+                            <a class="roi-btn-bl" ng-click="controller.playTemplateAudio(row, $event)" style="cursor:pointer">
+                                <i tooltip-placement="left"
+                                    tooltip-append-to-body="true"
+                                    tooltip="Play Audio"
+                                    class="fa fa-play">
+                                </i>
+                            </a>
                             <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
