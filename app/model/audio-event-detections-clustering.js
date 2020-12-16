@@ -97,7 +97,8 @@ var AudioEventDetectionsClustering = {
             "A.`time_min` as `time_min`",
             "A.`time_max` as `time_max`",
             "A.`frequency_min` as `freq_min`",
-            "A.`frequency_max` as `freq_max`"
+            "A.`frequency_max` as `freq_max`",
+            "A.`uri_image` as `uri`"
         );
 
         if (options.aed_id) {
