@@ -1,8 +1,7 @@
 FROM ubuntu:18.04
 
-RUN add-apt-repository ppa:jonathonf/ffmpeg-4 && \
-    apt-get update && \
-    apt-get install -y \
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
     curl \
     wget \
     gnupg \
@@ -33,12 +32,10 @@ RUN add-apt-repository ppa:jonathonf/ffmpeg-4 && \
     libsndfile1-dev \
     libmp3lame-dev \
     libwavpack-dev \
-    ffmpeg \
-    libsox-fmt-all
-
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+RUN add-apt-repository ppa:jonathonf/ffmpeg-4 && \
+    curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
     apt-get update && \
-    apt-get install -y nodejs && \
+    apt-get install -y nodejs ffmpeg libsox-fmt-all && \
     npm install -g bower && \
     wget -O /tmp/sox-14.4.2.tar.gz https://jztkft.dl.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2.tar.gz && \
     tar xzf /tmp/sox-14.4.2.tar.gz -C /tmp && \
@@ -80,8 +77,7 @@ RUN ./configure --with-opus=yes  --with-flac=yes --with-oggvorbis=yes && \
     rm -rf /var/lib/apt/lists/* /tmp/*
 
 WORKDIR /app
-ADD . /app
-
+COPY . /app
 RUN npm i && bower i --allow-root
 RUN ./node_modules/.bin/gulp build
 
