@@ -31,11 +31,11 @@ RUN apt-get update && \
     libmagic-dev \
     libsndfile1-dev \
     libmp3lame-dev \
-    libwavpack-dev \
+    libwavpack-dev
 RUN add-apt-repository ppa:jonathonf/ffmpeg-4 && \
     curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
     apt-get update && \
-    apt-get install -y nodejs ffmpeg libsox-fmt-all && \
+    apt-get install --no-install-recommends -y nodejs ffmpeg libsox-fmt-all && \
     npm install -g bower && \
     wget -O /tmp/sox-14.4.2.tar.gz https://jztkft.dl.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2.tar.gz && \
     tar xzf /tmp/sox-14.4.2.tar.gz -C /tmp && \
