@@ -196,11 +196,11 @@ router.get('/auth0-login', async function(req, res, next) {
         const profile = auth0Service.parseTokens(tokens)
         model.users.sendTouchAPI(tokens.id_token) // no need to wait for response
         if (!req.session || !req.session.user || req.session.user.username === 'guest') { // user user is not logged in and is authenticating with Auth0
-            await model.users.auth0Login(req, profile);
+            await model.users.auth0Login(req, profile, tokens);
             res.redirect('/home');
         }
         else {
-            await model.users.connectRFCx(req, profile); // if user is logged in and is authenticating with Auth0 ("Connect with RFCx feature")
+            await model.users.connectRFCx(req, profile, tokens); // if user is logged in and is authenticating with Auth0 ("Connect with RFCx feature")
             res.redirect('/connect-with-rfcx');
         }
     } catch (e) {

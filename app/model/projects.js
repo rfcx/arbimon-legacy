@@ -13,8 +13,6 @@ var rp = util.promisify(request);
 const auth0Service = require('../model/auth0');
 const { EmptyResultError } = require('@rfcx/http-utils');
 
-
-var s3 = new AWS.S3();
 var config = require('../config');
 const rfcxConfig = config('rfcx');
 var dbpool = require('../utils/dbpool');
@@ -23,7 +21,6 @@ var queryHandler = dbpool.queryHandler;
 var APIError = require('../utils/apierror');
 var species = require('./species');
 var songtypes = require('./songtypes');
-var s3;
 
 var Projects = {
 
