@@ -1,5 +1,5 @@
 angular.module('a2.visualizer.layers.training-sets', [
-    'visualizer-services', 
+    'visualizer-services',
     'a2.visualizer.layers.training-sets.roi_set',
     'a2.utils',
 ])
@@ -7,7 +7,7 @@ angular.module('a2.visualizer.layers.training-sets', [
     /**
      * @ngdoc object
      * @name a2.visualizer.layers.training-sets.object:training-data
-     * @description Training Data layer. 
+     * @description Training Data layer.
      * adds the training-data layer_type to layer_types. This layer uses
      * a2.visualizer.layers.training-sets.controller:a2VisualizerTrainingSetLayerController as controller,
      * and requires a visobject of type recording to be selected.
@@ -43,7 +43,7 @@ angular.module('a2.visualizer.layers.training-sets', [
             notify.log('You do not have permission to create training sets');
             return;
         }
-        
+
         $modal.open({
             templateUrl : '/app/visualizer/layers/training-data/add_tset_modal.html',
             controller  : 'a2VisualizerAddTrainingSetModalController'
@@ -95,21 +95,21 @@ angular.module('a2.visualizer.layers.training-sets', [
         }
     };
 })
-.controller('a2VisualizerAddTrainingSetModalController', function($scope, $modalInstance, Project, a2TrainingSets){
+.controller('a2VisualizerAddTrainingSetModalController', function($scope, $modalInstance, Project, a2TrainingSets, $state){
     $scope.data = {
         name : '',
         type : null
     };
-    
+
     $scope.loadingClasses = true;
-    
+
     Project.getClasses(function(project_classes){
         $scope.project_classes = project_classes;
         $scope.loadingClasses = false;
     });
-    
+
     $scope.loadingTypes = true;
-    
+
     a2TrainingSets.getTypes(function(tset_types){
         $scope.tset_types = tset_types;
         if(tset_types && tset_types.length == 1) {
@@ -117,18 +117,22 @@ angular.module('a2.visualizer.layers.training-sets', [
             $scope.loadingTypes = false;
         }
     });
-    
+
+    $scope.goToSpeciesPage = function () {
+        $state.go('audiodata.species', {});
+    };
+
     $scope.ok = function(){
         $scope.creating = true;
-        $scope.validation = { 
-            count:0 
+        $scope.validation = {
+            count:0
         };
-            
+
         var tset_data = {};
 
         if($scope.data.name){
             tset_data.name = $scope.data.name;
-        } 
+        }
         else {
             $scope.validation.name = "Training set name is required.";
             $scope.validation.count++;
@@ -136,12 +140,12 @@ angular.module('a2.visualizer.layers.training-sets', [
 
         if($scope.data.type && $scope.data.type.id){
             tset_data.type = $scope.data.type.identifier;
-        } 
+        }
         else {
             $scope.validation.type = "Training set type is required.";
             $scope.validation.count++;
         }
-        
+
         if($scope.data.class) {
             tset_data.class = $scope.data.class.id;
         }
@@ -149,17 +153,17 @@ angular.module('a2.visualizer.layers.training-sets', [
             $scope.validation.class = "Species sound is required.";
             $scope.validation.count++;
         }
-        
+
         // $scope.form_data=tset_data;
 
         if($scope.validation.count ===  0) {
             a2TrainingSets.add(tset_data, function(new_tset) {
                 if(new_tset.error) {
-                    
+
                     var field = new_tset.field || 'error';
-                    
+
                     $scope.validation[field] = new_tset.error;
-                    
+
                     return;
                 }
                 $modalInstance.close(new_tset);
