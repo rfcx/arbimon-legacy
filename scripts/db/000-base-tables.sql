@@ -1899,17 +1899,20 @@ CREATE TABLE `templates` (
   `date_created` timestamp NULL DEFAULT NULL,
   `deleted` tinyint(1) DEFAULT '0',
   `source_project_id` INT(10) unsigned DEFAULT NULL,
+  `user_id` INT(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`template_id`),
   KEY `fk_templates_1_idx` (`project_id`),
   KEY `fk_templates_2_idx` (`recording_id`),
   KEY `fk_templates_3_idx` (`species_id`),
   KEY `fk_templates_4_idx` (`songtype_id`),
   KEY `fk_templates_5_idx` (`source_project_id`),
+  KEY `fk_templates_6_idx` (`user_id`),
   CONSTRAINT `fk_templates_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_templates_2` FOREIGN KEY (`recording_id`) REFERENCES `recordings` (`recording_id`) ON DELETE CASCADE ON UPDATE NO ACTION,
   CONSTRAINT `fk_templates_3` FOREIGN KEY (`species_id`) REFERENCES `species` (`species_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_templates_4` FOREIGN KEY (`songtype_id`) REFERENCES `songtypes` (`songtype_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_templates_5` FOREIGN KEY (`source_project_id`) REFERENCES `projects` (`project_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `fk_templates_5` FOREIGN KEY (`source_project_id`) REFERENCES `projects` (`project_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_templates_6` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=3758 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
