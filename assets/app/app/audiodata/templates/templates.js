@@ -2,6 +2,9 @@ angular.module('a2.audiodata.templates', [
     'a2.services',
     'a2.directives',
     'ui.bootstrap',
+    'a2.srv.templates',
+    'a2.directive.audio-bar',
+    'a2.visualizer.audio-player',
     'humane'
 ])
 .config(function($stateProvider) {
@@ -11,7 +14,7 @@ angular.module('a2.audiodata.templates', [
         templateUrl: '/app/audiodata/templates/templates.html'
     });
 })
-.controller('TemplatesCtrl', function($state, $scope, a2Templates, Project, $q, a2UserPermit, notify, $modal, $window) {
+.controller('TemplatesCtrl', function($state, $scope, a2Templates, Project, $q, a2UserPermit, notify, $modal, $window, a2AudioBarService) {
     var self = this;
     Object.assign(this, {
         initialize: function(){
@@ -107,6 +110,13 @@ angular.module('a2.audiodata.templates', [
                 console.log('err', err);
                 notify.error(err);
             }));
+        },
+        playTemplateAudio: function(template, $event) {
+            if ($event) {
+                $event.preventDefault();
+                $event.stopPropagation();
+            };
+            a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(template), true);
         }
     });
     this.initialize();
