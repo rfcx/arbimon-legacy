@@ -134,8 +134,8 @@ def branchToConfig(branch) {
         withCredentials([file(credentialsId: 'arbimon_staging_mandrill-key', variable: 'PRIVATE_ENV')]) {
         sh "cp $PRIVATE_ENV config/mandrill-key.local.json"
         }
-        withCredentials([file(credentialsId: 'arbimon_staging_mapbox-api', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/mapbox-api.local.json"
+        withCredentials([file(credentialsId: 'arbimon_staging_mapbox-api', variable: 'MAPBOXAPI')]) {
+        sh "cp $MAPBOXAPI config/mapbox-api.local.json"
         }
         withCredentials([file(credentialsId: 'arbimon_staging_rfcx', variable: 'PRIVATE_ENV')]) {
         sh "cp $PRIVATE_ENV config/rfcx.local.json"
