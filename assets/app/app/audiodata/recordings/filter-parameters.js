@@ -257,7 +257,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                     tagsObj[key] = {
                         tag: key,
                         tag_id: [t.tag_id],
-                        count: 1
+                        count: t.count
                     }
                 }
                 else {
