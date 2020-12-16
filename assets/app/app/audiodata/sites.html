@@ -8,9 +8,11 @@
     </div>
     <div class="col-md-6 col-md-pull-6 toolbar">
         <button class="btn btn-default"
-            ng-click="create() | trackEvent:'Dashboard-sites':'add site'"
-            tooltip="Create a new site">
-            <i class="fa fa-plus"></i>
+            ng-click="create() | trackEvent:'Dashboard-sites':'add site'">
+            Create
+        </button>
+        <button class="btn btn-default btn-file" ng-click="importSite()">
+            Import
         </button>
 
         <!-- <div class="btn-group" dropdown>
@@ -31,21 +33,18 @@
         </div> -->
         <button class="btn btn-default"
             ng-click="edit() | trackEvent:'Dashboard-sites':'edit site'"
-            ng-disabled="!selected || selected.imported"
-            tooltip="Edit site info">
-            <i class="fa fa-pencil"></i>
+            ng-disabled="!selected || selected.imported">
+            Edit
         </button>
         <button class="btn btn-default"
             ng-click="site_token()"
-            ng-disabled="!selected || selected.imported"
-            tooltip="Link Recorder">
-            <i class="fa fa-link"></i>
+            ng-disabled="!selected || selected.imported">
+            Link
         </button>
         <button class="btn btn-default"
             ng-click="del()"
-            ng-disabled="!selected"
-            tooltip="remove site">
-            <i class="fa fa-trash"></i>
+            ng-disabled="!selected">
+            Delete
         </button>
     </div>
 </div>
