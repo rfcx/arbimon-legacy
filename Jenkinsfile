@@ -40,7 +40,7 @@ spec:
                 catchError {
                 container(name: 'kaniko') {
                 sh '''
-                /kaniko/executor --snapshotMode=redo --use-new-run=true --cache=true --build-arg PHASE=${PHASE} --build-arg --cache-repo=${ECR}/${APP}/${PHASE} --dockerfile `pwd`/Dockerfile --context `pwd` --destination=${ECR}/${APP}/${PHASE}:latest --destination=${ECR}/${APP}/${PHASE}:${GIT_COMMIT} --destination=${ECR}/${APP}/${PHASE}:v$BUILD_NUMBER
+                /kaniko/executor --snapshotMode=redo --use-new-run=true --cache=true --build-arg PHASE=${PHASE} --build-arg --cache-repo=${ECR}/${APP}/cache --dockerfile `pwd`/Dockerfile --context `pwd` --destination=${ECR}/${APP}/${PHASE}:latest --destination=${ECR}/${APP}/${PHASE}:${GIT_COMMIT} --destination=${ECR}/${APP}/${PHASE}:v$BUILD_NUMBER
                 '''
                 }
                 }
