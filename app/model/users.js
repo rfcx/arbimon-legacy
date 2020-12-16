@@ -11,6 +11,8 @@ var q = require('q');
 var APIError = require('../utils/apierror');
 var sprintf = require("sprintf-js").sprintf;
 var gravatar = require('gravatar');
+const rp = util.promisify(request);
+const rfcxConfig = config('rfcx');
 
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
@@ -670,7 +672,7 @@ var Users = {
         });
     },
 
-    auth0Login: async function(req, profile) {
+    auth0Login: async function(req, profile, tokens) {
         const user = await this.ensureUserExistFromAuth0(profile)
         this.refreshLastLogin(user.user_id)
 
@@ -678,11 +680,11 @@ var Users = {
         req.session.loggedIn = true;
         req.session.isAnonymousGuest = false;
         req.session.user = Users.makeUserObject(user, {secure: req.secure, all:true});
-
+        req.session.idToken = tokens.id_token
         return user
     },
 
-    connectRFCx: async function(req, profile) {
+    connectRFCx: async function(req, profile, tokens) {
         const userId = req.session.user.id;
         const email = this.getEmailFromAuth0Profile(profile);
         // if user authenticates with different email, check if there is another user with this email
@@ -700,6 +702,7 @@ var Users = {
         req.session.loggedIn = true;
         req.session.isAnonymousGuest = false;
         req.session.user = Users.makeUserObject(user, { secure: req.secure, all: true });
+        req.session.idToken = tokens.id_token
     },
 
     ensureUserExistFromAuth0: async function(profile) {
@@ -717,6 +720,19 @@ var Users = {
             return await q.ninvoke(Users, "findByEmail", email).get(0).get(0);
         }
         return await Users.createFromAuth0(profile)
+    },
+
+    sendTouchAPI: function(idToken) {
+        const options = {
+            method: 'GET',
+            url: `${rfcxConfig.apiBaseUrl}/v1/users/touchapi`,
+            headers: {
+              Authorization: `Bearer ${idToken}`
+            },
+            json: true
+          }
+
+          return rp(options)
     },
 
     refreshLastLogin: function(user_id) {

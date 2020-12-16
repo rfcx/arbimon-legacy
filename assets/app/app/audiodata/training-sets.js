@@ -1,20 +1,20 @@
 angular.module('a2.audiodata.training-sets', [
-    'a2.services', 
-    'a2.directives', 
+    'a2.services',
+    'a2.directives',
     'ui.bootstrap',
     'a2.visualizer.layers.training-sets',
     'humane'
 ])
 .factory('a2TrainingSetHistory',
     function() {
-        var lastSet, 
+        var lastSet,
             lastPage,
             lastRoi,
             lastRoiSet,
             viewState,
             lastSpecie,
             lastSongtype;
-            
+
         return {
             getLastSet : function(callback) {
                 callback ({ls:lastSet,lp:lastPage,lr:lastRoi,lrs:lastRoiSet,vs:viewState,sp:lastSpecie,sg:lastSongtype}) ;
@@ -50,7 +50,7 @@ angular.module('a2.audiodata.training-sets', [
     this.selected = {roi_index:0, roi:null, page:0};
     this.total = {rois:0, pages:0};
     this.loading = {list:false, details:false};
-    
+
     this.rois = [];
     this.species = '';
     this.songtype = '';
@@ -63,7 +63,7 @@ angular.module('a2.audiodata.training-sets', [
     this.getROIVisualizerUrl = function(roi){
         return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording : '';
     };
-    
+
     this.setROI = function(roi_index){
         if(this.total.rois <= 0){
             this.selected.roi_index = 0;
@@ -82,36 +82,36 @@ angular.module('a2.audiodata.training-sets', [
             this.selected.currentrois = [];
         } else {
             this.selected.page = Math.max(0, Math.min(page, (this.total.rois / this.roisPerpage) | 0));
-            this.currentrois = this.rois.slice( 
-                (this.selected.page  ) * this.roisPerpage, 
+            this.currentrois = this.rois.slice(
+                (this.selected.page  ) * this.roisPerpage,
                 (this.selected.page+1) * this.roisPerpage
             );
         }
         a2TrainingSetHistory.setLastPage(this.selected.page);
         return this.currentrois;
     };
-    
+
     this.setROISet = function(rois){
         this.rois = rois;
         a2TrainingSetHistory.setLastRoiSet(this.rois);
     };
-    
+
     this.nextROI = function(step) {
         return this.setROI(this.selected.roi_index + (step || 1));
     };
-    
+
     this.prevROI = function (step) {
         return this.setROI(this.selected.roi_index - (step || 1));
     };
-    
+
     this.nextPage = function(step) {
         return this.setPage(this.selected.page + (step || 1));
     };
-    
+
     this.prevPage = function(step) {
         return this.setPage(this.selected.page - (step || 1));
     };
-    
+
     this.next = function(step) {
         if(!step){step = 1;}
         if(this.detailedView) {
@@ -120,18 +120,18 @@ angular.module('a2.audiodata.training-sets', [
             this.nextPage(step);
         }
     };
-    
+
     this.prev = function(step) {
         if(!step){step = 1;}
         return this.next(-step);
     };
-    
+
     this.removeRoi = function(roiId) {
         if(!a2UserPermit.can('manage training sets')) {
             notify.log('You do not have permission to edit training sets');
             return;
         }
-        
+
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
@@ -141,7 +141,7 @@ angular.module('a2.audiodata.training-sets', [
             },
             controllerAs: 'popup'
         });
-        
+
         modalInstance.result.then((function() {
             a2TrainingSets.removeRoi(this.selected.trainingSet.id, roiId, (function(data){
                 if(data.affectedRows) {
@@ -159,11 +159,11 @@ angular.module('a2.audiodata.training-sets', [
             }).bind(this));
         }).bind(this));
     };
-    
+
     this.closeSetDetails = function(){
        this.showSetDetails = false;
     };
-    
+
     this.getTrainingSetList = function(){
         this.loading.list = true;
         return a2TrainingSets.getList((function(data){
@@ -182,47 +182,47 @@ angular.module('a2.audiodata.training-sets', [
             this.loading.list = false;
         }.bind(this)));
     };
-    
+
     this.addNewTrainingSet = function() {
         if(!a2UserPermit.can('manage training sets')) {
             notify.log('You do not have permission to create training sets');
             return;
         }
-        
+
         $modal.open({
-            templateUrl : '/app/visualizer/modal/add_tset.html',
+            templateUrl : '/app/visualizer/layers/training-data/add_tset_modal.html',
             controller  : 'a2VisualizerAddTrainingSetModalController'
         }).result.then(
             this.getTrainingSetList.bind(this)
         );
     };
-    
+
     this.selectTrainingSet = function(selected) {
         $state.transitionTo($state.current.name, {set:selected.id, show:$state.params.show}, {notify:false});
-        
+
         this.detailedView = $state.params.show != "gallery";
         this.loaderDisplay = true;
         a2TrainingSetHistory.setLastSet(selected);
-        
+
         if(this.selected.trainingSet){
             if(this.selected.trainingSet.edit){
                 delete this.selected.trainingSet.edit;
             }
         }
-        
+
         this.selected.trainingSet = selected;
         this.selected.trainingSet.export_url = a2TrainingSets.getExportUrl(selected.id);
-        
+
         Project.validationBySpeciesSong(selected.species, selected.songtype, (function(data) {
             this.selected.trainingSet.validations = data;
         }).bind(this));
-        
+
         a2TrainingSets.getSpecies(selected.id, (function(speciesData) {
             this.species = speciesData.species;
-            this.songtype = speciesData.songtype;            
-        
+            this.songtype = speciesData.songtype;
+
             a2TrainingSetHistory.setLastSpecies(this.species,this.songtype);
-        
+
             a2TrainingSets.getRois(selected.id, (function(data) {
                 this.loaderDisplay = false;
                 this.detailedView = false;
@@ -235,13 +235,13 @@ angular.module('a2.audiodata.training-sets', [
             }).bind(this) );
         }).bind(this));
     };
-    
+
     this.setDetailedView = function(detailedView){
         $state.transitionTo($state.current.name, {set:$state.params.set, show:detailedView?"detail":"gallery"}, {notify:false});
         this.detailedView = detailedView;
         a2TrainingSetHistory.setViewState(this.detailedView);
     };
-    
+
     this.editSelectedTrainingSet = function(){
         if(!a2UserPermit.can('manage training sets')) {
             notify.log('You do not have permission to edit training sets');
@@ -258,7 +258,7 @@ angular.module('a2.audiodata.training-sets', [
                 var current = classes.filter(function(cls){
                     return speciesClass.species == cls.species && speciesClass.songtype == cls.songtype;
                 }).pop() || speciesClass;
-                
+
                 trainingSet.edit = {
                     name : trainingSet.name,
                     class : current,
@@ -275,7 +275,7 @@ angular.module('a2.audiodata.training-sets', [
                         notify.log(response.data);
                     });
                 };
-                                
+
                 return d.promise;
             }).then((function(editedTrainingSet){
                 for(var i in editedTrainingSet){
@@ -283,7 +283,7 @@ angular.module('a2.audiodata.training-sets', [
                 }
                 this.selectTrainingSet(trainingSet);
             }).bind(this)).finally(function(){
-                delete trainingSet.edit;                
+                delete trainingSet.edit;
             });
         }
     };
@@ -293,12 +293,12 @@ angular.module('a2.audiodata.training-sets', [
         if(!trainingSet){
             return;
         }
-        
+
         if(!a2UserPermit.can('manage training sets')) {
             notify.log('You do not have permission to edit training sets');
             return;
         }
-        
+
         $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             controller: function() {
@@ -317,7 +317,7 @@ angular.module('a2.audiodata.training-sets', [
 
     this.getTrainingSetList();
     this.projecturl = Project.getUrl();
-    
+
     a2TrainingSetHistory.getLastSet((function(data) {
         if(data.ls) {
             this.showSetDetails = true;
@@ -333,6 +333,6 @@ angular.module('a2.audiodata.training-sets', [
             this.setROI(data.lr || 0);
         }
     }).bind(this));
-     
+
 })
 ;

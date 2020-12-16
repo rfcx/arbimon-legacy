@@ -1,0 +1,20 @@
+<div class="modal-header">
+    <h3>Import site</h3>
+  </div>
+  <div class="modal-body">
+   <h4>To import a list of site, please proride a CSV file in the following format including header</h4>
+   <pre>
+name,lat,lon,alt
+Site_1,16.09887,100.9392,0
+Site_2,13.13304,110.9452,0
+Site_3,49.09308,90.3492,0
+Site_4,56.09887,150.9252,0
+Site_5,33.00309,10.7892,0</pre>
+   
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary btn-file"><i class="fa fa-file-text"></i> Select file
+        <input accept=".csv" file-change="handler($event,files)" type="file" ng-model="files">
+    </button>
+    <button class="btn btn-default" ng-click="cancel()"><i class="fa fa-times"></i> Close</button>
+  </div>

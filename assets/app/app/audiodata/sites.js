@@ -7,9 +7,24 @@ angular.module('a2.audiodata.sites', [
     'a2.googlemaps',
     'a2.srv.project'
 ])
+.directive('fileChange',['$parse', function($parse) {
+    return{
+      require:'ngModel',
+      restrict:'A',
+      link:function($scope, element, attrs) {
+        var attrHandler=$parse(attrs['fileChange']);
+        var handler=function(e){
+          $scope.$apply(function(){
+            attrHandler($scope, {$event:e, files:e.target.files});
+          });
+        };
+        element[0].addEventListener('change', handler,false);
+      }
+    }
+  }])
 .controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader) {
     $scope.loading = true;
-
+    
     Project.getInfo(function(info){
         $scope.project = info;
     });
@@ -41,6 +56,83 @@ angular.module('a2.audiodata.sites', [
     });
 
     $scope.editing = false;
+    
+    $scope.importSite = function() {
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to add sites");
+            return;
+        }
+        
+        var modalInstance =  $modal.open({
+          templateUrl: "/app/audiodata/import.html",
+          controller: "ImportSiteInstanceCtrl"
+        });
+        
+        modalInstance.result.then(function(response) {
+            // Check the file is valid
+            const sites = parseSitesFromCsv(response);
+            if (!sites) {
+                notify.log("Wrong format of csv file")
+                return
+            }
+            
+            // Save the sites
+            createSites(sites).then(function () {
+                notify.log("Sites created");
+                
+                // Refresh data
+                Project.getSites(function(sites) {
+                    $scope.sites = sites;
+                });
+            }).catch(function (error) {
+                notify.error("Error: " + error);
+            });
+        });
+    };
+    
+    function parseSitesFromCsv(allText) {
+        var allTextLines = allText.split(/\r\n|\n/);
+        var headers = allTextLines[0].split(',');
+        
+        if(!headers.includes("name") || !headers.includes("lat") || !headers.includes("lon") || !headers.includes("alt")) {
+            return false;
+        }
+        
+        var sites = [];
+        for (var i=1; i<allTextLines.length; i++) {
+            var data = allTextLines[i].split(',');
+            if (data.length == headers.length) {
+                var site = {};
+                for (var j=0; j<headers.length; j++) {
+                    if(headers[j] === "lat" && (data[j] > 85 ||  data[j] < -85)) {
+                        return notify.log('Please enter latitude number between -85 to 85');
+                    }
+                    if(headers[j] === "lon" && (data[j] > 180 ||  data[j] < -180)) {
+                        return notify.log('Please enter longitude number between -180 to 180');
+                    }
+                    site[headers[j]] = data[j]
+                }
+                sites.push(site);
+            }
+        }
+        return sites;
+    }
+    
+    function createSites(sites) {
+        return Promise.all(
+            sites.map(function (site) {
+                return new Promise(function (resolve, reject) {
+                    a2Sites.create(site, function(data) {
+                        if (data.error) {
+                            reject(data.error)
+                        } else {
+                            resolve()
+                        }
+                    });
+                })
+            })
+        )
+    };
 
     a2GoogleMapsLoader.then(function(google){
         $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
@@ -90,7 +182,6 @@ angular.module('a2.audiodata.sites', [
         }
 
         if($scope.siteForm.$invalid) return;
-
         a2Sites[action]($scope.temp, function(data) {
             if(data.error)
                 return notify.error(data.error);
@@ -106,7 +197,7 @@ angular.module('a2.audiodata.sites', [
                 $scope.sites = sites;
             });
 
-            var message = (action == "update") ? "site updated" : "site created";
+            var message = (action == "update") ? "Site updated" : "Ste created";
 
             notify.log(message);
         });
@@ -324,6 +415,21 @@ angular.module('a2.audiodata.sites', [
         });
     };
 
+})
+.controller('ImportSiteInstanceCtrl', function ($scope, $modalInstance) {
+    $scope.files=[];
+
+    $scope.handler = function(e, files) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            $modalInstance.close(reader.result);
+        }
+        reader.readAsText(files[0]);
+    }
+    
+    $scope.cancel = function(){
+        $modalInstance.dismiss();
+    } 
 })
 // TODO remove properly published
 // .controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {
