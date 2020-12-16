@@ -51,7 +51,7 @@
 <div class="row sites">
     <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
         <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
-            <field title="Name" key="name" className="name">
+            <field title="Name" key="name" className="name hidelongtext">
                 {{ row.name }}
             </field>
             <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
@@ -78,7 +78,9 @@
                 This project does not have any <i class="fa fa-map-marker"></i> sites
             </h3>
         </div>
-        <loader ng-hide="!loading"></loader>
+        <div class="col-xs-10 col-md-6">
+            <loader ng-hide="!loading"></loader>
+        </div>
     </div>
 </div>
 
