@@ -287,24 +287,6 @@ angular.module('a2.citizen-scientist.patternmatching', [
         });
     },
 
-    filterRoisFromList: function(roiIds){
-        if(!this.rois){
-            return;
-        }
-
-        roiIds = (roiIds || []).reduce(function(_, roiId){
-            _[roiId] = true;
-            return _;
-        }, {});
-
-        this.rois = this.rois.filter(function(site){
-            site.list = site.list.filter(function(roi){
-                return !roiIds[roi.id];
-            });
-            return site.list.length;
-        });
-    },
-
     validate: function(validation, rois){
         if(!a2UserPermit.can('use citizen scientist interface')) {
             notify.log('You do not have permission to validate the matched rois.');
@@ -325,18 +307,19 @@ angular.module('a2.citizen-scientist.patternmatching', [
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
         var val_delta = {0:0, 1:0, null:0};
-        return a2CitizenScientistService.validatePatternMatchingRois(this.id, roiIds, validation).then((function(){
-            rois.forEach(function(roi){
-                val_delta[roi.cs_validated] -= 1;
-                val_delta[validation] += 1;
+        
+        rois.forEach(function(roi){
+            val_delta[roi.cs_validated] -= 1;
+            val_delta[validation] += 1;
 
-                roi.cs_validated = validation;
-                roi.selected = false;
-            });
-            this.patternMatching.cs_absent += val_delta[0];
-            this.patternMatching.cs_present += val_delta[1];
-            this.filterRoisFromList(roiIds);
-        }).bind(this));
+            roi.cs_validated = validation;
+            roi.selected = false;
+        });
+        
+        this.patternMatching.cs_absent += val_delta[0];
+        this.patternMatching.cs_present += val_delta[1];
+        
+        return a2CitizenScientistService.validatePatternMatchingRois(this.id, roiIds, validation);
     },
 
     nextMatch: function(step) {
