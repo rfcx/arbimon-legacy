@@ -1,0 +1,6 @@
+{
+  "NEW_RELIC_ENABLED": false,
+  "NEW_RELIC_LICENSE_KEY": "",
+  "NEW_RELIC_APP_NAME": "Arbimon Dev",
+  "NEW_RELIC_LOG_LEVEL": "warn"
+}

@@ -9,7 +9,7 @@ npm-debug.log
 
 # gedit backup files
 *~
-  
+
 # bower
 bower_components
 
@@ -36,3 +36,5 @@ tmpfilecache/**
 !tmpfilecache/.placeholder
 
 backend.png
+
+newrelic_agent.log
