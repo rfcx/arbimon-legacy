@@ -192,27 +192,6 @@ angular.module('a2.audiodata.uploads.upload', [
         $scope.uploaded = Math.floor($scope.uploader.progress/100 * $scope.uploader.queue.length);
     };
 
-
-    this.displayHelp = function() {
-        $modal.open({
-            templateUrl: '/app/audiodata/uploader-help.html',
-            controller: 'UploaderHelpDisplayCtrl as controller',
-            resolve: {
-                uploaderAppListing: (function(){
-                    return this.uploaderAppListing;
-                }).bind(this)
-            },
-            size: 'lg'
-        });
-    };
-
-    if($window.localStorage.getItem('data.uploads.help.viewed') === null) {
-        this.displayHelp();
-
-        $window.localStorage.setItem('data.uploads.help.viewed', true);
-    }
-
-
 })
 .controller('BatchInfoCtrl', function($scope, Project, info, $modalInstance, notify) {
 
@@ -247,10 +226,6 @@ angular.module('a2.audiodata.uploads.upload', [
 
         notify.error('all fields are required');
     };
-})
-.controller('UploaderHelpDisplayCtrl', function(uploaderAppListing) {
-    this.a="q";
-    this.uploaderAppListing = uploaderAppListing;
 })
 .factory('uploads', function(FileUploader){
 
