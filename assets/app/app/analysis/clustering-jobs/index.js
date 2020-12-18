@@ -407,7 +407,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.openFreqFilterModal = function() {
         var modalInstance = $modal.open({
             templateUrl : '/app/analysis/clustering-jobs/frequency-filter.html',
-            controller  : 'a2VisualizerFrequencyFilterModalController',
+            controller  : 'a2ClusterFrequencyFilterModalController',
             size        : 'sm',
             resolve     : {
                 data : function() { return {
@@ -419,6 +419,9 @@ angular.module('a2.analysis.clustering-jobs', [
 
         modalInstance.result.then(function (result) {
             console.log('filter', result);
+            if (!result) {
+                return
+            }
             var clusters = {};
             for (var c in $scope.clusters) {
                 if ($scope.clusters[c].records) {
@@ -443,8 +446,8 @@ angular.module('a2.analysis.clustering-jobs', [
     };
     getClusteringDetails();
 })
-.controller('a2VisualizerFrequencyFilterModalController', function($scope, $modalInstance, data, Project) {
-    console.log('a2VisualizerFrequencyFilterModalController', data);
+.controller('a2ClusterFrequencyFilterModalController', function($scope, $modalInstance, data, Project) {
+    console.log('a2ClusterFrequencyFilterModalController', data);
     $scope.filterData = {};
     $scope.filterData.max_freq = data.frequency.max;
     $scope.filterData.src="/api/project/"+Project.getUrl()+"/recordings/tiles/"+data.recording+"/0/0";
