@@ -933,8 +933,8 @@ var Recordings = {
                       "       r.site_id, \n"+
                       "       s.project_id != " + parameters.project_id + " as imported \n",
 
-                date_range: "SELECT DATE(MIN(r.datetime)) AS min_date, \n"+
-                            "       DATE(MAX(r.datetime)) AS max_date \n",
+                date_range: "SELECT MIN(r.datetime) AS min_date, \n"+
+                            "       MAX(r.datetime) AS max_date \n",
 
                 count: "SELECT COUNT(DISTINCT r.recording_id) as count \n"
             };
