@@ -100,10 +100,10 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
     var filterDefs = [
         {name:"range"                 , map: function set_range_bounds(range){
             if(range && range.from && range.to) {
-                range.from.setHours(0);
-                range.from.setMinutes(0);
-                range.to.setHours(23);
-                range.to.setMinutes(59);
+                range.from.setUTCHours(0);
+                range.from.setUTCMinutes(0);
+                range.to.setUTCHours(23);
+                range.to.setUTCMinutes(59);
             }
             return range;
         }},
