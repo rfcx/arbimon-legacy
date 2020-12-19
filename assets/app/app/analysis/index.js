@@ -28,8 +28,7 @@ angular.module('a2.analysis', [
     a2APIService,
     $scope
 ){
-    $scope.getProjectName = function() {
-        return a2APIService.getProjectName()
-    }
+    var projectName = a2APIService.getProjectName()
+    $scope.isClusteringEnabled =  ['usfws-carite-warbler', 'bci-panama-2018'].includes(projectName)
 })
 ;
