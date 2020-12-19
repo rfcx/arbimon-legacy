@@ -40,6 +40,10 @@ angular.module('a2.srv.api', [])
     a2APIService.api = new a2APIServiceClass('/api');
     a2APIService.project = new a2APIServiceClass('/project/' + projectName);
 
+    a2APIService.getProjectName = function() {
+        return projectName
+    }
+
     return a2APIService;
 })
 ;
