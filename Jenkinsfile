@@ -132,11 +132,11 @@ def branchToConfig(branch) {
         sh "cp $PRIVATE_ENV config/lambdas.local.json"
         }
         withCredentials([file(credentialsId: 'arbimon_staging_mandrill-key', variable: 'PRIVATE_ENV')]) {
-        sh "echo $PRIVATE_ENV && cp $PRIVATE_ENV config/mandrill-key.local.json"
+        sh "cp $PRIVATE_ENV config/mandrill-key.local.json"
         }
-        withCredentials([file(credentialsId: 'arbimon_staging_mapbox-api', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/mapbox-api.local.json"
-        }
+        // withCredentials([file(credentialsId: 'arbimon_staging_mapbox-api', variable: 'PRIVATE_ENV')]) {
+        // sh "cp $PRIVATE_ENV config/mapbox-api.local.json"
+        // }
         withCredentials([file(credentialsId: 'arbimon_staging_rfcx', variable: 'PRIVATE_ENV')]) {
         sh "cp $PRIVATE_ENV config/rfcx.local.json"
         }
