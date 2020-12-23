@@ -178,7 +178,7 @@
             <div ng-repeat="species in rois_species">
                 <div class="h3" id="site-{{species.species_id}}"><i class="fa fa-map-marker"></i> {{species.scientific_name}}</div>
                 <div ng-repeat="roi in species.rois"
-                    class="btn roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                     ng-click="roi.selected = !roi.selected"
                     ng-style="{'border-width': '2px'}"
                     popover-html="'Recording: {{roi.recording}}<br>
