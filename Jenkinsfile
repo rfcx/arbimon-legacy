@@ -36,7 +36,7 @@ spec:
                  expression { BRANCH_NAME ==~ /(develop)/ }
             }
             steps {
-                slackSend (channel: "#${slackChannel}", color: '#FF9800', message: "*Arbimon Web*: Build started <${env.BUILD_URL}|#${env.BUILD_NUMBER}> commit ${env.GIT_COMMIT[0..6]} branch ${env.BRANCH_NAME}")
+                // slackSend (channel: "#${slackChannel}", color: '#FF9800', message: "*Arbimon Web*: Build started <${env.BUILD_URL}|#${env.BUILD_NUMBER}> commit ${env.GIT_COMMIT[0..6]} branch ${env.BRANCH_NAME}")
                 catchError {
                 container(name: 'kaniko') {
                 sh '''
@@ -48,11 +48,11 @@ spec:
 
            post {
                success {
-                   slackSend (channel: "#${slackChannel}", color: '#3380C7', message: "*Arbimon Web*: Image built on <${env.BUILD_URL}|#${env.BUILD_NUMBER}> branch ${env.BRANCH_NAME}")
+                //    slackSend (channel: "#${slackChannel}", color: '#3380C7', message: "*Arbimon Web*: Image built on <${env.BUILD_URL}|#${env.BUILD_NUMBER}> branch ${env.BRANCH_NAME}")
                    echo 'Compile Stage Successful'
                }
                failure {
-                   slackSend (channel: "#${slackChannel}", color: '#F44336', message: "*Arbimon Web*: Image build failed <${env.BUILD_URL}|#${env.BUILD_NUMBER}> branch ${env.BRANCH_NAME}")
+                //    slackSend (channel: "#${slackChannel}", color: '#F44336', message: "*Arbimon Web*: Image build failed <${env.BUILD_URL}|#${env.BUILD_NUMBER}> branch ${env.BRANCH_NAME}")
                    echo 'Compile Stage Failed'
                }
 
@@ -86,7 +86,7 @@ spec:
             steps {
             catchError {
             sh "kubectl rollout status deployment ${APP} --namespace ${PHASE}"
-            slackSend (channel: "#${slackChannel}", color: '#4CAF50', message: "*Arbimon Web*: Deployment completed <${env.BUILD_URL}|#${env.BUILD_NUMBER}> branch ${env.BRANCH_NAME}")
+            // slackSend (channel: "#${slackChannel}", color: '#4CAF50', message: "*Arbimon Web*: Deployment completed <${env.BUILD_URL}|#${env.BUILD_NUMBER}> branch ${env.BRANCH_NAME}")
             }
             }
 
@@ -132,7 +132,7 @@ def branchToConfig(branch) {
         sh "cp $PRIVATE_ENV config/lambdas.local.json"
         }
         withCredentials([file(credentialsId: 'arbimon_staging_mandrill-key', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/mandrill-key.local.json"
+        sh "echo $PRIVATE_ENV && cp $PRIVATE_ENV config/mandrill-key.local.json"
         }
         withCredentials([file(credentialsId: 'arbimon_staging_mapbox-api', variable: 'PRIVATE_ENV')]) {
         sh "cp $PRIVATE_ENV config/mapbox-api.local.json"
