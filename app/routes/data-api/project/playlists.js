@@ -208,6 +208,16 @@ router.post('/delete', function(req, res, next) {
 
 });
 
+router.post('/:playlist/aed', function(req, res, next) {
+    res.type('json');
+
+    model.playlists.attachAedToPlaylist(req.params.playlist, req.body.aed, function(err, data) {
+        if(err) return next(err);
+        res.json(data);
+    });
+});
+
+
 
 
 

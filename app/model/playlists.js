@@ -407,6 +407,19 @@ var Playlists = {
         }).nodeify(callback);
     },
 
+    attachAedToPlaylist: function(playlist_id, aed, callback) {
+       var schema =  Joi.array().items(Joi.number());
+
+        return q.ninvoke(Joi, 'validate', aed, schema).then(function(items) {
+            return dbpool.query(
+                "INSERT INTO playlist_aed(playlist_id, aed_id) \n"+
+                "VALUES " + items.map(function(aed) {
+                    return "(" + (playlist_id|0) + "," + (aed|0) + ")";
+                }).join(",\n       ")
+            );
+        }).nodeify(callback);
+    },
+
     rename: function(playlist, callback) {
         var schema = {
             id: Joi.number().required(),

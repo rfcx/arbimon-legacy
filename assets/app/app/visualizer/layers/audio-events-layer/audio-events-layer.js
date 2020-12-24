@@ -15,15 +15,14 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
 .controller('a2VisualizerAudioEventsController', function($scope, a2AudioEventDetectionsClustering, Project){
     var self = this;
     self.audioEvents = null;
-
-    Project.getClasses(function(project_classes){
-        self.project_classes = project_classes;
-    });
-
+    self.isPlaylist = false;
     self.fetchAudioEvents = function() {
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
         if (rec) {
-            a2AudioEventDetectionsClustering.list({rec_id: rec}).then(function(audioEvents) {
+            self.isPlaylist = $scope.visobject.extra && $scope.visobject.extra.playlist;
+            a2AudioEventDetectionsClustering.list(
+                $scope.visobject.extra && $scope.visobject.extra.playlist && $scope.visobject.extra.playlist.id ?
+                {playlist: $scope.visobject.extra.playlist.id} : {rec_id: rec}).then(function(audioEvents) {
                 if (audioEvents) {
                     self.audioEvents = audioEvents.map(event => {
                         return {
@@ -31,7 +30,8 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
                             x1: event.time_min,
                             x2: event.time_max,
                             y1: event.freq_min,
-                            y2: event.freq_max
+                            y2: event.freq_max,
+                            display: event.rec_id === rec? "block" : "none"
                         }
                     });
                     return audioEvents;
