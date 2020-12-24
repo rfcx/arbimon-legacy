@@ -17,29 +17,34 @@
             <div class="col-md-12">
                 <loader ng-if="controller.loading"></loader>
                 <a2-table ng-if="!controller.loading" search="search" rows="controller.templates" no-checkbox>
-                    <field title="Name" key="name" filter tdclass="is-v-middle" className="name">
+                    <field tdclass="is-v-middle">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{row.uri}}" class="roi-img is-small"/>
                             <a class="roi-btn-bl" ng-click="controller.playTemplateAudio(row, $event)" style="cursor:pointer">
                                 <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="Play Audio"
-                                class="fa fa-play"></i>
+                                    tooltip-append-to-body="true"
+                                    tooltip="Play Audio"
+                                    class="fa fa-play">
+                                </i>
                             </a>
                             <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}">
                                 <i tooltip-placement="left"
-                                tooltip-append-to-body="true"
-                                tooltip="View in Visualizer"
-                                class="fa fa-cubes"></i>
+                                    tooltip-append-to-body="true"
+                                    tooltip="View in Visualizer"
+                                    class="fa fa-cubes">
+                                </i>
                             </a>
                         </div>
+                    </field>
+                    <field title="Name" key="name" filter tdclass="is-v-middle" className="name">
+                        <div>
                             <p class="m-0 is-v-middle no-wrap hidelongtext">{{ row.name }}</p>
                             <a class="is-v-middle"
                                 ng-if="controller.currentTab === 'showOwner' && row.project !== row.source_project_id && row.source_project_id !== null"
                                 ng-click="controller.goToSourceProject(row.source_project_id)">
-                                    <i aria-hidden="true" class="glyphicon glyphicon-link pl-2"></i>
-                                linked
+                                <i aria-hidden="true" class="glyphicon glyphicon-link pl-2"></i>linked
                             </a>
+                        </div>
                     </field>
                     <field title="Species" key="species_name" filter tdclass="is-v-middle no-wrap hidelongtext">
                         {{ row.species_name }}
