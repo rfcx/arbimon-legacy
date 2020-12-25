@@ -91,7 +91,7 @@ angular.module('a2.audiodata.playlists', [
         
         $scope.popup = {
             messages: message.concat(playlists, message2),
-            btnOk: "Yes, do it!",
+            btnOk: "Yes",
             btnCancel: "No",
         };
         
@@ -109,7 +109,7 @@ angular.module('a2.audiodata.playlists', [
             
             a2Playlists.remove(playlistIds, function(data) {
                 if(data.error)
-                    return notify.log(data.error);
+                    return notify.error(data.error);
                 
                 a2Playlists.getList().then(function(data) {
                     $scope.playlists = data;

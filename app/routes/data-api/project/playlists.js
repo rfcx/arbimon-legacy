@@ -200,7 +200,12 @@ router.post('/delete', function(req, res, next) {
         return res.json({ error: "missing paramenters" });
 
     model.playlists.remove(req.body.playlists, function(err, results) {
-        if(err) return next(err);
+        if(err) {
+            if(err.code == 'ER_ROW_IS_REFERENCED_2') {
+                return res.json({ error: "Playlist is used by analysis job" });
+            }
+            return next(err);
+        }
 
         debug('playlist deleted', results);
         res.json({ success: true });
