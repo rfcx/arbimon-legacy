@@ -17,7 +17,7 @@
             <div class="col-md-12">
                 <loader ng-if="controller.loading"></loader>
                 <a2-table ng-if="!controller.loading" search="search" rows="controller.templates" no-checkbox>
-                    <field tdclass="is-v-middle">
+                    <field tdclass="is-v-middle" className ="spectrogram-img">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{row.uri}}" class="roi-img is-small"/>
                             <a class="roi-btn-bl" ng-click="controller.playTemplateAudio(row, $event)" style="cursor:pointer">
@@ -64,7 +64,7 @@
                     <field title="Date created" key="date_created" tdclass="is-v-middle" className="no-wrap">
                         {{ row.date_created | moment: 'll' }}
                     </field>
-                    <field title="Source" key="source_project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'showOwner'">
+                    <field title="Source" key="source_project_name" filter tdclass="is-v-middle no-wrap hidelongtext" show="controller.currentTab === 'showOwner'" className="source">
                         {{ row.project !== row.source_project_id && row.source_project_id !== null ? row.author + ' / ' + row.source_project_name : '-' }}
                     </field>
                     <field tdclass="is-v-middle">
