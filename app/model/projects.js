@@ -585,6 +585,7 @@ var Projects = {
             return callback(new Error("invalid type for 'project_id'"));
 
         var q = "SELECT u.login AS username, \n"+
+                "       u.firstname, u.lastname, \n"+
                 "       u.user_id AS id, \n"+
                 "       u.email, \n"+
                 "       r.name AS rolename \n"+
