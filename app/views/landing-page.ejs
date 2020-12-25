@@ -12,8 +12,8 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-sm-12 col-md-7 col-lg-8 jumbotron" ng-class="mode === 'Sign up' ? 'visible-md-block visible-lg-block' : '' ">
-                <h1 class="hidden-xs hidden-sm">Arbimon</h1>
+            <div class="col-sm-12 col-md-7 col-lg-8 jumbotron">
+                <h1>Arbimon</h1>
                 <h2>Bio-acoustics analysis platform</h2>
                 <div class="button-group">
                     <a class="btn btn-lg btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Start analyzing audio</a>
@@ -29,7 +29,7 @@
                 </p>
             </div>
 
-            <div class="col-sm-12 col-md-5 col-lg-4" ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
+            <div class="col-sm-12 col-md-5 col-lg-4">
                 <div class="card-container mt-5">
                     <% include fragments/login-form %>
                 </div>

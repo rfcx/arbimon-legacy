@@ -8,26 +8,6 @@ angular.module('a2.login', [
 ])
 .controller('LoginCtrl', function($scope, $http, $window, $modal, notify) {
 
-    // $scope.mode have the String value of the next mode and
-    // is used as text for the mode button
-
-    if(/login/i.exec($window.location.pathname) !== null){
-        $scope.mode = "Sign up";
-    }
-    else {
-        $scope.mode = "Login";
-    }
-
-
-    $scope.switchMode = function() {
-        if($scope.mode === "Sign up") {
-            $scope.mode = "Login";
-        }
-        else {
-            $scope.mode = "Sign up";
-        }
-    };
-
     $scope.login = function() {
 
         var path = '/login' + $window.location.search;
