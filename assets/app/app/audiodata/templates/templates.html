@@ -17,7 +17,7 @@
             <div class="col-md-12">
                 <loader ng-if="controller.loading"></loader>
                 <a2-table ng-if="!controller.loading" search="search" rows="controller.templates" no-checkbox>
-                    <field tdclass="is-v-middle">
+                    <field tdclass="is-v-middle" className ="spectrogram-img">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{row.uri}}" class="roi-img is-small"/>
                             <a class="roi-btn-bl" ng-click="controller.playTemplateAudio(row, $event)" style="cursor:pointer">
