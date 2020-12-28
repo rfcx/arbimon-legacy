@@ -56,7 +56,6 @@ angular.module('a2.visualizer', [
             }
         },
         deepStateRedirect: true,
-        sticky: true,
     })
     .state('visualizer.view', {
         url: '/:type/:idA/:idB/:idC?gain&filter&a&clusters',
