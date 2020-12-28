@@ -870,6 +870,23 @@ var Projects = {
           return rp(options)
     },
 
+    updateInCoreAPI: async function(data, idToken) {
+        let body = {}
+        data.name !== undefined && (body.name = data.name)
+        data.description !== undefined && (body.description = data.description)
+        data.is_private !== undefined && (body.is_public = !data.is_private)
+        const options = {
+            method: 'PATCH',
+            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/projects/${data.project_id}`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify(body)
+          }
+          return rp(options)
+    },
+
     findInCoreAPI: async function (guid) {
         const token = await auth0Service.getToken();
         const options = {

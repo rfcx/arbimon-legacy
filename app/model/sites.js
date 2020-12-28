@@ -626,7 +626,8 @@ var Sites = {
             name: site.name,
             latitude: site.lat,
             longitude: site.lon,
-            project_external_id: site.project_id
+            project_external_id: site.project_id,
+            external_id: site.site_id
         }
         const options = {
             method: 'POST',
@@ -636,6 +637,36 @@ var Sites = {
                 Authorization: `Bearer ${idToken}`
             },
             body: JSON.stringify(body)
+          }
+          return rp(options)
+    },
+
+    updateInCoreAPI: async function(data, idToken) {
+        let body = {}
+        data.name !== undefined && (body.name = data.name)
+        data.lat !== undefined && (body.latitude = data.lat)
+        data.lon !== undefined && (body.longitude = data.lon)
+        data.project_id !== undefined && (body.project_external_id = data.project_id)
+        const options = {
+            method: 'PATCH',
+            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/streams/${data.site_id}`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify(body)
+          }
+          return rp(options)
+    },
+
+    deleteInCoreAPI: async function(site_id, idToken) {
+        const options = {
+            method: 'DELETE',
+            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/streams/${site_id}`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            }
           }
           return rp(options)
     },
