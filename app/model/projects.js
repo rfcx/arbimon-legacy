@@ -585,6 +585,7 @@ var Projects = {
             return callback(new Error("invalid type for 'project_id'"));
 
         var q = "SELECT u.login AS username, \n"+
+                "       u.firstname, u.lastname, \n"+
                 "       u.user_id AS id, \n"+
                 "       u.email, \n"+
                 "       r.name AS rolename \n"+
@@ -861,6 +862,23 @@ var Projects = {
         const options = {
             method: 'POST',
             url: `${rfcxConfig.apiBaseUrl}/projects`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`
+            },
+            body: JSON.stringify(body)
+          }
+          return rp(options)
+    },
+
+    updateInCoreAPI: async function(data, idToken) {
+        let body = {}
+        data.name !== undefined && (body.name = data.name)
+        data.description !== undefined && (body.description = data.description)
+        data.is_private !== undefined && (body.is_public = !data.is_private)
+        const options = {
+            method: 'PATCH',
+            url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/projects/${data.project_id}`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`

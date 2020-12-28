@@ -145,7 +145,6 @@ def branchToConfig(branch) {
         }
         }
         echo "BRANCH:${branch} -> CONFIGURATION:${result}"
-       
     }
     return result
 }

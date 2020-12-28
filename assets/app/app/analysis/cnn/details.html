@@ -54,7 +54,6 @@
                         {{ job_details.playlist_name }} ({{ job_details.playlist_count }} recordings)
                         <br>{{ job_details.timestamp }}
                         <br>CNN Model: {{job_details.cnn_model_name}}
-                        <br>Parameters: {{ job_details.parameters }}
                         <br>{{job_details.matches || 0}} matches ({{job_details.present || 0}} present, {{job_details.absent || 0}} not present, {{job_details.matches - (job_details.absent + job_details.present)}} unvalidated)
                 </div>
             </div>
@@ -178,7 +177,7 @@
             <div ng-repeat="species in rois_species">
                 <div class="h3" id="site-{{species.species_id}}"><i class="fa fa-map-marker"></i> {{species.scientific_name}}</div>
                 <div ng-repeat="roi in species.rois"
-                    class="btn roi-thumbnail {{roi.selected ? 'active' : ''}}"
+                    class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                     ng-click="roi.selected = !roi.selected"
                     ng-style="{'border-width': '2px'}"
                     popover-html="'Recording: {{roi.recording}}<br>
@@ -208,7 +207,7 @@
                             style="cursor:pointer">
                         </i>
                     </a>
-                    <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img-original"/>
+                    <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img {{lists.current.thumbnailClass}}"/>
                 </div>
             </div>
         </div>

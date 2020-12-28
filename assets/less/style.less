@@ -516,9 +516,20 @@ textarea.fixed-width {
   td, th {
     width: 10%;
   }
+
+  td.spectrogram-img,
+  th.spectrogram-img {
+    width: 80px;
+  }
+
   td.name,
   th.name {
-    width: 30%;
+    width: 25%;
+  }
+  
+  td.source,
+  th.source{
+    width: 25%;
   }
 }
 
@@ -531,9 +542,6 @@ textarea.fixed-width {
     }
   }
   td.name {
-    div {
-      width: 100%;
-    }
     p {
       max-width: ~"calc(100% - 56px)";
       display: inline-block;
