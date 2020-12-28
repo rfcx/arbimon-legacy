@@ -491,6 +491,12 @@ textarea.fixed-width {
   user-select: none;
 }
 
+.table {
+  & > thead > tr > th {
+    cursor: pointer;
+  }
+}
+
 // a2-table directive style
 .a2-table {
   & > tbody > tr.active > td {
@@ -1477,6 +1483,30 @@ img.outlined {
   }
   .roi-thumbnail {
     font-size: 14px; // set font-size back to previous after reset
+  }
+}
+
+//set cursor mouse
+.cs-default {
+  cursor: default;
+}
+
+.cs-pointer {
+  cursor: pointer;
+
+  &__input {
+    &_type-radio:checked{
+      cursor: default
+    }
+    &_type-radio:not(:checked){
+      cursor: pointer;
+    }
+  }
+}
+
+.dropdown-menu > li {
+  > a {
+    cursor: pointer;
   }
 }
 
