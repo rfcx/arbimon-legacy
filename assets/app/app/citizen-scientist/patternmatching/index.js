@@ -307,7 +307,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
         var val_delta = {0:0, 1:0, null:0};
-        
+
         rois.forEach(function(roi){
             val_delta[roi.cs_validated] -= 1;
             val_delta[validation] += 1;
@@ -315,10 +315,10 @@ angular.module('a2.citizen-scientist.patternmatching', [
             roi.cs_validated = validation;
             roi.selected = false;
         });
-        
+
         this.patternMatching.cs_absent += val_delta[0];
         this.patternMatching.cs_present += val_delta[1];
-        
+
         return a2CitizenScientistService.validatePatternMatchingRois(this.id, roiIds, validation);
     },
 
