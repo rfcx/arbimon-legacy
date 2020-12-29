@@ -35,7 +35,7 @@ var Classifications = {
             showModel: true,
         }).nodeify(callback);
     },
-    
+
     getFor: function(options) {
         options = options || {};
         var builder = new SQLBuilder();
@@ -62,22 +62,24 @@ var Classifications = {
             builder.addTable("JOIN `models`", "M", "M.`model_id` = JPC.`model_id`");
             builder.addProjection("M.name as modname", "M.`threshold`", "M.model_id");
         }
-        
+
         if(options.hasOwnProperty("completed")){
             builder.addConstraint("J.`completed` = ?", [!!options.completed]);
         }
-        
+
         if(options.hasOwnProperty("project")){
             builder.addConstraint("J.`project_id` = ?", [options.project]);
         }
-        
+
         if(options.hasOwnProperty("id")){
             builder.addConstraint("J.`job_id` IN (?)", [options.id]);
         }
 
+        builder.setOrderBy('date');
+
         return dbpool.query(builder.getSQL());
     },
-    
+
     // classificationName
     getName: function(cid, callback) {
         var q = "SELECT REPLACE(lower(c.`name`),' ','_') as name, \n"+
@@ -89,17 +91,17 @@ var Classifications = {
 
         queryHandler(q, callback);
     },
-    
+
     // TODO delete async
     // classificationDelete
     delete: function(classificationId, callback) {
-        
+
         var cid = dbpool.escape(classificationId);
         var modUri;
         var q;
         var allToDelete;
-        
-        // TODO change nested queries to join 
+
+        // TODO change nested queries to join
         async.waterfall([
             function(cb) {
                 q = "SELECT `uri` FROM `models` WHERE `model_id` = "+
@@ -108,7 +110,7 @@ var Classifications = {
             },
             function(data, fields, cb) {
                 if(!data.length) return callback(new Error('Classification not found'));
-                
+
                 modUri = data[0].uri.replace('.mod','');
                 q = "SELECT `uri` FROM `recordings` WHERE `recording_id` in "+
                 "(SELECT `recording_id` FROM `classification_results` WHERE `job_id` = "+cid+")";
@@ -130,11 +132,11 @@ var Classifications = {
                 else {
                     var params = {
                         Bucket: config('aws').bucketName,
-                        Delete: { 
+                        Delete: {
                             Objects: allToDelete
                         }
                     };
-                    
+
                     s3.deleteObjects(params, function() {
                         cb();
                     });
@@ -157,11 +159,11 @@ var Classifications = {
             }
         ], function(err) {
             if(err) return callback(err);
-            
+
             callback(null, { data:"Classification deleted succesfully" });
         });
     },
-    
+
     // classificationCsvData: function(classiJobId, callback) {
     getCsvData: function(classiJobId, callback) {
         var q = "SELECT extract(year from r.`datetime`) year, \n"+
@@ -195,18 +197,18 @@ var Classifications = {
 
         queryHandler(dbpool.format(q, [classiJobId]), callback);
     },
-    
+
     // classificationErrorsCount
     errorsCount: function(jobId, callback) {
         var q = "SELECT count(*) AS count \n"+
-                "FROM recordings_errors \n"+ 
+                "FROM recordings_errors \n"+
                 "WHERE job_id = " + dbpool.escape(jobId);
 
         queryHandler(q, callback);
     },
-    
+
     // classificationDetail: function(project_url, cid, callback) {
-    
+
     detail: function(cid, callback) {
         var q = (
             "SELECT c.`species_id`, \n"+
@@ -233,7 +235,7 @@ var Classifications = {
 
         queryHandler(dbpool.format(q,[cid]), callback);
     },
-    
+
     // classificationDetailMore: function(project_url, cid, from, total, callback) {
     moreDetails: function(cid, from, total, callback) {
         var q = "SELECT cs.`json_stats`, \n"+
@@ -266,10 +268,10 @@ var Classifications = {
                 "AND c.`songtype_id` = st.`songtype_id` \n"+
                 "AND r.`recording_id` = c.`recording_id` \n"+
                 "ORDER BY present DESC LIMIT ?,?";
-        
+
         queryHandler(dbpool.format(q,[cid, parseInt(from), parseInt(total)]), callback);
     },
-    
+
     getRecVector: function(c12nId, recId, callback) {
         var q = "SELECT CONCAT( \n"+
                 "           SUBSTRING_INDEX(m.uri, '.', 1), \n"+
@@ -285,9 +287,9 @@ var Classifications = {
                 "JOIN recordings AS r ON r.recording_id = cr.recording_id \n"+
                 "WHERE cr.job_id = ? \n"+
                 "AND r.recording_id = ? ";
-        
+
         q = dbpool.format(q, [c12nId, recId, callback]);
-        
+
         queryHandler(q, callback);
     },
 };

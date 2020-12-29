@@ -668,6 +668,7 @@ var Projects = {
                 "   CONCAT(UCASE(LEFT(m.name, 1)), \n"+
                 "   SUBSTRING(m.name, 2)) as mname, \n"+
                 "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n"+
+                "   m.date_created, \n"+
                 "   CONCAT( \n"+
                 "       CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)), \n"+
                 "       ' ', \n"+
@@ -689,6 +690,7 @@ var Projects = {
                 "   CONCAT(UCASE(LEFT(m.name, 1)), \n"+
                 "   SUBSTRING(m.name, 2)) as mname, \n"+
                 "   UNIX_TIMESTAMP( m.`date_created` )*1000 as date, \n"+
+                "   m.date_created, \n"+
                 "   CONCAT( \n"+
                 "       CONCAT(UCASE(LEFT(u.firstname, 1)), SUBSTRING(u.firstname, 2)), \n"+
                 "       ' ', \n"+
@@ -706,8 +708,7 @@ var Projects = {
                 "AND m.user_id = u.user_id \n"+
                 "AND pim.model_id = m.model_id \n"+
                 "AND pim.project_id = p.project_id \n"+
-                ")\n";
-
+                ") ORDER BY date_created DESC\n";
             queryHandler(q, callback);
     },
 

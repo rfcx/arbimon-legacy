@@ -136,7 +136,7 @@ var Jobs = {
         cnn_job: {
             type_id: 7,
             new: function(params, db) {
-                return 
+                return
             },
             sql : {
                 report : {
@@ -320,8 +320,7 @@ var Jobs = {
                 "  AND J.job_type_id = " + (job_type.type_id|0)
             );
         });
-
-        queryHandler("(\n" + union.join("\n) UNION (\n") + "\n)", callback);
+        queryHandler("(\n" + union.join("\n) UNION (\n") + "\n) ORDER BY last_update DESC", callback);
     },
 
 
