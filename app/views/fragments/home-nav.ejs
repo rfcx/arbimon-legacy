@@ -21,7 +21,7 @@
         <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
             <ul class="nav navbar-nav">
                 <% if (user && !user.isAnonymousGuest) { %>
-                    <li class="<%- state === 'home.my'? 'active' : '' %>"><a href="/home" >My Projects</a></li>
+                    <li class="<%- state === 'home.my'? 'active' : '' %>"><a href="/home">My Projects</a></li>
                     <li class="<%- state === 'home.all'? 'active' : '' %>"><a href="/home/all">Public Projects</a></li>
                 <% } %>
                 <% if (user && user.isSuper) { %>
@@ -29,6 +29,16 @@
                 <% } %>
             </ul>
             <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown open" dropdown="">
+                    <a class="nav-item nav-link dropdown-toggle glyphicon glyphicon-th glyphicon-style__size_24" dropdown-toggle="" aria-haspopup="true" aria-expanded="false"></a>
+                    <ul class="dropdown-menu dropdown-style-no-border dropdown-border-top" role="menu">
+                        <li><a href="https://explorer.rfcx.org">Explorer</a></li>
+                        <li><a href="https://arbimon.rfcx.org">Arbimon</a></li>
+                        <li><a href="https://rfcx-training.web.app">AI Hub</a></li>
+                        <hr class="navbar-divider">
+                        <li><a href="https://rfcx.org/">RFCx.org</a></li>
+                    </ul>
+                </li>
                 <% include user-dropdown %>
             </ul>
         </div>
