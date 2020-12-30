@@ -9,7 +9,7 @@
         <a2-tag tag="tag" ng-repeat="tag in bbox.tags"></a2-tag>
     </div>
 </div>
-<div class="input-source"
+<div class="input-source cursor-crosshair"
     ng-style="{height: layout.spectrogram.height, width: layout.spectrogram.width}"
     a2-visualizer-fit-spectrogram ng-show="selection.layer == layer" 
     ng-mousedown="($event.which == 1) && [layer.controller.bbox.reset(), layer.controller.bbox.add_point(pointer)]"
