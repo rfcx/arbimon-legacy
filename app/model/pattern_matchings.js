@@ -53,6 +53,7 @@ var PatternMatchings = {
             "PM.`parameters`" ,
             "PM.`citizen_scientist`",
             "PM.`cs_expert`",
+            "PM.`completed`",
             "PM.`playlist_id`", "PM.`template_id`" ,
         ];
         var tables = ["pattern_matchings PM"];
@@ -71,7 +72,7 @@ var PatternMatchings = {
         }
 
         if (options.completed !== undefined) {
-            constraints.push('PM.`completed` = ' + dbpool.escape(options.completed));
+            constraints.push('PM.`completed` = ' + dbpool.escape(Boolean(options.completed)));
         }
 
         if (options.citizen_scientist !== undefined) {

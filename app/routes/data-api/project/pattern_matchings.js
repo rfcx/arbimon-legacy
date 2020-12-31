@@ -23,7 +23,14 @@ router.use(function(req, res, next) {
  */
 router.get('/', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.find({ project:req.project.project_id, deleted:0, showUser:true, showTemplate: true, showPlaylist:true}).then(function(count) {
+    model.patternMatchings.find({
+        project:req.project.project_id,
+        deleted:0,
+        showUser:true,
+        showTemplate: true,
+        showPlaylist:true,
+        ...!!req.query.completed && { completed: req.query.completed }
+    }).then(function(count) {
         res.json(count);
     }).catch(next);
 });
