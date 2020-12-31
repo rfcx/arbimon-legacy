@@ -19,12 +19,13 @@
     </div>
     <div class="row">
         <div class="col-sm-12">
-            <div class="nav nav-pills nav-stacked visobj-list" role="menu">
+            <div class="nav nav-pills nav-stacked visobj-list" role="menu" a2-scroll="onScroll($event, $controller)" a2-infinite-scroll-distance="10">
+                <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': scrolledPastHeader }" />
                 <div class="visobj-list-item" ng-show="browser.loading.times">
                     <i class="fa fa-spinner fa-spin"></i>
                     Loading {{browser.type.vobject_type | plural}}
                 </div>
-                
+
                 <div class="visobj-list-item" ng-show="!browser.loading.times && !browser.lovo.list.length ">
                     <p ng-if="browser.type.name == 'rec'">
                         Please, select a site and a date to browse
@@ -36,7 +37,7 @@
                         No soundscapes found
                     </p>
                 </div>
-                
+
                 <div class="visobj-list-item"
                     ng-hide="browser.loading.times"
                     ng-repeat="visobj in browser.lovo.list"

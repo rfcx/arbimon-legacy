@@ -98,6 +98,7 @@ router.get('/count', function(req, res, next) {
     });
 });
 
+// get records for the project
 router.get('/:recUrl?', function(req, res, next) {
     res.type('json');
     var recordingUrl = req.params.recUrl;
@@ -107,7 +108,9 @@ router.get('/:recUrl?', function(req, res, next) {
         req.project.project_id,
         {
             order: true,
-            compute: req.query && req.query.show
+            compute: req.query && req.query.show,
+            ...req.query && req.query.limit && {limit: req.query.limit},
+            ...req.query && req.query.offset && {offset: req.query.offset}
         },
         function(err, rows) {
             if (err) return next(err);
@@ -130,6 +133,7 @@ router.get('/count/:recUrl?', function(req, res, next) {
     });
 });
 
+// get info about count of recordings in a project
 router.get('/available/:recUrl?', function(req, res, next) {
     res.type('json');
     var recordingUrl = req.params.recUrl;
@@ -150,6 +154,7 @@ router.get('/available/:recUrl?', function(req, res, next) {
     );
 });
 
+// get info about a selected recording
 router.param('oneRecUrl', function(req, res, next, recording_url){
     model.recordings.findByUrlMatch(recording_url, req.project.project_id, {limit:1}, function(err, recordings) {
         if(err){
@@ -167,7 +172,7 @@ router.get('/tiles/:recordingId/:i/:j', function(req, res, next) {
     var i = req.params.i | 0;
     var j = req.params.j | 0;
     var recordingId = req.params.recordingId;
-    
+
     model.recordings.findByRecordingId(recordingId, function(err, recording) {
         if (err) {
             return next(err);

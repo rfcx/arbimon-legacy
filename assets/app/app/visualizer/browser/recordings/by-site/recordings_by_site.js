@@ -17,12 +17,13 @@ angular.module('a2.browser_recordings_by_site', [
     return $cacheFactory('recordingsBrowserDateAvailabilityCache');
 })
 .service('a2RecordingsBySiteLOVO', function($q, Project, $filter){
-    var lovo = function(site, date){
+    var lovo = function(site, date, limit, offset){
         this.initialized = false;
         this.site = site;
         this.date = date;
         this.object_type = "recording";
-        this.offset = 0;
+        this.offset = offset|0;
+        this.limit = limit;
         this.order  = 'datetime';
         this.count  = 0;
         this.list   = [];
@@ -35,7 +36,7 @@ angular.module('a2.browser_recordings_by_site', [
             } else {
                 var site=this.site, date=this.date;
                 var key = ['!q:'+site.id, date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
-                Project.getRecordings(key, {show:'thumbnail-path'},(function(recordings){
+                Project.getRecordings(key, {show:'thumbnail-path', limit: this.limit, offset: this.offset},(function(recordings){
                     recordings = $filter('orderBy')(recordings, 'datetime');
                     recordings.forEach(function(recording){
                         recording.caption = [recording.site, moment(recording.datetime).utc().format('lll')].join(', ');
@@ -74,7 +75,7 @@ angular.module('a2.browser_recordings_by_site', [
     };
     return lovo;
 })
-.controller('a2BrowserRecordingsBySiteController', function(a2Browser, rbDateAvailabilityCache, Project, $timeout, $q, a2RecordingsBySiteLOVO){
+.controller('a2BrowserRecordingsBySiteController', function($scope, $window, a2Browser, rbDateAvailabilityCache, Project, $timeout, $q, a2RecordingsBySiteLOVO){
     var project = Project;
     var self = this;
 
@@ -162,12 +163,15 @@ angular.module('a2.browser_recordings_by_site', [
     };
     this.loading = {
         sites : false,
-        dates : false
+        dates : false,
+        records: false
     };
     this.auto={};
     this.site = null;
     this.date = null;
     this.lovo = null;
+    $scope.page = 1;
+    $scope.limit = 10;
 
     this.activate = function(){
         var defer = $q.defer();
@@ -236,14 +240,29 @@ angular.module('a2.browser_recordings_by_site', [
         return 'rec/' + recording.id;
     };
 
-    var make_lovo = function(){
+    var make_lovo = function(limit, offset){
+        self.loading.recordings = true;
         var site = self.site;
         var date = self.date;
         if(site && date){
-            self.lovo = new a2RecordingsBySiteLOVO(site, date);
+            self.lovo = self.lovo && self.lovo.length ? self.lovo.push(new a2RecordingsBySiteLOVO(site, date, limit, offset)) : new a2RecordingsBySiteLOVO(site, date, limit, offset);
         }
+        self.loading.recordings = false;
         return self.lovo;
     };
+
+    $scope.onScroll = function($event, $controller){
+        $scope.scrollElement = $controller.scrollElement;
+        var scrollTop = $controller.scrollElement.scrollTop();
+        var scrollHeight = $controller.scrollElement[0].scrollHeight;
+        var elementHeight = $controller.scrollElement.height();
+        var diff = scrollTop + elementHeight > scrollHeight * 0.8;
+        if (diff) {
+            if (self.loading.recordings === true) return;
+            a2Browser.setLOVO(make_lovo($scope.limit, $scope.page*$scope.limit));
+            $scope.page += 1;
+        }
+    }
 
     this.set_dates_display_year = function(new_display_year){
         this.dates.display_year = new_display_year;
@@ -272,14 +291,14 @@ angular.module('a2.browser_recordings_by_site', [
             });
         });
     };
-    
+
     this.set_date = function(date){
         if(!self.active){ return; }
-        
+
         this.yearpickOpen = false;
         var site = this.site;
         this.date = date;
-        
+
         if(site && date) {
             var isNewSiteAndDate = function() {
                 return (
@@ -290,14 +309,15 @@ angular.module('a2.browser_recordings_by_site', [
                     site.id === this.lovo.site.id
                 );
             };
-            
+
             if(isNewSiteAndDate()){
                 a2Browser.setLOVO(self.lovo);
             }
             else {
-                a2Browser.setLOVO(make_lovo());
+                console.log('first make_lovo', $scope.limit, $scope.page*$scope.limit);
+                a2Browser.setLOVO(make_lovo($scope.limit, $scope.page*$scope.limit));
             }
         }
-        
+
     };
 });
