@@ -1,17 +1,49 @@
 <div class="row" style="margin-top:10px;">
-    <div class="col-md-2">
-        <div class="big-count">
-            <i ng-if="newUsers === undefined" class="fa fa-spinner fa-spin"></i>
-            <span class="number" ng-if="newUsers !== undefined" title="{{newUsers}}">{{ newUsers }}</span>
-            <span class="text">New users today</span>
+    <div class="col-md-6">
+        <div class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-4">
+                <div class="big-count">
+                    <i ng-if="newUsers === undefined" class="fa fa-spinner fa-spin"></i>
+                    <span class="number" ng-if="newUsers !== undefined" title="{{ newUsers }}">{{ newUsers }}</span>
+                    <span class="text">New users today</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="big-count">
+                    <i ng-if="newProjects === undefined" class="fa fa-spinner fa-spin"></i>
+                    <span class="number" ng-if="newProjects !== undefined" title="{{ newProjects }}">{{ newProjects }}</span>
+                    <span class="text">New projects today</span>
+                </div>
+            </div>
+            <div class="col-md-2"></div>
         </div>
-        <div class="big-count">
-            <i ng-if="newProjects === undefined" class="fa fa-spinner fa-spin"></i>
-            <span class="number" ng-if="newProjects !== undefined" title="{{ newProjects }}">{{ newProjects }}</span>
-            <span class="text">New projects today</span>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="big-count">
+                    <i ng-if="allUsers === undefined" class="fa fa-spinner fa-spin"></i>
+                    <span class="number" ng-if="allUsers !== undefined" title="{{ allUsers }}">{{ allUsers }}</span>
+                    <span class="text">Number of all users</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="big-count">
+                    <i ng-if="allProjects === undefined" class="fa fa-spinner fa-spin"></i>
+                    <span class="number" ng-if="allProjects !== undefined" title="{{ allProjects }}">{{ allProjects }}</span>
+                    <span class="text">Number of all projects</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="big-count">
+                    <i ng-if="allSites === undefined" class="fa fa-spinner fa-spin"></i>
+                    <span class="number" ng-if="allSites !== undefined" title="{{ allSites }}">{{ allSites }}</span>
+                    <span class="text">Number of all sites</span>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-10">
+    
+    <div class="col-md-6">
         <!-- <div style="background-color:#bbb; height:300px; margin: 10px">
             Activity on the last 7 days
         </div> -->

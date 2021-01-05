@@ -29,6 +29,9 @@ angular.module('a2.admin.dashboard', [
             $scope.newUsers = data.newUsers;
             $scope.newProjects = data.newProjects;
             $scope.Jobs = data.jobsStatus;
+            $scope.allUsers = data.allUsers;
+            $scope.allSites = data.allSites;
+            $scope.allProjects = data.allProjects;
         });
 
     $scope.getSystemSettings = function() {

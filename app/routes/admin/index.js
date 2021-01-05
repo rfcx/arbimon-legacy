@@ -37,6 +37,9 @@ router.get('/dashboard-stats', function(req, res, next) {
         model.jobs.status,
         model.news.countProjectsCreatedToday,
         model.users.countCreatedToday,
+        model.users.countAllUsers,
+        model.sites.countAllSites,
+        model.projects.countAllProjects
     ], 
     function(err, results) {
         if(err) return next(err);
@@ -46,6 +49,9 @@ router.get('/dashboard-stats', function(req, res, next) {
             jobsStatus: results[0],
             newProjects: results[1][0][0].count,
             newUsers: results[2][0][0].count,
+            allUsers: results[3][0][0].count,
+            allSites: results[4][0][0].count,
+            allProjects: results[5][0][0].count,
         };
         
         res.json(stats);

@@ -684,6 +684,13 @@ var Sites = {
           }
 
         return rp(options).then(({ body }) => body)
+    },
+    
+    countAllSites: function(callback) {
+        var q = 'SELECT count(*) AS count \n'+
+                'FROM `sites`';
+
+        queryHandler(q, callback);
     }
 };
 
