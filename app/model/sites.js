@@ -691,6 +691,14 @@ var Sites = {
                 'FROM `sites`';
 
         queryHandler(q, callback);
+    },
+    
+    countSitesToday: function(callback) {
+        var q = 'SELECT count(*) AS count \n'+
+                'FROM `sites` \n' +
+                'WHERE DATE(created_at) = DATE(NOW())';
+
+        queryHandler(q, callback);
     }
 };
 

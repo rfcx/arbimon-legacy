@@ -32,6 +32,7 @@ angular.module('a2.admin.dashboard', [
             $scope.allUsers = data.allUsers;
             $scope.allSites = data.allSites;
             $scope.allProjects = data.allProjects;
+            $scope.newSites = data.newSites;
         });
 
     $scope.getSystemSettings = function() {

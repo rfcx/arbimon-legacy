@@ -39,7 +39,8 @@ router.get('/dashboard-stats', function(req, res, next) {
         model.users.countCreatedToday,
         model.users.countAllUsers,
         model.sites.countAllSites,
-        model.projects.countAllProjects
+        model.projects.countAllProjects,
+        model.sites.countSitesToday
     ], 
     function(err, results) {
         if(err) return next(err);
@@ -52,6 +53,7 @@ router.get('/dashboard-stats', function(req, res, next) {
             allUsers: results[3][0][0].count,
             allSites: results[4][0][0].count,
             allProjects: results[5][0][0].count,
+            newSites: results[6][0][0].count
         };
         
         res.json(stats);
