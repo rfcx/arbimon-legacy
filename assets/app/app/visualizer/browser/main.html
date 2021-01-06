@@ -19,12 +19,12 @@
     </div>
     <div class="row">
         <div class="col-sm-12">
-            <div class="nav nav-pills nav-stacked visobj-list" role="menu">
+            <div class="nav nav-pills nav-stacked visobj-list" role="menu" a2-scroll="onScroll($event, $controller)" a2-infinite-scroll-distance="10">
                 <div class="visobj-list-item" ng-show="browser.loading.times">
                     <i class="fa fa-spinner fa-spin"></i>
                     Loading {{browser.type.vobject_type | plural}}
                 </div>
-                
+
                 <div class="visobj-list-item" ng-show="!browser.loading.times && !browser.lovo.list.length ">
                     <p ng-if="browser.type.name == 'rec'">
                         Please, select a site and a date to browse
@@ -36,7 +36,7 @@
                         No soundscapes found
                     </p>
                 </div>
-                
+
                 <div class="visobj-list-item"
                     ng-hide="browser.loading.times"
                     ng-repeat="visobj in browser.lovo.list"
@@ -45,6 +45,9 @@
                     ng-click="browser.setVisObj(visobj) | trackEvent:'Visualizer-Main':'setting visobj'"
                     ng-include="browser.visobjectTypes[browser.lovo.object_type].cardTemplate"
                 >
+                </div>
+                <div class="seconds-div-center py-5" ng-show="browser.lovo.loading && browser.lovo.list.length">
+                    <i class="fa fa-spinner fa-spin" style="font-size: 22px;"></i>
                 </div>
             </div>
         </div>
