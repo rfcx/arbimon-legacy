@@ -58,7 +58,8 @@ var ClusteringJobs = {
         }, dbpool.query(
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
-            "WHERE " + constraints.join(" AND ")
+            "WHERE " + constraints.join(" AND ") + "\n" +
+            "ORDER BY timestamp DESC"
         ))
     },
 

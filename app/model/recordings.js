@@ -319,7 +319,7 @@ var Recordings = {
         }).nodeify(callback);
     },
     findByRecordingId: function (recording_id, callback) {
-        const query = 'SELECT uri, sample_rate, duration FROM recordings WHERE recording_id = ' 
+        const query = 'SELECT uri, sample_rate, duration FROM recordings WHERE recording_id = '
             + dbpool.escape(recording_id) + ' LIMIT 1';
         return queryHandler(query, function(err, rows) {
             if (err) { callback(err); return; }

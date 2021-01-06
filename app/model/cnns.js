@@ -122,8 +122,8 @@ var CNN = {
             (projection.length ? ","+projection.join(",")+"\n" : "") +
             "FROM " + tables.join("\n") + "\n" +
             (constraints.length ? ("WHERE " + constraints.join(" \n  AND ")) : "") +
-            (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "")
-
+            (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "") +
+            " ORDER BY timestamp DESC";
 
         return postprocess.reduce((_, fn) => {
             return _.then(fn);
@@ -192,7 +192,7 @@ var CNN = {
         if (callback){callback()};
     },
     listResults: function (job_id, options) {
-        
+
         var constraints = [],
             projection = [];
         var postprocess = [];
@@ -261,7 +261,7 @@ var CNN = {
             return _.then(fn);
         }, dbpool.query(queryStr, data))
     },
-    
+
     /** Deletes a pattern matching results.
      * @param {int} cnnId
      * @return {Promise} resolved after deleting the pattern matching
@@ -279,7 +279,7 @@ var CNN = {
         "FROM cnn_results_rois CRR\n" +
         "JOIN recordings R ON CRR.recording_id = R.recording_id\n" +
         "WHERE CRR.cnn_result_roi_id = ?";
-        
+
         return dbpool.query(
             query, [
                 roiId
@@ -413,7 +413,7 @@ var CNN = {
             "R.`site_id`",
             'SUBSTRING_INDEX(R.`uri`, "/", -1) as `recording`',
             'S.`name` as `site`',
-            
+
         ];
 
         if (options.humanValidated) {
@@ -500,7 +500,7 @@ var CNN = {
             (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "") +
             "\nORDER BY CRR.`species_id`, R.`site_id`" +
             (limits ? ("\nLIMIT " + limits.limit + " OFFSET " + limits.offset) : "");
-        
+
         if (options.return_sql) {
             return {queryStr: queryStr, data: data};
         }

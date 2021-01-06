@@ -129,7 +129,8 @@ var Templates = {
         return dbpool.query(
             "SELECT " + select.join(",\n") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
-            "WHERE " + constraints.join("\nAND ")
+            "WHERE " + constraints.join("\nAND ") + "\n" +
+            "ORDER BY date_created DESC"
         );
     },
 

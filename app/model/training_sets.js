@@ -76,7 +76,8 @@ var TrainingSets = {
                 "FROM training_sets TS \n" +
                 "JOIN training_set_types TST ON TS.training_set_type_id = TST.training_set_type_id \n" +
                 "LEFT JOIN training_sets_roi_set TSRS ON TS.training_set_id = TSRS.training_set_id \n" +
-                "WHERE " + constraints.join(" \nAND ");
+                "WHERE " + constraints.join(" \nAND ") + " \n" +
+                "ORDER BY TS.date_created DESC";
 
         return q.ninvoke(dbpool, 'queryHandler', sql).get(0).nodeify(callback);
     },
