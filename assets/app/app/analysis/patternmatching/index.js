@@ -50,7 +50,7 @@ angular.module('a2.analysis.patternmatching', [
         $scope.showInfo = true;
         $scope.splitAllSites = false;
 
-        return a2PatternMatching.list().then(function(data) {
+        return a2PatternMatching.list({completed: true}).then(function(data) {
             $scope.patternmatchingsOriginal = data;
             $scope.patternmatchingsData = data;
             $scope.infoInfo = "";

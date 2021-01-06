@@ -12,8 +12,14 @@ angular.module('a2.srv.patternmatching', [
         getState : function() {
             return saveData;
         },
-        list: function(callback) {
-            return $http.get('/api/project/'+Project.getUrl()+'/pattern-matchings').then(function(response){
+        list: function(opts, callback) {
+            var config = {
+                params: {}
+            };
+            if (opts && opts.completed) {
+                config.params.completed = opts.completed;
+            }
+            return $http.get('/api/project/'+Project.getUrl()+'/pattern-matchings', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },
