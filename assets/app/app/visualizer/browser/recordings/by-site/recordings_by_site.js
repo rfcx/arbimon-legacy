@@ -18,41 +18,64 @@ angular.module('a2.browser_recordings_by_site', [
 })
 .service('a2RecordingsBySiteLOVO', function($q, Project, $filter){
     var lovo = function(site, date, limit, offset){
+        this.loading = false;
         this.initialized = false;
         this.site = site;
         this.date = date;
         this.object_type = "recording";
-        this.offset = offset|0;
+        this.offset = offset || 0;
         this.limit = limit;
-        this.order  = 'datetime';
-        this.count  = 0;
-        this.list   = [];
+        this.order = 'datetime';
+        this.count = 0;
+        this.list = [];
+        this.page = 0;
+        this.finished = false;
     };
     lovo.prototype = {
-        initialize: function(){
+        initialize: function() {
             var d = $q.defer();
-            if(this.initialized){
+            if(this.initialized) {
                 d.resolve(true);
             } else {
-                var site=this.site, date=this.date;
-                var key = ['!q:'+site.id, date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
-                Project.getRecordings(key, {show:'thumbnail-path', limit: this.limit, offset: this.offset},(function(recordings){
-                    recordings = $filter('orderBy')(recordings, 'datetime');
-                    recordings.forEach(function(recording){
-                        recording.caption = [recording.site, moment(recording.datetime).utc().format('lll')].join(', ');
-                        recording.vaxis = {
-                            font:'7px', color:'#333333',
-                            range:[0, recording.sample_rate/2000],
-                            count:5,
-                            unit:''
-                        };
-                    });
-                    this.list = recordings;
-                    this.count = recordings.length;
-                    d.resolve(false);
-                }).bind(this));
+                return this.loadNext()
             }
             return d.promise;
+        },
+        getRecordings : function(limit, offset) {
+            var d = $q.defer();
+            this.limit = limit, this.offset = offset;
+            var site=this.site, date=this.date;
+            var key = ['!q:'+site.id, date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
+            this.loading = true;
+            Project.getRecordings(key, {show:'thumbnail-path', limit: limit, offset: offset},(function(recordings){
+                recordings = $filter('orderBy')(recordings, 'datetime');
+                recordings.forEach(function(recording){
+                    recording.caption = [recording.site, moment(recording.datetime).utc().format('lll')].join(', ');
+                    recording.vaxis = {
+                        font:'7px', color:'#333333',
+                        range:[0, recording.sample_rate/2000],
+                        count:5,
+                        unit:''
+                    };
+                });
+                if (recordings && recordings.length) {
+                    this.list.push.apply(this.list, recordings)
+                    this.page++
+                }
+                else {
+                    this.finished = true;
+                }
+                this.count += recordings.length;
+                this.loading = false;
+                d.resolve(false);
+            }).bind(this));
+            return d.promise;
+        },
+        loadNext: function () {
+            if (this.finished) {
+                return $q.defer().resolve(false);
+            }
+            return this.getRecordings(this.limit, this.page * this.limit);
         },
         find : function(recording){
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
@@ -170,7 +193,6 @@ angular.module('a2.browser_recordings_by_site', [
     this.site = null;
     this.date = null;
     this.lovo = null;
-    $scope.page = 1;
     $scope.limit = 10;
 
     this.activate = function(){
@@ -240,14 +262,12 @@ angular.module('a2.browser_recordings_by_site', [
         return 'rec/' + recording.id;
     };
 
-    var make_lovo = function(limit, offset){
-        self.loading.recordings = true;
+    var make_lovo = function(){
         var site = self.site;
         var date = self.date;
         if(site && date){
-            self.lovo = self.lovo && self.lovo.length ? self.lovo.push(new a2RecordingsBySiteLOVO(site, date, limit, offset)) : new a2RecordingsBySiteLOVO(site, date, limit, offset);
+            self.lovo = new a2RecordingsBySiteLOVO(site, date, $scope.limit);
         }
-        self.loading.recordings = false;
         return self.lovo;
     };
 
@@ -256,11 +276,10 @@ angular.module('a2.browser_recordings_by_site', [
         var scrollTop = $controller.scrollElement.scrollTop();
         var scrollHeight = $controller.scrollElement[0].scrollHeight;
         var elementHeight = $controller.scrollElement.height();
-        var diff = scrollTop + elementHeight > scrollHeight * 0.8;
+        var diff = scrollTop + elementHeight > scrollHeight * 0.6;
         if (diff) {
-            if (self.loading.recordings === true) return;
-            a2Browser.setLOVO(make_lovo($scope.limit, $scope.page*$scope.limit));
-            $scope.page += 1;
+            if (self.lovo.loading === true) return;
+            self.lovo.loadNext();
         }
     }
 
@@ -314,8 +333,7 @@ angular.module('a2.browser_recordings_by_site', [
                 a2Browser.setLOVO(self.lovo);
             }
             else {
-                console.log('first make_lovo', $scope.limit, $scope.page*$scope.limit);
-                a2Browser.setLOVO(make_lovo($scope.limit, $scope.page*$scope.limit));
+                a2Browser.setLOVO(make_lovo());
             }
         }
 
