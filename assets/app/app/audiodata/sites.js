@@ -197,7 +197,7 @@ angular.module('a2.audiodata.sites', [
                 $scope.sites = sites;
             });
 
-            var message = (action == "update") ? "Site updated" : "Ste created";
+            var message = (action == "update") ? "Site updated" : "Site created";
 
             notify.log(message);
         });
