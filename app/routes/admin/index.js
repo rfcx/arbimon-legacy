@@ -36,11 +36,11 @@ router.get('/dashboard-stats', function(req, res, next) {
     async.series([
         model.jobs.status,
         model.news.countProjectsCreatedToday,
+        model.sites.countSitesToday,
         model.users.countCreatedToday,
-        model.users.countAllUsers,
-        model.sites.countAllSites,
         model.projects.countAllProjects,
-        model.sites.countSitesToday
+        model.sites.countAllSites,
+        model.users.countAllUsers
     ], 
     function(err, results) {
         if(err) return next(err);
@@ -49,11 +49,11 @@ router.get('/dashboard-stats', function(req, res, next) {
         var stats = {
             jobsStatus: results[0],
             newProjects: results[1][0][0].count,
-            newUsers: results[2][0][0].count,
-            allUsers: results[3][0][0].count,
-            allSites: results[4][0][0].count,
-            allProjects: results[5][0][0].count,
-            newSites: results[6][0][0].count
+            newSites: results[2][0][0].count,
+            newUsers: results[3][0][0].count,
+            allProjects: results[4][0][0].count,
+            allSites: results[5][0][0].count,
+            allUsers: results[6][0][0].count
         };
         
         res.json(stats);
