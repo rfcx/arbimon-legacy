@@ -109,6 +109,45 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.loading = true;
     $scope.toggleMenu = false;
     $scope.infopanedata = '';
+    $scope.selectedClusters = null;
+    var timeout;
+    $scope.decrementClusters = function() {
+        if ($scope.selectedClusters === 1) return
+        $scope.selectedClusters -= 1;
+        $scope.selectClusters($scope.selectedClusters-1);
+    }
+    $scope.incrementClusters = function() {
+        if ($scope.selectedClusters === $scope.layout.shapes.length) return
+        $scope.selectedClusters += 1;
+        $scope.selectClusters($scope.selectedClusters-1);
+    }
+    $scope.selectClusters = function(items) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            if (items !== null) {
+                console.log('selectedClusters', items);
+                $("#plotly .select-outline").remove();
+                $scope.layout.shapes.forEach((shape) => {
+                    shape.line.color = shape.fillcolor;
+                    shape.line['stroke-width'] = 1;
+                });
+                $scope.points = [];
+                $scope.layout.shapes.forEach((shape, i) => {
+                    if (i <= items) {
+                        $scope.layout.shapes[i].line.color = '#ffffff';
+                        Plotly.relayout(document.getElementById('plotly'), {
+                            '$scope.layout.shapes[i].line.color': '#ff0000',
+                            '$scope.layout.shapes[i].line.stroke-width': 4
+                        });
+                        // collect all selected clusters' points indexes in the points array
+                        $scope.points.push($scope.clusters[i].aed.map((_,i) => {return i}));
+                        $scope.toggleMenu = true;
+                        $scope.$apply();
+                    }
+                });
+            }
+        }, 2000);
+    };
     var getClusteringDetails = function() {
         a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
             if (data) $scope.job_details = data;
@@ -208,7 +247,7 @@ angular.module('a2.analysis.clustering-jobs', [
             });
         }
         // shapes layout
-        var layout = {
+        $scope.layout = {
             shapes: shapes,
             height: 400,
             width: el ? el.offsetWidth : 1390,
@@ -239,7 +278,7 @@ angular.module('a2.analysis.clustering-jobs', [
             return color;
         }
         // make random color for shapes and points
-        layout.shapes.forEach((shape, i) => {
+        $scope.layout.shapes.forEach((shape, i) => {
             var color = random_color();
             data[i].marker = {
                 color: color
@@ -254,7 +293,7 @@ angular.module('a2.analysis.clustering-jobs', [
         $scope.resetSelect = function () {
             $scope.toggleMenu = false;
             $scope.$apply();
-            layout.shapes.forEach((shape) => {
+            $scope.layout.shapes.forEach((shape) => {
                 shape.line.color = shape.fillcolor;
                 shape.line['stroke-width'] = 1;
             });
@@ -269,7 +308,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 displaylogo: false,
                 hoverdistance: 5
             }
-            Plotly.newPlot(el, data, layout, config);
+            Plotly.newPlot(el, data, $scope.layout, config);
             // click on a point
             el.on('plotly_click', function(data) {
                 console.log('plotly_click', data);
@@ -280,13 +319,13 @@ angular.module('a2.analysis.clustering-jobs', [
                     y: data.points[0].y,
                     name: data.points[0].fullData.name
                 };
-                layout.shapes.forEach((shape, i) => {
+                $scope.layout.shapes.forEach((shape, i) => {
                     if (($scope.points.x >= shape.x0) && ($scope.points.x <= shape.x1) &&
                         ($scope.points.y >= shape.y0) && ($scope.points.y <= shape.y1)) {
-                        layout.shapes[i].line.color = '#ffffff';
+                        $scope.layout.shapes[i].line.color = '#ffffff';
                         Plotly.relayout(el, {
-                            'layout.shapes[i].line.color': '#ff0000',
-                            'layout.shapes[i].line.stroke-width': 4
+                            '$scope.layout.shapes[i].line.color': '#ff0000',
+                            '$scope.layout.shapes[i].line.stroke-width': 4
                         });
                         $scope.toggleMenu = true;
                         $scope.$apply();
@@ -301,6 +340,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 $scope.resetSelect();
                 console.log('plotly_selected', data);
                 $scope.points = [];
+                // collect selected points indexes in the points array
                 if (data && data.points && data.points.length) {
                     data.points.forEach(point => {
                         var cluster = point.curveNumber;
@@ -319,6 +359,7 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.onGridViewSelected = function () {
         $scope.toggleMenu = false;
+        $scope.selectedClusters = null;
         $scope.showViewGridPage = true;
         if ($scope.points.length) {
             $scope.gridContext = {};
