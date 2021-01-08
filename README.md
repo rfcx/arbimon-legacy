@@ -1,9 +1,8 @@
-# Arbimon II
-Bio-Acoustic Analyzer
+# Arbimon - Acoustic Analyzer
 
----
+## Getting started
 
-### Local Dev Setup (with Docker)
+### Local Dev Setup with Docker
 
 The recommended dev setup is to use docker-compose to create your web and database containers. By default, docker-compose will create and seed a new database using the migrations and seeds in `scripts/db`.
 
@@ -95,7 +94,16 @@ If you use Windows it's recommended to use WSL (Windows Subsystem for Linux) [ht
     - This will output all debug messages from the express framework as well as the mysql connections and http packages. Other node packages can be added, or subtracted from the list as needed.
 
 
-### Deployment
+## Deployment
+
+### Kubernetes
+
+The yaml configuration files are in `scripts/k8s`.
+
+_TODO: How do services get deployed? How do we change configuration? How do we manually deploy to testing namespace?_
+
+
+### Deployment to staging or production on AWS (sieve-analytics account)
 
 1. SSH into the Bastion tunnel server
     - `ssh ec2-user@54.159.71.198 -i ~/.ssh/arbimon2-bastion.pem`
@@ -139,9 +147,32 @@ Additional steps for production (to support auto-scaling of the frontend)
 10. If there were more than 1 EC2 instances before deployment, terminate rest instances (but not the one that was used for image creation).
     ![production-deployment-4](https://user-images.githubusercontent.com/2122991/96923854-84d5aa80-14ba-11eb-996d-97cb6cb9a604.png)
 
----
 
-## Development
+## Practices
+
+### Configuration
+
+All configuration is stored in `config/` as json files. The files stored in git are a template or the defaults for the configuration. For local development, create `xyz.local.json` which will overide `xyz.json`.
+
+Configuration can also be passed in as *environment variables* and will override the values specified in `xyz.local.json` and `xyz.json`. The format of each environment variable is `FILENAME_KEY` (filename + '_' + key + convert to uppercase).
+
+Take the example `db.json`, which contains json keys for `host`, `database`, `password`:
+
+```
+{
+    "host": "db.arb.rfcx.org",
+    "user": "super",
+    "password": "secret",
+}
+```
+
+The equivalent environment variables are:
+```
+DB_HOST=db.arb.rfcx.org
+DB_USER=super
+DB_PASSWORD=secret
+```
+
 
 ### Database migrations
 
@@ -153,132 +184,9 @@ Periodically merge all the migrations into a single file `000-base-tables.sql`.
 
 The seed files in `scripts/db` are separated into reference data, species data and test data. The seed files must be kept up-to-date with any migrations that are added because they are always run after all the migrations (in docker-compose local environment).
 
----
-## Legacy README
+### Python
 
-### Quick Setup:
- - install system dependencies all
-   ```
-   curl -sL https://deb.nodesource.com/setup_0.10 | sudo bash -
-   sudo apt-get install -y python-pip sox libsox-fmt-mp3 nodejs libmysqlclient-dev python-dev libpng12-dev libfreetype6-dev python-virtualenv pkg-config
-   ```
-
-
- - install python dependencies, create python virtualenv
-    ```
-    sh scripts/setup/010-make_virtual_env.sh
-    ```
-
-
- - install backend dependencies, frontend dependencies and build the app
-    ```
-    npm i && bower i
-    grunt prod
-    ```
-
- - run app (the app will be available in http://localhost:3000)
-    ```
-    npm start
-    ```
-
-
-### System dependencies:
-
- - nodejs 0.10.x
-   ```
-   curl -sL https://deb.nodesource.com/setup_0.10 | sudo bash -
-   sudo apt-get install -y nodejs
-   ```
-
- - python 2.7 - comes with Ubuntu
-
-
- - pip - python dependencies
-   ```
-   sudo apt-get install pip
-   or
-   sudo apt-get install python-pip
-   ```
-
-
- - sox - audio conversion
-   ```
-   sudo apt-get install sox
-   sudo apt-get install libsox-fmt-mp3
-   ```
-
-
- - MySQL-python dependencies
-   ```
-   sudo apt-get install libmysqlclient-dev python-dev
-   ```
-
- - python virtualenv
-   ```
-   sudo apt-get install virtualenv
-   ```
-
- - matplotlib dependencies
-   ```
-   sudo apt-get install libpng12-dev libfreetype6-dev pkg-config
-   ```
-
- - node global dependencies(`sudo npm install -g <package>`):
-    - bower
-    - grunt-cli
-
-
- - individual python dependencies (`sudo pip install`):
-    - MySQL-python
-    - boto
-    - pypng
-    - matplotlib
-    - virtualenv
-
----
-
-### Build for development
-
-install backend and dev dependecies
-
-`npm install`
-
-install frontend dependencies
-
-`bower install`
-
-build app
-
-`grunt` or `grunt build`
-
-run
-
-`npm start` and the app will be available in localhost:3000
-
-run server and watch
-
-`grunt server` everytime a file changes the project will rebuild and/or server will restart
-
-
-### Other tasks
-
-removes packages and builds (node_modules, bower_components, public/assets)
-
-`grunt clean`
-
-to run unit tests
-
-`grunt test`
-
-dependecy graphs (requires Graphviz installed)
-
-`grunt angular-depends` for frontend
-`npm run dep-graph` for backend (need npm package `madge`)
-
-
-### Dependencies
-
-How to install the python virtual environment
+Some parts of the Node.js app call Python. For this to work locally, you will need Python 2.7 and to (pip) install the dependencies from requirements.txt. The following script might be useful, or `scripts/setup/010-make_virtual_env.sh`. _TODO: complete the docs_
 
 ```sh
     cd ~/apps/arbimon2
@@ -292,7 +200,3 @@ How to install the python virtual environment
     pip install -r requirements.txt
     echo `realpath lib` > .env/lib/python2.7/site-packages/arbimon-server-libs.pth
 ```
-### Git Workflow
-
-1. Branch from dev
-  - `
