@@ -244,5 +244,8 @@ angular.module('a2.audiodata.recordings', [
             }
         });
     };
+    $scope.changePlaylistName = function() {
+        $scope.errMess = null;
+    }
 })
 ;
