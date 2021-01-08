@@ -491,7 +491,7 @@ var PatternMatchings = {
      */
     delete: function (patternMatchingId) {
         return dbpool.query(
-            "UPDATE pattern_matchings SET deleted=1, citizen_scientist=0, cs_expert=0 WHERE pattern_matching_id = ?", [patternMatchingId]
+            "DELETE from pattern_matchings WHERE pattern_matching_id = ?", [patternMatchingId]
         );
     },
 
