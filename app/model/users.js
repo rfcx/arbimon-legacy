@@ -372,6 +372,13 @@ var Users = {
 
         queryHandler(q, callback);
     },
+    
+    countAllUsers: function(callback) {
+        var q = 'SELECT count(*) AS count \n'+
+                'FROM `users`';
+
+        queryHandler(q, callback);
+    },
 
     getAddress: function(userId, callback) {
         var q = "SELECT * FROM addresses WHERE user_id = ?";
