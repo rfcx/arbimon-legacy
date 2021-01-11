@@ -172,7 +172,7 @@ angular.module('a2.jobs', [
         $http.get('/api/project/' + url + '/jobs/progress')
             .success(function(data) {
                 data.forEach(item => {
-                    if (item.job_type_id === 1 && item.completed === 0 && item.remarks.includes('validations')) {
+                    if (item.job_type_id === 1 && item.completed === 0 && item.state === 'error') {
                         item.state = 'error: insufficient validations';
                     }
                     if (item.job_type_id === 2 && item.completed === 0 && item.state === 'completed') {
