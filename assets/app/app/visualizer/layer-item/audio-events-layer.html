@@ -1,14 +1,14 @@
 <div class="layer">
-  <h5 class="collapse-title" ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Audio-Events':'toggle layer'">
-      <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
-      Audio Events
-  </h5>
-  <div ng-show="layer.is_open">
-      <div ng-if="layer.audio_events.audioEvents && !layer.audio_events.audioEvents.length">
-          There are no audio events in this recording.
-      </div>
-      <div ng-if="layer.audio_events.audioEvents && layer.audio_events.audioEvents.length">
-            There {{ layer.audio_events.audioEvents.length > 1 ? 'are' : 'is'}} {{ layer.audio_events.audioEvents.length }} audio events in this recording.
-      </div>
-  </div>
+    <h5 class="collapse-title" ng-click="layer.is_open = !layer.is_open  | trackEvent:'Visualizer-Audio-Events':'toggle layer'">
+        <i class="fa" ng-class="layer.is_open ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+        Audio Events
+    </h5>
+    <div ng-show="layer.is_open">
+        <div ng-if="layer.audio_events.audioEvents && !layer.audio_events.audioEvents.length">
+            There are no audio events in this {{ layer.audio_events.isPlaylist? 'playlist' : 'recording' }}.
+        </div>
+        <div ng-if="layer.audio_events.audioEvents && layer.audio_events.audioEvents.length">
+                There {{ layer.audio_events.audioEvents.length > 1 ? 'are' : 'is'}} {{ layer.audio_events.audioEvents.length }} audio events in this {{ layer.audio_events.isPlaylist? 'playlist' : 'recording' }}.
+        </div>
+    </div>
 </div>

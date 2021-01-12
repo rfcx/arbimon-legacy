@@ -48,3 +48,12 @@ CREATE TABLE `job_params_audio_event_clustering` (
   CONSTRAINT `job_params_aud_ev_cl_ifbk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `job_params_aud_ev_cl_ifbk_3` FOREIGN KEY (`project_id`) REFERENCES `projects` (`project_id`)
 );
+
+CREATE TABLE `playlist_aed` (
+  `playlist_id` INT(10) UNSIGNED NOT NULL,
+  `aed_id` BIGINT(20) UNSIGNED NOT NULL,
+  KEY `playlist_id` (`playlist_id`),
+  KEY `aed_id` (`aed_id`),
+  CONSTRAINT `playlist_id` FOREIGN KEY (`playlist_id`) REFERENCES `playlists` (`playlist_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `aed_id` FOREIGN KEY (`aed_id`) REFERENCES `audio_event_detections_clustering` (`aed_id`) ON DELETE CASCADE ON UPDATE CASCADE
+);

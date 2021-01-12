@@ -1,6 +1,7 @@
 angular.module('a2.analysis.clustering-jobs', [
     'ui.bootstrap',
     'a2.srv.clustering-jobs',
+    'a2.srv.playlists',
     'a2.services',
     'a2.permissions',
     'a2.directive.audio-bar',
@@ -482,6 +483,12 @@ angular.module('a2.analysis.clustering-jobs', [
                 }
             }
             console.log('filtered clusters', clusters);
+            $scope.countClustersDetected = Object.keys(clusters).length;
+            $scope.countAudioEventDetected = Object.values(clusters)
+                .map((cluster => {return cluster.aed.length}))
+                .reduce(function(sum, current) {
+                return sum + current;
+            }, 0);
             drawClusteringPoints(clusters);
         });
     };
@@ -567,7 +574,7 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, a2ClusteringJobs, a2AudioBarService, Project) {
+.controller('GridViewCtrl' , function($scope, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
     $scope.loading = true;
     $scope.infopanedata = '';
 
@@ -579,7 +586,7 @@ angular.module('a2.analysis.clustering-jobs', [
         ]
     };
     $scope.search = $scope.lists.search[0];
-
+    $scope.playlistData = {};
     $scope.aedData = {
         count: 0,
         id: []
@@ -662,5 +669,67 @@ angular.module('a2.analysis.clustering-jobs', [
         var projecturl = Project.getUrl();
         var box = ['box', roi.time_min, roi.frequency_min, roi.time_max, roi.frequency_max].join(',');
         return roi ? '/visualizer/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
+    };
+
+    $scope.togglePopup = function() {
+        $scope.isPopupOpened = !$scope.isPopupOpened;
+        // collect seleted aed
+        if ($scope.rows && $scope.rows.length) {
+            $scope.selectedRois = {};
+            $scope.rows.forEach(row => {
+                row.rois.forEach(roi => {
+                    if (roi.selected) {
+                        if (!$scope.selectedRois[roi.recording_id]) {
+                            $scope.selectedRois[roi.recording_id] = {
+                                aed: [roi.aed_id]
+                            }
+                        }
+                        else {
+                            $scope.selectedRois[roi.recording_id].aed.push(roi.aed_id);
+                        }
+                    }
+                })
+            })
+        }
+    }
+
+    $scope.isPlaylistDataValid = function() {
+        return $scope.selectedRois && Object.keys($scope.selectedRois).length && $scope.playlistData.playlistName && $scope.playlistData.playlistName.trim().length > 0;
+    }
+
+    $scope.closePopup = function() {
+        $scope.isPopupOpened = false;
+    }
+
+    $scope.savePlaylist = function() {
+        if (Object.keys($scope.selectedRois).length) {
+            $scope.isSavingPlaylist = true;
+            var aeds = [];
+            Object.values($scope.selectedRois).forEach(obj => {
+                obj.aed.forEach(el=>{ aeds.push(el) })
+            })
+            // create playlist
+            a2Playlists.create({
+                playlist_name: $scope.playlistData.playlistName,
+                params: Object.keys($scope.selectedRois),
+                isManuallyCreated: true
+            },
+            function(data) {
+                console.log('data', data);
+                $scope.isSavingPlaylist = false;
+                $scope.closePopup();
+                 // attach aed to playlist
+                if (data && data.playlist_id) {
+                    a2Playlists.attachAedToPlaylist({
+                        playlist_id: data.playlist_id,
+                        aed: aeds
+                    },
+                    function(data) {
+                        $scope.playlistData = {};
+                        notify.log('Audio event detections are saved in the playlist.');
+                    });
+                }
+            });
+        }
     };
 })
