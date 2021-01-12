@@ -908,7 +908,7 @@ CREATE TABLE `pattern_matchings` (
   `species_id` int(11) NOT NULL,
   `songtype_id` int(11) NOT NULL,
   `parameters` text NOT NULL,
-  `playlist_id` int(10) unsigned NOT NULL,
+  `playlist_id` int(10) unsigned DEFAULT NULL,
   `template_id` int(11) DEFAULT NULL,
   `completed` tinyint(1) NOT NULL DEFAULT '0',
   `deleted` tinyint(1) NOT NULL DEFAULT '0',
