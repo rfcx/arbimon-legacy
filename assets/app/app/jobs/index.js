@@ -39,7 +39,7 @@ angular.module('a2.jobs', [
         $scope.infoInfo = "";
         $scope.showInfo = false;
     };
-    
+
     // $scope.cancel = function(job) {
     //     var jobId = job.job_id;
     //     $scope.infoInfo = "Loading...";
@@ -51,7 +51,7 @@ angular.module('a2.jobs', [
     //         cancelJob(jobId);
     //     }
     // };
-    
+
     // var cancelJob = function(jobId) {
     //     $http.get('/api/project/' + Project.getUrl() + '/jobs/cancel/' + jobId)
     //         .success(function(data) {
@@ -67,7 +67,7 @@ angular.module('a2.jobs', [
     //             notify.serverError();
     //         });
     // };
-    
+
     var hideJob = function(jobId) {
         $http.get('/api/project/' + Project.getUrl() + '/jobs/hide/' + jobId)
             .success(function(data) {
@@ -87,11 +87,11 @@ angular.module('a2.jobs', [
 
     JobsData.getJobTypes().success(function(data) {
         var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528', '#ffff00'];
-        
+
         var job_types = data.filter(function(type) {
             return type.enabled;
         });
-        
+
         $scope.job_types = {};
         $scope.job_types.types = job_types;
         $scope.job_types.show = {};
@@ -142,7 +142,7 @@ angular.module('a2.jobs', [
                 cb(vl);
             });
     };
-    
+
     $scope.hide = function(job) {
         if(!a2UserPermit.can('manage project jobs')) {
             notify.log("You do not have permission to hide jobs");
@@ -160,7 +160,7 @@ angular.module('a2.jobs', [
             hideJob(jobId);
         }
     };
-    
+
 })
 .service('JobsData', function($http, $interval, Project, $q) {
     var jobslength = 0;
@@ -168,14 +168,22 @@ angular.module('a2.jobs', [
     var job_types;
     var url = Project.getUrl();
     var intervalPromise;
-    
-    
-    // TODO update the way loop is created
-    $http.get('/api/project/' + url + '/jobs/progress').success(function(data) {
-        jobs = data;
-        jobslength = jobs.length;
-    });
-
+    updateJobs = function() {
+        $http.get('/api/project/' + url + '/jobs/progress')
+            .success(function(data) {
+                data.forEach(item => {
+                    if (item.job_type_id === 1 && item.completed === 0 && item.state === 'error') {
+                        item.state = 'error: insufficient validations';
+                    }
+                    if (item.job_type_id === 2 && item.completed === 0 && item.state === 'completed') {
+                        item.state = 'processing';
+                    }
+                })
+                jobs = data;
+                jobslength = jobs.length;
+            });
+    };
+    updateJobs();
     return {
         geturl: function() {
             return url;
@@ -190,25 +198,21 @@ angular.module('a2.jobs', [
             return $http.get('/api/jobs/types');
         },
         updateJobs: function() {
-            $http.get('/api/project/' + url + '/jobs/progress')
-                .success(function(data) {
-                    jobs = data;
-                    jobslength = jobs.length;
-                });
+            return updateJobs();
         },
         startTimer: function() {
             $interval.cancel(intervalPromise);
             if(typeof jobs != 'undefined' && jobs.length > 0) {
                 intervalPromise = $interval(function() {
                     var cancelInterval = true;
-                    
+
                     for (var i = 0; i < jobs.length; i++) {
                         if (jobs[i].percentage < 100) {
                             cancelInterval = false;
                             break;
                         }
                     }
-                    
+
                     if (cancelInterval) {
                         $interval.cancel(intervalPromise);
                     }
@@ -216,14 +220,10 @@ angular.module('a2.jobs', [
                         $interval.cancel(intervalPromise);
                     }
                     else {
-                        $http.get('/api/project/' + url + '/jobs/progress')
-                            .success(function(data) {
-                                jobs = data;
-                                jobslength = jobs.length;
-                            });
+                        updateJobs();
                     }
-                    
-                }, 1000);
+
+                }, 5000);
             }
 
         },
