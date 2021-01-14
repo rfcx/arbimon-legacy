@@ -53,7 +53,6 @@ var PatternMatchings = {
             "PM.`parameters`" ,
             "PM.`citizen_scientist`",
             "PM.`cs_expert`",
-            "J.`completed`",
             "PM.`playlist_id`", "PM.`template_id`" ,
         ];
         var tables = ["pattern_matchings PM"];
@@ -76,6 +75,7 @@ var PatternMatchings = {
         }
 
         if (options.completed !== undefined) {
+            select.push("J.`completed`");
             constraints.push('J.state = "completed"');
         }
 
