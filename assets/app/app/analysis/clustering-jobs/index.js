@@ -419,24 +419,37 @@ angular.module('a2.analysis.clustering-jobs', [
                                 $scope.selectedClusters.boxes[rec.rec_id].push(box);
                             }
                         })
+                        // clear local storage
+                        $scope.removeFromLocalStorage();
+                        var tempPlaylistData = {};
+                        tempPlaylistData.aed = $scope.selectedClusters.aed;
+                        tempPlaylistData.boxes = $scope.selectedClusters.boxes;
                         console.log('boxes', $scope.selectedClusters.boxes);
-                        $localStorage.setItem('analysis.clusters',  JSON.stringify($scope.selectedClusters.boxes));
                         // add related records to a playlist
                         var recIds = data
                             .map(rec => {
                                 return rec.rec_id;
                             })
                             .filter((id, i, a) => a.indexOf(id) === i);
-                        $scope.savePlaylist({
-                            playlist_name: 'cluster_' + recIds.join("_"),
-                            params: recIds.filter((id, i, a) => a.indexOf(id) === i),
-                            isManuallyCreated: true
-                        });
+                        tempPlaylistData.playlist = {
+                            id: 0,
+                            name: 'cluster_' + recIds.join("_"),
+                            recordings: recIds.filter((id, i, a) => a.indexOf(id) === i),
+                            count: recIds.filter((id, i, a) => a.indexOf(id) === i).length
+                        };
+                        console.log('tempPlaylistData', tempPlaylistData);
+                        $localStorage.setItem('analysis.clusters',  JSON.stringify(tempPlaylistData));
+                        $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/0?clusters';
                     }
                 }
             );
         }
     };
+    $scope.removeFromLocalStorage = function () {
+        $localStorage.setItem('analysis.clusters', null);
+        $localStorage.setItem('analysis.clusters.playlist', null);
+        $state.params.clusters = '';
+    }
     $scope.savePlaylist = function(opts) {
         a2Playlists.create(opts,
         function(data) {
