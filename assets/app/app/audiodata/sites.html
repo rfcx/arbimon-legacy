@@ -36,11 +36,6 @@
             ng-disabled="!selected || selected.imported">
             Edit
         </button>
-        <!-- <button class="btn btn-default"
-            ng-click="site_token()"
-            ng-disabled="!selected || selected.imported">
-            Link
-        </button> -->
         <button class="btn btn-default"
             ng-click="del()"
             ng-disabled="!selected">
@@ -93,11 +88,6 @@
                 {{editing ? 'Edit Site' : (creating ? 'New Site' : 'Location')}}
             </a>
         </li>
-        <!-- <li class="ng-isolate-scope" ng-class="{active:show.status, disabled:!selected.has_logs || creating}">
-            <a ng-click="set_show('status')" href="">
-                <i class="fa fa-line-chart"></i> Status
-            </a>
-        </li> -->
     </ul>
     <div ng-show="editing || creating" class="panel panel-default">
         <div class="panel-body">
