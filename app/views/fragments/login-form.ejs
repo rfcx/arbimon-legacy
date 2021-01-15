@@ -1,3 +1,7 @@
+<div class="form-group oauth-buttons text-center">
+    <a class="btn btn-rfcx btn-block" href="<%- auth0UniversalLoginUrl %>">Login with RFCx account</a>
+</div>
+<br />
 <hr class="hr-text mb-4 mt-0" data-content="EXISTING ARBIMON II USERS">
 <form role="form" ng-submit="login()">
     <div class="form-group">
@@ -15,12 +19,6 @@
     </div>
     <button class="btn btn-default btn-block" type="submit">Login</button>
     <div class="text-right mt-2"><a href="/forgot_request">Forgotten password?</a></div>
-
-    <hr class="hr-text mb-0" data-content="OR">
-
-    <div class="form-group oauth-buttons text-center">
-        <a class="btn btn-default btn-block" href="<%- auth0UniversalLoginUrl %>">Login with RFCx account</a>
-    </div>
     <br />
     <small class="text-info inline-block text-justify mt-1">
         Note: access an existing Arbimon account by logging in via an RFCx account with a matching email address.
