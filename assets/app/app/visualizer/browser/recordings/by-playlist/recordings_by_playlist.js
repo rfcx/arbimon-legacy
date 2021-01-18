@@ -47,21 +47,6 @@ angular.module('a2.browser_recordings_by_playlist', [
                 });
             }
             return d.promise.then(function(){
-                var d = $q.defer();
-                a2Playlists.getInfo(self.playlist.id, function(playlist_info){
-                    self.playlist = playlist_info;
-                    switch(self.playlist.type){
-                        case "soundscape region":
-                            self.links = [
-                                {icon:"a2-soundscape-region", tooltip:"View Soundscape Region",
-                                location:"soundscape/" + playlist_info.soundscape + "/" + playlist_info.region}
-                            ];
-                        break;
-                    }
-                    d.resolve();
-                });
-                return d.promise;
-            }).then(function(){
                 if(self.whole_list){
                     self.whole_list.forEach(self.append_extras.bind(self));
                 }
@@ -262,12 +247,6 @@ angular.module('a2.browser_recordings_by_playlist', [
         self.active = false;
     };
     this.resolve={};
-    
-    this.resolve_link = function(link){
-        if(link.location){
-            a2Browser.set_location(link.location);
-        }
-    };
 
     this.resolve_location = function(location){
         var m = /(\d+)(\/(\d+))?/.exec(location);
