@@ -1,71 +1,88 @@
 <!DOCTYPE html>
 <html ng-app="a2.cs-app">
-    <%if(url_base){%><base href="<%= url_base %>"/><%}%>
+<%if(url_base){%>
+<base href="<%= url_base %>" /><%}%>
     <% include fragments/header %>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <% include ng-permissions %>
-    <title>RFCx Arbimon - <%= project.name %><% if(card && card.name){ %> - <%= card.name %><%} %></title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<% include ng-permissions %>
+<title>RFCx Arbimon - <%= project.name %><% if(card && card.name){ %> - <%= card.name %><%} %></title>
 </head>
+
 <body ng-controller="MainCtrl">
-    <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a href="/home" class="navbar-brand">
-                    <img src="/images/rfcx-logo.png">Arbimon
-                </a>
-            </div>
-
-            <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
-                <ul class="nav navbar-nav hide-tooltip-lg">
-                    <li ui-sref="citizen-scientist.my-stats" ui-sref-active="active"><a>My Stats</a></li>
-                    <li ui-sref="citizen-scientist.patternmatching" ng-class="{active: $state.includes('citizen-scientist.patternmatching-details') || $state.includes('citizen-scientist.patternmatching')}"><a>Pattern Matching</a></li>
-                    <li ui-sref="citizen-scientist.expert" ng-class=" ('citizen-scientist.expert' | includedByState) ? 'active' : ''"
-                        ng-if="userPermit.can(['manage pattern matchings', 'view citizen scientist expert interface'])"
-                    ><a>Expert</a></li>
-                    <li ui-sref="citizen-scientist.admin.classification-stats" ng-class=" ('citizen-scientist.admin' | includedByState) ? 'active' : ''"
-                        ng-if="userPermit.can(['view project', 'manage pattern matchings', 'view citizen scientist admin interface'])"
-                    ><a>Admin</a></li>
-                    <li ui-sref="citizen-scientist.admin.classification-stats" ui-sref-active="active"  ng-if="userPermit.can(['view project', 'view citizen scientist admin interface'])" ><a>Classification Stats</a></li>
-                    <li ui-sref="citizen-scientist.admin.user-stats" ui-sref-active="active"  ng-if="userPermit.can(['view project', 'view citizen scientist admin interface'])" ><a>User Stats</a></li>
-                    <li ui-sref="citizen-scientist.admin.settings" ui-sref-active="active" ng-if="userPermit.can(['manage pattern matchings', 'view citizen scientist admin interface'])" ><a>Settings</a></li>
-                </ul>
-                <ul class="nav navbar-nav navbar-right hide-tooltip-lg">
-                    <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
-                        <a class="dropdown-toggle" dropdown-toggle>
-                            <i class="fa fa-sitemap"></i>
-                            <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>
+    <div class="page-container">
+        <div class="content-wrap">
+            <nav class="navbar navbar-default" role="navigation">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button"
+                            class="navbar-toggle collapsed">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a href="/home" class="navbar-brand">
+                            <img src="/images/rfcx-logo.png">Arbimon
                         </a>
-                    </li>
+                    </div>
+                    
+                    <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
+                        <ul class="nav navbar-nav hide-tooltip-lg">
+                            <li ui-sref="citizen-scientist.my-stats" ui-sref-active="active"><a>My Stats</a></li>
+                            <li ui-sref="citizen-scientist.patternmatching"
+                                ng-class="{active: $state.includes('citizen-scientist.patternmatching-details') || $state.includes('citizen-scientist.patternmatching')}">
+                                <a>Pattern Matching</a></li>
+                            <li ui-sref="citizen-scientist.expert"
+                                ng-class=" ('citizen-scientist.expert' | includedByState) ? 'active' : ''"
+                                ng-if="userPermit.can(['manage pattern matchings', 'view citizen scientist expert interface'])">
+                                <a>Expert</a></li>
+                            <li ui-sref="citizen-scientist.admin.classification-stats"
+                                ng-class=" ('citizen-scientist.admin' | includedByState) ? 'active' : ''"
+                                ng-if="userPermit.can(['view project', 'manage pattern matchings', 'view citizen scientist admin interface'])">
+                                <a>Admin</a></li>
+                            <li ui-sref="citizen-scientist.admin.classification-stats" ui-sref-active="active"
+                                ng-if="userPermit.can(['view project', 'view citizen scientist admin interface'])">
+                                <a>Classification Stats</a></li>
+                            <li ui-sref="citizen-scientist.admin.user-stats" ui-sref-active="active"
+                                ng-if="userPermit.can(['view project', 'view citizen scientist admin interface'])">
+                                <a>User Stats</a></li>
+                            <li ui-sref="citizen-scientist.admin.settings" ui-sref-active="active"
+                                ng-if="userPermit.can(['manage pattern matchings', 'view citizen scientist admin interface'])">
+                                <a>Settings</a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right hide-tooltip-lg">
+                            <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
+                                <a class="dropdown-toggle" dropdown-toggle>
+                                    <i class="fa fa-sitemap"></i>
+                                    <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>
+                                </a>
+                            </li>
 
-                    <% include fragments/user-dropdown %>
-                </ul>
+                            <% include fragments/user-dropdown %>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <% if(planAlert == 'expired') { %>
+            <div class="alert alert-danger" ng-hide="hideAlertBar" ng-click="hideAlertBar = true">
+                Your project data plan have expired, please renew your plan.
+                If a new plan is not selected after 30 days of the
+                due date, the project will be disable. (click to dismiss)
+                <button class="close" ng-click="hideAlertBar = true">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <% } %>
+            <div id="body">
+                <div ui-view="audiodata" ng-show="$state.includes('audiodata')"></div>
+                <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
+                <div ui-view="analysis" ng-show="$state.includes('analysis')"></div>
+                <div ui-view="citizen-scientist" ng-show="$state.includes('citizen-scientist')"></div>
+                <div ui-view></div>
             </div>
         </div>
-    </nav>
-    <% if(planAlert == 'expired') { %>
-        <div class="alert alert-danger" ng-hide="hideAlertBar" ng-click="hideAlertBar = true">
-            Your project data plan have expired, please renew your plan.
-            If a new plan is not selected after 30 days of the
-            due date, the project will be disable. (click to dismiss)
-            <button class="close" ng-click="hideAlertBar = true">
-                <i class="fa fa-times"></i>
-            </button>
-        </div>
-    <% } %>
-    <div id="body">
-        <div ui-view="audiodata"  ng-show="$state.includes('audiodata')"></div>
-        <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
-        <div ui-view="analysis"   ng-show="$state.includes('analysis')"></div>
-        <div ui-view="citizen-scientist"   ng-show="$state.includes('citizen-scientist')"></div>
-        <div ui-view></div>
+        <% include fragments/footer %>
     </div>
-
-    <% include fragments/footer %>
 </body>
+
 </html>
