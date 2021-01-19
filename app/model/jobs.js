@@ -306,7 +306,7 @@ var Jobs = {
             var jt_projections = job_type.sql && job_type.sql.report && job_type.sql.report.projections;
             var jt_tables      = job_type.sql && job_type.sql.report && job_type.sql.report.tables;
             return (
-                "SELECT J.`progress`, J.`progress_steps`, J.`job_type_id`, JT.name as type, J.`job_id`, J.state, J.last_update,\n" +
+                "SELECT J.`progress`, J.`progress_steps`, J.`job_type_id`, JT.name as type, J.`job_id`, J.state, J.remarks, J.completed, J.last_update,\n" +
                 (jt_projections && jt_projections.length ?
                     "    "+jt_projections.join(", ")+",\n" : ""
                 ) +

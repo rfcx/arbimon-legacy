@@ -218,10 +218,7 @@ router.get('/logout', function(req, res, next) {
 });
 
 router.get('/register', function(req, res) {
-    res.type('html');
-    res.render('register', {
-        needCaptcha: config('recaptcha').needed
-    });
+    res.redirect('/');
 });
 
 router.get('/activate/:hash', function(req, res, next) {

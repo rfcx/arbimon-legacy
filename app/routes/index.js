@@ -33,12 +33,7 @@ router.get('/alive', function(req, res, next) { // for health checks
 router.use('/', login);
 
 router.get('/support', function(req, res) {
-    res.type('html');
-    res.render('post-page', {
-        title: "Support",
-        content: 'support',
-        user: req.session.user
-    });
+    res.redirect(config('hosts').support);
 });
 
 router.get('/classifiers', function(req, res) {

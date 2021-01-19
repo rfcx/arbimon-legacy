@@ -119,7 +119,7 @@ _TODO: How do services get deployed? How do we change configuration? How do we m
     - `npm i` and `bower i`
     - `npm run build` to build css
 5. Restart the web server/app
-    - `pm2 restart 0` to perform restart
+    - `pm2 restart 0 --time` to perform restart
     - `pm2 list` to check that the arbimon2 process is running
 
 Additional steps for production (to support auto-scaling of the frontend)

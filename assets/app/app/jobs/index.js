@@ -88,6 +88,7 @@ angular.module('a2.jobs', [
     JobsData.getJobTypes().success(function(data) {
         var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528', '#ffff00'];
         var job_types_id = [1, 2, 4, 6, 7];
+
         var job_types = data.filter(function(type) {
             return job_types_id.includes(type.id);
         });
@@ -169,13 +170,23 @@ angular.module('a2.jobs', [
     var url = Project.getUrl();
     var intervalPromise;
 
-
-    // TODO update the way loop is created
-    $http.get('/api/project/' + url + '/jobs/progress').success(function(data) {
-        jobs = data;
-        jobslength = jobs.length;
-    });
-
+    updateJobs = function() {
+        $http.get('/api/project/' + url + '/jobs/progress')
+            .success(function(data) {
+                data.forEach(item => {
+                    if (item.job_type_id === 1 && item.completed === 0 && item.state === 'error') {
+                        item.state = 'error: insufficient validations';
+                    }
+                    if (item.job_type_id === 2 && item.completed === 0 && item.state === 'completed') {
+                        item.state = 'processing';
+                    }
+                })
+                jobs = data;
+                jobslength = jobs.length;
+            });
+    };
+    updateJobs();
+  
     return {
         geturl: function() {
             return url;
@@ -190,11 +201,7 @@ angular.module('a2.jobs', [
             return $http.get('/api/jobs/types');
         },
         updateJobs: function() {
-            $http.get('/api/project/' + url + '/jobs/progress')
-                .success(function(data) {
-                    jobs = data;
-                    jobslength = jobs.length;
-                });
+            return updateJobs();
         },
         startTimer: function() {
             $interval.cancel(intervalPromise);
@@ -216,14 +223,9 @@ angular.module('a2.jobs', [
                         $interval.cancel(intervalPromise);
                     }
                     else {
-                        $http.get('/api/project/' + url + '/jobs/progress')
-                            .success(function(data) {
-                                jobs = data;
-                                jobslength = jobs.length;
-                            });
+                        updateJobs();
                     }
-
-                }, 1000);
+                }, 5000);
             }
 
         },

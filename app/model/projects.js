@@ -33,6 +33,13 @@ var Projects = {
         }
     },
 
+    countAllProjects: function(callback) {
+        var q = 'SELECT count(*) AS count \n'+
+                'FROM `projects`';
+
+        queryHandler(q, callback);
+    },
+
     listAll: function(callback) {
         var q = "SELECT project_id as id, name, url, description, is_private, is_enabled \n"+
                 "FROM projects";
