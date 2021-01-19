@@ -43,7 +43,7 @@ AWS.config.update({
 
 var s3 = new AWS.S3({
     httpOptions: {
-        timeout: 30000,
+        timeout: 120000,
     }
 });
 
@@ -70,7 +70,7 @@ Uploader.prototype.insertUploadRecs = function(callback) {
         },
         (function(err, result) {
             if(err) return callback(err);
-            
+
             this.upload.id = result.insertId;
             callback(null, result);
         }).bind(this));
@@ -83,9 +83,9 @@ Uploader.prototype.insertUploadRecs = function(callback) {
 Uploader.prototype.convertMonoFlac = function(callback) {
     debug('convertMonoFlac:', this.upload.name);
     var needConvert = false;
-    
+
     var args = [this.inFile];
-    
+
     if(this.upload.info.channels > 1) {
         needConvert = true;
         args.push('-c', 1);
@@ -94,14 +94,14 @@ Uploader.prototype.convertMonoFlac = function(callback) {
         needConvert = true;
         args.push('-t', 'flac');
     }
-    
+
     if(!needConvert) {
         this.outFile = this.inFile;
         return callback(null, 'did not process');
     }
-    
+
     args.push(this.outFile);
-    
+
     audioTools.sox(args, (function(code, stdout, stderr) {
         if(code !== 0)
             return callback(new Error("error converting to mono and/or to flac: \n" + stderr));
@@ -122,7 +122,7 @@ Uploader.prototype.getInitialAudioInfo = function(callback) {
             if(code !== 0) {
                 return callback(new Error("error getting audio file info"));
             }
-            
+
             this.upload.info = info;
             callback();
         }).bind(this));
@@ -138,7 +138,7 @@ Uploader.prototype.updateAudioInfo = function(callback) {
         if(code !== 0) {
             return callback(new Error("error getting audio file info"));
         }
-        
+
         this.upload.info = info;
         callback();
     }).bind(this));
@@ -151,7 +151,7 @@ Uploader.prototype.updateFileSize = function(callback) {
     debug('updateFilesize:', this.upload.name);
     fs.stat(this.outFile, (function(err, stats) {
         if(err) return callback(err);
-        
+
         this.upload.info.file_size = stats.size;
         callback();
     }).bind(this));
@@ -162,7 +162,7 @@ Uploader.prototype.updateFileSize = function(callback) {
  */
 Uploader.prototype.genThumbnail = function(callback) {
     debug('gen thumbnail:', this.upload.name);
-    
+
     audioTools.spectrogram(this.outFile, this.thumbnail,
         {
             maxfreq : 15000,
@@ -172,7 +172,7 @@ Uploader.prototype.genThumbnail = function(callback) {
         function(code, stdout, stderr){
             if(code !== 0)
                 return callback(new Error("error generating spectrogram: \n" + stderr));
-                
+
             callback(null, code);
         }
     );
@@ -194,7 +194,7 @@ Uploader.prototype.uploadFlac = function(callback) {
     s3.putObject(params, (function(err, data) {
         if (err)
             return callback(err);
-            
+
         debug("Successfully uploaded flac", this.upload.FFI.filename);
         callback(null, data);
     }).bind(this));
@@ -205,7 +205,7 @@ Uploader.prototype.uploadFlac = function(callback) {
  */
 Uploader.prototype.uploadThumbnail = function(callback) {
     debug('uploadThumbnail:', this.upload.name);
-    
+
     var params = {
         Bucket: config('aws').bucketName,
         Key: this.thumbnailUri,
@@ -216,7 +216,7 @@ Uploader.prototype.uploadThumbnail = function(callback) {
     s3.putObject(params, (function(err, data) {
         if (err)
             return callback(err);
-            
+
         debug("Successfully uploaded thumbnail:", this.upload.FFI.filename);
         callback(null, data);
     }).bind(this));
@@ -228,7 +228,7 @@ Uploader.prototype.uploadThumbnail = function(callback) {
  */
 Uploader.prototype.insertOnDB = function(callback) {
     debug("inserting to DB", this.upload.name);
-    
+
     model.recordings.insert({
         site_id: this.upload.siteId,
         uri: this.fileUri,
@@ -258,7 +258,7 @@ Uploader.prototype.cleanUpTempFiles = function(callback) {
     if(this.outFile !== this.inFile) {
         deleteFile(this.outFile);
     }
-    
+
     // remove from uploads_processing table
     callback();
 };
@@ -291,7 +291,7 @@ Uploader.prototype.dataPrep = function(callback) {
     this.inFile = this.upload.path;
     this.outFile = tmpFileCache.key2File(this.upload.FFI.filename + '.out.flac');
     this.thumbnail = tmpFileCache.key2File(this.upload.FFI.filename + '.thumbnail.png');
-    
+
     var uri = util.format('project_%d/site_%d/%d/%d/%s',
         this.upload.projectId,
         this.upload.siteId,
@@ -299,12 +299,12 @@ Uploader.prototype.dataPrep = function(callback) {
         this.upload.FFI.datetime.getMonth()+1,
         this.upload.FFI.filename
     );
-    
+
     this.fileUri = uri + '.flac';
     this.thumbnailUri = uri + '.thumbnail.png';
-    
+
     debug('fileURI:', this.fileUri);
-    
+
     callback();
 };
 
@@ -329,12 +329,12 @@ Uploader.prototype.dataPrep = function(callback) {
  **/
 Uploader.prototype.process = function(upload, done) {
     var self = this;
-    
+
     self.start = new Date(); // for elapse time
-    
+
     debug("process:", upload.name);
     self.upload = upload;
-    
+
     var results={};
     function step(method){
         return function stepfn(){
@@ -398,7 +398,7 @@ Uploader.moveToTempArea = function(upload, callback){
     if(!upload.tempFileUri){
         upload.tempFileUri = Uploader.computeTempAreaPath(upload);
     }
-    
+
     var params = {
         Bucket: config('aws').bucketName,
         Key: upload.tempFileUri,
@@ -411,9 +411,9 @@ Uploader.moveToTempArea = function(upload, callback){
             console.error("Error putting object in bucket ", upload.path, " to ", upload.tempFileUri, err);
             return callback(err);
         }
-            
+
         debug("Successfully moved uploaded ", upload.path, " to ", upload.tempFileUri);
-        
+
         fs.unlink(upload.path, callback);
     });
 };
