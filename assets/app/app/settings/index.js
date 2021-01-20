@@ -171,7 +171,7 @@ angular.module('a2.settings',[
             messages : [
                 "You are about to remove: ",
                 $scope.users[$index].username,
-                "Are you sure??"
+                "Are you sure?"
             ],
             btnOk: "Yes, do it!",
             btnCancel: "No",
