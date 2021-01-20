@@ -18,7 +18,7 @@
                 Percent:
             </label>
             <div class="col-sm-9">
-                <input type="number" class="text-right region__percent" min="0" max="100" ng-model="data.percent">% 
+                <input type="number" style="width:60px; color: #000;" class="text-right" min="0" max="100" ng-model="data.percent">% 
                 <span class="badge m-3">{{Math.floor(region.count * data.percent / 100)}}</span>
             </div>
             <div class="pull-right text-danger" ng-show="validation.percent">{{validation.percent}}</div>
