@@ -47,6 +47,10 @@ angular.module('a2.browser_recordings_by_playlist', [
                 });
             }
             return d.promise.then(function(){
+                a2Playlists.getInfo(self.playlist.id, function(playlist_info){
+                    self.playlist = playlist_info;
+                });
+            }).then(function(){
                 if(self.whole_list){
                     self.whole_list.forEach(self.append_extras.bind(self));
                 }
