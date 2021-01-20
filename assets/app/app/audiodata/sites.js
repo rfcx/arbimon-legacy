@@ -218,7 +218,7 @@ angular.module('a2.audiodata.sites', [
                 this.messages = [
                     "You are about to delete: ",
                     $scope.selected.name,
-                    "Are you sure??"
+                    "Are you sure?"
                 ];
                 this.btnOk = "Yes, do it!";
                 this.btnCancel = "No";
