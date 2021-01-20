@@ -165,7 +165,8 @@ var ClusteringJobs = {
     },
 
     JOB_SCHEMA : joi.object().keys({
-        project: joi.number().integer(),
+        project_id: joi.number().integer(),
+        user_id: joi.number().integer(),
         name : joi.string(),
         audioEventDetectionJob: joi.object().keys({
             name: joi.string(),
@@ -177,20 +178,49 @@ var ClusteringJobs = {
         }),
     }),
 
-    requestNewClusteringJob: function(data){
-        let payload = JSON.stringify({
-            project_id: data.project,
+    requestNewClusteringJob: function(data, callback){
+        var payload = JSON.stringify({
+            project_id: data.project_id,
+            user_id: data.user_id,
             name: data.name,
             aed_job_name: data.audioEventDetectionJob.name,
             aed_job_id: data.audioEventDetectionJob.jobId,
             min_points: data.params.minPoints,
             distance_threshold: data.params.distanceThreshold,
-        })
-        return q.ninvoke(joi, 'validate', data, ClusteringJobs.JOB_SCHEMA).then(() => lambda.invoke({
-            FunctionName: config('lambdas').clustering_jobs,
-            InvocationType: 'Event',
-            Payload: payload,
-        }).promise());
+        });
+        var jobQuery =
+            "INSERT INTO jobs (\n" +
+            "    `job_type_id`, `date_created`,\n" +
+            "    `last_update`, `project_id`,\n" +
+            "    `user_id`, `state`,\n" +
+            "    `progress`, `completed`, `progress_steps`, `hidden`, `ncpu`\n" +
+            ") SELECT ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?";
+
+        var clusteringQuery =
+            "INSERT INTO job_params_audio_event_clustering (\n" +
+            "    `name`, `project_id`, `user_id`, \n" +
+            "    `job_id`, `audio_event_detection_job_id`,\n" +
+            "    `date_created`, `parameters`\n" +
+            ") SELECT ?, ?, ?, ?, ?, NOW(), ?";
+
+        return q.ninvoke(joi, 'validate', payload, ClusteringJobs.JOB_SCHEMA)
+            .then(() => dbpool.query(
+                jobQuery, [
+                    9, data.project_id, data.user_id, 'processing', 0, 0, 4, 0, 0
+                ]
+            ).then(result => {
+                data.id = job_id = result.insertId;
+                console.log('\n\n--->>>clusteringQuery', clusteringQuery, data);
+            }).then(() =>
+                dbpool.query(
+                    clusteringQuery, [
+                        data.audioEventDetectionJob.name, data.project_id, data.user_id, data.id, data.audioEventDetectionJob.jobId, data.params
+                    ]
+                )
+            ).then(() => {
+                return job_id;
+            })
+        ).nodeify(callback);
     },
 };
 

@@ -16,6 +16,7 @@ var busboy = require('connect-busboy');
 var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
 var paypal = require('paypal-rest-sdk');
+// const K8s = require('easy-k8s').Client;
 
 
 var config = require('./config');
@@ -24,6 +25,12 @@ AWS.config.update({
     secretAccessKey: config('aws').secretAccessKey,
     region: config('aws').region
 });
+
+// const kubeconfig = require('../../../.kube/config');
+
+// const podSpec = await K8s.get(kubeconfig, 'testing');
+
+// console.log('podSpec', podSpec)
 
 var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');

@@ -79,15 +79,15 @@ router.get('/audio-event-detections', function(req, res, next) {
 router.post('/new', function(req, res, next) {
     res.type('json');
 
-    var project_id = req.project.project_id;
-
     return model.ClusteringJobs.requestNewClusteringJob({
-        project: project_id,
+        project_id: req.project.project_id,
+        user_id: req.session.user.id,
         name: req.body.name,
         audioEventDetectionJob: req.body.aed_job,
         params: req.body.params,
     })
     .then(function(result){
+        console.log('\n\n--->>>result', result);
         res.json({ create: true, result: result });
     }).catch(next);
 });

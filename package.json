@@ -22,6 +22,7 @@
     "cookie-parser": "~1.4.3",
     "csv-stringify": "~1.0.4",
     "debug": "^2.0.0",
+    "easy-k8s": "^1.0.9",
     "ejs": "~2.5.1",
     "express": "~4.14.0",
     "express-jwt": "~3.4.0",
