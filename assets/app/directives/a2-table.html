@@ -1,8 +1,12 @@
 <table class="table table-hover a2-table">
 <thead>
-    <tr class="headers">
+    <tr class="headers ">
         <th ng-hide="a2TableController.noCheck">
-            <input type="checkbox" ng-disabled="!a2TableController.rows.length" ng-model="checkall" ng-change="a2TableController.toggleAll()">
+            <input type="checkbox"
+                ng-disabled="!a2TableController.rows.length"
+                ng-model="checkall"
+                ng-change="a2TableController.toggleAll()"
+                class="cs-pointer">
         </th>
     </tr>
     <tr class="filters" ng-show="a2TableController.hasFilters">
@@ -19,7 +23,8 @@
             <input type="checkbox"
                 ng-model="row.checked"
                 ng-click="a2TableController.check($event, $index)"
-                stop-click>
+                stop-click
+                class="cs-pointer">
         </td>
     </tr>
 </tbody>
