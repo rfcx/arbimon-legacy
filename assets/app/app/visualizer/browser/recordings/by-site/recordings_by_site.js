@@ -193,7 +193,7 @@ angular.module('a2.browser_recordings_by_site', [
     this.site = null;
     this.date = null;
     this.lovo = null;
-    $scope.limit = 10;
+    // $scope.limit = 10;
 
     this.activate = function(){
         var defer = $q.defer();
@@ -266,7 +266,9 @@ angular.module('a2.browser_recordings_by_site', [
         var site = self.site;
         var date = self.date;
         if(site && date){
-            self.lovo = new a2RecordingsBySiteLOVO(site, date, $scope.limit);
+            // TO DO: add functionality to find a record from navigation query
+            // self.lovo = new a2RecordingsBySiteLOVO(site, date, $scope.limit);
+            self.lovo = new a2RecordingsBySiteLOVO(site, date);
         }
         return self.lovo;
     };
@@ -280,7 +282,7 @@ angular.module('a2.browser_recordings_by_site', [
         if (diff) {
             if (!self.lovo) return;
             if (self.lovo && self.lovo.loading === true) return;
-            self.lovo.loadNext();
+            // self.lovo.loadNext();
         }
     }
 

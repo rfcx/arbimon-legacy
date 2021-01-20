@@ -51,20 +51,9 @@ angular.module('a2.browser_recordings_by_playlist', [
                 return d.promise;
             };
             return d.promise.then(function(){
-                var d = $q.defer();
                 a2Playlists.getInfo(self.playlist.id, function(playlist_info){
                     self.playlist = playlist_info;
-                    switch(self.playlist.type){
-                        case "soundscape region":
-                            self.links = [
-                                {icon:"a2-soundscape-region", tooltip:"View Soundscape Region",
-                                location:"soundscape/" + playlist_info.soundscape + "/" + playlist_info.region}
-                            ];
-                        break;
-                    }
-                    d.resolve();
                 });
-                return d.promise;
             }).then(function(){
                 if(self.whole_list){
                     self.whole_list.forEach(self.append_extras.bind(self));

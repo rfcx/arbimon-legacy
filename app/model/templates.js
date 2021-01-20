@@ -83,15 +83,14 @@ var Templates = {
         }
 
         if (options.showOwner || options.allAccessibleProjects) {
-            if (!options.user_id) return q.reject(new Error("User id is required.")).nodeify(callback);
             select.push(
                 "IF (T.user_id IS NULL, CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))), CONCAT(CONCAT(UCASE(LEFT( U3.`firstname` , 1)), SUBSTRING( U3.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U3.`lastname` , 1)), SUBSTRING( U3.`lastname` , 2)))) AS author",
                 "P.`name` as `project_name`",
             );
             tables.push('JOIN projects P ON T.project_id = P.project_id');
-            // get an author of a template if the user_id exists.
+            // get an author of a template if the column T.user_id is not null.
             tables.push('LEFT JOIN users U3 ON T.user_id = U3.user_id AND T.user_id IS NOT NULL');
-            // get an owner of a project if the user_id not exists.
+            // get an owner of a project as uthor of the template if the column T.user_id is null.
             tables.push('LEFT JOIN user_project_role UPR ON T.project_id = UPR.project_id AND UPR.role_id = 4 AND T.user_id IS NULL');
             tables.push('LEFT JOIN users U ON UPR.user_id = U.user_id AND T.user_id IS NULL');
         }
@@ -125,7 +124,6 @@ var Templates = {
         if (constraints.length === 0){
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }
-        console.log(select, tables, constraints)
         return dbpool.query(
             "SELECT " + select.join(",\n") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
