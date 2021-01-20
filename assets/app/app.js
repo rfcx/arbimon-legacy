@@ -49,10 +49,8 @@ var a2 = angular.module('a2.app', [
 
     $rootScope.$on('$stateChangeStart', function (e, to, params) {
         if (to.name.startsWith('visualizer')) {
-            document.getElementById('footer').style.display = "none";
             document.getElementsByTagName('body')[0].classList.add('visualizer-page');
         } else {
-            document.getElementById('footer').style.display = "block";
             document.getElementsByTagName('body')[0].classList.remove('visualizer-page');
         }
 
