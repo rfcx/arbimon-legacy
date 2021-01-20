@@ -22,8 +22,8 @@
                         <button class="btn btn-default btn-sm col-sm-2" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="button" ng-click="decrementClusters()">
                             <i class="fa fa-minus"></i>
                         </button>
-                        <div style="padding:0;" class="col-sm-4 hide-input-arrow">
-                            <input type="number" class="form-control col-sm-3" style="text-align:center;" ng-model="selectedClusters" min="1" max="layout.shapes.length">
+                        <div style="padding:0;" class="col-sm-4">
+                            <input type="number" class="form-control col-sm-3 hide-input-arrow" style="text-align:center;" ng-change="selectClusters()" ng-model="selectedCluster" min="1" max="layout.shapes.length">
                         </div>
                         <button class="btn btn-default btn-sm col-sm-2" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="button" ng-click="incrementClusters()">
                             <i class="fa fa-plus"></i>
@@ -41,7 +41,8 @@
             </div>
         </div>
     </div>
-    <div id="plotly" style="position: relative;">
+    <div style="position: relative;">
+        <div id="plotly"></div>
         <div ng-if="toggleMenu" class="popup-chart panel panel-default">
             <ul class="list-group">
                 <li class="list-group-item"><a ng-click="showClustersInVisualizer()">Context View</a></li>

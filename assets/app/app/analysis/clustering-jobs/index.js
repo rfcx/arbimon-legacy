@@ -110,23 +110,22 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.loading = true;
     $scope.toggleMenu = false;
     $scope.infopanedata = '';
-    $scope.selectedClusters = null;
+    $scope.selectedCluster = null;
     var timeout;
     $scope.decrementClusters = function() {
-        if ($scope.selectedClusters === 1) return
-        $scope.selectedClusters -= 1;
-        $scope.selectClusters($scope.selectedClusters-1);
-    }
+        if ($scope.selectedCluster === 1) return
+        $scope.selectedCluster -= 1;
+        $scope.selectClusters();
+    };
     $scope.incrementClusters = function() {
-        if ($scope.selectedClusters === $scope.layout.shapes.length) return
-        $scope.selectedClusters += 1;
-        $scope.selectClusters($scope.selectedClusters-1);
-    }
-    $scope.selectClusters = function(items) {
+        if ($scope.selectedCluster === $scope.layout.shapes.length) return
+        $scope.selectedCluster += 1;
+        $scope.selectClusters();
+    };
+    $scope.selectClusters = function() {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
-            if (items !== null) {
-                console.log('selectedClusters', items);
+            if ($scope.selectedCluster !== null) {
                 $("#plotly .select-outline").remove();
                 $scope.layout.shapes.forEach((shape) => {
                     shape.line.color = shape.fillcolor;
@@ -134,7 +133,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 });
                 $scope.points = [];
                 $scope.layout.shapes.forEach((shape, i) => {
-                    if (i <= items) {
+                    if (i === $scope.selectedCluster - 1) {
                         $scope.layout.shapes[i].line.color = '#ffffff';
                         Plotly.relayout(document.getElementById('plotly'), {
                             '$scope.layout.shapes[i].line.color': '#ff0000',
@@ -352,7 +351,6 @@ angular.module('a2.analysis.clustering-jobs', [
                     });
                     $scope.toggleMenu = true;
                     $scope.$apply();
-
                 }
             });
         }
@@ -360,7 +358,7 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.onGridViewSelected = function () {
         $scope.toggleMenu = false;
-        $scope.selectedClusters = null;
+        $scope.selectedCluster = null;
         $scope.showViewGridPage = true;
         if ($scope.points.length) {
             $scope.gridContext = {};
