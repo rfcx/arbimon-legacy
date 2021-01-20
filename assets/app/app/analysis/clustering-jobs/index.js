@@ -110,23 +110,22 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.loading = true;
     $scope.toggleMenu = false;
     $scope.infopanedata = '';
-    $scope.selectedClusters = null;
+    $scope.selectedCluster = null;
     var timeout;
     $scope.decrementClusters = function() {
-        if ($scope.selectedClusters === 1) return
-        $scope.selectedClusters -= 1;
-        $scope.selectClusters($scope.selectedClusters-1);
-    }
+        if ($scope.selectedCluster === 1) return
+        $scope.selectedCluster -= 1;
+        $scope.selectClusters();
+    };
     $scope.incrementClusters = function() {
-        if ($scope.selectedClusters === $scope.layout.shapes.length) return
-        $scope.selectedClusters += 1;
-        $scope.selectClusters($scope.selectedClusters-1);
-    }
-    $scope.selectClusters = function(items) {
+        if ($scope.selectedCluster === $scope.layout.shapes.length) return
+        $scope.selectedCluster += 1;
+        $scope.selectClusters();
+    };
+    $scope.selectClusters = function() {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
-            if (items !== null) {
-                console.log('selectedClusters', items);
+            if ($scope.selectedCluster !== null) {
                 $("#plotly .select-outline").remove();
                 $scope.layout.shapes.forEach((shape) => {
                     shape.line.color = shape.fillcolor;
@@ -134,7 +133,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 });
                 $scope.points = [];
                 $scope.layout.shapes.forEach((shape, i) => {
-                    if (i <= items) {
+                    if (i === $scope.selectedCluster - 1) {
                         $scope.layout.shapes[i].line.color = '#ffffff';
                         Plotly.relayout(document.getElementById('plotly'), {
                             '$scope.layout.shapes[i].line.color': '#ff0000',
@@ -352,7 +351,6 @@ angular.module('a2.analysis.clustering-jobs', [
                     });
                     $scope.toggleMenu = true;
                     $scope.$apply();
-
                 }
             });
         }
@@ -360,7 +358,7 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.onGridViewSelected = function () {
         $scope.toggleMenu = false;
-        $scope.selectedClusters = null;
+        $scope.selectedCluster = null;
         $scope.showViewGridPage = true;
         if ($scope.points.length) {
             $scope.gridContext = {};
@@ -419,24 +417,37 @@ angular.module('a2.analysis.clustering-jobs', [
                                 $scope.selectedClusters.boxes[rec.rec_id].push(box);
                             }
                         })
+                        // clear local storage
+                        $scope.removeFromLocalStorage();
+                        var tempPlaylistData = {};
+                        tempPlaylistData.aed = $scope.selectedClusters.aed;
+                        tempPlaylistData.boxes = $scope.selectedClusters.boxes;
                         console.log('boxes', $scope.selectedClusters.boxes);
-                        $localStorage.setItem('analysis.clusters',  JSON.stringify($scope.selectedClusters.boxes));
                         // add related records to a playlist
                         var recIds = data
                             .map(rec => {
                                 return rec.rec_id;
                             })
                             .filter((id, i, a) => a.indexOf(id) === i);
-                        $scope.savePlaylist({
-                            playlist_name: 'cluster_' + recIds.join("_"),
-                            params: recIds.filter((id, i, a) => a.indexOf(id) === i),
-                            isManuallyCreated: true
-                        });
+                        tempPlaylistData.playlist = {
+                            id: 0,
+                            name: 'cluster_' + recIds.join("_"),
+                            recordings: recIds.filter((id, i, a) => a.indexOf(id) === i),
+                            count: recIds.filter((id, i, a) => a.indexOf(id) === i).length
+                        };
+                        console.log('tempPlaylistData', tempPlaylistData);
+                        $localStorage.setItem('analysis.clusters',  JSON.stringify(tempPlaylistData));
+                        $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/0?clusters';
                     }
                 }
             );
         }
     };
+    $scope.removeFromLocalStorage = function () {
+        $localStorage.setItem('analysis.clusters', null);
+        $localStorage.setItem('analysis.clusters.playlist', null);
+        $state.params.clusters = '';
+    }
     $scope.savePlaylist = function(opts) {
         a2Playlists.create(opts,
         function(data) {
