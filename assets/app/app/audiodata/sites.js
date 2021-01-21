@@ -267,7 +267,6 @@ angular.module('a2.audiodata.sites', [
             return $state.transitionTo($state.current.name, {site:$state.params.site, show:show_state_param}, {notify:false});
         });
     };
-    
     // $scope.browseShared = function() {
     //     var modalInstance = $modal.open({
     //         templateUrl: '/app/audiodata/browse-published-sites.html',
@@ -368,6 +367,23 @@ angular.module('a2.audiodata.sites', [
 
     $scope.onSelect = function($item) {
         $scope.temp.project = $item;
+    };
+
+    $scope.site_token = function() {
+
+        if(!$scope.selected || $scope.selected.imported)
+            return;
+
+        if(!a2UserPermit.can('manage project sites')) {
+            notify.log("You do not have permission to edit sites");
+            return;
+        }
+
+        var modalInstance = $modal.open({
+            templateUrl: '/app/audiodata/site-tokens-popup.html',
+            controller: 'SitesTokenGenaratorCtrl',
+            scope: $scope
+        });
     };
 
     $scope.sel = function(site) {

@@ -37,6 +37,11 @@
             Edit
         </button>
         <button class="btn btn-default"
+            ng-click="site_token()"
+            ng-disabled="!selected || selected.imported">
+            Link
+        </button>
+        <button class="btn btn-default"
             ng-click="del()"
             ng-disabled="!selected">
             Delete
@@ -86,6 +91,11 @@
             <a ng-click="set_show('map')" href="">
                 <i ng-class="editing ? 'fa fa-pencil' : (creating ? 'fa fa-plus' : 'fa fa-map')"></i>
                 {{editing ? 'Edit Site' : (creating ? 'New Site' : 'Location')}}
+            </a>
+        </li>
+        <li class="ng-isolate-scope" ng-class="{active:show.status, disabled:!selected.has_logs || creating}">
+            <a ng-click="set_show('status')" href="">
+                <i class="fa fa-line-chart"></i> Status
             </a>
         </li>
     </ul>
