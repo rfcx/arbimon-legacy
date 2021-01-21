@@ -124,6 +124,7 @@ var Templates = {
         if (constraints.length === 0){
             return q.reject(new Error("Templates.find called with invalid query.")).nodeify(callback);
         }
+        console.log(select, tables, constraints)
         return dbpool.query(
             "SELECT " + select.join(",\n") + "\n" +
             "FROM " + tables.join("\n") + "\n" +

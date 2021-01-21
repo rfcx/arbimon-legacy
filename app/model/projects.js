@@ -21,9 +21,6 @@ var queryHandler = dbpool.queryHandler;
 var APIError = require('../utils/apierror');
 var species = require('./species');
 var songtypes = require('./songtypes');
-const sha256 = require('../utils/sha256');
-const { LocalDB } = require('../utils/local-db')
-const localProjectsDb = new LocalDB({ interval: 180000 }) // clear every 3 minute
 
 var Projects = {
 
@@ -97,23 +94,11 @@ var Projects = {
             selectExtra += "p.project_id as id \n";
         }
 
-        let que = `SELECT p.* ${selectExtra? ', ' + selectExtra : ''} FROM projects AS p ${joinExtra} WHERE ( ${whereExp.join(') AND (')} )`;
-        // We would like to store query responses in RAM to avoid hitting DB with many repeating queries.
-        // Each query in this function could be different based on query params set.
-        // So we will calculate query hash and use it as query identifier.
-        const queryHash = sha256(que)
-        // Check RAM for query response existance.
-        const cache = localProjectsDb.get(queryHash)
-        if (cache) {
-            return callback? callback(null, cache) : Promise.resolve(cache)
-        }
-        return dbpool.query(que, data)
-            .then((result) => {
-                // Save query response in RAM by query hash.
-                localProjectsDb.set(queryHash, result)
-                return result
-            })
-            .nodeify(callback)
+        let que = "SELECT p.*" + (selectExtra ? ", \n" + selectExtra : "\n") +
+        "FROM projects AS p \n" + joinExtra +
+        "WHERE (" + whereExp.join(") \n" +
+        "  AND (") + ")";
+        return dbpool.query(que, data).nodeify(callback);
     },
 
     findById: function (project_id, callback) {
@@ -381,8 +366,6 @@ var Projects = {
 
             var projectInfoPlan = projectInfo.plan;
             delete projectInfo.plan;
-
-            localProjectsDb.clear()
 
             return q.all([
                 dbpool.query(
