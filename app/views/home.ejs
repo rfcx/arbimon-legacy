@@ -8,75 +8,84 @@
 </head>
 
 <body ng-controller="HomeCtrl as controller">
-<% include fragments/home-nav %>
+    <div class="page-container">
+        <div class="content-wrap">
+            <% include fragments/home-nav %>
 
+            <div class="container homepage">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-5 pb-3">
+                                <%if (!user.rfcx_id && user.username !== 'guest') { %>
+                                <% include connect-with-rfcx-alert %>
+                                <% } %>
+                            </div>
+                        </div>
 
-<div class="container homepage">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="row">
-                <div class="col-md-5 pb-3">
-                    <%if (!user.rfcx_id && user.username !== 'guest') { %>
-                        <% include connect-with-rfcx-alert %>
-                    <% } %>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-xs-5 col-md-5 pb-3">
-                    <% if (state === 'home.all') { %>
-                        <h3>Public Projects</h3>
-                    <% } else { %>
-                        <h3>My Projects</h3>
-                    <% } %>
-                </div>
-                <div class="col-xs-7 col-md-7 pt-4 pb-1">
-                    <div class="form-inline pull-right">
-                        <div class="form-group has-feedback">
-                            <input id="projectsSearch" type="search" class="form-control input-sm" ng-model="search" placeholder="Search projects" ng-change="controller.searchChanged()">
+                        <div class="row">
+                            <div class="col-xs-5 col-md-5 pb-3">
+                                <% if (state === 'home.all') { %>
+                                <h3>Public Projects</h3>
+                                <% } else { %>
+                                <h3>My Projects</h3>
+                                <% } %>
+                            </div>
+                            <div class="col-xs-7 col-md-7 pt-4 pb-1">
+                                <div class="form-inline pull-right">
+                                    <div class="form-group has-feedback">
+                                        <input id="projectsSearch" type="search" class="form-control input-sm"
+                                            ng-model="search" placeholder="Search projects"
+                                            ng-change="controller.searchChanged()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row ng-cloak" ng-if="results.length < 1">
+                            <div class="col-md-6 col-md-offset-3">
+                                <h4 class="text-center">No projects found.</h4>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12" style="text-align: center; padding: 0; min-height: 600px;">
+                                <ul class="projects-list">
+                                    <li ng-if="!controller.isAnonymousGuest && !search"
+                                        class="projects-list-item projects-list-item-add"
+                                        ng-click="controller.createProject() | trackEvent:'Home':'createProject'">
+                                        <div class="title">+</div>
+                                        <div>New Project</div>
+                                    </li>
+                                    <li class="ng-cloak projects-list-item"
+                                        ng-class="{'disabled': !project.is_enabled }"
+                                        ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort | filter: controller.customSearch ) | paginate: controller.currentPage : (controller.isAnonymousGuest? 12 : 11)"
+                                        style="background: url({{project.mapUrl}}) no-repeat top center; background-size: cover;"
+                                        ng-click="controller.selectProject(project)">
+                                        <div class="text-left">
+                                            <div class="last-accessed"
+                                                title="{{ project.lastAccessed | moment:'lll' }}">
+                                                {{project.lastAccessed | timeFromNow}}
+                                            </div>
+                                            <i class="fa project-type"
+                                                ng-class="project.is_private ? 'fa-lock' :'fa-globe'"></i>
+                                            <div class="title" title="{{ project.name }}">
+                                                {{ project.name }}
+                                            </div>
+                                            <div class="word-wrap line-ellipsis">
+                                                {{ project.description }}
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                                <pagination ng-show="results.length > 10" total-items="results.length"
+                                    ng-model="controller.currentPage" max-size="5" rotate="false"></pagination>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="row ng-cloak" ng-if="results.length < 1">
-                <div class="col-md-6 col-md-offset-3">
-                    <h4 class="text-center">No projects found.</h4>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12" style="text-align: center; padding: 0; min-height: 600px;">
-                    <ul class="projects-list">
-                        <li ng-if="!controller.isAnonymousGuest && !search" class="projects-list-item projects-list-item-add"
-                            ng-click="controller.createProject() | trackEvent:'Home':'createProject'">
-                            <div class="title">+</div>
-                            <div>New Project</div>
-                        </li>
-                        <li class="ng-cloak projects-list-item" ng-class="{'disabled': !project.is_enabled }"
-                            ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort | filter: controller.customSearch ) | paginate: controller.currentPage : (controller.isAnonymousGuest? 12 : 11)"
-                            style="background: url({{project.mapUrl}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project)">
-                            <div class="text-left">
-                                <div class="last-accessed" title="{{ project.lastAccessed | moment:'lll' }}">
-                                    {{project.lastAccessed | timeFromNow}}
-                                </div>
-                                <i class="fa project-type" ng-class="project.is_private ? 'fa-lock' :'fa-globe'"></i>
-                                <div class="title" title="{{ project.name }}">
-                                    {{ project.name }}
-                                </div>
-                                <div class="word-wrap line-ellipsis">
-                                    {{ project.description }}
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                    <pagination ng-show="results.length > 10" total-items="results.length" ng-model="controller.currentPage" max-size="5" rotate="false"></pagination>
-                </div>
-            </div>
         </div>
+        <% include fragments/footer %>
     </div>
-</div>
-
-<% include fragments/footer %>
 </body>
 
 </html>
-
