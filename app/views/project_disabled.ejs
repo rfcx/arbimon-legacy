@@ -8,39 +8,35 @@
 </head>
 
 <body>
-    <div class="page-container">
-        <div class="content-wrap">
-            <nav class="navbar navbar-default" role="navigation">
-                <div class="container-fluid">
-                    <div class="navbar-header">
-                        <a href="/" class="navbar-brand">
-                            <img src="/images/rfcx-logo.png">Arbimon
-                        </a>
-                    </div>
-                </div>
-            </nav>
-            <div class="jumbotron login-banner">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-sm-offset-3 col-sm-6">
-                            <div class="panel panel-warning">
-                                <div class="panel-heading">
-                                    <h3 class="panel-title">Project disabled</h3>
-                                </div>
-                                <div class="panel-body">
-                                    The project <%= project.name %> has been disabled.
-                                    <br />
-                                    Please <a href="mailto:support@rfcx.org">contact us</a> if you feel this project
-                                    should be enabled.
-                                </div>
-                            </div>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a href="/" class="navbar-brand">
+                    <img src="/images/rfcx-logo.png">Arbimon
+                </a>
+            </div>
+        </div>
+    </nav>
+    <div class="jumbotron login-banner">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-offset-3 col-sm-6">
+                    <div class="panel panel-warning">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Project disabled</h3>
+                        </div>
+                        <div class="panel-body">
+                            The project <%= project.name %> has been disabled.
+                            <br />
+                            Please <a href="mailto:support@rfcx.org">contact us</a> if you feel this project should be enabled.
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <% include fragments/footer %>
     </div>
+
+<% include fragments/footer %>
 </body>
 
 </html>
