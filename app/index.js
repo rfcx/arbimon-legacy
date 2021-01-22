@@ -16,8 +16,6 @@ var busboy = require('connect-busboy');
 var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
 var paypal = require('paypal-rest-sdk');
-// const K8s = require('easy-k8s').Client;
-
 
 var config = require('./config');
 AWS.config.update({
@@ -26,11 +24,26 @@ AWS.config.update({
     region: config('aws').region
 });
 
-// const kubeconfig = require('../../../.kube/config');
+async function k8sF() {
+    try {
+        const { KubeConfig } = require('kubernetes-client');
+        const kubeconfig = new KubeConfig();
+        kubeconfig.loadFromString(JSON.stringify(config('rfcx').k8sConfigPath));
+        const Request = require('kubernetes-client/backends/request');
+        const Client = require('kubernetes-client').Client;
+        const backend = new Request({ kubeconfig });
+        const client = new Client({ backend, version: '1.13' });
 
-// const podSpec = await K8s.get(kubeconfig, 'testing');
+        console.log('\n\nkubeconfig', kubeconfig, '\n\n')
 
-// console.log('podSpec', podSpec)
+        const namespaces = await client.api.v1.namespaces.get();
+        console.log('\n\n', namespaces, '\n\n')
+    } catch (e) {
+        console.log('\n\nerror', e, '\n\n')
+    }
+}
+
+k8sF()
 
 var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');

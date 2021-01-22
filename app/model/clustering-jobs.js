@@ -222,6 +222,19 @@ var ClusteringJobs = {
             })
         ).nodeify(callback);
     },
+
+    updateProgressOfClusteringJob: function(jobdata, job_id){
+        return jobdata ? dbpool.query(
+            "UPDATE jobs\n" +
+            "SET progress = ?, last_update = NOW(), state = ?, progress_steps = ?, ncpu = ?\n" +
+            "WHERE job_id = ?\n", [
+            jobdata['progress'],
+            jobdata['status'],
+            jobdata['progress_steps'],
+            jobdata['ncpu'],
+            job_id
+        ]) : Promise.resolve();
+    },
 };
 
 module.exports = ClusteringJobs;
