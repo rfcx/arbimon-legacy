@@ -2,19 +2,17 @@
 <html ng-app="a2.login">
 
 <head>
-  <% include fragments/header %>
+    <% include fragments/header %>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RFCx Arbimon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RFCx Arbimon</title>
 </head>
 
 <body>
-  <div class="page-container">
-    <div class="content-wrap">
-      <% include fragments/nav-public %>
+    <% include fragments/nav-public %>
 
-      <div class="container">
-        <div class="row">
+    <div class="container">
+      <div class="row">
           <div class="col-md-12">
             <h3><%= message %></h3>
             <% if(error.stack) { %>
@@ -23,11 +21,10 @@
             <p>You should have received a verification email in your inbox. If you do not receive one, please contact <a href="mailto:support@rfcx.org">support@rfcx.org</a>. Thank you!</p>
             <% } %>
           </div>
-        </div>
       </div>
     </div>
-    <% include fragments/footer %>
-  </div>
+
+<% include fragments/footer %>
 </body>
 
 </html>
