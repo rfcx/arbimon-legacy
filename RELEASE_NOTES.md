@@ -46,9 +46,9 @@ Resolved issues:
 - PI-180 Lost of parameters field in CNN details page
 - PI-215 Fix Random Forest Models in Analysis tab
 
-## v3.0.0 - Nov 24, 2020
+## v3.0.1 - Nov 24, 2020
 
-## (unknown) - Oct 14, 2020
+## v3.0.0 - Oct 14, 2020
 - Arbimon II becomes RFCx Arbimon
 
 ---
