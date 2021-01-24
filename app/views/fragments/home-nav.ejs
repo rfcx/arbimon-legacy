@@ -1,37 +1,45 @@
 <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
         <div class="navbar-header">
-            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
+            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button"
+                class="navbar-toggle collapsed">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-        <% if (!user || user.isAnonymousGuest) { %>
+            <% if (!user || user.isAnonymousGuest) { %>
             <a href="/" class="navbar-brand">
-                <img src="/images/rfcx-logo.png">Arbimon
+                <img src="/images/rfcx-logo.png">
+                <span class="navbar-title ml-2">Arbimon</span>
             </a>
-        <% } else { %>
+            <% } else { %>
             <a href="/home" class="navbar-brand">
                 <img src="/images/rfcx-logo.png">
-                Arbimon
+                <span class="navbar-title ml-2">Arbimon</span>
             </a>
-        <% } %>
+            <% } %>
+            
         </div>
-        <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
+        <div class="navbar-start navbar-collapse" ng-class="{'collapse': collapsedMenu }">
             <ul class="nav navbar-nav">
                 <% if (user && !user.isAnonymousGuest) { %>
-                    <li class="<%- state === 'home.my'? 'active' : '' %>"><a href="/home">My Projects</a></li>
-                    <li class="<%- state === 'home.all'? 'active' : '' %>"><a href="/home/all">Public Projects</a></li>
+                <li class="<%- state === 'home.my'? 'active' : '' %>"><a href="/home">My Projects</a></li>
+                <li class="<%- state === 'home.all'? 'active' : '' %>"><a href="/home/all">Public Projects</a></li>
                 <% } %>
                 <% if (user && user.isSuper) { %>
-                <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>
+                <li><a href="/admin/"><i class="fa fa-cogs"></i>Admin</a></li>
                 <% } %>
             </ul>
+        </div>
+        <div class="navbar-end">
             <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown open" dropdown="">
-                    <a class="nav-item nav-link dropdown-toggle glyphicon glyphicon-th glyphicon-style__size_24" dropdown-toggle="" aria-haspopup="true" aria-expanded="false"></a>
-                    <ul class="dropdown-menu dropdown-style-no-border dropdown-border-top" role="menu">
+                    <a class="nav-item nav-link dropdown-toggle" dropdown-toggle="" aria-haspopup="true"
+                        aria-expanded="false">
+                        <img src="/images/ic-app-menu.svg">
+                    </a>
+                    <ul class="dropdown-menu" role="menu">
                         <li><a href="https://explorer.rfcx.org">Explorer</a></li>
                         <li><a href="https://arbimon.rfcx.org">Arbimon</a></li>
                         <li><a href="https://rfcx-training.web.app">AI Hub</a></li>

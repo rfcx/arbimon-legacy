@@ -1,14 +1,14 @@
 <% if (!user || user.isAnonymousGuest) { %>
-    <a href="/login">
-        <button class="btn-signin">
-            Sign In
-        </button>
-    </a>
+<li>
+    <div>
+        <a class="navbar-btn btn btn-primary" href="/login">SignIn</a>
+    </div>
+</li>
 <% } else { %>
 <li class="dropdown" dropdown>
     <a class="dropdown-toggle" dropdown-toggle>
-        <span class="visible-lg-inline visible-xs-inline"><%= user.firstname || user.login %></span>
-        <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>" style="background-image:url('<%- user.imageUrl %>')"></i>
+        <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
+            style="background-image:url('<%- user.imageUrl %>')"></i>
     </a>
     <ul class="dropdown-menu" role="menu">
         <li class="">
