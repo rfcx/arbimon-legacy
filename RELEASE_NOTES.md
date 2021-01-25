@@ -1,5 +1,22 @@
 # Arbimon Release Notes
 
+## v3.0.5 - Jan 25, 2021
+
+New features:
+- PI-171 Create playlist from selection of audio events
+
+Resolved issues:
+- PI-340 Fix user id is required error contributing to Arbimon 503
+- PI-306 Hide the chat icon on the Visualizer page
+- PI-131 Remove view soundscape region
+- PI-341 Investigate putting object in bucket error contributing to Arbimon 503
+- PI-401 Fix typo in Import site feature
+- PI-368 Remove “Saved threshold” and “Suggested threshold” in RFM details
+- PI-370 Change the wording in deleting a playlist window
+- PI-265 Fix all places in platform where cursor needs to be changed to the hand
+- PI-132 Fix font color on soundscape pop up
+- PI-353 Patterns are fuzzy in Chrome but clear in Firefox
+
 ## v3.0.4 - Jan 14, 2021
 
 Resolved issues:
