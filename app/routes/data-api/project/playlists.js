@@ -21,6 +21,9 @@ router.get('/', function(req, res, next) {
 
 router.param('playlist', function(req, res, next, playlist){
     res.type('json');
+    if (!!req.query && !!req.query.recordings) {
+        return next();
+    }
     model.playlists.find({
         id      : playlist,
         project : req.project.project_id

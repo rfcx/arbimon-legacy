@@ -64,7 +64,7 @@ angular.module('a2.directive.a2-table', [
             options.selectExpand = compileSelectExpand(element, options);
             options.fields.forEach(function(field, index){
                 tplHead.append(
-                    angular.element('<th ng-click="a2TableController.sortBy(' + index+ ')"' + (field && field.show !== undefined ? ' ng-if="' + field.show + '"' : '') + '></th>').addClass(field.className).text(field.title).append(
+                    angular.element('<th ng-click="a2TableController.sortBy(' + index+ ')" class="cs-pointer"' + (field && field.show !== undefined ? ' ng-if="' + field.show + '"' : '') + '></th>').addClass(field.className).text(field.title).append(
                         field.key ?
                         '    <i ng-if="sortKey == ' + index + '" class="fa" ng-class="reverse ? \'fa-chevron-up\': \'fa-chevron-down\'"></i>\n' :
                         ''

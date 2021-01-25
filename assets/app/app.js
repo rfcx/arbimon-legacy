@@ -1,6 +1,6 @@
 try {
     angular.module("angularytics"); // this throws if GA script is not loaded
-} catch(e){ 
+} catch(e){
     console.error("GA not available, likely adblocker", e);
     (function () {
         angular.module('angularytics', []).provider('Angularytics', function () {
@@ -49,11 +49,11 @@ var a2 = angular.module('a2.app', [
 
     $rootScope.$on('$stateChangeStart', function (e, to, params) {
         if (to.name.startsWith('visualizer')) {
-            document.getElementById('footer').style.display = "none";
+            document.getElementsByTagName('body')[0].classList.add('visualizer-page');
         } else {
-            document.getElementById('footer').style.display = "block";
+            document.getElementsByTagName('body')[0].classList.remove('visualizer-page');
         }
-        
+
         // only check permissions if state have allowAccess
         if(!angular.isFunction(to.allowAccess)) return;
 

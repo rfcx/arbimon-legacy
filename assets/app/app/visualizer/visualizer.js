@@ -295,11 +295,12 @@ angular.module('a2.visualizer', [
                 $scope.loading_visobject = visobject_loader.getCaptionFor(visobject);
                 return visobject_loader.load(visobject, $scope).then((function (visobject){
                     console.log('VisObject loaded : ', visobject);
-                    // check playlist with clusters in local storage else clear local storage
+                    // check clusters playlist in local storage else clear local storage
                     if ($localStorage.getItem('analysis.clusters.playlist') === $state.params.idA) {
-                        var boxes = JSON.parse($localStorage.getItem('analysis.clusters'));
-                        if (boxes && $state.params.idB) {
-                            this.parseAnnotations(boxes[$state.params.idB]);
+                        var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+                        console.log('clustersData', this.clustersData);
+                        if (clustersData && clustersData.boxes && $state.params.idB) {
+                            this.parseAnnotations(clustersData.boxes[$state.params.idB]);
                         }
                     }
                     else {

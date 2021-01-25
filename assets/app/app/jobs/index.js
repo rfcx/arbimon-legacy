@@ -87,9 +87,10 @@ angular.module('a2.jobs', [
 
     JobsData.getJobTypes().success(function(data) {
         var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528', '#ffff00'];
+        var job_types_id = [1, 2, 4, 6, 7];
 
         var job_types = data.filter(function(type) {
-            return type.enabled;
+            return job_types_id.includes(type.id);
         });
 
         $scope.job_types = {};
@@ -168,6 +169,7 @@ angular.module('a2.jobs', [
     var job_types;
     var url = Project.getUrl();
     var intervalPromise;
+
     updateJobs = function() {
         $http.get('/api/project/' + url + '/jobs/progress')
             .success(function(data) {
@@ -184,6 +186,7 @@ angular.module('a2.jobs', [
             });
     };
     updateJobs();
+  
     return {
         geturl: function() {
             return url;
@@ -222,7 +225,6 @@ angular.module('a2.jobs', [
                     else {
                         updateJobs();
                     }
-
                 }, 5000);
             }
 
