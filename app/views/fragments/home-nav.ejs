@@ -19,7 +19,19 @@
                 <span class="navbar-title ml-2">Arbimon</span>
             </a>
             <% } %>
-            
+            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu3 = !collapsedMenu3" type="button"
+                class="navbar-toggle navbar-end collapsed" style="background:transparent; border:none; margin:5px 5px; padding: 0;">
+                <% if (!user || user.isAnonymousGuest) { %>
+                    <a class="navbar-btn btn btn-primary" href="/login">SignIn</a>
+                <% } else { %>
+                <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
+                    style="background-image:url('<%- user.imageUrl %>')"></i>
+                <% } %>
+            </button>
+            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu2 = !collapsedMenu2" type="button"
+                class="navbar-toggle navbar-end collapsed">
+                <img src="/images/ic-app-menu.svg">
+            </button>
         </div>
         <div class="navbar-start navbar-collapse" ng-class="{'collapse': collapsedMenu }">
             <ul class="nav navbar-nav">
@@ -32,11 +44,10 @@
                 <% } %>
             </ul>
         </div>
-        <div class="navbar-end">
+        <div class="navbar-right navbar-collapse" ng-class="{'collapse': !collapsedMenu2 }">
             <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown open" dropdown="">
-                    <a class="nav-item nav-link dropdown-toggle" dropdown-toggle="" aria-haspopup="true"
-                        aria-expanded="false">
+                    <a class="dropdown-toggle" dropdown-toggle="" aria-haspopup="true" aria-expanded="false">
                         <img src="/images/ic-app-menu.svg">
                     </a>
                     <ul class="dropdown-menu" role="menu">
