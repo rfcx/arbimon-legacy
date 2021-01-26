@@ -27,22 +27,15 @@ AWS.config.update({
 
 async function k8sF() {
     try {
-        var fs = require('fs');
-        var obj = JSON.parse(fs.readFileSync(config('rfcx').k8sConfigPath, 'utf8'));
-        obj.clusters[0].cluster['certificate-authority-data'] = Buffer.from(obj.clusters[0].cluster['certificate-authority-data']).toString('base64');
-        obj.users[0].user.keyData = Buffer.from(obj.users[0].user['client-key-data']).toString('base64');
-        obj.users[0].user.token = Buffer.from(obj.users[0].user.token).toString('base64');
-        const { KubeConfig } = require('kubernetes-client');
-        const kubeconfig = new KubeConfig();
-        kubeconfig.loadFromString(JSON.stringify(obj));
-        console.log('\n\nkubeconfig', kubeconfig, '\n\n');
-        const Request = require('kubernetes-client/backends/request');
-        const Client = require('kubernetes-client').Client;
-        const backend = new Request({ kubeconfig });
-        const client = new Client({ backend, version: '1.13' });
-
-        const namespaces = await client.api.v1.namespaces.get();
-        console.log('\n\n', namespaces, '\n\n')
+        var inputfile = config('rfcx').k8sConfigPath,
+        yaml = require('js-yaml'),
+        fs = require('fs'),
+        obj = yaml.load(fs.readFileSync(inputfile, {encoding: 'utf-8'}));
+        console.log('\n\nobj', obj, '\n\n');
+        const K8s = require('easy-k8s').Client;
+        const kubeconfig = obj;
+        const allPodSpecs = await K8s.get(kubeconfig, 'all', 'pod');
+        console.log('\n\n', allPodSpecs, '\n\n')
     } catch (e) {
         console.log('\n\nerror', e, '\n\n')
     }
