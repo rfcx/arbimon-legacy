@@ -1,7 +1,8 @@
 ## ✅ DoD
 
 - [x] Resolves [PI-XXX](https://jira.rfcx.org/browse/PI-XXX)
-- [ ] DB migrations updated/na
+- [ ] Release notes updated
+- [ ] Deployment notes updated
 - [ ] ...
 
 ## 📝 Summary
