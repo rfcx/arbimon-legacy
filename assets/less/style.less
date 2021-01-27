@@ -1504,6 +1504,14 @@ img.outlined {
   border: none;
 }
 
+.burger-bar {
+  display: block;
+  width: 21px;
+  height: 2px;
+  background-color: #fff;
+  margin: 6px auto;
+}
+
 .navbar-start {
   float: left;
 }
@@ -1512,18 +1520,86 @@ img.outlined {
   float: right;
 }
 
+.navbar-nav-rfcx {
+  a {
+    color:#e9e6e3;
+  }
+  li > a:hover {
+    background-color: #0f0f17; 
+  }
+}
+
 .navbar-divider{
   margin: 0.5rem 0;
   height: 1px;
   background-color: #45485D;
 }
 
+.navbar-toggle-signin-rfcx{
+  display:none;
+}
+
 @media (max-width: 767px) {
+  
   .navbar-brand {
-    position: absolute;
-    left: 50%;
-    margin-left: -50px !important;
-    display: block;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+  }
+
+  .navbar-flex-start-rfcx {
+    display:flex;
+    justify-content: flex-start;
+    margin-right:  0 auto;
+  }
+
+  .navbar-flex-end-rfcx {
+    display:flex;
+    justify-content: flex-end;
+    margin-left:  0 auto;
+  }
+
+  .navbar-collapse-rfcx {
+    margin: 0px 12px;
+    padding: 0px 12px;
+  }
+
+  .navbar-toggle-signin-rfcx{
+    display:flex;
+  }
+
+  .navbar-nav-rfcx {
+    
+    li > a {
+      float: none;
+      margin: 7.5px 0;
+      padding: 10px 23px;
+      line-height: 20px;
+    }
+
+    li > a:hover {
+      background-color: #0f0f17 !important;
+    }
+
+  }
+
+  .navbar-default .navbar-nav>.active>a,
+  .navbar-default .navbar-nav>.open>a {
+    background: transparent;
+
+    &:after {
+      left: auto;
+      right: 99%;
+      top: 0;
+      bottom: auto;
+      width: 10px;
+      height: 100%;
+      display: block;
+      content: "";
+      background: @val-color-1;
+      position: absolute;
+    }
   }
 
   .navbar-start {

@@ -1,6 +1,6 @@
 <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
-        <div class="navbar-header">
+        <div class="navbar-header row-flex">
             <% if (!user || user.isAnonymousGuest) { %>
             <a href="/" class="navbar-brand">
                 <img src="/images/rfcx-logo.png">
@@ -8,11 +8,11 @@
             </a>
             <% } else { %>
             <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button"
-                class="navbar-toggle collapsed">
+                class="navbar-toggle navbar-collapse-rfcx collapsed">
                 <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
+                <span class="burger-bar"></span>
+                <span class="burger-bar"></span>
+                <span class="burger-bar"></span>
             </button>
             <a href="/home" class="navbar-brand">
                 <img src="/images/rfcx-logo.png">
@@ -21,7 +21,7 @@
             <% } %>
 
             <% if (!user || user.isAnonymousGuest) { %>
-            <a class="navbar-btn btn btn-primary navbar-end" href="/login">SignIn</a>
+            <a class="navbar-btn btn btn-primary navbar-toggle-signin-rfcx navbar-end collapsed" href="/login">SignIn</a>
             <% } else { %>
             <button ng-init="collapsedMenu = true" ng-click="collapsedMenu3 = !collapsedMenu3" type="button"
                 class="navbar-toggle navbar-end collapsed">
@@ -30,13 +30,13 @@
             </button>
             <% } %>
             <button ng-init="collapsedMenu = true" ng-click="collapsedMenu2 = !collapsedMenu2" type="button"
-                class="navbar-toggle navbar-end collapsed">
+                class="navbar-toggle navbar-collapse-rfcx navbar-end collapsed">
                 <img src="/images/ic-app-menu.svg">
             </button>
         </div>
 
         <div class="navbar-start navbar-collapse" ng-class="{'collapse': collapsedMenu }">
-            <ul class="nav navbar-nav">
+            <ul class="nav navbar-nav navbar-nav-rfcx">
                 <% if (user && !user.isAnonymousGuest) { %>
                 <li class="<%- state === 'home.my'? 'active' : '' %>"><a href="/home">My Projects</a></li>
                 <li class="<%- state === 'home.all'? 'active' : '' %>"><a href="/home/all">Public Projects</a></li>
@@ -59,7 +59,7 @@
                     <a class="dropdown-toggle" dropdown-toggle="" aria-haspopup="true" aria-expanded="false">
                         <img src="/images/ic-app-menu.svg">
                     </a>
-                    <ul class="dropdown-menu" role="menu">
+                    <ul class="dropdown-menu navbar-nav-rfcx" role="menu">
                         <li><a href="https://explorer.rfcx.org">Explorer</a></li>
                         <li><a href="https://arbimon.rfcx.org">Arbimon</a></li>
                         <li><a href="https://rfcx-training.web.app">AI Hub</a></li>

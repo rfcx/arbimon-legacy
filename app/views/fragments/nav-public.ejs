@@ -1,26 +1,28 @@
 <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
-        <div class="navbar-header">
+        <div class="navbar-header row-flex">
             <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button"
-                class="navbar-toggle collapsed">
+                class="navbar-toggle navbar-collapse-rfcx collapsed">
                 <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
+                <span class="burger-bar"></span>
+                <span class="burger-bar"></span>
+                <span class="burger-bar"></span>
             </button>
             <a href="/" class="navbar-brand">
                 <img src="/images/rfcx-logo.png">
                 <span class="navbar-title ml-2">Arbimon</span>
             </a>
             <button ng-init="collapsedMenu = true" ng-click="collapsedMenu2 = !collapsedMenu2" type="button"
-            class="navbar-toggle navbar-end collapsed">
+            class="navbar-toggle navbar-collapse-rfcx navbar-end collapsed">
             <img src="/images/ic-app-menu.svg">
         </button>
         </div>
 
         <div class="navbar-start navbar-collapse" ng-class="{'collapse': collapsedMenu }">
-            <ul class="nav navbar-nav">
-                <li><a href="/home">Public projects</a></li>
+            <ul class="nav navbar-nav navbar-nav-rfcx">
+                <li>
+                    <a href="/home">Public projects</a>
+                </li>
             </ul>
         </div>
 
@@ -30,7 +32,7 @@
                     <a class="dropdown-toggle" dropdown-toggle="" aria-haspopup="true" aria-expanded="false">
                         <img src="/images/ic-app-menu.svg">
                     </a>
-                    <ul class="dropdown-menu" role="menu">
+                    <ul class="dropdown-menu  navbar-nav-rfcx" role="menu">
                         <li><a href="https://explorer.rfcx.org">Explorer</a></li>
                         <li><a href="https://arbimon.rfcx.org">Arbimon</a></li>
                         <li><a href="https://rfcx-training.web.app">AI Hub</a></li>
