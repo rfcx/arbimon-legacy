@@ -107,6 +107,7 @@ var Templates = {
             // find the original template.
             select.push(
                 "T.`source_project_id` as `source_project_id`, P2.`name` as `source_project_name`",
+                "IF (T.`source_project_id` IS NULL, P.`url`, P2.`url`) as `project_url`",
                 "IF (T.user_id IS NULL, CONCAT(CONCAT(UCASE(LEFT( U2.`firstname` , 1)), SUBSTRING( U2.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U2.`lastname` , 1)), SUBSTRING( U2.`lastname` , 2))), CONCAT(CONCAT(UCASE(LEFT( U3.`firstname` , 1)), SUBSTRING( U3.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U3.`lastname` , 1)), SUBSTRING( U3.`lastname` , 2)))) AS author",
             );
             tables.push('LEFT JOIN projects P2 ON T.source_project_id = P2.project_id');
