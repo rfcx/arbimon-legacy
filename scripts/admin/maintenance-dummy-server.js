@@ -2,7 +2,6 @@ var http = require('http');
 var path = require('path');
 
 var express = require('express');
-var favicon = require('serve-favicon');
 
 var app = express();
 var rootDir = path.join(__dirname, '../../');
@@ -14,7 +13,6 @@ app.set('view engine', 'ejs');
 
 app.enable('trust proxy');
 
-app.use(favicon(path.join(rootDir, '/public/images/favicon.ico')));
 app.use(express.static(path.join(rootDir, 'public')));
 
 app.get('/alive', function(req, res) { // for health checks
