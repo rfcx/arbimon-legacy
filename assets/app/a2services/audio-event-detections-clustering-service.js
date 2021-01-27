@@ -12,6 +12,9 @@ angular.module('a2.srv.audio-event-detections-clustering', [
             if (opts && opts.rec_id) {
                 config.params.rec_id = opts.rec_id;
             }
+            if (opts && opts.playlist) {
+                config.params.playlist = opts.playlist;
+            }
             return $http.get('/api/project/'+Project.getUrl()+'/audio-event-detections-clustering', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);

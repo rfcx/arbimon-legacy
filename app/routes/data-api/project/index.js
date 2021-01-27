@@ -10,6 +10,8 @@ var util = require('util');
 var gravatar = require('gravatar');
 var paypal = require('paypal-rest-sdk');
 var uuid = require('node-uuid');
+var config = require('../../../config');
+const rfcxConfig = config('rfcx');
 
 var model = require('../../../model');
 
@@ -105,7 +107,7 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
                 project_id: joi.number().required(),
                 name: joi.string(),
                 url: joi.string(),
-                description: joi.string(),
+                description: joi.string().optional().empty(''),
                 is_private: joi.number(),
             };
 
@@ -148,6 +150,9 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
                 var url = urlChanged ? newProjectInfo.url : undefined;
 
                 debug("update project:", result);
+                if (rfcxConfig.coreAPIEnabled) {
+                    model.projects.updateInCoreAPI(newProjectInfo, req.session.idToken)
+                }
                 res.json({ success: true , url: url });
             });
         }

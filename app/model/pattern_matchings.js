@@ -70,8 +70,13 @@ var PatternMatchings = {
             data.push(options.id);
         }
 
+        if (options.completed !== undefined || options.showUser) {
+            tables.push("JOIN jobs J ON PM.job_id = J.job_id");
+        }
+
         if (options.completed !== undefined) {
-            constraints.push('PM.`completed` = ' + dbpool.escape(options.completed));
+            select.push("J.`completed`");
+            constraints.push('J.state = "completed"');
         }
 
         if (options.citizen_scientist !== undefined) {
@@ -96,7 +101,6 @@ var PatternMatchings = {
                 'J.user_id',
                 "CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))) AS user"
             );
-            tables.push("JOIN jobs J ON PM.job_id = J.job_id");
             tables.push("JOIN users U ON J.user_id = U.user_id");
         }
 
@@ -187,7 +191,8 @@ var PatternMatchings = {
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" \n  AND ") + (
-                groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : ""
+                groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "" + "\n" +
+            "ORDER BY timestamp DESC"
             ),
             data
         ))
@@ -489,7 +494,7 @@ var PatternMatchings = {
      */
     delete: function (patternMatchingId) {
         return dbpool.query(
-            "UPDATE pattern_matchings SET deleted=1, citizen_scientist=0, cs_expert=0 WHERE pattern_matching_id = ?", [patternMatchingId]
+            "UPDATE pattern_matchings SET deleted=1, playlist_id=NULL, citizen_scientist=0, cs_expert=0 WHERE pattern_matching_id = ?", [patternMatchingId]
         );
     },
 

@@ -13,7 +13,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         template   : '/app/visualizer/browser/recordings/by-playlist/recordings-by-playlist.html'
     });
 })
-.service('a2PlaylistLOVO', function($q, makeClass, a2Playlists, a2Pager){
+.service('a2PlaylistLOVO', function($q, makeClass, a2Playlists, a2Pager, $state, $localStorage){
     return makeClass({
         static: {
             PageSize : 100,
@@ -46,21 +46,14 @@ angular.module('a2.browser_recordings_by_playlist', [
                     d.resolve(false);
                 });
             }
+            if (self.playlist && self.playlist.id === 0) {
+                d.resolve(true);
+                return d.promise;
+            };
             return d.promise.then(function(){
-                var d = $q.defer();
                 a2Playlists.getInfo(self.playlist.id, function(playlist_info){
                     self.playlist = playlist_info;
-                    switch(self.playlist.type){
-                        case "soundscape region":
-                            self.links = [
-                                {icon:"a2-soundscape-region", tooltip:"View Soundscape Region",
-                                location:"soundscape/" + playlist_info.soundscape + "/" + playlist_info.region}
-                            ];
-                        break;
-                    }
-                    d.resolve();
                 });
-                return d.promise;
             }).then(function(){
                 if(self.whole_list){
                     self.whole_list.forEach(self.append_extras.bind(self));
@@ -69,11 +62,19 @@ angular.module('a2.browser_recordings_by_playlist', [
         },
         load_page: function(offset, count){
             var self = this, d = $q.defer();
-            a2Playlists.getData(self.playlist.id, {
+            var opts = {
                 offset : offset,
                 limit  : count,
                 show:'thumbnail-path'
-            }, function(recordings){
+            };
+            // get recordings data for temporary clusters playlist
+            if ($state.params.clusters) {
+                var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+                if (clustersData && clustersData.playlist && clustersData.playlist.recordings) {
+                    opts.recordings = clustersData.playlist.recordings;
+                }
+            };
+            a2Playlists.getData(self.playlist.id, opts, function(recordings){
                 self.list = recordings;
                 recordings.forEach(function(recording){
                     recording.caption = [recording.site, moment(recording.datetime).utc().format('lll')].join(', ');
@@ -113,7 +114,7 @@ angular.module('a2.browser_recordings_by_playlist', [
             var self = this;
             var d = $q.defer();
             var id = (recording && recording.id) || (recording | 0);
-            
+
             self.find_local(recording)
                 .then(function(found_rec){
                     if(found_rec){
@@ -187,13 +188,13 @@ angular.module('a2.browser_recordings_by_playlist', [
             this.current_page = this.resolve_value(page, this.current_page, 0, this.last_page)|0;
             this.is_at_first_page = this.current_page === 0;
             this.is_at_last_page  = this.current_page === this.last_page;
-            
+
             if(this.block_tracks_page){
                 this.show_block((this.current_page - this.block_size/2 + (this.block_size%2)) / this.block_size);
             } else {
                 this.show_block(this.current_page / this.block_size);
             }
-            
+
             if(this.on_page instanceof Function){
                 var offset = this.current_page*this.page_size;
                 return this.on_page({
@@ -202,7 +203,7 @@ angular.module('a2.browser_recordings_by_playlist', [
                     count  : Math.min(this.page_size, this.item_count - offset + 1)
                 });
             }
-            
+
         },
         update : function(){
             this.is_at_first_page = this.current_page <= 0;
@@ -219,7 +220,7 @@ angular.module('a2.browser_recordings_by_playlist', [
             }
             this.is_at_first_page_block = this.current_page_block <= 0;
             this.is_at_last_page_block  = this.current_page_block >= this.last_page_block;
-            
+
             this.current_page_block_first_page = (this.current_page_block * this.block_size)|0;
             this.current_page_block_last_page  = Math.min(((this.current_page_block+1) * this.block_size - 1)|0, this.last_page);
             this.block = [];
@@ -232,7 +233,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         }
     });
 })
-.controller('a2BrowserRecordingsByPlaylistController', function(itemSelection, a2Browser, rbDateAvailabilityCache, a2Playlists, $timeout, $q, a2PlaylistLOVO){
+.controller('a2BrowserRecordingsByPlaylistController', function(itemSelection, a2Browser, rbDateAvailabilityCache, a2Playlists, $timeout, $q, a2PlaylistLOVO, $state, $localStorage){
     var self = this;
     this.playlists = [];
     this.active=false;
@@ -245,6 +246,13 @@ angular.module('a2.browser_recordings_by_playlist', [
     this.activate = function(){
         self.loading.playlists = true;
         this.getPlaylists = a2Playlists.getList().then(function(playlists){
+            // add temporary clusters playlist to playlists' array
+            if ($state.params.clusters) {
+                var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+                if (clustersData && clustersData.playlist) {
+                    playlists.push(clustersData.playlist);
+                }
+            }
             self.playlists = playlists;
             self.loading.playlists = false;
         }).then(function(){
@@ -262,7 +270,7 @@ angular.module('a2.browser_recordings_by_playlist', [
         self.active = false;
     };
     this.resolve={};
-    
+
     this.resolve_link = function(link){
         if(link.location){
             a2Browser.set_location(link.location);
@@ -277,7 +285,7 @@ angular.module('a2.browser_recordings_by_playlist', [
                 var playlist = self.playlists.filter(function(playlist){
                     return playlist.id == plid;
                 }).shift();
-                
+
                 if(playlist){
                     self.playlist = playlist;
                     self.lovo = new a2PlaylistLOVO(playlist);
@@ -295,7 +303,7 @@ angular.module('a2.browser_recordings_by_playlist', [
     this.get_location = function(recording){
         return 'playlist/' + (this.lovo ? this.lovo.playlist.id + (recording ? "/" + recording.id : '') : '');
     };
-    
+
     this.set_playlist = function(playlist){
         this.playlist = playlist;
         if(!self.active){

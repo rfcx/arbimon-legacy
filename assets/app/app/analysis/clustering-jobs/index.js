@@ -1,6 +1,7 @@
 angular.module('a2.analysis.clustering-jobs', [
     'ui.bootstrap',
     'a2.srv.clustering-jobs',
+    'a2.srv.playlists',
     'a2.services',
     'a2.permissions',
     'a2.directive.audio-bar',
@@ -109,6 +110,44 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.loading = true;
     $scope.toggleMenu = false;
     $scope.infopanedata = '';
+    $scope.selectedCluster = null;
+    var timeout;
+    $scope.decrementClusters = function() {
+        if ($scope.selectedCluster === 1) return
+        $scope.selectedCluster -= 1;
+        $scope.selectClusters();
+    };
+    $scope.incrementClusters = function() {
+        if ($scope.selectedCluster === $scope.layout.shapes.length) return
+        $scope.selectedCluster += 1;
+        $scope.selectClusters();
+    };
+    $scope.selectClusters = function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            if ($scope.selectedCluster !== null) {
+                $("#plotly .select-outline").remove();
+                $scope.layout.shapes.forEach((shape) => {
+                    shape.line.color = shape.fillcolor;
+                    shape.line['stroke-width'] = 1;
+                });
+                $scope.points = [];
+                $scope.layout.shapes.forEach((shape, i) => {
+                    if (i === $scope.selectedCluster - 1) {
+                        $scope.layout.shapes[i].line.color = '#ffffff';
+                        Plotly.relayout(document.getElementById('plotly'), {
+                            '$scope.layout.shapes[i].line.color': '#ff0000',
+                            '$scope.layout.shapes[i].line.stroke-width': 4
+                        });
+                        // collect all selected clusters' points indexes in the points array
+                        $scope.points.push($scope.clusters[i].aed.map((_,i) => {return i}));
+                        $scope.toggleMenu = true;
+                        $scope.$apply();
+                    }
+                });
+            }
+        }, 2000);
+    };
     var getClusteringDetails = function() {
         a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
             if (data) $scope.job_details = data;
@@ -208,7 +247,7 @@ angular.module('a2.analysis.clustering-jobs', [
             });
         }
         // shapes layout
-        var layout = {
+        $scope.layout = {
             shapes: shapes,
             height: 400,
             width: el ? el.offsetWidth : 1390,
@@ -239,7 +278,7 @@ angular.module('a2.analysis.clustering-jobs', [
             return color;
         }
         // make random color for shapes and points
-        layout.shapes.forEach((shape, i) => {
+        $scope.layout.shapes.forEach((shape, i) => {
             var color = random_color();
             data[i].marker = {
                 color: color
@@ -254,7 +293,7 @@ angular.module('a2.analysis.clustering-jobs', [
         $scope.resetSelect = function () {
             $scope.toggleMenu = false;
             $scope.$apply();
-            layout.shapes.forEach((shape) => {
+            $scope.layout.shapes.forEach((shape) => {
                 shape.line.color = shape.fillcolor;
                 shape.line['stroke-width'] = 1;
             });
@@ -269,7 +308,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 displaylogo: false,
                 hoverdistance: 5
             }
-            Plotly.newPlot(el, data, layout, config);
+            Plotly.newPlot(el, data, $scope.layout, config);
             // click on a point
             el.on('plotly_click', function(data) {
                 console.log('plotly_click', data);
@@ -280,13 +319,13 @@ angular.module('a2.analysis.clustering-jobs', [
                     y: data.points[0].y,
                     name: data.points[0].fullData.name
                 };
-                layout.shapes.forEach((shape, i) => {
+                $scope.layout.shapes.forEach((shape, i) => {
                     if (($scope.points.x >= shape.x0) && ($scope.points.x <= shape.x1) &&
                         ($scope.points.y >= shape.y0) && ($scope.points.y <= shape.y1)) {
-                        layout.shapes[i].line.color = '#ffffff';
+                        $scope.layout.shapes[i].line.color = '#ffffff';
                         Plotly.relayout(el, {
-                            'layout.shapes[i].line.color': '#ff0000',
-                            'layout.shapes[i].line.stroke-width': 4
+                            '$scope.layout.shapes[i].line.color': '#ff0000',
+                            '$scope.layout.shapes[i].line.stroke-width': 4
                         });
                         $scope.toggleMenu = true;
                         $scope.$apply();
@@ -301,6 +340,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 $scope.resetSelect();
                 console.log('plotly_selected', data);
                 $scope.points = [];
+                // collect selected points indexes in the points array
                 if (data && data.points && data.points.length) {
                     data.points.forEach(point => {
                         var cluster = point.curveNumber;
@@ -311,7 +351,6 @@ angular.module('a2.analysis.clustering-jobs', [
                     });
                     $scope.toggleMenu = true;
                     $scope.$apply();
-
                 }
             });
         }
@@ -319,6 +358,7 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.onGridViewSelected = function () {
         $scope.toggleMenu = false;
+        $scope.selectedCluster = null;
         $scope.showViewGridPage = true;
         if ($scope.points.length) {
             $scope.gridContext = {};
@@ -377,24 +417,37 @@ angular.module('a2.analysis.clustering-jobs', [
                                 $scope.selectedClusters.boxes[rec.rec_id].push(box);
                             }
                         })
+                        // clear local storage
+                        $scope.removeFromLocalStorage();
+                        var tempPlaylistData = {};
+                        tempPlaylistData.aed = $scope.selectedClusters.aed;
+                        tempPlaylistData.boxes = $scope.selectedClusters.boxes;
                         console.log('boxes', $scope.selectedClusters.boxes);
-                        $localStorage.setItem('analysis.clusters',  JSON.stringify($scope.selectedClusters.boxes));
                         // add related records to a playlist
                         var recIds = data
                             .map(rec => {
                                 return rec.rec_id;
                             })
                             .filter((id, i, a) => a.indexOf(id) === i);
-                        $scope.savePlaylist({
-                            playlist_name: 'cluster_' + recIds.join("_"),
-                            params: recIds.filter((id, i, a) => a.indexOf(id) === i),
-                            isManuallyCreated: true
-                        });
+                        tempPlaylistData.playlist = {
+                            id: 0,
+                            name: 'cluster_' + recIds.join("_"),
+                            recordings: recIds.filter((id, i, a) => a.indexOf(id) === i),
+                            count: recIds.filter((id, i, a) => a.indexOf(id) === i).length
+                        };
+                        console.log('tempPlaylistData', tempPlaylistData);
+                        $localStorage.setItem('analysis.clusters',  JSON.stringify(tempPlaylistData));
+                        $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/0?clusters';
                     }
                 }
             );
         }
     };
+    $scope.removeFromLocalStorage = function () {
+        $localStorage.setItem('analysis.clusters', null);
+        $localStorage.setItem('analysis.clusters.playlist', null);
+        $state.params.clusters = '';
+    }
     $scope.savePlaylist = function(opts) {
         a2Playlists.create(opts,
         function(data) {
@@ -441,6 +494,12 @@ angular.module('a2.analysis.clustering-jobs', [
                 }
             }
             console.log('filtered clusters', clusters);
+            $scope.countClustersDetected = Object.keys(clusters).length;
+            $scope.countAudioEventDetected = Object.values(clusters)
+                .map((cluster => {return cluster.aed.length}))
+                .reduce(function(sum, current) {
+                return sum + current;
+            }, 0);
             drawClusteringPoints(clusters);
         });
     };
@@ -526,7 +585,7 @@ angular.module('a2.analysis.clustering-jobs', [
         templateUrl: '/app/analysis/clustering-jobs/grid-view.html'
     };
 })
-.controller('GridViewCtrl' , function($scope, a2ClusteringJobs, a2AudioBarService, Project) {
+.controller('GridViewCtrl' , function($scope, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
     $scope.loading = true;
     $scope.infopanedata = '';
 
@@ -538,7 +597,7 @@ angular.module('a2.analysis.clustering-jobs', [
         ]
     };
     $scope.search = $scope.lists.search[0];
-
+    $scope.playlistData = {};
     $scope.aedData = {
         count: 0,
         id: []
@@ -621,5 +680,67 @@ angular.module('a2.analysis.clustering-jobs', [
         var projecturl = Project.getUrl();
         var box = ['box', roi.time_min, roi.frequency_min, roi.time_max, roi.frequency_max].join(',');
         return roi ? '/visualizer/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
+    };
+
+    $scope.togglePopup = function() {
+        $scope.isPopupOpened = !$scope.isPopupOpened;
+        // collect seleted aed
+        if ($scope.rows && $scope.rows.length) {
+            $scope.selectedRois = {};
+            $scope.rows.forEach(row => {
+                row.rois.forEach(roi => {
+                    if (roi.selected) {
+                        if (!$scope.selectedRois[roi.recording_id]) {
+                            $scope.selectedRois[roi.recording_id] = {
+                                aed: [roi.aed_id]
+                            }
+                        }
+                        else {
+                            $scope.selectedRois[roi.recording_id].aed.push(roi.aed_id);
+                        }
+                    }
+                })
+            })
+        }
+    }
+
+    $scope.isPlaylistDataValid = function() {
+        return $scope.selectedRois && Object.keys($scope.selectedRois).length && $scope.playlistData.playlistName && $scope.playlistData.playlistName.trim().length > 0;
+    }
+
+    $scope.closePopup = function() {
+        $scope.isPopupOpened = false;
+    }
+
+    $scope.savePlaylist = function() {
+        if (Object.keys($scope.selectedRois).length) {
+            $scope.isSavingPlaylist = true;
+            var aeds = [];
+            Object.values($scope.selectedRois).forEach(obj => {
+                obj.aed.forEach(el=>{ aeds.push(el) })
+            })
+            // create playlist
+            a2Playlists.create({
+                playlist_name: $scope.playlistData.playlistName,
+                params: Object.keys($scope.selectedRois),
+                isManuallyCreated: true
+            },
+            function(data) {
+                console.log('data', data);
+                $scope.isSavingPlaylist = false;
+                $scope.closePopup();
+                 // attach aed to playlist
+                if (data && data.playlist_id) {
+                    a2Playlists.attachAedToPlaylist({
+                        playlist_id: data.playlist_id,
+                        aed: aeds
+                    },
+                    function(data) {
+                        $scope.playlistData = {};
+                        notify.log('Audio event detections are saved in the playlist.');
+                    });
+                }
+            });
+        }
     };
 })

@@ -11,7 +11,8 @@ router.get('/', function(req, res, next) {
 
     return model.AudioEventDetectionsClustering.find({
         project_id: req.project.project_id,
-        rec_id: req.query.rec_id
+        ...!!req.query && !!req.query.rec_id && { rec_id: req.query.rec_id },
+        ...!!req.query && !!req.query.playlist && { playlist: req.query.playlist }
     })
     .then(function(data){
         res.json(data);

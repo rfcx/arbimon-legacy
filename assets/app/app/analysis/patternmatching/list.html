@@ -60,6 +60,9 @@
                     </button>
                 </field>
             </a2-table>
+            <div class="jumbotron seconds-div-center" ng-show="(!patternmatchingsOriginal || !patternmatchingsOriginal.length > 0) && !loading">
+                <h3>{{ infopanedata }}</h3>
+            </div>
         </div>
     </div>
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="selectedPatternMatchingId">

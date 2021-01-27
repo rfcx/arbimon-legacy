@@ -23,7 +23,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
 })
-.controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
     $scope.getTemplateVisualizerUrl = function(template){
@@ -50,7 +50,7 @@ angular.module('a2.analysis.patternmatching', [
         $scope.showInfo = true;
         $scope.splitAllSites = false;
 
-        return a2PatternMatching.list().then(function(data) {
+        return a2PatternMatching.list({completed: true}).then(function(data) {
             $scope.patternmatchingsOriginal = data;
             $scope.patternmatchingsData = data;
             $scope.infoInfo = "";

@@ -8,9 +8,10 @@
             <label for="name">Playlist name</label><span class="text-danger small pull-right">{{errMess}}</span>
             <input type="text"
                 name="name"
-                id="name" 
+                id="name"
                 class="form-control"
-                ng-model="pname">
+                ng-model="pname"
+                ng-change="changePlaylistName()">
         </div>
     </form>
 </div>

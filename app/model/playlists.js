@@ -144,6 +144,12 @@ var Playlists = {
             query = {};
         }
 
+        if (query.recordings) {
+            return q.all(query.recordings.map(function(id){
+                return model.recordings.findByUrlMatch({id: Number(id)}, null, {compute:query && query.show}).get(0);
+            })).nodeify(callback);
+        }
+
         constraints.push('PLR.playlist_id = ?');
         data.push(playlist.id);
 
@@ -402,6 +408,19 @@ var Playlists = {
                 "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
                 "VALUES " + recs.map(function(rec_id) {
                     return "(" + (playlist_id|0) + "," + (rec_id|0) + ")";
+                }).join(",\n       ")
+            );
+        }).nodeify(callback);
+    },
+
+    attachAedToPlaylist: function(playlist_id, aed, callback) {
+       var schema =  Joi.array().items(Joi.number());
+
+        return q.ninvoke(Joi, 'validate', aed, schema).then(function(items) {
+            return dbpool.query(
+                "INSERT INTO playlist_aed(playlist_id, aed_id) \n"+
+                "VALUES " + items.map(function(aed) {
+                    return "(" + (playlist_id|0) + "," + (aed|0) + ")";
                 }).join(",\n       ")
             );
         }).nodeify(callback);

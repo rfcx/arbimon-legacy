@@ -21,6 +21,9 @@ router.get('/', function(req, res, next) {
 
 router.param('playlist', function(req, res, next, playlist){
     res.type('json');
+    if (!!req.query && !!req.query.recordings) {
+        return next();
+    }
     model.playlists.find({
         id      : playlist,
         project : req.project.project_id
@@ -212,6 +215,16 @@ router.post('/delete', function(req, res, next) {
     });
 
 });
+
+router.post('/:playlist/aed', function(req, res, next) {
+    res.type('json');
+
+    model.playlists.attachAedToPlaylist(req.params.playlist, req.body.aed, function(err, data) {
+        if(err) return next(err);
+        res.json(data);
+    });
+});
+
 
 
 

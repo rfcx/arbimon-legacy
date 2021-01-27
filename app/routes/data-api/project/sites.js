@@ -37,7 +37,7 @@ router.post('/create', function(req, res, next) {
 
         site.project_id = project.project_id;
 
-        model.sites.insert(site, function(err, rows) {
+        model.sites.insert(site, function(err, result) {
             if(err) return next(err);
 
             model.projects.insertNews({
@@ -48,7 +48,10 @@ router.post('/create', function(req, res, next) {
             });
 
             if (rfcxConfig.coreAPIEnabled) {
-                model.sites.createInCoreAPI(site, req.session.idToken)
+                model.sites.createInCoreAPI({
+                    ...site,
+                    site_id: result.insertId
+                }, req.session.idToken)
             }
 
             res.json({ message: "New site created" });
@@ -95,6 +98,13 @@ router.post('/update', function(req, res, next) {
             data: JSON.stringify({ site: site.name })
         });
 
+        if (rfcxConfig.coreAPIEnabled) {
+            model.sites.updateInCoreAPI({
+                ...req.body.site,
+                ...(site.project.project_id? { project_id: site.project.project_id } : {})
+            }, req.session.idToken)
+        }
+
         res.json({ message: "site updated" });
     });
 });
@@ -117,6 +127,10 @@ router.post('/delete', function(req, res, next) {
             project_id: project.project_id,
             data: JSON.stringify({ sites: site.name })
         });
+
+        if (rfcxConfig.coreAPIEnabled) {
+            model.sites.deleteInCoreAPI(site.id, req.session.idToken)
+        }
 
         res.json(rows);
     });

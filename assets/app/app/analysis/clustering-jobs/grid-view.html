@@ -18,7 +18,34 @@
             </div>
             <div class="col-sm-6 flex-self-align-bottom">
                 <div class="pull-right">
-                    <div class="btn-group btn-group-margin">
+                    <div class="inline-block" style="position: relative;">
+                        <button class="btn btn-default" type="button" tooltip="Save to playlist" ng-click="togglePopup()">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                        <div class="popover right create-template" style="display: block;" ng-if="isPopupOpened">
+                            <div class="arrow"></div>
+                            <h3 class="popover-title">
+                                Create Playlist
+                            </h3>
+                            <div class="popover-content">
+                                <div class="mb-2">
+                                    <label for="name">Name</label>
+                                    <input to="name" type="text" class="form-control" ng-model="playlistData.playlistName" placeholder="Playlist name"/>
+                                </div>
+                                <button id="submit-btn" class="btn btn-sm btn-default"
+                                    ng-click="savePlaylist()" ng-disabled="!!isSavingPlaylist || !isPlaylistDataValid()">
+                                    <i class="fa text-success" ng-class="{'fa-plus' : !isSavingPlaylist , 'fa-spinner fa-spin': isSavingPlaylist }"></i>
+                                    Create Playlist
+                                </button>
+                                <button class="btn btn-sm btn-default"
+                                    ng-click="closePopup()">
+                                    <i class="fa fa-ban text-danger"></i>
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
                         <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
                         <ui-select ng-model="search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected.value)">
                             <ui-select-match class="right-corners">

@@ -24,7 +24,7 @@ angular.module('a2.audiodata.sites', [
   }])
 .controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader) {
     $scope.loading = true;
-    
+
     Project.getInfo(function(info){
         $scope.project = info;
     });
@@ -56,18 +56,18 @@ angular.module('a2.audiodata.sites', [
     });
 
     $scope.editing = false;
-    
+
     $scope.importSite = function() {
         if(!a2UserPermit.can('manage project sites')) {
             notify.log("You do not have permission to add sites");
             return;
         }
-        
+
         var modalInstance =  $modal.open({
           templateUrl: "/app/audiodata/import.html",
           controller: "ImportSiteInstanceCtrl"
         });
-        
+
         modalInstance.result.then(function(response) {
             // Check the file is valid
             const sites = parseSitesFromCsv(response);
@@ -75,11 +75,11 @@ angular.module('a2.audiodata.sites', [
                 notify.log("Wrong format of csv file")
                 return
             }
-            
+
             // Save the sites
             createSites(sites).then(function () {
                 notify.log("Sites created");
-                
+
                 // Refresh data
                 Project.getSites(function(sites) {
                     $scope.sites = sites;
@@ -89,15 +89,15 @@ angular.module('a2.audiodata.sites', [
             });
         });
     };
-    
+
     function parseSitesFromCsv(allText) {
         var allTextLines = allText.split(/\r\n|\n/);
         var headers = allTextLines[0].split(',');
-        
+
         if(!headers.includes("name") || !headers.includes("lat") || !headers.includes("lon") || !headers.includes("alt")) {
             return false;
         }
-        
+
         var sites = [];
         for (var i=1; i<allTextLines.length; i++) {
             var data = allTextLines[i].split(',');
@@ -117,7 +117,7 @@ angular.module('a2.audiodata.sites', [
         }
         return sites;
     }
-    
+
     function createSites(sites) {
         return Promise.all(
             sites.map(function (site) {
@@ -197,7 +197,7 @@ angular.module('a2.audiodata.sites', [
                 $scope.sites = sites;
             });
 
-            var message = (action == "update") ? "Site updated" : "Ste created";
+            var message = (action == "update") ? "Site updated" : "Site created";
 
             notify.log(message);
         });
@@ -218,7 +218,7 @@ angular.module('a2.audiodata.sites', [
                 this.messages = [
                     "You are about to delete: ",
                     $scope.selected.name,
-                    "Are you sure??"
+                    "Are you sure?"
                 ];
                 this.btnOk = "Yes, do it!";
                 this.btnCancel = "No";
@@ -342,10 +342,10 @@ angular.module('a2.audiodata.sites', [
         $scope.set_show('map');
         $scope.temp = angular.copy($scope.selected);
         $scope.temp.published = ($scope.temp.published === 1);
-        Project.getProjectsList(null, function(data) {
+        Project.getProjectsList('my', function(data) {
             $scope.projects = data.map(project => {
                 return {
-                    project_id: project.id,
+                    project_id: project.project_id,
                     name: project.name,
                     url: project.url
                 }
@@ -426,10 +426,10 @@ angular.module('a2.audiodata.sites', [
         }
         reader.readAsText(files[0]);
     }
-    
+
     $scope.cancel = function(){
         $modalInstance.dismiss();
-    } 
+    }
 })
 // TODO remove properly published
 // .controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {

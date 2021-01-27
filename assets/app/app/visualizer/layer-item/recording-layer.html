@@ -6,37 +6,37 @@
             </div>
             <div class="center-block">
                 <div class="btn-toolbar" >
-                    <div class="btn-group">
-                        <button class="btn btn-default btn-sm" 
-                            ng-disabled="!audio_player.has_recording" 
+                    <div class="btn-group ml-1">
+                        <button class="btn btn-default btn-sm"
+                            ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player.prev_recording() | trackEvent:'Visualizer-RecordingLayer':'AudioControl prev rec'" >
-                            
+
                             <i class="fa fa-step-backward" ></i>
                         </button>
                     </div>
-                    <div class="btn-group">
-                        <button class="btn btn-default btn-sm" 
-                            ng-disabled="!audio_player.has_recording" 
+                    <div class="btn-group ml-1">
+                        <button class="btn btn-default btn-sm"
+                            ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player[audio_player.is_playing ? 'pause' : 'play']()  | trackEvent:'Visualizer-RecordingLayer':'AudioControl start play'" >
-                            
+
                             <i class="fa" ng-class="{'fa-play':!audio_player.is_playing, 'fa-pause':audio_player.is_playing}"></i>
                         </button>
-                        <button class="btn btn-default btn-sm" 
-                            ng-disabled="!audio_player.has_recording" 
+                        <button class="btn btn-default btn-sm"
+                            ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player.stop() | trackEvent:'Visualizer-RecordingLayer':'AudioControl stop play'" >
-                            
+
                             <i class="fa fa-stop"></i>
                         </button>
                     </div>
-                    <div class="btn-group">
-                        <button class="btn btn-default btn-sm" 
-                            ng-disabled="!audio_player.has_recording" 
+                    <div class="btn-group ml-1">
+                        <button class="btn btn-default btn-sm"
+                            ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player.next_recording() | trackEvent:'Visualizer-RecordingLayer':'AudioControl next rec'" >
-                            
+
                             <i class="fa fa-step-forward" ></i>
                         </button>
                     </div>
-                    <div class="btn-group">
+                    <div class="btn-group ml-1">
                         <div class="btn-group dropdown" dropdown dropdown-append-to-body role="group">
                             <button class="btn btn-sm btn-default dropdown-toggle" dropdown-toggle ng-disabled="!audio_player.has_recording" >
                                 <i class="fa fa-fw-1" ng-class="audio_player.resource.audio.volume > .75 ? 'fa-volume-up' : audio_player.resource.audio.volume > .25 ? 'fa-volume-down' : 'fa-volume-off'" ></i>
@@ -44,13 +44,13 @@
                                 <span class="fa fa-caret-down fa-concat-sub"></span>
                             </button>
                             <div class="dropdown-menu min-pad" role="menu">
-                                <div class="no-margin" range-slider min="0" max="1" step="0.01" decimal-places="2" 
-                                    model-max="audio_player.resource.audio.volume" pin-handle="min" show-values="false" 
+                                <div class="no-margin" range-slider min="0" max="1" step="0.01" decimal-places="2"
+                                    model-max="audio_player.resource.audio.volume" pin-handle="min" show-values="false"
                                     attach-handle-values="true"
                                 ></div>
                                 <div class="btn-group btn-group-xs">
                                     <span class="btn btn-default">Gain</span>
-                                    <span class="btn btn-default" 
+                                    <span class="btn btn-default"
                                         ng-click="layer.controller.setGain(gain_level)"
                                         ng-repeat="gain_level in audio_player.gain_levels" ng-class="audio_player.gain == gain_level ? 'active' :''"
                                     >x{{gain_level}}</span>
@@ -62,13 +62,43 @@
                             <span class="fa fa-ellipsis-h fa-concat-sub"></span>
                         </button>
                     </div>
-                    <div class="btn-group">
-                        <button class="btn btn-default btn-sm" 
-                            ng-disabled="!audio_player.has_recording" 
+                    <div class="btn-group ml-1">
+                        <button class="btn btn-default btn-sm"
+                            ng-disabled="!audio_player.has_recording"
                             ng-click="audio_player.download() | trackEvent:'Visualizer-RecordingLayer':'AudioControl download rec'" >
-                            
+
                             <i class="fa fa-download"></i>
                         </button>
+                    </div>
+                    <div class="btn-group ml-1" style="position: relative;">
+                        <button class="btn btn-default btn-sm"
+                            ng-disabled="!audio_player.clustersData"
+                            tooltip="Save to playlist"
+                            ng-click="audio_player.togglePopup() | trackEvent:'Visualizer-RecordingLayer':'AudioControl save playlist'" >
+                            <i class="fa fa-plus"></i>
+                        </button>
+                        <div class="popover left" style="display: block; transform: translateX(-100%); min-width: 16em;" ng-if="audio_player.isPopupOpened">
+                            <div class="arrow" style="top: 12%;"></div>
+                            <h3 class="popover-title">
+                                Create Playlist
+                            </h3>
+                            <div class="popover-content">
+                                <div class="mb-2">
+                                    <label for="name">Name</label>
+                                    <input to="name" type="text" class="form-control" ng-model="audio_player.playlistData.playlistName" placeholder="Playlist name"/>
+                                </div>
+                                <button id="submit-btn" class="btn btn-sm btn-default"
+                                    ng-click="audio_player.savePlaylist()" ng-disabled="!!audio_player.isSavingPlaylist || !audio_player.isPlaylistDataValid()">
+                                    <i class="fa text-success" ng-class="{'fa-plus' : !audio_player.isSavingPlaylist , 'fa-spinner fa-spin': audio_player.isSavingPlaylist }"></i>
+                                    Create Playlist
+                                </button>
+                                <button class="btn btn-sm btn-default"
+                                    ng-click="audio_player.closePopup()">
+                                    <i class="fa fa-ban text-danger"></i>
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
