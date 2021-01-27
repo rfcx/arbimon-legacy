@@ -85,7 +85,7 @@ var Templates = {
         if (options.showOwner || options.allAccessibleProjects) {
             select.push(
                 "IF (T.user_id IS NULL, CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))), CONCAT(CONCAT(UCASE(LEFT( U3.`firstname` , 1)), SUBSTRING( U3.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U3.`lastname` , 1)), SUBSTRING( U3.`lastname` , 2)))) AS author",
-                "P.`name` as `project_name`",
+                "P.`name` as `project_name`, P.`url` as `project_url`",
             );
             tables.push('JOIN projects P ON T.project_id = P.project_id');
             // get an author of a template if the column T.user_id is not null.
