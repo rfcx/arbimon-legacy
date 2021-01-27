@@ -98,7 +98,8 @@ angular.module('a2.audiodata.recordings', [
                 listParams: function() {
                     return listParams;
                 }
-            }
+            },
+            backdrop: false
         });
 
         modalInstance.result.then(function() {
