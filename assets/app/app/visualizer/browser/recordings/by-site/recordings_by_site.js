@@ -280,7 +280,8 @@ angular.module('a2.browser_recordings_by_site', [
         var elementHeight = $controller.scrollElement.height();
         var diff = scrollTop + elementHeight > scrollHeight * 0.6;
         if (diff) {
-            if (self.lovo.loading === true) return;
+            if (!self.lovo) return;
+            if (self.lovo && self.lovo.loading === true) return;
             // self.lovo.loadNext();
         }
     }

@@ -144,6 +144,12 @@ var Playlists = {
             query = {};
         }
 
+        if (query.recordings) {
+            return q.all(query.recordings.map(function(id){
+                return model.recordings.findByUrlMatch({id: Number(id)}, null, {compute:query && query.show}).get(0);
+            })).nodeify(callback);
+        }
+
         constraints.push('PLR.playlist_id = ?');
         data.push(playlist.id);
 
