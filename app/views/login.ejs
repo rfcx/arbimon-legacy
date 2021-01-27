@@ -9,33 +9,37 @@
 </head>
 
 <body ng-controller="LoginCtrl as controller">
-    <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <a href="/" class="navbar-brand">
-                    <img src="/images/rfcx-logo.png">
-                    Arbimon
-                </a>
-            </div>
-        </div>
-    </nav>
-    <div class="jumbotron login-banner">
-        <div class="container">
-            <div class="row">
-                <!--  visible-md-block visible-lg-block hide only on small and x-small screens -->
-                <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-4 col-md-4 col-lg-offset-4 col-lg-4"
-                     ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
-                    <div class="card-container">
-                        <% include fragments/login-form %>
+
+    <div class="container-page">
+        <div class="content-wrap">
+            <nav class="navbar navbar-default" role="navigation">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <a href="/" class="navbar-brand">
+                            <img src="/images/rfcx-logo.png">
+                            Arbimon
+                        </a>
                     </div>
                 </div>
+            </nav>
+            <div class="jumbotron login-banner">
+                <div class="container">
+                    <div class="row">
+                        <!--  visible-md-block visible-lg-block hide only on small and x-small screens -->
+                        <div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-4 col-md-4 col-lg-offset-4 col-lg-4"
+                             ng-class="mode === 'Login' ? 'visible-md-block visible-lg-block' : '' ">
+                            <div class="card-container">
+                                <% include fragments/login-form %>
+                            </div>
+                        </div>
+                    </div>
+        
+                </div>
+        
             </div>
-
         </div>
-
-    </div>
-
-<% include fragments/footer %>
+        <% include fragments/footer %>
+      </div>
 </body>
 
 </html>
