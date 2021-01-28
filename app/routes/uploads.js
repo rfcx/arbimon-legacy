@@ -120,155 +120,151 @@ var verifySite = function(req, res, next) {
 var receiveUpload = function(req, res, next) {
     res.type('json');
 
-    return q.all([])
-        .then(function() {
+    var upload = {};
+    var error = false;
 
-        var upload = {};
-        var error = false;
+    if(!req.busboy) return res.status(400).json({ error: "no data" });
 
-        if(!req.busboy) return res.status(400).json({ error: "no data" });
+    req.busboy.on('field', function(fieldname, val) {
+        debug('field %s = %s', fieldname, val);
 
-        req.busboy.on('field', function(fieldname, val) {
-            debug('field %s = %s', fieldname, val);
-
-            if(fieldname === 'info') {
-                try {
-                    upload.metadata = JSON.parse(val);
-                }
-                catch(err) {
-                    error = true;
-                    return res.status(400).json({ error: err.message });
-                }
-
-                var notValid = !upload.metadata.recorder ||
-                                !upload.metadata.sver ||
-                                !upload.metadata.mic;
-
-                if(notValid && !error) {
-                    error = true;
-                    return res.status(400).json({ error: "missing basic metadata" });
-                }
-            }
-        });
-
-        req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-            debug('file fieldname: %s | filename: %s', fieldname, filename);
-
-            // FFI -> filename format info
+        if(fieldname === 'info') {
             try {
-                upload.FFI = formatParse(req.upload.nameFormat, filename);
+                upload.metadata = JSON.parse(val);
             }
-            catch(e) {
-                file.resume();
+            catch(err) {
                 error = true;
-                return res.status(400).json({ error: e.message });
+                return res.status(400).json({ error: err.message });
             }
 
-            var saveTo = tmpFileCache.key2File(Date.now()+filename);
-            //                                 ^__ concat now() to prevent collitions
-            file.pipe(fs.createWriteStream(saveTo));
+            var notValid = !upload.metadata.recorder ||
+                            !upload.metadata.sver ||
+                            !upload.metadata.mic;
 
-            upload.name = filename;
-            upload.path = saveTo;
-
-        });
-
-        req.busboy.on('finish', function() {
-            if(error) return;
-
-            if(!upload.metadata || !upload.name || !upload.path) {
-                return res.status(400).json({ error: "form data not complete"});
+            if(notValid && !error) {
+                error = true;
+                return res.status(400).json({ error: "missing basic metadata" });
             }
+        }
+    });
 
-            debug('metadata: ', upload.metadata);
-            debug('filename: ', upload.name);
+    req.busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+        debug('file fieldname: %s | filename: %s', fieldname, filename);
 
-            async.waterfall([
-                function recNotExists(callback) {
-                    model.recordings.exists({
-                        site_id: req.upload.siteId,
-                        filename: upload.FFI.filename
-                    },
-                    function(err, exists) {
+        // FFI -> filename format info
+        try {
+            upload.FFI = formatParse(req.upload.nameFormat, filename);
+        }
+        catch(e) {
+            file.resume();
+            error = true;
+            return res.status(400).json({ error: e.message });
+        }
+
+        var saveTo = tmpFileCache.key2File(Date.now()+filename);
+        //                                 ^__ concat now() to prevent collitions
+        file.pipe(fs.createWriteStream(saveTo));
+
+        upload.name = filename;
+        upload.path = saveTo;
+
+    });
+
+    req.busboy.on('finish', function() {
+        if(error) return;
+
+        if(!upload.metadata || !upload.name || !upload.path) {
+            return res.status(400).json({ error: "form data not complete"});
+        }
+
+        debug('metadata: ', upload.metadata);
+        debug('filename: ', upload.name);
+
+        async.waterfall([
+            function recNotExists(callback) {
+                model.recordings.exists({
+                    site_id: req.upload.siteId,
+                    filename: upload.FFI.filename
+                },
+                function(err, exists) {
+                    if(err) return next(err);
+
+                    if(exists) {
+                        deleteFile(upload.path);
+                        var msg = "filename "+ upload.FFI.filename +
+                                    " already exists on site " + req.upload.siteId;
+                        return res.status(403).json({ error: msg });
+                    }
+
+                    callback();
+                });
+            },
+            function getAudioInfo(callback) {
+                audioTools.info(upload.path, function(code, info) {
+                    if(code !== 0) {
+                        deleteFile(upload.path);
+                        return res.status(500).json({ error: "error getting audio file info" });
+                    }
+
+                    callback(null, info);
+                });
+            },
+            function sendToProcess(info, callback) {
+
+                upload.projectId = req.upload.projectId;
+                upload.siteId = req.upload.siteId;
+                upload.userId = req.upload.userId;
+                upload.info = info;
+
+                if(info.duration >= 3600) {
+                    deleteFile(upload.path);
+                    return res.status(403).json({ error: "Recording is too long, please contact support" });
+                }
+
+                if(info.duration > 61) {
+                    audioTools.splitter(upload.path, info.duration, function(err, files) {
                         if(err) return next(err);
 
-                        if(exists) {
-                            deleteFile(upload.path);
-                            var msg = "filename "+ upload.FFI.filename +
-                                      " already exists on site " + req.upload.siteId;
-                            return res.status(403).json({ error: msg });
-                        }
+                        var i = 0;
+                        async.eachSeries(files, function(f, nextUpload) {
+                            var uploadPart = _.cloneDeep(upload);
 
-                        callback();
-                    });
-                },
-                function getAudioInfo(callback) {
-                    audioTools.info(upload.path, function(code, info) {
-                        if(code !== 0) {
-                            deleteFile(upload.path);
-                            return res.status(500).json({ error: "error getting audio file info" });
-                        }
+                            uploadPart.FFI.filename = uploadPart.FFI.filename +'.p'+ (i+1);
 
-                        callback(null, info);
-                    });
-                },
-                function sendToProcess(info, callback) {
+                            uploadPart.FFI.datetime.setMinutes(uploadPart.FFI.datetime.getMinutes()+i);
 
-                    upload.projectId = req.upload.projectId;
-                    upload.siteId = req.upload.siteId;
-                    upload.userId = req.upload.userId;
-                    upload.info = info;
+                            uploadPart.name = uploadPart.FFI.filename + uploadPart.FFI.filetype;
+                            uploadPart.path = f;
 
-                    if(info.duration >= 3600) {
-                        deleteFile(upload.path);
-                        return res.status(403).json({ error: "Recording is too long, please contact support" });
-                    }
+                            debug('upload', uploadPart);
+                            uploadQueue.enqueue(_.cloneDeep(uploadPart), function(err) {
+                                if(err) return nextUpload(err);
 
-                    if(info.duration > 61) {
-                        audioTools.splitter(upload.path, info.duration, function(err, files) {
-                            if(err) return next(err);
-
-                            var i = 0;
-                            async.eachSeries(files, function(f, nextUpload) {
-                                var uploadPart = _.cloneDeep(upload);
-
-                                uploadPart.FFI.filename = uploadPart.FFI.filename +'.p'+ (i+1);
-
-                                uploadPart.FFI.datetime.setMinutes(uploadPart.FFI.datetime.getMinutes()+i);
-
-                                uploadPart.name = uploadPart.FFI.filename + uploadPart.FFI.filetype;
-                                uploadPart.path = f;
-
-                                debug('upload', uploadPart);
-                                uploadQueue.enqueue(_.cloneDeep(uploadPart), function(err) {
-                                    if(err) return nextUpload(err);
-
-                                    i++;
-                                    nextUpload();
-                                });
-                            }, function splitDone(err2) {
-                                if(err2) return next(err2);
-
-                                deleteFile(upload.path);
-                                res.status(202).json({ success: "upload done!" });
+                                i++;
+                                nextUpload();
                             });
-                        });
-                    }
-                    else {
-                        debug('upload', upload);
-                        uploadQueue.enqueue(upload, function(err) {
-                            if(err) return next(err);
+                        }, function splitDone(err2) {
+                            if(err2) return next(err2);
 
+                            deleteFile(upload.path);
                             res.status(202).json({ success: "upload done!" });
                         });
-                    }
+                    });
                 }
-            ]);
+                else {
+                    debug('upload', upload);
+                    uploadQueue.enqueue(upload, function(err) {
+                        if(err) return next(err);
 
-        });
+                        res.status(202).json({ success: "upload done!" });
+                    });
+                }
+            }
+        ]);
 
-        req.pipe(req.busboy);
-    }).catch(next);
+    });
+
+    req.pipe(req.busboy);
 };
 
 var receiveSiteLogUpload = function(req, res, next) {
