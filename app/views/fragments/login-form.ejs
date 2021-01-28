@@ -1,4 +1,8 @@
-<hr class="hr-text mb-4 mt-0" data-content="EXISTING ARBIMON II USERS">
+<div class="form-group oauth-buttons text-center">
+    <a class="btn btn-primary" href="<%- auth0UniversalLoginUrl %>">Login with RFCx account</a>
+</div>
+<br />
+<hr class="hr-text mb-4 mt-0" data-content="NOT YET MIGRATED">
 <form role="form" ng-submit="login()">
     <div class="form-group">
         <label class="sr-only" for="user">Username</label>
@@ -15,14 +19,8 @@
     </div>
     <button class="btn btn-default btn-block" type="submit">Login</button>
     <div class="text-right mt-2"><a href="/forgot_request">Forgotten password?</a></div>
-
-    <hr class="hr-text mb-0" data-content="OR">
-
-    <div class="form-group oauth-buttons text-center">
-        <a class="btn btn-default btn-block" href="<%- auth0UniversalLoginUrl %>">Login with RFCx account</a>
-    </div>
     <br />
     <small class="text-info inline-block text-justify mt-1">
-        Note: access an existing Arbimon account by logging in via an RFCx account with a matching email address.
+        Note: Check out the benefits of <a href="https://staging-arbimon.rfcx.org/connect-with-rfcx" style="font-weight: bold;">migrating your account to RFCx.</a> You'll be able to access your existing Arbimon account with all your data by logging in via RFCx by using a matching email address.
     </small>
 </form>
