@@ -23,13 +23,12 @@
             <% if (!user || user.isAnonymousGuest) { %>
             <a class="navbar-btn btn btn-primary navbar-toggle-signin-rfcx navbar-end collapsed" href="/login">SignIn</a>
             <% } else { %>
-            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu3 = !collapsedMenu3" type="button"
-                class="navbar-toggle navbar-end collapsed">
-                <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
-                    style="background-image:url('<%- user.imageUrl %>')"></i>
+            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu2 = !collapsedMenu2" type="button"
+                class="navbar-toggle navbar-end collapsed fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
+                style="background-image:url('<%- user.imageUrl %>')">
             </button>
             <% } %>
-            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu2 = !collapsedMenu2" type="button"
+            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu3 = !collapsedMenu3" type="button"
                 class="navbar-toggle navbar-collapse-rfcx navbar-end collapsed">
                 <img src="/images/ic-app-menu.svg">
             </button>
@@ -46,14 +45,7 @@
                 <% } %>
             </ul>
         </div>
-        <div class="navbar-right" ng-class="{'collapse': !collapsedMenu3 }">
-            <ul class="nav navbar-nav navbar-right">
-                <% if (user && !user.isAnonymousGuest) { %>
-                <% include user-dropdown %>
-                <% } %>
-            </ul>
-        </div>
-        <div class="navbar-right navbar-collapse" ng-class="{'collapse': !collapsedMenu2 }">
+        <div class="navbar-right navbar-collapse" ng-class="{'collapse': !collapsedMenu3 }">
             <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown open" dropdown="">
                     <a class="dropdown-toggle" dropdown-toggle="" aria-haspopup="true" aria-expanded="false">
@@ -67,6 +59,13 @@
                         <li><a href="https://rfcx.org/">RFCx.org</a></li>
                     </ul>
                 </li>
+            </ul>
+        </div>
+        <div class="navbar-right navbar-collapse" ng-class="{'collapse': !collapsedMenu2 }">
+            <ul class="nav navbar-nav navbar-right navbar-nav-rfcx">
+                <% if (user && !user.isAnonymousGuest) { %>
+                <% include user-dropdown %>
+                <% } %>
             </ul>
         </div>
     </div>
