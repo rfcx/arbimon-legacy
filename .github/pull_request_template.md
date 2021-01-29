@@ -3,6 +3,7 @@
 - [x] Resolves [PI-XXX](https://jira.rfcx.org/browse/PI-XXX)
 - [ ] Release notes updated
 - [ ] Deployment notes updated
+- [ ] DB migrations updated/na
 - [ ] ...
 
 ## 📝 Summary
