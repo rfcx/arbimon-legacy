@@ -1494,6 +1494,31 @@ img.outlined {
   }
 }
 
+//set footer
+
+.container-page{
+  position: relative;
+  min-height: 100vh;
+}
+
+.content-wrap{
+  padding-bottom: 100px;
+}
+
+.hr-line{
+  margin: 20px 100px 20px 100px;
+  border: 0;
+  border-top: 1px solid #45485d;
+}
+
+.footer-page {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100px;
+  text-align: center;
+}
+
 /* Chrome, Safari, Edge, Opera */
 .hide-input-arrow > input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -1503,11 +1528,19 @@ img.outlined {
 /* Firefox */
 .hide-input-arrow > input[type=number] {
   -moz-appearance: textfield;
-}  
 
 .visualizer-page {
   #beacon-container,
   #footer {
     display: none;
+  }
+
+  .container-page {
+    position: sticky;
+    min-height: 100vh;
+  }
+
+  .content-wrap {
+    padding-bottom: 0px;
   }
 }

@@ -25,8 +25,8 @@ angular.module('a2.audiodata.templates', [
             this.currentTab = 'showOwner';
         },
         getTemplateVisualizerUrl: function(template){
-            var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-            return template ? "/project/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+            var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+            return template ? "/project/"+template.project_url+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
         },
         goToSourceProject: function(projectId) {
             if (!projectId) return;
