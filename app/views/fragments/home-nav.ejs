@@ -1,36 +1,78 @@
 <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
         <div class="navbar-header">
-            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
+            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button"
+                class="navbar-toggle navbar-toggle-left collapsed">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-        <% if (!user || user.isAnonymousGuest) { %>
-            <a href="/" class="navbar-brand">
-                <img src="/images/rfcx-logo.png">Arbimon
-            </a>
-        <% } else { %>
-            <a href="/home" class="navbar-brand">
+            <% if (!user || user.isAnonymousGuest) { %>
+            <a href="/" class="navbar-brand navbar-brand-center">
                 <img src="/images/rfcx-logo.png">
-                Arbimon
+                <span class=navbar-title>Arbimon</span>
             </a>
-        <% } %>
+            <a class="navbar-btn btn btn-primary navbar-toggle-right collapse-menu-hide collapsed" href="/login">
+                Sign In
+            </a>
+            <% } else { %>
+            <a href="/" class="navbar-brand navbar-brand-center">
+                <img src="/images/rfcx-logo.png">
+                <span class=navbar-title>Arbimon</span>
+            </a>
+
+            <button ng-init="collapsedMenu = true" ng-click="collapsedMenu2 = !collapsedMenu2" type="button"
+                class="navbar-toggle navbar-toggle-right collapsed fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
+                style="background-image:url('<%- user.imageUrl %>')">
+            </button>
+            <% } %>
         </div>
-        <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
-            <ul class="nav navbar-nav">
+        <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': collapsedMenu }">
+            <ul class="nav navbar-nav navbar-left">
                 <% if (user && !user.isAnonymousGuest) { %>
-                    <li class="<%- state === 'home.my'? 'active' : '' %>"><a href="/home" >My Projects</a></li>
-                    <li class="<%- state === 'home.all'? 'active' : '' %>"><a href="/home/all">Public Projects</a></li>
+                <li class="<%- state === 'home.my'? 'active' : '' %>"><a href="/home">My Projects</a></li>
+                <li class="<%- state === 'home.all'? 'active' : '' %>"><a href="/home/all">Public Projects</a></li>
                 <% } %>
                 <% if (user && user.isSuper) { %>
                 <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>
                 <% } %>
             </ul>
-            <ul class="nav navbar-nav navbar-right">
+            <ul class="nav navbar-nav navbar-right navbar-menu-hide">
                 <% include user-dropdown %>
             </ul>
+            <ul class="nav navbar-nav navbar-right mr-0">
+                <li class="dropdown open" dropdown="">
+                    <a class="dropdown-toggle replace-icon navbar-icon-pd-14" dropdown-toggle="" aria-haspopup="true"
+                        aria-expanded="false">
+                        <img src="/images/ic-app-menu.svg">
+                        <span>RFCXx Link</span>
+                    </a>
+                    <ul class="dropdown-menu navbar-link-rfcx" role="menu">
+                        <li><a href="https://explorer.rfcx.org">Explorer</a></li>
+                        <li><a href="https://arbimon.rfcx.org">Arbimon</a></li>
+                        <li><a href="https://rfcx-training.web.app">AI Hub</a></li>
+                        <hr class="navbar-divider">
+                        <li><a href="https://rfcx.org/">RFCx.org</a></li>
+                    </ul>
+                </li>
+            </ul>
         </div>
+        <% if (user && !user.isAnonymousGuest) { %>
+        <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': collapsedMenu2 }">
+            <ul class="nav navbar-nav navbar-left collapse-menu-hide">
+                <li>
+                    <a href="/user-settings">
+                        <i class="fa fa-wrench"></i> Account Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="/logout">
+                        <i class="fa fa-sign-out"></i> Sign out
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <% } %>
     </div>
 </nav>
