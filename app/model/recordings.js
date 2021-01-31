@@ -564,7 +564,8 @@ var Recordings = {
                 if(err) { callback(err); return; }
                 audioTools.spectrogram(recording_path.path, cache_miss.file, {
                     pixPerSec : config("spectrograms").spectrograms.pixPerSec,
-                    height    : config("spectrograms").spectrograms.height
+                    height    : config("spectrograms").spectrograms.height,
+                    ...recording.uri.endsWith('.opus') && recording.sample_rate && { maxfreq: recording.sample_rate * 2 }
                 },function(status_code){
                     if(status_code) { callback({code:status_code}); return; }
                     cache_miss.retry_get();

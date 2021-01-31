@@ -1,5 +1,21 @@
 # Arbimon Release Notes
 
+## v3.0.7 - Jan 29, 2021
+
+New features:
+- PI-352 Change place of “Login with RFCx account” in the Arbimon’s Page
+
+Resolved issues:
+- PI-423 Disable code that checks for storage limit
+- PI-435 Fix view in visualizer button in data templates
+- PI-351 Fix the Page Footer
+- PI-208 Fix Playlist Name Select
+
+## v3.0.6 - Jan 27, 2021
+
+Resolved issues:
+- Fix spectrogram service issue related to incorrect sample rate for opus files
+
 ## v3.0.5 - Jan 25, 2021
 
 New features:
@@ -134,7 +150,7 @@ Resolved issues:
     - moving visualizer link to the bottom right
     - removing broken/unneeded variables in delete controller
     - removing delete button click-through
-    
+
 ## visualizer
     - using ui select in playlist dropdown
     - using ui select in sites dropdown
@@ -401,6 +417,6 @@ Resolved issues:
     - `layer_type` is now a provider instead of a factory.
     - `options` argument is now passed to `connection.query` in to `dbpool.queryHandler`
     - Added debug output for options in `dbpool.queryHandler`
-    
+
 ## v1.0.0 - Sep 30, 2015
 - Arbimon II launched

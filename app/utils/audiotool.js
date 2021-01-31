@@ -170,13 +170,13 @@ var audiotools = {
     spectrogram : function(source_path, destination_path, options, callback){
         if(options instanceof Function) { callback = options; }
         options = options || {};
-
         var args = [];
         args.push(source_path);
+        args.push('-n');
         if(options.maxfreq) {
-            args.push('-r', ((options.maxfreq/500)|0) + 'k'); // maximum frequency to show in spectrogram
+            args.push('rate', (options.maxfreq/2)|0); // maximum frequency to show in spectrogram
         }
-        args.push('-n', 'spectrogram');             // sox spectrogram filter
+        args.push('spectrogram');             // sox spectrogram filter
         args.push('-r',                             // output just the raw spectrogram image (no axes, no nothing)
             '-y', ((options.height    | 0) || 256)  // set the spectrogram's height
         );
