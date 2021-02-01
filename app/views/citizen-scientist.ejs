@@ -38,6 +38,15 @@
                     </div>
         
                     <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': collapsedMenu }">
+
+                        <ul class="nav navbar-nav navbar-left">
+                            <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
+                                <a class="dropdown-toggle" dropdown-toggle>
+                                    <i class="fa fa-sitemap"></i>
+                                    <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>
+                                </a>
+                            </li>
+                        </ul>
                         <ul class="nav navbar-nav navbar-left hide-tooltip-lg">
                             <li ui-sref="citizen-scientist.my-stats" ui-sref-active="active"><a>My Stats</a></li>
                             <li ui-sref="citizen-scientist.patternmatching" ng-class="{active: $state.includes('citizen-scientist.patternmatching-details') || $state.includes('citizen-scientist.patternmatching')}"><a>Pattern Matching</a></li>
@@ -51,13 +60,9 @@
                             <li ui-sref="citizen-scientist.admin.user-stats" ui-sref-active="active"  ng-if="userPermit.can(['view project', 'view citizen scientist admin interface'])" ><a>User Stats</a></li>
                             <li ui-sref="citizen-scientist.admin.settings" ui-sref-active="active" ng-if="userPermit.can(['manage pattern matchings', 'view citizen scientist admin interface'])" ><a>Settings</a></li>
                         </ul>
-                        <ul class="nav navbar-nav navbar-right navbar-menu-hide hide-tooltip-lg">
-                            <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
-                                <a class="dropdown-toggle" dropdown-toggle>
-                                    <i class="fa fa-sitemap"></i>
-                                    <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>
-                                </a>
-                            </li>
+                        <hr class="navbar-divider-collapse">
+
+                        <ul class="nav navbar-nav navbar-right navbar-menu-hide">
                             <% include fragments/user-dropdown %>
                         </ul>
                         <ul class="nav navbar-nav navbar-right mr-0">

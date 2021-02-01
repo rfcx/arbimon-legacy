@@ -32,8 +32,10 @@
                 <% if (user && user.isSuper) { %>
                 <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>
                 <% } %>
-                <hr class="navbar-divider">
             </ul>
+            <% if (user && !user.isAnonymousGuest) { %>
+            <hr class="navbar-divider-collapse">
+            <% } %>
             <ul class="nav navbar-nav navbar-right navbar-menu-hide">
                 <% include user-dropdown %>
             </ul>
