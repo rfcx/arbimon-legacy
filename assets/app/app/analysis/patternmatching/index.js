@@ -157,7 +157,7 @@ angular.module('a2.analysis.patternmatching', [
         this.loading = {details: false, rois:false};
         this.validation = this.lists.validation[2];
         this.thumbnailClass = this.lists.thumbnails[0].value;
-        this.search = this.lists.search[0];
+        this.search = this.lists.search[6];
         this.projecturl = Project.getUrl();
         this.fetchDetails().then((function(){
             this.loadSiteIndex();
