@@ -1,6 +1,6 @@
 # Arbimon - Acoustic Analyzer
 
-[Release Notes](./RELEASE_NOTES.md) | [Deployment Notes](./DEPLOYMENT_NOTES.md)
+[Release Notes](./CHANGELOG.md) | [Deployment Notes](./DEPLOYMENT_NOTES.md)
 
 ## Getting started
 
