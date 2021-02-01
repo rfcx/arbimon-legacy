@@ -1,18 +1,18 @@
 <% if (!user || user.isAnonymousGuest) { %>
 <li>
     <div>
-        <a class="navbar-btn btn btn-primary collapsed" href="/login">
+        <a class="navbar-btn btn btn-primary navbar-mr1 collapsed" href="/login">
             Sign In
         </a>
     </div>
 </li>
 <% } else { %>
 <li class="dropdown" dropdown>
-    <a class="dropdown-toggle" dropdown-toggle>
+    <a class="dropdown-toggle navbar-mr1" dropdown-toggle>
         <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
             style="background-image:url('<%- user.imageUrl %>')"></i>
     </a>
-    <ul class="dropdown-menu" role="menu">
+    <ul class="dropdown-menu navbar-mr1 dropdown-menu-wd" role="menu">
         <li>
             <a href="/user-settings">
                 <i class="fa fa-wrench"></i> Account Settings

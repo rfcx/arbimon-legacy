@@ -32,6 +32,7 @@
                 <% if (user && user.isSuper) { %>
                 <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>
                 <% } %>
+                <hr class="navbar-divider">
             </ul>
             <ul class="nav navbar-nav navbar-right navbar-menu-hide">
                 <% include user-dropdown %>
@@ -43,7 +44,7 @@
                         <img src="/images/ic-app-menu.svg">
                         <span>RFCXx Link</span>
                     </a>
-                    <ul class="dropdown-menu navbar-link-rfcx" role="menu">
+                    <ul class="dropdown-menu navbar-link-rfcx dropdown-menu-wd dropdown-menu-wd" role="menu">
                         <li><a href="https://explorer.rfcx.org">Explorer</a></li>
                         <li><a href="https://arbimon.rfcx.org">Arbimon</a></li>
                         <li><a href="https://rfcx-training.web.app">AI Hub</a></li>
