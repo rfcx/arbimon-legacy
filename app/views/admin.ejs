@@ -53,20 +53,7 @@
                     <% include fragments/user-dropdown %>
                 </ul>
                 <ul class="nav navbar-nav navbar-right mr-0">
-                    <li class="dropdown open" dropdown="">
-                        <a class="dropdown-toggle replace-icon navbar-icon-pd-14" dropdown-toggle="" aria-haspopup="true"
-                            aria-expanded="false">
-                            <img src="/images/ic-app-menu.svg">
-                            <span>RFCXx Link</span>
-                        </a>
-                        <ul class="dropdown-menu navbar-link-rfcx dropdown-menu-wd" role="menu">
-                            <li><a href="https://explorer.rfcx.org">Explorer</a></li>
-                            <li><a href="https://arbimon.rfcx.org">Arbimon</a></li>
-                            <li><a href="https://rfcx-training.web.app">AI Hub</a></li>
-                            <hr class="navbar-divider">
-                            <li><a href="https://rfcx.org/">RFCx.org</a></li>
-                        </ul>
-                    </li>
+                    <% include fragments/other-rfcx-apps %>
                 </ul>
             </div>
             <% if (user && !user.isAnonymousGuest) { %>
