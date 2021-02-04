@@ -85,6 +85,11 @@ angular.module('a2.audiodata.recordings', [
 
         if(!Object.keys(listParams).length)
             return;
+            
+        if($scope.totalRecs == 0) {
+            notify.log('You can\'t create playlist with 0 recording');
+            return;
+        }
 
         if(!a2UserPermit.can('manage playlists')) {
             notify.log('You do not have permission to create playlists');

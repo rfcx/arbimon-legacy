@@ -369,23 +369,6 @@ angular.module('a2.audiodata.sites', [
         $scope.temp.project = $item;
     };
 
-    $scope.site_token = function() {
-
-        if(!$scope.selected || $scope.selected.imported)
-            return;
-
-        if(!a2UserPermit.can('manage project sites')) {
-            notify.log("You do not have permission to edit sites");
-            return;
-        }
-
-        var modalInstance = $modal.open({
-            templateUrl: '/app/audiodata/site-tokens-popup.html',
-            controller: 'SitesTokenGenaratorCtrl',
-            scope: $scope
-        });
-    };
-
     $scope.sel = function(site) {
         return $state.transitionTo($state.current.name, {site:site.id, show:$state.params.show}, {notify:false}).then(function(){
             $scope.close();
