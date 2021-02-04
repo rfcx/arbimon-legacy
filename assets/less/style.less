@@ -1507,11 +1507,9 @@ img.outlined {
   }
 }
 
-
 // Navigation new version
-
-.navbar-default .navbar-nav > .active > a,
-.navbar-default .navbar-nav > .open > a {
+.navbar-default .navbar-nav>.active>a,
+.navbar-default .navbar-nav>.open>a {
   background: transparent;
 
   &:after {
@@ -1522,14 +1520,13 @@ img.outlined {
     position: absolute;
     bottom: 0;
     left: 0;
-    
   }
-
 }
 
-.navbar-default .navbar-nav .open .dropdown-menu > .active > a {
+.navbar-default .navbar-nav .open .dropdown-menu>.active>a {
   @media (max-width: @screen-tablet) {
     background-color: @gray-darker;
+
     &:hover,
     &:focus,
     &:active {
@@ -1540,7 +1537,7 @@ img.outlined {
 
 .navbar-toggle {
   border: none;
-  
+
   &:hover {
     background-color: transparent !important;
   }
@@ -1570,38 +1567,27 @@ img.outlined {
   font-weight: 700;
 }
 
-.navbar-brand-center {
-  @media (max-width:767px) {
-    position: absolute;
-    left: 50%;
-    margin-left: -70px !important;
-    display: block;
-  }
-}
-
 .replace-icon {
   span {
     display: none;
   }
+
   img {
     display: block;
   }
 }
 
-.navbar-mr1 {
+.navbar-rfcx-link-m {
+  margin-left: 15px !important;
   margin-right: -15px !important;
 }
 
-.navbar-mr2 {
+.navbar-mrd {
   margin-right: -30px !important;
 }
 
-.navbar-icon-pd-14 {
-  padding-bottom: 14px !important;
-}
-
 .dropdown-right {
-  float:right;
+  float: right;
 }
 
 .navbar-divider {
@@ -1611,7 +1597,7 @@ img.outlined {
 }
 
 .collapse-menu-hide {
-  display:none;
+  display: none;
 }
 
 .navbar-link-pd {
@@ -1620,21 +1606,30 @@ img.outlined {
 
 .dropdown-menu-wd {
   min-width: 0px;
+
   a {
     padding: 5px 15px !important;
   }
 }
 
 .navbar-divider-collapse {
-  display:none;
+  display: none;
 }
 
 @media (max-width:767px) {
+
+  .navbar-brand-center {
+    position: absolute;
+    left: 50%;
+    margin-left: -70px !important;
+    display: block;
+  }
 
   .replace-icon {
     span {
       display: block;
     }
+
     img {
       display: none;
     }
@@ -1662,11 +1657,11 @@ img.outlined {
     a {
       margin: 0 !important;
       padding: 10px auto !important;
-      
+
     }
   }
 
-  .navbar-icon-pd-14 {
+  .navbar-link-pd {
     padding: 10px 15px 10px 15px !important;
   }
 
@@ -1690,13 +1685,13 @@ img.outlined {
       padding: 10px 15px 10px 25px !important;
     }
   }
-  
+
   .collapse-menu-hide {
-    display:block
+    display: block
   }
 
   .navbar-menu-hide {
-    display:none;
+    display: none;
   }
 
 }
