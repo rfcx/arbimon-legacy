@@ -41,7 +41,7 @@ angular.module('a2.audiodata.training-sets', [
         };
     }
 )
-.controller('TrainingSetsCtrl', function($state, $scope, a2TrainingSets, Project, $q, $modal, a2TrainingSetHistory, a2UserPermit, notify) {
+.controller('TrainingSetsCtrl', function($state, $window, a2TrainingSets, Project, $q, $modal, a2TrainingSetHistory, a2UserPermit, notify) {
     var p={
         set : $state.params.set,
         show : $state.params.show
@@ -61,7 +61,7 @@ angular.module('a2.audiodata.training-sets', [
     this.loaderDisplay = false;
 
     this.getROIVisualizerUrl = function(roi){
-        return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording : '';
+        $window.location.href = roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording : '';
     };
 
     this.setROI = function(roi_index){

@@ -176,13 +176,13 @@
                                 tooltip="Delete ROI">
                                 <i class="fa fa-times"></i>
                             </button>
-                            <a class="roi-btn-br" ng-href="{{controller.getROIVisualizerUrl(roi)}}">
+                            <div class="roi-btn-br" ng-click="controller.getROIVisualizerUrl(roi); $event.stopPropagation()" style="cursor:pointer">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer"
-                                    class="fa fa-cubes">
+                                    class="fa fa-cubes" style="color:white">
                                 </i>
-                            </a>
+                            </div>
                             <img ng-src="{{ roi.uri }}" class="roi-img"/>
                         </div>
                     </div>
@@ -195,9 +195,9 @@
                                         <div class="col-sm-5" >Duration: {{controller.selected.roi.dur}}s</div>
                                         <div class="col-sm-5" >{{controller.selected.roi.y1}}-{{controller.selected.roi.y2}}Hz</div>
                                         <div class="col-sm-1" >
-                                            <a ng-href="{{controller.getROIVisualizerUrl(controller.selected.roi)}}">
-                                                <i tooltip="View in Visualizer" class="fa fa-cubes"></i>
-                                            </a>
+                                            <div ng-click="controller.getROIVisualizerUrl(controller.selected.roi)" style="cursor:pointer">
+                                                <i tooltip="View in Visualizer" class="fa fa-cubes" style="color:white"></i>
+                                            </div>
                                         </div>
                                         <div class="col-sm-1" class="roi-div-inline-remove-detail" >
                                             <button class="roi-delete"

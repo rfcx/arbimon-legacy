@@ -27,13 +27,13 @@
                                     class="fa fa-play">
                                 </i>
                             </a>
-                            <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}">
+                            <div class="roi-btn-br" ng-click="getTemplateVisualizerUrl(row)" style="cursor:pointer">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer"
-                                    class="fa fa-cubes">
+                                    class="fa fa-cubes" style="color:white">
                                 </i>
-                            </a>
+                            </div>
                         </div>
                     </field>
                     <field title="Name" key="name" filter tdclass="is-v-middle" className="name">
