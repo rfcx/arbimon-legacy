@@ -1523,6 +1523,12 @@ img.outlined {
   }
 }
 
+.navbar-tab-bottom-hide a{
+    &:after {
+      background: transparent !important;
+    }
+  }
+  
 .navbar-default .navbar-nav .open .dropdown-menu>.active>a {
   @media (max-width: @screen-tablet) {
     background-color: @gray-darker;
@@ -1617,6 +1623,12 @@ img.outlined {
 }
 
 @media (max-width:767px) {
+
+  .navbar-tab-bottom-hide a{
+    &:after {
+      background: @val-color-1 !important;
+    }
+  }
 
   .navbar-brand-center {
     position: absolute;
