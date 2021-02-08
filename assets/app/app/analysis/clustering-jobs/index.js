@@ -676,7 +676,7 @@ angular.module('a2.analysis.clustering-jobs', [
         a2AudioBarService.loadUrl(a2ClusteringJobs.getAudioUrlFor(recId), true);
     };
 
-    $scope.getRoiVisualizerUrl = function(roi){
+    $scope.openRoiVisualizer = function(roi){
         var projecturl = Project.getUrl();
         var box = ['box', roi.time_min, roi.frequency_min, roi.time_max, roi.frequency_max].join(',');
         $window.location.href = roi ? '/visualizer/' + projecturl + '/visualizer/rec/' + roi.recording_id + '?a=' + box : '';

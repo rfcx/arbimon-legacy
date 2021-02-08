@@ -361,6 +361,7 @@ angular.module('a2.browser_recordings_by_site', [
 
     };
     $scope.$watch('siteInfo', function(value, oldValue) {
+        console.log('watch', value, oldValue);
         if (value && oldValue && (value === oldValue || value !== oldValue)) {
             $scope.browser.currentRecording = null;
             $scope.browser.annotations = null;

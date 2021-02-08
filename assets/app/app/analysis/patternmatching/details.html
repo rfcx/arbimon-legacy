@@ -12,7 +12,7 @@
                 <div class="col-sm-3" style="padding-bottom:5px">
                     <div class="roi-thumbnail" >
                         <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
-                        <div class="roi-btn-bl" ng-click="controller.getTemplateVisualizerUrl(controller.patternMatching.template)" style="cursor:pointer">
+                        <div class="roi-btn-bl cs-pointer" ng-click="controller.openTemplateVisualizerUrl(controller.patternMatching.template)">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="View in Visualizer"
@@ -164,7 +164,7 @@
                     <div class="roi-btn-tr h1" ng-if="roi.validated !== null">
                         <i class="fa val-{{roi.validated}}"></i>
                     </div>
-                    <div class="roi-btn-bl" ng-click="controller.getRoiVisualizerUrl(roi)" style="cursor:pointer">
+                    <div class="roi-btn-bl cs-pointer" ng-click="controller.openRoiVisualizer(roi)">
                         <i tooltip-placement="left"
                             tooltip-append-to-body="true"
                             tooltip="View in Visualizer"

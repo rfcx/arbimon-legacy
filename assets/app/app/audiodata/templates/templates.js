@@ -115,7 +115,7 @@ angular.module('a2.audiodata.templates', [
             a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(template), true);
         }
     });
-    $scope.getTemplateVisualizerUrl = function(template){
+    $scope.openTemplateVisualizerUrl = function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
         $window.location.href = template ? "/project/"+template.project_url+"/visualizer/rec/"+template.recording+"?a="+box : '';
     };

@@ -58,7 +58,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         });
     };
 
-    $scope.getTemplateVisualizerUrl = function(template){
+    $scope.openTemplateVisualizerUrl = function(template){
         var projecturl = Project.getUrl();
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
         $window.location.href = template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
@@ -231,12 +231,12 @@ angular.module('a2.citizen-scientist.patternmatching', [
         a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
     },
 
-    getRoiVisualizerUrl: function(roi){
+    openRoiVisualizer: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
         $window.location.href = roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
-    getTemplateVisualizerUrl: function(template){
+    openTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
         $window.location.href = template ? "/project/"+this.projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },

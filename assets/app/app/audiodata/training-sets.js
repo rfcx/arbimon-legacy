@@ -60,7 +60,7 @@ angular.module('a2.audiodata.training-sets', [
     this.detailedView = false;
     this.loaderDisplay = false;
 
-    this.getROIVisualizerUrl = function(roi){
+    this.openRoiVisualizer = function(roi){
         $window.location.href = roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording : '';
     };
 

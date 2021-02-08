@@ -176,7 +176,7 @@
                                 tooltip="Delete ROI">
                                 <i class="fa fa-times"></i>
                             </button>
-                            <div class="roi-btn-br" ng-click="controller.getROIVisualizerUrl(roi); $event.stopPropagation()" style="cursor:pointer">
+                            <div class="roi-btn-br cs-pointer" ng-click="controller.openRoiVisualizer(roi); $event.stopPropagation()">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer"
@@ -195,7 +195,7 @@
                                         <div class="col-sm-5" >Duration: {{controller.selected.roi.dur}}s</div>
                                         <div class="col-sm-5" >{{controller.selected.roi.y1}}-{{controller.selected.roi.y2}}Hz</div>
                                         <div class="col-sm-1" >
-                                            <div ng-click="controller.getROIVisualizerUrl(controller.selected.roi)" style="cursor:pointer">
+                                            <div  class="cs-pointer" ng-click="controller.openRoiVisualizer(controller.selected.roi)">
                                                 <i tooltip="View in Visualizer" class="fa fa-cubes" style="color:white"></i>
                                             </div>
                                         </div>

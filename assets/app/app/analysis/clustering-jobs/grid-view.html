@@ -71,7 +71,7 @@
                 popover-append-to-body="true"
             >
                 <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
-                <div class="roi-btn-bl" ng-click="getRoiVisualizerUrl(roi)" style="cursor:pointer">
+                <div class="roi-btn-bl cs-pointer" ng-click="openRoiVisualizer(roi)">
                     <i tooltip-placement="left"
                         tooltip-append-to-body="true"
                         tooltip="View in Visualizer"
