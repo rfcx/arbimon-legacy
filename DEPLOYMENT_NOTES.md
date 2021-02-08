@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.8
+
+- Install `serve-favicon` library
+
 ## v3.0.7
 
 _None_

@@ -6,7 +6,6 @@ var path = require('path');
 
 // packages 3rd party
 var express = require('express');
-var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
@@ -57,9 +56,6 @@ if (app.get('env') === 'development') {
 
 // middleware
 // ------------------------------------------------------------------
-
-
-app.use(favicon(path.join(www_root_path, '/images/favicon.ico')));
 
 logger.token('tag', function(req, res){ return 'arbimon2:request'; });
 
