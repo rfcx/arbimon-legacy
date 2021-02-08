@@ -63,7 +63,7 @@
                 <div class="pull-right">
                     <div class="pull-right btn-group btn-group-margin">
                         <button class="btn btn-default not-active"><i class="fa fa-search"></i></button>
-                            <ui-select ng-model="selected.search" theme="bootstrap" style="display:inline-block; width:9em;"
+                            <ui-select ng-model="selected.search" theme="bootstrap" style="display:inline-block; width:11em;"
                                 on-select="onSearchChanged()"
                             >
                                 <ui-select-match class="right-corners">
@@ -71,6 +71,7 @@
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in lists.search | filter:$select.search">
                                     <i ng-class="$item.class"></i> {{$item.text}}
+                                    <div class="item-description">{{$item.description}}</div>
                                 </ui-select-choices>
                             </ui-select>
                     </div>
