@@ -283,7 +283,8 @@ angular.module('a2.analysis.cnn', [
             {value:'present', text:'Present', description: 'Show all rois marked as present.'},
             {value:'not_present', text:'Not Present', description: 'Show all rois marked as not present.'},
             {value:'unvalidated', text:'Unvalidated', description: 'Show all rois without validation.'},
-            {value:'by_score', text:'Score per Species', description: 'Show all rois ranked by score.'}
+            {value:'by_score', text:'Score per Species', description: 'Show rois ranked by score per species.'},
+            {value:'by_score_per_site', text:'Score per Site', description: 'Show rois ranked by score per site.'}
         ],
         selection: [
             {value:'all', text:'All'},

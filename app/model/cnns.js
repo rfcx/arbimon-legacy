@@ -482,6 +482,9 @@ var CNN = {
             else if (options.search === 'by_score') {
                 orderBy = ['CRR.score DESC']
             }
+            else if (options.search === 'by_score_per_site'){
+                orderBy = [['S.name ASC'], ['CRR.score DESC']]
+            }
         }
         postprocess.push((rows) => {
             rows.forEach(row => {
