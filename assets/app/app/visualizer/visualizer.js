@@ -337,7 +337,6 @@ angular.module('a2.visualizer', [
 
     $rootScope.$on('notify-visobj-updated', function(){
         var args = Array.prototype.slice.call(arguments, 1);
-        args.unshift('visobj-updated');
         $scope.$broadcast.apply($scope, args);
     });
 
