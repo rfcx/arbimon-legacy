@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.9
+
+New features:
+- PI-263 Admin can enable Audio-event-detection and Clustering pages
+
 ## v3.0.8 - Feb 08, 2021
 
 New features:
