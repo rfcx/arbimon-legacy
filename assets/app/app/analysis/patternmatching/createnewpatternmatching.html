@@ -11,7 +11,7 @@
             <label for="template">Template:</label>
             <span class="red" ng-hide="controller.loading.templates || controller.list.templates.length">
                 <em>No templates found.
-                    <a ng-click="controller.cancel('/audiodata/templates') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Create template'">Create one.</a>
+                    <a class="red cs-pointer linodeco" ng-click="controller.cancel('/visualizer') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Create template'">Create one.</a>
                 </em>
             </span>
             <ui-select class="ui-select-6em" ng-disabled="disabled" ng-model="controller.data.template" theme="/common/templates/a2-ui-select">
@@ -34,7 +34,7 @@
             <label for="template">Select Playlist:</label>
             <span class="red" ng-hide="controller.loading.playlists || controller.list.playlists.length">
                 <em>No playlists found.
-                    <a ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Go to playlists'">
+                    <a class="red cs-pointer linodeco" ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-PatternMatching-new pattern matching modal':'Cancel-Go to playlists'">
                         Create one.
                     </a>
                 </em>

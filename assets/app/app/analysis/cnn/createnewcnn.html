@@ -11,7 +11,7 @@
             <label for="template">Model:</label>
             <span class="red" ng-hide="controller.loading.models || controller.list.models.length">
                 <em>No models found.
-                    <a ng-click="controller.cancel('/audiodata/models') | trackEvent:'Analysis-CNN-new cnn modal':'Cancel-Create model'">Create one.</a>
+                    <a class="red cs-pointer linodeco" ng-click="controller.cancel('/audiodata/models') | trackEvent:'Analysis-CNN-new cnn modal':'Cancel-Create model'">Create one.</a>
                 </em>
             </span>
             <ui-select class="ui-select-6em" ng-disabled="disabled" ng-model="controller.data.model" theme="/common/templates/a2-ui-select">
