@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.8
+
+New features:
+- PI-478 Add Score per Species/Site filters to the CNN details page
+
 ## v3.0.7 - Jan 29, 2021
 
 New features:

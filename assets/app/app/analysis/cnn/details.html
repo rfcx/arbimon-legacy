@@ -182,7 +182,7 @@
                     ng-click="roi.selected = !roi.selected"
                     ng-style="{'border-width': '2px'}"
                     popover-html="'Recording: {{roi.recording}}<br>
-                    {{selected.search.value === 'by_score_per_site' ? 'Species: ' : 'Site: ' }}{{selected.search.value === 'by_score_per_site' ? species.scientific_name : roi.site}}<br>
+                            {{selected.search.value === 'by_score_per_site' ? ('Species: ' + species.scientific_name) : ('Site: ' + roi.site) }}<br>
                             Time: {{roi.datetime | date:'medium': 'UTC'}} <br>
                             Score: {{(roi.score | number) || '(Missing)'}}'"
                     popover-trigger="mouseenter"
