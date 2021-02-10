@@ -1,9 +1,24 @@
 # Arbimon Release Notes
 
-## v3.0.8
+## v3.0.9
 
 New features:
+- PI-263 Admin can enable Audio-event-detection and Clustering pages
 - PI-478 Add Score per Species/Site filters to the CNN details page
+
+## v3.0.8 - Feb 08, 2021
+
+New features:
+- PI-184 Implement global navigation bar
+
+Resolved issues:
+- PI-482 Fix save playlist issue
+- PI-351 Hot fix the Page Footer on the Pattern Matching page
+
+Other:
+- PI-275 Hide the “link” button and “status” tab on the Site page
+- PI-436 Update PM results default sort list to “Score”
+- PI-441 Update RFCX logo icon
 
 ## v3.0.7 - Jan 29, 2021
 

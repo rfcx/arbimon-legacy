@@ -351,6 +351,8 @@ var Projects = {
             citizen_scientist_enabled: [joi.number().valid(0,1), joi.boolean()],
             pattern_matching_enabled: [joi.number().valid(0,1), joi.boolean()],
             cnn_enabled: [joi.number().valid(0,1), joi.boolean()],
+            aed_enabled: [joi.number().valid(0,1), joi.boolean()],
+            clustering_enabled: [joi.number().valid(0,1), joi.boolean()],
             plan: joi.object().keys({
                 tier: joi.string(),
                 storage: joi.number(),
