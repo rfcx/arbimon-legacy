@@ -12,19 +12,31 @@
             <nav class="navbar navbar-default" role="navigation">
                 <div class="container-fluid">
                     <div class="navbar-header">
-                        <button ng-init="collapsedMenu = true" ng-click="collapsedMenu = !collapsedMenu" type="button" class="navbar-toggle collapsed">
+                        <button ng-init="leftCollapsedMenu = true" ng-click="leftCollapsedMenu = !leftCollapsedMenu; rightCollapsedMenu = true" type="button"
+                            class="navbar-toggle navbar-toggle-left collapsed">
                             <span class="sr-only">Toggle navigation</span>
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
                         </button>
-                        <a href="/home" class="navbar-brand">
-                            <img src="/images/favicon/rfcx-logo.svg">Arbimon
+                        <a href="/" class="navbar-brand navbar-brand-center">
+                            <img src="/images/favicon/rfcx-logo.svg">
+                            <span class="navbar-title">Arbimon</span>
                         </a>
+                        <% if (!user || user.isAnonymousGuest) { %>
+                        <a class="navbar-btn btn btn-primary navbar-toggle-right collapse-menu-hide collapsed"
+                            href="/login">
+                            Sign In
+                        </a>
+                        <% } else { %>
+                        <button ng-init="rightCollapsedMenu = true" ng-click="rightCollapsedMenu = !rightCollapsedMenu; leftCollapsedMenu = true" type="button"
+                            class="navbar-toggle navbar-toggle-right collapsed fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
+                            style="background-image:url('<%- user.imageUrl %>')">
+                        </button>
+                        <% } %>
                     </div>
-        
-                    <div class="navbar-collapse" ng-class="{'collapse': collapsedMenu }">
-                        <ul class="nav navbar-nav hide-tooltip-lg">
+                    <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
+                        <ul class="nav navbar-nav navbar-left hide-tooltip-lg">
                             <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
                                 <a class="dropdown-toggle text-overflow" dropdown-toggle>
                                     <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>
@@ -82,10 +94,30 @@
                                 <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="settings"></ul>
                             </li>
                         </ul>
-                        <ul class="nav navbar-nav navbar-right hide-tooltip-lg">
+                        <hr class="navbar-divider-collapse">
+                        <ul class="nav navbar-nav navbar-right navbar-menu-hide hide-tooltip-lg">
                             <% include fragments/user-dropdown %>
                         </ul>
+                        <ul class="nav navbar-nav navbar-right mr-0">
+                            <% include fragments/other-rfcx-apps %>
+                        </ul>
                     </div>
+                    <% if (user && !user.isAnonymousGuest) { %>
+                    <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': rightCollapsedMenu }">
+                        <ul class="nav navbar-nav navbar-left collapse-menu-hide">
+                            <li>
+                                <a href="/user-settings">
+                                    <i class="fa fa-wrench"></i> Account Settings
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/logout">
+                                    <i class="fa fa-sign-out"></i> Sign out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <% } %>
                 </div>
             </nav>
             <% if(planAlert == 'expired') { %>

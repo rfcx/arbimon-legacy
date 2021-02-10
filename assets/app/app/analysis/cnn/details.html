@@ -63,7 +63,7 @@
                 <div class="pull-right">
                     <div class="pull-right btn-group btn-group-margin">
                         <button class="btn btn-default not-active"><i class="fa fa-search"></i></button>
-                            <ui-select ng-model="selected.search" theme="bootstrap" style="display:inline-block; width:9em;"
+                            <ui-select ng-model="selected.search" theme="bootstrap" style="display:inline-block; width:11em;"
                                 on-select="onSearchChanged()"
                             >
                                 <ui-select-match class="right-corners">
@@ -71,6 +71,7 @@
                                 </ui-select-match>
                                 <ui-select-choices repeat="$item in lists.search | filter:$select.search">
                                     <i ng-class="$item.class"></i> {{$item.text}}
+                                    <div class="item-description">{{$item.description}}</div>
                                 </ui-select-choices>
                             </ui-select>
                     </div>
@@ -175,13 +176,13 @@
     <div ng-if="!loading">
         <div class="panel-body" ng-show="viewType=='rois'">
             <div ng-repeat="species in rois_species">
-                <div class="h3" id="site-{{species.species_id}}"><i class="fa fa-map-marker"></i> {{species.scientific_name}}</div>
+                <div ng-if="rois_species" class="h3" id="site-{{species.species_id}}"><i class="fa fa-map-marker"></i>{{selected.search.value === 'by_score_per_site' ? species.site : species.scientific_name}}</div>
                 <div ng-repeat="roi in species.rois"
                     class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                     ng-click="roi.selected = !roi.selected"
                     ng-style="{'border-width': '2px'}"
                     popover-html="'Recording: {{roi.recording}}<br>
-                            Site: {{roi.site}}<br>
+                            {{selected.search.value === 'by_score_per_site' ? ('Species: ' + species.scientific_name) : ('Site: ' + roi.site) }}<br>
                             Time: {{roi.datetime | date:'medium': 'UTC'}} <br>
                             Score: {{(roi.score | number) || '(Missing)'}}'"
                     popover-trigger="mouseenter"

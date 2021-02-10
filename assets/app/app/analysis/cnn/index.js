@@ -279,10 +279,12 @@ angular.module('a2.analysis.cnn', [
             { class:'fa fa-th', value:'is-small'},
         ],
         search: [
-            {value:'all', text:'All'},
-            {value:'present', text:'Present'},
-            {value:'not_present', text:'Not Present'},
-            {value:'unvalidated', text:'Unvalidated'},
+            {value:'all', text:'All', description: 'Show all matched rois.'},
+            {value:'present', text:'Present', description: 'Show all rois marked as present.'},
+            {value:'not_present', text:'Not Present', description: 'Show all rois marked as not present.'},
+            {value:'unvalidated', text:'Unvalidated', description: 'Show all rois without validation.'},
+            {value:'by_score', text:'Score per Species', description: 'Show rois ranked by score per species.'},
+            {value:'by_score_per_site', text:'Score per Site', description: 'Show rois ranked by score per site.'}
         ],
         selection: [
             {value:'all', text:'All'},
@@ -298,9 +300,9 @@ angular.module('a2.analysis.cnn', [
             thumbnailClass: 'is-small'
         }
     };
-    //$scope.search = $scope.lists.search[0];
+
     $scope.total = {rois:0, pages:0};
-    $scope.selected = {roi_index:0, roi:null, page:0, search: $scope.lists.search[0]};
+    $scope.selected = {roi_index:0, roi:null, page:0, search: $scope.lists.search[4]};
     $scope.validation = {current: $scope.lists.validation[2]};
     $scope.offset = 0;
     $scope.limit = 100;
@@ -411,15 +413,16 @@ angular.module('a2.analysis.cnn', [
         return dataOut;
     }
 
-    var byROIsbySpecies = function(dataIn) {
+    var byROIsbySpecies = function(dataIn, bySite) {
         dataOut = {};
         dataIn.forEach(function(element) {
-            var s = element.species_id;
+            var s = bySite? element.site : element.species_id;
             if (!(s in dataOut)) {
                 dataOut[s] = {count: 0,
                               species_id: s,
                               scientific_name: element.scientific_name,
                               rois: []};
+                if (bySite) dataOut[s].site = element.site;
             }
             dataOut[s].rois.push(element);
             dataOut[s].count++;
@@ -636,8 +639,7 @@ angular.module('a2.analysis.cnn', [
             $scope.loading = false;
             $scope.infopanedata = "";
             $scope.rois = byROIs($scope.resultsROIs);
-            $scope.rois_species = byROIsbySpecies($scope.rois);
-
+            $scope.rois_species = byROIsbySpecies($scope.rois, $scope.selected.search.value === 'by_score_per_site');
         });
     };
 
