@@ -27,7 +27,7 @@ router.get('/:cnnId/rois.csv', function(req, res, next) {
     model.CNN.exportRois(req.params.cnnId, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name;});
-        
+
         var colOrder={
             cnn_result_roi_id: -17,
             score: -16,
@@ -170,7 +170,6 @@ router.get('/rois/:job_id', function (req, res, next) {
 });
 
 router.get('/rois/:job_id/:species_id/:site_id/:search/:paging', function (req, res, next) {
-
     res.type('json');
     model.CNN.listROIs(req.params.job_id, {
         project: req.project.project_id,

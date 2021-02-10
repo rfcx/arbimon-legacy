@@ -392,6 +392,7 @@ var CNN = {
         var postprocess = [];
         var data = [];
         var limits = false;
+        var orderBy = [];
 
         var select = [
             "CRR.`cnn_result_roi_id`",
@@ -478,6 +479,12 @@ var CNN = {
             } else if (options.search=="unvalidated"){
                 constraints.push("CRR.`validated` is NULL");
             }
+            else if (options.search === 'by_score') {
+                orderBy = ['CRR.score DESC']
+            }
+            else if (options.search === 'by_score_per_site'){
+                orderBy = [['S.name ASC'], ['CRR.score DESC']]
+            }
         }
         postprocess.push((rows) => {
             rows.forEach(row => {
@@ -498,7 +505,7 @@ var CNN = {
             "FROM " + tables.join("\n") + "\n" +
             (constraints.length ? ("WHERE " + constraints.join(" \n  AND ")) : "") +
             (groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "") +
-            "\nORDER BY CRR.`species_id`, R.`site_id`" +
+            (orderBy.length ? ("\nORDER BY " + orderBy.join(",\n    ")) : "\nORDER BY CRR.`species_id`, R.`site_id`") +
             (limits ? ("\nLIMIT " + limits.limit + " OFFSET " + limits.offset) : "");
 
         if (options.return_sql) {

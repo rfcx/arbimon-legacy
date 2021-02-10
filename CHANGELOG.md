@@ -4,6 +4,7 @@
 
 New features:
 - PI-263 Admin can enable Audio-event-detection and Clustering pages
+- PI-478 Add Score per Species/Site filters to the CNN details page
 
 ## v3.0.8 - Feb 08, 2021
 
