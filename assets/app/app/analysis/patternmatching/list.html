@@ -21,13 +21,13 @@
                 <field title="Name" class="hidelongtext widthtd" key="name" filter>
                     <div class="roi-thumbnail" >
                         <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
-                        <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}">
+                        <div class="roi-btn-br cs-pointer" ng-click="openTemplateVisualizerUrl(row.template); $event.stopPropagation()">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="View in Visualizer"
-                                class="fa fa-cubes">
+                                class="fa fa-cubes" style="color:white">
                             </i>
-                        </a>
+                        </div>
                     </div>
                     {{row.name}}
                 </field>

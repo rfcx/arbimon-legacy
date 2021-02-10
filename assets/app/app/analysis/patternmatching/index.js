@@ -23,13 +23,13 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
 })
-.controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, $window, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
-    $scope.getTemplateVisualizerUrl = function(template){
+    $scope.openTemplateVisualizerUrl = function(template){
         var projecturl = Project.getUrl();
-        var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+        $window.location.href = template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     $scope.selectItem = function(patternmatchingId){
@@ -144,7 +144,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $document) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $window) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -307,14 +307,14 @@ angular.module('a2.analysis.patternmatching', [
         a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
     },
 
-    getRoiVisualizerUrl: function(roi){
+    openRoiVisualizer: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        $window.location.href = roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
-    getTemplateVisualizerUrl: function(template){
+    openTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        $window.location.href = template ? "/project/"+this.projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){

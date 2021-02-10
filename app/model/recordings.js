@@ -277,6 +277,10 @@ var Recordings = {
                 count_only : options.count_only
             });
 
+            if (options.recording_id) {
+                constraints.push('R.`recording_id` = ' + dbpool.escape(Number(options.recording_id)));
+            }
+
             if(!urlquery.id) {
                 steps.push(dbpool.query("(\n" +
                 "   SELECT site_id FROM sites WHERE project_id = ?\n" +

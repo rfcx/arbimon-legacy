@@ -269,7 +269,7 @@ angular.module('a2.analysis.cnn', [
         templateUrl: '/app/analysis/cnn/details.html'
     };
 })
-.controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, a2AudioPlayer, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, a2AudioBarService, notify) {
+.controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, a2AudioPlayer, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, a2AudioBarService, notify, $window) {
 
     var projecturl = Project.getUrl();
 
@@ -510,18 +510,18 @@ angular.module('a2.analysis.cnn', [
         }
     };
 
-    $scope.getRecordingVisualizerUrl = function(recording_id) {
-        return "/project/"+Project.getUrl()+"/visualizer/rec/"+recording_id;
+    $scope.openRecordingVisualizerUrl = function(recording_id) {
+        $window.location.href = "/project/"+Project.getUrl()+"/visualizer/rec/"+recording_id;
     };
 
-    $scope.getRoiVisualizerUrl = function(roi){
+    $scope.openRoiVisualizer = function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/project/"+projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        $window.location.href = roi ? "/project/"+projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     };
 
-    $scope.getTemplateVisualizerUrl = function(template){
+    $scope.openTemplateVisualizerUrl = function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        $window.location.href = template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     };
 
     $scope.playRoiAudio = function(roi, $event){

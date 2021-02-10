@@ -20,20 +20,20 @@
                     <field tdclass="is-v-middle" className ="spectrogram-img">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{row.uri}}" class="roi-img is-small"/>
-                            <a class="roi-btn-bl" ng-click="controller.playTemplateAudio(row, $event)" style="cursor:pointer">
+                            <a class="roi-btn-bl cs-pointer" ng-click="controller.playTemplateAudio(row, $event)">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="Play Audio"
                                     class="fa fa-play">
                                 </i>
                             </a>
-                            <a class="roi-btn-br" ng-href="{{controller.getTemplateVisualizerUrl(row)}}">
+                            <div class="roi-btn-br cs-pointer" ng-click="openTemplateVisualizerUrl(row)">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer"
-                                    class="fa fa-cubes">
+                                    class="fa fa-cubes" style="color:white">
                                 </i>
-                            </a>
+                            </div>
                         </div>
                     </field>
                     <field title="Name" key="name" filter tdclass="is-v-middle" className="name">

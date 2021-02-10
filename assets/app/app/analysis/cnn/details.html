@@ -193,19 +193,18 @@
                     </div>
                     <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected">
                     <span class="roi-btn-tr">{{roi.site}}</span>
-                    <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
+                    <div class="roi-btn-bl cs-pointer" ng-click="openRoiVisualizer(roi)">
                         <i tooltip-placement="left"
                             tooltip-append-to-body="true"
                             tooltip="View in Visualizer"
-                            class="fa fa-cubes">
+                            class="fa fa-cubes" style="color:white">
                         </i>
-                    </a>
+                    </div>
                     <a class="roi-btn-br" ng-click="playRoiAudio(roi);$event.stopPropagation();">
                         <i tooltip-placement="left"
                             tooltip-append-to-body="true"
                             tooltip="Play Audio"
-                            class="fa fa-play"
-                            style="cursor:pointer">
+                            class="fa fa-play cs-pointer">
                         </i>
                     </a>
                     <img ng-src="{{ roi.roi_thumbnail_uri }}" class="roi-img {{lists.current.thumbnailClass}}"/>
@@ -252,13 +251,13 @@
                         <td data-title="'Recording'" class="hidelongtext widthtd" data-sortable="'recording_id'" filter="{ 'recording_id': 'text' }">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{recording.thumbnail}}" class="roi-img-cnn is-small"/>
-                            <a class="roi-btn-br" ng-href="{{getRecordingVisualizerUrl(recording.recording_id)}}">
+                            <div class="roi-btn-br cs-pointer" ng-click="openRecordingVisualizerUrl(recording.recording_id)">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer"
-                                    class="fa fa-cubes">
+                                    class="fa fa-cubes" style="color:white">
                                 </i>
-                            </a>
+                            </div>
                         </div>
                             {{ recording.recording_id }}
                         </td>
@@ -269,9 +268,9 @@
                             <span ng-repeat="specie in recording.species" ng-show="specie.count > 0">{{ specie.scientific_name }}({{ specie.count }}) </span>
                         </td>
                         <td class="is-v-middle">
-                            <a class="btn btn-default" ng-href="{{getRecordingVisualizerUrl(recording.recording_id)}}">
+                            <div class="btn btn-default cs-pointer" ng-click="openRecordingVisualizerUrl(recording.recording_id)">
                                 Show In Visualizer
-                            </a>
+                            </div>
                         </td>
                     </tr>
                 </table>
@@ -285,32 +284,31 @@
                         <td data-title="'Recording'" data-sortable="'recording_id'" filter="{ 'recording_id': 'text' }" class="hidelongtext widthtd is-v-middle">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{result.thumbnail}}" class="roi-img-cnn is-small"/>
-                            <a class="roi-btn-br" ng-href="{{getRecordingVisualizerUrl(result.recording_id)}}">
+                            <div class="roi-btn-br cs-pointer" ng-click="openRecordingVisualizerUrl(result.recording_id)">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer"
-                                    class="fa fa-cubes">
+                                    class="fa fa-cubes" style="color:white">
                                 </i>
-                            </a>
+                            </div>
                         </div>
                             <br />{{ result.recording_id }}
                         </td>
                         <td data-title="'Triggering ROI'" data-sortable="'cnn_result_roi_id'" filter="{ 'cnn_result_roi_id': 'text' }" class="hidelongtext widthtd is-v-middle">
                         <div class="roi-thumbnail" >
                             <img ng-src="{{result.cnn_result_roi_uri}}" class="roi-img-cnn is-small"/>
-                            <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(result)}}">
+                            <div class="roi-btn-bl cs-pointer" ng-click="openRoiVisualizer(result)">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer"
-                                    class="fa fa-cubes">
+                                    class="fa fa-cubes" style="color:white">
                                 </i>
-                            </a>
+                            </div>
                             <a class="roi-btn-br" ng-click="playRoiAudio(result)">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="Play Audio"
-                                    class="fa fa-play"
-                                    style="cursor:pointer">
+                                    class="fa fa-play cs-pointer">
                                 </i>
                             </a>
                         </div>
@@ -334,9 +332,9 @@
                         </td>
                         <td class="is-v-middle">
                             <td class="is-v-middle">
-                                <a class="btn btn-default" ng-href="{{getRoiVisualizerUrl(result)}}">
+                                <div class="btn btn-default cs-pointer" ng-click="openRoiVisualizer(result)">
                                     Show In Visualizer
-                                </a>
+                                </div>
                             </td>
                         </td>
                     </tr>

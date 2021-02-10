@@ -12,13 +12,13 @@
                 <div class="col-sm-3" style="padding-bottom:5px">
                     <div class="roi-thumbnail" >
                         <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
-                        <a class="roi-btn-bl" ng-href="{{controller.getTemplateVisualizerUrl(controller.patternMatching.template)}}">
+                        <div class="roi-btn-bl cs-pointer" ng-click="controller.openTemplateVisualizerUrl(controller.patternMatching.template)">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="View in Visualizer"
-                                class="fa fa-cubes">
+                                class="fa fa-cubes" style="color:white">
                             </i>
-                        </a>
+                        </div>
                         <a class="roi-btn-br" ng-click="controller.playTemplateAudio()">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
@@ -122,13 +122,13 @@
                         <div class="roi-btn-tr h1" ng-if="roi.cs_validated !== null">
                             <i class="fa val-{{roi.cs_validated}}"></i>
                         </div>
-                        <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}">
+                        <div class="roi-btn-bl cs-pointer" ng-click="controller.openRoiVisualizer(roi)">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="View in Visualizer"
-                                class="fa fa-cubes">
+                                class="fa fa-cubes" style="color:white">
                             </i>
-                        </a>
+                        </div>
                         <a class="roi-btn-br" ng-click="controller.playRoiAudio(roi, $event)">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
