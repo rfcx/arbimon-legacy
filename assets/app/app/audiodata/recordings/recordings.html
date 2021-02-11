@@ -78,9 +78,9 @@
                 <div>
                     <img ng-src="{{selected.thumbnail}}"/>
                 </div>
-                <a class="btn btn-default btn-xs" ui-sref="visualizer.view({type:'rec', idA:selected.id})">
+                <div class="btn btn-default btn-xs cs-pointer" ng-click="controller.openRecordingVisualizerUrl(selected.id)">
                     <i class="fa fa-cubes"></i> View in Visualizer
-                </a>
+                </div>
             </expand-select>
         </a2-table>
         <loader ng-hide="!loading"></loader>

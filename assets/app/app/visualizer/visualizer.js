@@ -61,20 +61,20 @@ angular.module('a2.visualizer', [
         url: '/:type/:idA/:idB/:idC?gain&filter&a&clusters',
         params:{
             type:'',
-            a:'',
-            clusters:'',
-            gain:'',
-            filter:'',
+            a: null,
+            clusters: null,
+            gain: null,
+            filter: null,
             idA: {
                 value:'',
                 squash:true
             },
             idB:{
-                value:'',
+                value: null,
                 squash:true
             },
             idC:{
-                value:'',
+                value: null,
                 squash:true
             }
         },
@@ -154,7 +154,7 @@ angular.module('a2.visualizer', [
             if ($location.path() != this.prefix + location){
                 console.log('a2VisualizerLocationManager::set_location', this.prefix + location, dont_sync);
                 var search = $location.search();
-                delete search.a;
+                // delete search.a;
 
                 $location.path(this.prefix + location);
                 $location.search(search);

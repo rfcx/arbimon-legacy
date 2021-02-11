@@ -67,6 +67,10 @@ angular.module('a2.audiodata.recordings', [
         });
     };
 
+    this.openRecordingVisualizerUrl = function(recording_id) {
+        $window.location.href = "/project/"+Project.getUrl()+"/visualizer/rec/"+recording_id;
+    };
+
     this.sortRecs = function(sortKey, reverse) {
         $scope.sortKey = sortKey;
         $scope.reverse = reverse;
@@ -85,7 +89,7 @@ angular.module('a2.audiodata.recordings', [
 
         if(!Object.keys(listParams).length)
             return;
-            
+
         if($scope.totalRecs == 0) {
             notify.log('You can\'t create playlist with 0 recording');
             return;
