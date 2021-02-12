@@ -37,11 +37,11 @@ angular.module('a2.visobjects.recording', [
             }
         };
         // set it to the scope
-        var streamId = data.uri.split('/')[3]
         this.tiles.set.forEach((function(tile){
             if (!!data.legacy) {
                 tile.src="/api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j;
             } else {
+                var streamId = data.uri.split('/')[3]
                 var start = new Date(new Date(data.datetime).valueOf() + Math.round(tile.s * 1000)).toISOString()
                 var end = new Date(new Date(data.datetime).valueOf() + Math.round((tile.s + tile.ds) * 1000)).toISOString()
                 tile.src = '/api/ingest/recordings/' + streamId + '_t' + start.replace(/-|:|\./g, '') + '.' + end.replace(/-|:|\./g, '') + '_z95_wdolph_g1_fspec_mtrue_d1023.255.png'
