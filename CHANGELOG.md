@@ -1,10 +1,16 @@
 # Arbimon Release Notes
 
-## v3.0.9
+## v3.0.9 - Feb 12, 2021
 
 New features:
 - PI-263 Admin can enable Audio-event-detection and Clustering pages
 - PI-478 Add Score per Species/Site filters to the CNN details page
+
+Resolved issues:
+- PI-375 Take user to the Visualizer page when prompted to create a new template
+- PI-434 Fix infinite scroll functionality on the Visualizer page
+- PI-424 Fix after changed soundscape color returns user to top of thumbnails list
+- PI-552 Fix issue with loading the recording after redirecting to the Visualizer page
 
 ## v3.0.8 - Feb 08, 2021
 
