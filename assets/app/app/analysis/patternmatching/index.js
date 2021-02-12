@@ -23,13 +23,13 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
 })
-.controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, $window, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
-    $scope.openTemplateVisualizerUrl = function(template){
+    $scope.getTemplateVisualizerUrl = function(template){
         var projecturl = Project.getUrl();
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-        $window.location.href = template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     $scope.selectItem = function(patternmatchingId){
@@ -307,14 +307,14 @@ angular.module('a2.analysis.patternmatching', [
         a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
     },
 
-    openRoiVisualizer: function(roi){
+    getRoiVisualizerUrl: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        $window.location.href = roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        return roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
-    openTemplateVisualizerUrl: function(template){
+    getTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        $window.location.href = template ? "/project/"+this.projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+this.projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){

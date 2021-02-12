@@ -73,8 +73,12 @@ angular.module('a2.browser_recordings_by_site', [
                     };
                 });
                 if (recordings && recordings.length) {
-                    this.list.push.apply(this.list, recordings)
-                    this.page++
+                    if (recordings.length === 1 && this.list.length && this.list[0].id === recordings[0].id) {
+                        // Do not push existing recording to the list
+                    } else {
+                        this.list.push.apply(this.list, recordings)
+                        this.page++
+                    }
                 }
                 else {
                     this.finished = true;
@@ -115,7 +119,7 @@ angular.module('a2.browser_recordings_by_site', [
 .controller('a2BrowserRecordingsBySiteController', function($scope, a2Browser, rbDateAvailabilityCache, Project, $timeout, $q, a2RecordingsBySiteLOVO){
     var project = Project;
     var self = this;
-    $scope.siteInfo = null;
+    $scope.siteInfo = {};
     this.sites = [];
     this.dates = {
         refreshing  : false,
@@ -313,7 +317,7 @@ angular.module('a2.browser_recordings_by_site', [
     };
 
     this.set_site = function(newValue){
-        this.site = $scope.siteInfo = newValue;
+        this.site = $scope.siteInfo.site = newValue;
         if(!this.active){ return; }
         this.recordings = [];
         // reset the selections and stuff
@@ -339,7 +343,7 @@ angular.module('a2.browser_recordings_by_site', [
 
         this.yearpickOpen = false;
         var site = this.site;
-        this.date = date;
+        this.date = $scope.siteInfo.date = date;
         if(site && date) {
             var isNewSiteAndDate = function() {
                 return (
@@ -360,12 +364,19 @@ angular.module('a2.browser_recordings_by_site', [
         }
 
     };
-    $scope.$watch('siteInfo', function(value, oldValue) {
-        console.log('watch', value, oldValue);
+    $scope.compareValues = function(value, oldValue) {
         if (value && oldValue && (value === oldValue || value !== oldValue)) {
             $scope.browser.currentRecording = null;
             $scope.browser.annotations = null;
         }
+    };
+    $scope.$watch('siteInfo.site', function(value, oldValue) {
+        console.log('watch siteInfo.site', value, oldValue);
+        $scope.compareValues(value, oldValue);
+    });
+    $scope.$watch('siteInfo.date', function(value, oldValue) {
+        console.log('watch siteInfo.date', value, oldValue);
+        $scope.compareValues(value, oldValue);
     });
 
 });
