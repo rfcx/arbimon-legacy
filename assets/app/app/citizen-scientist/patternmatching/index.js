@@ -20,7 +20,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         templateUrl: '/app/citizen-scientist/patternmatching/list.html'
     });
 })
-.controller('CitizenScientistPatternMatchingCtrl' , function($scope, $window, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('CitizenScientistPatternMatchingCtrl' , function($scope, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
     var initTable = function(p, c, s, f, t) {
@@ -58,10 +58,10 @@ angular.module('a2.citizen-scientist.patternmatching', [
         });
     };
 
-    $scope.openTemplateVisualizerUrl = function(template){
+    $scope.getTemplateVisualizerUrl = function(template){
         var projecturl = Project.getUrl();
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        $window.location.href = template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     $scope.selectItem = function(patternmatchingId){
@@ -117,7 +117,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         templateUrl: '/app/citizen-scientist/patternmatching/details.html'
     };
 })
-.controller('CitizenScientistPatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistService, a2UserPermit, Project, a2AudioBarService, notify, $window) {
+.controller('CitizenScientistPatternMatchingDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistService, a2UserPermit, Project, a2AudioBarService, notify) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -231,14 +231,14 @@ angular.module('a2.citizen-scientist.patternmatching', [
         a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(this.patternMatching.template), true);
     },
 
-    openRoiVisualizer: function(roi){
+    getRoiVisualizerUrl: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        $window.location.href = roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        return roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
-    openTemplateVisualizerUrl: function(template){
+    getTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        $window.location.href = template ? "/project/"+this.projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+this.projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){

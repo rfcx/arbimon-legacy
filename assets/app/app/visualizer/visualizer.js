@@ -56,6 +56,7 @@ angular.module('a2.visualizer', [
             }
         },
         deepStateRedirect: true,
+        sticky: true
     })
     .state('visualizer.view', {
         url: '/:type/:idA/:idB/:idC?gain&filter&a&clusters',
@@ -154,7 +155,7 @@ angular.module('a2.visualizer', [
             if ($location.path() != this.prefix + location){
                 console.log('a2VisualizerLocationManager::set_location', this.prefix + location, dont_sync);
                 var search = $location.search();
-                // delete search.a;
+                delete search.a;
 
                 $location.path(this.prefix + location);
                 $location.search(search);
@@ -289,7 +290,6 @@ angular.module('a2.visualizer', [
     };
 
     $scope.setVisObject = function(visobject, type, location){
-        console.log("$scope.setVisObject :: ", visobject, type, location);
         return $q.resolve().then((function(){
             if (visobject) {
                 $scope.visobject_location = location;

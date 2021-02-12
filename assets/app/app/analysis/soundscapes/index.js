@@ -244,11 +244,6 @@ angular.module('a2.analysis.soundscapes', [
         });
     };
 
-    $scope.openSoundscapeVisualizerUrl = function(soundscapeId) {
-        $window.location.href = "/project/"+Project.getUrl()+"/visualizer/soundscape/"+soundscapeId;
-    };
-
-
     $scope.showDetails = function(soundscapeId) {
 
         a2Soundscapes.get(soundscapeId, function(soundscape) {

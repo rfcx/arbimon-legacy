@@ -25,13 +25,13 @@
                                 class="fa fa-play">
                             </i>
                         </a>
-                        <div class="roi-btn-bl cs-pointer" ng-click="controller.openTemplateVisualizerUrl(controller.patternMatching.template)" target="visualizer">
+                        <a class="roi-btn-bl" ng-href="{{controller.getTemplateVisualizerUrl(controller.patternMatching.template)}}" target="visualizer" ng-click="$event.stopPropagation();">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="View in Visualizer"
-                                class="fa fa-cubes" style="color:white">
+                                class="fa fa-cubes">
                             </i>
-                        </div>
+                        </a>
                         <div class="roi-btn-b outside text-sm">
                             {{controller.patternMatching.template.x2 - controller.patternMatching.template.x1 | number:2}}s
                         </div>
@@ -169,13 +169,13 @@
                                     class="fa fa-play">
                                 </i>
                             </a>
-                            <div class="roi-btn-bl cs-pointer" ng-click="controller.openRoiVisualizer(roi)" target="visualizer">
+                            <a class="roi-btn-bl" ng-href="{{controller.getRoiVisualizerUrl(roi)}}" target="visualizer" ng-click="$event.stopPropagation();">
                                 <i tooltip-placement="left"
                                     tooltip-append-to-body="true"
                                     tooltip="View in Visualizer"
-                                    class="fa fa-cubes" style="color:white">
+                                    class="fa fa-cubes">
                                 </i>
-                            </div>
+                            </a>
                             <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
                         </div>
                         <div>

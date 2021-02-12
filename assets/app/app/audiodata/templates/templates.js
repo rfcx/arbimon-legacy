@@ -42,6 +42,10 @@ angular.module('a2.audiodata.templates', [
                 notify.serverError(err);
             }).bind(this));
         },
+        getTemplateVisualizerUrl: function(template){
+            var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+            return template ? "/project/"+template.project_url+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        },
         deleteTemplate: function(templateId){
             if(!a2UserPermit.can('manage templates')) {
                 notify.log('You do not have permission to delete templates');
@@ -115,9 +119,5 @@ angular.module('a2.audiodata.templates', [
             a2AudioBarService.loadUrl(a2Templates.getAudioUrlFor(template), true);
         }
     });
-    $scope.openTemplateVisualizerUrl = function(template){
-        var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-        $window.location.href = template ? "/project/"+template.project_url+"/visualizer/rec/"+template.recording+"?a="+box : '';
-    };
     this.initialize();
 });

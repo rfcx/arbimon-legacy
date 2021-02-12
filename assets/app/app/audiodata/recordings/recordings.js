@@ -67,10 +67,6 @@ angular.module('a2.audiodata.recordings', [
         });
     };
 
-    this.openRecordingVisualizerUrl = function(recording_id) {
-        $window.location.href = "/project/"+Project.getUrl()+"/visualizer/rec/"+recording_id;
-    };
-
     this.sortRecs = function(sortKey, reverse) {
         $scope.sortKey = sortKey;
         $scope.reverse = reverse;
