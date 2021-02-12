@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.10
+
+_None_
+
 ## v3.0.9
 
 - Run migration 006-project-table-add-aed-clustering-enabled-colums.sql

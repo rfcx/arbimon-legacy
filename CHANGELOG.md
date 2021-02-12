@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.10
+
+New features:
+- ([CS-494](https://jira.rfcx.org/browse/CS-494)) Request spectrogram tiles from Media API for audios from RFCx streams
+
 ## v3.0.9 - Feb 12, 2021
 
 New features:

@@ -1,5 +1,5 @@
 {
   "coreAPIEnabled": false,
   "apiBaseUrl": "https://api.rfcx.org",
-  "mediaBaseUrl": "https://media.rfcx.org"
+  "mediaBaseUrl": "https://media-api.rfcx.org"
 }
