@@ -109,6 +109,7 @@ router.get('/:recUrl?', function(req, res, next) {
         {
             order: true,
             compute: req.query && req.query.show,
+            recording_id: req.query && req.query.recording_id,
             ...req.query && req.query.limit && {limit: req.query.limit},
             ...req.query && req.query.offset && {offset: req.query.offset}
         },

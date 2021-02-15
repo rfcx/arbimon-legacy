@@ -35,10 +35,9 @@ angular.module('a2.visobjectsbrowser', [
             browser.events.on('browser-vobject-type', function(vobject_type){
                 scope.$emit('browser-vobject-type', vobject_type);
             });
-            
+
             browser.events.on('on-vis-object', function(location, visobject, type){
                 scope.onVisObject({location: location, visobject: visobject, type: type});
-                // console.log("scope.onVisObject");
                 $timeout(function(){
                     var $e = element.find('.visobj-list-item.active');
                     if($e.length) {
@@ -48,14 +47,16 @@ angular.module('a2.visobjectsbrowser', [
                     }
                 });
             });
-            
+
             scope.selectVisObject = browser.selectVisObject.bind(browser);
             // scope.$on('a2-persisted', browser.activate.bind(browser));
             scope.$on('prev-visobject', browser.selectPreviousVisObject.bind(browser));
             scope.$on('next-visobject', browser.selectNextVisObject.bind(browser));
             scope.$on('set-browser-location', browser.setBrowserLocation.bind(browser));
+            // Catch the navigation URL query from visualizer view
+            scope.$on('set-browser-annotations', browser.setBrowserAnnotations.bind(browser));
             scope.$on('visobj-updated', browser.notifyVisobjUpdated.bind(browser));
-            
+
             browser.activate(scope.location).catch(console.error.bind(console));
 
         }
@@ -83,7 +84,7 @@ angular.module('a2.visobjectsbrowser', [
     // var self = $scope.browser = this;
     var self = this;
     var project = Project;
-    
+
     // Set of available lovo types
     this.types = BrowserLOVOs.$grouping;
     this.visobjectTypes = BrowserVisObjects;
@@ -104,16 +105,16 @@ angular.module('a2.visobjectsbrowser', [
     this.events= new EventlistManager();
     // initialized flag
     var initialized = false;
-    
+
     var waitForInitializedDefer = $q.defer();
     this.waitForInitialized = waitForInitializedDefer.promise;
-    
+
     this.waitForInitialized.then((function(){
         if(!this.type){
             this.setBrowserType(BrowserLOVOs.$list.filter(function(lovo){return lovo.default;}).shift());
         }
     }).bind(this));
-    
+
     /** (Re)-Activates the browser controller.
      * Sets the browser controller into an active state. On the first time,
      * the browse gets initialized and sends a 'browser-available' event
@@ -124,11 +125,14 @@ angular.module('a2.visobjectsbrowser', [
      *
      */
     this.activate = function(location){
-// console.log("this.activate = function(){", "location : ", location);
         var $type = this.$type;
         return (
             ($type && $type.activate) ?
             $type.activate().then((function(){
+                if ($scope.browser.currentRecording && $scope.browser.annotations) {
+                    return this.setLOVO()
+                }
+                if ($type.lovo)
                 return this.setLOVO($type.lovo);
             }).bind(this)) :
             $q.resolve()
@@ -141,17 +145,23 @@ angular.module('a2.visobjectsbrowser', [
     };
 
     this.setLOVO = function(lovo, location){
-// console.log("this.setLOVO = function(lovo, location){", lovo, location);
         var defer = $q.defer();
         var old_lovo = self.lovo;
         self.lovo = lovo;
         return $q.resolve().then(function(){
             if(lovo){
+                if (lovo.recordingsBySite) {
+                    lovo.updateRecording($scope.browser.currentRecording? $scope.browser.currentRecording : undefined);
+                }
                 lovo.initialize().then(function(){
                     if(location){
                         self.set_location(location);
                     }
                 }).then(function(){
+                    // to set lovo recording to visobject
+                    if (lovo.recordingsBySite && lovo.list && lovo.list.length === 1){
+                        self.auto.visobject = lovo.list[0];
+                    }
                     if(self.auto.visobject){
                         return lovo.find(self.auto.visobject).then(function(visobject){
                             return self.setVisObj(visobject);
@@ -163,7 +173,7 @@ angular.module('a2.visobjectsbrowser', [
             }
         });
     };
-    
+
     this.set_location = function(location){
 // console.log("this.set_location = function(location){", location);
         this.location = location;
@@ -207,7 +217,7 @@ angular.module('a2.visobjectsbrowser', [
         this.cachedLocation = location;
         this.events.send({event:'on-vis-object', context:this}, location, newValue, self.lovo ? self.lovo.object_type : null);
     };
-    
+
     this.selectVisObject = function(visobject){
         console.log("this.selectVisObject :: ", visobject);
         return (visobject) ?
@@ -240,6 +250,11 @@ console.log("this.selectNextVisObject = function(){");
             self.lovo.next(self.visobj.id).then(this.selectVisObject.bind(this));
         }
     };
+    // Parse the navigation URL query
+    this.setBrowserAnnotations = function(evt, recording, query){
+        this.annotations = query;
+        this.currentRecording = recording;
+    }
     this.setBrowserLocation = function(evt, location){
 console.log("this.setBrowserLocation :: ", location, this.cachedLocation);
         var m = /([\w-+]+)(\/(.+))?/.exec(location);
@@ -248,8 +263,8 @@ console.log("this.setBrowserLocation :: ", location, this.cachedLocation);
             return $q.resolve();
         }
         this.cachedLocation = location;
-        
-        
+
+
         if(m && BrowserLOVOs[m[1]]){
             var loc = m[3];
             var lovos_def = BrowserLOVOs[m[1]];

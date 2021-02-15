@@ -41,7 +41,7 @@ angular.module('a2.audiodata.training-sets', [
         };
     }
 )
-.controller('TrainingSetsCtrl', function($state, $scope, a2TrainingSets, Project, $q, $modal, a2TrainingSetHistory, a2UserPermit, notify) {
+.controller('TrainingSetsCtrl', function($state, a2TrainingSets, Project, $q, $modal, a2TrainingSetHistory, a2UserPermit, notify) {
     var p={
         set : $state.params.set,
         show : $state.params.show

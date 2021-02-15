@@ -17,18 +17,20 @@ angular.module('a2.browser_recordings_by_site', [
     return $cacheFactory('recordingsBrowserDateAvailabilityCache');
 })
 .service('a2RecordingsBySiteLOVO', function($q, Project, $filter){
-    var lovo = function(site, date, limit, offset){
+    var lovo = function(site, date, limit, offset, recording_id){
         this.loading = false;
         this.initialized = false;
         this.site = site;
         this.date = date;
         this.object_type = "recording";
+        this.recordingsBySite = true;
         this.offset = offset || 0;
         this.limit = limit;
         this.order = 'datetime';
         this.count = 0;
         this.list = [];
         this.page = 0;
+        this.recording_id = recording_id;
         this.finished = false;
     };
     lovo.prototype = {
@@ -41,13 +43,26 @@ angular.module('a2.browser_recordings_by_site', [
             }
             return d.promise;
         },
-        getRecordings : function(limit, offset) {
+        updateRecording: function(recording_id) {
+            this.recording_id = recording_id;
+        },
+        getRecordings : function(limit, offset, recording_id) {
             var d = $q.defer();
             this.limit = limit, this.offset = offset;
             var site=this.site, date=this.date;
             var key = ['!q:'+site.id, date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
+            var opts = {
+                show:'thumbnail-path'
+            };
+            if (recording_id === undefined) {
+                opts.limit = limit;
+                opts.offset = offset;
+            };
+            if (recording_id !== undefined) {
+                opts.recording_id = recording_id;
+            };
             this.loading = true;
-            Project.getRecordings(key, {show:'thumbnail-path', limit: limit, offset: offset},(function(recordings){
+            Project.getRecordings(key, opts,(function(recordings){
                 recordings = $filter('orderBy')(recordings, 'datetime');
                 recordings.forEach(function(recording){
                     recording.caption = [recording.site, moment(recording.datetime).utc().format('lll')].join(', ');
@@ -59,8 +74,12 @@ angular.module('a2.browser_recordings_by_site', [
                     };
                 });
                 if (recordings && recordings.length) {
-                    this.list.push.apply(this.list, recordings)
-                    this.page++
+                    if (recordings.length === 1 && this.list.length && this.list[0].id === recordings[0].id) {
+                        // Do not push existing recording to the list
+                    } else {
+                        this.list.push.apply(this.list, recordings)
+                        this.page++
+                    }
                 }
                 else {
                     this.finished = true;
@@ -75,7 +94,7 @@ angular.module('a2.browser_recordings_by_site', [
             if (this.finished) {
                 return $q.defer().resolve(false);
             }
-            return this.getRecordings(this.limit, this.page * this.limit);
+            return this.getRecordings(this.limit, this.page * this.limit, this.recording_id);
         },
         find : function(recording){
             var d = $q.defer(), id = (recording && recording.id) || (recording | 0);
@@ -98,10 +117,10 @@ angular.module('a2.browser_recordings_by_site', [
     };
     return lovo;
 })
-.controller('a2BrowserRecordingsBySiteController', function($scope, $window, a2Browser, rbDateAvailabilityCache, Project, $timeout, $q, a2RecordingsBySiteLOVO){
+.controller('a2BrowserRecordingsBySiteController', function($scope, a2Browser, rbDateAvailabilityCache, Project, $timeout, $q, a2RecordingsBySiteLOVO){
     var project = Project;
     var self = this;
-
+    $scope.siteInfo = {};
     this.sites = [];
     this.dates = {
         refreshing  : false,
@@ -193,7 +212,7 @@ angular.module('a2.browser_recordings_by_site', [
     this.site = null;
     this.date = null;
     this.lovo = null;
-    // $scope.limit = 10;
+    $scope.limit = 10;
 
     this.activate = function(){
         var defer = $q.defer();
@@ -214,6 +233,7 @@ angular.module('a2.browser_recordings_by_site', [
         self.active = false;
         return defer.promise;
     };
+    // Preselect of a site and a date from navigation URL
     this.auto_select = function(recording){
         if(recording) {
             var utcdateaslocal = new Date(recording.datetime);
@@ -266,9 +286,13 @@ angular.module('a2.browser_recordings_by_site', [
         var site = self.site;
         var date = self.date;
         if(site && date){
-            // TO DO: add functionality to find a record from navigation query
-            // self.lovo = new a2RecordingsBySiteLOVO(site, date, $scope.limit);
-            self.lovo = new a2RecordingsBySiteLOVO(site, date);
+            // Create current browser state for the one recording in the list of recordings
+            if ($scope.browser.currentRecording) {
+                self.lovo = new a2RecordingsBySiteLOVO(site, date, null, null, Number($scope.browser.currentRecording));
+            }
+            else {
+                self.lovo = new a2RecordingsBySiteLOVO(site, date, $scope.limit);
+            }
         }
         return self.lovo;
     };
@@ -282,7 +306,8 @@ angular.module('a2.browser_recordings_by_site', [
         if (diff) {
             if (!self.lovo) return;
             if (self.lovo && self.lovo.loading === true) return;
-            // self.lovo.loadNext();
+            if ($scope.browser.currentRecording && $scope.browser.annotations) return;
+            self.lovo.loadNext();
         }
     }
 
@@ -293,7 +318,7 @@ angular.module('a2.browser_recordings_by_site', [
     };
 
     this.set_site = function(newValue){
-        this.site = newValue;
+        this.site = $scope.siteInfo.site = newValue;
         if(!this.active){ return; }
         this.recordings = [];
         // reset the selections and stuff
@@ -319,8 +344,7 @@ angular.module('a2.browser_recordings_by_site', [
 
         this.yearpickOpen = false;
         var site = this.site;
-        this.date = date;
-
+        this.date = $scope.siteInfo.date = date;
         if(site && date) {
             var isNewSiteAndDate = function() {
                 return (
@@ -341,4 +365,19 @@ angular.module('a2.browser_recordings_by_site', [
         }
 
     };
+    $scope.compareValues = function(value, oldValue) {
+        if (value && oldValue && (value === oldValue || value !== oldValue)) {
+            $scope.browser.currentRecording = null;
+            $scope.browser.annotations = null;
+        }
+    };
+    $scope.$watch('siteInfo.site', function(value, oldValue) {
+        console.log('watch siteInfo.site', value, oldValue);
+        $scope.compareValues(value, oldValue);
+    });
+    $scope.$watch('siteInfo.date', function(value, oldValue) {
+        console.log('watch siteInfo.date', value, oldValue);
+        $scope.compareValues(value, oldValue);
+    });
+
 });

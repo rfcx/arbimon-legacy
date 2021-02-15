@@ -24,10 +24,6 @@ angular.module('a2.audiodata.templates', [
             this.projecturl = Project.getUrl();
             this.currentTab = 'showOwner';
         },
-        getTemplateVisualizerUrl: function(template){
-            var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-            return template ? "/project/"+template.project_url+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
-        },
         goToSourceProject: function(projectId) {
             if (!projectId) return;
             Project.getProjectById(projectId, function(data) {
@@ -45,6 +41,10 @@ angular.module('a2.audiodata.templates', [
                 self.loading = false;
                 notify.serverError(err);
             }).bind(this));
+        },
+        getTemplateVisualizerUrl: function(template){
+            var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+            return template ? "/project/"+template.project_url+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
         },
         deleteTemplate: function(templateId){
             if(!a2UserPermit.can('manage templates')) {

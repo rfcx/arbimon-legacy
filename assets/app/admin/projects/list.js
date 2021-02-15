@@ -131,6 +131,8 @@ angular.module('a2.admin.projects.list', [
                 citizen_scientist_enabled : !!project.citizen_scientist_enabled,
                 cnn_enabled : !!project.cnn_enabled,
                 pattern_matching_enabled : !!project.pattern_matching_enabled,
+                aed_enabled : !!project.aed_enabled,
+                clustering_enabled : !!project.clustering_enabled,
                 plan : {
                     tier: project.tier,
                     storage: project.storage_limit,
