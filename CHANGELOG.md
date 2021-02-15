@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+## v3.0.10 - Feb XX, 2021
+Resolved issues:
+- CS-474 Drop unique constraint on `projects` `name` column
+
 ## v3.0.9 - Feb 12, 2021
 
 New features:
