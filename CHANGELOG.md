@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.10
+
+Resolved issues:
+- PI-504 Can not filter more than one tag
+
 ## v3.0.9 - Feb 12, 2021
 
 New features:
