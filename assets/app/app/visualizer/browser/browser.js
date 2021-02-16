@@ -150,7 +150,7 @@ angular.module('a2.visobjectsbrowser', [
         self.lovo = lovo;
         return $q.resolve().then(function(){
             if(lovo){
-                if (self.lovo.object_type === 'recording') {
+                if (lovo.recordingsBySite) {
                     lovo.updateRecording($scope.browser.currentRecording? $scope.browser.currentRecording : undefined);
                 }
                 lovo.initialize().then(function(){
@@ -159,7 +159,7 @@ angular.module('a2.visobjectsbrowser', [
                     }
                 }).then(function(){
                     // to set lovo recording to visobject
-                    if (self.lovo.object_type === 'recording' && lovo.list && lovo.list.length === 1){
+                    if (lovo.recordingsBySite && lovo.list && lovo.list.length === 1){
                         self.auto.visobject = lovo.list[0];
                     }
                     if(self.auto.visobject){

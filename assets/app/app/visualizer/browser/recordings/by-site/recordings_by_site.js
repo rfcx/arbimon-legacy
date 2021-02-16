@@ -23,6 +23,7 @@ angular.module('a2.browser_recordings_by_site', [
         this.site = site;
         this.date = date;
         this.object_type = "recording";
+        this.recordingsBySite = true;
         this.offset = offset || 0;
         this.limit = limit;
         this.order = 'datetime';

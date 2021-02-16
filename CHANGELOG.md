@@ -4,6 +4,7 @@
 
 Resolved issues:
 - PI-545 Improve the quality of the spectrogram image
+- PI-504 Can not filter more than one tag
 
 ## v3.0.9 - Feb 15, 2021
 
