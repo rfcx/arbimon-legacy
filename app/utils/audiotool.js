@@ -163,6 +163,7 @@ var audiotools = {
      *                  of the audio file's duration. (default: 172)
      * @param {Integer} options.quantization number of colors gradations used in the spectrogram image.
      *                  (default: 249, the maximum)
+     * @param {Integer} options.contrast the ‘contrast’ of the spectrogram display.
      * @param {String} options.window windowing function used to compute the spectrogram.
      *                 (One of 'Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser', default: 'Hann')
      * @param {Function} callback callback function.
@@ -192,7 +193,9 @@ var audiotools = {
         args.push(
             '-q', ((options.quantization | 0) || 249) // color quantization
         );
-
+        if(options.contrast) {
+            args.push('-z', options.contrast);
+        }
         if(options.window && ['Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser'].indexOf(options.window) >= 0) {
             args.push('-w', options.window); // just the raw spectrogram image
         }

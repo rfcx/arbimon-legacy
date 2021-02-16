@@ -3,9 +3,10 @@
 ## v3.0.10
 
 Resolved issues:
+- PI-545 Improve the quality of the spectrogram image
 - PI-504 Can not filter more than one tag
 
-## v3.0.9 - Feb 12, 2021
+## v3.0.9 - Feb 15, 2021
 
 New features:
 - PI-263 Admin can enable Audio-event-detection and Clustering pages
