@@ -12,7 +12,7 @@ angular.module('a2.visobjects.recording', [
 })
 .service('VisualizerObjectRecordingTypeLoader', function ($q, Project) {
     var khz_format = function(v){return (v/1000) | 0; };
-    
+
     var recording = function(data, extra){
         for(var i in data){ this[i] = data[i]; }
         this.sampling_rate = this.sample_rate;
@@ -38,11 +38,18 @@ angular.module('a2.visobjects.recording', [
         };
         // set it to the scope
         this.tiles.set.forEach((function(tile){
-            tile.src="/api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j;
+            if (!!data.legacy) {
+                tile.src="/api/project/"+Project.getUrl()+"/recordings/tiles/"+this.id+"/"+tile.i+"/"+tile.j;
+            } else {
+                var streamId = data.uri.split('/')[3]
+                var start = new Date(new Date(data.datetime).valueOf() + Math.round(tile.s * 1000)).toISOString()
+                var end = new Date(new Date(data.datetime).valueOf() + Math.round((tile.s + tile.ds) * 1000)).toISOString()
+                tile.src = '/api/ingest/recordings/' + streamId + '_t' + start.replace(/-|:|\./g, '') + '.' + end.replace(/-|:|\./g, '') + '_z95_wdolph_g1_fspec_mtrue_d1023.255.png'
+            }
         }).bind(this));
     };
     recording.layers=[
-    
+
     ];
     recording.fetch = function(visobject){
         var d = $q.defer();

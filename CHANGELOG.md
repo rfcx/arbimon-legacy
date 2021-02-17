@@ -2,6 +2,9 @@
 
 ## v3.0.10 - Feb XX, 2021
 
+New features:
+- CS-494 Request spectrogram tiles from Media API for audios from RFCx streams
+
 Resolved issues:
 - PI-545 Improve the quality of the spectrogram image
 - PI-504 Can not filter more than one tag
