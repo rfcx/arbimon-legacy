@@ -1,11 +1,16 @@
 # Arbimon Release Notes
 
-## v3.0.10
+## v3.0.10 - Feb XX, 2021
 
 New features:
-- ([CS-494](https://jira.rfcx.org/browse/CS-494)) Request spectrogram tiles from Media API for audios from RFCx streams
+- CS-494 Request spectrogram tiles from Media API for audios from RFCx streams
 
-## v3.0.9 - Feb 12, 2021
+Resolved issues:
+- PI-545 Improve the quality of the spectrogram image
+- PI-504 Can not filter more than one tag
+- CS-474 Drop unique constraint on `projects` `name` column
+
+## v3.0.9 - Feb 15, 2021
 
 New features:
 - PI-263 Admin can enable Audio-event-detection and Clustering pages
