@@ -32,7 +32,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.showViewGridPage = false;
     $scope.loadClusteringJobs = function() {
         $scope.loading = true;
-        return a2ClusteringJobs.list().then(function(data) {
+        return a2ClusteringJobs.list({completed: true}).then(function(data) {
             $scope.clusteringJobsOriginal = data;
             $scope.clusteringJobsData = data;
             $scope.loading = false;
@@ -525,7 +525,8 @@ angular.module('a2.analysis.clustering-jobs', [
     Object.assign(this, {
         initialize: function(){
             this.loading = {
-                jobs: false
+                jobs: false,
+                saving: false
             };
 
             var list = this.list = {};
@@ -540,7 +541,7 @@ angular.module('a2.analysis.clustering-jobs', [
             };
 
             this.loading.jobs = true;
-            a2ClusteringJobs.audioEventDetections().then((function(jobs){
+            a2ClusteringJobs.audioEventDetections({completed: true}).then((function(jobs){
                 this.loading.jobs = false;
                 list.jobs = jobs.map(job => {
                     return {
@@ -551,19 +552,24 @@ angular.module('a2.analysis.clustering-jobs', [
             }).bind(this));
         },
         create: function () {
+            this.loading.saving = true;
             try {
                 return a2ClusteringJobs.create({
                     name: this.data.name,
                     aed_job: this.data.aed_job,
                     params: this.data.params
                 }).then(function(clusteringModel) {
+                    this.loading.saving = false;
                     $modalInstance.close({create:true, clusteringModel: clusteringModel});
                 }).catch(notify.serverError);
             } catch(error) {
+                this.loading.saving = false;
                 console.error("a2ClusteringJobs.create error: " + error);
             }
         },
         cancel: function (url) {
+            this.loading.jobs = false;
+            this.loading.saving = false;
             $modalInstance.close({ cancel: true, url: url });
         },
         isJobValid: function () {

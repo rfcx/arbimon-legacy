@@ -4,10 +4,14 @@
 var joi = require('joi');
 var AWS = require('aws-sdk');
 var q = require('q');
-var lambda = new AWS.Lambda();
-var config = require('../config');
 var dbpool = require('../utils/dbpool');
 var Recordings = require('./recordings');
+var APIError = require('../utils/apierror');
+const config = require('../config');
+const k8sConfig = config('k8s');
+var jsonTemplates = require('../utils/json-templates');
+const { Client } = require('kubernetes-client');
+const k8sClient = new Client({ version: '1.13' });
 
 var ClusteringJobs = {
     find: function (options) {
@@ -42,6 +46,11 @@ var ClusteringJobs = {
 
         if (options.job_id) {
             constraints.push('C.job_id = ' + dbpool.escape(options.job_id));
+        }
+
+        if (options.completed) {
+            select.push("J.`state`");
+            constraints.push('J.state = "completed"');
         }
 
         postprocess.push((rows) => {
@@ -157,6 +166,12 @@ var ClusteringJobs = {
             constraints.push('JP.project_id = ' + dbpool.escape(options.project_id));
         }
 
+        if (options.completed) {
+            select.push("J.`state`");
+            constraints.push('J.state = "completed"');
+            tables.push("JOIN jobs J ON JP.job_id = J.job_id");
+        }
+
         return dbpool.query(
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
@@ -165,32 +180,115 @@ var ClusteringJobs = {
     },
 
     JOB_SCHEMA : joi.object().keys({
-        project: joi.number().integer(),
+        project_id: joi.number().integer(),
+        user_id: joi.number().integer(),
         name : joi.string(),
-        audioEventDetectionJob: joi.object().keys({
-            name: joi.string(),
-            jobId: joi.number()
-        }),
-        params: joi.object().keys({
-            minPoints: joi.number(),
-            distanceThreshold: joi.number()
-        }),
+        aed_job_name: joi.string(),
+        aed_job_id: joi.number(),
+        min_points: joi.number(),
+        distance_threshold: joi.number(),
     }),
 
-    requestNewClusteringJob: function(data){
-        let payload = JSON.stringify({
-            project_id: data.project,
+    requestNewClusteringJob: function(data, callback){
+        var payload = JSON.stringify({
+            project_id: data.project_id,
+            user_id: data.user_id,
             name: data.name,
             aed_job_name: data.audioEventDetectionJob.name,
             aed_job_id: data.audioEventDetectionJob.jobId,
             min_points: data.params.minPoints,
             distance_threshold: data.params.distanceThreshold,
-        })
-        return q.ninvoke(joi, 'validate', data, ClusteringJobs.JOB_SCHEMA).then(() => lambda.invoke({
-            FunctionName: config('lambdas').clustering_jobs,
-            InvocationType: 'Event',
-            Payload: payload,
-        }).promise());
+        });
+        var job_id;
+        var jobQuery =
+            "INSERT INTO jobs (\n" +
+            "    `job_type_id`, `date_created`,\n" +
+            "    `last_update`, `project_id`,\n" +
+            "    `user_id`, `state`,\n" +
+            "    `progress`, `completed`, `progress_steps`, `hidden`, `ncpu`\n" +
+            ") SELECT ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?";
+
+        var clusteringQuery =
+            "INSERT INTO job_params_audio_event_clustering (\n" +
+            "    `name`, `project_id`, `user_id`, \n" +
+            "    `job_id`, `audio_event_detection_job_id`,\n" +
+            "    `date_created`, `parameters`\n" +
+            ") SELECT ?, ?, ?, ?, ?, NOW(), ?";
+
+        return q.ninvoke(joi, 'validate', payload, ClusteringJobs.JOB_SCHEMA)
+            .then(() => dbpool.query(
+                jobQuery, [
+                    9, data.project_id, data.user_id, 'processing', 0, 0, 1, 0, 0
+                ]
+            ).then(result => {
+                data.id = job_id = result.insertId;
+            }).then(() =>
+                dbpool.query(
+                    clusteringQuery, [
+                        data.name, data.project_id, data.user_id, data.id, data.audioEventDetectionJob.jobId,
+                        JSON.stringify({
+                            "Min. Points": data.params.minPoints,
+                            "Distance Threshold": data.params.distanceThreshold
+                        })
+                    ]
+                )
+            ).then(async () => {
+                data.kubernetesJobName = `aed-clustering-${new Date().getTime()}`;
+                var jobParam = jsonTemplates.getTemplate('aed-clustering', 'job', {
+                    kubernetesJobName: data.kubernetesJobName,
+                    imagePath: k8sConfig.imagePath,
+                    minPoints: `${data.params.minPoints}`,
+                    distanceThreshold: `${data.params.distanceThreshold}`,
+                    jobId: `${data.audioEventDetectionJob.jobId}`
+                });
+                await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
+                // TODO: remove when clustering job will update db by itself
+                return new Promise((resolve, reject) => {
+                    let counter = 0
+                    let interval = setInterval(async () => {
+                        // clear interval in 2 minutes
+                        if (counter === 24) {
+                            clearInterval(interval)
+                            reject(new Error(`${data.kubernetesJobName} processing time exceeded.`))
+                        }
+                        const status = await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs(data.kubernetesJobName).status.get();
+                        console.log('status', status)
+                        if (status && status.statusCode === 200) {
+                            clearInterval(interval)
+                            resolve()
+                        }
+                        counter++
+                    }, 5000)
+                })
+            }).then(() => {
+                var jobdata = {
+                    'progress': 1,
+                    'status': 'completed',
+                    'completed': true,
+                    'progress_steps': 1,
+                    'ncpu': 1
+                }
+                ClusteringJobs.updateProgressOfClusteringJob(jobdata, job_id);
+            }).then(() => {
+                return job_id;
+            })
+        ).catch(function(err){
+            console.log('APIError', err)
+            throw new APIError(err.message);
+        }).nodeify(callback);
+    },
+
+    updateProgressOfClusteringJob: function(jobdata, job_id){
+        return jobdata ? dbpool.query(
+            "UPDATE jobs\n" +
+            "SET progress = ?, last_update = NOW(), state = ?, progress_steps = ?, ncpu = ?\n" +
+            "WHERE job_id = ?\n", [
+            jobdata['progress'],
+            jobdata['status'],
+            jobdata['progress_steps'],
+            jobdata['ncpu'],
+            job_id
+        ]) : Promise.resolve();
     },
 };
 

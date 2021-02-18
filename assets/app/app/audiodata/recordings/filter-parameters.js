@@ -20,7 +20,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         requires:'^RecsCtrl',
         link: function(scope, element, attrs) {
             var controller = scope.controller;
-            
+
             scope.applyFilters = function() {
                 scope.onApplyFilters({filters: controller.getFilters()});
             };
@@ -55,12 +55,12 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             return _1.length !== undefined && _1.map(mapFn);
         };
     }
-    
+
     var _1_get_value_mapper = _1_mapper(_1_get("value"));
     var _1_get_id_mapper    = _1_mapper(_1_get("id"));
     var _1_get_tag_id_mapper  = _1_mapper(_1_get("tag_id"));
     var _1_get_flags_mapper = _1_mapper(_1_get("flags"));
-    
+
     var findObjectWith = function(arr, key, value) {
         var result = arr.filter(function(obj) {
             return obj[key] === value;
@@ -96,7 +96,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         soundscape_composition_annotation : ['present', 'absent'],
     };
     this.params={};
-    
+
     var filterDefs = [
         {name:"range"                 , map: function set_range_bounds(range){
             if(range && range.from && range.to) {
@@ -123,7 +123,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
     this.getFilters = function() {
         var filters = {};
         var params = this.params;
-                
+
         filterDefs.forEach(function(filterDef){
             var param = params[filterDef.name];
             var value = (param && filterDef.map) ? filterDef.map(param) : param;
@@ -131,7 +131,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 filters[filterDef.name] = value;
             }
         });
-        
+
         return filters;
     };
 
@@ -139,7 +139,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         if(filters === undefined){
             filters = {};
         }
-        
+
         var options = this.options;
         Project.getSites().then(function(sites){
             return $q.all(sites.map(function(site){
@@ -157,13 +157,13 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 days: [], // daysList
                 hours: [], // hoursList
             };
-            
+
             var levelIds = Object.keys(lists);
-            
+
             var getFilterOptions = function(filters, obj, level) {
                 var count = 0;
                 var currentLevel = levelIds[level];
-                
+
                 for(var child in obj) {
                     if(
                         Object.keys(filters).length &&
@@ -172,35 +172,35 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                     ) { // skip if filter is define and the value is not in it
                         continue;
                     }
-                    
+
                     var item = findObjectWith(lists[currentLevel], 'value', child);
-                    
+
                     if(!item) {
                         item = { value: child, count: 0 };
                         lists[currentLevel].push(item);
                     }
-                    
+
                     var itemCount;
                     if(typeof obj[child] == 'number') {
                         itemCount = obj[child];
                     }
                     else {
                         if(level === 0) count = 0;
-                            
+
                         itemCount = getFilterOptions(filters, obj[child], level+1);
                     }
-                    
+
                     item.count += itemCount;
                     count += itemCount;
                 }
-                
+
                 return count;
             };
             getFilterOptions(filters, data, 0);
-            
+
             options.sites = lists.sites;
             options.years = lists.years;
-            
+
             options.months = lists.months.map(function(month) {
                 month.value = parseInt(month.value);
                 month.value--;
@@ -210,12 +210,12 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                     count: month.count
                 };
             });
-            
+
             options.days = lists.days.map(function(day) {
                 day.value = parseInt(day.value);
                 return day;
             });
-            
+
             options.hours = lists.hours.map(function(hour) {
                 hour.value = parseInt(hour.value);
                 return {
@@ -224,11 +224,11 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                     count: hour.count
                 };
             });
-            
+
             var sort = function(a, b) {
                 return a.value > b.value;
             };
-            
+
             options.sites.sort(sort);
             options.years.sort(sort);
             options.months.sort(sort);
@@ -254,12 +254,11 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 if (!tagsObj[key]) {
                     tagsObj[key] = {
                         tag: key,
-                        tag_id: [t.tag_id],
+                        tag_id: t.tag_id,
                         count: t.count
                     }
                 }
                 else {
-                    tagsObj[key].tag_id.push(t.tag_id);
                     tagsObj[key].count++
                 }
             })
@@ -277,7 +276,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             options.soundscape_composition = classes;
         }).bind(this));
     };
-    
+
     this.computeClassificationResultsOptions = function(classifications){
         console.log("this.computeClassificationResults = function(classifications){", classifications);
         var haveThreshold = classifications && classifications.reduce(function(a, b){

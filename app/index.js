@@ -16,7 +16,6 @@ var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
 var paypal = require('paypal-rest-sdk');
 
-
 var config = require('./config');
 AWS.config.update({
     accessKeyId: config('aws').accessKeyId,
