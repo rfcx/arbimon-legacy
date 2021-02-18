@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.9 - Feb 12, 2021
+## v3.0.10 - Feb 18, 2021
+
+Resolved issues:
+- PI-495 Hot fix pixelated styles for Pattern Matching boxes
+- PI-215 Fix the Random Forest Models (RFM) creation error
+
+## v3.0.9 - Feb 15, 2021
 
 New features:
 - PI-263 Admin can enable Audio-event-detection and Clustering pages
