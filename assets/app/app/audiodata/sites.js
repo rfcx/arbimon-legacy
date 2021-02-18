@@ -218,7 +218,7 @@ angular.module('a2.audiodata.sites', [
                 this.messages = [
                     "You are about to delete: ",
                     $scope.selected.name,
-                    "Are you sure??"
+                    "Are you sure?"
                 ];
                 this.btnOk = "Yes, do it!";
                 this.btnCancel = "No";
@@ -367,23 +367,6 @@ angular.module('a2.audiodata.sites', [
 
     $scope.onSelect = function($item) {
         $scope.temp.project = $item;
-    };
-
-    $scope.site_token = function() {
-
-        if(!$scope.selected || $scope.selected.imported)
-            return;
-
-        if(!a2UserPermit.can('manage project sites')) {
-            notify.log("You do not have permission to edit sites");
-            return;
-        }
-
-        var modalInstance = $modal.open({
-            templateUrl: '/app/audiodata/site-tokens-popup.html',
-            controller: 'SitesTokenGenaratorCtrl',
-            scope: $scope
-        });
     };
 
     $scope.sel = function(site) {

@@ -1,5 +1,7 @@
 # Arbimon - Acoustic Analyzer
 
+[Release Notes](./CHANGELOG.md) | [Deployment Notes](./DEPLOYMENT_NOTES.md)
+
 ## Getting started
 
 ### Local Dev Setup with Docker

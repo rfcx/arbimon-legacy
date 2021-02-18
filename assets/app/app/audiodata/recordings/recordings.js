@@ -86,6 +86,11 @@ angular.module('a2.audiodata.recordings', [
         if(!Object.keys(listParams).length)
             return;
 
+        if($scope.totalRecs == 0) {
+            notify.log('You can\'t create playlist with 0 recording');
+            return;
+        }
+
         if(!a2UserPermit.can('manage playlists')) {
             notify.log('You do not have permission to create playlists');
             return;
@@ -98,7 +103,8 @@ angular.module('a2.audiodata.recordings', [
                 listParams: function() {
                     return listParams;
                 }
-            }
+            },
+            backdrop: false
         });
 
         modalInstance.result.then(function() {
@@ -131,7 +137,7 @@ angular.module('a2.audiodata.recordings', [
             var s = recCount[site] > 1 ? 's' : '';
             return recCount[site] + ' recording'+s+' from "' + site + '"';
         }));
-        messages.push("Are you sure??");
+        messages.push("Are you sure?");
 
         return $modal.open({
             templateUrl: '/common/templates/pop-up.html',
@@ -180,7 +186,7 @@ angular.module('a2.audiodata.recordings', [
                     importedSites.push('"' + entry.site + '"');
                 }
             });
-            messages.push("Are you sure??");
+            messages.push("Are you sure?");
             if(importedCount){
                 messages.push("(The filters matched " + importedCount + " recordings wich come from " + importedSites.join(", ") + ". You cannot delete these from your project, they can only be removed from their original project.)");
             }

@@ -169,6 +169,7 @@ angular.module('a2.jobs', [
     var job_types;
     var url = Project.getUrl();
     var intervalPromise;
+
     updateJobs = function() {
         $http.get('/api/project/' + url + '/jobs/progress')
             .success(function(data) {
@@ -185,6 +186,7 @@ angular.module('a2.jobs', [
             });
     };
     updateJobs();
+  
     return {
         geturl: function() {
             return url;
@@ -223,7 +225,6 @@ angular.module('a2.jobs', [
                     else {
                         updateJobs();
                     }
-
                 }, 5000);
             }
 

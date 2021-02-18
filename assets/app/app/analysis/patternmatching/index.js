@@ -23,13 +23,13 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/list.html'
     });
 })
-.controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
     $scope.getTemplateVisualizerUrl = function(template){
         var projecturl = Project.getUrl();
-        var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
+        return template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     $scope.selectItem = function(patternmatchingId){
@@ -144,7 +144,7 @@ angular.module('a2.analysis.patternmatching', [
         templateUrl: '/app/analysis/patternmatching/details.html'
     };
 })
-.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $document) {
+.controller('PatternMatchingDetailsCtrl' , function($scope, $q, a2PatternMatching, a2Templates, a2UserPermit, Project, a2AudioBarService, notify, $anchorScroll, $window) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -157,7 +157,7 @@ angular.module('a2.analysis.patternmatching', [
         this.loading = {details: false, rois:false};
         this.validation = this.lists.validation[2];
         this.thumbnailClass = this.lists.thumbnails[0].value;
-        this.search = this.lists.search[0];
+        this.search = this.lists.search[6];
         this.projecturl = Project.getUrl();
         this.fetchDetails().then((function(){
             this.loadSiteIndex();
@@ -171,14 +171,14 @@ angular.module('a2.analysis.patternmatching', [
             { class:'fa fa-th', value:'is-small'},
         ],
         search: [
-            {value:'all', text:'All', description: 'Show all matched rois.'},
-            {value:'present', text:'Present', description: 'Show all rois marked as present.'},
-            {value:'not_present', text:'Not Present', description: 'Show all rois marked as not present.'},
-            {value:'unvalidated', text:'Unvalidated', description: 'Show all rois without validation.'},
+            {value:'all', text:'All', description: 'Show all matched Region of Interest.'},
+            {value:'present', text:'Present', description: 'Show all Region of Interest marked as present.'},
+            {value:'not_present', text:'Not Present', description: 'Show all Region of Interest marked as not present.'},
+            {value:'unvalidated', text:'Unvalidated', description: 'Show all Region of Interest without validation.'},
             {value:'best_per_site', text:'Best per Site', description: 'Show the best scored roi per site.'},
             {value:'best_per_site_day', text:'Best per Site, Day', description: 'Show the best scored roi per site and day.'},
-            {value:'by_score', text:'Score', description: 'Show all rois ranked by score.'},
-            {value:'by_score_per_site', text:'Score per Site', description: 'Show all rois ranked by score per site.'},
+            {value:'by_score', text:'Score', description: 'Show all Region of Interest ranked by score.'},
+            {value:'by_score_per_site', text:'Score per Site', description: 'Show all Region of Interest ranked by score per site.'},
         ],
         selection: [
             {value:'all', text:'All'},
@@ -309,12 +309,12 @@ angular.module('a2.analysis.patternmatching', [
 
     getRoiVisualizerUrl: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        return roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
     getTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+this.projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){

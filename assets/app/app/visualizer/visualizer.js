@@ -56,25 +56,26 @@ angular.module('a2.visualizer', [
             }
         },
         deepStateRedirect: true,
+        sticky: true
     })
     .state('visualizer.view', {
         url: '/:type/:idA/:idB/:idC?gain&filter&a&clusters',
         params:{
             type:'',
-            a:'',
-            clusters:'',
-            gain:'',
-            filter:'',
+            a: null,
+            clusters: null,
+            gain: null,
+            filter: null,
             idA: {
                 value:'',
                 squash:true
             },
             idB:{
-                value:'',
+                value: null,
                 squash:true
             },
             idC:{
-                value:'',
+                value: null,
                 squash:true
             }
         },
@@ -91,10 +92,13 @@ angular.module('a2.visualizer', [
                 }
             }
             var l = lc.join('/');
-            // console.log(".state('visualizer.rec', { controller: function($state, $scope){ $state.params: ", $state.params);
 
             $scope.location.whenBrowserIsAvailable(function(){
                 $scope.$parent.$broadcast('set-browser-location', l, p.a);
+                // Catch the navigation URL query
+                if (p.type === 'rec') {
+                    $scope.$parent.$broadcast('set-browser-annotations', p.idA? Number(p.idA) : null, p.a? p.a : null);
+                }
             });
             if($scope.parseAnnotations){
                 $scope.parseAnnotations(p.a);
@@ -286,7 +290,6 @@ angular.module('a2.visualizer', [
     };
 
     $scope.setVisObject = function(visobject, type, location){
-        console.log("$scope.setVisObject :: ", visobject, type, location);
         return $q.resolve().then((function(){
             if (visobject) {
                 $scope.visobject_location = location;
@@ -295,11 +298,12 @@ angular.module('a2.visualizer', [
                 $scope.loading_visobject = visobject_loader.getCaptionFor(visobject);
                 return visobject_loader.load(visobject, $scope).then((function (visobject){
                     console.log('VisObject loaded : ', visobject);
-                    // check playlist with clusters in local storage else clear local storage
+                    // check clusters playlist in local storage else clear local storage
                     if ($localStorage.getItem('analysis.clusters.playlist') === $state.params.idA) {
-                        var boxes = JSON.parse($localStorage.getItem('analysis.clusters'));
-                        if (boxes && $state.params.idB) {
-                            this.parseAnnotations(boxes[$state.params.idB]);
+                        var clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+                        console.log('clustersData', this.clustersData);
+                        if (clustersData && clustersData.boxes && $state.params.idB) {
+                            this.parseAnnotations(clustersData.boxes[$state.params.idB]);
                         }
                     }
                     else {

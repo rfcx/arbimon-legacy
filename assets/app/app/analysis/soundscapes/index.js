@@ -244,7 +244,6 @@ angular.module('a2.analysis.soundscapes', [
         });
     };
 
-
     $scope.showDetails = function(soundscapeId) {
 
         a2Soundscapes.get(soundscapeId, function(soundscape) {

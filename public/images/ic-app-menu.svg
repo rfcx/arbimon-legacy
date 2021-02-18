@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="21px" height="21px" viewBox="0 0 21 21" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 49.3 (51167) - http://www.bohemiancoding.com/sketch -->
+    <title>ic-app-menu</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Nav" transform="translate(-912.000000, -34.000000)" fill="#F1F1F1">
+            <g id="ic-app-menu" transform="translate(912.000000, 34.000000)">
+                <rect id="Rectangle-7" x="0" y="0" width="5" height="5" rx="2.5"></rect>
+                <rect id="Rectangle-7" x="8" y="0" width="5" height="5" rx="2.5"></rect>
+                <rect id="Rectangle-7" x="16" y="0" width="5" height="5" rx="2.5"></rect>
+                <rect id="Rectangle-7" x="0" y="8" width="5" height="5" rx="2.5"></rect>
+                <rect id="Rectangle-7" x="8" y="8" width="5" height="5" rx="2.5"></rect>
+                <rect id="Rectangle-7" x="16" y="8" width="5" height="5" rx="2.5"></rect>
+                <rect id="Rectangle-7" x="0" y="16" width="5" height="5" rx="2.5"></rect>
+                <rect id="Rectangle-7" x="8" y="16" width="5" height="5" rx="2.5"></rect>
+                <rect id="Rectangle-7" x="16" y="16" width="5" height="5" rx="2.5"></rect>
+            </g>
+        </g>
+    </g>
+</svg>

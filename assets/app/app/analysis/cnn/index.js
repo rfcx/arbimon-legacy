@@ -8,7 +8,7 @@ angular.module('a2.analysis.cnn', [
     'c3-charts',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
-    
+
     $stateProvider.state('analysis.disabled-cnn', {
         url: '/disabled/cnn',
         templateUrl: '/app/analysis/cnn/disabled.html'
@@ -121,12 +121,12 @@ angular.module('a2.analysis.cnn', [
 
     $scope.deleteCNN = function(cnn, $event) {
         $event.stopPropagation();
-        
+
         if(!a2UserPermit.can('manage cnns')) {
             notify.log('You do not have permission to delete cnns.');
             return;
         }
-        
+
 
         var modalInstance = $modal.open({
             templateUrl: '/app/analysis/cnn/deletecnn.html',
@@ -269,7 +269,7 @@ angular.module('a2.analysis.cnn', [
         templateUrl: '/app/analysis/cnn/details.html'
     };
 })
-.controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, a2AudioPlayer, $filter, a2CNN, a2PatternMatching, a2UserPermit, Project, a2AudioBarService, notify) {
+.controller('CNNDetailsCtrl' , function($scope, $state, ngTableParams, a2AudioPlayer, $filter, a2CNN, a2UserPermit, Project, a2AudioBarService, notify) {
 
     var projecturl = Project.getUrl();
 
@@ -279,10 +279,12 @@ angular.module('a2.analysis.cnn', [
             { class:'fa fa-th', value:'is-small'},
         ],
         search: [
-            {value:'all', text:'All'},
-            {value:'present', text:'Present'},
-            {value:'not_present', text:'Not Present'},
-            {value:'unvalidated', text:'Unvalidated'},
+            {value:'all', text:'All', description: 'Show all matched rois.'},
+            {value:'present', text:'Present', description: 'Show all rois marked as present.'},
+            {value:'not_present', text:'Not Present', description: 'Show all rois marked as not present.'},
+            {value:'unvalidated', text:'Unvalidated', description: 'Show all rois without validation.'},
+            {value:'by_score', text:'Score per Species', description: 'Show rois ranked by score per species.'},
+            {value:'by_score_per_site', text:'Score per Site', description: 'Show rois ranked by score per site.'}
         ],
         selection: [
             {value:'all', text:'All'},
@@ -298,9 +300,9 @@ angular.module('a2.analysis.cnn', [
             thumbnailClass: 'is-small'
         }
     };
-    //$scope.search = $scope.lists.search[0];
+
     $scope.total = {rois:0, pages:0};
-    $scope.selected = {roi_index:0, roi:null, page:0, search: $scope.lists.search[0]};
+    $scope.selected = {roi_index:0, roi:null, page:0, search: $scope.lists.search[4]};
     $scope.validation = {current: $scope.lists.validation[2]};
     $scope.offset = 0;
     $scope.limit = 100;
@@ -309,7 +311,7 @@ angular.module('a2.analysis.cnn', [
     $scope.CNNExportUrl = a2CNN.getExportUrl({
         cnnId: $scope.cnnId
     });
-    
+
     var audio_player = new a2AudioPlayer($scope);
 
     var initTable = function(p, c, s, f, t) {
@@ -411,15 +413,16 @@ angular.module('a2.analysis.cnn', [
         return dataOut;
     }
 
-    var byROIsbySpecies = function(dataIn) {
+    var byROIsbySpecies = function(dataIn, bySite) {
         dataOut = {};
         dataIn.forEach(function(element) {
-            var s = element.species_id;
+            var s = bySite? element.site : element.species_id;
             if (!(s in dataOut)) {
                 dataOut[s] = {count: 0,
                               species_id: s,
                               scientific_name: element.scientific_name,
                               rois: []};
+                if (bySite) dataOut[s].site = element.site;
             }
             dataOut[s].rois.push(element);
             dataOut[s].count++;
@@ -518,7 +521,7 @@ angular.module('a2.analysis.cnn', [
 
     $scope.getTemplateVisualizerUrl = function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     };
 
     $scope.playRoiAudio = function(roi, $event){
@@ -537,7 +540,7 @@ angular.module('a2.analysis.cnn', [
             $scope.offset = page * $scope.limit;
             loadROIPage();
         }
-        
+
     };
     $scope.moveROIPage = function(n){
         var nextPage = $scope.selected.page + n;
@@ -615,7 +618,7 @@ angular.module('a2.analysis.cnn', [
         $scope.selected.site = $scope.counts.roi_sites_counts.find(function(element) {
             return element.site_id == $scope.selected.site.site_id;
         });
-        
+
         $scope.total = {
             rois: site.N,
             pages: Math.ceil(site.N / $scope.limit)
@@ -627,17 +630,16 @@ angular.module('a2.analysis.cnn', [
         $scope.loading = true;
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
-        
+
         a2CNN.listROIs($scope.cnnId, $scope.limit, $scope.offset, $scope.selected.species.species_id, $scope.selected.site.site_id, $scope.selected.search.value).then(function(data) {
-        
+
             $scope.resultsROIs = data;
             $scope.infoInfo = "";
             $scope.showInfo = false;
             $scope.loading = false;
             $scope.infopanedata = "";
             $scope.rois = byROIs($scope.resultsROIs);
-            $scope.rois_species = byROIsbySpecies($scope.rois);
-            
+            $scope.rois_species = byROIsbySpecies($scope.rois, $scope.selected.search.value === 'by_score_per_site');
         });
     };
 
@@ -648,7 +650,7 @@ angular.module('a2.analysis.cnn', [
         }
 
         var validation = ($scope.validation.current || {value:null}).value;
-        
+
         var rois = []
         for (var species in $scope.rois_species) {
             $scope.rois_species[species].rois.forEach(function (roi){
@@ -659,7 +661,7 @@ angular.module('a2.analysis.cnn', [
         }
 
         var roiIds = rois.map(function(roi){ return roi.cnn_result_roi_id; })
-        
+
         try {
             a2CNN.validateRois($scope.cnnId, roiIds, validation).then(function(response){
                 rois.forEach(function(roi){
@@ -677,7 +679,7 @@ angular.module('a2.analysis.cnn', [
     //$scope.calcWidth = function(roi) {
 
     //};
-    
+
     $scope.onScroll = function($event, $controller){
         this.scrollElement = $controller.scrollElement;
         var scrollPos = $controller.scrollElement.scrollY;
@@ -722,7 +724,7 @@ angular.module('a2.analysis.cnn', [
         })
         if (species=='total') {
             roi_site_counts_dict = roi_site_counts.reduce(function(sitesAcc, site) {
-                
+
                 if (!(site.site_id in sitesAcc)) {
                     sitesAcc[site.site_id] = {site_id: site.site_id, N: 0, name: site.name};
                 }
@@ -760,7 +762,7 @@ angular.module('a2.analysis.cnn', [
                 $scope.mainResults = $scope.results;
                 $scope.cnnOriginal = Object.values($scope.results);
             }
-            
+
             if($scope.cnnOriginal.length > 0) {
                 initTable(1,10,sortBy,{},$scope.cnnOriginal.length);
             } else {
@@ -768,18 +770,18 @@ angular.module('a2.analysis.cnn', [
             }
         };
         if (viewType=="rois") {
-            
+
             a2CNN.countROIsBySpeciesSites($scope.cnnId, {search: $scope.selected.search.value}).then(function(response) {
                 var data = response.data;
                 $scope.roi_species_sites_counts = data;
 
                 $scope.counts.roi_species_counts = getSpeciesCounts($scope.selected.site ? $scope.selected.site.site_id : 0, $scope.roi_species_sites_counts);
                 $scope.counts.roi_sites_counts = getSitesCounts($scope.selected.species ? $scope.selected.species.species_id : 0, $scope.roi_species_sites_counts);
-                
+
                 var count_all = $scope.counts.roi_species_counts.reduce(function(count, current){
                     return count = count + current.N;
                 }, 0);
-                
+
                 var all_species = {species_id: 0, N: count_all, scientific_name: "All Species"};
                 $scope.counts.roi_species_counts.unshift(all_species);
                 if (!$scope.selected.species){
@@ -789,7 +791,7 @@ angular.module('a2.analysis.cnn', [
                         return (element.species_id == $scope.selected.species.species_id);
                     }) || all_species;
                 }
-                
+
                 var all_sites = {site_id: 0, N: count_all, name: "All Sites"};
                 $scope.counts.roi_sites_counts.unshift(all_sites);
                 if (!$scope.selected.site){

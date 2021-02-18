@@ -1,6 +1,5 @@
 {
   "coreAPIEnabled": false,
   "apiBaseUrl": "https://api.rfcx.org",
-  "mediaBaseUrl": "https://media.rfcx.org",
-  "k8sConfigPath": ""
+  "mediaBaseUrl": "https://media-api.rfcx.org"
 }

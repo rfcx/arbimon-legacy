@@ -9,22 +9,25 @@
 </head>
 
 <body>
-    <% include fragments/nav-public %>
+    <div class="container-page">
+      <div class="content-wrap">
+        <% include fragments/nav-public %>
 
-    <div class="container">
-      <div class="row">
-          <div class="col-md-12">
-            <h3><%= message %></h3>
-            <% if(error.stack) { %>
-            <pre><%= error.stack %></pre>
-            <% } else { %>
-            <p>You should have received a verification email in your inbox. If you do not receive one, please contact <a href="mailto:support@rfcx.org">support@rfcx.org</a>. Thank you!</p>
-            <% } %>
+        <div class="container">
+          <div class="row">
+              <div class="col-md-12">
+                <h3><%= message %></h3>
+                <% if(error.stack) { %>
+                <pre><%= error.stack %></pre>
+                <% } else { %>
+                <p>You should have received a verification email in your inbox. If you do not receive one, please contact <a href="mailto:support@rfcx.org">support@rfcx.org</a>. Thank you!</p>
+                <% } %>
+              </div>
           </div>
+        </div>
       </div>
+      <% include fragments/footer %>
     </div>
-
-<% include fragments/footer %>
 </body>
 
 </html>

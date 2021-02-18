@@ -87,7 +87,7 @@ angular.module('a2.audiodata.playlists', [
         });
         
         var message = ["You are about to delete the following playlists: "];
-        var message2 = ["Are you sure??"];
+        var message2 = ["Are you sure?"];
         
         $scope.popup = {
             messages: message.concat(playlists, message2),

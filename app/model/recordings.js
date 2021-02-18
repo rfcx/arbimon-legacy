@@ -247,6 +247,7 @@ var Recordings = {
             projection = "R.recording_id AS id, \n"+
                         "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
                         "S.name as site, \n"+
+                        "S.legacy as legacy, \n"+
                         "R.uri, \n"+
                         "R.datetime, \n"+
                         "R.mic, \n"+
@@ -276,6 +277,10 @@ var Recordings = {
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
                 count_only : options.count_only
             });
+
+            if (options.recording_id) {
+                constraints.push('R.`recording_id` = ' + dbpool.escape(Number(options.recording_id)));
+            }
 
             if(!urlquery.id) {
                 steps.push(dbpool.query("(\n" +
@@ -564,7 +569,9 @@ var Recordings = {
                 if(err) { callback(err); return; }
                 audioTools.spectrogram(recording_path.path, cache_miss.file, {
                     pixPerSec : config("spectrograms").spectrograms.pixPerSec,
-                    height    : config("spectrograms").spectrograms.height
+                    height    : config("spectrograms").spectrograms.height,
+                    ...recording.uri.endsWith('.opus') && recording.sample_rate && { maxfreq: recording.sample_rate * 2 },
+                    ...recording.contrast && { contrast: recording.contrast }
                 },function(status_code){
                     if(status_code) { callback({code:status_code}); return; }
                     cache_miss.retry_get();
@@ -584,6 +591,7 @@ var Recordings = {
             },
             function(rec_info,  next){
                 recording = rec_info;
+                recording.contrast = 105;
                 Recordings.fetchSpectrogramFile(recording, next);
             },
             function(specFile, next){

@@ -16,7 +16,7 @@ angular.module('a2.citizen-scientist.expert', [
         templateUrl: '/app/citizen-scientist/expert/list.html'
     });
 })
-.controller('CitizenScientistExpertCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2CitizenScientistExpertService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('CitizenScientistExpertCtrl' , function($scope, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2CitizenScientistExpertService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
     var initTable = function(p, c, s, f, t) {
@@ -57,7 +57,7 @@ angular.module('a2.citizen-scientist.expert', [
     $scope.getTemplateVisualizerUrl = function(template){
         var projecturl = Project.getUrl();
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/visualizer/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/visualizer/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     $scope.selectItem = function(patternmatchingId){
@@ -123,7 +123,7 @@ angular.module('a2.citizen-scientist.expert', [
         }
     }
 })
-.controller('CitizenScientistExpertDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistService, a2CitizenScientistExpertService, a2UserPermit, Project, a2AudioBarService, notify) {
+.controller('CitizenScientistExpertDetailsCtrl' , function($scope, a2PatternMatching, a2Templates, a2CitizenScientistExpertService, a2UserPermit, Project, a2AudioBarService, notify) {
     Object.assign(this, {
     id: null,
     initialize: function(patternMatchingId){
@@ -265,12 +265,12 @@ angular.module('a2.citizen-scientist.expert', [
 
     getRoiVisualizerUrl: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/visualizer/"+this.projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        return roi ? "/visualizer/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
     getTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/visualizer/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/visualizer/"+this.projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){

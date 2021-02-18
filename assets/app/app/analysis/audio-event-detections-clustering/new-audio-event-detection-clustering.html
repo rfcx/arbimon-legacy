@@ -9,7 +9,7 @@
         </div>
         <div class="form-group">
             <label for="playlist">Playlist</label>
-            <span class="red" ng-hide="controller.loading.playlists || controller.list.playlists.length">
+            <span ng-hide="controller.loading.playlists || controller.list.playlists.length">
                 <em>No playlists found.
                     <a ng-click="controller.cancel('/audiodata/playlists') | trackEvent:'Analysis-Audio-Event-Detection-new audio event detection clustering model':'Cancel-Go to playlists'">
                         Create one.

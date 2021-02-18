@@ -41,7 +41,7 @@
                 <loader ng-show="controller.loading.list"></loader>
                 <div class="jumbotron" ng-show="(!controller.trainingSets || !controller.trainingSets.length > 0) && !controller.loading.list">
                     <h3>
-                        No training sets found. <a ng-click="controller.addNewTrainingSet() | trackEvent:'Audiodata-Training Sets':'addNewTrainingSet'"  ng-show="(!controller.trainingSets || !controller.trainingSets.length > 0) && !controller.loading.list" >Create a training set.</a>
+                        No training sets found. <a ng-click="controller.addNewTrainingSet() | trackEvent:'Audiodata-Training Sets':'addNewTrainingSet'"  ng-show="(!controller.trainingSets || !controller.trainingSets.length > 0) && !controller.loading.list" class="cs-pointer">Create a training set.</a>
                     </h3>
                 </div>
             </div>

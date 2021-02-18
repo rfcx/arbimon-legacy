@@ -1,5 +1,5 @@
 angular.module('a2.visualizer.audio-player', [])
-.service('a2AudioPlayer', function(A2AudioObject, $q){
+.service('a2AudioPlayer', function(A2AudioObject, $q, notify, a2Playlists, $localStorage){
     'use strict';
     var a2AudioPlayer = function(scope, options){
         this.scope = scope;
@@ -13,6 +13,10 @@ angular.module('a2.visualizer.audio-player', [])
         this.has_prev_recording = false;
         this.resource = null;
         this.resource_params = {};
+        this.isPopupOpened = false;
+        this.isSavingPlaylist = false;
+        this.playlistData = {};
+        this.clustersData = null;
         if(options){
             if(options.gain){
                 this.gain = Math.min(Math.max(1, (options && options.gain)|0), this.gain_levels[this.gain_levels.length-1]);
@@ -72,6 +76,42 @@ angular.module('a2.visualizer.audio-player', [])
         getCurrentTime: function(){
             return this.resource && this.resource.audio && this.resource.audio.currentTime;
         },
+        togglePopup: function() {
+            this.isPopupOpened = !this.isPopupOpened;
+        },
+        isPlaylistDataValid: function() {
+            return this.playlistData.playlistName && this.playlistData.playlistName.trim().length > 0;
+        },
+        closePopup: function() {
+            this.isPopupOpened = false;
+        },
+        savePlaylist: function() {
+            this.isSavingPlaylist = true;
+            // create playlist
+            if (this.clustersData && this.clustersData.playlist) {
+                var self = this;
+                a2Playlists.create({
+                    playlist_name: this.playlistData.playlistName,
+                    params: this.clustersData.playlist.recordings,
+                    isManuallyCreated: true
+                },
+                function(data) {
+                    self.isSavingPlaylist = false;
+                    self.closePopup();
+                     // attach aed to playlist
+                    if (data && data.playlist_id) {
+                        a2Playlists.attachAedToPlaylist({
+                            playlist_id: data.playlist_id,
+                            aed: self.clustersData.aed
+                        },
+                        function(data) {
+                            self.playlistData = {};
+                            notify.log('Audio event detections are saved in the playlist.');
+                        });
+                    }
+                });
+            }
+        },
         _load_resource: function(url, params){
             this.loading=true;
             if(params){
@@ -99,6 +139,8 @@ angular.module('a2.visualizer.audio-player', [])
                 this.duration = resource.duration;
                 this.resource_url = url;
                 this.has_recording = true;
+                this.clustersData = JSON.parse($localStorage.getItem('analysis.clusters'));
+                console.log('clustersData', this.clustersData);
             }).bind(this));
         },
         discard: function(){
