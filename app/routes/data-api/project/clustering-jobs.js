@@ -71,7 +71,8 @@ router.get('/audio-event-detections', function(req, res, next) {
     res.type('json');
 
     return model.ClusteringJobs.audioEventDetections({
-        project_id: req.project.project_id
+        project_id: req.project.project_id,
+        ...!!req.query.completed && { completed: req.query.completed }
     })
     .then(function(data){
         res.json(data);

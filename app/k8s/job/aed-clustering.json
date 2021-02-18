@@ -10,7 +10,7 @@
                 "containers": [
                     {
                         "name": "aed-clustering-container",
-                        "image": "docker.io/jackgl/cluster-dev:latest",
+                        "image": "{{imagePath}}",
                         "envFrom": [
                             {
                                 "secretRef": {

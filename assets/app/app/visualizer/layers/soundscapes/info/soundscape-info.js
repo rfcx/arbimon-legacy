@@ -101,7 +101,6 @@ angular.module('a2.visualizer.layers.soundscapes.info', [
                     soundscape.update(sc);
                 }
                 a2UrlUpdate.update(soundscape.thumbnail);
-                $scope.$emit('notify-visobj-updated', soundscape);
                 $modalInstance.close();
             });
         };

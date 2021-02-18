@@ -51,8 +51,14 @@ angular.module('a2.srv.clustering-jobs', [
         getAudioUrlFor: function(recId) {
             return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + recId + '/audio';
         },
-        audioEventDetections: function(callback) {
-            return $http.get('/api/project/'+Project.getUrl()+'/clustering-jobs/audio-event-detections').then(function(response){
+        audioEventDetections: function(opts) {
+            var config = {
+                params: {}
+            };
+            if (opts.completed) {
+                config.params.completed = opts.completed;
+            }
+            return $http.get('/api/project/'+Project.getUrl()+'/clustering-jobs/audio-event-detections', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },

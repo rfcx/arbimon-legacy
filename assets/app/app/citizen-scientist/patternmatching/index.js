@@ -20,7 +20,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
         templateUrl: '/app/citizen-scientist/patternmatching/list.html'
     });
 })
-.controller('CitizenScientistPatternMatchingCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
+.controller('CitizenScientistPatternMatchingCtrl' , function($scope, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2CitizenScientistService, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
     var initTable = function(p, c, s, f, t) {
@@ -61,7 +61,7 @@ angular.module('a2.citizen-scientist.patternmatching', [
     $scope.getTemplateVisualizerUrl = function(template){
         var projecturl = Project.getUrl();
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     $scope.selectItem = function(patternmatchingId){
@@ -233,12 +233,12 @@ angular.module('a2.citizen-scientist.patternmatching', [
 
     getRoiVisualizerUrl: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/project/"+this.projecturl+"/#/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        return roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
     getTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+this.projecturl+"/#/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+this.projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){

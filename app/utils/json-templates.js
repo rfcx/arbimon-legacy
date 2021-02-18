@@ -19,6 +19,7 @@ function getTemplate (name, type, opts) {
     var template = parse(json);
     return template({
         "aed-clustering-timestamp": opts.kubernetesJobName,
+        "imagePath": opts.imagePath,
         "ARG_EPSILON":  opts.minPoints,
         "ARG_MINSAMPLES": opts.distanceThreshold,
         "ARG_JOBID": opts.jobId

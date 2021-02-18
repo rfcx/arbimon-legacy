@@ -119,7 +119,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
         });
         
         var message = ["You are about to delete the following project species: "];
-        var message2 = ["Are you sure??"];
+        var message2 = ["Are you sure?"];
         
         this.popup = {
             messages: message.concat(speciesClasses, message2),

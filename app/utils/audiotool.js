@@ -163,6 +163,7 @@ var audiotools = {
      *                  of the audio file's duration. (default: 172)
      * @param {Integer} options.quantization number of colors gradations used in the spectrogram image.
      *                  (default: 249, the maximum)
+     * @param {Integer} options.contrast the ‘contrast’ of the spectrogram display.
      * @param {String} options.window windowing function used to compute the spectrogram.
      *                 (One of 'Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser', default: 'Hann')
      * @param {Function} callback callback function.
@@ -170,13 +171,13 @@ var audiotools = {
     spectrogram : function(source_path, destination_path, options, callback){
         if(options instanceof Function) { callback = options; }
         options = options || {};
-
         var args = [];
         args.push(source_path);
+        args.push('-n');
         if(options.maxfreq) {
-            args.push('-r', ((options.maxfreq/500)|0) + 'k'); // maximum frequency to show in spectrogram
+            args.push('rate', (options.maxfreq/2)|0); // maximum frequency to show in spectrogram
         }
-        args.push('-n', 'spectrogram');             // sox spectrogram filter
+        args.push('spectrogram');             // sox spectrogram filter
         args.push('-r',                             // output just the raw spectrogram image (no axes, no nothing)
             '-y', ((options.height    | 0) || 256)  // set the spectrogram's height
         );
@@ -192,7 +193,9 @@ var audiotools = {
         args.push(
             '-q', ((options.quantization | 0) || 249) // color quantization
         );
-
+        if(options.contrast) {
+            args.push('-z', options.contrast);
+        }
         if(options.window && ['Hann', 'Hamming', 'Bartlett', 'Rectangular', 'Kaiser'].indexOf(options.window) >= 0) {
             args.push('-w', options.window); // just the raw spectrogram image
         }

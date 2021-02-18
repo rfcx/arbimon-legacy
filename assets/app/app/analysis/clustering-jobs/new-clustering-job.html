@@ -9,7 +9,7 @@
         </div>
         <div class="form-group">
             <label for="playlist">Audio Event Detection Job</label>
-            <span class="red" ng-hide="controller.loading.jobs || controller.list.jobs.length">
+            <span ng-hide="controller.loading.jobs || controller.list.jobs.length">
                 <em>No jobs found.
                     <a ng-click="controller.cancel('/analysis/audio-event-detections-clustering/') | trackEvent:'Analysis-Clustering-new clustering model':'Cancel-Go to AED jobs'">
                         Create one.
@@ -36,6 +36,9 @@
     </form>
 </div>
 <div class="modal-footer">
+    <span class="pr-3" ng-if="!!controller.loading.saving">
+        <i class="fa fa-spinner fa-spin is-v-middle" style="font-size: 22px;"></i>
+    </span>
     <button class="btn btn-primary" ng-click="controller.create() | trackEvent:'Analysis-Clustering-new clustering model':'Submit'" ng-disabled="!controller.isJobValid()">
         Run
     </button>

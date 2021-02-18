@@ -166,6 +166,12 @@ var ClusteringJobs = {
             constraints.push('JP.project_id = ' + dbpool.escape(options.project_id));
         }
 
+        if (options.completed) {
+            select.push("J.`state`");
+            constraints.push('J.state = "completed"');
+            tables.push("JOIN jobs J ON JP.job_id = J.job_id");
+        }
+
         return dbpool.query(
             "SELECT " + select.join(",\n    ") + "\n" +
             "FROM " + tables.join("\n") + "\n" +
@@ -230,15 +236,17 @@ var ClusteringJobs = {
                 data.kubernetesJobName = `aed-clustering-${new Date().getTime()}`;
                 var jobParam = jsonTemplates.getTemplate('aed-clustering', 'job', {
                     kubernetesJobName: data.kubernetesJobName,
+                    imagePath: k8sConfig.imagePath,
                     minPoints: `${data.params.minPoints}`,
                     distanceThreshold: `${data.params.distanceThreshold}`,
                     jobId: `${data.audioEventDetectionJob.jobId}`
                 });
-                console.log('jobParam', jobParam);
                 await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
+                // TODO: remove when clustering job will update db by itself
                 return new Promise((resolve, reject) => {
                     let counter = 0
                     let interval = setInterval(async () => {
+                        // clear interval in 2 minutes
                         if (counter === 24) {
                             clearInterval(interval)
                             reject(new Error(`${data.kubernetesJobName} processing time exceeded.`))

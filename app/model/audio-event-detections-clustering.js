@@ -84,9 +84,8 @@ var AudioEventDetectionsClustering = {
             "FROM " + tables.join("\n") + "\n" +
             "WHERE " + constraints.join(" \n  AND ") + (
                 groupby.length ? ("\nGROUP BY " + groupby.join(",\n    ")) : "" + "\n" +
-            "ORDER BY timestamp DESC"
-            ),
-            data
+            !!options.playlist ? "" : "ORDER BY timestamp DESC"
+            ), data
         ))
     },
 
