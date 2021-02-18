@@ -1,0 +1,4 @@
+{
+  "namespace": "production",
+  "imagePath": "docker.io/jackgl/cluster-dev:latest"
+}

@@ -42,7 +42,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
           data = result;
           if (data.create) {
               JobsData.updateJobs();
-              notify.log("Your new audio event detection clustering model is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
+              notify.log("Your new Audio Event Detection Clustering model is waiting to start processing.<br> Check it's status on <b>Jobs</b>.");
           } else if (data.error) {
               notify.error("Error: "+data.error);
           } else if (data.url) {
@@ -86,7 +86,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
                     $modalInstance.close({create:true, clusteringModel: clusteringModel});
                 }).catch(notify.serverError);
             } catch(error) {
-                console.error("a2AudioEventDetectionsClustering.create error: " + error);
+                console.error('a2AudioEventDetectionsClustering.create error: ' + error);
             }
         },
         cancel: function (url) {

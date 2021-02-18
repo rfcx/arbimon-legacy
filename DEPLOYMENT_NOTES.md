@@ -2,7 +2,7 @@
 
 ## v3.0.10
 
-_None_
+- Add `config/k8s.json` file
 
 ## v3.0.9
 

@@ -86,8 +86,8 @@ angular.module('a2.jobs', [
 
 
     JobsData.getJobTypes().success(function(data) {
-        var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528', '#ffff00'];
-        var job_types_id = [1, 2, 4, 6, 7];
+        var colors = ['#1482f8', '#df3627', '#40af3b', '#9f51bf', '#d37528', '#ffff00', '#5bc0de'];
+        var job_types_id = [1, 2, 4, 6, 7, 8, 9];
 
         var job_types = data.filter(function(type) {
             return job_types_id.includes(type.id);
@@ -186,7 +186,7 @@ angular.module('a2.jobs', [
             });
     };
     updateJobs();
-  
+
     return {
         geturl: function() {
             return url;

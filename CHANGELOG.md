@@ -4,6 +4,7 @@
 
 New features:
 - CS-494 Request spectrogram tiles from Media API for audios from RFCx streams
+- PI-270 Add settings to invoke a Kubernetes job for Clustering jobs
 
 Resolved issues:
 - PI-545 Improve the quality of the spectrogram image

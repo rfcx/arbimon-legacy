@@ -12,7 +12,9 @@ router.get('/', function(req, res, next) {
     res.type('json');
 
     return model.ClusteringJobs.find({
-        project_id: req.project.project_id
+        project_id: req.project.project_id,
+        ...!!req.query.job_id && { job_id: req.query.job_id },
+        ...!!req.query.completed && { completed: req.query.completed }
     })
     .then(function(data){
         res.json(data);
@@ -69,7 +71,8 @@ router.get('/audio-event-detections', function(req, res, next) {
     res.type('json');
 
     return model.ClusteringJobs.audioEventDetections({
-        project_id: req.project.project_id
+        project_id: req.project.project_id,
+        ...!!req.query.completed && { completed: req.query.completed }
     })
     .then(function(data){
         res.json(data);
@@ -79,10 +82,9 @@ router.get('/audio-event-detections', function(req, res, next) {
 router.post('/new', function(req, res, next) {
     res.type('json');
 
-    var project_id = req.project.project_id;
-
     return model.ClusteringJobs.requestNewClusteringJob({
-        project: project_id,
+        project_id: req.project.project_id,
+        user_id: req.session.user.id,
         name: req.body.name,
         audioEventDetectionJob: req.body.aed_job,
         params: req.body.params,

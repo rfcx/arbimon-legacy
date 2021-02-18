@@ -144,6 +144,30 @@ var Jobs = {
                     tables      : ['JOIN `job_params_cnn` as CNN ON J.job_id = CNN.job_id'],
                 }
             }
+        },
+        aed_job: {
+            type_id: 8,
+            new: function(params, db) {
+                return
+            },
+            sql : {
+                report : {
+                    projections : ['CONCAT(UCASE(LEFT( AED.`name`, 1)), SUBSTRING( AED.`name`, 2)) as name'],
+                    tables      : ['JOIN `job_params_audio_event_detection_clustering` as AED ON J.job_id = AED.job_id'],
+                }
+            }
+        },
+        clustering_job: {
+            type_id: 9,
+            new: function(params, db) {
+                return
+            },
+            sql : {
+                report : {
+                    projections : ['CONCAT(UCASE(LEFT( CL.`name`, 1)), SUBSTRING( CL.`name`, 2)) as name'],
+                    tables      : ['JOIN `job_params_audio_event_clustering` as CL ON J.job_id = CL.job_id'],
+                }
+            }
         }
     },
 

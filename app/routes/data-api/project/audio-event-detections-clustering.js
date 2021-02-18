@@ -34,15 +34,11 @@ router.get('/records', function(req, res, next) {
 
 router.post('/new', function(req, res, next) {
     res.type('json');
-
-    var project_id = req.project.project_id;
-
     return model.AudioEventDetectionsClustering.requestNewAudioEventDetectionClusteringJob({
-        project    : project_id,
-        user       : req.session.user.id,
-        name       : req.body.name,
-        playlist   : req.body.playlist_id,
-        params     : req.body.params,
+        user_id: req.session.user.id,
+        name: req.body.name,
+        playlist_id: req.body.playlist_id,
+        params: req.body.params,
     })
     .then(function(result){
         res.json({ create: true, result: result });
