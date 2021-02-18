@@ -1,0 +1,45 @@
+{
+    "apiVersion": "batch/v1",
+    "kind": "Job",
+    "metadata": {
+        "name": "{{aed-clustering-timestamp}}"
+    },
+    "spec": {
+        "template": {
+            "spec": {
+                "containers": [
+                    {
+                        "name": "aed-clustering-container",
+                        "image": "docker.io/jackgl/cluster-dev:latest",
+                        "envFrom": [
+                            {
+                                "secretRef": {
+                                    "name": "aed-clustering-secrets"
+                                }
+                            }
+                        ],
+                        "command": [
+                            "python",
+                            "./cluster.py"
+                        ],
+                        "args": [
+                            "-e",
+                            "{{ARG_EPSILON}}",
+                            "-m",
+                            "{{ARG_MINSAMPLES}}",
+                            "-j",
+                            "{{ARG_JOBID}}"
+                        ]
+                    }
+                ],
+                "imagePullSecrets": [
+                    {
+                        "name": "aedkey"
+                    }
+                ],
+                "restartPolicy": "Never"
+            }
+        },
+        "backoffLimit": 0
+    }
+}

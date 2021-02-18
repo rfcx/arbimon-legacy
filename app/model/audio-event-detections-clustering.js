@@ -126,27 +126,27 @@ var AudioEventDetectionsClustering = {
     },
 
     JOB_SCHEMA : joi.object().keys({
-        project    : joi.number().integer(),
-        user       : joi.number().integer(),
-        name       : joi.string(),
-        playlist   : joi.number().integer(),
+        user_id: joi.number().integer(),
+        name: joi.string(),
+        playlist_id: joi.number().integer(),
         params     : joi.object().keys({
             amplitudeThreshold: joi.number(),
             sizeThreshold: joi.number(),
-            filterSize: joi.number()
+            filterSize: joi.number(),
         }),
     }),
 
     requestNewAudioEventDetectionClusteringJob: function(data){
-        let payload = JSON.stringify({
-            project_id: data.project,
-            user_id: data.user,
-            playlist_id: data.playlist,
-            name: data.name,
-            amplitude_threshold: data.params.amplitudeThreshold,
-            size_threshold: data.params.sizeThreshold,
-            filter_size: data.params.filterSize
-        })
+        let payload = JSON.stringify(
+            {
+                'name': data.name,
+                'playlist_id': data.playlist_id,
+                'user_id': data.user_id,
+                'Amplitude Threshold': data.params.amplitudeThreshold,
+                'Size Threshold': data.params.sizeThreshold,
+                'Filter Size': data.params.filterSize
+            }
+        )
         return q.ninvoke(joi, 'validate', data, AudioEventDetectionsClustering.JOB_SCHEMA).then(() => lambda.invoke({
             FunctionName: config('lambdas').audio_event_detections,
             InvocationType: 'Event',

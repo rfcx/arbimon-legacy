@@ -32,7 +32,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.showViewGridPage = false;
     $scope.loadClusteringJobs = function() {
         $scope.loading = true;
-        return a2ClusteringJobs.list().then(function(data) {
+        return a2ClusteringJobs.list({completed: true}).then(function(data) {
             $scope.clusteringJobsOriginal = data;
             $scope.clusteringJobsData = data;
             $scope.loading = false;

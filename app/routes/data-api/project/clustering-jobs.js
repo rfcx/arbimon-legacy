@@ -12,7 +12,9 @@ router.get('/', function(req, res, next) {
     res.type('json');
 
     return model.ClusteringJobs.find({
-        project_id: req.project.project_id
+        project_id: req.project.project_id,
+        ...!!req.query.job_id && { job_id: req.query.job_id },
+        ...!!req.query.completed && { completed: req.query.completed }
     })
     .then(function(data){
         res.json(data);
@@ -87,7 +89,6 @@ router.post('/new', function(req, res, next) {
         params: req.body.params,
     })
     .then(function(result){
-        console.log('\n\n--->>>result', result);
         res.json({ create: true, result: result });
     }).catch(next);
 });

@@ -1,5 +1,7 @@
 # CHANGELOG
 
+PI-270 Add settings to invoke a Kubernetes job for Clustering jobs
+
 - v1.18.4
     - added user names to cs expert validations
 - v1.18.3

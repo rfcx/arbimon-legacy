@@ -16,7 +16,6 @@ var busboy = require('connect-busboy');
 var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
 var paypal = require('paypal-rest-sdk');
-const fs = require('fs');
 
 var config = require('./config');
 AWS.config.update({
@@ -24,24 +23,6 @@ AWS.config.update({
     secretAccessKey: config('aws').secretAccessKey,
     region: config('aws').region
 });
-
-async function k8sF() {
-    try {
-        var inputfile = config('rfcx').k8sConfigPath,
-        yaml = require('js-yaml'),
-        fs = require('fs'),
-        obj = yaml.load(fs.readFileSync(inputfile, {encoding: 'utf-8'}));
-        console.log('\n\nobj', obj, '\n\n');
-        const K8s = require('easy-k8s').Client;
-        const kubeconfig = obj;
-        const allPodSpecs = await K8s.get(kubeconfig, 'all', 'pod');
-        console.log('\n\n', allPodSpecs, '\n\n')
-    } catch (e) {
-        console.log('\n\nerror', e, '\n\n')
-    }
-}
-
-k8sF()
 
 var systemSettings = require('./utils/settings-monitor');
 var tmpfilecache = require('./utils/tmpfilecache');
