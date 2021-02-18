@@ -1,6 +1,6 @@
 # Arbimon Release Notes
 
-## v3.0.10 - Feb XX, 2021
+## v3.0.11 - Feb XX, 2021
 
 New features:
 - CS-494 Request spectrogram tiles from Media API for audios from RFCx streams
@@ -10,6 +10,16 @@ Resolved issues:
 - PI-545 Improve the quality of the spectrogram image
 - PI-504 Can not filter more than one tag
 - CS-474 Drop unique constraint on `projects` `name` column
+
+Other:
+- PI-496 Change Pattern Matching Sort Options "rois" to "Region of Interest"
+- PI-425 Change The Red Font to White Font in "Change Plan"
+
+## v3.0.10 - Feb 18, 2021
+
+Resolved issues:
+- PI-495 Hot fix pixelated styles for Pattern Matching boxes
+- PI-215 Fix the Random Forest Models (RFM) creation error
 
 ## v3.0.9 - Feb 15, 2021
 
