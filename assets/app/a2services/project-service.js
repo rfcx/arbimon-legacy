@@ -73,7 +73,10 @@ angular.module('a2.srv.project', [
                     callback = query;
                     query = {};
                 }
-
+                if (query && query.tags) {
+                    query['tags[]'] = query.tags.flat()
+                    delete query.tags
+                }
                 $http.get('/api/project/'+url+'/recordings/search',{
                         params: query
                     })
