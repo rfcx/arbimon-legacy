@@ -1,6 +1,6 @@
 # Arbimon Release Notes
 
-## v3.0.11 - Feb XX, 2021
+## v3.0.11 - Feb 22, 2021
 
 New features:
 - CS-494 Request spectrogram tiles from Media API for audios from RFCx streams

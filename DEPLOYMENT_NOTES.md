@@ -1,8 +1,12 @@
 # Arbimon Deployment Notes
 
-## v3.0.10
+## v3.0.11
 
 - Add `config/k8s.json` file
+
+## v3.0.10
+
+_None_
 
 ## v3.0.9
 
