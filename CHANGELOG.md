@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.12 - Feb XX, 2021
+
+Resolved issues:
+- PI-495 Fix fuzzy images for Pattern Matching boxes in Chrome browser
+
 ## v3.0.11 - Feb 22, 2021
 
 New features:
