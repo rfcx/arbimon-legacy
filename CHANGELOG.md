@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- PI-563 Fix timezone issue where AudioMoth UTC timezone is not translated
+
 ## v3.0.11 - Feb 22, 2021
 
 New features:

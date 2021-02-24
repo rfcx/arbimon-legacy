@@ -47,6 +47,18 @@ var Projects = {
         queryHandler(q, callback);
     },
 
+    allProjects: function(callback) {
+        var q = "SELECT project_id as id, name, url \n"+
+                "FROM projects";
+
+        queryHandler(q, callback);
+    },
+
+    listAllAsync: function() {
+        var projects = util.promisify(Projects.allProjects);
+        return projects();
+    },
+
     find: function (query, callback) {
         var whereExp = [], data=[];
         var selectExtra = '';
@@ -136,7 +148,9 @@ var Projects = {
                 "       s.lat, \n"+
                 "       s.lon, \n"+
                 "       s.alt, \n"+
+                "       s.timezone, \n"+
                 "       s.published, \n"+
+                "       s.legacy, \n"+
                 "       s.project_id != ? AS imported, \n"+
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+

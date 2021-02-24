@@ -247,6 +247,7 @@ var Recordings = {
             projection = "R.recording_id AS id, \n"+
                         "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
                         "S.name as site, \n"+
+                        "S.timezone, \n"+
                         "S.legacy as legacy, \n"+
                         "R.uri, \n"+
                         "R.datetime, \n"+
@@ -932,6 +933,7 @@ var Recordings = {
                       "       s.name as site, \n"+
                       "       s.legacy as legacy, \n"+
                       "       s.external_id as site_external_id, \n"+
+                      "       s.timezone, \n"+
                       "       r.uri, \n"+
                       "       r.datetime, \n"+
                       "       r.duration, \n"+

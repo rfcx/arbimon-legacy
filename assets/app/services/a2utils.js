@@ -76,7 +76,7 @@ angular.module('a2.utils', [
     return function(input, fmt) {
         if(!input)
             return undefined;
-            
+
         return moment(input).format(fmt);
     };
 })
@@ -85,27 +85,38 @@ angular.module('a2.utils', [
     return function(x, fmt){
         if(!x)
             return undefined;
-            
+
         return moment(x).utc().format(fmt);
     };
 })
+
+// display site localtime formated by momentjs
+.filter('momentTz', function(){
+    return function(x, fmt, timezone){
+        if(!x) {
+            return undefined;
+        }
+        return moment.tz(x, timezone).format(fmt);
+    };
+})
+
 // divides array of into pages of limitPerPage size
 .filter('paginate', function() {
     return function(arr, currentPage, limitPerPage) {
         if(!arr)
             return undefined;
-        
+
         return arr.slice((currentPage-1)*limitPerPage, currentPage*limitPerPage);
     };
 })
 /** Pluralizes singular words accoring to some heuristics that (hopefully)
  *  look like english grammar.
  */
-.filter('plural', function(){ 
+.filter('plural', function(){
     return function(x, fmt){
         if(!x)
             return undefined;
-            
+
         return x +'s';
     };
 })
@@ -114,7 +125,7 @@ angular.module('a2.utils', [
     return function(x, fmt){
         if(!x)
             return undefined;
-            
+
         return (''+x).replace(/[_-]/g, ' ');
     };
 })
@@ -123,8 +134,8 @@ angular.module('a2.utils', [
     return function(x, fmt){
         if(!x)
             return undefined;
-            
-        return (''+x).replace(/\b(\w)/g, function(_1){ 
+
+        return (''+x).replace(/\b(\w)/g, function(_1){
             return _1.toUpperCase();
         });
     };
@@ -138,7 +149,7 @@ angular.module('a2.utils', [
  * any othe function calls, resetting the wait for time every call. After its wait
  * time, the function gets called with the last given arguments and context.
  * @param {Function} fn - the function to debounce
- * @param {Function} rate - the timeout 
+ * @param {Function} rate - the timeout
  * @return {Promise} resolved with the function's return value.
  */
 .factory('$debounce', function($timeout, $q, $log){
@@ -155,7 +166,7 @@ angular.module('a2.utils', [
                 qDefer = $q.defer();
                 debouncePromise = qDefer.promise.then(function(){
                     // qDefer got resolved. forget it's reference in case of recursivity.
-                    qDefer = null; 
+                    qDefer = null;
                     return fn.apply(self, args);
                 });
             }
@@ -170,7 +181,7 @@ angular.module('a2.utils', [
     var a2LookaheadHelper = function(options){
         this.options=options||{};
         if(!options.searchCompare){
-            options.searchCompare = function(a, b){ 
+            options.searchCompare = function(a, b){
                 return a == b;
             };
         }
@@ -181,9 +192,9 @@ angular.module('a2.utils', [
             if(options.minLength && text.length < options.minLength){
                 return $q.resolve([]);
             }
-            
+
             var promise = options.fn(text);
-            
+
             if(options.includeSearch){
                 promise = promise.then(function(items){
                     var textItem = items.filter(function(item){
@@ -197,7 +208,7 @@ angular.module('a2.utils', [
                     return items;
                 });
             }
-            
+
             return promise;
         }
     };
@@ -241,8 +252,8 @@ angular.module('a2.utils', [
             eventdef.listeners.push(fn);
         }
     };
-    
-    return EventlistManager;    
+
+    return EventlistManager;
 })
 ;
 
@@ -299,17 +310,17 @@ angular.module('a2.classy', [])
     var slice=Array.prototype.slice;
     return function makeClass(classdef){
         if(!classdef.constructor){
-            classdef.constructor = classdef.super && classdef.super.constructor ? 
+            classdef.constructor = classdef.super && classdef.super.constructor ?
                 function super_constructor(){
                     this.super.constructor.apply(this, slice.call(arguments));
-                } : 
+                } :
                 function empty_constructor(){}
             ;
         }
         if(classdef.static){
             angular.extend(classdef.constructor, classdef.static);
             delete classdef.static;
-        }        
+        }
         if(classdef.super){
             classdef = $inheritFrom(classdef.super, classdef);
         }
@@ -317,7 +328,7 @@ angular.module('a2.classy', [])
         (window.qc||(window.qc=[])).push(classdef);
 
         return classdef.constructor;
-    };        
+    };
 })
 .value('$inheritFrom', function $inheritFrom(object){
     var fn = function(){};

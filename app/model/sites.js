@@ -7,8 +7,8 @@ var config = require('../config');
 const rfcxConfig = config('rfcx');
 var request = require('request');
 var rp = util.promisify(request);
-const auth0Service = require('../model/auth0');
-
+var tzlookup = require("tz-lookup");
+var model = require('../model');
 var s3;
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
@@ -87,6 +87,14 @@ var Sites = {
 
         site = result.value;
 
+        if (site.lat !== undefined && site.lon !== undefined) {
+            try {
+                site.timezone = tzlookup(site.lat, site.lon);
+            } catch(err) {
+                site.timezone = 'UTC';
+            }
+        }
+
         for(var j in site) {
             if(j !== 'id') {
                 values.push(util.format('%s = %s',
@@ -108,7 +116,7 @@ var Sites = {
         return insert(site)
     },
 
-    update: function(site, callback) {
+    update: async function(site, callback) {
         var values = [];
 
         if(site.id)
@@ -118,6 +126,15 @@ var Sites = {
         if(typeof site.site_id === "undefined")
             return callback(new Error("required field 'site_id' missing"));
 
+        if (site.lat !== undefined && site.lon !== undefined) {
+            try {
+                site.timezone = tzlookup(site.lat, site.lon);
+            } catch(err) {
+                console.log(err)
+                site.timezone = 'UTC';
+            }
+        }
+
         var tableFields = [
             "project_id",
             "name",
@@ -125,7 +142,8 @@ var Sites = {
             "lon",
             "alt",
             "published",
-            "site_type_id"
+            "site_type_id",
+            "timezone"
         ];
 
         for( var i in tableFields) {
@@ -147,6 +165,29 @@ var Sites = {
         q = util.format(q, values.join(", "), site.site_id);
 
         queryHandler(q, callback);
+    },
+
+    updateAsync: function(site) {
+        let update = util.promisify(this.update);
+        return update(site);
+    },
+
+    updateAllSites: async function() {
+        try {
+            const projects = await model.projects.listAllAsync();
+            // const projects = await model.projects.find({id: 1209});
+            console.log('\n\project', projects);
+            for (let project of projects) {
+                console.log('\n\project', project, project.id);
+                const sites = await model.projects.getProjectSites(project.id)
+                // const sites = await model.projects.getProjectSites(project.project_id)
+                for (let site of sites) {
+                    await this.updateAsync(site);
+                }
+            };
+        } catch(err) {
+            console.log('\n\nerror updating sites', err);
+        }
     },
 
     exists: function(site_name, project_id, callback) {
@@ -685,14 +726,14 @@ var Sites = {
 
         return rp(options).then(({ body }) => body)
     },
-    
+
     countAllSites: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `sites`';
 
         queryHandler(q, callback);
     },
-    
+
     countSitesToday: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `sites` \n' +
