@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+## v3.0.12 - Feb XX, 2021
+
+Resolved issues:
+- PI-495 Fix fuzzy images for Pattern Matching boxes in Chrome browser
 - PI-563 Fix timezone issue where AudioMoth UTC timezone is not translated
 
 ## v3.0.11 - Feb 22, 2021
