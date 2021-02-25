@@ -24,6 +24,7 @@ angular.module('a2.audiodata.sites', [
   }])
 .controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader) {
     $scope.loading = true;
+    $scope.markers = [];
 
     Project.getInfo(function(info){
         $scope.project = info;
@@ -42,9 +43,9 @@ angular.module('a2.audiodata.sites', [
         $scope.sites = sites;
         $scope.loading = false;
 
-        if(p.site){
+        if (p.site) {
             var site = sites.filter(function(s){return s.id == p.site;}).shift();
-            if(site){
+            if (site && site.id) {
                 $scope.sel(site).then(function(){
                     if(p.show){
                         $scope.set_show(p.show, p.show_path);
@@ -52,8 +53,59 @@ angular.module('a2.audiodata.sites', [
                 });
             }
         }
-// )
+        a2GoogleMapsLoader.then(function(google){
+            $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
+                center: { lat: 0, lng: 0},
+                mapTypeId: google.maps.MapTypeId.SATELLITE,
+                zoom: 8, minZoom: 2
+            });
+
+            var bounds = new google.maps.LatLngBounds();
+
+            angular.forEach($scope.sites, function(site) {
+                if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
+                    return;
+                }
+                var position = new google.maps.LatLng(site.lat, site.lon);
+                var marker = new google.maps.Marker({
+                    position: position,
+                    title: site.name
+                });
+
+                $scope.markers.push(marker);
+                bounds.extend(position);
+            });
+
+            $scope.map.fitBounds(bounds);
+
+            if ($scope.markers.length) {
+                $scope.setMapOnAll($scope.map);
+            };
+        });
     });
+
+    // Sets the map on all markers in the array
+    $scope.setMapOnAll = function(map) {
+        for (var i = 0; i < $scope.markers.length; i++) {
+            $scope.markers[i].setMap(map);
+        }
+    };
+
+    // Removes the markers from the map, but keeps them in the array
+    $scope.clearMarkers = function() {
+        $scope.setMapOnAll(null);
+    }
+
+    // Shows any markers currently in the array
+    $scope.showMarkers = function(map) {
+        $scope.setMapOnAll(map);
+    }
+
+    // Deletes all markers in the array by removing references to them
+    $scope.deleteMarkers = function() {
+        $scope.clearMarkers();
+        $scope.markers = [];
+    }
 
     $scope.editing = false;
 
@@ -133,14 +185,6 @@ angular.module('a2.audiodata.sites', [
             })
         )
     };
-
-    a2GoogleMapsLoader.then(function(google){
-        $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
-            center: { lat: 0, lng: 0},
-            mapTypeId: google.maps.MapTypeId.SATELLITE,
-            zoom: 8, minZoom: 2
-        });
-    });
 
     $scope.close = function() {
         $scope.creating = false;
@@ -267,33 +311,6 @@ angular.module('a2.audiodata.sites', [
             return $state.transitionTo($state.current.name, {site:$state.params.site, show:show_state_param}, {notify:false});
         });
     };
-    // $scope.browseShared = function() {
-    //     var modalInstance = $modal.open({
-    //         templateUrl: '/app/audiodata/browse-published-sites.html',
-    //         controller: 'PublishedSitesBrowserCtrl',
-    //         size: 'lg',
-    //         resolve: {
-    //             project: function() {
-    //                 var p = angular.copy($scope.project);
-    //                 p.sites = $scope.sites;
-    //                 return p;
-    //             }
-    //         }
-    //     });
-    //
-    //     modalInstance.result.then(function(data) {
-    //         Project.getSites(function(sites) {
-    //             $scope.sites = sites;
-    //             $scope.loading = false;
-    //         });
-    //         notify.log(data.msg);
-    //     })
-    //     .catch(function(reason) {
-    //         if(reason) {
-    //             notify.error(reason);
-    //         }
-    //     });
-    // };
 
     $scope.create = function() {
 
@@ -372,14 +389,11 @@ angular.module('a2.audiodata.sites', [
     $scope.sel = function(site) {
         return $state.transitionTo($state.current.name, {site:site.id, show:$state.params.show}, {notify:false}).then(function(){
             $scope.close();
-
             $scope.selected = site;
+            $scope.clearMarkers()
 
-
-
-            a2GoogleMapsLoader.then(function(google){
+            a2GoogleMapsLoader.then(function(google) {
                 var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
-
                 if(!$scope.marker) {
                     $scope.marker = new google.maps.Marker({
                         position: position,
@@ -392,7 +406,6 @@ angular.module('a2.audiodata.sites', [
                     $scope.marker.setPosition(position);
                     $scope.marker.setTitle($scope.selected.name);
                 }
-
                 $scope.map.panTo(position);
             });
         });
@@ -414,57 +427,6 @@ angular.module('a2.audiodata.sites', [
         $modalInstance.dismiss();
     }
 })
-// TODO remove properly published
-// .controller('PublishedSitesBrowserCtrl', function($scope, a2Sites, project, $modalInstance, $window) {
-//     var geocoder = new $window.google.maps.Geocoder();
-//
-//     a2Sites.listPublished(function(sites) {
-//
-//         sites.forEach(function(site) {
-//             geocoder.geocode({
-//                     location: {
-//                         lat: site.lat,
-//                         lng: site.lon
-//                     }
-//             }, function(result, status) {
-//
-//                 if(result.length){
-//                     site.location = result[1].formatted_address;
-//                 }
-//                 else {
-//                     site.location = 'unknown';
-//                 }
-//
-//                 $scope.$apply();
-//             });
-//
-//         });
-//
-//         $scope.sites = sites;
-//     });
-//
-//
-//     $scope.addSite = function(site) {
-//
-//         if(site.project_id === project.project_id) {
-//             $modalInstance.dismiss("site is owned by this project");
-//             return;
-//         }
-//
-//         var result = project.sites.filter(function(value) {
-//             return value.id === site.id;
-//         });
-//
-//         if(result.length > 0) {
-//             $modalInstance.dismiss("site is already on this project");
-//             return;
-//         }
-//
-//         a2Sites.import(site, function(data) {
-//             $modalInstance.close(data);
-//         });
-//     };
-// })
 .controller('SitesTokenGenaratorCtrl', function($scope, a2Sites, $modal, notify){
         $scope.site = $scope.selected;
         $scope.loading = {};
