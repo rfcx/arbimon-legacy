@@ -74,8 +74,10 @@ angular.module('a2.audiodata.sites', [
 
                 $scope.markers.push(marker);
                 bounds.extend(position);
-                $scope.map.fitBounds(bounds);
             });
+
+            $scope.map.fitBounds(bounds);
+
             if ($scope.markers.length) {
                 $scope.setMapOnAll($scope.map);
             };
