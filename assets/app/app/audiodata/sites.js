@@ -22,7 +22,7 @@ angular.module('a2.audiodata.sites', [
       }
     }
   }])
-.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader, $timeout) {
+.controller('SitesCtrl', function($scope, $state, Project, $modal, notify, a2Sites, $window, $controller, $q, a2UserPermit, a2GoogleMapsLoader) {
     $scope.loading = true;
     $scope.markers = [];
 
@@ -43,45 +43,43 @@ angular.module('a2.audiodata.sites', [
         $scope.sites = sites;
         $scope.loading = false;
 
-        $timeout(function() {
-            if (p.site) {
-                var site = sites.filter(function(s){return s.id == p.site;}).shift();
-                if (site && site.id) {
-                    $scope.sel(site).then(function(){
-                        if(p.show){
-                            $scope.set_show(p.show, p.show_path);
-                        }
-                    });
-                }
-            }
-            a2GoogleMapsLoader.then(function(google){
-                $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
-                    center: { lat: 0, lng: 0},
-                    mapTypeId: google.maps.MapTypeId.SATELLITE,
-                    zoom: 8, minZoom: 2
-                });
-
-                var bounds = new google.maps.LatLngBounds();
-
-                angular.forEach($scope.sites, function(site) {
-                    if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
-                        return;
+        if (p.site) {
+            var site = sites.filter(function(s){return s.id == p.site;}).shift();
+            if (site && site.id) {
+                $scope.sel(site).then(function(){
+                    if(p.show){
+                        $scope.set_show(p.show, p.show_path);
                     }
-                    var position = new google.maps.LatLng(site.lat, site.lon);
-                    var marker = new google.maps.Marker({
-                        position: position,
-                        title: site.name
-                    });
-
-                    $scope.markers.push(marker);
-                    bounds.extend(position);
-                    $scope.map.fitBounds(bounds);
                 });
-                if ($scope.markers.length) {
-                    $scope.setMapOnAll($scope.map);
-                };
+            }
+        }
+        a2GoogleMapsLoader.then(function(google){
+            $scope.map = new google.maps.Map($window.document.getElementById('map-site'), {
+                center: { lat: 0, lng: 0},
+                mapTypeId: google.maps.MapTypeId.SATELLITE,
+                zoom: 8, minZoom: 2
             });
-        }, 100);
+
+            var bounds = new google.maps.LatLngBounds();
+
+            angular.forEach($scope.sites, function(site) {
+                if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
+                    return;
+                }
+                var position = new google.maps.LatLng(site.lat, site.lon);
+                var marker = new google.maps.Marker({
+                    position: position,
+                    title: site.name
+                });
+
+                $scope.markers.push(marker);
+                bounds.extend(position);
+                $scope.map.fitBounds(bounds);
+            });
+            if ($scope.markers.length) {
+                $scope.setMapOnAll($scope.map);
+            };
+        });
     });
 
     // Sets the map on all markers in the array
