@@ -172,24 +172,6 @@ var Sites = {
         return update(site);
     },
 
-    updateAllSites: async function() {
-        try {
-            const projects = await model.projects.listAllAsync();
-            // const projects = await model.projects.find({id: 1209});
-            console.log('\n\project', projects);
-            for (let project of projects) {
-                console.log('\n\project', project, project.id);
-                const sites = await model.projects.getProjectSites(project.id)
-                // const sites = await model.projects.getProjectSites(project.project_id)
-                for (let site of sites) {
-                    await this.updateAsync(site);
-                }
-            };
-        } catch(err) {
-            console.log('\n\nerror updating sites', err);
-        }
-    },
-
     exists: function(site_name, project_id, callback) {
         var q = 'SELECT count(*) as count \n'+
                 'FROM sites \n'+

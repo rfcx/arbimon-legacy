@@ -47,18 +47,6 @@ var Projects = {
         queryHandler(q, callback);
     },
 
-    allProjects: function(callback) {
-        var q = "SELECT project_id as id, name, url \n"+
-                "FROM projects";
-
-        queryHandler(q, callback);
-    },
-
-    listAllAsync: function() {
-        var projects = util.promisify(Projects.allProjects);
-        return projects();
-    },
-
     find: function (query, callback) {
         var whereExp = [], data=[];
         var selectExtra = '';
