@@ -44,6 +44,7 @@ var app={
             'jquery-ui'          :{'jquery-ui.min.js': '../jquery/', },
             leaflet              :{'dist/**': '', },
             moment               :{'min/moment.min.js': '', },
+            'moment-timezone'    :{'builds/moment-timezone-with-data.min.js': '', },
             'ng-csv'             :{'build/ng-csv.min.js': '', },
             'ng-table'           :{'ng-table.*': '', },
             'plotly.js'          :{'dist/plotly.js': '', },

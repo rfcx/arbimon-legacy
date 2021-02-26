@@ -17,6 +17,7 @@ module.exports = function(config) {
     files: [
         'bower_components/d3/d3.js',
         'bower_components/moment/moment.js',
+        'bower_components/moment-timezone/moment-timezone.js',
         'bower_components/humane-js/humane.js',
         'bower_components/jquery/dist/jquery.js',
         'bower_components/angular/angular.js',
@@ -44,7 +45,7 @@ module.exports = function(config) {
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters: ['mocha', 'coverage'],
-    
+
     coverageReporter: {
       // specify a common output directory
       dir: 'coverage',
@@ -53,7 +54,7 @@ module.exports = function(config) {
         { type: 'html' }
       ]
     },
-    
+
     // web server port
     port: 9876,
 
@@ -74,7 +75,7 @@ module.exports = function(config) {
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
     browsers: [
-        'Firefox', 
+        'Firefox',
         'Chrome'
     ],
 

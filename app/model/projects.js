@@ -136,7 +136,9 @@ var Projects = {
                 "       s.lat, \n"+
                 "       s.lon, \n"+
                 "       s.alt, \n"+
+                "       s.timezone, \n"+
                 "       s.published, \n"+
+                "       s.legacy, \n"+
                 "       s.external_id, \n"+
                 "       s.project_id != ? AS imported, \n"+
                 "       s.token_created_on \n" +

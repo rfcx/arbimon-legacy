@@ -2,7 +2,8 @@
 
 ## v3.0.12
 
-_None_
+- Run migration 007-sites-table-add-timezone-column.sql
+- Run script to updating all sites timezone
 
 ## v3.0.11
 
