@@ -137,6 +137,7 @@ var Projects = {
                 "       s.lon, \n"+
                 "       s.alt, \n"+
                 "       s.published, \n"+
+                "       s.external_id, \n"+
                 "       s.project_id != ? AS imported, \n"+
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
