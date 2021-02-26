@@ -2,6 +2,10 @@
 
 ## v3.0.12 - Feb XX, 2021
 
+New features:
+- PI-574 Default map on the sites page should display sites
+- PI-609/PI-252 Get Companions' images and show them for a current site
+
 Resolved issues:
 - PI-495 Fix fuzzy images for Pattern Matching boxes in Chrome browser
 - PI-563 Fix timezone issue where AudioMoth UTC timezone is not translated

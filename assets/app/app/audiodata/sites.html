@@ -213,5 +213,41 @@
     <div class="panel" ng-show="show.map">
         <div class="map" id="map-site"></div>
     </div>
-</div>
+    <div ng-if="images && images.length">
+        <ul class="tree">
+            <li ng-repeat="image in images track by image.src" ng-click="showCarousel(image.id)"
+                style="width: 100px; height: 100px; background: url({{image.src}}) no-repeat center center;
+                background-size: contain; cursor: pointer;" data-toggle="modal" data-target="#carouselModal">
+            </li>
+        </ul>
+        <!-- Carousel -->
+        <div class="modal fade" id="carouselModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document" style="height: 80%; max-height: 600px;">
+                <div class="modal-content" style="background: transparent; height: 100%;">
+                    <div id="carouselId" class="carousel slide" data-ride="carousel" data-interval="0"
+                        style="width: 100%; max-width: 800px; height: 100%; max-height: 600px; margin: 0 auto;">
+                        <ol class="carousel-indicators">
+                            <li ng-repeat="image in images track by $index" data-target="#carouselId{{$index}}" data-slide-to="{{$index}}" ng-class="image.active ? 'active' : ''"></li>
+                        </ol>
+                        <div class="carousel-inner" style="width: 100%; height: 100%;" role="listbox">
+                            <div ng-repeat="image in images track by image.id" class="item" style="width: 100%; height: 100%;"
+                                ng-class="image.active ? 'active' : ''">
+                                <img class="d-block w-100" style="display: block; max-width: 100%; max-height: 100%; margin: 0 auto;" src="{{image.src}}" alt="">
+                            </div>
+                        </div>
+                        <a class="left carousel-control" href="#carouselId" role="button" ng-non-bindable data-slide="prev"
+                            style="background: none;">
+                            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="right carousel-control" href="#carouselId" role="button" ng-non-bindable data-slide="next"
+                            style="background: none;">
+                            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
