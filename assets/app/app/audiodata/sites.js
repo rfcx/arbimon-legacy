@@ -386,10 +386,41 @@ angular.module('a2.audiodata.sites', [
         $scope.temp.project = $item;
     };
 
+    $scope.showAssetsCarousel = false;
+
+    $scope.showCarousel = function(id) {
+        $scope.images.forEach((image) => {
+            image.active = image.id === id;
+        })
+        $scope.images[index].active = true;
+        $scope.showAssetsCarousel = true;
+    }
+
     $scope.sel = function(site) {
         return $state.transitionTo($state.current.name, {site:site.id, show:$state.params.show}, {notify:false}).then(function(){
+            $scope.images = [];
             $scope.close();
             $scope.selected = site;
+
+            if ($scope.selected && $scope.selected.external_id) {
+                a2Sites.getListOfAssets($scope.selected.external_id)
+                    .then(data => {
+                        $scope.assets = data;
+                        if ($scope.assets) {
+                            for (var i = 0; i < $scope.assets.length; i++) {
+                                var src = '/api/project/'+ $scope.project.url + '/streams/'+ $scope.selected.external_id +'/assets/' + $scope.assets[i].id
+                                $scope.images.push({
+                                    id: i,
+                                    src: src,
+                                    active: i === 0
+                                })
+                            }
+                        };
+                    }).catch(err => {
+                        console.log('\nerr', err);
+                    });
+            }
+
             $scope.clearMarkers()
 
             a2GoogleMapsLoader.then(function(google) {

@@ -9,35 +9,35 @@ angular.module('a2.srv.sites', [
                 callback(data);
             });
         },
-        
+
         import: function(site, callback) {
             $http.post('/api/project/'+ Project.getUrl() +'/sites/import', {
                 site: site,
             })
             .success(callback);
         },
-        
+
         update: function(site, callback) {
             $http.post('/api/project/'+ Project.getUrl() +'/sites/update', {
                 site: site,
             })
             .success(callback);
         },
-        
+
         create: function(site, callback) {
             $http.post('/api/project/'+ Project.getUrl() +'/sites/create', {
                 site: site,
             })
             .success(callback);
         },
-        
+
         delete: function(site, callback) {
             $http.post('/api/project/'+ Project.getUrl() +'/sites/delete', {
                 site: site
             })
             .success(callback);
         },
-        
+
         // Uses Promises :-)
         getLogFiles: function(site, callback) {
             return $http.get('/api/project/'+ Project.getUrl() +'/sites/'+site+'/logs');
@@ -50,7 +50,7 @@ angular.module('a2.srv.sites', [
                 .error(d.reject.bind(d));
             return d.promise;
         },
-        
+
         getSiteLogDataUrl: function(site, series, from, to, period){
             var args = 'q='+period+'&from='+from.getTime()+'&to='+to.getTime();
             if(/uploads/.test(series)){
@@ -61,7 +61,7 @@ angular.module('a2.srv.sites', [
                 return $q.resolve('/api/project/'+ Project.getUrl() +'/sites/'+site+'/log/data.txt?stat='+series+'&'+args);
             }
         },
-        
+
         getSiteLogData: function(site, series, from, to, period){
             return this.getSiteLogDataUrl(site, series, from, to, period).then(function(url){
                 return $q.when($http.get(url));
@@ -75,14 +75,23 @@ angular.module('a2.srv.sites', [
                 return data;
             });
         },
-        
-        // Uses Promises :-)
+
+        // Get list of assets to a site
+        getListOfAssets: function(site_id) {
+            var d = $q.defer();
+            $http.get('/api/project/'+ Project.getUrl() + '/streams/'+site_id+'/assets')
+                .success(d.resolve.bind(d))
+                .error(d.reject.bind(d));
+            return d.promise;
+        },
+
+        // Uses Promises
         generateToken : function(site){
             return $http.post('/api/project/'+ Project.getUrl() +'/sites/generate-token', {
                 site: site.id
             });
         },
-        
+
         revokeToken : function(site){
             return $http.post('/api/project/'+ Project.getUrl() +'/sites/revoke-token', {
                 site: site.id
