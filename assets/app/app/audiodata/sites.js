@@ -392,7 +392,6 @@ angular.module('a2.audiodata.sites', [
         $scope.images.forEach((image) => {
             image.active = image.id === id;
         })
-        $scope.images[index].active = true;
         $scope.showAssetsCarousel = true;
     }
 
