@@ -1,5 +1,6 @@
 {
   "coreAPIEnabled": false,
   "apiBaseUrl": "https://api.rfcx.org",
-  "mediaBaseUrl": "https://media-api.rfcx.org"
+  "mediaBaseUrl": "https://media-api.rfcx.org",
+  "deviceBaseUrl": "https://staging-device-api.rfcx.org"
 }
