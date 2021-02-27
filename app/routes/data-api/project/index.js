@@ -397,7 +397,7 @@ router.get('/:projectUrl/usage', function(req, res, next) {
     }).catch(next);
 });
 
-
+router.use('/:projectUrl/streams', require('./streams'));
 router.use('/:projectUrl/recordings', recording_routes);
 router.use('/:projectUrl/training-sets', training_set_routes);
 router.use('/:projectUrl/playlists', playlist_routes);

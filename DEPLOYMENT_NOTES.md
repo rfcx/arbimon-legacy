@@ -1,5 +1,10 @@
 # Arbimon Deployment Notes
 
+## v3.0.12
+
+- Run migration 007-sites-table-add-timezone-column.sql
+- Run script to updating all sites timezone
+
 ## v3.0.11
 
 - Add `config/k8s.json` file

@@ -116,6 +116,40 @@ router.post('/project/:id/sites/create', verifyToken(), hasRole(['appUser', 'rfc
     }
 })
 
+router.patch('/sites/:externalId', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
+  try {
+    const user = await model.users.ensureUserExistFromAuth0(req.user);
+    const converter = new Converter(req.body, {});
+    converter.convert('name').optional().toString();
+    converter.convert('latitude').optional().toFloat().minimum(-90).maximum(90);
+    converter.convert('longitude').optional().toFloat().minimum(-180).maximum(180);
+    converter.convert('altitude').optional().toFloat().minimum(0);
+
+    const params = await converter.validate();
+    const site = await model.sites.find({ external_id: req.params.externalId }).get(0);
+    if (!site) {
+      // TODO request site from CORE API if not found
+      throw new EmptyResultError('Site with given external_id not found.');
+    }
+    const project = await model.projects.find({id: site.project_id}).get(0);
+    const projectUsers = await model.projects.getUsersAsync(project.project_id);
+    const hasPermission = !!projectUsers.find(x => x.id === user.user_id);
+    if (!hasPermission) {
+      throw new ForbiddenError(`You don't have permission to manage project sites`);
+    }
+    await model.sites.updateAsync({
+      site_id: site.site_id,
+      name: params.name,
+      lat: params.latitude,
+      lon: params.longitude,
+      alt: params.altitude
+    })
+    res.sendStatus(200);
+  } catch (e) {
+    httpErrorHandler(req, res, 'Failed updating a site')(e);
+  }
+})
+
 router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async function(req, res) {
   try {
     const convertedParams = {};
