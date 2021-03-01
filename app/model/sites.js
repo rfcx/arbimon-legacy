@@ -134,6 +134,9 @@ var Sites = {
                 site.timezone = 'UTC';
             }
         }
+        if (site.lat !== undefined || site.lon !== undefined || site.alt !== undefined) {
+            site['updated_at'] = moment.utc(new Date()).format('YYYY-MM-DD HH-MM-SS');
+        }
 
         var tableFields = [
             "project_id",
@@ -143,7 +146,8 @@ var Sites = {
             "alt",
             "published",
             "site_type_id",
-            "timezone"
+            "timezone",
+            "updated_at"
         ];
 
         for( var i in tableFields) {
@@ -165,11 +169,6 @@ var Sites = {
         q = util.format(q, values.join(", "), site.site_id);
 
         queryHandler(q, callback);
-    },
-
-    updateAsync: function(site) {
-        let update = util.promisify(this.update);
-        return update(site);
     },
 
     exists: function(site_name, project_id, callback) {

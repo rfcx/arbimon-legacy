@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.13
+
+- Run 008-sites-table-add-updated-at-column.sql
+
 ## v3.0.12
 
 - Run migration 007-sites-table-add-timezone-column.sql
