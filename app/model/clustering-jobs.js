@@ -239,7 +239,8 @@ var ClusteringJobs = {
                     imagePath: k8sConfig.imagePath,
                     minPoints: `${data.params.minPoints}`,
                     distanceThreshold: `${data.params.distanceThreshold}`,
-                    jobId: `${data.audioEventDetectionJob.jobId}`
+                    aedJobId: `${data.audioEventDetectionJob.jobId}`,
+                    clusterJobId: `${data.id}`
                 });
                 await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
                 // TODO: remove when clustering job will update db by itself
