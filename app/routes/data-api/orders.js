@@ -217,6 +217,9 @@ router.post('/create-project', function(req, res, next) {
                                 project.project_id = projectId
                                 if (rfcxConfig.coreAPIEnabled) {
                                     model.projects.createInCoreAPI(project, req.session.idToken)
+                                        .then((externalProject) => {
+                                            return model.projects.setExternalId(project.project_id, externalProject.id)
+                                        })
                                 }
                             }
                             res.json({
@@ -244,6 +247,9 @@ router.post('/create-project', function(req, res, next) {
                             project.project_id = projectId
                             if (rfcxConfig.coreAPIEnabled) {
                                 model.projects.createInCoreAPI(project, req.session.idToken)
+                                    .then((externalProject) => {
+                                        return model.projects.setExternalId(project.project_id, externalProject.id)
+                                    })
                             }
                         }
                         res.json({
