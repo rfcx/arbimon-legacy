@@ -23,7 +23,7 @@ function getTemplate (name, type, opts) {
         "imagePath": opts.imagePath,
         "ARG_EPSILON":  opts.minPoints,
         "ARG_MINSAMPLES": opts.distanceThreshold,
-        "ARG_JOBID": opts.aedJobId,
+        "ARG_AED_JOBID": opts.aedJobId,
         "ARG_CLUSTER_JOBID": opts.clusterJobId
     });
 }
