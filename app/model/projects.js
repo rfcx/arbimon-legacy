@@ -981,6 +981,24 @@ var Projects = {
     },
 
     /**
+     * Gets personal project url for given user
+     * @param {*} user
+     * @param {integer} user.user_id
+     * @param {string} user.firstname
+     */
+    getPersonalProjectUrl: function (user) {
+        return `${user.user_id}-${this.nameToUrl(user.firstname)}-project`
+    },
+
+    /**
+     * Removes everything except latin characters, replaces spaces with dashes
+     * @param {*} name
+     */
+    nameToUrl: function (name) {
+        return name.replace(/[^a-z0-9A-Z-]/g, '-').replace(/-+/g,'-').replace(/(^-)|(-$)/g, '').toLowerCase()
+    },
+
+    /**
      * Creates personal project for given user
      * @param {*} user
      * @param {integer} user.user_id
@@ -992,7 +1010,7 @@ var Projects = {
             is_private: true,
             plan: this.plans.free,
             name: `${user.firstname} ${user.lastname}'s project`,
-            url: `${user.user_id}-${this.nameToUrl(user.firstname)}-project`,
+            url: this.getPersonalProjectUrl(user),
             description: `${user.firstname}'s personal project`,
             project_type_id: 1
         };
@@ -1006,14 +1024,6 @@ var Projects = {
         }
         const projectId = await q.ninvoke(this, "create", projectData, user.user_id)
         return this.find({ id: projectId }).get(0)
-    },
-
-    /**
-     * Removes everything except latin characters, replaces spaces with dashes
-     * @param {*} name
-     */
-    nameToUrl: function (name) {
-        return name.replace(/[^a-z0-9A-Z-]/g, '-').replace(/-+/g,'-').replace(/(^-)|(-$)/g, '').toLowerCase()
     },
 
     /**
