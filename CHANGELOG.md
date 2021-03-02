@@ -1,5 +1,8 @@
 # Arbimon Release Notes
 
+Resolved issues:
+- PI-622 PI-433 Fix issue with displaying related playlist, duplicate aed jobs.
+
 ## v3.0.12 - Feb XX, 2021
 
 New features:
