@@ -1,5 +1,10 @@
 # Arbimon Deployment Notes
 
+## v3.0.13
+
+- Run migration 008-add-external-id-to-projects.sql
+- Add missing `external_id` to projects and sites
+
 ## v3.0.12
 
 - Run migration 007-sites-table-add-timezone-column.sql
