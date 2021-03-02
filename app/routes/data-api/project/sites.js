@@ -40,18 +40,14 @@ router.post('/create', function(req, res, next) {
         model.sites.insert(site, function(err, result) {
             if(err) return next(err);
 
-            model.projects.insertNews({
-                news_type_id: 2, // site created
-                user_id: req.session.user.id,
-                project_id: project.project_id,
-                data: JSON.stringify({ site: site.name })
-            });
-
             if (rfcxConfig.coreAPIEnabled) {
                 model.sites.createInCoreAPI({
                     ...site,
                     site_id: result.insertId
                 }, req.session.idToken)
+                    .then((externalSite) => {
+                        return model.sites.setExternalId(result.insertId, externalSite.id)
+                    })
             }
 
             res.json({ message: "New site created" });
