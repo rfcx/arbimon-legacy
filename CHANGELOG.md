@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.13 - Mar XX, 2021
+
+New features:
+- CE-174 rework streams-sites unification
+
 ## v3.0.12 - Feb XX, 2021
 
 New features:
