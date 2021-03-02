@@ -678,7 +678,7 @@ var Sites = {
         data.name !== undefined && (body.name = data.name)
         data.lat !== undefined && (body.latitude = data.lat)
         data.lon !== undefined && (body.longitude = data.lon)
-        data.alt !== undefined && (body.altitude = data.lon)
+        data.alt !== undefined && (body.altitude = data.alt)
         data.project_id !== undefined && (body.project_external_id = data.project_id)
         const options = {
             method: 'PATCH',

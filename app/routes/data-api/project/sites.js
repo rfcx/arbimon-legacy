@@ -96,8 +96,12 @@ router.post('/update', function(req, res, next) {
 
         if (rfcxConfig.coreAPIEnabled) {
             model.sites.updateInCoreAPI({
-                ...req.body.site,
-                ...(site.project.project_id? { project_id: site.project.project_id } : {})
+                site_id: site.site_id,
+                name: site.name,
+                lat: site.lat,
+                lon: site.lon,
+                alt: site.alt,
+                ...(site.project_id !== project.project_id? { project_id: project.project_id } : {})
             }, req.session.idToken)
         }
 
