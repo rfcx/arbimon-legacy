@@ -12,6 +12,7 @@ var model = require('../model');
 var s3;
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
+const moment = require('moment');
 
 var site_log_processor = require('../utils/site_log_processor');
 
@@ -135,7 +136,7 @@ var Sites = {
             }
         }
         if (site.lat !== undefined || site.lon !== undefined || site.alt !== undefined) {
-            site['updated_at'] = moment.utc(new Date()).format('YYYY-MM-DD HH-MM-SS');
+            site['updated_at'] = moment.utc(new Date()).format();
         }
 
         var tableFields = [
