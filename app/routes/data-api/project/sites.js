@@ -40,18 +40,21 @@ router.post('/create', function(req, res, next) {
         model.sites.insert(site, function(err, result) {
             if(err) return next(err);
 
-            model.projects.insertNews({
-                news_type_id: 2, // site created
-                user_id: req.session.user.id,
-                project_id: project.project_id,
-                data: JSON.stringify({ site: site.name })
-            });
-
             if (rfcxConfig.coreAPIEnabled) {
-                model.sites.createInCoreAPI({
-                    ...site,
-                    site_id: result.insertId
-                }, req.session.idToken)
+                model.projects.findOrCreatePersonalProject({ ...req.session.user, user_id: req.session.user.id })
+                    .then((personalProject) => {
+                        return model.sites.createInCoreAPI({
+                            site_id: result.insertId,
+                            name: site.name,
+                            lat: site.lat,
+                            lon: site.lon,
+                            alt: site.alt,
+                            ...personalProject && personalProject.project_id === site.project_id ? {} : { project_id: site.project_id }
+                        }, req.session.idToken)
+                    })
+                    .then((externalSite) => {
+                        return model.sites.setExternalId(result.insertId, externalSite.id)
+                    })
             }
 
             res.json({ message: "New site created" });
@@ -99,10 +102,17 @@ router.post('/update', function(req, res, next) {
         });
 
         if (rfcxConfig.coreAPIEnabled) {
-            model.sites.updateInCoreAPI({
-                ...req.body.site,
-                ...(site.project.project_id? { project_id: site.project.project_id } : {})
-            }, req.session.idToken)
+            model.projects.findOrCreatePersonalProject({ ...req.session.user, user_id: req.session.user.id })
+                .then((personalProject) => {
+                    return model.sites.updateInCoreAPI({
+                        site_id: site.site_id,
+                        name: site.name,
+                        lat: site.lat,
+                        lon: site.lon,
+                        alt: site.alt,
+                        ...personalProject && personalProject.project_id === site.project_id ? {} : { project_id: site.project_id }
+                    }, req.session.idToken)
+                })
         }
 
         res.json({ message: "site updated" });

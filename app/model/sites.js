@@ -15,6 +15,7 @@ var queryHandler = dbpool.queryHandler;
 const moment = require('moment');
 
 var site_log_processor = require('../utils/site_log_processor');
+const projects = require('./projects')
 
 var Sites = {
 
@@ -228,6 +229,11 @@ var Sites = {
                 queryHandler(q, callback);
             }
         });
+    },
+
+    removeFromProjectAsync: function (siteId, projectId) {
+        let remove = util.promisify(this.removeFromProject)
+        return remove(siteId, projectId)
     },
 
     listPublished: function(callback) {
@@ -649,6 +655,7 @@ var Sites = {
             name: site.name,
             latitude: site.lat,
             longitude: site.lon,
+            altitude: site.alt,
             project_external_id: site.project_id,
             external_id: site.site_id
         }
@@ -657,11 +664,13 @@ var Sites = {
             url: `${rfcxConfig.apiBaseUrl}/streams`,
             headers: {
                 'content-type': 'application/json',
-                Authorization: `Bearer ${idToken}`
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
             },
-            body: JSON.stringify(body)
+            body,
+            json: true
           }
-          return rp(options)
+          return rp(options).then(({ body }) => body)
     },
 
     updateInCoreAPI: async function(data, idToken) {
@@ -669,13 +678,15 @@ var Sites = {
         data.name !== undefined && (body.name = data.name)
         data.lat !== undefined && (body.latitude = data.lat)
         data.lon !== undefined && (body.longitude = data.lon)
+        data.alt !== undefined && (body.altitude = data.alt)
         data.project_id !== undefined && (body.project_external_id = data.project_id)
         const options = {
             method: 'PATCH',
             url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/streams/${data.site_id}`,
             headers: {
                 'content-type': 'application/json',
-                Authorization: `Bearer ${idToken}`
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
             },
             body: JSON.stringify(body)
           }
@@ -688,7 +699,8 @@ var Sites = {
             url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/streams/${site_id}`,
             headers: {
                 'content-type': 'application/json',
-                Authorization: `Bearer ${idToken}`
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
             }
           }
           return rp(options)
@@ -707,6 +719,19 @@ var Sites = {
           }
 
         return rp(options).then(({ body }) => body)
+    },
+
+    setExternalId: function (siteId, externalId) {
+        return dbpool.query(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
+    },
+
+    /**
+     * Checks whether user has permission for the project or not
+     * @param {object} site
+     * @param {integer} userId
+     */
+    userHasPermission: async function (site, userId) {
+        return projects.userHasPermission(site.project_id, userId)
     },
 
     countAllSites: function(callback) {

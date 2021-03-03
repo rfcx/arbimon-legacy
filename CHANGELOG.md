@@ -1,9 +1,14 @@
 # Arbimon Release Notes
 
-## v3.0.13 - Feb XX, 2021
+## v3.0.14 - Feb XX, 2021
 
 New features:
 - PI-548 Display the site updated date on the Site page
+
+## v3.0.13 - Mar 02, 2021
+
+New features:
+- CE-174 rework streams-sites unification
 
 ## v3.0.12 - Feb 27, 2021
 
