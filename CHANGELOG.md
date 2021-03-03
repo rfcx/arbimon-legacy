@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- PI-503 Change the ordering of pages on Analyses tab
+
 ## v3.0.13 - Mar 02, 2021
 
 New features:
