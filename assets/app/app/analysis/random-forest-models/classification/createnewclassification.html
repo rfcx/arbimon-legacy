@@ -12,7 +12,7 @@
             <label for="classifier">Select Model:</label>
             <span class="text-danger small pull-right" ng-hide="data">
                 <em>No models found.
-                    <a class="red cs-pointer linodeco" ng-click="cancel('/analysis/models') | trackEvent:'Analysis-Classification-new classification modal':'Cancel-Go to models'">Create one.</a>
+                    <a class="red cs-pointer linodeco" ng-click="cancel('/analysis/random-forest-models/models') | trackEvent:'Analysis-Classification-new classification modal':'Cancel-Go to models'">Create one.</a>
                 </em>
             </span>
             <ui-select ng-disabled="disabled" ng-model="datas.classifier" theme="/common/templates/a2-ui-select">
