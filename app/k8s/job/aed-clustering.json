@@ -28,7 +28,9 @@
                             "-m",
                             "{{ARG_MINSAMPLES}}",
                             "-j",
-                            "{{ARG_JOBID}}"
+                            "{{ARG_CLUSTER_JOBID}}",
+                            "-a",
+                            "{{ARG_AED_JOBID}}"
                         ]
                     }
                 ],
