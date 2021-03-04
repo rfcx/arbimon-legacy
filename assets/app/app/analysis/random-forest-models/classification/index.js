@@ -1,15 +1,15 @@
-angular.module('a2.analysis.classification', [
-    'ui.bootstrap' , 
-    'a2.services', 
-    'a2.permissions', 
+angular.module('a2.analysis.random-forest-models.classification', [
+    'ui.bootstrap' ,
+    'a2.services',
+    'a2.permissions',
     'humane',
     'c3-charts',
 ])
 .config(function($stateProvider, $urlRouterProvider) {
-    $stateProvider.state('analysis.classification', {
+    $stateProvider.state('analysis.random-forest-models.classification', {
         url: '/classification',
         controller: 'ClassificationCtrl',
-        templateUrl: '/app/analysis/classification/list.html'
+        templateUrl: '/app/analysis/random-forest-models/classification/list.html'
     });
 })
 .controller('ClassificationCtrl' , function($scope, $modal, $filter, Project, ngTableParams, JobsData, a2Playlists, notify, $q, a2Classi, a2UserPermit) {
@@ -26,7 +26,7 @@ angular.module('a2.analysis.classification', [
             sorting: sortBy,
             filter:f
         };
-        
+
         $scope.tableParams = new ngTableParams(tableConfig, {
             total: t,
             getData: function ($defer, params) {
@@ -55,7 +55,7 @@ angular.module('a2.analysis.classification', [
             }
         });
     };
-    
+
     $scope.updateFlags = function() {
         $scope.successInfo = "";
         $scope.showSuccess = false;
@@ -65,7 +65,7 @@ angular.module('a2.analysis.classification', [
         $scope.showInfo = false;
         $scope.loading = false;
     };
-    
+
     $scope.loadClassifications = function() {
         a2Classi.list(function(data) {
             $scope.classificationsOriginal = data;
@@ -88,12 +88,12 @@ angular.module('a2.analysis.classification', [
             }
         });
     };
-    
+
     $scope.showClassificationDetails = function (classi) {
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         $scope.loading = true;
-        
+
         var data = {
             id: classi.job_id,
             name: classi.cname,
@@ -103,9 +103,9 @@ angular.module('a2.analysis.classification', [
                 id: classi.playlist_id
             }
         };
-        
+
         var modalInstance = $modal.open({
-            templateUrl: '/app/analysis/classification/classinfo.html',
+            templateUrl: '/app/analysis/random-forest-models/classification/classinfo.html',
             controller: 'ClassiDetailsInstanceCtrl',
             windowClass: 'details-modal-window',
             backdrop: 'static',
@@ -125,20 +125,20 @@ angular.module('a2.analysis.classification', [
             $scope.loading = false;
         });
     };
-    
+
     $scope.createNewClassification = function () {
         if(!a2UserPermit.can('manage models and classification')) {
             notify.log('You do not have permission to create classifications');
             return;
         }
-        
+
         $scope.loading = true;
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
 
 
         var modalInstance = $modal.open({
-            templateUrl: '/app/analysis/classification/createnewclassification.html',
+            templateUrl: '/app/analysis/random-forest-models/classification/createnewclassification.html',
             controller: 'CreateNewClassificationInstanceCtrl',
             resolve: {
                 data: function($q){
@@ -179,29 +179,29 @@ angular.module('a2.analysis.classification', [
                 JobsData.updateJobs();
                 notify.log("Your new classification is waiting to start processing.<br> Check its status on <b>Jobs</b>.");
             }
-            
+
             if (data.error) {
                 notify.error("Error: "+data.error);
             }
-            
+
             if (data.url) {
                 $location.path(data.url);
             }
         });
     };
-    
+
     $scope.deleteClassification = function(id,name) {
         if(!a2UserPermit.can('manage models and classification')) {
             notify.log('You do not have permission to delete classifications');
             return;
         }
-        
+
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         $scope.loading = true;
-        
+
         var modalInstance = $modal.open({
-            templateUrl: '/app/analysis/classification/deleteclassification.html',
+            templateUrl: '/app/analysis/random-forest-models/classification/deleteclassification.html',
             controller: 'DeleteClassificationInstanceCtrl',
             resolve: {
                 name: function() {
@@ -221,7 +221,7 @@ angular.module('a2.analysis.classification', [
             $scope.showInfo = false;
             $scope.loading = false;
         });
-        
+
         modalInstance.result.then(function(ret) {
             if (ret.err) {
                 notify.error("Error: "+ret.err);
@@ -243,17 +243,17 @@ angular.module('a2.analysis.classification', [
             }
         });
     };
-    
+
     $scope.loading = true;
     $scope.infoInfo = "Loading...";
     $scope.showInfo = true;
-    
+
     Project.getInfo(function(data) {
         $scope.projectData = data;
     });
-    
+
     var stateData = a2Classi.getState();
-    
+
     if (stateData === null) {
         $scope.loadClassifications();
     }
@@ -265,37 +265,37 @@ angular.module('a2.analysis.classification', [
         }
         else {
             $scope.infopanedata = "No models found.";
-        }            
+        }
         $scope.infoInfo = "";
         $scope.showInfo = false;
         $scope.loading = false;
     }
 })
-.controller('DeleteClassificationInstanceCtrl', 
+.controller('DeleteClassificationInstanceCtrl',
     function($scope, $modalInstance, a2Classi, name, id, projectData) {
         $scope.name = name;
         $scope.id = id;
         $scope.deletingloader = false;
         $scope.projectData = projectData;
         var url = $scope.projectData.url;
-        
+
         $scope.ok = function() {
             $scope.deletingloader = true;
             a2Classi.delete(id, function(data) {
                 $modalInstance.close(data);
             });
         };
-        
+
         $scope.cancel = function() {
             $modalInstance.dismiss('cancel');
         };
     }
 )
-.controller('ClassiDetailsInstanceCtrl', 
+.controller('ClassiDetailsInstanceCtrl',
     function ($scope, $modalInstance, a2Classi, a2Models, notify, a2UserPermit, ClassiInfo) {
         var loadClassifiedRec = function() {
             a2Classi.getResultDetails($scope.classiData.id, ($scope.currentPage*$scope.maxPerPage), $scope.maxPerPage, function(dataRec) {
-                
+
                 a2Classi.getRecVector($scope.classiData.id, dataRec[0].recording_id).success(function(data) {
                     var maxVal = Math.max.apply(null, data.vector);
                     if(typeof $scope.th === 'number') {
@@ -309,7 +309,7 @@ angular.module('a2.analysis.classification', [
                 });
             });
         };
-        
+
         $scope.ok = function () {
             $modalInstance.close( );
         };
@@ -347,7 +347,7 @@ angular.module('a2.analysis.classification', [
 
             loadClassifiedRec();
         };
-    
+
 
         $scope.toggleRecDetails = function() {
             $scope.showMore = !$scope.showMore;
@@ -355,8 +355,8 @@ angular.module('a2.analysis.classification', [
                 loadClassifiedRec();
             }
         };
-        
-        
+
+
         $scope.loading = true;
         $scope.htresDeci = '-';
         $scope.classiData = ClassiInfo.data;
@@ -364,31 +364,31 @@ angular.module('a2.analysis.classification', [
         $scope.showMore = false;
         $scope.currentPage = 0;
         $scope.maxPerPage = 1;
-        
+
         $scope.csvUrl = "/api/project/"+$scope.project.url+"/classifications/csv/"+$scope.classiData.id;
-        
+
         $scope.showDownload = a2UserPermit.can('manage models and classification');
-        
+
         console.table($scope.classiData);
-        
+
         a2Classi.getDetails($scope.classiData.id, function(data) {
             if(!data) {
                 $modalInstance.close();
                 notify.log("No details available for this classification");
                 return;
             }
-            
+
             angular.extend($scope.classiData, data);
-            
+
             $scope.totalRecs = Math.ceil($scope.classiData.total/$scope.maxPerPage);
-            
+
             console.log($scope.classiData);
             $scope.results = [
                 ['absent', $scope.classiData.total-$scope.classiData.present],
                 ['present', $scope.classiData.present],
                 ['skipped', $scope.classiData.errCount]
             ];
-            
+
             a2Models.findById($scope.classiData.modelId)
                 .success(function(modelInfo) {
                     console.log(modelInfo);
@@ -429,10 +429,10 @@ angular.module('a2.analysis.classification', [
         var url = $scope.projectData.url;
         $scope.all = 0;
         $scope.selectedSites = [];
-        
+
         // NOTE temporary block disabled model types
         if(!$scope.datas.classifier.enabled) return;
-        
+
         var classiData = {
             n: $scope.datas.name,
             c: $scope.datas.classifier.model_id,
@@ -440,7 +440,7 @@ angular.module('a2.analysis.classification', [
             s: $scope.selectedSites.join(),
             p: $scope.datas.playlist
         };
-        
+
         a2Classi.create(classiData, function(data) {
             if (data.name) {
                 $scope.nameMsg = 'Name exists';
@@ -487,49 +487,49 @@ angular.module('a2.analysis.classification', [
             minvect: '=',
             maxvect: '=',
         },
-        templateUrl: '/app/analysis/classification/vectorchart.html',
+        templateUrl: '/app/analysis/random-forest-models/classification/vectorchart.html',
         controller: function($scope) {
             $scope.loadingflag = true;
 
             $scope.drawVector = function() {
                 if(!$scope.vectorData) return;
-                
+
                 $scope.loadingflag = true;
-                
+
                 var canvas = $scope.canvas;
                 var vector = $scope.vectorData;
-                
+
                 var height = 50;
                 var width = $scope.width;
-                
+
                 var xStep;
-                
+
                 if (width>=vector.length) {
                     canvas.width = width;
                     xStep = width/vector.length;
-                    
+
                 }
                 else {
                     canvas.width = vector.length;
                     xStep = 1;
                 }
-                
+
                 canvas.height = height;
                 ctx = canvas.getContext('2d');
                 ctx.beginPath();
-                
+
                 var i = 0;
                 ctx.moveTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
                 while(i < vector.length) {
                     i++;
                     ctx.lineTo(i*xStep, height * (1 - ((vector[i] - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
                 }
-                
+
                 ctx.strokeStyle = '#000';
                 ctx.stroke();
 
-                
-                
+
+
                 if ($scope.minvect < -0.09) {
                     //code
                     ctx.beginPath();
@@ -539,20 +539,20 @@ angular.module('a2.analysis.classification', [
                         i++;
                         ctx.lineTo(i*xStep, height * (1 - ((0 - $scope.minvect) / ($scope.maxvect - $scope.minvect))));
                     }
-                    
+
                     ctx.strokeStyle = '#aa0000';
                     ctx.stroke();
                 }
-                
+
                 $scope.loadingflag = false;
             };
-            
+
             $scope.$watch('vectorData', function() {
                 $scope.drawVector();
             });
         },
         link: function(scope, element) {
-            scope.canvas = element.children()[0]; 
+            scope.canvas = element.children()[0];
             scope.width = parseInt(element.css('width'));
         }
     };

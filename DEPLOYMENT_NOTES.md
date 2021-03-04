@@ -1,5 +1,8 @@
 # Arbimon Deployment Notes
 
+## v3.0.14
+- Run 008-sites-table-add-updated-at-column.sql
+
 ## v3.0.13
 
 - Run migration 008-add-external-id-to-projects.sql
