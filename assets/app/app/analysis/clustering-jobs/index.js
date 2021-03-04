@@ -154,10 +154,10 @@ angular.module('a2.analysis.clustering-jobs', [
         }).catch(err => {
             console.log(err);
         });
-        // get json file with clusters x, y points
+        // get json file with aed_id, clusters x, y points
         a2ClusteringJobs.getClusteringDetails($scope.clusteringJobId).then(function(res) {
             $scope.loading = false;
-            if (res) {
+            if (res && res.aed_id) {
                 $scope.countAudioEventDetected = res.aed_id.length;
                 // collect clusters
                 $scope.clusters = {};

@@ -1,4 +1,4 @@
-angular.module('a2.analysis.models', [
+angular.module('a2.analysis.random-forest-models.models', [
     'a2.services',
     'a2.permissions',
     'a2.utils',
@@ -10,15 +10,15 @@ angular.module('a2.analysis.models', [
     'humane'
 ])
 .config(function($stateProvider, $urlRouterProvider) {
-    $stateProvider.state('analysis.models', {
+    $stateProvider.state('analysis.random-forest-models.models', {
         url: '/models',
         controller: 'ModelsCtrl',
-        templateUrl: '/app/analysis/models/list.html'
+        templateUrl: '/app/analysis/random-forest-models/models/list.html'
     })
     .state('analysis.modeldetails', {
         url: '/model/:modelId',
         controller: 'ModelDetailsCtrl',
-        templateUrl: '/app/analysis/models/modelinfo.html'
+        templateUrl: '/app/analysis/random-forest-models/models/modelinfo.html'
     });
 })
 .controller('ModelsCtrl', function($scope, $modal, $filter, ngTableParams, Project, a2Models, JobsData, $location, notify, a2UserPermit) {
@@ -82,7 +82,7 @@ angular.module('a2.analysis.models', [
             }
         });
     };
-    
+
     $scope.loadModels = function() {
         a2Models.list(function(data) {
             $scope.modelsData = data;
@@ -103,7 +103,7 @@ angular.module('a2.analysis.models', [
             }
         });
     };
-    
+
     var stateData = a2Models.getState();
     if (stateData === null) {
         $scope.loadModels();
@@ -116,24 +116,24 @@ angular.module('a2.analysis.models', [
         }
         else {
             $scope.infopanedata = "No models found.";
-        }            
+        }
         $scope.infoInfo = "";
         $scope.showInfo = false;
         $scope.loading = false;
     }
-    
-    
+
+
     $scope.deleteModel = function(model_id, model_name) {
         if(!a2UserPermit.can('manage models and classification')) {
             notify.log('You do not have permission to delete models');
             return;
         }
-        
+
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         $scope.loading = true;
         var modalInstance = $modal.open({
-            templateUrl: '/app/analysis/models/deletemodel.html',
+            templateUrl: '/app/analysis/random-forest-models/models/deletemodel.html',
             controller: 'DeleteModelInstanceCtrl',
             resolve: {
                 model_name: function() {
@@ -188,26 +188,26 @@ angular.module('a2.analysis.models', [
             notify.log('You do not have permission to create models');
             return;
         }
-        
+
         $scope.infoInfo = "Loading...";
         $scope.showInfo = true;
         $scope.loading = true;
         var url = $scope.projectData.url;
-        
+
         a2Models.getFormInfo(function(data) {
 
             var modalInstance = $modal.open({
-                templateUrl: '/app/analysis/models/newmodel.html',
+                templateUrl: '/app/analysis/random-forest-models/models/newmodel.html',
                 controller: 'NewModelInstanceCtrl',
                 resolve: {
                     projectData: function() {
                         return $scope.projectData;
                     },
                     types: function() {
-                        var typesEnable = data.types.filter(function(type) { 
-                            return type.enabled; 
+                        var typesEnable = data.types.filter(function(type) {
+                            return type.enabled;
                         });
-                        
+
                         return typesEnable;
                     },
                     trainings: function() {
@@ -252,22 +252,22 @@ angular.module('a2.analysis.models', [
         usePresentValidation: -1,
         useNotPresentValidation: -1
     };
-    
-    
+
+
     $http.get('/api/jobs/types')
         .success(function(jobTypes) {
             var training = jobTypes.filter(function(type) {
                 return type.name === "Model training";
             });
-            
+
             if(!training.length)
                 return console.error('training job info not found');
-            
+
             $scope.jobDisabled = !training[0].enabled;
         });
-    
+
     $scope.totalPresentValidation = 0;
-    
+
     $scope.$watch('data.usePresentTraining', function() {
         var val = $scope.data.presentValidations - $scope.data.usePresentTraining;
 
@@ -281,12 +281,12 @@ angular.module('a2.analysis.models', [
         if ($scope.data.usePresentTraining > $scope.data.presentValidations) {
             $scope.data.usePresentTraining = $scope.data.presentValidations;
         }
-        
+
         $scope.totalPresentValidation = $scope.data.usePresentValidation;
     });
-    
+
     $scope.totalNotPresentValidation = 0;
-    
+
     $scope.$watch('data.useNotPresentTraining', function() {
             var val = $scope.data.absentsValidations - $scope.data.useNotPresentTraining;
             if (val > -1) {
@@ -297,7 +297,7 @@ angular.module('a2.analysis.models', [
 
             if ($scope.data.useNotPresentTraining > $scope.data.absentsValidations)
                 $scope.data.useNotPresentTraining = $scope.data.absentsValidations;
-                
+
             $scope.totalNotPresentValidation = $scope.data.useNotPresentValidation;
 
     });
@@ -308,18 +308,18 @@ angular.module('a2.analysis.models', [
         }
 
     });
-     
+
     $scope.$watch('data.useNotPresentValidation', function() {
         if ($scope.data.useNotPresentValidation > $scope.totalNotPresentValidation) {
            $scope.data.useNotPresentValidation = $scope.totalNotPresentValidation;
         }
 
     });
-    
+
     $scope.$watch('data.training', function() {
         if($scope.data.training !== '') {
             Project.validationBySpeciesSong(
-                $scope.data.training.species_id, 
+                $scope.data.training.species_id,
                 $scope.data.training.songtype_id,
                 function(data) {
                     $scope.data.totalValidations = data.total;
@@ -344,7 +344,7 @@ angular.module('a2.analysis.models', [
             typeof $scope.data.classifier !== 'string' &&
             !$scope.jobDisabled
         );
-            
+
     };
 
     $scope.ok = function() {
@@ -398,7 +398,7 @@ angular.module('a2.analysis.models', [
 .controller('NewClassificationInstanceCtrl', function($scope, $modalInstance, model_name, model_id) {
     $scope.model_name = model_name;
     $scope.model_id = model_id;
-    
+
     $scope.ok = function() {
         $modalInstance.close();
     };
@@ -413,24 +413,24 @@ angular.module('a2.analysis.models', [
         scopeExited = true;
         a2Models.modelState(false);
     });
-    
+
     /*
         method recursively get validations vectors and then call waitinFunction()
      */
     var getVectors = function(index) {
         if(scopeExited) return;
-        
+
         if(index >= $scope.validations.length) return $scope.waitinFunction();
-        
+
         var currRec = $scope.validations[index];
-       
+
         currRec.date = $window.moment(currRec.date, 'MM-DD-YYYY HH:mm');
-        
+
         a2Models.getRecVector($scope.model.id, currRec.id)
             .success(function(data) {
                 if(!(data.err && data.err == "vector-not-found")) {
                     var vector = data.vector;
-            
+
                     var vmax = Math.max.apply(null, vector);
                     var vmin = Math.min.apply(null, vector);
                     currRec.vmax = vmax;
@@ -446,12 +446,12 @@ angular.module('a2.analysis.models', [
                         $scope.allYesMax.push(vmax);
                     }
                 }
-                
+
                 getVectors(++index);
             });
     };
-    
-    
+
+
     var loadingMsgs = [
         '',
         'Loading validations',
@@ -466,13 +466,13 @@ angular.module('a2.analysis.models', [
     $scope.loadingValidations = true;
     $scope.showModelValidations = true;
     $scope.messageSaved = '';
-    
+
     a2Models.modelState(true);
-    
+
     Project.getInfo(function(data) {
         $scope.project_id = data.project_id;
     });
-    
+
     a2Models.findById($stateParams.modelId)
         .success(function(model) {
             $scope.model = model;
@@ -486,45 +486,45 @@ angular.module('a2.analysis.models', [
                 notify.serverError();
             }
         });
-    
+
     a2Models.getValidationResults($stateParams.modelId, function(data) {
         if(data.err || !data.validations.length) {
             $scope.showModelValidations = false;
             $scope.loadingValidations = false;
             return;
         }
-        
+
         $scope.validations = data.validations;
-        
+
         getVectors(0);
     });
-    
-    
 
-    
-    
+
+
+
+
     $scope.waitinFunction = function() {
         $scope.loading = null;
         if(!$scope.allYesMax.length) {
             $scope.showModelValidations = false;
             $scope.loadingValidations = false;
         }
-        
+
         $scope.allYesMax = $scope.allYesMax.sort();
-        
+
         var index = 0;
         for (var j = 0; j < $scope.allYesMax.length; j++) {
             if ($scope.allYesMax[j] >= $scope.vectorNoMax) {
                 index = j;
             }
         }
-        
+
         // NOTE this value is received from the server and overwritten here, maybe this value can be saved
         $scope.model.maxv = Math.max.apply(null, $scope.allMax);
         $scope.model.minv = Math.min.apply(null, $scope.allMin);
 
         $scope.suggestedThreshold = Math.round($scope.allYesMax[index] * 1000000) / 1000000;
-        
+
         if (typeof $scope.suggestedThreshold === undefined || isNaN($scope.suggestedThreshold)) {
             $scope.suggestedThreshold = Math.round($scope.allYesMax[0] * 1000000) / 1000000;
         }
@@ -534,7 +534,7 @@ angular.module('a2.analysis.models', [
         }
         else {
             // TODO optimize this section
-            
+
             var searchTh = $scope.suggestedThreshold;
             var thresholdObject = [];
             var precisionObject = [];
@@ -544,7 +544,7 @@ angular.module('a2.analysis.models', [
             var sumObject = [];
             var tries = 0;
             var i, ii, jj;
-            
+
             while (searchTh > 0.01 && tries < 15) {
                 for (jj = 0; jj < $scope.validations.length; jj++) {
                     $scope.validations[jj].threshold = ($scope.validations[jj].vmax > searchTh) ? 'yes' : 'no';
@@ -559,7 +559,7 @@ angular.module('a2.analysis.models', [
                 searchTh = searchTh - 0.001;
                 tries = tries + 1;
             }
-            
+
             var max = sumObject[0];
             var mindex = 0;
             for (ii = 1; ii < sumObject.length; ii++) {
@@ -568,7 +568,7 @@ angular.module('a2.analysis.models', [
                     mindex = ii;
                 }
             }
-            
+
             max = precisionObject[0];
 
             for (ii = 0; ii < precisionObject.length; ii++) {
@@ -583,7 +583,7 @@ angular.module('a2.analysis.models', [
                     precisionMaxIndices.push(ii);
                 }
             }
-            
+
             max = sensitivityObject[precisionMaxIndices[0]];
 
             for (i = 0; i < precisionMaxIndices.length; i++) {
@@ -632,7 +632,7 @@ angular.module('a2.analysis.models', [
                 accum = accum + thresholdObject[specificityMaxIndices[i]];
 
             }
-            
+
             accum = accum / specificityMaxIndices.length;
             $scope.currentThreshold = $scope.model.threshold != '-' ? $scope.model.threshold : accum;
             $scope.suggestedThreshold = Math.round(accum * 1000000) / 1000000;
@@ -649,7 +649,7 @@ angular.module('a2.analysis.models', [
             $scope.loadingValidations = false;
         }
     };
-    
+
     $scope.computeStats = function() {
         $scope.thres = {
             tpos: '-',
@@ -683,7 +683,7 @@ angular.module('a2.analysis.models', [
                 }
             }
         }
-        
+
         $scope.thres.tpos = trupositive;
         $scope.thres.fpos = falsepositives;
         $scope.thres.tneg = truenegatives;
@@ -700,7 +700,7 @@ angular.module('a2.analysis.models', [
             $scope.thres.specificity = Math.round((truenegatives / (truenegatives + falsepositives)) * 100) / 100;
         }
     };
-    
+
     $scope.saveThreshold = function() {
         $scope.messageSaved = '';
         $scope.recalculate();
@@ -714,11 +714,11 @@ angular.module('a2.analysis.models', [
                 $scope.messageSaved = 'Error saving threshold';
             });
     };
-    
+
     $scope.recalculate = function() {
         $scope.messageSaved = '';
         var newval = parseFloat($scope.newthres);
-        
+
         if (!isNaN(newval) && (newval <= 1.0) && (newval >= 0.0)) {
             $scope.currentThreshold = newval;
             for (var jj = 0; jj < $scope.validations.length; jj++) {
@@ -730,18 +730,18 @@ angular.module('a2.analysis.models', [
             $scope.messageSaved = 'Value should be between 0 and 1.';
         }
     };
-    
+
     // TODO use ng-style
     $scope.zoomout = function() {
         $("#patternDivMain").css("min-width", 210);
         $("#patternDivMain").css("height", 100);
     };
-    
+
     $scope.zoomin = function() {
         $("#patternDivMain").css("min-width", 420);
         $("#patternDivMain").css("height", 150);
     };
-    
+
     $scope.getValidations = function() {
         var vals = [];
         for(var i = 0; i < $scope.validations.length; i++) {
@@ -756,17 +756,17 @@ angular.module('a2.analysis.models', [
         }
         return vals;
     };
-    
+
     $scope.recDetails = function(rec) {
         $scope.selected = rec;
         $scope.showValidationsTable = false;
     };
-    
+
     $scope.closeRecValidationsDetails = function() {
         $scope.showValidationsTable = true;
         $scope.selected = null;
     };
-    
+
     $scope.gotoRec = function() {
         var rurl = "/visualizer/rec/" + $scope.selected.id;
         $location.path(rurl);

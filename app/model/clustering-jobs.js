@@ -239,7 +239,8 @@ var ClusteringJobs = {
                     imagePath: k8sConfig.imagePath,
                     minPoints: `${data.params.minPoints}`,
                     distanceThreshold: `${data.params.distanceThreshold}`,
-                    jobId: `${data.audioEventDetectionJob.jobId}`
+                    clusterJobId: `${data.id}`,
+                    aedJobId: `${data.audioEventDetectionJob.jobId}`
                 });
                 await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
                 // TODO: remove when clustering job will update db by itself
@@ -253,7 +254,7 @@ var ClusteringJobs = {
                         }
                         const status = await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs(data.kubernetesJobName).status.get();
                         console.log('status', status)
-                        if (status && status.statusCode === 200) {
+                        if (status && status.body && status.body.status &&  status.body.status.completionTime) {
                             clearInterval(interval)
                             resolve()
                         }

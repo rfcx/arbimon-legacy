@@ -4,6 +4,10 @@
 
 New features:
 - PI-548 Display the site updated date on the Site page
+- PI-503 Change the ordering of pages on Analysis tab
+
+Resolved issues:
+- PI-622 PI-433 Fix issue with displaying related playlist, duplicated AED jobs.
 
 ## v3.0.13 - Mar 02, 2021
 

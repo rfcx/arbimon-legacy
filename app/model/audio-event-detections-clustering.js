@@ -16,20 +16,21 @@ var AudioEventDetectionsClustering = {
         var data=[];
         var select = [];
         var tables = [
-            "audio_event_detections_clustering A"
+            "job_params_audio_event_detection_clustering JP"
         ];
+
         if(!options){
             options = {};
         }
 
-        select.push("A.`recording_id` as `rec_id`");
+        if (options.project_id) {
+            constraints.push('JP.project_id = ' + dbpool.escape(options.project_id));
+        }
 
         if (!options.playlist) {
             select.push("JP.name, JP.parameters");
-            select.push("J.`date_created` as `timestamp`");
+            select.push("JP.`date_created` as `timestamp`");
             select.push("P.playlist_id, P.`name` as `playlist_name`");
-            tables.push("JOIN job_params_audio_event_detection_clustering JP ON A.job_id = JP.job_id");
-            tables.push("JOIN jobs J ON A.job_id = J.job_id");
             tables.push("JOIN playlists P ON JP.playlist_id = P.playlist_id");
 
             select.push(
@@ -39,12 +40,6 @@ var AudioEventDetectionsClustering = {
             tables.push("JOIN users U ON JP.user_id = U.user_id");
         }
 
-        if (options.project_id && !options.playlist) {
-            tables.push("JOIN recordings R ON A.recording_id = R.recording_id");
-            tables.push("JOIN sites S ON R.site_id = S.site_id");
-            constraints.push('S.project_id = ' + dbpool.escape(options.project_id));
-        }
-
         if (options.rec_id || options.playlist) {
             select.push(
                 "A.`time_min` as `time_min`",
@@ -52,9 +47,11 @@ var AudioEventDetectionsClustering = {
                 "A.`frequency_min` as `freq_min`",
                 "A.`frequency_max` as `freq_max`"
             );
+            tables.push("JOIN audio_event_detections_clustering A ON JP.job_id = A.job_id");
         }
 
         if (options.rec_id) {
+            select.push("A.`recording_id` as `rec_id`");
             constraints.push('A.recording_id = ?');
             data.push(options.rec_id);
         }
