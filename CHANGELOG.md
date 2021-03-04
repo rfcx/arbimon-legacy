@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-- PI-503 Change the ordering of pages on Analyses tab
+## v3.0.14 - Mar XX, 2021
+
+New features:
+- PI-503 Change the ordering of pages on Analysis tab
+
+Resolved issues:
+- PI-622 PI-433 Fix issue with displaying related playlist, duplicated AED jobs.
 
 ## v3.0.13 - Mar 02, 2021
 
