@@ -22,6 +22,13 @@ var APIError = require('../utils/apierror');
 var species = require('./species');
 var songtypes = require('./songtypes');
 
+const projectSchema = joi.object().keys({
+    name: joi.string(),
+    url: joi.string(),
+    description: joi.string().optional(),
+    is_private: joi.boolean(),
+});
+
 var Projects = {
 
     plans: {
@@ -55,6 +62,10 @@ var Projects = {
         if(query.hasOwnProperty("id")) {
             whereExp.push("p.project_id = ?");
             data.push(query.id);
+        }
+        if(query.hasOwnProperty("external_id")) {
+            whereExp.push("p.external_id = ?");
+            data.push(query.external_id);
         }
         if(query.hasOwnProperty("url")) {
             whereExp.push("p.url = ?");
@@ -877,11 +888,13 @@ var Projects = {
             url: `${rfcxConfig.apiBaseUrl}/projects`,
             headers: {
                 'content-type': 'application/json',
-                Authorization: `Bearer ${idToken}`
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
             },
-            body: JSON.stringify(body)
+            body,
+            json: true
           }
-          return rp(options)
+        return rp(options).then(({ body }) => body)
     },
 
     updateInCoreAPI: async function(data, idToken) {
@@ -894,7 +907,8 @@ var Projects = {
             url: `${rfcxConfig.apiBaseUrl}/internal/arbimon/projects/${data.project_id}`,
             headers: {
                 'content-type': 'application/json',
-                Authorization: `Bearer ${idToken}`
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
             },
             body: JSON.stringify(body)
           }
@@ -919,6 +933,108 @@ var Projects = {
             }
             return body[0]
         })
+    },
+
+    setExternalId: function (projectId, externalId) {
+        return dbpool.query(`UPDATE projects SET external_id = "${externalId}" WHERE project_id = ${projectId}`, [])
+    },
+
+    /**
+     * Finds unique url value which doesn't exist in db by iterating over several combinations
+     * @param {*} name project name
+     * @param {*} externalId external id
+     * @param {*} userId user id
+     */
+    findUniqueUrl: async function (name, externalId, userId) {
+        const n = this.nameToUrl(name)
+        const random = Math.round(Math.random() * 100000000)
+        const possibilities = [ n, `${externalId}-${n}`,  `${userId}-${externalId}-${n}`, `${userId}-${externalId}-${random}-${n}`]
+        for (let url of possibilities) {
+            const existingProject = await this.find({ url }).get(0)
+            if (!existingProject) {
+                return url
+            }
+        }
+    },
+
+    /**
+     * Creates a project with given data
+     * @param {*} data
+     * @param {string} data.name
+     * @param {string} data.description
+     * @param {string} data.url
+     * @param {boolean} data.is_private
+     * @param {integer} userId
+     */
+    createProject: async function (data, userId) {
+        const projectData = {
+            plan: this.plans.free,
+            project_type_id: 1,
+            ...data
+        }
+        await q.ninvoke(joi, 'validate', projectData, projectSchema, {
+            stripUnknown: true,
+            presence: 'required',
+        });
+        const id = await q.ninvoke(this, "create", projectData, userId)
+        return this.find({ id }).get(0)
+    },
+
+    /**
+     * Gets personal project url for given user
+     * @param {*} user
+     * @param {integer} user.user_id
+     * @param {string} user.firstname
+     */
+    getPersonalProjectUrl: function (user) {
+        return `${user.user_id}-${this.nameToUrl(user.firstname)}-project`
+    },
+
+    /**
+     * Removes everything except latin characters, replaces spaces with dashes
+     * @param {*} name
+     */
+    nameToUrl: function (name) {
+        return name.replace(/[^a-z0-9A-Z-]/g, '-').replace(/-+/g,'-').replace(/(^-)|(-$)/g, '').toLowerCase()
+    },
+
+    /**
+     * Creates personal project for given user
+     * @param {*} user
+     * @param {integer} user.user_id
+     * @param {string} user.firstname
+     * @param {string} user.lastname
+     */
+    findOrCreatePersonalProject: async function (user) {
+        const projectData = {
+            is_private: true,
+            plan: this.plans.free,
+            name: `${user.firstname} ${user.lastname}'s project`,
+            url: this.getPersonalProjectUrl(user),
+            description: `${user.firstname}'s personal project`,
+            project_type_id: 1
+        };
+        await q.ninvoke(joi, 'validate', projectData, projectSchema, {
+            stripUnknown: true,
+            presence: 'required',
+        });
+        const projWithExistingUrl = await this.find({ url: projectData.url }).get(0);
+        if (projWithExistingUrl) {
+            return projWithExistingUrl
+        }
+        const projectId = await q.ninvoke(this, "create", projectData, user.user_id)
+        return this.find({ id: projectId }).get(0)
+    },
+
+    /**
+     * Checks whether user has permission for the project or not
+     * @param {integer} projectId
+     * @param {integer} userId
+     */
+    userHasPermission: async function (projectId, userId) {
+        const projectUsers = await this.getUsersAsync(projectId);
+        const hasPermission = !!projectUsers.find(x => x.id === userId);
+        return !!hasPermission
     }
 };
 

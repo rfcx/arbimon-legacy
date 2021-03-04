@@ -10,6 +10,7 @@ var routes = [
     '/jobs',
     '/app-listings',
     '/ingest',
+    '/integration',
 ];
 
 
