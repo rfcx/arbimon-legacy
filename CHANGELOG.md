@@ -1,8 +1,9 @@
 # Arbimon Release Notes
 
-## v3.0.14 - Mar XX, 2021
+## v3.0.14 - Feb XX, 2021
 
 New features:
+- PI-548 Display the site updated date on the Site page
 - PI-503 Change the ordering of pages on Analysis tab
 
 Resolved issues:

@@ -12,6 +12,7 @@ var model = require('../model');
 var s3;
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
+const moment = require('moment');
 
 var site_log_processor = require('../utils/site_log_processor');
 const projects = require('./projects')
@@ -135,6 +136,9 @@ var Sites = {
                 site.timezone = 'UTC';
             }
         }
+        if (site.lat !== undefined || site.lon !== undefined || site.alt !== undefined) {
+            site['updated_at'] = moment.utc(new Date()).format();
+        }
 
         var tableFields = [
             "project_id",
@@ -144,7 +148,8 @@ var Sites = {
             "alt",
             "published",
             "site_type_id",
-            "timezone"
+            "timezone",
+            "updated_at"
         ];
 
         for( var i in tableFields) {
@@ -166,11 +171,6 @@ var Sites = {
         q = util.format(q, values.join(", "), site.site_id);
 
         queryHandler(q, callback);
-    },
-
-    updateAsync: function(site) {
-        let update = util.promisify(this.update);
-        return update(site);
     },
 
     exists: function(site_name, project_id, callback) {
