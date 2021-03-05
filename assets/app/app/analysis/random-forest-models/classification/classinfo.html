@@ -1,6 +1,6 @@
-<div class="modal-header">  
-    <h3 class="modal-title">Classification Details</h3>  
-</div>  
+<div class="modal-header">
+    <h3 class="modal-title">Classification Details</h3>
+</div>
 <div class="modal-body" ng-show="loading">
     Loading <loader></loader>
 </div>
@@ -32,7 +32,7 @@
                         <table class="table">
                             <tr>
                                 <td><b>Name</b></td>
-                                <td><a ng-click="$close()" ng-href="/project/{{ project.url }}/analysis/model/{{model.id}}">{{model.name}}</a></td>
+                                <td><a ng-click="$close()" ng-href="/project/{{ project.url }}/analysis/random-forest-models/model/{{model.id}}">{{model.name}}</a></td>
                             </tr>
                             <tr>
                                 <td><b>Species</b></td>
@@ -52,19 +52,19 @@
                 <div class="col-sm-12">
                     <h4>
                         Results
-                        <a class="btn btn-default" 
+                        <a class="btn btn-default"
                             ng-if="showDownload"
-                            target="_blank" 
+                            target="_blank"
                             ng-href="{{csvUrl}}">
-                            <i class="fa fa-download " 
-                                tooltip="Download CSV" 
+                            <i class="fa fa-download "
+                                tooltip="Download CSV"
                                 tooltip-placement="bottom">
                             </i>
                         </a>
                     </h4>
                 </div>
             </div>
-            
+
             <div class="row">
                 <div class="col-sm-12">
                     <c3-chart data-columns="results" width="300" height="300" type="donut"></c3-chart>
@@ -94,7 +94,7 @@
     <div class="text-center">
         <button type="button" name="button" class="btn btn-default"
             ng-click="toggleRecDetails() | trackEvent:'Analysis-Classification-Info':'toggleRecDetails'">
-                <i class="fa" ng-class="showMore ? 'fa-caret-up' : 'fa-caret-down'"></i> 
+                <i class="fa" ng-class="showMore ? 'fa-caret-up' : 'fa-caret-down'"></i>
                 {{ showMore ? 'Hide' : 'Show' }} details per recording
         </button>
     </div>
@@ -141,6 +141,6 @@
         </ul>
     </div>
 </div>
-<div class="modal-footer">  
-    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Classification-Info':'ok clicked'"  ng-disabled="buttonEnable()">Close</button>  
-</div>  
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok() | trackEvent:'Analysis-Classification-Info':'ok clicked'"  ng-disabled="buttonEnable()">Close</button>
+</div>

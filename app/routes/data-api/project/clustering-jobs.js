@@ -52,12 +52,13 @@ router.get('/:recId/audio', function(req, res, next) {
 });
 router.get('/:job_id/clustering-details', function (req, res, next) {
     res.type('json');
-    var uri = `audio_events/${config('aws').env}/clustering/${req.params.job_id}.json`;
+
+    var uri = `audio_events/${config('aws').env}/clustering/${req.params.job_id}/${req.params.job_id}.json`;
     if (!s3) {
         s3 = new AWS.S3();
     }
     s3.getObject({
-        Bucket: config('aws').bucketName,
+        Bucket: config('aws').env === 'dev' ? config('aws').mlSpecsName : config('aws').bucketName,
         Key: uri
     }, function(err, data){
         if (err) {

@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-xs-12">
-        <a class="btn btn-primary" ui-sref="analysis.models" ui-sref-active="active">
-            <i class="fa fa-arrow-left"></i> 
+        <a class="btn btn-primary" ui-sref="analysis.random-forest-models.models" ui-sref-active="active">
+            <i class="fa fa-arrow-left"></i>
             back
         </a>
     </div>
@@ -16,7 +16,7 @@
     <div class="row">
         <div class="col-xs-12" >
             <div class="model-info-column">
-                <h3>Model details</h3>  
+                <h3>Model details</h3>
                 <div class="model-info-column">
                     <table class="table">
                         <tr>
@@ -69,15 +69,15 @@
                             <td><strong>Pattern ROI Count:</strong></td>
                             <td>{{ model.trainingSet.roiCount }}</td>
                         </tr>
-                        <!-- 
+                        <!--
                         <tr>
                             <td>
-                                Pattern Low Frequency: 
+                                Pattern Low Frequency:
                             </td><td><span ng-bind="data.lfreq"></span>hz</td>
                         </tr>
                         <tr>
                             <td>
-                                Pattern High Frequency: 
+                                Pattern High Frequency:
                             </td><td><span ng-bind="data.hfreq"></span>Hz</td>
                         </tr>
                         -->
@@ -90,7 +90,7 @@
                 <div class="model-info-column">
                     <h4>Training set pattern:</h4>
                     <div id="zoomDiv" class="zoomDivClass">
-                        <b>Zoom</b>: 
+                        <b>Zoom</b>:
                         <button ng-click="zoomout()" class="btn btn-default btn-xs">
                             <i class="fa fa-search-minus" ></i>
                         </button>
@@ -121,17 +121,17 @@
         <div class="col-xs-12">
             <h3>Model validation details</h3>
             <div class="model-info-column">
-                
+
                 <div class="">
-                    <strong>Total validations used:</strong> 
-                    {{ model.validations.use_in_training.present + 
-                        model.validations.use_in_training.notPresent + 
+                    <strong>Total validations used:</strong>
+                    {{ model.validations.use_in_training.present +
+                        model.validations.use_in_training.notPresent +
                        model.validations.use_in_validation.present +
                        model.validations.use_in_validation.notPresent
                     }}
                 </div>
                 <div class="" >
-                    <div class="model-info-column">  
+                    <div class="model-info-column">
                         <table class="table">
                             <tr>
                                 <td><strong>Present:</strong></td>
@@ -161,7 +161,7 @@
                                 <td>In verification:</td>
                                 <td>{{ model.validations.use_in_validation.notPresent }}</td>
                             </tr>
-                        </table>         
+                        </table>
                     </div>
                 </div>
             </div>
@@ -176,11 +176,11 @@
                         <td><strong>Precision:</strong></td>
                         <td>{{ model.validations.stats.precision }}</td>
                     </tr>
-                    <tr ng-show="data.sensitivity != null"> 
+                    <tr ng-show="data.sensitivity != null">
                         <td><strong>Sensitivity:</strong></td>
                         <td>{{ model.validations.stats.sensitivity }}</td>
                     </tr>
-                    <tr ng-show="data.specificity != null"> 
+                    <tr ng-show="data.specificity != null">
                         <td><strong>Specificity:</strong></td>
                         <td>{{ model.validations.stats.specificity }}</td>
                     </tr>
@@ -226,10 +226,10 @@
                 <strong>Current threshold:</strong> {{ currentThreshold | number }}
                 <div class="newthersholddiv">
                     <label>New threshold:</label>
-                    <input type="text" 
+                    <input type="text"
                         ng-model="newthres"
-                        class="form-control input-sm" 
-                        aria-describedby="enter new threshold" 
+                        class="form-control input-sm"
+                        aria-describedby="enter new threshold"
                         style="width:50px; display:inline-block;">
                 </div>
                 <button class="btn btn-default" ng-click="recalculate()">
@@ -251,11 +251,11 @@
                         <td><strong>Precision:</strong></td>
                         <td>{{ thres.precision }}</td>
                     </tr>
-                    <tr ng-show="data.sensitivity != null"> 
+                    <tr ng-show="data.sensitivity != null">
                         <td><strong>Sensitivity:</strong></td>
                         <td>{{ thres.sensitivity }}</td>
                     </tr>
-                    <tr ng-show="data.specificity != null"> 
+                    <tr ng-show="data.specificity != null">
                         <td><strong>Specificity:</strong></td>
                         <td>{{ thres.specificity }}</td>
                     </tr>
@@ -280,12 +280,12 @@
                             <tr>
                                 <td ><small><em>P</em></small></td>
                                 <td class=""> {{ thres.tpos }}</td>
-                                <td class="">{{ thres.fneg }}</td>                
+                                <td class="">{{ thres.fneg }}</td>
                             </tr>
                             <tr class="">
                                 <td ><small><em>A</em></small></td>
                                 <td class="">{{ thres.fpos }}</td>
-                                <td class="">{{ thres.tneg }}</td>                
+                                <td class="">{{ thres.tneg }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -296,7 +296,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="row" ng-show="showModelValidations">
         <div class="col-sm-12 col-lg-8" ng-hide="showModelValidations">
             <h4>
@@ -308,13 +308,13 @@
         </div>
         <div class="col-sm-12 col-lg-8" ng-show="!loadingValidations && showValidationsTable">
             <h3>
-                Validations 
-                <div class="btn btn-default" 
-                    ng-csv="getValidations()" 
-                    filename="matrixValues.csv"  
+                Validations
+                <div class="btn btn-default"
+                    ng-csv="getValidations()"
+                    filename="matrixValues.csv"
                     csv-header="['Site', 'Date', 'User presence','Model presence','Threshold presence' ,'Threshold value']">
                     <i class="fa fa-download"
-                        tooltip="Download Values in CSV" 
+                        tooltip="Download Values in CSV"
                         tooltip-placement="bottom">
                     </i>
                 </div>
@@ -326,21 +326,21 @@
                 <field title="User presence"  key="presence">{{ row.presence }}</field>
                 <field title="Model presence"  key="model">{{ row.model }}</field>
                 <field title="Threshold presence"  key="threshold">{{ row.threshold }}</field>
-            </a2-table>  
+            </a2-table>
         </div>
         <div class="col-sm-12 col-lg-8" ng-hide="showValidationsTable">
             <div>
                 <h3>
                     Validation Recording Detail
                     <div class="btn-group">
-                        <button class="btn btn-default" 
+                        <button class="btn btn-default"
                             ng-click="closeRecValidationsDetails()" >
-                             <i class="fa fa-arrow-left"></i> 
+                             <i class="fa fa-arrow-left"></i>
                             Back
                         </button>
-                        <button class="btn btn-default" 
+                        <button class="btn btn-default"
                             ng-click="gotoRec()" >
-                             <i class="fa fa-cubes"></i> 
+                             <i class="fa fa-cubes"></i>
                             Open in Visualizer
                         </button>
                     </div>
