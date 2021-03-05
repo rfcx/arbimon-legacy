@@ -1,6 +1,6 @@
 # Arbimon Release Notes
 
-## v3.0.14 - Feb XX, 2021
+## v3.0.15 - Mar 05, 2021
 
 New features:
 - PI-548 Display the site updated date on the Site page
@@ -8,6 +8,11 @@ New features:
 
 Resolved issues:
 - PI-622 PI-433 Fix issue with displaying related playlist, duplicated AED jobs.
+
+## v3.0.14 - Mar 05, 2021
+
+Resolved issues:
+- Delete `minimum` constraint from altitude parameter
 
 ## v3.0.13 - Mar 02, 2021
 
