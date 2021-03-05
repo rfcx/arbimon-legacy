@@ -7,7 +7,8 @@ New features:
 - PI-503 Change the ordering of pages on Analysis tab
 
 Resolved issues:
-- PI-622 PI-433 Fix issue with displaying related playlist, duplicated AED jobs.
+- PI-622 PI-433 Fix issue with displaying related playlist, duplicated AED jobs
+- PI-546 Fix Pattern Matching results that do not play
 
 ## v3.0.14 - Mar 05, 2021
 
