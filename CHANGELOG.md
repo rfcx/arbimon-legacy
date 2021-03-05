@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.14 - Mar 05, 2021
+
+Resolved issues:
+- Delete `minimum` constraint from altitude parameter
+
 ## v3.0.13 - Mar 02, 2021
 
 New features:
