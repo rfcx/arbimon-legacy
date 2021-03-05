@@ -243,6 +243,7 @@ var Projects = {
             name: joi.string(),
             url: joi.string(),
             description: joi.string().optional(),
+            external_id: joi.string().optional(),
             project_type_id: joi.number(),
             is_private: joi.boolean(),
             plan: joi.object().keys({
