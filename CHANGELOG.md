@@ -1,6 +1,9 @@
 # Arbimon Release Notes
 
-- PI-546 Fix Pattern Matching results that flicker and do not play
+## v3.0.15 - Mar 02, 2021
+
+Resolved issues:
+- PI-546 Fix Pattern Matching results that don't play
 
 ## v3.0.13 - Mar 02, 2021
 
