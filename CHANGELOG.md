@@ -4,6 +4,7 @@
 
 Resolved issues:
 - Delete `minimum` constraint from altitude parameter
+- Add `external_id` into attributes of project creation function
 
 ## v3.0.13 - Mar 02, 2021
 
