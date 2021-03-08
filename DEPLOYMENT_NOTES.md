@@ -1,5 +1,10 @@
 # Arbimon Deployment Notes
 
+## v3.0.15
+
+- Run migration 008-sites-table-add-updated-at-column.sql
+- Run script to updating all sites updated_at
+
 ## v3.0.13
 
 - Run migration 008-add-external-id-to-projects.sql

@@ -191,10 +191,10 @@ angular.module('a2.audiodata.sites', [
         $scope.editing = false;
         if($scope.marker){
             a2GoogleMapsLoader.then(function(google){
-                var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
+                var position = new google.maps.LatLng($scope.selected && $scope.selected.lat, $scope.selected && $scope.selected.lon);
                 $scope.marker.setDraggable(false);
                 $scope.marker.setPosition(position);
-                $scope.marker.setTitle($scope.selected.name);
+                $scope.marker.setTitle($scope.selected && $scope.selected.name);
             });
         }
     };
@@ -226,7 +226,21 @@ angular.module('a2.audiodata.sites', [
         }
 
         if($scope.siteForm.$invalid) return;
-        a2Sites[action]($scope.temp, function(data) {
+
+        var tempObj = Object.assign({}, $scope.temp);
+
+        // do not include equal location metadata to update endpoint
+        if (action === 'update') {
+            var locationArray = ['lat', 'lon', 'alt', 'updated_at'];
+            for (var i = 0; i < locationArray.length; i++) {
+                var key = locationArray[i];
+                if ($scope.temp[key] === $scope.selected[key]) {
+                  delete tempObj[key]
+                }
+            }
+        }
+
+        a2Sites[action](action === 'create'? $scope.temp : tempObj, function(data) {
             if(data.error)
                 return notify.error(data.error);
 
@@ -396,16 +410,15 @@ angular.module('a2.audiodata.sites', [
     }
 
     $scope.sel = function(site) {
-        return $state.transitionTo($state.current.name, {site:site.id, show:$state.params.show}, {notify:false}).then(function(){
+        return $state.transitionTo($state.current.name, {site: site && site.id, show:$state.params.show}, {notify:false}).then(function(){
             $scope.images = [];
             $scope.close();
             $scope.selected = site;
-
             if ($scope.selected && $scope.selected.external_id) {
                 a2Sites.getListOfAssets($scope.selected.external_id)
                     .then(data => {
                         $scope.assets = data;
-                        if ($scope.assets) {
+                        if ($scope.assets && $scope.selected.external_id) {
                             for (var i = 0; i < $scope.assets.length; i++) {
                                 var src = '/api/project/'+ $scope.project.url + '/streams/'+ $scope.selected.external_id +'/assets/' + $scope.assets[i].id
                                 $scope.images.push({
@@ -422,22 +435,24 @@ angular.module('a2.audiodata.sites', [
 
             $scope.clearMarkers()
 
-            a2GoogleMapsLoader.then(function(google) {
-                var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
-                if(!$scope.marker) {
-                    $scope.marker = new google.maps.Marker({
-                        position: position,
-                        title: $scope.selected.name
-                    });
-                    $scope.marker.setMap($scope.map);
-                }
-                else {
-                    $scope.marker.setDraggable(false);
-                    $scope.marker.setPosition(position);
-                    $scope.marker.setTitle($scope.selected.name);
-                }
-                $scope.map.panTo(position);
-            });
+            if ($scope.selected) {
+                a2GoogleMapsLoader.then(function(google) {
+                    var position = new google.maps.LatLng($scope.selected.lat, $scope.selected.lon);
+                    if(!$scope.marker) {
+                        $scope.marker = new google.maps.Marker({
+                            position: position,
+                            title: $scope.selected.name
+                        });
+                        $scope.marker.setMap($scope.map);
+                    }
+                    else {
+                        $scope.marker.setDraggable(false);
+                        $scope.marker.setPosition(position);
+                        $scope.marker.setTitle($scope.selected.name);
+                    }
+                    $scope.map.panTo(position);
+                });
+            }
         });
     };
 

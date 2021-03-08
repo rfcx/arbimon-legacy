@@ -1,7 +1,7 @@
 angular.module('a2.analysis', [
-    'a2.analysis.models',
+    'a2.analysis.patternmatching',
     'a2.directive.audio-bar',
-    'a2.analysis.classification',
+    'a2.analysis.random-forest-models',
     'a2.analysis.patternmatching',
     'a2.analysis.cnn',
     'a2.analysis.soundscapes',
@@ -12,7 +12,7 @@ angular.module('a2.analysis', [
     'ct.ui.router.extras',
     'a2.srv.api'
 ]).config(function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.when("/analysis", "/analysis/models");
+    $urlRouterProvider.when("/analysis", "/analysis/patternmatching");
     $stateProvider.state('analysis', {
         url: '/analysis',
         views: {

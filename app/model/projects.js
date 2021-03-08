@@ -149,6 +149,7 @@ var Projects = {
                 "       s.alt, \n"+
                 "       s.timezone, \n"+
                 "       s.published, \n"+
+                "       s.updated_at, \n"+
                 "       s.legacy, \n"+
                 "       s.external_id, \n"+
                 "       s.project_id != ? AS imported, \n"+
