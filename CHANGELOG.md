@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- PI-583 Fix error getting soundscape annotation classes
+
 ## v3.0.15 - Mar 05, 2021
 
 New features:

@@ -23,7 +23,7 @@ var CacheMiss = function(cache, key, callback){
     this.deferred = Q.defer();
     this.callback = callback;
     filesProcessing[key] = this.deferred.promise;
-    
+
     this.deferred.promise.nodeify(this.callback);
 };
 
@@ -56,25 +56,25 @@ var cache = {
         var match = /^(.*?)((\.[^.\/]*)*)?$/.exec(key);
         return sha256(match[1]) + (match[2] || '');
     },
-    
+
     key2File: function(key){
         var root = path.resolve(config("tmpfilecache").path);
         return path.join(root, this.hash_key(key));
     },
-    
+
     checkValidity: function(file, callback){
         fs.stat(file, function(err, stats){
             if(err) return callback(err);
-            
+
             var now = (new Date()).getTime();
-            
-            if (stats.atime.getTime() + config("tmpfilecache").maxObjectLifetime >= now ) { 
+
+            if (stats.atime.getTime() + config("tmpfilecache").maxObjectLifetime >= now ) {
                 debug('file is fresh %s', file);
                 callback(null, {
                     path : file,
                     stat : stats
                 });
-            } 
+            }
             else {
                 debug('file is expired %s', file);
                 fs.unlink(file, function() {
@@ -83,49 +83,49 @@ var cache = {
             }
         });
     },
-    
+
     get:  function(key, callback){
         cache.checkValidity(cache.key2File(key), callback);
     },
-    
+
     put: function(key, data, callback){
         var file = cache.key2File(key);
         fs.writeFile(file, data, function(err){
             if(err) return callback(err);
-            
+
             callback(null, { path: file });
         });
     },
-    
+
     fetch: function(key, oncachemiss, callback){
         debug('fetch file: %s', key);
         debug(filesProcessing);
-        
+
         if(filesProcessing[key]) {
             debug('waiting for file: %s', key);
             return filesProcessing[key].nodeify(callback);
         }
         this.get(key, function(err, data){
             if(!data || err){
-                if(err.code !== "ENOENT"){
+                if(err && err.code && err.code !== "ENOENT"){
                     callback(err);
                 }
                 else {
                     oncachemiss(new CacheMiss(cache, key, callback));
                 }
-            } 
+            }
             else {
                 callback(null, data);
             }
         });
     },
-    
+
     cleanupTimeout: 0,
-    
+
     cleanup: function(){
         debug('Cleaning up tmpcache.');
         var root = path.resolve(config("tmpfilecache").path);
-        
+
         fs.readdir(root, function(err, files){
             if(err) return console.error(err.stack);
             async.each(files, function(subfile, next){
@@ -140,12 +140,12 @@ var cache = {
             });
         });
     },
-    
+
     setCleanupTimeout: function(){
         if(cache.cleanupTimeout) {
             return;
         }
-        
+
         var delay = config("tmpfilecache").cleanupInterval;
         debug('tmpfilecache cleanup will run in: %d seconds.', (delay/1000.0));
         cache.cleanupTimeout = setTimeout(function(){
