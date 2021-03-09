@@ -108,7 +108,7 @@ var Users = {
     search: function(query, callback) {
         query = dbpool.escape('%'+query+'%');
 
-        var q = "SELECT user_id AS id, \n"+
+        var q = "SELECT user_id AS id, firstname, lastname, \n"+
                 "       email, \n"+
                 "       login AS username \n"+
                 "FROM users \n"+
@@ -372,7 +372,7 @@ var Users = {
 
         queryHandler(q, callback);
     },
-    
+
     countAllUsers: function(callback) {
         var q = 'SELECT count(*) AS count \n'+
                 'FROM `users`';
