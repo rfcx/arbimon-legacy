@@ -12,7 +12,7 @@
                         type="text"
                         placeholder="Search: username, email"
                         ng-model="userToAdd"
-                        typeahead="user as (user.username.includes('auth0')? (user.firstname + ' ' + user.lastname + ' ' + '(' + user.email + ')') : user.username) for user in findUser($viewValue)"
+                        typeahead="user as (user.firstname + ' ' + user.lastname + ' ' + '(' + user.email + ')') for user in findUser($viewValue)"
                         typeahead-editable="false">
                     <span class="input-group-btn">
                         <button class="btn btn-default"
