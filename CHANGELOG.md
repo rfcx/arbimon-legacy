@@ -1,8 +1,12 @@
 # Arbimon Release Notes
 
+## v3.0.16 - Mar XX, 2021
+
+Resolved issues:
+- PI-524 Users shouldn't see auth0 format for usernames
 - PI-583 Fix error getting soundscape annotation classes
 
-## v3.0.15 - Mar 05, 2021
+## v3.0.15 - Mar 08, 2021
 
 New features:
 - PI-548 Display the site updated date on the Site page
