@@ -18,12 +18,12 @@ var SoundscapeComposition = {
         ], where = [], data = [], order = ["SCC.typeId, SCC.isSystemClass DESC"];
         var selectdata=[];
         var presteps = [];
-        
+
         if(options.tally){
             if(options.project){
                 presteps.push(models.projects.getProjectSites(options.project).then(function(sites){
                     if(sites.length){
-                        select.push("(" + 
+                        select.push("(" +
                         "SELECT COUNT(*) " +
                         "FROM recording_soundscape_composition_annotations RSCA " +
                         "JOIN recordings R ON R.recording_id = RSCA.recordingId " +
@@ -38,16 +38,16 @@ var SoundscapeComposition = {
                     }
                 }));
             } else {
-                select.push("(" + 
+                select.push("(" +
                     "SELECT COUNT(*) " +
                     "FROM recording_soundscape_composition_annotations RSCA " +
                     "WHERE RSCA.scclassId = SCC.id" +
                 ") as tally");
             }
         }
-        
+
         if(options.project){
-            tables.push("LEFT JOIN project_soundscape_composition_classes PSCC ON PSCC.scclassId = SCC.id");
+            tables.push("JOIN project_soundscape_composition_classes PSCC ON PSCC.scclassId = SCC.id");
             where.push("PSCC.projectId = ? OR (PSCC.projectId IS NULL AND SCC.isSystemClass)");
             data.push(options.project);
             order.push("PSCC.`order`");
@@ -57,7 +57,7 @@ var SoundscapeComposition = {
             where.push("SCC.id IN (?)");
             data.push(options.id);
         }
-        
+
         return q.all(presteps).then(function(){
             data.unshift.apply(data, selectdata);
             return dbpool.query(
@@ -69,7 +69,7 @@ var SoundscapeComposition = {
             );
         });
     },
-    
+
     addClass: function(name, type, project){
         var scClass;
         return dbpool.query(
@@ -86,7 +86,7 @@ var SoundscapeComposition = {
                     "VALUES (?, ?, 0)",[
                     type, name
                 ]).get('insertId');
-            }            
+            }
         }).then(function(scClassId){
             return SoundscapeComposition.getClassesFor({id:scClassId}).get(0);
         }).then(function(_scClass){
@@ -110,7 +110,7 @@ var SoundscapeComposition = {
             return scClass;
         });
     },
-        
+
     removeClassFrom: function(scClassId, project){
         return dbpool.query(
             "DELETE FROM project_soundscape_composition_classes\n"+
@@ -118,7 +118,7 @@ var SoundscapeComposition = {
                 project, scClassId
             ]);
     },
-    
+
     getAnnotationsFor: function(options){
         options = options || {};
         return dbpool.query(
@@ -137,7 +137,7 @@ var SoundscapeComposition = {
             }
         });
     },
-    
+
     annotateSchema : joi.object().keys({
         recording: joi.number(),
         annotation: joi.object().keys({
@@ -166,7 +166,7 @@ var SoundscapeComposition = {
                 if (annotation.present < 0 || annotation.present > 2) {
                     return q.reject(new Error("Invalid annotation value " + annotation.present));
                 }
-                
+
                 // 0 is not present , 1 is present and 2 is clear
                 return ((annotation.present == 2) ?
                     dbpool.query(
