@@ -24,7 +24,7 @@ var tags = {
         if(!resourceDef){
             return q.reject(new APIError(resource + " resources do not support tags.", 415));
         }
-        
+
         return resourceDef.getFor(id);
     },
     /** Fetches the tags for a given resource.type
@@ -39,7 +39,7 @@ var tags = {
         if(!resourceDef){
             return q.reject(new APIError(resource + " resources do not support tags.", 415));
         }
-        
+
         return resourceDef.getForType(options);
     },
     /** Adds a tag to a given resource.
@@ -58,7 +58,7 @@ var tags = {
         if(!resourceDef){
             return q.reject(new APIError(resource + " resources do not support tags.", 415));
         }
-        
+
         return resourceDef.addTo(id, tag);
     },
     /** Removes a tag from a given resource.
@@ -73,46 +73,46 @@ var tags = {
         if(!resourceDef){
             return q.reject(new APIError(resource + " resources do not support tags.", 415));
         }
-        
+
         return resourceDef.removeFrom(id, resourceTagId);
     },
-        
+
     /** Searches for tags matching the given query.
      *  @param {Object} options - options object.
      *  @param {Object} options.id - tag ids to match
-     *  @returns {Promise} Promise resolving to matching tags, or rejecting if 
+     *  @returns {Promise} Promise resolving to matching tags, or rejecting if
      *     any error occurred.
      */
     getFor: function(options){
         options = options || {};
         var where = [], data = [];
-        
+
         if(options.id){
             where.push("T.tag_id IN (?)");
             data.push(options.id);
         }
-        
-        return q.ninvoke(dbpool, 'queryHandler', 
+
+        return q.ninvoke(dbpool, 'queryHandler',
             "SELECT T.tag_id, T.tag, 'tag' as type\n" +
             "FROM tags T\n" +
             (where.length ? "WHERE (" + where.join(") AND (") + ")" : ""),
             data
         ).get(0);
     },
-        
+
     /** Searches for tags matching the given query.
      *  @param {Object} query - query object.
      *  @param {Object} query.q - text to match.
      *  @param {Object} query.offset - offset of results.
      *  @param {Object} query.limit - limit count of results. (maximum is 20)
-     *  @returns {Promise} Promise resolving to matching tags, or rejecting if 
+     *  @returns {Promise} Promise resolving to matching tags, or rejecting if
      *     any error occurred.
      */
     search: function(query){
         var txt = '%' + (query.q || '') + '%';
         var offset = Math.max(query.offset|0, 0);
         var limit = Math.min(Math.max(0, (query.limit|0) || 20), 20);
-        return q.ninvoke(dbpool, 'queryHandler', 
+        return q.ninvoke(dbpool, 'queryHandler',
             "SELECT T.tag_id, T.tag, 'tag' as type\n" +
             "FROM tags T\n" +
             "WHERE T.tag LIKE ?\n"+
@@ -132,7 +132,7 @@ tags.resourceDefs.recording = {
      *  @returns {Promise} Promise resolving to fetched tags.
      */
     getFor: function(id){
-        return q.ninvoke(dbpool, 'queryHandler', 
+        return q.ninvoke(dbpool, 'queryHandler',
             "SELECT RT.recording_tag_id as id, T.tag_id, T.tag, user_id, datetime, t0, f0, t1, f1\n" +
             "FROM recording_tags RT\n" +
             "JOIN tags T ON RT.tag_id = T.tag_id\n" +
@@ -149,7 +149,7 @@ tags.resourceDefs.recording = {
         var constraints = [];
         var data = [];
         var promise;
-        
+
         if(options && options.project){
             promise = projects.getProjectSites(options.project).then(function(sites){
                 tables.push(
@@ -161,17 +161,17 @@ tags.resourceDefs.recording = {
                 })) + ')');
             });
         }
-        
+
         if(!promise){
             promise = q();
         }
-        
+
         return promise.then(function(){
-            return q.ninvoke(dbpool, 'queryHandler', 
+            return q.ninvoke(dbpool, 'queryHandler',
                 "SELECT T.tag_id, T.tag, COUNT(*) as count\n" +
                 "FROM " + tables.join("\n") + "\n" +
-                (constraints.length ? "WHERE " + constraints.join(' AND ') + '\n' : '') + 
-                'GROUP BY T.tag_id', 
+                (constraints.length ? ("WHERE " + constraints.join(' AND ') + "\n") : "") +
+                'GROUP BY T.tag_id',
                 data
             ).get(0);
         });
@@ -192,28 +192,28 @@ tags.resourceDefs.recording = {
         } else if(!userId){
             return q.reject(new APIError('No user specified'));
         }
-        
-        var tagIdPromise = tag.id ? q(tag.id) : q.ninvoke(dbpool, 'queryHandler', 
+
+        var tagIdPromise = tag.id ? q(tag.id) : q.ninvoke(dbpool, 'queryHandler',
             "INSERT IGNORE INTO tags(tag) VALUES (?)", [tag.text]
         ).then(function(result){
             return result[0].insertId;
         }).catch(function(){
-            return q.ninvoke(dbpool, 'queryHandler', 
+            return q.ninvoke(dbpool, 'queryHandler',
                 "SELECT tag_id FROM tags WHERE tag = ?", [tag.text]
             ).get(0).get(0);
         });
-        
+
         return tagIdPromise.then(function(tagId){
-            return q.ninvoke(dbpool, 'queryHandler', 
+            return q.ninvoke(dbpool, 'queryHandler',
                 "INSERT INTO recording_tags(recording_id, tag_id, user_id, datetime, t0, f0, t1, f1)\n"+
                 "VALUES (?, ?, ?, NOW(), ?, ?, ?, ?)", [
-                    id, tagId, userId, 
+                    id, tagId, userId,
                     tag.t0 || null, tag.f0 || null,
                     tag.t1 || null, tag.f1 || null
                 ]
             ).get(0);
         }).then(function(results){
-            return q.ninvoke(dbpool, 'queryHandler', 
+            return q.ninvoke(dbpool, 'queryHandler',
                 "SELECT RT.recording_tag_id as id, T.tag_id, T.tag, user_id, datetime, t0, f0, t1, f1\n" +
                 "FROM recording_tags RT\n" +
                 "JOIN tags T ON RT.tag_id = T.tag_id\n" +
@@ -228,7 +228,7 @@ tags.resourceDefs.recording = {
      *  @returns {Promise} Promise resolving to the count of removed tags.
      */
     removeFrom: function(id, recordingTagId){
-        return q.ninvoke(dbpool, 'queryHandler', 
+        return q.ninvoke(dbpool, 'queryHandler',
             "DELETE FROM recording_tags\n" +
             "WHERE recording_id = ? AND recording_tag_id = ?", [id, recordingTagId]
         ).get(0);

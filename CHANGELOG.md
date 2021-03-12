@@ -4,6 +4,7 @@
 
 Resolved issues:
 - PI-524 Users shouldn't see auth0 format for usernames
+- PI-583 Fix error getting soundscape annotation classes
 
 ## v3.0.15 - Mar 08, 2021
 

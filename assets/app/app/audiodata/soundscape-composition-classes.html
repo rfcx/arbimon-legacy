@@ -3,7 +3,7 @@
         <h4>
             Soundscape Composition Classes
         </h4>
-        <loader ng-hide="!loading"></loader>
+        <loader ng-if="controller.loading"></loader>
         <div>
             <div ng-repeat="classGroup in controller.classes">
                 <div>
@@ -31,5 +31,7 @@
             </div>
         </div>
     </div>
-
+    <div class="jumbotron seconds-div-center" ng-show="(controller.classes && !controller.classes.length) && !loading">
+        <h3>{{ controller.infopanedata }}</h3>
+    </div>
 </div>
