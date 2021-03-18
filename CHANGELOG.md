@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.15-hotfix.0 - Mar 18, 2021
+
+Performance improvements:
+- Do not check for duplicates in the recordings ingest endpoint
+
 ## v3.0.16 - Mar XX, 2021
 
 Resolved issues:
