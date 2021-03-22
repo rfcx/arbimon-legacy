@@ -91,10 +91,10 @@ router.get('/recordings-export.csv', function(req, res, next) {
 
 router.get('/count', function(req, res, next) {
     res.type('json');
-    model.projects.totalRecordings(req.project.project_id, function(err, rows) {
+    model.projects.totalRecordings(req.project.project_id, function(err, count) {
         if(err) return next(err);
 
-        res.json({ count: rows[0].count });
+        res.json({ count: count });
     });
 });
 

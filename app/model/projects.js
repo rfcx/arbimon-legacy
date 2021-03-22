@@ -845,20 +845,11 @@ var Projects = {
 
     // this includes recordings processing
     totalRecordings: function(project_id, callback) {
-        var q = "SELECT count(*) as count \n"+
-                "FROM ( \n"+
-                "    (SELECT upload_id as id \n"+
-                "    FROM uploads_processing  \n"+
-                "    WHERE project_id = %1$s AND state != 'uploaded' AND state != 'error') \n"+
-                "    UNION \n"+
-                "    (SELECT recording_id as id \n"+
-                "    FROM recordings AS r \n"+
-                "    JOIN sites AS s ON s.site_id = r.site_id \n"+
-                "    WHERE s.project_id = %1$s) \n"+
-                ") as t";
-
-        q = sprintf(q, dbpool.escape(project_id));
-        queryHandler(q, callback);
+        return dbpool.query(
+            "SELECT count(*) as count \n" +
+            "FROM recordings AS r JOIN sites AS s ON s.site_id = r.site_id \n"+
+            "WHERE s.project_id = ?", [project_id]
+        ).get(0).count;
     },
 
     // this includes recordings processing
