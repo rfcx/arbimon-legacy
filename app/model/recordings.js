@@ -921,7 +921,21 @@ var Recordings = {
     findProjectRecordings: function(params, callback) {
         var schema = Recordings.SCHEMAS.searchFilters;
 
-        return Q.ninvoke(joi, 'validate', params, schema).then(function(parameters) {
+        return Q.ninvoke(joi, 'validate', params, schema).then(function (parameters) {
+            return dbpool.query("SELECT s.* FROM sites s WHERE s.project_id = ?\n" +
+                "OR s.site_id in (\n" +
+                "   SELECT pis.site_id FROM project_imported_sites pis WHERE pis.project_id = ?\n" +
+                ")", [parameters.project_id, parameters.project_id])
+                .then(function (sites) {
+                    parameters.siteData = {};
+                    for (const s of sites) {
+                        parameters.siteData[s.site_id] = s;
+                    }
+                    return parameters
+                })
+            })
+        }).then(function (parameters) {
+            var siteData = parameters.siteData
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
 
             var projection=[];
@@ -930,18 +944,13 @@ var Recordings = {
             var select_clause = {
                 list: "SELECT r.recording_id AS id, \n"+
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
-                      "       s.name as site, \n"+
-                      "       s.legacy as legacy, \n"+
-                      "       s.external_id as site_external_id, \n"+
-                      "       s.timezone, \n"+
                       "       r.uri, \n"+
                       "       r.datetime, \n"+
                       "       r.duration, \n"+
                       "       r.mic, \n"+
                       "       r.recorder, \n"+
                       "       r.version, \n"+
-                      "       r.site_id, \n"+
-                      "       s.project_id != " + parameters.project_id + " as imported \n",
+                      "       r.site_id \n",
 
                 date_range: "SELECT MIN(r.datetime) AS min_date, \n"+
                             "       MAX(r.datetime) AS max_date \n",
@@ -950,31 +959,24 @@ var Recordings = {
             };
 
             var tables = [
-                "recordings AS r",
-                "JOIN sites AS s ON s.site_id = r.site_id"
+                "recordings AS r"
             ];
-
             var constraints = [];
             var data = [];
 
-            steps.push(dbpool.query("(\n" +
-            "   SELECT site_id FROM sites WHERE project_id = ?\n" +
-            ") UNION (\n" +
-            "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" +
-            ")", [parameters.project_id, parameters.project_id]).then(function(sites){
-                constraints.push("s.site_id IN (?)");
-                data.push(sites.map(function(site){
-                    return site.site_id;
-                }));
+            constraints.push("r.site_id IN (?)");
+            data.push(sites.map(function(site){
+                return site.site_id;
             }));
-
+            
             if(parameters.range) {
                 console.log(parameters.range);
                 constraints.push('r.datetime BETWEEN ? AND ?');
                 data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }
 
-            if(parameters.sites) {
+            if (parameters.sites) {
+                tables.push("JOIN sites AS s ON s.site_id = r.site_id");
                 constraints.push('s.name IN (?)');
                 data.push(parameters.sites);
             }
@@ -1098,19 +1100,25 @@ var Recordings = {
                         typeCast: sqlutil.parseUtcDatetime,
                     });
                 }));
-            }).then(function(results){
+            }).then(function (results) {
                 results = outputs.reduce(function(obj, output, i){
                     var r = results[i][0];
                     if(output == "count"){
                         r = r[0].count;
                     } else if(output == 'list'){
                         for (let _1 of r) {
-                            Recordings.__compute_thumbnail_path_async(_1)
-                            if (!!_1.legacy !== true) {
-                                _1.file = `${moment.utc(_1.datetime).format('YYYY-MM-DD HH:mm:ss')}${path.extname(_1.file)}`
+                            // Previously part of the query but now merged after
+                            _1.site = siteData[_1.site_id].name;
+                            _1.legacy = siteData[_1.site_id].legacy;
+                            _1.site_external_id = siteData[_1.site_id].external_id;
+                            _1.timezone = siteData[_1.site_id].timezone;
+                            _1.imported = siteData[_1.site_id].project_id !== project_id;
+                            Recordings.__compute_thumbnail_path_async(_1);
+                            if (!!siteData[_1.site_id].legacy !== true) {
+                                _1.file = `${moment.utc(_1.datetime).format('YYYY-MM-DD HH:mm:ss')}${path.extname(_1.file)}`;
                             }
                         }
-                    } else if(output != 'list'){
+                    } else {
                         r = r[0];
                     }
                     obj[output] = r;
