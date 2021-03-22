@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.16
+
+- Ensure that `config/job-queue.local.json` has a value for `instanceId` because the default was changed to `"none"`.
+
 ## v3.0.15
 
 - Run migration 008-sites-table-add-updated-at-column.sql
