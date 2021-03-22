@@ -1,15 +1,16 @@
 # Arbimon Release Notes
 
-## v3.0.15-hotfix.0 - Mar 18, 2021
-
-Performance improvements:
-- Do not check for duplicates in the recordings ingest endpoint
-
-## v3.0.16 - Mar XX, 2021
+## v3.0.17 - Mar 22, 2021
 
 Resolved issues:
 - PI-524 Users shouldn't see auth0 format for usernames
 - PI-583 Fix error getting soundscape annotation classes
+- PI-680 Fix inability to create playlists for recordings with tags
+
+## v3.0.16-hotfix.0 - Mar 18, 2021
+
+Performance improvements:
+- Do not check for duplicates in the recordings ingest endpoint
 
 ## v3.0.15 - Mar 08, 2021
 
