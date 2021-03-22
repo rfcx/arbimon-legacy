@@ -928,7 +928,7 @@ var Recordings = {
             var steps=[];
 
             var select_clause = {
-                list: "SELECT DISTINCT r.recording_id AS id, \n"+
+                list: "SELECT r.recording_id AS id, \n"+
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
                       "       s.name as site, \n"+
                       "       s.legacy as legacy, \n"+
@@ -946,7 +946,7 @@ var Recordings = {
                 date_range: "SELECT MIN(r.datetime) AS min_date, \n"+
                             "       MAX(r.datetime) AS max_date \n",
 
-                count: "SELECT COUNT(DISTINCT r.recording_id) as count \n"
+                count: "SELECT COUNT(r.recording_id) as count \n"
             };
 
             var tables = [
