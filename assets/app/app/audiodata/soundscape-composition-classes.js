@@ -1,6 +1,6 @@
 angular.module('a2.audiodata.soundscape-composition-classes', [
-    'a2.services', 
-    'a2.directives', 
+    'a2.services',
+    'a2.directives',
     'ui.bootstrap',
     'humane'
 ])
@@ -12,21 +12,24 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
     });
 })
 .controller('SoundscapeCompositionClassesScreenCtrl', function(
-    $modal, 
-    notify, 
-    Project, 
+    $modal,
+    notify,
+    Project,
     a2SoundscapeCompositionService, a2UserPermit
 ) {
     this.initialize = function(){
         this.loading = true;
         this.newClass = {};
-        this.canManageClasses = a2UserPermit.can("manage project species");        
+        this.canManageClasses = a2UserPermit.can("manage project species");
         a2SoundscapeCompositionService.getClassList({tally:1, groupByType:true}).then((function(classes){
             this.classes = classes;
             this.loading = false;
+            if(this.classes && !this.classes.length) {
+                this.infopanedata = "No Soundscape Composition Classes found.";
+            }
         }).bind(this));
     };
-    
+
     this.addNewClass = function(groupType){
         var className = this.newClass[groupType.typeId];
         delete this.newClass[groupType.typeId];
@@ -44,7 +47,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
             });
         }
     };
-    
+
     this.removeClass = function(scClass){
         if(scClass.isSystemClass){
             return;
@@ -54,7 +57,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
             notify.log("You do not have permission to remove soundscape composition classes");
             return;
         }
-        
+
         a2SoundscapeCompositionService.removeClass(scClass.id).then((function(){
             this.classes.forEach(function(classGroup){
                 var index = classGroup.list.indexOf(scClass);
@@ -66,31 +69,31 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
             notify.error(err.data || err.message);
         });
     };
-    
+
     this.add = function() {
-        
+
         if(!a2UserPermit.can("manage project species")) {
             notify.log("You do not have permission to add species");
             return;
         }
-        
+
         var modalInstance = $modal.open({
             templateUrl: '/app/audiodata/select-species.html',
             controller: 'SelectSoundscapeCompositionClassesScreenCtrl',
             size: 'lg',
         });
-        
+
         modalInstance.result.then(function(selected) {
-            
+
             var cls = {
                 species: selected.species.scientific_name,
                 songtype: selected.song.name
             };
-            
+
             Project.addClass(cls)
                 .success(function(result){
                     notify.log(selected.species.scientific_name + ' ' + selected.song.name +" added to project");
-                    
+
                     Project.getClasses(function(classes){
                         this.classes = classes;
                     });
@@ -101,46 +104,46 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
                     else
                         notify.serverError();
                 });
-            
+
         });
     };
-    
+
     this.del = function() {
         if(!this.checked || !this.checked.length)
             return;
-        
+
         if(!a2UserPermit.can("manage project species")) {
             notify.log("You do not have permission to remove species");
             return;
         }
-        
+
         var speciesClasses = this.checked.map(function(row) {
             return '"'+row.species_name +' | ' + row.songtype_name+'"';
         });
-        
+
         var message = ["You are about to delete the following project species: "];
         var message2 = ["Are you sure?"];
-        
+
         this.popup = {
             messages: message.concat(speciesClasses, message2),
             btnOk: "Yes, do it!",
             btnCancel: "No",
         };
-        
+
         var modalInstance = $modal.open({
             templateUrl: '/common/templates/pop-up.html',
             scope: this
         });
-        
+
         modalInstance.result.then(function() {
             var classesIds = this.checked.map(function(row) {
                 return row.id;
             });
-            
+
             var params = {
                 project_classes: classesIds
             };
-            
+
             Project.removeClasses(params)
                 .success(function(result) {
                     Project.getClasses(function(classes){
@@ -154,7 +157,7 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
                         notify.serverError();
                 });
         });
-            
+
     };
 
     this.initialize();
