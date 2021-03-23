@@ -204,6 +204,14 @@ var PatternMatchings = {
         }).nodeify(callback);
     },
 
+    totalPatternMatchings: function(project_id, callback) {
+        var q = "SELECT count(*) as count \n" +
+                "FROM pattern_matchings as PM \n"+
+                "JOIN jobs J ON PM.job_id = J.job_id \n"+
+                "WHERE J.state = 'completed' AND PM.project_id = " + dbpool.escape(project_id);
+        queryHandler(q, callback);
+    },
+
     SEARCH_ROIS_SCHEMA : {
         patternMatching: joi.number().required(),
         // project_id: joi.number().required(),

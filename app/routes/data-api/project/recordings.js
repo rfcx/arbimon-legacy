@@ -94,7 +94,7 @@ router.get('/count', function(req, res, next) {
     model.projects.totalRecordings(req.project.project_id, function(err, count) {
         if(err) return next(err);
 
-        res.json({ count: count });
+        res.json(count[0]);
     });
 });
 

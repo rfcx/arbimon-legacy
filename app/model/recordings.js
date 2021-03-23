@@ -933,7 +933,6 @@ var Recordings = {
                     }
                     return parameters
                 })
-            })
         }).then(function (parameters) {
             var siteData = parameters.siteData
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
@@ -965,10 +964,10 @@ var Recordings = {
             var data = [];
 
             constraints.push("r.site_id IN (?)");
-            data.push(sites.map(function(site){
+            data.push(Object.values(siteData).map(function(site){
                 return site.site_id;
             }));
-            
+
             if(parameters.range) {
                 console.log(parameters.range);
                 constraints.push('r.datetime BETWEEN ? AND ?');
@@ -1112,7 +1111,7 @@ var Recordings = {
                             _1.legacy = siteData[_1.site_id].legacy;
                             _1.site_external_id = siteData[_1.site_id].external_id;
                             _1.timezone = siteData[_1.site_id].timezone;
-                            _1.imported = siteData[_1.site_id].project_id !== project_id;
+                            _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!!siteData[_1.site_id].legacy !== true) {
                                 _1.file = `${moment.utc(_1.datetime).format('YYYY-MM-DD HH:mm:ss')}${path.extname(_1.file)}`;
