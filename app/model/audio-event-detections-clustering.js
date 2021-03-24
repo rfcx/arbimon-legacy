@@ -57,7 +57,7 @@ var AudioEventDetectionsClustering = {
         }
 
         if (options.playlist) {
-            select.push('A.aed_id');
+            select.push('A.aed_id, A.`recording_id` as `rec_id`');
             tables.push('JOIN playlist_aed PLE ON A.aed_id = PLE.aed_id');
             constraints.push('PLE.playlist_id = ' + dbpool.escape(options.playlist));
         }
