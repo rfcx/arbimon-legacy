@@ -1076,7 +1076,7 @@ var Recordings = {
 
                 var from_clause  = "FROM " + tables.join('\n');
                 var where_clause = dbpool.format("WHERE " + constraints.join('\n AND '), data);
-                var order_clause = 'ORDER BY ' + dbpool.escapeId(parameters.sortBy || 'site') + ' ' + (parameters.sortRev ? 'DESC' : '');
+                var order_clause = 'ORDER BY ' + dbpool.escapeId(parameters.sortBy || 'datetime') + ' ' + (parameters.sortRev ? 'DESC' : '');
                 var limit_clause = (parameters.limit) ? dbpool.escape(parameters.offset || 0) + ', ' + dbpool.escape(parameters.limit) : '';
 
                 return Q.all(outputs.map(function(output){
@@ -1086,7 +1086,7 @@ var Recordings = {
                         where_clause
                     ];
                     if(output === 'list') {
-                        var sortBy = parameters.sortBy || 'site';
+                        var sortBy = parameters.sortBy || 'datetime';
                         var sortRev = parameters.sortRev ? 'DESC' : '';
                         query.push('ORDER BY ' + dbpool.escapeId(sortBy) + ' ' + sortRev);
                         if(limit_clause){
