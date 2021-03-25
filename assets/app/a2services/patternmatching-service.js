@@ -28,6 +28,12 @@ angular.module('a2.srv.patternmatching', [
                 return response.data;
             });
         },
+        getPatternMatchingsTotal: function(callback) {
+            $http.get('/api/project/' + Project.getUrl() + '/pattern-matchings/count')
+            .success(function(data) {
+                callback(data.count);
+            });
+        },
         getRoisFor: function(patternMatchingId, limit, offset, options) {
             var query = Object.keys(options || {}).map(function(option){
                 return option + '=' + encodeURIComponent(options[option]);
