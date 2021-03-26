@@ -96,6 +96,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         soundscape_composition_annotation : ['present', 'absent'],
     };
     this.params={};
+    this.loading = {sites: false};
 
     var filterDefs = [
         {name:"range"                 , map: function set_range_bounds(range){
@@ -141,6 +142,8 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         }
 
         var options = this.options;
+        var loading = this.loading;
+        loading.sites = true
         Project.getSites().then(function(sites){
             return $q.all(sites.map(function(site){
                 return Project.getRecordingAvailability('!q:' + site.id + '---[1:31]');
@@ -150,6 +153,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 }, {});
             });
         }).then(function(data) {
+            loading.sites = false
             var lists = {
                 sites: [], // sitesList
                 years: [], // yearsList

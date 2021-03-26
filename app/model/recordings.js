@@ -274,7 +274,11 @@ var Recordings = {
             }
 
             constraints = sqlutil.compile_query_constraints(urlquery, fields);
-
+            if (urlquery && urlquery.site) {
+                constraints.shift()
+                data.push(urlquery.site['='])
+                constraints.push('S.name = ?');
+            }
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
                 count_only : options.count_only
             });
@@ -284,15 +288,17 @@ var Recordings = {
             }
 
             if(!urlquery.id) {
-                steps.push(dbpool.query("(\n" +
+                steps.push(
+                    dbpool.query("(\n" +
                 "   SELECT site_id FROM sites WHERE project_id = ?\n" +
-                ") UNION (\n" +
+                "   ) UNION (\n" +
                 "   SELECT site_id FROM project_imported_sites WHERE project_id = ?\n" +
-                ")", [project_id, project_id]).then(function(sites){
-                    constraints.push("S.site_id IN (?)");
-                    data.push(sites.length ? sites.map(function(site){
-                        return site.site_id;
-                    }) : [0]);
+                ")", [project_id, project_id])
+                    .then(function(sites){
+                        constraints.push("S.site_id IN (?)");
+                        data.push(sites.length ? sites.map(function(site){
+                            return site.site_id;
+                        }) : [0]);
                 }));
             }
         }).then(function(){
