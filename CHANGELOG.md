@@ -1,5 +1,12 @@
 # Arbimon Release Notes
 
+## v3.0.19 - Mar 30, 2021
+
+Other:
+
+- Disable buttons on Recordings page while data is loading
+
+
 ## v3.0.18 - Mar 26, 2021
 
 Resolved issues:
