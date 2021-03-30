@@ -168,10 +168,10 @@ var Projects = {
                 return q.all([
                     options.compute.rec_count ? dbpool.query(
                         "SELECT r.site_id, COUNT(r.recording_id ) as rec_count\n"+
-                        "FROM recordings AS r\n"+
-                        "WHERE r.site_id IN (?)\n" +
+                        "FROM recordings AS r INNER JOIN sites s ON s.site_id = r.site_id\n"+
+                        "WHERE s.project_id = ?\n" +
                         "GROUP BY r.site_id",
-                        [siteIds]
+                        [project_id]
                     ).then(function(results){
                         sites.forEach(function(site){
                             site.rec_count=0;
@@ -845,19 +845,9 @@ var Projects = {
 
     // this includes recordings processing
     totalRecordings: function(project_id, callback) {
-        var q = "SELECT count(*) as count \n"+
-                "FROM ( \n"+
-                "    (SELECT upload_id as id \n"+
-                "    FROM uploads_processing  \n"+
-                "    WHERE project_id = %1$s AND state != 'uploaded' AND state != 'error') \n"+
-                "    UNION \n"+
-                "    (SELECT recording_id as id \n"+
-                "    FROM recordings AS r \n"+
-                "    JOIN sites AS s ON s.site_id = r.site_id \n"+
-                "    WHERE s.project_id = %1$s) \n"+
-                ") as t";
-
-        q = sprintf(q, dbpool.escape(project_id));
+        var q = "SELECT count(*) as count \n" +
+                "FROM recordings AS r JOIN sites AS s ON s.site_id = r.site_id \n"+
+                "WHERE s.project_id = " + dbpool.escape(project_id);
         queryHandler(q, callback);
     },
 

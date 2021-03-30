@@ -48,6 +48,14 @@ router.get('/:patternMatching/details', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/count', function(req, res, next) {
+    res.type('json');
+    model.patternMatchings.totalPatternMatchings(req.project.project_id, function(err, count) {
+        if(err) return next(err);
+        res.json(count[0]);
+    });
+});
+
 router.param('paging', function(req, res, next, paging){
     const components = paging.split('_');
     console.log('paging components', components);

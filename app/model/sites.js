@@ -256,18 +256,18 @@ var Sites = {
     },
 
     haveRecordings: function(site_id, callback) {
-        var q = "SELECT COUNT( r.recording_id ) as rec_count\n"+
+        var q = "SELECT r.recording_id\n"+
                 "FROM sites AS s \n"+
-                "LEFT JOIN recordings AS r ON s.site_id = r.site_id  \n"+
+                "INNER JOIN recordings AS r ON s.site_id = r.site_id  \n"+
                 "WHERE s.site_id = %s\n"+
-                "GROUP BY s.site_id";
+                "LIMIT 1";
 
         q = util.format(q, dbpool.escape(site_id));
 
         queryHandler(q, function(err, rows) {
             if(err) return callback(err);
 
-            callback(null, rows[0].rec_count > 0);
+            callback(null, rows.length > 0);
         });
     },
 
