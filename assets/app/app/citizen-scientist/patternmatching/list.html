@@ -15,7 +15,7 @@
                 <field title="Name" class="hidelongtext widthtd" key="name" filter>
                     <div class="roi-thumbnail" >
                         <img ng-src="{{row.template.uri}}" class="roi-img is-small"/>
-                        <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}">
+                        <a class="roi-btn-br" ng-href="{{getTemplateVisualizerUrl(row.template)}}" ng-click="$event.stopPropagation();">
                             <i tooltip-placement="left"
                                 tooltip-append-to-body="true"
                                 tooltip="View in Visualizer"
