@@ -42,26 +42,26 @@
                                     <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>
                                 </a>
                             </li>
-                            <li ui-sref-active="active">
+                            <li ui-sref-active="active" ng-if="!userPermit.all.includes('use citizen scientist interface')">
                                 <a ui-sref="dashboard" tooltip="Summary" tooltip-placement="bottom">
                                     <i class="fa fa-dashboard"></i>
                                     <span class="visible-lg-inline visible-xs-inline">Summary</span>
                                 </a>
                             </li>
-                            <li ui-sref-active="open" tooltip="Data" tooltip-placement="bottom">
+                            <li ui-sref-active="open" tooltip="Data" tooltip-placement="bottom" ng-if="!userPermit.all.includes('use citizen scientist interface')">
                                 <a ui-sref="audiodata">
                                     <i class="fa fa-cloud-upload"></i>
                                     <span class="visible-lg-inline visible-xs-inline">Data</span>
                                 </a>
                                 <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="audiodata"></ul>
                             </li>
-                            <li ui-sref-active="active" tooltip="Visualizer" tooltip-placement="bottom">
+                            <li ui-sref-active="active" tooltip="Visualizer" tooltip-placement="bottom" ng-if="userPermit.has('citizen_scientist')">
                                 <a ui-sref="visualizer">
                                     <i class="fa fa-cubes"></i>
                                     <span class="visible-lg-inline visible-xs-inline">Visualizer</span>
                                 </a>
                             </li>
-                            <li ui-sref-active="open" tooltip="Analysis" tooltip-placement="bottom">
+                            <li ui-sref-active="open" tooltip="Analysis" tooltip-placement="bottom" ng-if="!userPermit.all.includes('use citizen scientist interface')">
                                 <a ui-sref="analysis">
                                     <i class="fa fa-send-o"></i>
                                     <span class="visible-lg-inline visible-xs-inline">Analysis</span>
@@ -76,7 +76,7 @@
                                 <ul class="navbar-hide-collapsed dropdown-menu" a2-sidenav-bar-anchor="citizen-scientist"></ul>
                             </li>
                         </ul>
-                        <ul class="nav navbar-nav hide-tooltip-lg" ng-controller="StatusBarNavIndexController">
+                        <ul class="nav navbar-nav hide-tooltip-lg" ng-controller="StatusBarNavIndexController" ng-if="!userPermit.all.includes('use citizen scientist interface')">
                             <li ui-sref-active="active">
                                 <a ui-sref="jobs" tooltip="Active Jobs" tooltip-placement="bottom">
                                     <i class="fa fa-cogs"></i>
@@ -85,7 +85,7 @@
                                 </a>
                             </li>
                         </ul>
-                        <ul class="nav navbar-nav hide-tooltip-lg">
+                        <ul class="nav navbar-nav hide-tooltip-lg" ng-if="!userPermit.all.includes('use citizen scientist interface')">
                             <li ui-sref-active="open">
                                 <a ui-sref="settings" tooltip="Settings" tooltip-placement="bottom">
                                     <i class="fa fa-wrench"></i>

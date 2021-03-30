@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.20 - Mar 30, 2021
+
+New features:
+
+- CE-336 Display the Visualizer page for Citizen Scientist users
+
 ## v3.0.16 - Mar XX, 2021
 
 Resolved issues:
