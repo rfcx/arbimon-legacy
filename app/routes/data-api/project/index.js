@@ -45,7 +45,6 @@ router.param('projectUrl', function(req, res, next, project_url){
             _[p.name] = true;
             return _;
         })
-
         // Allow the navigation to the Visualizer page for citizen scientist users
         if (permissionsMap['use citizen scientist interface'] &&
             (req.inAppUrl && !req.inAppUrl.startsWith('visualizer'))) {
