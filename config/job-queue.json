@@ -6,5 +6,5 @@
     "heartbeat_timeout" : 300000,
     "job_inactivity_timeout" : 1800000,
     "concurrency" : -2,
-    "instanceId": "i-c4a2aa3a"
+    "instanceId": "none"
 }
