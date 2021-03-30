@@ -41,6 +41,17 @@ router.param('projectUrl', function(req, res, next, project_url){
             return res.status(404).json({ error: "project not found"});
         }
 
+        var permissionsMap = rows.reduce(function(_, p) {
+            _[p.name] = true;
+            return _;
+        })
+
+        // Allow the navigation to the Visualizer page for citizen scientist users
+        if (permissionsMap['use citizen scientist interface'] &&
+            (req.inAppUrl && !req.inAppUrl.startsWith('visualizer'))) {
+                return res.redirect('/citizen-scientist/' + project.project_id + '/');
+        }
+
         var project = rows[0];
 
         var permissions = req.session.user.permissions && req.session.user.permissions[project.project_id];

@@ -94,7 +94,13 @@ router.get('/:projecturl?/', function(req, res, next) {
                 if(!project.is_private || permissionsMap['view project'] || req.session.user.isSuper){
                     // pass
                 } else if(permissionsMap['use citizen scientist interface']){
-                    return res.redirect('/citizen-scientist/' + project.url + '/');
+                    // Allow the navigation to the Visualizer page for citizen scientist users
+                    if (req.inAppUrl && req.inAppUrl.startsWith('visualizer')) {
+                        // pass
+                    }
+                    else {
+                        return res.redirect('/citizen-scientist/' + project.url + '/');
+                    }
                 } else {
                     // if not authorized to see project send 404
                     return res.redirect('/home');

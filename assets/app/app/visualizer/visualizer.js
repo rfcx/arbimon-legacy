@@ -199,6 +199,7 @@ angular.module('a2.visualizer', [
     itemSelection,
     Project,
     $controller,
+    a2UserPermit,
     a2SpectrogramClick2Zoom,
     $rootScope,
     VisualizerObjectTypes,
@@ -249,22 +250,27 @@ angular.module('a2.visualizer', [
     $scope.canDisplayInSidebar     = layers.display_sidebar.bind(layers);
     $scope.canDisplayInSpectrogram = layers.display_spectrogram.bind(layers);
 
-    layers.add(
-        'base-image-layer',
-        'annotation-layer',
-        'data-plot-layer',
-        'recording-layer',
-        'recording-tags-layer',
-        'soundscape-info-layer',
-        'soundscape-regions-layer',
-        'recording-soundscape-region-tags',
-        'species-presence',
-        'training-data',
-        'templates',
-        'soundscape-composition-tool',
-        'zoom-input-layer',
-        'audio-events-layer'
-    );
+    if (a2UserPermit.has('citizen_scientist') &&  !a2UserPermit.isSuper()) {
+        layers.add('base-image-layer', 'recording-layer', 'zoom-input-layer')
+    }
+    else {
+        layers.add(
+            'base-image-layer',
+            'annotation-layer',
+            'data-plot-layer',
+            'recording-layer',
+            'recording-tags-layer',
+            'soundscape-info-layer',
+            'soundscape-regions-layer',
+            'recording-soundscape-region-tags',
+            'species-presence',
+            'training-data',
+            'templates',
+            'soundscape-composition-tool',
+            'zoom-input-layer',
+            'audio-events-layer'
+        );
+    }
 
     $scope.visobject = null;
 
