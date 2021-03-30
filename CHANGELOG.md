@@ -6,11 +6,42 @@ New features:
 
 - CE-336 Display the Visualizer page for Citizen Scientist users
 
-## v3.0.16 - Mar XX, 2021
+## v3.0.19 - Mar 27, 2021
+
+Resolved issues:
+
+- CE-416 Not being able to filter recordings by sites date time
+
+## v3.0.18 - Mar 26, 2021
+
+Resolved issues:
+
+- CE-416 Not being able to filter recordings by sites date time
+
+
+## v3.0.18 - Mar 25, 2021
+
+Resolved issues:
+
+- PI-639 PI-689 Fix users unable to open spectrograms in visualizer page
+- DB query tuning
+- Hotfix displaying AED boxes on the Visualizer page
+
+Other:
+
+- Summary page is updated
+
+## v3.0.17 - Mar 22, 2021
 
 Resolved issues:
 - PI-524 Users shouldn't see auth0 format for usernames
 - PI-583 Fix error getting soundscape annotation classes
+- PI-680 Fix inability to create playlists for recordings with tags
+
+## v3.0.16-hotfix.0 - Mar 18, 2021
+
+Performance improvements:
+- Do not check for duplicates in the recordings ingest endpoint
 
 ## v3.0.15 - Mar 08, 2021
 

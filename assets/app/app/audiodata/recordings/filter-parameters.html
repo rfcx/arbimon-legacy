@@ -1,10 +1,13 @@
 <div class="a2-filter-row">
+    <span class="pr-3" ng-if="controller.loading && controller.loading.sites">
+        <i class="fa fa-spinner fa-spin" style="font-size: 26px; margin-top: 2px;"></i>
+    </span>
     <div class="a2-filter a2-filter-text">
         Range:
     </div>
     <div class="a2-filter">
-        <button class="btn btn-default" type="text" 
-            yearpick 
+        <button class="btn btn-default" type="text"
+            yearpick
             min-date="minDate"
             max-date="controller.params.range.to || maxDate"
             ng-model="controller.params.range.from">
@@ -16,8 +19,8 @@
         <i class="fa fa-long-arrow-right"></i>
     </div>
     <div class="a2-filter">
-        <button class="btn btn-default" type="text" 
-            yearpick 
+        <button class="btn btn-default" type="text"
+            yearpick
             min-date="controller.params.range.from || minDate"
             max-date="maxDate"
             ng-model="controller.params.range.to">
@@ -34,7 +37,7 @@
         <ui-select multiple ng-model="controller.params.sites" theme="bootstrap" style="width: 300px;">
             <ui-select-match placeholder="Site1, Site2, ...">{{$item.value}}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.sites | filter:$select.search">
-                {{item.value}} 
+                {{item.value}}
                 <span class="badge">{{ item.count }}</span>
             </ui-select-choices>
         </ui-select>
@@ -89,7 +92,7 @@
         <ui-select multiple ng-model="controller.params.playlists" theme="bootstrap" style="width: 300px;">
             <ui-select-match placeholder="Playlist1, Playlist2, ...">{{$item.name}}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.playlists | filter:$select.search">
-                {{item.name}} 
+                {{item.name}}
                 <span class="badge">{{ item.count }}</span>
             </ui-select-choices>
         </ui-select>
@@ -102,12 +105,12 @@
     <div class="a2-filter">
         <ui-select multiple ng-model="controller.params.validations" theme="bootstrap" style="width: 400px;">
             <ui-select-match placeholder="Species - Sound...">
-                {{$item.species_name}} - {{$item.songtype_name}} 
+                {{$item.species_name}} - {{$item.songtype_name}}
             </ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.classes | filter:$select.search">
-                {{item.species_name }} - {{ item.songtype_name }} 
+                {{item.species_name }} - {{ item.songtype_name }}
                 <span class="badge">
-                    <i class="fa val-1"></i> {{ item.vals_present }} / 
+                    <i class="fa val-1"></i> {{ item.vals_present }} /
                     <i class="fa val-0"></i> {{ item.vals_absent }}
                 </span>
             </ui-select-choices>
@@ -131,10 +134,10 @@
     <div class="a2-filter">
         <ui-select multiple ng-model="controller.params.classifications" ng-change="controller.computeClassificationResultsOptions(controller.params.classifications)" theme="bootstrap" style="width: 350px;">
             <ui-select-match placeholder="Classifications...">
-                {{$item.name}} - {{$item.date | moment : 'lll' }} 
+                {{$item.name}} - {{$item.date | moment : 'lll' }}
             </ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.classifications | filter:$select.search">
-                {{item.name }} - {{ item.date | moment : 'lll' }} 
+                {{item.name }} - {{ item.date | moment : 'lll' }}
             </ui-select-choices>
         </ui-select>
     </div>
@@ -156,7 +159,7 @@
     <div class="a2-filter">
         <ui-select multiple ng-model="controller.params.soundscape_composition" theme="bootstrap" style="width: 300px;">
             <ui-select-match placeholder="Audio Classes...">
-                {{$item.type}}/{{$item.name}} 
+                {{$item.type}}/{{$item.name}}
             </ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.soundscape_composition | filter:$select.search" group-by="'type'">
                 {{item.name }}
@@ -198,8 +201,8 @@
     <button class="btn btn-default" ng-click="resetFilters() | trackEvent:'Audiodata-Recordings':'resetFilters'">
         <i class="fa fa-undo"></i> Reset
     </button>
-    <button class="btn btn-default" 
-        ng-click="createPlaylist() | trackEvent:'Audiodata-Recordings':'createPlaylist'" 
+    <button class="btn btn-default"
+        ng-click="createPlaylist() | trackEvent:'Audiodata-Recordings':'createPlaylist'"
         tooltip="Save filtered results as playlist"
         tooltip-trigger="mouseenter">
         <i class="fa fa-list-alt"></i> Save to Playlist

@@ -79,14 +79,6 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         throw new EmptyResultError('Site with given external_id not found.');
       }
     }
-    const fileExists = await model.recordings.existsAsync({
-      site_id: site.site_id,
-      filename: convertedParams.uri
-    });
-    if (fileExists) {
-      // Do nothing
-      return res.sendStatus(200);
-    }
     const recordingData = {
       site_id: site.site_id,
       uri: convertedParams.uri,

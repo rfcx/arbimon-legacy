@@ -46,7 +46,7 @@
                                                     <i class="fa fa-cloud-upload"></i>
                                                 </li>
 
-                                                <li class="project-progress-level1"
+                                                <!-- <li class="project-progress-level1"
                                                     ng-class="{ full: species.length }"
                                                     tooltip="Add species">
                                                     <i class="fa fa-paw"></i>
@@ -56,9 +56,9 @@
                                                     ng-class="{ full: valsQty }"
                                                     tooltip="Validate recordings">
                                                     <i class="fa fa-pencil-square-o"></i>
-                                                </li>
+                                                </li> -->
 
-                                                <li class="project-progress-level2"
+                                                <!-- <li class="project-progress-level2"
                                                     ng-class="{ full: trainingSetsQty }"
                                                     tooltip="Create training sets">
                                                     <i class="fa fa-list-ol"></i>
@@ -74,13 +74,15 @@
                                                     ng-class="{ full: classiQty }"
                                                     tooltip="Run Clasification">
                                                     <i class="fa fa-rocket"></i>
-                                                </li>
+                                                </li> -->
                                             </ul>
                                         </div>
                                     </li>
                                     <li class="list-group-item">Sites: {{ sites.length }}</li>
                                     <li class="list-group-item">Storage: {{ recsQty | number }} recordings of unlimited</li>
-                                    <li class="list-group-item">
+                                    <li class="list-group-item">Templates: {{ templateQty }}</li>
+                                    <li class="list-group-item">Pattern Matchings: {{ pmQty }}</li>
+                                    <!-- <li class="list-group-item">
                                         Species (Validated*: {{ (validatedSpecies === -1 ? "-" : validatedSpecies) + "/" + species.length }}, Templates: {{ templateQty }}):
                                         <ul>
                                             <li ng-repeat="s in species | limitTo: 5">
@@ -88,7 +90,7 @@
                                             </li>
                                             <p ng-show="species.length > 5">...</p>
                                         </ul>
-                                    </li>
+                                    </li> -->
                                 </ul>
                             </div>
                         </div>
