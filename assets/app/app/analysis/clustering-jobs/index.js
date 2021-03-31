@@ -594,6 +594,7 @@ angular.module('a2.analysis.clustering-jobs', [
 .controller('GridViewCtrl' , function($scope, a2ClusteringJobs, a2AudioBarService, Project, a2Playlists, notify) {
     $scope.loading = true;
     $scope.infopanedata = '';
+    $scope.projectUrl = Project.getUrl();
 
     $scope.lists = {
         search: [
@@ -674,12 +675,12 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.getRoisDetails();
 
-    $scope.playRoiAudio = function(recId, $event) {
+    $scope.playRoiAudio = function(recId, aedId, $event) {
         if ($event) {
             $event.preventDefault();
             $event.stopPropagation();
         }
-        a2AudioBarService.loadUrl(a2ClusteringJobs.getAudioUrlFor(recId), true);
+        a2AudioBarService.loadUrl(a2ClusteringJobs.getAudioUrlFor(recId, aedId), true);
     };
 
     $scope.getRoiVisualizerUrl = function(roi){

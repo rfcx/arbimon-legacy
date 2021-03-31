@@ -143,11 +143,16 @@ var Playlists = {
         if(!query) {
             query = {};
         }
-
+        // Fetch recordings data for the playlists with audio event detections
         if (query.recordings) {
-            return q.all(query.recordings.map(function(id){
-                return model.recordings.findByUrlMatch({id: Number(id)}, null, {compute:query && query.show}).get(0);
-            })).nodeify(callback);
+            if (Array.isArray(query.recordings)) {
+                return q.all(query.recordings.map(function(id){
+                    return model.recordings.findByUrlMatch({id: Number(id)}, null, {compute:query && query.show}).get(0);
+                })).nodeify(callback);
+            }
+            else {
+                return q.all(model.recordings.findByUrlMatch({id: Number(query.recordings)}, null, {compute:query && query.show})).nodeify(callback);
+            }
         }
 
         constraints.push('PLR.playlist_id = ?');
