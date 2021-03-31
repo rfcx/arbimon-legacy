@@ -38,7 +38,7 @@
             <ui-select-match placeholder="Site1, Site2, ...">{{$item.value}}</ui-select-match>
             <ui-select-choices class="has-badges" repeat="item in controller.options.sites | filter:$select.search">
                 {{item.value}}
-                <span class="badge">{{ item.count }}</span>
+                <span class="badge" ng-if="item.count !== null">{{ item.count }}</span>
             </ui-select-choices>
         </ui-select>
     </div>

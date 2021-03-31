@@ -45,6 +45,20 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
     $http, $modal, notify, a2UserPermit, a2Tags,
     $window
 ) {
+    var staticMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(function (mon, ind) {
+        return { value: ind, string: mon, count: null }
+    })
+
+    var staticDays = []
+    for (var day = 1; day <= 31; day++) {
+        staticDays.push({ value: day, count: null })
+    }
+
+    var staticHours = []
+    for (var hour = 0; hour < 24; hour++) {
+        staticHours.push({ value: hour, string: ((hour < 10 ? '0' : '') + hour + ':00'), count: null })
+    }
+
     function _1_get(attribute){
         return function(_1){
             return _1[attribute];
@@ -136,7 +150,125 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         return filters;
     };
 
+    this.getRecordingsStatsPerSite = function (sites, filters, options) {
+        var proms = sites.map(function (site) {
+            return Project.getRecordingAvailability('!q:' + site.id + '---[1:31]');
+        })
+        return $q.all(proms)
+            .then(function (data) {
+                return data.reduce(function(_, recAv){
+                    return angular.merge(_, recAv);
+                }, {});
+            })
+            .then(function(data) {
+                // loading.sites = false
+                var lists = {
+                    sites: [], // sitesList
+                    years: [], // yearsList
+                    months: [], // monthsList
+                    days: [], // daysList
+                    hours: [], // hoursList
+                };
+
+                var levelIds = Object.keys(lists);
+
+                var getFilterOptions = function(filters, obj, level) {
+                    var count = 0;
+                    var currentLevel = levelIds[level];
+
+                    for(var child in obj) {
+                        if(
+                            Object.keys(filters).length &&
+                            filters[currentLevel] &&
+                            filters[currentLevel].indexOf(child) === -1
+                        ) { // skip if filter is define and the value is not in it
+                            continue;
+                        }
+
+                        var item = findObjectWith(lists[currentLevel], 'value', child);
+
+                        if(!item) {
+                            item = { value: child, count: 0 };
+                            lists[currentLevel].push(item);
+                        }
+
+                        var itemCount;
+                        if(typeof obj[child] == 'number') {
+                            itemCount = obj[child];
+                        }
+                        else {
+                            if(level === 0) count = 0;
+
+                            itemCount = getFilterOptions(filters, obj[child], level+1);
+                        }
+
+                        item.count += itemCount;
+                        count += itemCount;
+                    }
+
+                    return count;
+                };
+                getFilterOptions(filters, data, 0);
+
+                options.sites = lists.sites;
+                options.years = lists.years;
+
+                options.months = lists.months.map(function(month) {
+                    month.value = parseInt(month.value);
+                    month.value--;
+                    return {
+                        value: month.value,
+                        string: $window.moment().month(month.value).format('MMM'),
+                        count: month.count
+                    };
+                });
+
+                options.days = lists.days.map(function(day) {
+                    day.value = parseInt(day.value);
+                    return day;
+                });
+
+                options.hours = lists.hours.map(function(hour) {
+                    hour.value = parseInt(hour.value);
+                    return {
+                        value: hour.value,
+                        string: $window.moment().hour(hour.value).minute(0).format('HH:mm'),
+                        count: hour.count
+                    };
+                });
+
+                var sort = function(a, b) {
+                    return a.value > b.value;
+                };
+
+                options.sites.sort(sort);
+                options.years.sort(sort);
+                options.months.sort(sort);
+                options.days.sort(sort);
+                options.hours.sort(sort);
+                console.log('options', options)
+            });
+    }
+
+    this.setRecStatsStatic = function (sites, bounds, options) {
+        options.sites = sites.map(function (site) {
+            return { value: site.name, count: null }
+        })
+        var years = []
+        var maxYear = (bounds.max ? new Date(bounds.max) : new Date()).getFullYear()
+        var minYear = bounds.min ? new Date(bounds.min).getFullYear() : '1990'
+        for (var year = maxYear; year >= minYear; year--) {
+            years.push({ value: year, count: null })
+        }
+        options.years = years
+        options.months = staticMonths
+        options.days = staticDays
+        options.hours = staticHours
+        console.log('options', options)
+    }
+
     this.fetchOptions = function(filters) {
+        var self = this
         if(filters === undefined){
             filters = {};
         }
@@ -144,101 +276,26 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         var options = this.options;
         var loading = this.loading;
         loading.sites = true
-        Project.getSites().then(function(sites){
-            return $q.all(sites.map(function(site){
-                return Project.getRecordingAvailability('!q:' + site.id + '---[1:31]');
-            })).then(function(data){
-                return data.reduce(function(_, recAv){
-                    return angular.merge(_, recAv);
-                }, {});
-            });
-        }).then(function(data) {
-            loading.sites = false
-            var lists = {
-                sites: [], // sitesList
-                years: [], // yearsList
-                months: [], // monthsList
-                days: [], // daysList
-                hours: [], // hoursList
-            };
-
-            var levelIds = Object.keys(lists);
-
-            var getFilterOptions = function(filters, obj, level) {
-                var count = 0;
-                var currentLevel = levelIds[level];
-
-                for(var child in obj) {
-                    if(
-                        Object.keys(filters).length &&
-                        filters[currentLevel] &&
-                        filters[currentLevel].indexOf(child) === -1
-                    ) { // skip if filter is define and the value is not in it
-                        continue;
-                    }
-
-                    var item = findObjectWith(lists[currentLevel], 'value', child);
-
-                    if(!item) {
-                        item = { value: child, count: 0 };
-                        lists[currentLevel].push(item);
-                    }
-
-                    var itemCount;
-                    if(typeof obj[child] == 'number') {
-                        itemCount = obj[child];
-                    }
-                    else {
-                        if(level === 0) count = 0;
-
-                        itemCount = getFilterOptions(filters, obj[child], level+1);
-                    }
-
-                    item.count += itemCount;
-                    count += itemCount;
+        var sites
+        Project.getSites()
+            .then(function(data) {
+                sites = data
+                return Project.getRecTotalQty()
+            })
+            .then(function(recTotal) {
+                if (sites.length < 100 && recTotal < 100000) {
+                    return self.getRecordingsStatsPerSite(sites, filters, options)
+                } else {
+                    return Project.getProjectTimeBounds()
+                        .then(function (bounds) {
+                            return self.setRecStatsStatic(sites, bounds, options)
+                        })
                 }
+            })
+            .finally(() => {
+                loading.sites = false
+            })
 
-                return count;
-            };
-            getFilterOptions(filters, data, 0);
-
-            options.sites = lists.sites;
-            options.years = lists.years;
-
-            options.months = lists.months.map(function(month) {
-                month.value = parseInt(month.value);
-                month.value--;
-                return {
-                    value: month.value,
-                    string: $window.moment().month(month.value).format('MMM'),
-                    count: month.count
-                };
-            });
-
-            options.days = lists.days.map(function(day) {
-                day.value = parseInt(day.value);
-                return day;
-            });
-
-            options.hours = lists.hours.map(function(hour) {
-                hour.value = parseInt(hour.value);
-                return {
-                    value: hour.value,
-                    string: $window.moment().hour(hour.value).minute(0).format('HH:mm'),
-                    count: hour.count
-                };
-            });
-
-            var sort = function(a, b) {
-                return a.value > b.value;
-            };
-
-            options.sites.sort(sort);
-            options.years.sort(sort);
-            options.months.sort(sort);
-            options.days.sort(sort);
-            options.hours.sort(sort);
-        });
         Project.getClasses(
             {
                 validations: true,

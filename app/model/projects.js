@@ -851,6 +851,12 @@ var Projects = {
         queryHandler(q, callback);
     },
 
+    recordingsMinMaxDates: function (project_id, callback) {
+        let q = `SELECT min(r.datetime) as min, max(r.datetime) as max FROM recordings r
+            JOIN sites s ON r.site_id = s.site_id WHERE s.project_id = ` + dbpool.escape(project_id)
+        queryHandler(q, callback);
+    },
+
     // this includes recordings processing
     getStorageUsage: function(project_id, callback) {
         return dbpool.query(
