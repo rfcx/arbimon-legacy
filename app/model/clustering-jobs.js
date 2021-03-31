@@ -12,6 +12,8 @@ const k8sConfig = config('k8s');
 var jsonTemplates = require('../utils/json-templates');
 const { Client } = require('kubernetes-client');
 const k8sClient = new Client({ version: '1.13' });
+var AWS = require('aws-sdk');
+var s3 = new AWS.S3();
 
 var ClusteringJobs = {
     find: function (options) {
@@ -90,7 +92,8 @@ var ClusteringJobs = {
             options = {};
         }
         select.push(
-            "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id, A.`uri_image` as `uri`"
+            "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id",
+            "A.`uri_image` as `uri`"
         );
 
         if (options.aed) {
@@ -117,17 +120,28 @@ var ClusteringJobs = {
         )
     },
 
+    getAsset: function (s3Path, res) {
+        if(!s3){
+            s3 = new AWS.S3();
+        }
+        return s3
+            .getObject({ Bucket: config('aws').mlSpecsName, Key: s3Path })
+            .createReadStream()
+            .pipe(res)
+    },
+
     getRoiAudioFile: function (options) {
         options = options || {};
 
         var query = "SELECT A.time_min, A.time_max, A.frequency_min, A.frequency_max, R.`uri` as `rec_uri`, R.site_id\n" +
         "FROM audio_event_detections_clustering A\n" +
         "JOIN recordings R ON A.recording_id = R.recording_id\n" +
-        "WHERE A.recording_id = ?";
+        "WHERE A.recording_id = ? AND A.aed_id = ?";
 
         return dbpool.query(
             query, [
-                options.recId
+                options.recId,
+                options.aedId
             ]
         ).get(0).then(function(rec) {
             if (!rec) {

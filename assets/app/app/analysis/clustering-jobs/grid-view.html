@@ -78,14 +78,14 @@
                         class="fa fa-cubes">
                     </i>
                 </a>
-                <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, $event)">
+                <a class="roi-btn-br" ng-click="playRoiAudio(roi.recording_id, roi.aed_id, $event)">
                     <i tooltip-placement="left"
                         tooltip-append-to-body="true"
                         tooltip="Play Audio"
                         class="fa fa-play">
                     </i>
                 </a>
-                <img ng-src="{{ roi.uri }}" class="roi-img"/>
+                <img ng-src="/api/project/{{projectUrl}}/clustering-jobs/asset?path={{roi.uri}}" class="roi-img"/>
             </span>
         </span>
     </div>
