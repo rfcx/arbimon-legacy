@@ -75,11 +75,12 @@ var a2 = angular.module('a2.app', [
     $locationProvider.html5Mode(true);
     $urlRouterProvider.otherwise("/dashboard");
 })
-.controller('MainCtrl', function($scope, $state, Project){
+.controller('MainCtrl', function($scope, $state, Project, a2UserPermit){
     $scope.$state = $state;
     $scope.getUrlFor = function(page){
         if(page == 'citizen-scientist'){
             return '/citizen-scientist/' + Project.getUrl() + '/';
         }
     }
+    $scope.citizenScientistUser = a2UserPermit.has('citizen_scientist') && !a2UserPermit.isSuper();
 });

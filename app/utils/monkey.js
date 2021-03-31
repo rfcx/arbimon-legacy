@@ -7,6 +7,9 @@ var config = require('../config');
 
 var ec2 = new AWS.EC2();
 
+const instanceId = config('job-queue').instanceId;
+const jobQueueIsEC2Instance = instanceId !== 'none';
+
 function poke(argument) {
     return q.ninvoke(request, 'post', config('hosts').jobqueue + '/notify');
 }
@@ -23,7 +26,7 @@ function pokeDaMonkey(){
     }
     
     var params = {
-        InstanceIds: [config('job-queue').instanceId]
+        InstanceIds: [instanceId]
     };
     
     return q.ninvoke(ec2, 'describeInstances', params).then(function(data) {
@@ -56,4 +59,4 @@ function pokeDaMonkey(){
     });
 }
 
-module.exports = pokeDaMonkey;
+module.exports = jobQueueIsEC2Instance ? pokeDaMonkey : () => { };
