@@ -82,5 +82,5 @@ var a2 = angular.module('a2.app', [
             return '/citizen-scientist/' + Project.getUrl() + '/';
         }
     }
-    $scope.citizenScientistUser = a2UserPermit.can('use citizen scientist interface') && !a2UserPermit.isSuper();
+    $scope.citizenScientistUser = !a2UserPermit.can('delete project') && a2UserPermit.can('use citizen scientist interface') && !a2UserPermit.isSuper();
 });
