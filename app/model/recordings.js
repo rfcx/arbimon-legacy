@@ -26,6 +26,7 @@ var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
 
 const moment = require('moment');
+const Projects = require('./projects');
 
 // local variables
 var s3, s3RFCx;

@@ -1,5 +1,12 @@
 # Arbimon Release Notes
 
+## v3.0.21 - Mar XX, 2021
+
+Performance improvements:
+- CE-438 Do not request counts for proj where sites > 100 and recs > 100000
+
+# Arbimon Release Notes
+
 ## v3.0.20 - Mar 30, 2021
 
 New features:

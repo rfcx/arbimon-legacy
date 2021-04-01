@@ -101,9 +101,19 @@ angular.module('a2.srv.project', [
                 return '/api/project/'+url+'/recordings/recordings-export.csv' + (serializedParams.length ? '?'+serializedParams : '');
             },
             getRecTotalQty: function(callback) {
-                $http.get('/api/project/'+url+'/recordings/count')
-                .success(function(data) {
-                    callback(data.count);
+                return a2APIService.get('/recordings/count').then(function(data) {
+                    if(callback){
+                        callback(data.count);
+                    }
+                    return data.count;
+                });
+            },
+            getProjectTimeBounds: function(callback) {
+                return a2APIService.get('/recordings/time-bounds').then(function(data) {
+                    if(callback){
+                        callback(data);
+                    }
+                    return data;
                 });
             },
             getRecordings: function(key, options, callback) {
