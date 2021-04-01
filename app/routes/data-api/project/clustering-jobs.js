@@ -2,6 +2,7 @@
 "use strict";
 
 var express = require('express');
+var path = require('path')
 var router = express.Router();
 var model = require('../../../model');
 var AWS = require('aws-sdk');
@@ -20,6 +21,17 @@ router.get('/', function(req, res, next) {
         res.json(data);
     }).catch(next);
 });
+
+router.get('/asset', function(req, res, next) {
+    if (config('aws').env === 'dev') {
+        res.attachment(path.basename(req.query.path))
+        return model.ClusteringJobs.getAsset(req.query.path, res)
+    }
+    else {
+        return req.query.path;
+    }
+});
+
 router.get('/:job_id/job-details', function (req, res, next) {
     res.type('json');
     model.ClusteringJobs.findOne(req.params.job_id, {
@@ -28,6 +40,7 @@ router.get('/:job_id/job-details', function (req, res, next) {
         res.json(data);
     }).catch(next);
 });
+
 router.get('/:job_id/rois-details', function(req, res, next) {
     res.type('json');
     var params = {
@@ -41,8 +54,9 @@ router.get('/:job_id/rois-details', function(req, res, next) {
             res.json(data);
         }).catch(next);
 });
-router.get('/:recId/audio', function(req, res, next) {
-    model.ClusteringJobs.getRoiAudioFile({ recId: req.params.recId, gain: req.query.gain }).then(function(roiAudio) {
+
+router.get('/:recId/audio/:aedId', function(req, res, next) {
+    model.ClusteringJobs.getRoiAudioFile({ recId: req.params.recId, aedId: req.params.aedId, gain: req.query.gain }).then(function(roiAudio) {
         if(!roiAudio){
             res.sendStatus(404);
         } else {
@@ -50,6 +64,7 @@ router.get('/:recId/audio', function(req, res, next) {
         }
     }).catch(next);
 });
+
 router.get('/:job_id/clustering-details', function (req, res, next) {
     res.type('json');
 

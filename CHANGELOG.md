@@ -1,5 +1,21 @@
 # Arbimon Release Notes
 
+## v3.0.20 - Mar 30, 2021
+
+New features:
+
+- CE-336 Display the Visualizer page for Citizen Scientist users
+
+Other:
+
+- Disable buttons on Recordings page while data is loading
+
+## v3.0.19 - Mar 27, 2021
+
+Resolved issues:
+
+- CE-416 Not being able to filter recordings by sites date time
+
 ## v3.0.18 - Mar 26, 2021
 
 Resolved issues:

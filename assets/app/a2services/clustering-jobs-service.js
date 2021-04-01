@@ -48,8 +48,8 @@ angular.module('a2.srv.clustering-jobs', [
                 return response.data;
             });
         },
-        getAudioUrlFor: function(recId) {
-            return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + recId + '/audio';
+        getAudioUrlFor: function(recId, aedId) {
+            return '/api/project/' + Project.getUrl() + '/clustering-jobs/' + recId + '/audio/' + aedId;
         },
         audioEventDetections: function(opts) {
             var config = {

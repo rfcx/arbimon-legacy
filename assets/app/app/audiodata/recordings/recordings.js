@@ -35,12 +35,19 @@ angular.module('a2.audiodata.recordings', [
     };
 
     this.searchRecs = function(output) {
+        $scope.loading = true;
         output = output || ['list'];
         var params = this.getSearchParameters(output);
         var expect = output.reduce(function(obj, a){
             obj[a] = true;
             return obj;
         }, {});
+        if (expect.list) {
+            $scope.recs = []
+        }
+        if (expect.count) {
+            $scope.totalRecs = undefined
+        }
 
         Project.getRecs(params, function(data) {
             if(output.length == 1){
@@ -217,7 +224,6 @@ angular.module('a2.audiodata.recordings', [
         }).bind(this));
     };
 
-    $scope.loading = true;
     $scope.params = {};
     $scope.loading = true;
     $scope.currentPage  = 1;
