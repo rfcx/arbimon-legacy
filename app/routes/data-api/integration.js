@@ -28,7 +28,7 @@ router.post('/projects', verifyToken(), hasRole(['appUser', 'rfcxUser']), async 
   }
 })
 
-router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
+router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCreator']), async function(req, res) {
   try {
     const converter = new Converter(req.body, {});
     converter.convert('name').toString();
