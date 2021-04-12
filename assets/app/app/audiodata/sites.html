@@ -51,6 +51,7 @@
             </field>
             <field title="Name" key="name" className="name hidelongtext">
                 {{ row.name }}
+                <i ng-if="!row.legacy" class="fa fa-link text-primary" title="Uploader/Companion-enabled"></i>
             </field>
             <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
                 <field>
@@ -143,6 +144,23 @@
                             placeholder="Altitude"
                             pattern="^-?\d+\.?\d*$"
                             required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Compatibility:</label>
+                    <div class="radio" style="margin-top: 0">
+                        <label for="radio-legacy">
+                            <input id="radio-legacy" type="radio" ng-model="temp.legacy" value="1" ng-checked="true"
+                                ng-disabled="editing">
+                            <b>Arbimon only</b> - upload audio using browser only (site not accessible to other tools)
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label for="radio-nonlegacy">
+                            <input id="radio-nonlegacy" type="radio" ng-model="temp.legacy" value="0"
+                                ng-disabled="editing">
+                            <b>Companion &amp; Uploader</b> - upload audio using Uploader only
+                        </label>
                     </div>
                 </div>
                 <div ng-if="editing" class="form-group">

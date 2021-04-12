@@ -6,11 +6,15 @@
 <div class="modal-body">
         <div class="form-group">
             <ui-select ng-model="info.site" theme="bootstrap">
-                <ui-select-match placeholder="Site name">{{ $select.selected.name }}</ui-select-match>
+                <ui-select-match placeholder="Site name">{{ $select.selected.name }} <i ng-if="!$select.selected.legacy" class="fa fa-link text-primary" title="Uploader/Companion-enabled"></i></ui-select-match>
                 <ui-select-choices class="has-badges" repeat="site in sites | filter:$select.search">
                     {{ site.name }}
+                    <i ng-if="!site.legacy" class="fa fa-link text-primary" title="Uploader/Companion-enabled"></i>
                 </ui-select-choices>
             </ui-select>
+            <div ng-if="info.site && !info.site.legacy" class="alert alert-danger mt-2 p-3" role="alert">
+                <strong>You cannot upload to this site via Arbimon!</strong> Please use the <a href="">RFCx Uploader</a> desktop app, or create an Arbimon-only site.
+            </div>
         </div>
         <div class="form-group">
             <label class="control-label" for="format" >
@@ -53,13 +57,14 @@
 <div class="modal-footer">
     <button class="btn btn-primary"
         type="submit"
+        ng-disabled="!info.site.legacy"
         ng-click="close() | trackEvent:'Audiodata-Batchinfo':'Save clicked'">
-            <i class="fa fa-floppy-o"></i> Save &amp; Close
+            <i class="fa fa-floppy-o"></i> Select
     </button>
     <button class="btn btn-default"
         type="button"
         ng-click="$dismiss() | trackEvent:'Audiodata-Batchinfo':'Close clicked'">
-            <i class="fa fa-times"></i> Close
+            <i class="fa fa-times"></i> Cancel
     </button>
 </div>
 </form>
