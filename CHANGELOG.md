@@ -3,7 +3,13 @@
 ## v3.0.21 - Mar XX, 2021
 
 Performance improvements:
+
 - CE-438 Do not request counts for proj where sites > 100 and recs > 100000
+
+Resolved issues:
+
+- When creating a new site, user can choose Arbimon-only or linked to Companion/Uploader. Temporary solution until upload page is migrated to use Core.
+- User can only upload audio through Arbimon to an Arbimon-only site.
 
 # Arbimon Release Notes
 
