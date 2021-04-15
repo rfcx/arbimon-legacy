@@ -66,8 +66,7 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCr
       lon: params.longitude,
       alt: params.altitude,
       external_id: params.external_id,
-      project_id: project.project_id,
-      legacy: false
+      project_id: project.project_id
     };
     const existingSite = await model.sites.find({ external_id: siteData.external_id, project_id: siteData.project_id }).get(0);
     if (existingSite) {

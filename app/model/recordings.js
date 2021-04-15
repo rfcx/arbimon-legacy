@@ -249,7 +249,6 @@ var Recordings = {
                         "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
                         "S.name as site, \n"+
                         "S.timezone, \n"+
-                        "S.legacy as legacy, \n"+
                         "R.uri, \n"+
                         "R.datetime, \n"+
                         "R.mic, \n"+
