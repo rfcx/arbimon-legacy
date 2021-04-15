@@ -656,7 +656,7 @@ var Sites = {
             latitude: site.lat,
             longitude: site.lon,
             altitude: site.alt,
-            project_external_id: site.project_id,
+            project_id: site.project_id,
             external_id: site.site_id
         }
         const options = {
@@ -670,7 +670,16 @@ var Sites = {
             body,
             json: true
           }
-          return rp(options).then(({ body }) => body)
+          return rp(options).then((response) => {
+            if (response.statusCode === 201 && response.headers.location) {
+                const regexResult = /\/streams\/(?<id>\w+)$/.exec(response.headers.location)
+                if (regexResult) {
+                    return regexResult.groups.id
+                }
+                throw new Error(`Unable to parse location header: ${response.headers.location}`)
+            }
+            throw new Error(`Unexpected status code or location header: ${response.statusCode} ${response.headers.location}`)
+        })
     },
 
     updateInCoreAPI: async function(data, idToken) {
