@@ -892,7 +892,16 @@ var Projects = {
             body,
             json: true
           }
-        return rp(options).then(({ body }) => body)
+        return rp(options).then((response) => {
+            if (response.statusCode === 201 && response.headers.location) {
+                const regexResult = /\/projects\/(?<id>\w+)$/.exec(response.headers.location)
+                if (regexResult) {
+                    return regexResult.groups.id
+                }
+                throw new Error(`Unable to parse location header: ${response.headers.location}`)
+            }
+            throw new Error(`Unexpected status code or location header: ${response.statusCode} ${response.headers.location}`)
+        })
     },
 
     updateInCoreAPI: async function(data, idToken) {
