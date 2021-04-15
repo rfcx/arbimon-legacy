@@ -4,6 +4,7 @@
 
 Performance improvements:
 - CE-438 Do not request counts for proj where sites > 100 and recs > 100000
+- CE-451 Update code logic for determining recordings "legacy" attribute
 
 # Arbimon Release Notes
 
