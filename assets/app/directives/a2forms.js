@@ -208,7 +208,7 @@ angular.module('a2.forms',['templates-arbimon2'])
                 $scope.verify();
             }
             else {
-                $scope.project = { is_private: 0 };
+                $scope.project = { is_private: 1 };
                 $scope.valid = false;
             }
             
