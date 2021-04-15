@@ -5,7 +5,8 @@
 Performance improvements:
 - CE-438 Do not request counts for proj where sites > 100 and recs > 100000
 
-# Arbimon Release Notes
+Resolved issues:
+- Support for Core API v1.1.x changes
 
 ## v3.0.20 - Mar 30, 2021
 
