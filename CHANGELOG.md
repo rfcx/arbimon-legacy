@@ -1,14 +1,16 @@
 # Arbimon Release Notes
 
-## v3.0.21 - Apr XX, 2021
+## v3.0.21 - Apr 16, 2021
 
 Resolved issues:
 - PI-714 Fix timezone issue for calendar on the Visualizer page
+- PI-731 Bounding box is no longer visible in the Pattern Matching for Citizen Scientist users
+- PI-732 User unable to create PM template
+- Support for Core API v1.1.x changes
 
 Performance improvements:
 - CE-438 Do not request counts for proj where sites > 100 and recs > 100000
-
-# Arbimon Release Notes
+- CE-451 Update code logic for determining recordings "legacy" attribute
 
 ## v3.0.20 - Mar 30, 2021
 

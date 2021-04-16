@@ -65,8 +65,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
             lat: externalSite.latitude || 0,
             lon: externalSite.longitude || 0,
             alt: externalSite.altitude || 0,
-            project_id: project.project_id,
-            legacy: false
+            project_id: project.project_id
           });
           site = (await model.sites.findByIdAsync(siteInsertData.insertId))[0];
         }
