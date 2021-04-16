@@ -41,20 +41,19 @@ router.post('/create', function(req, res, next) {
             if(err) return next(err);
 
             if (rfcxConfig.coreAPIEnabled) {
-                model.projects.findOrCreatePersonalProject({ ...req.session.user, user_id: req.session.user.id })
-                    .then((personalProject) => {
-                        return model.sites.createInCoreAPI({
-                            site_id: result.insertId,
-                            name: site.name,
-                            lat: site.lat,
-                            lon: site.lon,
-                            alt: site.alt,
-                            ...personalProject && personalProject.project_id === site.project_id ? {} : { project_id: site.project_id }
-                        }, req.session.idToken)
-                    })
-                    .then((externalSite) => {
-                        return model.sites.setExternalId(result.insertId, externalSite.id)
-                    })
+                const coreSite = {
+                    site_id: result.insertId,
+                    name: site.name,
+                    lat: site.lat,
+                    lon: site.lon,
+                    alt: site.alt
+                }
+                if (project.external_id) {
+                    coreSite.project_id = project.external_id
+                }
+                model.sites.createInCoreAPI(coreSite, req.session.idToken)
+                    .then((externalSiteId) => model.sites.setExternalId(result.insertId, externalSiteId))
+                    .catch((err) => console.error(`Failed to create site in Core: ${err.message}`))
             }
 
             res.json({ message: "New site created" });

@@ -46,8 +46,8 @@
 <div class="row sites">
     <div ng-class="editing || creating ? 'visible-md-block visible-lg-block' : '' ">
         <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
-            <field title="Date" key="date" className="date hidelongtext">
-                {{row.legacy? (row.updated_at | momentUtc : 'lll') : (row.updated_at | momentTz : 'lll' : row.timezone) }}
+            <field title="Last updated" key="date" className="date hidelongtext">
+                {{ row.updated_at | momentTz : 'lll' : row.timezone }}
             </field>
             <field title="Name" key="name" className="name hidelongtext">
                 {{ row.name }}
