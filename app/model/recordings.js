@@ -72,9 +72,9 @@ var Recordings = {
         site   : { subject: 'S.name',             project: false, level:1, next: 'year'                },
         year   : { subject: 'YEAR(R.datetime)',   project: true,  level:2, next: 'month' , prev:'site' },
         month  : { subject: 'MONTH(R.datetime)',  project: true,  level:3, next: 'day'   , prev:'year' },
-        day    : { subject: 'DAY(R.datetime)',    project: true,  level:4, next: 'hour'  , prev:'month'},
-        hour   : { subject: 'HOUR(R.datetime)',   project: true,  level:5, next: 'minute', prev:'day'  },
-        minute : { subject: 'MINUTE(R.datetime)', project: true,  level:6,                 prev:'hour' }
+        day    : { subject: 'DAY(R.datetime_local)',    project: true,  level:4, next: 'hour'  , prev:'month'},
+        hour   : { subject: 'HOUR(R.datetime_local)',   project: true,  level:5, next: 'minute', prev:'day'  },
+        minute : { subject: 'MINUTE(R.datetime_local)', project: true,  level:6,                 prev:'hour' }
     },
     parseUrl: function(recording_url){
         var patternFound = false, resolved = false;
@@ -252,6 +252,7 @@ var Recordings = {
                         "S.legacy as legacy, \n"+
                         "R.uri, \n"+
                         "R.datetime, \n"+
+                        "R.datetime_local, \n"+
                         "R.mic, \n"+
                         "R.recorder, \n"+
                         "R.version, \n"+
@@ -770,6 +771,16 @@ var Recordings = {
 
     },
 
+    calculateLocalTimeAsync: function(site_id) {
+        let calculateLocalTime = util.promisify(this.calculateLocalTime)
+        return calculateLocalTime(site_id)
+    },
+
+    calculateLocalTime: function(site_id, datetime, callback) {
+        var q = `SELECT CONVERT_TZ(${datetime}, 'UTC', timezone) FROM sites WHERE site_id=${site_id}`;
+        queryHandler(q, callback);
+    },
+
     insert: function(recording, callback) {
 
         var schema = {
@@ -786,7 +797,8 @@ var Recordings = {
             file_size:       joi.number(),
             bit_rate:        joi.string(),
             sample_encoding: joi.string(),
-            upload_time:     joi.date()
+            upload_time:     joi.date(),
+            datetime_local:  joi.date(),
         };
 
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
@@ -794,10 +806,10 @@ var Recordings = {
 
             queryHandler('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
-                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`\n' +
+                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_local`\n' +
             ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
                 rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
-                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time
+                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_local
             ], callback);
         });
     },

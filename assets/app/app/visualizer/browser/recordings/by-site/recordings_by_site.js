@@ -65,7 +65,7 @@ angular.module('a2.browser_recordings_by_site', [
             Project.getRecordings(key, opts,(function(recordings){
                 recordings = $filter('orderBy')(recordings, 'datetime');
                 recordings.forEach(function(recording) {
-                    recording.caption = [recording.site, site.legacy? moment(recording.datetime).utc().format('lll') : moment.tz(recording.datetime, recording.timezone).format('lll') + ', local time'].join(', ');
+                    recording.caption = [recording.site, moment.tz(recording.datetime, recording.timezone).format('lll')].join(', ');
                     recording.vaxis = {
                         font:'7px', color:'#333333',
                         range:[0, recording.sample_rate/2000],

@@ -1,6 +1,9 @@
 # Arbimon Release Notes
 
-## v3.0.21 - Mar XX, 2021
+## v3.0.21 - Apr XX, 2021
+
+Resolved issues:
+- PI-714 Fix timezone issue for calendar on the Visualizer page
 
 Performance improvements:
 - CE-438 Do not request counts for proj where sites > 100 and recs > 100000
