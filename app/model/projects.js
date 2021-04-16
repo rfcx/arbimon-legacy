@@ -150,7 +150,6 @@ var Projects = {
                 "       s.timezone, \n"+
                 "       s.published, \n"+
                 "       s.updated_at, \n"+
-                "       s.legacy, \n"+
                 "       s.external_id, \n"+
                 "       s.project_id != ? AS imported, \n"+
                 "       s.token_created_on \n" +

@@ -8,6 +8,7 @@ Resolved issues:
 
 Performance improvements:
 - CE-438 Do not request counts for proj where sites > 100 and recs > 100000
+- CE-451 Update code logic for determining recordings "legacy" attribute
 
 Resolved issues:
 - Support for Core API v1.1.x changes

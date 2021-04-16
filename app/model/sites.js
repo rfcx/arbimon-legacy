@@ -74,7 +74,6 @@ var Sites = {
             lon: joi.number(),
             alt: joi.number(),
             site_type_id: joi.number().optional().default(2), // default mobile recorder
-            legacy: joi.boolean().optional().default(true), // wheter this site belongs to Arbimon (true) or RFCx platform (false)
             external_id: joi.string().optional().default(null),
         };
 
