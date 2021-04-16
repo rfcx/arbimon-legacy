@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<div class="input-source cursor-crosshair"
+<div class="input-source cursor-crosshair" ng-if="!layer.templates.citizenScientistUser"
     ng-style="{height: layout.spectrogram.height, width: layout.spectrogram.width}"
     a2-visualizer-fit-spectrogram ng-show="selection.layer == layer"
     ng-mousedown="($event.which == 1) && layer.templates.editor.add_point(pointer)"

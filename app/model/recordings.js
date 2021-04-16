@@ -249,7 +249,6 @@ var Recordings = {
                         "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
                         "S.name as site, \n"+
                         "S.timezone, \n"+
-                        "S.legacy as legacy, \n"+
                         "R.uri, \n"+
                         "R.datetime, \n"+
                         "R.mic, \n"+
@@ -326,6 +325,9 @@ var Recordings = {
                         return Recordings['__compute_' + property.replace(/-/g,'_')];
                     });
                 } else {
+                    data.forEach((d) => {
+                        d.legacy = Recordings.isLegacy(d)
+                    })
                     return data;
                 }
             }
@@ -436,11 +438,11 @@ var Recordings = {
 
     /**
      * Checks whether recording belongs to Arbimon (legacy) or RFCx platform
+     * Arbimon-based recordings are uploaded into buckets with similar naming (e.g. project_123, project_3, etc...)
      * @param {*} recording object containing the recording's data, like the ones returned in findByUrlMatch.
      */
-    isLegacy: async function(recording) {
-        const site = await this.getSiteModel(recording)
-        return site && site.legacy
+    isLegacy: function(recording) {
+        return recording.uri.startsWith('project_')
     },
 
     /** Downloads a recording from the bucket, storing it in a temporary file cache, and returns its path.
@@ -454,7 +456,7 @@ var Recordings = {
             if(!s3 || !s3RFCx){
                 defineS3Clients()
             }
-            const legacy = await this.isLegacy(recording)
+            const legacy = this.isLegacy(recording)
             let s3Client = legacy? s3 : s3RFCx
             const opts = {
                 Bucket : config(legacy? 'aws' : 'aws-rfcx').bucketName,
@@ -882,17 +884,16 @@ var Recordings = {
         callback();
     },
     __compute_thumbnail_path_async : async function(recording){
-        if (recording.site_id && recording.legacy !== undefined && recording.site_external_id !== undefined) {
+        if (recording.site_id && recording.site_external_id !== undefined) {
             var site = {
                 site_id: recording.site_id,
-                legacy: !!recording.legacy,
                 external_id: recording.site_external_id
             }
         }
         else {
             var site = await Recordings.getSiteModel(recording)
         }
-        const legacy = site && site.legacy
+        const legacy = this.isLegacy(recording)
         if (legacy) {
             recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
         }
@@ -1115,13 +1116,13 @@ var Recordings = {
                         for (let _1 of r) {
                             // Previously part of the query but now merged after
                             _1.site = siteData[_1.site_id].name;
-                            _1.legacy = siteData[_1.site_id].legacy;
+                            _1.legacy = Recordings.isLegacy(_1)
                             _1.site_external_id = siteData[_1.site_id].external_id;
                             _1.timezone = siteData[_1.site_id].timezone;
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
                             Recordings.__compute_thumbnail_path_async(_1);
-                            if (!!siteData[_1.site_id].legacy !== true) {
-                                _1.file = `${moment.utc(_1.datetime).format('YYYY-MM-DD HH:mm:ss')}${path.extname(_1.file)}`;
+                            if (!_1.legacy) {
+                                _1.file = `${moment.utc(_1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
                             }
                         }
                     } else {

@@ -250,8 +250,8 @@ angular.module('a2.visualizer', [
     $scope.canDisplayInSidebar     = layers.display_sidebar.bind(layers);
     $scope.canDisplayInSpectrogram = layers.display_spectrogram.bind(layers);
 
-    if (a2UserPermit.has('citizen_scientist') &&  !a2UserPermit.isSuper()) {
-        layers.add('base-image-layer', 'recording-layer', 'zoom-input-layer')
+    if (a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper()) {
+        layers.add('base-image-layer', 'recording-layer', 'templates', 'zoom-input-layer')
     }
     else {
         layers.add(
