@@ -1,6 +1,10 @@
 # Arbimon Release Notes
 
-## v3.0.21 - Mar XX, 2021
+## v3.0.21 - Apr 15, 2021
+
+Resolved issues:
+- PI-731 Bounding box is no longer visible in the Pattern Matching for Citizen Scientist users
+- PI-732 User unable to create PM template
 
 Performance improvements:
 - CE-438 Do not request counts for proj where sites > 100 and recs > 100000
