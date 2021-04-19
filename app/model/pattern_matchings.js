@@ -43,6 +43,7 @@ var PatternMatchings = {
      * @return {Promise} resolving to array with the matching playlists.
      */
     find: function (options) {
+        console.log('\n\noptions', options)
         var constraints=[], projection=[];
         var postprocess=[];
         var data=[];
@@ -114,7 +115,7 @@ var PatternMatchings = {
                     (_[row.template_id] || (_[row.template_id] = [])).push(row);
                     return _;
                 }, {});
-                return Templates.find({idIn: Object.keys(idmap)}).then(templates => {
+                return Templates.find({idIn: Object.keys(idmap), sourceProjectUri: true}).then(templates => {
                     templates.forEach((template) => idmap[template.id].forEach(row => row.template = template));
                     return rows;
                 });

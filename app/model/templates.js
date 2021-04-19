@@ -82,6 +82,13 @@ var Templates = {
             select.push('R.uri as recUri, R.site_id as recSiteId, R.sample_rate');
         }
 
+        if (options.sourceProjectUri){
+            tables.push('JOIN recordings R ON T.recording_id = R.recording_id');
+            tables.push('JOIN sites S ON R.site_id = S.site_id');
+            tables.push('JOIN projects P ON S.project_id = P.project_id');
+            select.push('P.url as source_project_uri');
+        }
+
         if (options.showOwner || options.allAccessibleProjects) {
             select.push(
                 "IF (T.user_id IS NULL, CONCAT(CONCAT(UCASE(LEFT( U.`firstname` , 1)), SUBSTRING( U.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U.`lastname` , 1)), SUBSTRING( U.`lastname` , 2))), CONCAT(CONCAT(UCASE(LEFT( U3.`firstname` , 1)), SUBSTRING( U3.`firstname` , 2)),' ',CONCAT(UCASE(LEFT( U3.`lastname` , 1)), SUBSTRING( U3.`lastname` , 2)))) AS author",

@@ -5,6 +5,7 @@
 Resolved issues:
 - PI-731 Bounding box is no longer visible in the Pattern Matching for Citizen Scientist users
 - PI-732 User unable to create PM template
+- PI-730 Fix blank Visualizer page in Pattern Matching - Expert's View part in Citizen Scientist
 
 Performance improvements:
 - CE-438 Do not request counts for proj where sites > 100 and recs > 100000

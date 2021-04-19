@@ -27,9 +27,8 @@ angular.module('a2.analysis.patternmatching', [
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
 
     $scope.getTemplateVisualizerUrl = function(template){
-        var projecturl = Project.getUrl();
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
-        return template ? "/project/"+projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     $scope.selectItem = function(patternmatchingId){
@@ -314,7 +313,7 @@ angular.module('a2.analysis.patternmatching', [
 
     getTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/project/"+this.projecturl+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){
