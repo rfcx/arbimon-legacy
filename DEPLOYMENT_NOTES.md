@@ -2,7 +2,10 @@
 
 ## v3.0.21
 
-- Ensure that `config/rfcx.local.json` has the correct value for `apiBaseUrl` and `mediaBaseUrl` (default value in rfcx.json was changed).
+- Run migration 009-recordings-table-add-datetime-local-column.sql
+- Run query to updating all recordings datetime_local
+- Add datetime_local parameter to model.py file into uploader Lambda function
+- Ensure that `config/rfcx.local.json` has the correct value for `apiBaseUrl` and `mediaBaseUrl` (default value in rfcx.json was changed)
 
 ## v3.0.16
 
@@ -27,10 +30,6 @@
 
 - Add `config/k8s.json` file
 
-## v3.0.10
-
-_None_
-
 ## v3.0.9
 
 - Run migration 006-project-table-add-aed-clustering-enabled-colums.sql
@@ -38,14 +37,6 @@ _None_
 ## v3.0.8
 
 - Install `serve-favicon` library
-
-## v3.0.7
-
-_None_
-
-## v3.0.6
-
-_None_
 
 ## v3.0.5
 

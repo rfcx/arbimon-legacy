@@ -76,7 +76,7 @@ module.exports = {
     enqueue: function(upload, cb) {
         var upload_row;
         async.waterfall([
-            function(callback) {
+            async function(callback) {
                 upload.tempFileUri = Uploader.computeTempAreaPath(upload);
                 upload_row = {
                     filename: upload.name,
@@ -89,6 +89,8 @@ module.exports = {
                     channels: upload.info.channels,
                     duration: upload.info.duration
                 };
+                const datetimeLocal = await model.recordings.calculateLocalTimeAsync(upload_row.site_id, upload_row.datetime);
+                upload_row.datetime_local = datetimeLocal? datetimeLocal : upload_row.datetime;
                 model.uploads.insertRecToList(upload_row, callback);
             },
             function(result, fields, callback) {

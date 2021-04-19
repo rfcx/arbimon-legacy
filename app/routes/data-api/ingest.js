@@ -94,6 +94,8 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
       sample_encoding: convertedParams.sample_encoding,
       upload_time: new Date()
     };
+    const datetimeLocal = await model.recordings.calculateLocalTimeAsync(recordingData.site_id, recordingData.datetime);
+    recordingData.datetime_local = datetimeLocal? datetimeLocal : recordingData.datetime;
     const insertData = await model.recordings.insertAsync(recordingData);
     const recording = await model.recordings.findByIdAsync(insertData.insertId);
     res.status(201).json(recording);
