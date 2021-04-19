@@ -43,7 +43,6 @@ var PatternMatchings = {
      * @return {Promise} resolving to array with the matching playlists.
      */
     find: function (options) {
-        console.log('\n\noptions', options)
         var constraints=[], projection=[];
         var postprocess=[];
         var data=[];
