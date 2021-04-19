@@ -6,22 +6,6 @@
 - Run query to updating all recordings datetime_local
 - Add datetime_local parameter to model.py file into uploader Lambda function
 
-## v3.0.20
-
-_None_
-
-## v3.0.19
-
-_None_
-
-## v3.0.18
-
-_None_
-
-## v3.0.17
-
-_None_
-
 ## v3.0.16
 
 - Ensure that `config/job-queue.local.json` has a value for `instanceId` because the default was changed to `"none"`.
@@ -30,10 +14,6 @@ _None_
 
 - Run migration 008-sites-table-add-updated-at-column.sql
 - Run script to updating all sites updated_at
-
-## v3.0.14
-
-_None_
 
 ## v3.0.13
 
@@ -49,10 +29,6 @@ _None_
 
 - Add `config/k8s.json` file
 
-## v3.0.10
-
-_None_
-
 ## v3.0.9
 
 - Run migration 006-project-table-add-aed-clustering-enabled-colums.sql
@@ -60,14 +36,6 @@ _None_
 ## v3.0.8
 
 - Install `serve-favicon` library
-
-## v3.0.7
-
-_None_
-
-## v3.0.6
-
-_None_
 
 ## v3.0.5
 
