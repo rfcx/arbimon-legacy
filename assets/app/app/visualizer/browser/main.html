@@ -20,12 +20,12 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="nav nav-pills nav-stacked visobj-list" role="menu" a2-scroll="onScroll($event, $controller)" a2-infinite-scroll-distance="10">
-                <div class="visobj-list-item" ng-show="browser.loading.times">
+                <div class="visobj-list-item" ng-show="browser.loading.times || browser.lovo.loading">
                     <i class="fa fa-spinner fa-spin"></i>
                     Loading {{browser.type.vobject_type | plural}}
                 </div>
 
-                <div class="visobj-list-item" ng-show="!browser.loading.times && !browser.lovo.list.length ">
+                <div class="visobj-list-item" ng-show="!browser.loading.times && !browser.lovo.list.length && !browser.lovo.loading">
                     <p ng-if="browser.type.name == 'rec'">
                         Please, select a site and a date to browse
                     </p>

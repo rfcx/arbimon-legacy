@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.21
+
+- Ensure that `config/rfcx.local.json` has the correct value for `apiBaseUrl` and `mediaBaseUrl` (default value in rfcx.json was changed).
+
 ## v3.0.16
 
 - Ensure that `config/job-queue.local.json` has a value for `instanceId` because the default was changed to `"none"`.
