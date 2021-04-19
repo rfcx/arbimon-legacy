@@ -2,17 +2,22 @@
 
 ## v3.0.21 - Apr 15, 2021
 
+New features:
+
+- PI-520 Modify the Arbimon upload page
+
 Resolved issues:
+
 - PI-731 Bounding box is no longer visible in the Pattern Matching for Citizen Scientist users
 - PI-732 User unable to create PM template
 - PI-730 Fix blank Visualizer page in Pattern Matching - Expert's View part in Citizen Scientist
+- Support for Core API v1.1.x changes
+- PI-739 The Visualizer page not loading before switching tabs
 
 Performance improvements:
+
 - CE-438 Do not request counts for proj where sites > 100 and recs > 100000
 - CE-451 Update code logic for determining recordings "legacy" attribute
-
-Resolved issues:
-- Support for Core API v1.1.x changes
 
 ## v3.0.20 - Mar 30, 2021
 
