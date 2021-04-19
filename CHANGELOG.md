@@ -11,6 +11,7 @@ Resolved issues:
 - PI-731 Bounding box is no longer visible in the Pattern Matching for Citizen Scientist users
 - PI-732 User unable to create PM template
 - Support for Core API v1.1.x changes
+- PI-739 The Visualizer page not loading before switching tabs
 
 Performance improvements:
 

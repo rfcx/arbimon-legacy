@@ -148,8 +148,10 @@ angular.module('a2.visobjectsbrowser', [
         var defer = $q.defer();
         var old_lovo = self.lovo;
         self.lovo = lovo;
+        if (self.lovo) self.lovo.loading = true;
         return $q.resolve().then(function(){
             if(lovo){
+                self.lovo.loading = false;
                 if (lovo.recordingsBySite) {
                     lovo.updateRecording($scope.browser.currentRecording? $scope.browser.currentRecording : undefined);
                 }
