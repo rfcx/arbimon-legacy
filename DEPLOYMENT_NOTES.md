@@ -5,6 +5,7 @@
 - Run migration 009-recordings-table-add-datetime-local-column.sql
 - Run query to updating all recordings datetime_local
 - Add datetime_local parameter to model.py file into uploader Lambda function
+- Ensure that `config/rfcx.local.json` has the correct value for `apiBaseUrl` and `mediaBaseUrl` (default value in rfcx.json was changed)
 
 ## v3.0.16
 
