@@ -13,6 +13,7 @@ Resolved issues:
 - PI-730 Fix blank Visualizer page in Pattern Matching - Expert's View part in Citizen Scientist
 - Support for Core API v1.1.x changes
 - PI-739 The Visualizer page not loading before switching tabs
+- CE-537 Fix the location of the legend for the scatter plot
 
 Performance improvements:
 

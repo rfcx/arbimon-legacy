@@ -249,11 +249,13 @@ angular.module('a2.analysis.clustering-jobs', [
         // shapes layout
         $scope.layout = {
             shapes: shapes,
-            height: 400,
+            height: 500,
             width: el ? el.offsetWidth : 1390,
             showlegend: true,
             legend: {
-                orientation: 'h',
+                x: 1,
+                xanchor: 'right',
+                y: 1,
                 itemclick: 'toggleothers',
                 font: {
                     color: 'white'
