@@ -236,7 +236,7 @@ angular.module('a2.browser_recordings_by_site', [
     // Preselect of a site and a date from navigation URL
     this.auto_select = function(recording){
         if(recording) {
-            var utcdateaslocal = new Date(recording.datetime);
+            var utcdateaslocal = new Date(recording.datetime_local);
             var recdate = new Date(utcdateaslocal.getTime() + utcdateaslocal.getTimezoneOffset()*60*1000);
 
             self.auto = {
