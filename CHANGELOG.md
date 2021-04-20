@@ -14,6 +14,7 @@ Resolved issues:
 - Support for Core API v1.1.x changes
 - PI-739 The Visualizer page not loading before switching tabs
 - CE-537 Fix the location of the legend for the scatter plot
+- CE-538 Change the type of the request for getting recordings by aed ids
 
 Performance improvements:
 
