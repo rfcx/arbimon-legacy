@@ -773,14 +773,12 @@ var Recordings = {
 
     },
 
-    calculateLocalTimeAsync: function(site_id) {
-        let calculateLocalTime = util.promisify(this.calculateLocalTime)
-        return calculateLocalTime(site_id)
-    },
-
-    calculateLocalTime: function(site_id, datetime, callback) {
-        var q = `SELECT CONVERT_TZ(${datetime}, 'UTC', timezone) FROM sites WHERE site_id=${site_id}`;
-        queryHandler(q, callback);
+    calculateLocalTimeAsync: async function(site_id, datetime) {
+        var datetimeFormatted = moment.utc(datetime).format('YYYY-MM-DD HH:mm:ss');
+        return dbpool.query(`SELECT CONVERT_TZ('${datetimeFormatted}','UTC',S.timezone) as datetime_local FROM sites S WHERE S.site_id=${site_id}`, [])
+            .then((data) => {
+                return data[0].datetime_local;
+            })
     },
 
     insert: function(recording, callback) {
