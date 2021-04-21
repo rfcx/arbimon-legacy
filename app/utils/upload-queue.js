@@ -90,7 +90,7 @@ module.exports = {
                     duration: upload.info.duration
                 };
                 const datetimeLocal = await model.recordings.calculateLocalTimeAsync(upload_row.site_id, upload_row.datetime);
-                upload_row.datetime_local = datetimeLocal && datetimeLocal[0].datetime_local? datetimeLocal[0].datetime_local : upload_row.datetime;
+                upload_row.datetime_local = datetimeLocal? datetimeLocal : upload_row.datetime;
                 model.uploads.insertRecToList(upload_row, callback);
             },
             function(result, fields, callback) {

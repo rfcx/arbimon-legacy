@@ -781,7 +781,11 @@ var Recordings = {
     calculateLocalTime: function(site_id, datetime, callback) {
         var datetimeFormatted = moment.utc(datetime).format('YYYY-MM-DD HH:mm:ss');
         var q = `SELECT CONVERT_TZ('${datetimeFormatted}','UTC',S.timezone) as datetime_local FROM sites S WHERE S.site_id=${site_id}`;
-        queryHandler(q, callback);
+        queryHandler(q, function(err, rows) {
+            if (err) { callback(null); return; }
+            if (!rows || !rows.length) { callback(null, null); return; }
+            callback(null, rows[0].datetime_local);
+        });
     },
 
     insert: function(recording, callback) {
