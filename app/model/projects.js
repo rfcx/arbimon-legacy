@@ -27,6 +27,7 @@ const projectSchema = joi.object().keys({
     url: joi.string(),
     description: joi.string().optional(),
     is_private: joi.boolean(),
+    external_id: joi.string().optional(),
 });
 
 var Projects = {
