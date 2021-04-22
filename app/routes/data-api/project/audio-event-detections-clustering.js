@@ -19,13 +19,13 @@ router.get('/', function(req, res, next) {
     }).catch(next);
 });
 
-router.get('/records', function(req, res, next) {
+router.post('/records', function(req, res, next) {
     res.type('json');
 
     return model.AudioEventDetectionsClustering.findClusteredRecords({
         project_id: req.project.project_id,
-        aed_id: req.query.aed_id,
-        aed_id_in: req.query.aed_id_in
+        aed_id: req.body.aed_id,
+        aed_id_in: req.body.aed_id_in
     })
     .then(function(data){
         res.json(data);

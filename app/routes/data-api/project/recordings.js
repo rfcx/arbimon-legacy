@@ -98,6 +98,14 @@ router.get('/count', function(req, res, next) {
     });
 });
 
+router.get('/time-bounds', function(req, res, next) {
+    res.type('json');
+    model.projects.recordingsMinMaxDates(req.project.project_id, function(err, data) {
+        if(err) return next(err);
+        res.json(data[0]);
+    });
+});
+
 // get records for the project
 router.get('/:recUrl?', function(req, res, next) {
     res.type('json');

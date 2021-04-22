@@ -19,17 +19,16 @@ angular.module('a2.srv.audio-event-detections-clustering', [
                 return response.data;
             }).catch(notify.serverError);
         },
-        getClusteredRecords: function(opts, callback) {
-            var config = {
-                params: {}
-            };
+        searchClusteredRecords: function(opts, callback) {
+            var params = {};
+
             if (opts.aed_id) {
-                config.params.aed_id = opts.aed_id;
+                params.aed_id = opts.aed_id;
             }
             if (opts.aed_id_in) {
-                config.params.aed_id_in = opts.aed_id_in;
+                params.aed_id_in = opts.aed_id_in;
             }
-            return $http.get('/api/project/'+Project.getUrl()+'/audio-event-detections-clustering/records', config).then(function(response){
+            return $http.post('/api/project/'+Project.getUrl()+'/audio-event-detections-clustering/records', params).then(function(response){
                 return response.data;
             }).catch(notify.serverError);
         },

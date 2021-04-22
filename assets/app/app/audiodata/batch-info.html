@@ -9,6 +9,7 @@
                 <ui-select-match placeholder="Site name">{{ $select.selected.name }}</ui-select-match>
                 <ui-select-choices class="has-badges" repeat="site in sites | filter:$select.search">
                     {{ site.name }}
+                    <i ng-if="site.external_id" class="fa fa-info-circle text-warning" title="Uploader/Companion site"></i>
                 </ui-select-choices>
             </ui-select>
         </div>
@@ -54,12 +55,12 @@
     <button class="btn btn-primary"
         type="submit"
         ng-click="close() | trackEvent:'Audiodata-Batchinfo':'Save clicked'">
-            <i class="fa fa-floppy-o"></i> Save &amp; Close
+            <i class="fa fa-floppy-o"></i> Select
     </button>
     <button class="btn btn-default"
         type="button"
         ng-click="$dismiss() | trackEvent:'Audiodata-Batchinfo':'Close clicked'">
-            <i class="fa fa-times"></i> Close
+            <i class="fa fa-times"></i> Cancel
     </button>
 </div>
 </form>

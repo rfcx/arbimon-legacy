@@ -150,7 +150,6 @@ var Projects = {
                 "       s.timezone, \n"+
                 "       s.published, \n"+
                 "       s.updated_at, \n"+
-                "       s.legacy, \n"+
                 "       s.external_id, \n"+
                 "       s.project_id != ? AS imported, \n"+
                 "       s.token_created_on \n" +
@@ -851,6 +850,12 @@ var Projects = {
         queryHandler(q, callback);
     },
 
+    recordingsMinMaxDates: function (project_id, callback) {
+        let q = `SELECT min(r.datetime) as min, max(r.datetime) as max FROM recordings r
+            JOIN sites s ON r.site_id = s.site_id WHERE s.project_id = ` + dbpool.escape(project_id)
+        queryHandler(q, callback);
+    },
+
     // this includes recordings processing
     getStorageUsage: function(project_id, callback) {
         return dbpool.query(
@@ -886,7 +891,16 @@ var Projects = {
             body,
             json: true
           }
-        return rp(options).then(({ body }) => body)
+        return rp(options).then((response) => {
+            if (response.statusCode === 201 && response.headers.location) {
+                const regexResult = /\/projects\/(?<id>\w+)$/.exec(response.headers.location)
+                if (regexResult) {
+                    return regexResult.groups.id
+                }
+                throw new Error(`Unable to parse location header: ${response.headers.location}`)
+            }
+            throw new Error(`Unexpected status code or location header: ${response.statusCode} ${response.headers.location}`)
+        })
     },
 
     updateInCoreAPI: async function(data, idToken) {

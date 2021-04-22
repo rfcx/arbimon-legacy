@@ -5,7 +5,7 @@ var express = require('express');
 var router = express.Router();
 var model = require('../../model');
 const request = require('request');
-
+const moment = require('moment');
 const authentication = require('../../middleware/jwt');
 const verifyToken = authentication.verifyToken;
 const hasRole = authentication.hasRole;
@@ -65,8 +65,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
             lat: externalSite.latitude || 0,
             lon: externalSite.longitude || 0,
             alt: externalSite.altitude || 0,
-            project_id: project.project_id,
-            legacy: false
+            project_id: project.project_id
           });
           site = (await model.sites.findByIdAsync(siteInsertData.insertId))[0];
         }
@@ -79,7 +78,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         throw new EmptyResultError('Site with given external_id not found.');
       }
     }
-    const recordingData = {
+    var recordingData = {
       site_id: site.site_id,
       uri: convertedParams.uri,
       datetime: convertedParams.datetime.format('YYYY-MM-DD HH:mm:ss.SSS'), // required format to avoid timezone issues in joi
@@ -95,6 +94,8 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
       sample_encoding: convertedParams.sample_encoding,
       upload_time: new Date()
     };
+    const datetimeLocal = await model.recordings.calculateLocalTimeAsync(recordingData.site_id, recordingData.datetime);
+    recordingData.datetime_local = datetimeLocal? datetimeLocal : moment.utc(recordingData.datetime).format('YYYY-MM-DD HH:mm:ss');
     const insertData = await model.recordings.insertAsync(recordingData);
     const recording = await model.recordings.findByIdAsync(insertData.insertId);
     res.status(201).json(recording);

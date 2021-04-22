@@ -209,19 +209,21 @@ router.post('/create-project', function(req, res, next) {
                     };
 
                     return createProject(project, req.session.user.id)
-                        .then(async function(projectId) {
+                        .then(async function (projectId) {
                             await model.ActivationCodes.consumeCode(coupon, req.session.user.id);
                             return projectId
-                        }).then(function(projectId){
+                        }).then(function (projectId) {
                             if (req.session.user && req.session.user.rfcx_id) {
                                 project.project_id = projectId
                                 if (rfcxConfig.coreAPIEnabled) {
-                                    model.projects.createInCoreAPI(project, req.session.idToken)
-                                        .then((externalProject) => {
-                                            return model.projects.setExternalId(project.project_id, externalProject.id)
+                                    return model.projects.createInCoreAPI(project, req.session.idToken)
+                                        .then((externalProjectId) => {
+                                            return model.projects.setExternalId(project.project_id, externalProjectId)
                                         })
+                                        .catch((err) => console.error(`Failed to create project in Core: ${err.message}`))
                                 }
                             }
+                        }).then(function () {
                             res.json({
                                 message: util.format("Project '%s' successfully created!", project.name)
                             });
@@ -242,16 +244,18 @@ router.post('/create-project', function(req, res, next) {
                     }).then(function(){
                         project.plan = plan;
                         return createProject(project, req.session.user.id);
-                    }).then(function(projectId) {
+                    }).then(function (projectId) {
                         if (req.session.user && req.session.user.rfcx_id) {
                             project.project_id = projectId
                             if (rfcxConfig.coreAPIEnabled) {
-                                model.projects.createInCoreAPI(project, req.session.idToken)
-                                    .then((externalProject) => {
-                                        return model.projects.setExternalId(project.project_id, externalProject.id)
+                                return model.projects.createInCoreAPI(project, req.session.idToken)
+                                    .then((externalProjectId) => {
+                                        return model.projects.setExternalId(project.project_id, externalProjectId)
                                     })
+                                    .catch((err) => console.error(`Failed to create project in Core: ${err.message}`))
                             }
                         }
+                    }).then(function () {
                         res.json({
                             message: util.format("Project '%s' successfully created!", project.name)
                         });

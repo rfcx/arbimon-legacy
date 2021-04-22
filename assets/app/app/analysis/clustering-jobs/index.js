@@ -176,7 +176,7 @@ angular.module('a2.analysis.clustering-jobs', [
                         $scope.clusters[item].aed.push(res.aed_id[i]);
                     }
                 });
-                a2AudioEventDetectionsClustering.getClusteredRecords(res.aed_id.length === 1 ?
+                a2AudioEventDetectionsClustering.searchClusteredRecords(res.aed_id.length === 1 ?
                     {aed_id: res.aed_id} : {aed_id_in: res.aed_id})
                     .then(function(records) {
                         if (records && records.length) {
@@ -249,11 +249,13 @@ angular.module('a2.analysis.clustering-jobs', [
         // shapes layout
         $scope.layout = {
             shapes: shapes,
-            height: 400,
+            height: 500,
             width: el ? el.offsetWidth : 1390,
             showlegend: true,
             legend: {
-                orientation: 'h',
+                x: 1,
+                xanchor: 'right',
+                y: 1,
                 itemclick: 'toggleothers',
                 font: {
                     color: 'white'
@@ -401,7 +403,7 @@ angular.module('a2.analysis.clustering-jobs', [
         // find related records
         if ($scope.selectedClusters && $scope.selectedClusters.aed && $scope.selectedClusters.aed.length) {
             // TO DO: filter recordings from clusters object.
-            return a2AudioEventDetectionsClustering.getClusteredRecords($scope.selectedClusters.aed.length === 1 ?
+            return a2AudioEventDetectionsClustering.searchClusteredRecords($scope.selectedClusters.aed.length === 1 ?
                 {aed_id: $scope.selectedClusters.aed} : {aed_id_in: $scope.selectedClusters.aed})
                 .then(function(data) {
                     console.log('records', data);

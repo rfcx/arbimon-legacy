@@ -28,7 +28,7 @@ router.post('/projects', verifyToken(), hasRole(['appUser', 'rfcxUser']), async 
   }
 })
 
-router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser']), async function(req, res) {
+router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser', 'guardianCreator']), async function(req, res) {
   try {
     const converter = new Converter(req.body, {});
     converter.convert('name').toString();
@@ -66,8 +66,7 @@ router.post('/sites', verifyToken(), hasRole(['appUser', 'rfcxUser']), async fun
       lon: params.longitude,
       alt: params.altitude,
       external_id: params.external_id,
-      project_id: project.project_id,
-      legacy: false
+      project_id: project.project_id
     };
     const existingSite = await model.sites.find({ external_id: siteData.external_id, project_id: siteData.project_id }).get(0);
     if (existingSite) {

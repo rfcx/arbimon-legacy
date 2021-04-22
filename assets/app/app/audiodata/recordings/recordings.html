@@ -59,7 +59,7 @@
             </field> -->
             <field title="Filename"   key="file"     >{{ row.file     }}</field>
             <field title="Site"       key="site"     >{{ row.site     }}</field>
-            <field title="Time"       key="datetime" >{{row.legacy? (row.datetime | momentUtc : 'lll') : (row.datetime | momentTz : 'lll' : row.timezone) }}
+            <field title="Time"       key="datetime" >{{ (row.datetime | momentTz : 'lll' : row.timezone) }}
                 <!-- <span class="on-row-hover">
                     <a ng-href="#/visualizer/rec/{{row.id}}">
                         <i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i>

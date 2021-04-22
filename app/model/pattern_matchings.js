@@ -114,7 +114,7 @@ var PatternMatchings = {
                     (_[row.template_id] || (_[row.template_id] = [])).push(row);
                     return _;
                 }, {});
-                return Templates.find({idIn: Object.keys(idmap)}).then(templates => {
+                return Templates.find({idIn: Object.keys(idmap), sourceProjectUri: true}).then(templates => {
                     templates.forEach((template) => idmap[template.id].forEach(row => row.template = template));
                     return rows;
                 });
