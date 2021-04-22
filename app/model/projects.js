@@ -893,9 +893,9 @@ var Projects = {
           }
         return rp(options).then((response) => {
             if (response.statusCode === 201 && response.headers.location) {
-                const regexResult = /\/projects\/(?<id>\w+)$/.exec(response.headers.location)
+                const regexResult = /\/projects\/(\w+)$/.exec(response.headers.location)
                 if (regexResult) {
-                    return regexResult.groups.id
+                    return regexResult[1]
                 }
                 throw new Error(`Unable to parse location header: ${response.headers.location}`)
             }

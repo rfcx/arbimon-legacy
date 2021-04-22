@@ -671,9 +671,9 @@ var Sites = {
           }
           return rp(options).then((response) => {
             if (response.statusCode === 201 && response.headers.location) {
-                const regexResult = /\/streams\/(?<id>\w+)$/.exec(response.headers.location)
+                const regexResult = /\/streams\/(\w+)$/.exec(response.headers.location)
                 if (regexResult) {
-                    return regexResult.groups.id
+                    return regexResult[1]
                 }
                 throw new Error(`Unable to parse location header: ${response.headers.location}`)
             }
