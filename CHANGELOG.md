@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-496 Add modifications to site page
+
 ## v3.0.21 - Apr 16, 2021
 
 New features:

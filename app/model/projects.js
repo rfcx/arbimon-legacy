@@ -156,7 +156,8 @@ var Projects = {
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
-                "WHERE (s.project_id = ? OR pis.project_id = ?)",
+                "WHERE (s.project_id = ? OR pis.project_id = ?) \n"+
+                "ORDER BY s.name ASC",
                 [project_id, project_id, project_id, project_id]
         ).then(function(sites){
             if(sites.length && options && options.compute){
