@@ -1,6 +1,10 @@
 # Arbimon Release Notes
 
-## v3.0.21 - Apr 16, 2021
+## v3.0.22 - Apr XX, 2021
+
+- CE-523 User unable to scroll through nearby recordings when clicking thru to visualizer page
+
+## v3.0.21 - Apr 22, 2021
 
 New features:
 
