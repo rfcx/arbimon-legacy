@@ -22,7 +22,7 @@ router.get('/projectlist', function(req, res, next) {
     }
     else {
         model.projects.find({
-            ...type === 'my' && { owner_id: user.id },
+            ...type === 'my' && { user_id: user.id },
             ...includeLocation && { include_location: true }
         }, function(err, rows) {
             if(err) return next(err);
