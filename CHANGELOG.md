@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.22 - Apr XX, 2021
+
+Other:
+
+- Update ingest recordings create endpoint to receive multiple recordings
+
 ## v3.0.21 - Apr 16, 2021
 
 New features:
