@@ -1,6 +1,7 @@
 # Arbimon Release Notes
 
 - CE-507 My projects should include projects where you have been added as a user
+- CE-529 Change pattern matching threshold default value
 
 ## v3.0.21 - Apr 16, 2021
 
