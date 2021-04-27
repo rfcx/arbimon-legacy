@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- Do not convert recordings datetime with timezone for legacy sites
+
 ## v3.0.22 - Apr XX, 2021
 
 Resolved issues:

@@ -245,8 +245,8 @@ var Recordings = {
                     const base = `SELECT ${selection} FROM recordings R JOIN sites S ON S.site_id = ? WHERE R.site_id = ?`
                     const replacements = [recording.site_id, recording.site_id, recording.datetime]
                     const proms = [
-                        dbpool.query(`${base} AND datetime < ? ORDER BY datetime DESC LIMIT 5`, replacements),
-                        dbpool.query(`${base} AND datetime >= ? ORDER BY datetime ASC LIMIT 5`, replacements)
+                        dbpool.query({ sql: `${base} AND datetime < ? ORDER BY datetime DESC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements),
+                        dbpool.query({ sql:`${base} AND datetime >= ? ORDER BY datetime ASC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements)
                     ]
                     return Q.all(proms);
                 }
