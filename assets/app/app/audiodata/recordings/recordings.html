@@ -50,31 +50,16 @@
 <div class="row">
     <div class="col-sm-12">
         <a2-table rows="recs" data-checked="checked" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site">
-            <!-- <field title="">
-                <a class="btn btn-default btn-xs"
-                    ng-href="#/visualizer/rec/{{row.id}}"
-                    title="View in Visualizer">
-                    <i class="fa fa-cubes"></i>
-                </a>
-            </field> -->
-            <field title="Filename"   key="file"     >{{ row.file     }}</field>
-            <field title="Site"       key="site"     >{{ row.site     }}</field>
-            <field title="Time"       key="datetime" >{{ (row.datetime | momentTz : 'lll' : row.timezone) }}
-                <!-- <span class="on-row-hover">
-                    <a ng-href="#/visualizer/rec/{{row.id}}">
-                        <i tooltip-placement="right" tooltip="View in Visualizer" class="fa fa-cubes"></i>
-                    </a>
-                </span> -->
-            </field>
-            <field title="Recorder"   key="recorder" >{{ row.recorder }}</field>
-            <field title="Microphone" key="mic"      >{{ row.mic      }}</field>
-            <field title="Software"   key="version"  >{{ row.version  }}</field>
-            <!-- <field title=""   key=""     >{{ row.file     }}</field> -->
+            <field title="Filename" key="file">{{ row.file }}</field>
+            <field title="Site" key="site">{{ row.site }}</field>
+            <field title="Recording Time" key="datetime" >{{ (row.datetime_local | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
+            <field title="Uploaded" key="uploaded" >{{ (row.upload_time | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
+            <field title="Sample rate" key="sample_rate">{{ row.sample_rate }}</field>
+            <field title="Duration" key="duration">{{ row.duration }}</field>
+            <field title="Samples" key="samples">{{ row.samples }}</field>
+            <field title="File size" key="file_size">{{ row.file_size }}</field>
+            <field title="Bit rate" key="bit_rate">{{ row.bit_rate }}</field>
             <expand-select>
-                <!-- <h4>{{selected.file}}</h4> -->
-                <!-- <p class="">
-                    Type : {{selected.type}}
-                </p> -->
                 <div>
                     <img ng-src="{{selected.thumbnail}}"/>
                 </div>

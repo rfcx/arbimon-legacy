@@ -963,10 +963,17 @@ var Recordings = {
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
                       "       r.uri, \n"+
                       "       r.datetime, \n"+
+                      "       r.datetime_local, \n"+
+                      "       r.upload_time, \n"+
                       "       r.duration, \n"+
                       "       r.mic, \n"+
                       "       r.recorder, \n"+
                       "       r.version, \n"+
+                      "       r.sample_rate, \n"+
+                      "       r.duration, \n"+
+                      "       r.samples, \n"+
+                      "       r.file_size, \n"+
+                      "       r.bit_rate, \n"+
                       "       r.site_id \n",
 
                 date_range: "SELECT MIN(r.datetime) AS min_date, \n"+

@@ -58,10 +58,6 @@ angular.module('a2.audiodata.recordings', [
             }
             if(expect.list) {
                 $scope.recs = data.list;
-
-                $scope.recs.forEach(function(rec) {
-                    rec.datetime = new Date(rec.datetime);
-                });
                 $scope.loading = false;
             }
             if(expect.count){

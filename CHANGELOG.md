@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-495 Add files metadata to the Recordings page
+
 ## v3.0.21 - Apr 16, 2021
 
 New features:
