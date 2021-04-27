@@ -9,7 +9,7 @@ const moment = require('moment');
 const authentication = require('../../middleware/jwt');
 const verifyToken = authentication.verifyToken;
 const hasRole = authentication.hasRole;
-const { Converter, EmptyResultError, httpErrorHandler } = require('@rfcx/http-utils');
+const { EmptyResultError, httpErrorHandler, ArrayConverter } = require('@rfcx/http-utils');
 
 const config = require('../../config');
 const rfcxConfig = config('rfcx');
@@ -17,30 +17,30 @@ const auth0Service = require('../../model/auth0');
 
 router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async function(req, res) {
   try {
-    const convertedParams = {};
-    const params = new Converter(req.body, convertedParams);
-    params.convert('site_external_id').toString();
-    params.convert('uri').toString();
-    params.convert('datetime').toMomentUtc();
-    params.convert('sample_rate').toInt();
-    params.convert('precision').toInt();
-    params.convert('duration').toFloat();
-    params.convert('samples').toInt();
-    params.convert('file_size').toInt();
-    params.convert('bit_rate').toString();
-    params.convert('sample_encoding').toString();
-    params.convert('nameformat').toString().optional().default('AudioMoth');
-    params.convert('recorder').toString().optional().default('Unknown');
-    params.convert('mic').toString().optional().default('Unknown');
-    params.convert('sver').toString().optional().default('Unknown');
+    const converter = new ArrayConverter(req.body)
+    converter.convert('site_external_id').toString();
+    converter.convert('uri').toString();
+    converter.convert('datetime').toMomentUtc();
+    converter.convert('sample_rate').toInt();
+    converter.convert('precision').toInt();
+    converter.convert('duration').toFloat();
+    converter.convert('samples').toInt();
+    converter.convert('file_size').toInt();
+    converter.convert('bit_rate').toString();
+    converter.convert('sample_encoding').toString();
+    converter.convert('nameformat').toString().optional().default('AudioMoth');
+    converter.convert('recorder').toString().optional().default('Unknown');
+    converter.convert('mic').toString().optional().default('Unknown');
+    converter.convert('sver').toString().optional().default('Unknown');
 
-    await params.validate();
-    var site = await model.sites.find({ external_id: convertedParams.site_external_id }).get(0);
+    await converter.validate();
+    const siteExternalId = converter.transformedArray[0].site_external_id
+    var site = await model.sites.find({ external_id: siteExternalId }).get(0);
     if (!site) {
       if (rfcxConfig.coreAPIEnabled) {
         try {
           // Find info about this site (guardian) in Core API DB
-          const externalSite = await model.sites.findInCoreAPI(convertedParams.site_external_id)
+          const externalSite = await model.sites.findInCoreAPI(siteExternalId)
           // Check if we have a project for this site in the DB
           var project = await model.projects.find({ url }).get(0)
           if (!project) {
@@ -78,27 +78,28 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         throw new EmptyResultError('Site with given external_id not found.');
       }
     }
-    var recordingData = {
-      site_id: site.site_id,
-      uri: convertedParams.uri,
-      datetime: convertedParams.datetime.format('YYYY-MM-DD HH:mm:ss.SSS'), // required format to avoid timezone issues in joi
-      mic: convertedParams.mic,
-      recorder: convertedParams.recorder,
-      version: convertedParams.sver,
-      sample_rate: convertedParams.sample_rate,
-      precision: convertedParams.precision,
-      duration: convertedParams.duration,
-      samples: convertedParams.samples,
-      file_size: convertedParams.file_size,
-      bit_rate: convertedParams.bit_rate,
-      sample_encoding: convertedParams.sample_encoding,
-      upload_time: new Date()
-    };
-    const datetimeLocal = await model.recordings.calculateLocalTimeAsync(recordingData.site_id, recordingData.datetime);
-    recordingData.datetime_local = datetimeLocal? datetimeLocal : moment.utc(recordingData.datetime).format('YYYY-MM-DD HH:mm:ss');
-    const insertData = await model.recordings.insertAsync(recordingData);
-    const recording = await model.recordings.findByIdAsync(insertData.insertId);
-    res.status(201).json(recording);
+    for (let data of converter.transformedArray) {
+      var recordingData = {
+        site_id: site.site_id,
+        uri: data.uri,
+        datetime: data.datetime.format('YYYY-MM-DD HH:mm:ss.SSS'), // required format to avoid timezone issues in joi
+        mic: data.mic,
+        recorder: data.recorder,
+        version: data.sver,
+        sample_rate: data.sample_rate,
+        precision: data.precision,
+        duration: data.duration,
+        samples: data.samples,
+        file_size: data.file_size,
+        bit_rate: data.bit_rate,
+        sample_encoding: data.sample_encoding,
+        upload_time: new Date()
+      };
+      const datetimeLocal = await model.recordings.calculateLocalTimeAsync(recordingData.site_id, recordingData.datetime);
+      recordingData.datetime_local = datetimeLocal? datetimeLocal : moment.utc(recordingData.datetime).format('YYYY-MM-DD HH:mm:ss');
+      await model.recordings.insertAsync(recordingData);
+    }
+    res.sendStatus(201);
   } catch (e) {
     httpErrorHandler(req, res, 'Failed creating a recording')(e);
   }
