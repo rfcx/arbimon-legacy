@@ -1,5 +1,6 @@
 # Arbimon Release Notes
 
+- CE-496 Move the Last updated column to the right in the sites table. Add default sort site name
 - CE-507 My projects should include projects where you have been added as a user
 - CE-529 Change pattern matching threshold default value
 
