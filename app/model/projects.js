@@ -76,10 +76,11 @@ var Projects = {
             whereExp.push("p.name = ?");
             data.push(query.name);
         }
-        if(query.hasOwnProperty("owner_id")) {
-            joinExtra += 'JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n'
+        if(query.hasOwnProperty("user_id")) {
+            selectExtra += 'upr.role_id, '
+            joinExtra += 'JOIN user_project_role AS upr ON (p.project_id = upr.project_id) \n'
             whereExp.push("upr.user_id = ?");
-            data.push(query.owner_id);
+            data.push(query.user_id);
         }
         if(query.hasOwnProperty("include_location")) {
             selectExtra += 'site.lat as lat, site.lon as lon, '
