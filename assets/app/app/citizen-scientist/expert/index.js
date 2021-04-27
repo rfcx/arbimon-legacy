@@ -264,12 +264,12 @@ angular.module('a2.citizen-scientist.expert', [
 
     getRoiVisualizerUrl: function(roi){
         var box = ['box', roi.x1, roi.y1, roi.x2, roi.y2].join(',')
-        return roi ? "/visualizer/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
+        return roi ? "/project/"+this.projecturl+"/visualizer/rec/"+roi.recording_id+"?a="+box : '';
     },
 
     getTemplateVisualizerUrl: function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',')
-        return template ? "/visualizer/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
+        return template ? "/project/"+template.source_project_uri+"/visualizer/rec/"+template.recording+"?a="+box : '';
     },
 
     setRoi: function(roi_index){

@@ -27,6 +27,7 @@ const projectSchema = joi.object().keys({
     url: joi.string(),
     description: joi.string().optional(),
     is_private: joi.boolean(),
+    external_id: joi.string().optional(),
 });
 
 var Projects = {
@@ -75,10 +76,11 @@ var Projects = {
             whereExp.push("p.name = ?");
             data.push(query.name);
         }
-        if(query.hasOwnProperty("owner_id")) {
-            joinExtra += 'JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n'
+        if(query.hasOwnProperty("user_id")) {
+            selectExtra += 'upr.role_id, '
+            joinExtra += 'JOIN user_project_role AS upr ON (p.project_id = upr.project_id) \n'
             whereExp.push("upr.user_id = ?");
-            data.push(query.owner_id);
+            data.push(query.user_id);
         }
         if(query.hasOwnProperty("include_location")) {
             selectExtra += 'site.lat as lat, site.lon as lon, '
@@ -155,7 +157,8 @@ var Projects = {
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
-                "WHERE (s.project_id = ? OR pis.project_id = ?)",
+                "WHERE (s.project_id = ? OR pis.project_id = ?) \n"+
+                "ORDER BY s.name ASC",
                 [project_id, project_id, project_id, project_id]
         ).then(function(sites){
             if(sites.length && options && options.compute){
@@ -893,9 +896,9 @@ var Projects = {
           }
         return rp(options).then((response) => {
             if (response.statusCode === 201 && response.headers.location) {
-                const regexResult = /\/projects\/(?<id>\w+)$/.exec(response.headers.location)
+                const regexResult = /\/projects\/(\w+)$/.exec(response.headers.location)
                 if (regexResult) {
-                    return regexResult.groups.id
+                    return regexResult[1]
                 }
                 throw new Error(`Unable to parse location header: ${response.headers.location}`)
             }

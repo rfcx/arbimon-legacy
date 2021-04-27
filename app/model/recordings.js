@@ -813,14 +813,12 @@ var Recordings = {
 
     },
 
-    calculateLocalTimeAsync: function(site_id) {
-        let calculateLocalTime = util.promisify(this.calculateLocalTime)
-        return calculateLocalTime(site_id)
-    },
-
-    calculateLocalTime: function(site_id, datetime, callback) {
-        var q = `SELECT CONVERT_TZ(${datetime}, 'UTC', timezone) FROM sites WHERE site_id=${site_id}`;
-        queryHandler(q, callback);
+    calculateLocalTimeAsync: async function(site_id, datetime) {
+        var datetimeFormatted = moment.utc(datetime).format('YYYY-MM-DD HH:mm:ss');
+        return dbpool.query(`SELECT CONVERT_TZ('${datetimeFormatted}','UTC',S.timezone) as datetime_local FROM sites S WHERE S.site_id=${site_id}`, [])
+            .then((data) => {
+                return data[0].datetime_local;
+            })
     },
 
     insert: function(recording, callback) {
@@ -849,7 +847,7 @@ var Recordings = {
             queryHandler('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
                 '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_local`\n' +
-            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
+            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
                 rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
                 rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_local
             ], callback);
