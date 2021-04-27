@@ -160,9 +160,9 @@ angular.module('a2.visobjectsbrowser', [
                         self.set_location(location);
                     }
                 }).then(function(){
-                    // to set lovo recording to visobject
-                    if (lovo.recordingsBySite && lovo.list && lovo.list.length === 1){
-                        self.auto.visobject = lovo.list[0];
+                    // to set selected recording from the list of recordings
+                    if (lovo.recordingsBySite && lovo.list && lovo.recording_id) {
+                        self.auto.visobject = lovo.list.find(item => item.id === self.auto.visobject.id);
                     }
                     if(self.auto.visobject){
                         return lovo.find(self.auto.visobject).then(function(visobject){
