@@ -109,25 +109,40 @@ router.get('/time-bounds', function(req, res, next) {
 // get records for the project
 router.get('/:recUrl?', function(req, res, next) {
     res.type('json');
-    var recordingUrl = req.params.recUrl;
+    // get nearby recordings
+    if (req.query && req.query.recording_id) {
+        model.recordings.getPrevAndNextRecordingsAsync(req.query.recording_id)
+            .then((recordings) => {
+                if(!recordings.length){
+                    return res.status(404).json({ error: 'recording not found' });
+                }
+                res.json(recordings);
+                return null;
+            })
+            .catch((err) => {
+                next(err)
+            })
+    }
+    else {
+        var recordingUrl = req.params.recUrl;
 
-    model.recordings.findByUrlMatch(
-        recordingUrl,
-        req.project.project_id,
-        {
-            order: true,
-            compute: req.query && req.query.show,
-            recording_id: req.query && req.query.recording_id,
-            ...req.query && req.query.limit && {limit: req.query.limit},
-            ...req.query && req.query.offset && {offset: req.query.offset}
-        },
-        function(err, rows) {
-            if (err) return next(err);
-
-            res.json(rows);
-            return null;
-        }
-    );
+        model.recordings.findByUrlMatch(
+            recordingUrl,
+            req.project.project_id,
+            {
+                order: true,
+                compute: req.query && req.query.show,
+                recording_id: req.query && req.query.recording_id,
+                ...req.query && req.query.limit && {limit: req.query.limit},
+                ...req.query && req.query.offset && {offset: req.query.offset}
+            },
+            function(err, rows) {
+                if (err) return next(err);
+                res.json(rows);
+                return null;
+            }
+        );
+    }
 });
 
 router.get('/count/:recUrl?', function(req, res, next) {
