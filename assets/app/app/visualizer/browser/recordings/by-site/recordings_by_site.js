@@ -74,8 +74,13 @@ angular.module('a2.browser_recordings_by_site', [
                     };
                 });
                 if (recordings && recordings.length) {
-                    if (recordings.length === 1 && this.list.length && this.list[0].id === recordings[0].id) {
-                        // Do not push existing recording to the list
+                    // not use infinite-scroll functionality for navigating recording
+                    if (recording_id) {
+                        if (angular.equals(this.list, recordings)) {
+                            this.finished = true;
+                        };
+                        this.list = [];
+                        this.list = recordings;
                     } else {
                         this.list.push.apply(this.list, recordings)
                         this.page++
