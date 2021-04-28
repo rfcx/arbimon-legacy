@@ -701,9 +701,11 @@ var Projects = {
             role: role
         }
 
+        const project = await this.findById(userProjectRole.project_id)
+
         const options = {
             method: 'PUT',
-            url: `${rfcxConfig.apiBaseUrl}/projects/${userProjectRole.project_id}/users`,
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
@@ -722,9 +724,11 @@ var Projects = {
             email: email
         }
 
+        const project = await this.findById(project_id)
+
         const options = {
             method: 'DELETE',
-            url: `${rfcxConfig.apiBaseUrl}/projects/${project_id}/users`,
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
