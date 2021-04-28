@@ -363,15 +363,11 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
-    const userRole = {
-        project_id: req.project.project_id,
-        user_id: req.body.user_id
-    }
     model.projects.removeUser(req.body.user_id, req.project.project_id, function(err, result){
         if(err) return next(err);
 
         debug("remove user:", result);
-        model.projects.updateUserRoleInCoreAPI(userRole, req.headers.authorization)
+        model.projects.updateUserRoleInCoreAPI(req.body.user_id, req.project.project_id, req.headers.authorization)
         res.json({ success: true });
     });
 });

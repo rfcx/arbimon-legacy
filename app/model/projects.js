@@ -714,8 +714,8 @@ var Projects = {
         return rp(options)
     },
 
-    removeUserRoleInCoreAPI: async function(userProjectRole, idToken) {
-        const user = await users.findById(userProjectRole.user_id)
+    removeUserRoleInCoreAPI: async function(user_id, project_id, idToken) {
+        const user = await users.findById(user_id)
         const email = user[0].email
 
         var body = {
@@ -724,7 +724,7 @@ var Projects = {
 
         const options = {
             method: 'DELETE',
-            url: `${rfcxConfig.apiBaseUrl}/projects/${userProjectRole.project_id}/users`,
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project_id}/users`,
             headers: {
                 'content-type': 'application/json',
                 Authorization: `Bearer ${idToken}`,
