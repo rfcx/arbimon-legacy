@@ -307,11 +307,12 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
-    model.projects.addUser({
+    const userRole = {
         project_id: req.project.project_id,
         user_id: req.body.user_id,
-        role_id: 2 // default to normal user
-    },
+        role_id: 2
+    }
+    model.projects.addUser(userRole,
     function(err, result){
         if (err) {
             if (err.status === 404) {
@@ -321,6 +322,7 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
         }
 
         debug("add user:", result);
+        model.projects.updateUserRoleInCoreAPI(userRole, req.headers.authorization)
         res.json({ success: true });
     });
 });
@@ -336,15 +338,17 @@ router.post('/:projectUrl/user/role', function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
-    model.projects.changeUserRole({
+    const userRole = {
         project_id: req.project.project_id,
         user_id: req.body.user_id,
         role_id: req.body.role_id
-    },
+    }
+    model.projects.changeUserRole(userRole,
     function(err, result){
         if(err) return next(err);
 
         debug("change user role:", result);
+        model.projects.updateUserRoleInCoreAPI(userRole, req.headers.authorization)
         res.json({ success: true });
     });
 });
@@ -359,10 +363,15 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
+    const userRole = {
+        project_id: req.project.project_id,
+        user_id: req.body.user_id
+    }
     model.projects.removeUser(req.body.user_id, req.project.project_id, function(err, result){
         if(err) return next(err);
 
         debug("remove user:", result);
+        model.projects.updateUserRoleInCoreAPI(userRole, req.headers.authorization)
         res.json({ success: true });
     });
 });
