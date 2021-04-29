@@ -52,13 +52,14 @@
         <a2-table rows="recs" data-checked="checked" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site">
             <field title="Filename" key="file">{{ row.file }}</field>
             <field title="Site" key="site">{{ row.site }}</field>
-            <field title="Recording Time" key="datetime" >{{ (row.datetime_local | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
-            <field title="Uploaded" key="uploaded" >{{ (row.upload_time | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
-            <field title="Sample rate" key="sample_rate">{{ row.sample_rate }}</field>
-            <field title="Duration" key="duration">{{ row.duration }}</field>
-            <field title="Samples" key="samples">{{ row.samples }}</field>
-            <field title="File size" key="file_size">{{ row.file_size }}</field>
-            <field title="Bit rate" key="bit_rate">{{ row.bit_rate }}</field>
+            <field title="Recorded Time" key="datetime" >{{ (row.datetime | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
+            <field title="Uploaded Time" key="upload_time" >{{ (row.upload_time | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
+            <field title="Recorder Name" key="recorder">{{ row.recorder }}</field>
+            <field title="Sampling Rate" key="sample_rate">{{ row.sample_rate }}</field>
+            <field title="Comments" key="comments" className="comments hidelongtext seconds-div-center">
+                <div ng-if="row.legacy === false && row.comments"><i class="fa fa-info-circle text-warning" title="{{row.comments}}"></i></div>
+                <div ng-if="row.legacy === true">{{ 'Microphone: ' + row.mic + ' / ' +  'Software: ' + row.version}}</div>
+            </field>
             <expand-select>
                 <div>
                     <img ng-src="{{selected.thumbnail}}"/>

@@ -92,7 +92,8 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
       file_size: convertedParams.file_size,
       bit_rate: convertedParams.bit_rate,
       sample_encoding: convertedParams.sample_encoding,
-      upload_time: new Date()
+      upload_time: new Date(),
+      comment: convertedParams.comment
     };
     const datetimeLocal = await model.recordings.calculateLocalTimeAsync(recordingData.site_id, recordingData.datetime);
     recordingData.datetime_local = datetimeLocal? datetimeLocal : moment.utc(recordingData.datetime).format('YYYY-MM-DD HH:mm:ss');
