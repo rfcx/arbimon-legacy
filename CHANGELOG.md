@@ -13,6 +13,10 @@ Resolved issues:
 - CE-507 My projects should include projects where you have been added as a user
 - CE-529 Change pattern matching threshold default value
 
+Other:
+
+- Update ingest recordings create endpoint to receive multiple recordings
+
 ## v3.0.21 - Apr 16, 2021
 
 New features:
