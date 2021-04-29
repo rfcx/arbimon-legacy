@@ -322,7 +322,9 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
         }
 
         debug("add user:", result);
-        model.projects.updateUserRoleInCoreAPI(userRole, req.headers.authorization)
+        if (rfcxConfig.coreAPIEnabled) {
+            model.projects.updateUserRoleInCoreAPI(userRole, req.session.idToken)
+        }
         res.json({ success: true });
     });
 });
@@ -348,7 +350,9 @@ router.post('/:projectUrl/user/role', function(req, res, next) {
         if(err) return next(err);
 
         debug("change user role:", result);
-        model.projects.updateUserRoleInCoreAPI(userRole, req.headers.authorization)
+        if (rfcxConfig.coreAPIEnabled) {
+            model.projects.updateUserRoleInCoreAPI(userRole, req.session.idToken)
+        }
         res.json({ success: true });
     });
 });
@@ -367,7 +371,9 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
         if(err) return next(err);
 
         debug("remove user:", result);
-        model.projects.updateUserRoleInCoreAPI(req.body.user_id, req.project.project_id, req.headers.authorization)
+        if (rfcxConfig.coreAPIEnabled) {
+            model.projects.updateUserRoleInCoreAPI(req.body.user_id, req.project.project_id, req.session.idToken)
+        }
         res.json({ success: true });
     });
 });
