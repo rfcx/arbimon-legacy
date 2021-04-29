@@ -217,6 +217,46 @@ var Recordings = {
         return find(recId)
     },
 
+    getPrevAndNextRecordingsAsync: function (recording_id) {
+        var selection = "R.recording_id AS id, \n"+
+            "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
+            "S.name as site, \n"+
+            "S.site_id, \n"+
+            "S.timezone, \n"+
+            "R.uri, \n"+
+            "R.datetime, \n"+
+            "R.datetime_local, \n"+
+            "R.mic, \n"+
+            "R.recorder, \n"+
+            "R.version, \n"+
+            "R.sample_rate, \n"+
+            "R.duration, \n"+
+            "R.samples, \n"+
+            "R.file_size, \n"+
+            "R.bit_rate, \n"+
+            "R.precision, \n"+
+            "R.sample_encoding";
+        return this.findByIdAsync(recording_id)
+            .then((recordings) => {
+                const recording = recordings[0]
+                if (!recording) {
+                    return [[], []];
+                } else {
+                    const base = `SELECT ${selection} FROM recordings R JOIN sites S ON S.site_id = ? WHERE R.site_id = ?`
+                    const replacements = [recording.site_id, recording.site_id, recording.datetime]
+                    const proms = [
+                        dbpool.query(`${base} AND datetime < ? ORDER BY datetime DESC LIMIT 5`, replacements),
+                        dbpool.query(`${base} AND datetime >= ? ORDER BY datetime ASC LIMIT 5`, replacements)
+                    ]
+                    return Q.all(proms);
+                }
+            }).then((data) => {
+                return arrays_util.compute_row_properties(data.reduce((arr1, arr2) => [...arr1, ...arr2], []), 'thumbnail-path', function(property){
+                    return Recordings['__compute_' + property.replace(/-/g,'_')];
+                });
+            })
+    },
+
     /** Finds recordings matching the given url and project id.
      * @param {String} recording_url url query selecting the set of recordings
      * @param {Integer} project_id id of the project associated to the recordings
