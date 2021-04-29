@@ -932,6 +932,9 @@ var Recordings = {
 
     __parse_comments_data : function(data) {
         var paresedData = JSON.parse(data);
+        if (paresedData && !paresedData.ARTIST) {
+            return {};
+        }
         var regState = /state was (.*?) and/.exec(data);
         var regGein = /at (\w+) gain/.exec(data);
         var regTemperature = /temperature was (.*?).","/.exec(data);

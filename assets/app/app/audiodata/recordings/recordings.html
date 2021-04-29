@@ -58,7 +58,7 @@
             <field title="Sample Rate" key="sample_rate">{{ row.sample_rate }}</field>
             <field title="Comments" key="comments" className="comments hidelongtext seconds-div-center">
                 <div ng-if="row.legacy === false && row.comments"><i class="fa fa-info-circle text-warning" title="{{row.comments}}"></i></div>
-                <div ng-if="row.legacy === true">{{ 'Microphone: ' + row.mic + ' / ' +  'Software: ' + row.version}}</div>
+                <div ng-if="row.legacy === true"><i class="fa fa-info-circle text-warning" title="{{ 'Microphone: ' + row.mic + ' / ' +  'Software: ' + row.version}}"></i></div>
             </field>
             <expand-select>
                 <div>
