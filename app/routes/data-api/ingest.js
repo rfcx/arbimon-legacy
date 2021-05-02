@@ -94,9 +94,9 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         bit_rate: data.bit_rate,
         sample_encoding: data.sample_encoding,
         upload_time: new Date(),
-        comment: convertedParams.comment
+        comment: data.comment
       };
-      var paresedData = convertedParams.comment? JSON.parse(convertedParams.comment) : null;
+      var paresedData = data.comment? JSON.parse(data.comment) : null;
       if (paresedData && paresedData.ARTIST && paresedData.ARTIST.startsWith('AudioMoth')) {
         recordingData.recorder = 'AudioMoth';
       }
