@@ -310,7 +310,7 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
     const userRole = {
         project_id: req.project.project_id,
         user_id: req.body.user_id,
-        role_id: 2
+        role_id: 2 // default to normal user
     }
     model.projects.addUser(userRole,
     function(err, result){
