@@ -9,7 +9,7 @@ const listOfRoles = {
 }
 
 const Roles = {
-  getRoleById: function(roleId) {
+  getCoreRoleById: function(roleId) {
     return listOfRoles[roleId]
   }
 }
