@@ -40,7 +40,7 @@ angular.module('a2.audiodata.sites', [
     }
 
     Project.getSites(function(sites) {
-        $scope.sites = sites;
+        $scope.sites = sites.sort(function(a, b) { return new Date(b.updated_at) - new Date(a.updated_at)});
         $scope.loading = false;
 
         if (p.site) {
