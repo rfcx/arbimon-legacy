@@ -931,14 +931,19 @@ var Recordings = {
     },
 
     __parse_comments_data : function(data) {
-        var paresedData = JSON.parse(data);
+        const paresedData = JSON.parse(data);
         if (paresedData && !paresedData.ARTIST) {
             return {};
         }
-        var regState = /state was (.*?) and/.exec(data);
-        var regGein = /at (\w+) gain/.exec(data);
-        var regTemperature = /temperature was (.*?).","/.exec(data);
-        var comment = [paresedData.ARTIST, regState[1], regGein[1]+' gain', regTemperature[1]].join(' / ');
+        let comment = '';
+        const regArtist = /AudioMoth (\w+)/.exec(paresedData.ARTIST);
+        comment += regArtist && regArtist[1]? regArtist[1] : '';
+        const regGain = /at (\w+) gain/.exec(data);
+        comment += regGain && regGain[1]? ` / ${regGain[1]} gain`: '';
+        const regState = /state was (.*?) and/.exec(data);
+        comment += regState && regState[1]? ` / ${regState[1]}` : '';
+        const regTemperature = /temperature was (.*?).","/.exec(data);
+        comment += regTemperature && regTemperature[1]? ` / ${regTemperature[1]}` : '';
         return comment;
     },
     __compute_thumbnail_path : async function(recording, callback){
@@ -1021,7 +1026,7 @@ var Recordings = {
                       "       r.recorder, \n"+
                       "       r.version, \n"+
                       "       r.sample_rate, \n"+
-                      "       r.comments, \n"+
+                      "       r.meta, \n"+
                       "       r.site_id \n",
 
                 date_range: "SELECT MIN(r.datetime) AS min_date, \n"+
@@ -1185,7 +1190,7 @@ var Recordings = {
                             _1.site_external_id = siteData[_1.site_id].external_id;
                             _1.timezone = siteData[_1.site_id].timezone;
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
-                            _1.comments = _1.comments? Recordings.__parse_comments_data(_1.comments) : null;
+                            _1.meta = _1.meta? Recordings.__parse_comments_data(_1.meta) : null;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!_1.legacy) {
                                 _1.file = `${moment.utc(_1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
