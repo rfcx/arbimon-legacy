@@ -2,7 +2,7 @@
 
 ## v3.0.22
 
-- Run migration 010-recordings-table-add-comments-column.sql
+- Run migration 010-recordings-table-add-meta-column.sql
 
 ## v3.0.21
 
