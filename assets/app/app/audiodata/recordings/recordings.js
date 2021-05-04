@@ -29,8 +29,7 @@ angular.module('a2.audiodata.recordings', [
         params.output = output;
         params.limit = $scope.limitPerPage;
         params.offset = output.indexOf('list') >= 0 ? ($scope.currentPage-1) * $scope.limitPerPage : 0;
-        params.sortBy = $scope.sortKey? $scope.sortKey : 'datetime';
-        params.sortRev = $scope.reverse? $scope.reverse : true;
+        params.sortBy = 'site_id DESC, datetime DESC';
         return params;
     };
 

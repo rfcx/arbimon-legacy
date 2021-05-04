@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.22-hotfix.1 - May 04, 2021
+
+Performance improvements:
+- CE-614 Fix slow basic recordings query by sorting by site_id additionally
+
 ## v3.0.22 - Apr XX, 2021
 
 Other:

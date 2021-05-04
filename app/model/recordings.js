@@ -1106,12 +1106,11 @@ var Recordings = {
                     if(output === 'list') {
                         var sortBy = parameters.sortBy || 'datetime';
                         var sortRev = parameters.sortRev ? 'DESC' : '';
-                        query.push('ORDER BY ' + dbpool.escapeId(sortBy) + ' ' + sortRev);
+                        query.push('ORDER BY ' + sortBy + ' ' + sortRev);
                         if(limit_clause){
                             query.push("LIMIT " + limit_clause);
                         }
                     }
-
                     return Q.nfcall(queryHandler, {
                         sql: query.join('\n'),
                         typeCast: sqlutil.parseUtcDatetime,
