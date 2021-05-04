@@ -48,7 +48,7 @@
         <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
             <field title="Name" key="name" className="name hidelongtext">
                 {{ row.name }}
-                <span title="ARBIMON ONLY" ng-if="!row.external_id">ARBIMON ONLY</span>
+                <span class="badge" title="ARBIMON ONLY" ng-if="!row.external_id">ARBIMON ONLY</span>
             </field>
             <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
                 <field>
