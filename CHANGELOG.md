@@ -1,6 +1,6 @@
 # Arbimon Release Notes
 
-- CE-496 Move the Last updated column to the right in the sites table. Add default sort site name
+- CE-496 Move the Last updated column to the right in the sites table. Add default site sort by Last updated
 
 ## v3.0.21 - Apr 16, 2021
 
