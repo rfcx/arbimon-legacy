@@ -65,7 +65,7 @@ angular.module('a2.browser_recordings_by_site', [
             Project.getRecordings(key, opts,(function(recordings){
                 recordings = $filter('orderBy')(recordings, 'datetime');
                 recordings.forEach(function(recording) {
-                    recording.caption = [recording.site, moment.tz(recording.datetime, recording.timezone).format('lll')].join(', ');
+                    recording.caption = [recording.site, moment.utc(recording.datetime).format('lll')].join(', ');
                     recording.vaxis = {
                         font:'7px', color:'#333333',
                         range:[0, recording.sample_rate/2000],
@@ -74,8 +74,13 @@ angular.module('a2.browser_recordings_by_site', [
                     };
                 });
                 if (recordings && recordings.length) {
-                    if (recordings.length === 1 && this.list.length && this.list[0].id === recordings[0].id) {
-                        // Do not push existing recording to the list
+                    // not use infinite-scroll functionality for navigating recording
+                    if (recording_id) {
+                        if (angular.equals(this.list, recordings)) {
+                            this.finished = true;
+                        };
+                        this.list = [];
+                        this.list = recordings;
                     } else {
                         this.list.push.apply(this.list, recordings)
                         this.page++
