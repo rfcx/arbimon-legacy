@@ -1,5 +1,10 @@
 # Arbimon Deployment Notes
 
+## v3.0.23
+
+- Run migration 011-projects-table-add-featured-column.sql
+- Run query to add featured=true for top projects
+
 ## v3.0.21
 
 - Run migration 009-recordings-table-add-datetime-local-column.sql

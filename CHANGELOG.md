@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.23 - May XX, 2021
+
+New features:
+- CE-499 Display top projects in the Explore Projects tab
+
 ## v3.0.22 - Apr XX, 2021
 
 Resolved issues:
