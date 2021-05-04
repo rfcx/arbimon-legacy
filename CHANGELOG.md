@@ -8,9 +8,17 @@ Performance improvements:
 
 ## v3.0.22 - Apr XX, 2021
 
+Resolved issues:
+
+- CE-523 User is able to scroll through nearby recordings when clicking thru to visualizer page
+- CE-496 Move the Last updated column to the right in the sites table. Add default sort site name
+- CE-507 My projects should include projects where you have been added as a user
+- CE-529 Change pattern matching threshold default value
+
 Other:
 
 - Update ingest recordings create endpoint to receive multiple recordings
+- Do not convert recordings datetime with timezone for legacy sites
 
 ## v3.0.21 - Apr 16, 2021
 

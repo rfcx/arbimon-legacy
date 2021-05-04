@@ -70,11 +70,11 @@ var Recordings = {
     QUERY_FIELDS : {
         id     : { subject: 'R.recording_id',     project:  true },
         site   : { subject: 'S.name',             project: false, level:1, next: 'year'                },
-        year   : { subject: 'YEAR(R.datetime_local)',   project: true,  level:2, next: 'month' , prev:'site' },
-        month  : { subject: 'MONTH(R.datetime_local)',  project: true,  level:3, next: 'day'   , prev:'year' },
-        day    : { subject: 'DAY(R.datetime_local)',    project: true,  level:4, next: 'hour'  , prev:'month'},
-        hour   : { subject: 'HOUR(R.datetime_local)',   project: true,  level:5, next: 'minute', prev:'day'  },
-        minute : { subject: 'MINUTE(R.datetime_local)', project: true,  level:6,                 prev:'hour' }
+        year   : { subject: 'YEAR(R.datetime)',   project: true,  level:2, next: 'month' , prev:'site' },
+        month  : { subject: 'MONTH(R.datetime)',  project: true,  level:3, next: 'day'   , prev:'year' },
+        day    : { subject: 'DAY(R.datetime)',    project: true,  level:4, next: 'hour'  , prev:'month'},
+        hour   : { subject: 'HOUR(R.datetime)',   project: true,  level:5, next: 'minute', prev:'day'  },
+        minute : { subject: 'MINUTE(R.datetime)', project: true,  level:6,                 prev:'hour' }
     },
     parseUrl: function(recording_url){
         var patternFound = false, resolved = false;
@@ -215,6 +215,46 @@ var Recordings = {
     findByIdAsync: function(recId) {
         let find = util.promisify(this.findById)
         return find(recId)
+    },
+
+    getPrevAndNextRecordingsAsync: function (recording_id) {
+        var selection = "R.recording_id AS id, \n"+
+            "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
+            "S.name as site, \n"+
+            "S.site_id, \n"+
+            "S.timezone, \n"+
+            "R.uri, \n"+
+            "R.datetime, \n"+
+            "R.datetime_local, \n"+
+            "R.mic, \n"+
+            "R.recorder, \n"+
+            "R.version, \n"+
+            "R.sample_rate, \n"+
+            "R.duration, \n"+
+            "R.samples, \n"+
+            "R.file_size, \n"+
+            "R.bit_rate, \n"+
+            "R.precision, \n"+
+            "R.sample_encoding";
+        return this.findByIdAsync(recording_id)
+            .then((recordings) => {
+                const recording = recordings[0]
+                if (!recording) {
+                    return [[], []];
+                } else {
+                    const base = `SELECT ${selection} FROM recordings R JOIN sites S ON S.site_id = ? WHERE R.site_id = ?`
+                    const replacements = [recording.site_id, recording.site_id, recording.datetime]
+                    const proms = [
+                        dbpool.query({ sql: `${base} AND datetime < ? ORDER BY datetime DESC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements),
+                        dbpool.query({ sql:`${base} AND datetime >= ? ORDER BY datetime ASC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements)
+                    ]
+                    return Q.all(proms);
+                }
+            }).then((data) => {
+                return arrays_util.compute_row_properties(data.reduce((arr1, arr2) => [...arr1, ...arr2], []), 'thumbnail-path', function(property){
+                    return Recordings['__compute_' + property.replace(/-/g,'_')];
+                });
+            })
     },
 
     /** Finds recordings matching the given url and project id.
