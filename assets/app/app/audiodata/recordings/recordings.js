@@ -246,11 +246,13 @@ angular.module('a2.audiodata.recordings', [
 })
 .controller('SavePlaylistModalInstanceCtrl', function($scope, $modalInstance, a2Playlists, listParams) {
     $scope.savePlaylist = function(name) {
+        $scope.isSavingPlaylist = true
         a2Playlists.create({
             playlist_name: name,
             params: listParams
         },
         function(data) {
+            $scope.isSavingPlaylist = false
             if (data.error) {
                 $scope.errMess = data.error;
             }

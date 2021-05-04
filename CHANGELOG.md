@@ -4,6 +4,7 @@
 
 Performance improvements:
 - CE-614 Fix slow basic recordings query by sorting by site_id additionally
+- CE-614 Fix playlist creation for large projects; Support playlist creation for large amount of recordings (300k tested); Update UI form to show spinner and disable buttons.
 
 ## v3.0.22 - Apr XX, 2021
 
