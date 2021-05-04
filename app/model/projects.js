@@ -87,6 +87,12 @@ var Projects = {
             joinExtra += 'LEFT JOIN (SELECT project_id, lat, lon, MAX(site_id) as maxSiteId FROM sites GROUP BY project_id) site ON p.project_id = site.project_id \n'
             whereExp.push("1 = 1");
         }
+        if(query.hasOwnProperty('q')) {
+            whereExp.push("(p.name LIKE '%"+query.q+"%' OR p.description LIKE '%"+query.q+"%')");
+        }
+        if(query.hasOwnProperty('featured')) {
+            whereExp.push("p.featured = 1");
+        }
 
         if(!whereExp.length) {
             return q.reject(new Error('no query params'));

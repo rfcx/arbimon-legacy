@@ -15,7 +15,11 @@ router.get('/projectlist', function(req, res, next) {
     var type = req.query.type;
     var includeLocation = req.query.include_location === 'true';
     if ((user.isAnonymousGuest || user.isSuper !== 1) && !type) {
-        model.users.projectList(req.session.user.id, function(err, rows) {
+        model.users.projectList({
+            user_id: req.session.user.id,
+            ...req.query.q && { q: req.query.q },
+            ...req.query.featured && { featured: req.query.featured }
+        }, function(err, rows) {
             if(err) return next(err);
             res.json(rows);
         });
@@ -23,7 +27,9 @@ router.get('/projectlist', function(req, res, next) {
     else {
         model.projects.find({
             ...type === 'my' && { user_id: user.id },
-            ...includeLocation && { include_location: true }
+            ...includeLocation && { include_location: true },
+            ...req.query.q && { q: req.query.q },
+            ...req.query.featured && type !== 'my' && { featured: req.query.featured }
         }, function(err, rows) {
             if(err) return next(err);
             res.json(rows);
