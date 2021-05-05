@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+## v3.0.23 - May XX, 2021
+
+New features:
+- CE-501 Ability to delete project
 
 ## v3.0.22 - May 04, 2021
 

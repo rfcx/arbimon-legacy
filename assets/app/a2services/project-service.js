@@ -268,6 +268,9 @@ angular.module('a2.srv.project', [
                         callback(response);
                     });
             },
+            removeProject: function(data) {
+                return $http.post('/api/project/'+url+'/remove', data);
+            },
         };
     })
 ;

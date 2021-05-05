@@ -367,6 +367,23 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
     });
 });
 
+router.post('/:projectUrl/remove', function(req, res, next) {
+    res.type('json');
+
+    if(!req.haveAccess(req.project.project_id, "delete project")) {
+        next(new APIError('You do not have permission to delete this project'));
+        return;
+    }
+
+    model.projects.removeProject({
+        project_id: req.project.project_id,
+        ...!!req.body.user_id && { user_id: req.body.user_id},
+        ...!!req.session.user.isSuper && { super: req.session.user.isSuper}
+    }).then(function(){
+        res.json({ result: 'success' });
+    }).catch(next);
+});
+
 router.get('/:projectUrl/user-permissions', function(req, res, next) {
     res.type('json');
     model.users.getPermissions(

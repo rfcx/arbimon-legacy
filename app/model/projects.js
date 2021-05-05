@@ -988,6 +988,24 @@ var Projects = {
         return this.find({ id }).get(0)
     },
 
+    removeProject: function(options) {
+        if (options.super) {
+            return dbpool.query(
+                "DELETE FROM projects \n"+
+                "WHERE project_id = ?",[
+                    options.project_id
+                ]);
+        }
+        else {
+            return dbpool.query(
+                "DELETE FROM projects p \n"+
+                "LEFT JOIN user_project_role r ON p.project_id = r.project_id AND r.user_id = ? AND r.role_id = 4 \n"+
+                "WHERE p.project_id = ?",[
+                    options.user_id, options.project_id
+                ]);
+        }
+    },
+
     /**
      * Gets personal project url for given user
      * @param {*} user

@@ -35,7 +35,7 @@ angular.module('a2.settings',[
         allowAccess: accessCheck
     });
 })
-.controller('SettingsDetailsCtrl', function($scope, Project, notify, $window, $timeout, a2order) {
+.controller('SettingsDetailsCtrl', function($scope, Project, notify, $window, $timeout, a2order, a2UserPermit, $modal) {
     $scope.today = new Date();
 
     Project.getInfo(function(info) {
@@ -82,6 +82,32 @@ angular.module('a2.settings',[
             }
         });
     };
+
+    $scope.deleteProject = function() {
+        if(!a2UserPermit.can('delete project')) {
+            notify.log('You do not have permission to delete this project');
+            return;
+        }
+
+        $scope.popup = {
+            title: 'Delete project',
+            messages: ['Are you sure you want to delete this project?'],
+            btnOk: 'Yes',
+            btnCancel: 'No',
+        };
+
+        var modalInstance = $modal.open({
+            templateUrl: '/common/templates/pop-up.html',
+            scope: $scope
+        });
+
+        modalInstance.result.then(function() {
+            return Project.removeProject({ project_id: $scope.project.project_id })
+                .then(function() {
+                    notify.log('Project deleted');
+                });
+        });
+    }
 
     $scope.changePlan = function() {
         var modalInstance = a2order.changePlan({});
