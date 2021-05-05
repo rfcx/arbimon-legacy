@@ -29,8 +29,7 @@ angular.module('a2.audiodata.recordings', [
         params.output = output;
         params.limit = $scope.limitPerPage;
         params.offset = output.indexOf('list') >= 0 ? ($scope.currentPage-1) * $scope.limitPerPage : 0;
-        params.sortBy = $scope.sortKey? $scope.sortKey : 'datetime';
-        params.sortRev = $scope.reverse? $scope.reverse : true;
+        params.sortBy = 'site_id DESC, datetime DESC';
         return params;
     };
 
@@ -247,11 +246,13 @@ angular.module('a2.audiodata.recordings', [
 })
 .controller('SavePlaylistModalInstanceCtrl', function($scope, $modalInstance, a2Playlists, listParams) {
     $scope.savePlaylist = function(name) {
+        $scope.isSavingPlaylist = true
         a2Playlists.create({
             playlist_name: name,
             params: listParams
         },
         function(data) {
+            $scope.isSavingPlaylist = false
             if (data.error) {
                 $scope.errMess = data.error;
             }
