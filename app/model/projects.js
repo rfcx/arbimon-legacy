@@ -695,7 +695,7 @@ var Projects = {
         const user = await users.findById(userProjectRole.user_id)
         const email = user[0].email
 
-        const role = roles.getRoleById(userProjectRole.role_id)
+        const role = roles.getCoreRoleById(userProjectRole.role_id)
         var body = {
             email: email,
             role: role
