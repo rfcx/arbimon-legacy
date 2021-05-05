@@ -297,7 +297,7 @@ router.get('/:projectUrl/users', function(req, res, next) {
     });
 });
 
-router.post('/:projectUrl/user/add', function(req, res, next) {
+router.post('/:projectUrl/user/add', async function(req, res, next) {
     res.type('json');
     if(!req.body.user_id) {
         return res.json({ error: "missing parameters"});
@@ -323,13 +323,13 @@ router.post('/:projectUrl/user/add', function(req, res, next) {
 
         debug("add user:", result);
         if (rfcxConfig.coreAPIEnabled) {
-            model.projects.updateUserRoleInCoreAPI(userRole, req.session.idToken)
+            await model.projects.updateUserRoleInCoreAPI(userRole, req.session.idToken)
         }
         res.json({ success: true });
     });
 });
 
-router.post('/:projectUrl/user/role', function(req, res, next) {
+router.post('/:projectUrl/user/role', async function(req, res, next) {
     res.type('json');
 
     if(!req.body.user_id || !req.body.role_id) {
@@ -351,13 +351,13 @@ router.post('/:projectUrl/user/role', function(req, res, next) {
 
         debug("change user role:", result);
         if (rfcxConfig.coreAPIEnabled) {
-            model.projects.updateUserRoleInCoreAPI(userRole, req.session.idToken)
+            await model.projects.updateUserRoleInCoreAPI(userRole, req.session.idToken)
         }
         res.json({ success: true });
     });
 });
 
-router.post('/:projectUrl/user/del', function(req, res, next) {
+router.post('/:projectUrl/user/del', async function(req, res, next) {
     res.type('json');
     if(!req.body.user_id) {
         return res.json({ error: "missing parameters"});
@@ -372,7 +372,7 @@ router.post('/:projectUrl/user/del', function(req, res, next) {
 
         debug("remove user:", result);
         if (rfcxConfig.coreAPIEnabled) {
-            model.projects.updateUserRoleInCoreAPI(req.body.user_id, req.project.project_id, req.session.idToken)
+            await model.projects.removeUserRoleInCoreAPI(req.body.user_id, req.project.project_id, req.session.idToken)
         }
         res.json({ success: true });
     });
