@@ -839,6 +839,7 @@ var Recordings = {
             sample_encoding: joi.string(),
             upload_time:     joi.date(),
             datetime_local:  joi.date(),
+            meta:  joi.string().optional(),
         };
 
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
@@ -846,10 +847,10 @@ var Recordings = {
 
             queryHandler('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
-                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_local`\n' +
-            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
+                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_local`, `meta`\n' +
+            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
                 rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
-                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_local
+                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_local, rec.meta
             ], callback);
         });
     },
@@ -929,6 +930,22 @@ var Recordings = {
         return exists(recording)
     },
 
+    __parse_comments_data : function(data) {
+        const parsedData = JSON.parse(data);
+        if (parsedData && !parsedData.ARTIST) {
+            return {};
+        }
+        let comment = '';
+        const regArtist = /AudioMoth (\w+)/.exec(parsedData.ARTIST);
+        comment += regArtist && regArtist[1] ? regArtist[1] : '';
+        const regGain = /at (\w+) gain/.exec(data);
+        comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : '';
+        const regState = /state was (.*?) and/.exec(data);
+        comment += regState && regState[1] ? ` / ${regState[1]}` : '';
+        const regTemperature = /temperature was (.*?).","/.exec(data);
+        comment += regTemperature && regTemperature[1] ? ` / ${regTemperature[1]}` : '';
+        return comment;
+    },
     __compute_thumbnail_path : async function(recording, callback){
         await Recordings.__compute_thumbnail_path_async(recording)
         callback();
@@ -1003,10 +1020,13 @@ var Recordings = {
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
                       "       r.uri, \n"+
                       "       r.datetime, \n"+
+                      "       r.upload_time, \n"+
                       "       r.duration, \n"+
                       "       r.mic, \n"+
                       "       r.recorder, \n"+
                       "       r.version, \n"+
+                      "       r.sample_rate, \n"+
+                      "       r.meta, \n"+
                       "       r.site_id \n",
 
                 date_range: "SELECT MIN(r.datetime) AS min_date, \n"+
@@ -1169,6 +1189,7 @@ var Recordings = {
                             _1.site_external_id = siteData[_1.site_id].external_id;
                             _1.timezone = siteData[_1.site_id].timezone;
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
+                            _1.meta = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!_1.legacy) {
                                 _1.file = `${moment.utc(_1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
