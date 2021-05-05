@@ -1,24 +1,26 @@
 # Arbimon Release Notes
 
-## v3.0.22-hotfix.1 - May 04, 2021
+## v3.0.22 - May 04, 2021
 
-Performance improvements:
-- CE-614 Fix slow basic recordings query by sorting by site_id additionally
-- CE-614 Fix playlist creation for large projects; Support playlist creation for large amount of recordings (300k tested); Update UI form to show spinner and disable buttons.
+New features:
 
-## v3.0.22 - Apr XX, 2021
+- CE-523 User is able to scroll through nearby recordings when clicking thru to visualizer page
+- CE-496 Move the Last updated column to the right in the sites table. Add default site sort by Last updated
+- CE-507 My projects should include projects where you have been added as a user
+- CE-529 Change pattern matching threshold default value
 
 Resolved issues:
 
-- CE-523 User is able to scroll through nearby recordings when clicking thru to visualizer page
-- CE-496 Move the Last updated column to the right in the sites table. Add default sort site name
-- CE-507 My projects should include projects where you have been added as a user
-- CE-529 Change pattern matching threshold default value
+- Do not convert recordings datetime with timezone on the Visualizer page
 
 Other:
 
 - Update ingest recordings create endpoint to receive multiple recordings
-- Do not convert recordings datetime with timezone for legacy sites
+- Display recordings datetime without offsets on the Visualizer page
+
+Performance improvements:
+- CE-614 Fix slow basic recordings query by sorting by site_id additionally
+- CE-614 Fix playlist creation for large projects; Support playlist creation for large amount of recordings (300k tested); Update UI form to show spinner and disable buttons.
 
 ## v3.0.21 - Apr 16, 2021
 
