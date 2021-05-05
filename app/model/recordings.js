@@ -931,19 +931,19 @@ var Recordings = {
     },
 
     __parse_comments_data : function(data) {
-        const paresedData = JSON.parse(data);
-        if (paresedData && !paresedData.ARTIST) {
+        const parsedData = JSON.parse(data);
+        if (parsedData && !parsedData.ARTIST) {
             return {};
         }
         let comment = '';
-        const regArtist = /AudioMoth (\w+)/.exec(paresedData.ARTIST);
-        comment += regArtist && regArtist[1]? regArtist[1] : '';
+        const regArtist = /AudioMoth (\w+)/.exec(parsedData.ARTIST);
+        comment += regArtist && regArtist[1] ? regArtist[1] : '';
         const regGain = /at (\w+) gain/.exec(data);
-        comment += regGain && regGain[1]? ` / ${regGain[1]} gain`: '';
+        comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : '';
         const regState = /state was (.*?) and/.exec(data);
-        comment += regState && regState[1]? ` / ${regState[1]}` : '';
+        comment += regState && regState[1] ? ` / ${regState[1]}` : '';
         const regTemperature = /temperature was (.*?).","/.exec(data);
-        comment += regTemperature && regTemperature[1]? ` / ${regTemperature[1]}` : '';
+        comment += regTemperature && regTemperature[1] ? ` / ${regTemperature[1]}` : '';
         return comment;
     },
     __compute_thumbnail_path : async function(recording, callback){
@@ -1190,7 +1190,7 @@ var Recordings = {
                             _1.site_external_id = siteData[_1.site_id].external_id;
                             _1.timezone = siteData[_1.site_id].timezone;
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
-                            _1.meta = _1.meta? Recordings.__parse_comments_data(_1.meta) : null;
+                            _1.meta = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!_1.legacy) {
                                 _1.file = `${moment.utc(_1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
