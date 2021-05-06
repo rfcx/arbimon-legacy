@@ -13,6 +13,7 @@ New features:
 - CE-496 Move the Last updated column to the right in the sites table. Add default site sort by Last updated
 - CE-507 My projects should include projects where you have been added as a user
 - CE-529 Change pattern matching threshold default value
+- CE-495 Add files metadata to the Recordings page
 
 Resolved issues:
 
@@ -21,6 +22,12 @@ Resolved issues:
 Other:
 
 - Update ingest recordings create endpoint to receive multiple recordings
+- Display recordings datetime without offsets on the Visualizer page
+
+Performance improvements:
+
+- CE-614 Fix slow basic recordings query by sorting by site_id additionally
+- CE-614 Fix playlist creation for large projects; Support playlist creation for large amount of recordings (300k tested); Update UI form to show spinner and disable buttons.
 
 ## v3.0.21 - Apr 16, 2021
 
