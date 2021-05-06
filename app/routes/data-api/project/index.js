@@ -374,14 +374,13 @@ router.post('/:projectUrl/remove', function(req, res, next) {
         next(new APIError('You do not have permission to delete this project'));
         return;
     }
-
     model.projects.removeProject({
         project_id: req.project.project_id,
-        ...!!req.body.user_id && { user_id: req.body.user_id},
-        ...!!req.session.user.isSuper && { super: req.session.user.isSuper}
-    }).then(function(){
-        res.json({ result: 'success' });
-    }).catch(next);
+        external_id: req.body.external_id,
+        idToken: req.session.idToken
+    }).then(function() {
+            res.json({ result: 'success' });
+        }).catch(next);
 });
 
 router.get('/:projectUrl/user-permissions', function(req, res, next) {

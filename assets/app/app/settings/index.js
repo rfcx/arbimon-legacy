@@ -102,7 +102,7 @@ angular.module('a2.settings',[
         });
 
         modalInstance.result.then(function() {
-            return Project.removeProject({ project_id: $scope.project.project_id })
+            return Project.removeProject({ external_id: $scope.project.external_id })
                 .then(function() {
                     notify.log('Project deleted');
                 });

@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.23
+
+- Run migration 012-projects-table-add-deleted-column.sql
+
 ## v3.0.21
 
 - Run migration 009-recordings-table-add-datetime-local-column.sql
