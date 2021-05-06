@@ -77,7 +77,7 @@ angular.module('a2.browser_recordings_by_playlist', [
             a2Playlists.getData(self.playlist.id, opts, function(recordings){
                 self.list = recordings;
                 recordings.forEach(function(recording){
-                    recording.caption = [recording.site, moment(recording.datetime).utc().format('lll')].join(', ');
+                    recording.caption = [recording.site, moment.utc(recording.datetime).format('lll')].join(', ');
                     recording.vaxis = {
                         font:'7px', color:'#333333',
                         range:[0, recording.sample_rate/2000],

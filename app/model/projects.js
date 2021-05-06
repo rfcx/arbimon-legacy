@@ -76,10 +76,11 @@ var Projects = {
             whereExp.push("p.name = ?");
             data.push(query.name);
         }
-        if(query.hasOwnProperty("owner_id")) {
-            joinExtra += 'JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n'
+        if(query.hasOwnProperty("user_id")) {
+            selectExtra += 'upr.role_id, '
+            joinExtra += 'JOIN user_project_role AS upr ON (p.project_id = upr.project_id) \n'
             whereExp.push("upr.user_id = ?");
-            data.push(query.owner_id);
+            data.push(query.user_id);
         }
         if(query.hasOwnProperty("include_location")) {
             selectExtra += 'site.lat as lat, site.lon as lon, '
@@ -142,7 +143,7 @@ var Projects = {
         if(typeof project_id !== 'number'){
             return q.reject(new Error("invalid type for 'project_id'"));
         }
-        return dbpool.query(
+        return dbpool.query({ sql:
                 "SELECT s.site_id as id, \n"+
                 "       s.name, \n"+
                 "       s.lat, \n"+
@@ -156,7 +157,7 @@ var Projects = {
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
-                "WHERE (s.project_id = ? OR pis.project_id = ?)",
+                "WHERE (s.project_id = ? OR pis.project_id = ?)",  typeCast: sqlutil.parseUtcDatetime },
                 [project_id, project_id, project_id, project_id]
         ).then(function(sites){
             if(sites.length && options && options.compute){

@@ -70,11 +70,11 @@ var Recordings = {
     QUERY_FIELDS : {
         id     : { subject: 'R.recording_id',     project:  true },
         site   : { subject: 'S.name',             project: false, level:1, next: 'year'                },
-        year   : { subject: 'YEAR(R.datetime_local)',   project: true,  level:2, next: 'month' , prev:'site' },
-        month  : { subject: 'MONTH(R.datetime_local)',  project: true,  level:3, next: 'day'   , prev:'year' },
-        day    : { subject: 'DAY(R.datetime_local)',    project: true,  level:4, next: 'hour'  , prev:'month'},
-        hour   : { subject: 'HOUR(R.datetime_local)',   project: true,  level:5, next: 'minute', prev:'day'  },
-        minute : { subject: 'MINUTE(R.datetime_local)', project: true,  level:6,                 prev:'hour' }
+        year   : { subject: 'YEAR(R.datetime)',   project: true,  level:2, next: 'month' , prev:'site' },
+        month  : { subject: 'MONTH(R.datetime)',  project: true,  level:3, next: 'day'   , prev:'year' },
+        day    : { subject: 'DAY(R.datetime)',    project: true,  level:4, next: 'hour'  , prev:'month'},
+        hour   : { subject: 'HOUR(R.datetime)',   project: true,  level:5, next: 'minute', prev:'day'  },
+        minute : { subject: 'MINUTE(R.datetime)', project: true,  level:6,                 prev:'hour' }
     },
     parseUrl: function(recording_url){
         var patternFound = false, resolved = false;
@@ -215,6 +215,46 @@ var Recordings = {
     findByIdAsync: function(recId) {
         let find = util.promisify(this.findById)
         return find(recId)
+    },
+
+    getPrevAndNextRecordingsAsync: function (recording_id) {
+        var selection = "R.recording_id AS id, \n"+
+            "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
+            "S.name as site, \n"+
+            "S.site_id, \n"+
+            "S.timezone, \n"+
+            "R.uri, \n"+
+            "R.datetime, \n"+
+            "R.datetime_local, \n"+
+            "R.mic, \n"+
+            "R.recorder, \n"+
+            "R.version, \n"+
+            "R.sample_rate, \n"+
+            "R.duration, \n"+
+            "R.samples, \n"+
+            "R.file_size, \n"+
+            "R.bit_rate, \n"+
+            "R.precision, \n"+
+            "R.sample_encoding";
+        return this.findByIdAsync(recording_id)
+            .then((recordings) => {
+                const recording = recordings[0]
+                if (!recording) {
+                    return [[], []];
+                } else {
+                    const base = `SELECT ${selection} FROM recordings R JOIN sites S ON S.site_id = ? WHERE R.site_id = ?`
+                    const replacements = [recording.site_id, recording.site_id, recording.datetime]
+                    const proms = [
+                        dbpool.query({ sql: `${base} AND datetime < ? ORDER BY datetime DESC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements),
+                        dbpool.query({ sql:`${base} AND datetime >= ? ORDER BY datetime ASC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements)
+                    ]
+                    return Q.all(proms);
+                }
+            }).then((data) => {
+                return arrays_util.compute_row_properties(data.reduce((arr1, arr2) => [...arr1, ...arr2], []), 'thumbnail-path', function(property){
+                    return Recordings['__compute_' + property.replace(/-/g,'_')];
+                });
+            })
     },
 
     /** Finds recordings matching the given url and project id.
@@ -773,12 +813,18 @@ var Recordings = {
 
     },
 
-    calculateLocalTimeAsync: async function(site_id, datetime) {
-        var datetimeFormatted = moment.utc(datetime).format('YYYY-MM-DD HH:mm:ss');
-        return dbpool.query(`SELECT CONVERT_TZ('${datetimeFormatted}','UTC',S.timezone) as datetime_local FROM sites S WHERE S.site_id=${site_id}`, [])
-            .then((data) => {
-                return data[0].datetime_local;
-            })
+    calculateLocalTime: function(site_id, datetime, callback) {
+        const datetimeFormatted = moment.utc(datetime).format('YYYY-MM-DD HH:mm:ss');
+        let q = `SELECT CONVERT_TZ('${datetimeFormatted}','UTC',S.timezone) as datetime_local FROM sites S WHERE S.site_id=${site_id}`;
+        queryHandler(q, function(err, rows) {
+            if (err) return callback(err);
+            if (rows.length) callback(null, rows[0].datetime_local);
+        });
+    },
+
+    calculateLocalTimeAsync: function(site_id, datetime) {
+        let calculateLocalTime = util.promisify(this.calculateLocalTime)
+        return calculateLocalTime(site_id, datetime)
     },
 
     insert: function(recording, callback) {
@@ -799,6 +845,7 @@ var Recordings = {
             sample_encoding: joi.string(),
             upload_time:     joi.date(),
             datetime_local:  joi.date(),
+            meta:  joi.string().optional(),
         };
 
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
@@ -806,10 +853,10 @@ var Recordings = {
 
             queryHandler('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
-                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_local`\n' +
-            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
+                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_local`, `meta`\n' +
+            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
                 rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
-                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_local
+                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_local, rec.meta
             ], callback);
         });
     },
@@ -889,6 +936,22 @@ var Recordings = {
         return exists(recording)
     },
 
+    __parse_comments_data : function(data) {
+        const parsedData = JSON.parse(data);
+        if (parsedData && !parsedData.ARTIST) {
+            return {};
+        }
+        let comment = '';
+        const regArtist = /AudioMoth (\w+)/.exec(parsedData.ARTIST);
+        comment += regArtist && regArtist[1] ? regArtist[1] : '';
+        const regGain = /at (\w+) gain/.exec(data);
+        comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : '';
+        const regState = /state was (.*?) and/.exec(data);
+        comment += regState && regState[1] ? ` / ${regState[1]}` : '';
+        const regTemperature = /temperature was (.*?).","/.exec(data);
+        comment += regTemperature && regTemperature[1] ? ` / ${regTemperature[1]}` : '';
+        return comment;
+    },
     __compute_thumbnail_path : async function(recording, callback){
         await Recordings.__compute_thumbnail_path_async(recording)
         callback();
@@ -963,10 +1026,13 @@ var Recordings = {
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
                       "       r.uri, \n"+
                       "       r.datetime, \n"+
+                      "       r.upload_time, \n"+
                       "       r.duration, \n"+
                       "       r.mic, \n"+
                       "       r.recorder, \n"+
                       "       r.version, \n"+
+                      "       r.sample_rate, \n"+
+                      "       r.meta, \n"+
                       "       r.site_id \n",
 
                 date_range: "SELECT MIN(r.datetime) AS min_date, \n"+
@@ -1106,12 +1172,11 @@ var Recordings = {
                     if(output === 'list') {
                         var sortBy = parameters.sortBy || 'datetime';
                         var sortRev = parameters.sortRev ? 'DESC' : '';
-                        query.push('ORDER BY ' + dbpool.escapeId(sortBy) + ' ' + sortRev);
+                        query.push('ORDER BY ' + sortBy + ' ' + sortRev);
                         if(limit_clause){
                             query.push("LIMIT " + limit_clause);
                         }
                     }
-
                     return Q.nfcall(queryHandler, {
                         sql: query.join('\n'),
                         typeCast: sqlutil.parseUtcDatetime,
@@ -1130,6 +1195,7 @@ var Recordings = {
                             _1.site_external_id = siteData[_1.site_id].external_id;
                             _1.timezone = siteData[_1.site_id].timezone;
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
+                            _1.meta = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!_1.legacy) {
                                 _1.file = `${moment.utc(_1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
