@@ -125,7 +125,7 @@ angular.module('a2.home', [
     this.searchChanged = function() {
         clearTimeout($scope.timeout);
         $scope.timeout = setTimeout(() => {
-            if (!$scope.search || $scope.search === '') {
+            if (!$scope.search || $scope.search.trim() === '') {
                 this.loadProjectList();
             }
             if ($scope.search.length < 3) {
@@ -134,7 +134,6 @@ angular.module('a2.home', [
                 return;
             }
             if ($scope.search.length >= 3) {
-                console.log('$scope.search === this.previousSearc', $scope.search, this.previousSearc);
                 if ($scope.search === this.previousSearch) { return; }
                 this.loadProjectList();
             }

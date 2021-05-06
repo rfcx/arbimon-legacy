@@ -24,8 +24,8 @@
                     </div>
                     <div class="row">
                         <div class="col-xs-5 col-md-5 pb-3">
-                            <% if (state === 'home.all') { %>
-                                <h3>Public Projects</h3>
+                            <% if (state === 'home.all' || (user && user.isAnonymousGuest)) { %>
+                                <h3>Explore Projects</h3>
                             <% } else { %>
                                 <h3>My Projects</h3>
                             <% } %>
