@@ -92,6 +92,10 @@ var Projects = {
             return q.reject(new Error('no query params'));
         }
 
+        if (query.hasOwnProperty('allAccessibleProjects')) {
+            whereExp.push('p.deleted_at IS NULL');
+        }
+
         if(!query.basicInfo){
             selectExtra += "   pp.tier, \n"+
                           "   pp.storage AS storage_limit, \n"+

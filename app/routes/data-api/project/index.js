@@ -379,8 +379,8 @@ router.post('/:projectUrl/remove', function(req, res, next) {
         external_id: req.body.external_id,
         idToken: req.session.idToken
     }).then(function() {
-            res.json({ result: 'success' });
-        }).catch(next);
+        res.json({ result: 'success' });
+    }).catch(next);
 });
 
 router.get('/:projectUrl/user-permissions', function(req, res, next) {

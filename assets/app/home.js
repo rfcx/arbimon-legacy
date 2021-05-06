@@ -45,7 +45,8 @@ angular.module('a2.home', [
     this.loadProjectList = function() {
         var config = {
             params: {
-                include_location: true
+                include_location: true,
+                allAccessibleProjects: true
             }
         };
         if ($window.location.pathname === '/home' && !this.isAnonymousGuest) {
