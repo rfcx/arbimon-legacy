@@ -11,11 +11,17 @@
                 id="name"
                 class="form-control"
                 ng-model="pname"
-                ng-change="changePlaylistName()">
+                ng-change="changePlaylistName()"
+                ng-disabled="isSavingPlaylist">
         </div>
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="savePlaylist(pname) | trackEvent:'Audiodata-Create-playlists':'close clicked'"><i class="fa fa-floppy-o"></i> Save &amp; Close </button>
-    <button class="btn btn-default" ng-click="$dismiss() | trackEvent:'Audiodata-Create-playlists':'dismiss clicked'"><i class="fa fa-times"></i> Close</button>
+    <i class="fa fa-spinner fa-spin" ng-if="isSavingPlaylist" style="font-size: 26px; vertical-align: middle; margin-right: 5px;"></i>
+    <button class="btn btn-primary" ng-click="savePlaylist(pname) | trackEvent:'Audiodata-Create-playlists':'close clicked'" ng-disabled="isSavingPlaylist">
+        <i class="fa fa-floppy-o"></i>Save &amp; Close
+    </button>
+    <button class="btn btn-default" ng-click="$dismiss() | trackEvent:'Audiodata-Create-playlists':'dismiss clicked'" ng-disabled="isSavingPlaylist">
+        <i class="fa fa-times"></i>Close
+    </button>
 </div>

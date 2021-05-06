@@ -292,6 +292,7 @@ var Playlists = {
      */
     create: function(data, callback) {
         data.params.project_id = data.project_id;
+        data.params.sortBy = 'site_id, datetime'
         var paramsProm = data.is_manually_created ? Promise.resolve(data.params) : model.recordings.findProjectRecordings(data.params).then(function(rows) {
             return rows.map(function(rec){
                 return rec.id;
@@ -408,14 +409,41 @@ var Playlists = {
     addRecs: function(playlist_id, rec_ids, callback) {
         var schema =  Joi.array().items(Joi.number());
 
-        return q.ninvoke(Joi, 'validate', rec_ids, schema).then(function(recs) {
-            return dbpool.query(
-                "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
-                "VALUES " + recs.map(function(rec_id) {
-                    return "(" + (playlist_id|0) + "," + (rec_id|0) + ")";
-                }).join(",\n       ")
-            );
-        }).nodeify(callback);
+        return q.ninvoke(Joi, 'validate', rec_ids, schema)
+            .then(function(recs) {
+                const chunkSize = 10000
+                let splittedRecs = []
+                if (recs.length < chunkSize) {
+                    splittedRecs = [recs]
+                } else {
+                    while (recs.length > 0) {
+                        splittedRecs.push(recs.splice(0, chunkSize))
+                    }
+                }
+                let db
+                return dbpool.getConnection()
+                    .then(async (connection) => {
+                        db = connection
+                        await db.beginTransaction()
+                        for (let arr of splittedRecs) {
+                            await connection.query(
+                                "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
+                                "VALUES " + arr.map(function(rec_id) {
+                                    return "(" + (playlist_id|0) + "," + (rec_id|0) + ")";
+                                }).join(",\n       ")
+                            )
+                        }
+                        await db.commit()
+                        await db.release()
+                    })
+                    .catch(async (err) => {
+                        if (db) {
+                            await db.rollback()
+                            await db.release()
+                        }
+                        throw err
+                    })
+            }).nodeify(callback);
     },
 
     attachAedToPlaylist: function(playlist_id, aed, callback) {

@@ -40,7 +40,7 @@ angular.module('a2.audiodata.sites', [
     }
 
     Project.getSites(function(sites) {
-        $scope.sites = sites;
+        $scope.sortByLastUpdated(sites);
         $scope.loading = false;
 
         if (p.site) {
@@ -83,6 +83,10 @@ angular.module('a2.audiodata.sites', [
             };
         });
     });
+
+    $scope.sortByLastUpdated = function(sites) {
+        $scope.sites = sites.sort(function(a, b) { return new Date(b.updated_at) - new Date(a.updated_at)});
+    }
 
     // Sets the map on all markers in the array
     $scope.setMapOnAll = function(map) {
@@ -134,7 +138,7 @@ angular.module('a2.audiodata.sites', [
 
                 // Refresh data
                 Project.getSites(function(sites) {
-                    $scope.sites = sites;
+                    $scope.sortByLastUpdated(sites);
                 });
             }).catch(function (error) {
                 notify.error("Error: " + error);
@@ -252,7 +256,7 @@ angular.module('a2.audiodata.sites', [
             }
 
             Project.getSites(function(sites) {
-                $scope.sites = sites;
+                $scope.sortByLastUpdated(sites);
             });
 
             var message = (action == "update") ? "Site updated" : "Site created";
@@ -290,7 +294,7 @@ angular.module('a2.audiodata.sites', [
                     return notify.error(data.error);
 
                 Project.getSites(function(sites) {
-                    $scope.sites = sites;
+                    $scope.sortByLastUpdated(sites);
                 });
                 notify.log("site removed");
             });

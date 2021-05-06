@@ -1,0 +1,2 @@
+ALTER TABLE `arbimon2`.`recordings`
+ADD COLUMN `meta` VARCHAR(255) DEFAULT NULL;
