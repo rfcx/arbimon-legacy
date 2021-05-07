@@ -181,9 +181,9 @@ var Users = {
     },
 
     projectList: function(query, callback) {
-        var whereExp = [], data=[];
-        var selectExtra = '';
-        var joinExtra = '';
+        let whereExp = [], data=[];
+        let selectExtra = '';
+        let joinExtra = '';
 
         selectExtra = "p.project_id AS id, \n"+
         "name, \n"+

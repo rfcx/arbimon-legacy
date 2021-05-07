@@ -14,11 +14,11 @@ router.get('/projectlist', function(req, res, next) {
     var user = req.session.user;
     var type = req.query.type;
     var includeLocation = req.query.include_location === 'true';
-    var allAccessibleProjects = req.query.allAccessibleProjects === 'true';
+    let allAccessibleProjects = req.query.allAccessibleProjects === 'true';
     if ((user.isAnonymousGuest || user.isSuper !== 1) && !type) {
         model.users.projectList({
             user_id: req.session.user.id,
-            ...allAccessibleProjects && { allAccessibleProjects: true }
+            allAccessibleProjects: allAccessibleProjects
         }, function(err, rows) {
             if(err) return next(err);
             res.json(rows);
@@ -28,7 +28,7 @@ router.get('/projectlist', function(req, res, next) {
         model.projects.find({
             ...type === 'my' && { user_id: user.id },
             ...includeLocation && { include_location: true },
-            ...allAccessibleProjects && { allAccessibleProjects: true }
+            allAccessibleProjects: allAccessibleProjects
         }, function(err, rows) {
             if(err) return next(err);
             res.json(rows);
