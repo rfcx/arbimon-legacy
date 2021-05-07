@@ -4,6 +4,10 @@
 
 - Run migration 012-projects-table-add-deleted-column.sql
 
+## v3.0.22
+
+- Run migration 010-recordings-table-add-meta-column.sql
+
 ## v3.0.21
 
 - Run migration 009-recordings-table-add-datetime-local-column.sql
