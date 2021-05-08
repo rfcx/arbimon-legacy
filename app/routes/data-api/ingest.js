@@ -101,6 +101,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         recordingData.recorder = 'AudioMoth';
       }
       const datetimeLocal = await model.recordings.calculateLocalTimeAsync(recordingData.site_id, recordingData.datetime);
+      recordingData.datetime = datetimeLocal ? datetimeLocal : moment.utc(recordingData.datetime).format('YYYY-MM-DD HH:mm:ss');
       recordingData.datetime_local = datetimeLocal ? datetimeLocal : moment.utc(recordingData.datetime).format('YYYY-MM-DD HH:mm:ss');
       await model.recordings.insertAsync(recordingData);
     }
