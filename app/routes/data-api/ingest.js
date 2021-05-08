@@ -93,10 +93,15 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
         file_size: data.file_size,
         bit_rate: data.bit_rate,
         sample_encoding: data.sample_encoding,
-        upload_time: new Date()
+        upload_time: new Date(),
+        meta: data.meta
       };
+      const parsedData = data.meta ? JSON.parse(data.meta) : null;
+      if (parsedData && parsedData.ARTIST && parsedData.ARTIST.startsWith('AudioMoth')) {
+        recordingData.recorder = 'AudioMoth';
+      }
       const datetimeLocal = await model.recordings.calculateLocalTimeAsync(recordingData.site_id, recordingData.datetime);
-      recordingData.datetime_local = datetimeLocal? datetimeLocal : moment.utc(recordingData.datetime).format('YYYY-MM-DD HH:mm:ss');
+      recordingData.datetime_local = datetimeLocal ? datetimeLocal : moment.utc(recordingData.datetime).format('YYYY-MM-DD HH:mm:ss');
       await model.recordings.insertAsync(recordingData);
     }
     res.sendStatus(201);

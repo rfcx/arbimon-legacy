@@ -145,7 +145,7 @@ var Projects = {
         if(typeof project_id !== 'number'){
             return q.reject(new Error("invalid type for 'project_id'"));
         }
-        return dbpool.query(
+        return dbpool.query({ sql:
                 "SELECT s.site_id as id, \n"+
                 "       s.name, \n"+
                 "       s.lat, \n"+
@@ -159,8 +159,7 @@ var Projects = {
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
-                "WHERE (s.project_id = ? OR pis.project_id = ?) \n"+
-                "ORDER BY s.name ASC",
+                "WHERE (s.project_id = ? OR pis.project_id = ?)",  typeCast: sqlutil.parseUtcDatetime },
                 [project_id, project_id, project_id, project_id]
         ).then(function(sites){
             if(sites.length && options && options.compute){

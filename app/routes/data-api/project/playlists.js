@@ -128,13 +128,6 @@ router.post('/create', function(req, res, next) {
         if (req.body.isManuallyCreated) opts.is_manually_created = req.body.isManuallyCreated
         model.playlists.create(opts).then(function(new_tset) {
             debug("playlist added", new_tset);
-
-            model.projects.insertNews({
-                news_type_id: 10, // playlist created
-                user_id: req.session.user.id,
-                project_id: req.project.project_id,
-                data: JSON.stringify({ playlist: req.body.playlist_name, playlist_id:new_tset.id })
-            });
             res.json({
                 success: true,
                 ...req.body.isManuallyCreated && { playlist_id: new_tset.id }
