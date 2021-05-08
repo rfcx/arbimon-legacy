@@ -692,6 +692,11 @@ var Projects = {
     },
 
     updateUserRoleInCoreAPI: async function(userProjectRole, idToken) {
+        const project = await this.findById(userProjectRole.project_id)
+        if (project.external_id == null) {
+            return
+        }
+
         const user = await users.findById(userProjectRole.user_id)
         const email = user[0].email
 
@@ -700,8 +705,6 @@ var Projects = {
             email: email,
             role: role
         }
-
-        const project = await this.findById(userProjectRole.project_id)
 
         const options = {
             method: 'PUT',
@@ -717,14 +720,17 @@ var Projects = {
     },
 
     removeUserRoleInCoreAPI: async function(user_id, project_id, idToken) {
+        const project = await this.findById(project_id)
+        if (project.external_id == null) {
+            return
+        }
+        
         const user = await users.findById(user_id)
         const email = user[0].email
 
         var body = {
             email: email
         }
-
-        const project = await this.findById(project_id)
 
         const options = {
             method: 'DELETE',
