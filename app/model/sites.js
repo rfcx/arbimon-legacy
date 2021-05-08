@@ -172,6 +172,11 @@ var Sites = {
         queryHandler(q, callback);
     },
 
+    updateAsync: function (site) {
+        let update = util.promisify(this.update)
+        return update(site)
+    },
+
     exists: function(site_name, project_id, callback) {
         var q = 'SELECT count(*) as count \n'+
                 'FROM sites \n'+
