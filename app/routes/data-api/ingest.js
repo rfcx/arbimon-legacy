@@ -82,7 +82,7 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
       var recordingData = {
         site_id: site.site_id,
         uri: data.uri,
-        datetime: data.datetime.format('YYYY-MM-DD HH:mm:ss.SSS'), // required format to avoid timezone issues in joi
+        datetime_utc: data.datetime.format('YYYY-MM-DD HH:mm:ss.SSS'), // required format to avoid timezone issues in joi
         mic: data.mic,
         recorder: data.recorder,
         version: data.sver,
@@ -100,9 +100,10 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
       if (parsedData && parsedData.ARTIST && parsedData.ARTIST.startsWith('AudioMoth')) {
         recordingData.recorder = 'AudioMoth';
       }
-      const datetimeLocal = await model.recordings.calculateLocalTimeAsync(recordingData.site_id, recordingData.datetime);
-      recordingData.datetime = datetimeLocal ? datetimeLocal : moment.utc(recordingData.datetime).format('YYYY-MM-DD HH:mm:ss');
-      recordingData.datetime_local = datetimeLocal ? datetimeLocal : moment.utc(recordingData.datetime).format('YYYY-MM-DD HH:mm:ss');
+      const datetimeLocal = await model.recordings.calculateLocalTimeAsync(recordingData.site_id, recordingData.datetime_utc);
+      recordingData.datetime = datetimeLocal ? datetimeLocal : moment.utc(recordingData.datetime_utc).format('YYYY-MM-DD HH:mm:ss');
+      // TODO: check that we can remove it and remove
+      recordingData.datetime_local = datetimeLocal ? datetimeLocal : moment.utc(recordingData.datetime_utc).format('YYYY-MM-DD HH:mm:ss');
       await model.recordings.insertAsync(recordingData);
     }
     res.sendStatus(201);

@@ -5,6 +5,7 @@
 Resolved issues:
 
 - CE-673 Add timezone offsets to recordings datetime ingested from Companion/Uploader apps
+- CE-673 Add datetime_utc column and use it for assets
 - Hotfix adding external_id in async function for imported sites
 
 ## v3.0.22 - May 04, 2021
