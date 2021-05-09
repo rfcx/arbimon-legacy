@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+## v3.0.22-hotfix.0 - May 08, 2021
+
+- Hotfix adding external_id in async function for imported sites
+
 ## v3.0.22 - May 04, 2021
 
 New features:
