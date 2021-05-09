@@ -1,7 +1,10 @@
 # Arbimon Release Notes
 
-## v3.0.22-hotfix.0 - May 08, 2021
+## v3.0.22-hotfix.0 - May 09, 2021
 
+Resolved issues:
+
+- CE-673 Add timezone offsets to recordings datetime ingested from Companion/Uploader apps
 - Hotfix adding external_id in async function for imported sites
 
 ## v3.0.22 - May 04, 2021
