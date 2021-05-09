@@ -85,7 +85,7 @@ angular.module('a2.audiodata.sites', [
     });
 
     $scope.sortByLastUpdated = function(sites) {
-        $scope.sites = sites.sort(function(a, b) { return new Date(b.updated_at) - new Date(a.updated_at)});
+        $scope.sites = sites.sort(function(a, b) { return (a.updated_at < b.updated_at) ? 1 : -1;});
     }
 
     // Sets the map on all markers in the array
