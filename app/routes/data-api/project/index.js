@@ -313,7 +313,7 @@ router.post('/:projectUrl/user/add', async function(req, res, next) {
         role_id: 2 // default to normal user
     }
     model.projects.addUser(userRole,
-    function(err, result){
+    async function(err, result){
         if (err) {
             if (err.status === 404) {
                 return res.json({ error: err.message});
@@ -346,7 +346,7 @@ router.post('/:projectUrl/user/role', async function(req, res, next) {
         role_id: req.body.role_id
     }
     model.projects.changeUserRole(userRole,
-    function(err, result){
+    async function(err, result){
         if(err) return next(err);
 
         debug("change user role:", result);
@@ -367,7 +367,7 @@ router.post('/:projectUrl/user/del', async function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
-    model.projects.removeUser(req.body.user_id, req.project.project_id, function(err, result){
+    model.projects.removeUser(req.body.user_id, req.project.project_id, async function(err, result){
         if(err) return next(err);
 
         debug("remove user:", result);
