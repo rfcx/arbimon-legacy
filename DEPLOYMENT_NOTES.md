@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.22-hotfix.0
+
+- Run migration 013-recordings-table-add-datetime-utc-column.sql
+
 ## v3.0.22
 
 - Run migration 010-recordings-table-add-meta-column.sql
