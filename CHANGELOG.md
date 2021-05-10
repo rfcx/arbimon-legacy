@@ -4,6 +4,8 @@
 
 New features:
 
+- CE-503 Users added to arbimon needs to access project site list throughout platform
+
 Resolved issues:
 
 - Fix site name and coordinates not updated in Arbimon when edited in the Companion app
