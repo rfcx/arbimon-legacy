@@ -1,5 +1,12 @@
 # Arbimon Release Notes
 
+## v3.0.23 - May xx, 2021
+
+New features:
+
+Resolved issues:
+
+- Fix site name and coordinates not updated in Arbimon when edited in the Companion app
 ## v3.0.22-hotfix.0 - May 09, 2021
 
 Resolved issues:
