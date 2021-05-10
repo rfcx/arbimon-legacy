@@ -225,6 +225,7 @@ var Recordings = {
             "S.timezone, \n"+
             "R.uri, \n"+
             "R.datetime, \n"+
+            "R.datetime_utc, \n"+
             "R.datetime_local, \n"+
             "R.mic, \n"+
             "R.recorder, \n"+
@@ -291,6 +292,7 @@ var Recordings = {
                         "S.timezone, \n"+
                         "R.uri, \n"+
                         "R.datetime, \n"+
+                        "R.datetime_utc, \n"+
                         "R.datetime_local, \n"+
                         "R.mic, \n"+
                         "R.recorder, \n"+
@@ -845,6 +847,7 @@ var Recordings = {
             sample_encoding: joi.string(),
             upload_time:     joi.date(),
             datetime_local:  joi.date(),
+            datetime_utc:    joi.date(),
             meta:  joi.string().optional(),
         };
 
@@ -853,10 +856,10 @@ var Recordings = {
 
             queryHandler('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
-                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_local`, `meta`\n' +
-            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
+                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_local`, `datetime_utc`, `meta`\n' +
+            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
                 rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
-                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_local, rec.meta
+                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_local, rec.datetime_utc, rec.meta
             ], callback);
         });
     },
@@ -971,7 +974,7 @@ var Recordings = {
             recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
         }
         else {
-            const momentStart = moment.utc(recording.datetime)
+            const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
             const momentEnd = momentStart.clone().add(recording.duration, 'seconds')
             const dateFormat = 'YYYYMMDDTHHmmssSSS'
             const start = momentStart.format(dateFormat)
@@ -1026,6 +1029,7 @@ var Recordings = {
                       "       SUBSTRING_INDEX(r.uri,'/',-1) as file, \n"+
                       "       r.uri, \n"+
                       "       r.datetime, \n"+
+                      "       r.datetime_utc, \n"+
                       "       r.upload_time, \n"+
                       "       r.duration, \n"+
                       "       r.mic, \n"+
@@ -1198,7 +1202,7 @@ var Recordings = {
                             _1.meta = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!_1.legacy) {
-                                _1.file = `${moment.utc(_1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
+                                _1.file = `${moment.utc(_1.datetime_utc ? _1.datetime_utc : _1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
                             }
                         }
                     } else {
