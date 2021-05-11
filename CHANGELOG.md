@@ -1,14 +1,16 @@
 # Arbimon Release Notes
 
-## v3.0.23 - May xx, 2021
+## v3.0.23 - May XX, 2021
 
 New features:
 
+- CE-499 Display top projects in the Explore Projects tab
 - CE-503 Users added to arbimon needs to access project site list throughout platform
 
 Resolved issues:
 
 - Fix site name and coordinates not updated in Arbimon when edited in the Companion app
+
 ## v3.0.22-hotfix.0 - May 09, 2021
 
 Resolved issues:

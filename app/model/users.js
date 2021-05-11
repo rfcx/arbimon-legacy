@@ -180,26 +180,34 @@ var Users = {
         return insert(userData)
     },
 
-    projectList: function(user_id, callback) {
+    projectList: function(query, callback) {
+        let whereExp = [], data=[];
+        let selectExtra = '';
+        let joinExtra = '';
+
+        selectExtra = "p.project_id AS id, name, url, lat, lon, description, is_private, is_enabled, u.login AS `owner`";
+
+        joinExtra = "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
+        "JOIN user_project_role AS upr2 ON (p.project_id = upr2.project_id) \n"+
+        "JOIN users AS u ON (upr.user_id = u.user_id) \n"+
+        "LEFT JOIN (SELECT project_id, lat, lon, MAX(site_id) as maxSiteId FROM sites GROUP BY project_id) site ON p.project_id = site.project_id \n";
+
+        whereExp.push('upr2.user_id = ? OR p.is_private = 0');
+        data.push(query.user_id);
+
+        if(query.hasOwnProperty('q')) {
+            whereExp.push("p.name LIKE '%"+query.q+"%' OR p.description LIKE '%"+query.q+"%'");
+        }
+        if(query.hasOwnProperty('featured')) {
+            whereExp.push("p.featured = 1");
+        }
+
         return dbpool.query(
-            "SELECT p.project_id AS id, \n"+
-            "    name, \n"+
-            "    url, \n"+
-            "    lat, lon, \n"+
-            "    description, \n"+
-            "    is_private, \n"+
-            "    is_enabled, \n"+
-            "    u.login AS `owner` \n"+
-            "FROM projects AS p \n"+
-            "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
-            "JOIN user_project_role AS upr2 ON (p.project_id = upr2.project_id) \n"+
-            "JOIN users AS u ON (upr.user_id = u.user_id) \n"+
-            "LEFT JOIN (SELECT project_id, lat, lon, MAX(site_id) as maxSiteId FROM sites GROUP BY project_id) site ON p.project_id = site.project_id \n"+
-            "WHERE upr2.user_id = ? \n"+
-            "OR p.is_private = 0 \n"+
-            "GROUP BY p.project_id", [
-            user_id
-        ]).nodeify(callback);
+            "SELECT " + selectExtra + " \n" +
+            "FROM projects AS p \n" + joinExtra +
+            "WHERE (" + whereExp.join(") \n" +
+            "  AND (") + ") GROUP BY p.project_id", data
+        ).nodeify(callback);
     },
 
     getProjectList: function(userId){
