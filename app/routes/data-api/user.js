@@ -19,6 +19,8 @@ router.get('/projectlist', function(req, res, next) {
         model.users.projectList({
             user_id: req.session.user.id,
             allAccessibleProjects: allAccessibleProjects
+            ...req.query.q && { q: req.query.q },
+            ...req.query.featured && { featured: req.query.featured }
         }, function(err, rows) {
             if(err) return next(err);
             res.json(rows);
@@ -29,6 +31,8 @@ router.get('/projectlist', function(req, res, next) {
             ...type === 'my' && { user_id: user.id },
             ...includeLocation && { include_location: true },
             allAccessibleProjects: allAccessibleProjects
+            ...req.query.q && { q: req.query.q },
+            ...req.query.featured && type !== 'my' && { featured: req.query.featured }
         }, function(err, rows) {
             if(err) return next(err);
             res.json(rows);

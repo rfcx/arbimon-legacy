@@ -21,6 +21,8 @@ var queryHandler = dbpool.queryHandler;
 var APIError = require('../utils/apierror');
 var species = require('./species');
 var songtypes = require('./songtypes');
+var users = require('./users')
+var roles = require('./roles')
 
 const projectSchema = joi.object().keys({
     name: joi.string(),
@@ -86,6 +88,12 @@ var Projects = {
             selectExtra += 'site.lat as lat, site.lon as lon, '
             joinExtra += 'LEFT JOIN (SELECT project_id, lat, lon, MAX(site_id) as maxSiteId FROM sites GROUP BY project_id) site ON p.project_id = site.project_id \n'
             whereExp.push("1 = 1");
+        }
+        if(query.hasOwnProperty('q')) {
+            whereExp.push("(p.name LIKE '%"+query.q+"%' OR p.description LIKE '%"+query.q+"%')");
+        }
+        if(query.hasOwnProperty('featured')) {
+            whereExp.push("p.featured = 1");
         }
 
         if(!whereExp.length) {
@@ -690,6 +698,60 @@ var Projects = {
             q = util.format(q, role_id, user_id, project_id);
             queryHandler(q, callback);
         });
+    },
+
+    updateUserRoleInCoreAPI: async function(userProjectRole, idToken) {
+        const project = await this.findById(userProjectRole.project_id)
+        if (!project.external_id) {
+            return
+        }
+
+        const user = await users.findById(userProjectRole.user_id)
+        const email = user[0].email
+
+        const role = roles.getCoreRoleById(userProjectRole.role_id)
+        var body = {
+            email: email,
+            role: role
+        }
+
+        const options = {
+            method: 'PUT',
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
+            },
+            body: JSON.stringify(body)
+        }
+        return rp(options)
+    },
+
+    removeUserRoleInCoreAPI: async function(user_id, project_id, idToken) {
+        const project = await this.findById(project_id)
+        if (!project.external_id) {
+            return
+        }
+
+        const user = await users.findById(user_id)
+        const email = user[0].email
+
+        var body = {
+            email: email
+        }
+
+        const options = {
+            method: 'DELETE',
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
+            },
+            body: JSON.stringify(body)
+        }
+        return rp(options)
     },
 
     modelList: function(project_url, callback) {

@@ -26,7 +26,7 @@
             <ul class="nav navbar-nav navbar-left">
                 <% if (user && !user.isAnonymousGuest) { %>
                 <li class="<%- state === 'home.my'? 'active' : '' %>"><a href="/home">My Projects</a></li>
-                <li class="<%- state === 'home.all'? 'active' : '' %>"><a href="/home/all">Public Projects</a></li>
+                <li class="<%- state === 'home.all'? 'active' : '' %>"><a href="/home/all">Explore Projects</a></li>
                 <% } %>
                 <% if (user && user.isSuper) { %>
                 <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>

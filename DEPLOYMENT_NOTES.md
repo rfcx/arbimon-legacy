@@ -3,6 +3,12 @@
 ## v3.0.23
 
 - Run migration 012-projects-table-add-deleted-column.sql
+- Run migration 011-projects-table-add-featured-column.sql
+- Run query to add featured=true for top projects
+
+## v3.0.22-hotfix.0
+
+- Run migration 013-recordings-table-add-datetime-utc-column.sql
 
 ## v3.0.22
 
