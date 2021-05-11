@@ -181,18 +181,11 @@ var Users = {
     },
 
     projectList: function(query, callback) {
-        var whereExp = [], data=[];
-        var selectExtra = '';
-        var joinExtra = '';
+        let whereExp = [], data=[];
+        let selectExtra = '';
+        let joinExtra = '';
 
-        selectExtra = "p.project_id AS id, \n"+
-        "name, \n"+
-        "url, \n"+
-        "lat, lon, \n"+
-        "description, \n"+
-        "is_private, \n"+
-        "is_enabled, \n"+
-        "u.login AS `owner`";
+        selectExtra = "p.project_id AS id, name, url, lat, lon, description, is_private, is_enabled, u.login AS `owner`";
 
         joinExtra = "JOIN user_project_role AS upr ON (p.project_id = upr.project_id and upr.role_id = 4) \n"+
         "JOIN user_project_role AS upr2 ON (p.project_id = upr2.project_id) \n"+
