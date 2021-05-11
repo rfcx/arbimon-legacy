@@ -201,6 +201,9 @@ var Users = {
         if(query.hasOwnProperty('featured')) {
             whereExp.push("p.featured = 1");
         }
+        if (query.hasOwnProperty('allAccessibleProjects')) {
+            whereExp.push('p.deleted_at IS NULL');
+        }
 
         return dbpool.query(
             "SELECT " + selectExtra + " \n" +

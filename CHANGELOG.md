@@ -4,6 +4,7 @@
 
 New features:
 
+- CE-501 Ability to delete project
 - CE-499 Display top projects in the Explore Projects tab
 - CE-503 Users added to arbimon needs to access project site list throughout platform
 

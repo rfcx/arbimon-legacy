@@ -100,6 +100,10 @@ var Projects = {
             return q.reject(new Error('no query params'));
         }
 
+        if (query.hasOwnProperty('allAccessibleProjects')) {
+            whereExp.push('p.deleted_at IS NULL');
+        }
+
         if(!query.basicInfo){
             selectExtra += "   pp.tier, \n"+
                           "   pp.storage AS storage_limit, \n"+
@@ -985,6 +989,21 @@ var Projects = {
           return rp(options)
     },
 
+    deleteInCoreAPI: async function(project_id, idToken) {
+        let body = {}
+        const options = {
+            method: 'DELETE',
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project_id}`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
+            },
+            body: JSON.stringify(body)
+          }
+          return rp(options)
+    },
+
     findInCoreAPI: async function (guid) {
         const token = await auth0Service.getToken();
         const options = {
@@ -1048,6 +1067,36 @@ var Projects = {
         });
         const id = await q.ninvoke(this, "create", projectData, userId)
         return this.find({ id }).get(0)
+    },
+
+    removeProject: async function(options) {
+        let db;
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                db = connection
+                await db.beginTransaction()
+                await this.deleteInArbimobDb(options.project_id, connection)
+                if (rfcxConfig.coreAPIEnabled) {
+                    await this.deleteInCoreAPI(options.external_id, options.idToken)
+                }
+                await db.commit()
+                await db.release()
+            })
+            .catch(async (err) => {
+                console.log('err', err)
+                if (db) {
+                    await db.rollback()
+                    await db.release()
+                }
+            })
+    },
+
+    deleteInArbimobDb: async function(project_id, db) {
+        return db.query(
+            "UPDATE projects SET deleted_at = NOW() \n"+
+            "WHERE project_id = ?",[
+                project_id
+            ]);
     },
 
     /**
