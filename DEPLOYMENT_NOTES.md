@@ -5,6 +5,14 @@
 - Run migration 011-projects-table-add-featured-column.sql
 - Run query to add featured=true for top projects
 
+## v3.0.22-hotfix.0
+
+- Run migration 013-recordings-table-add-datetime-utc-column.sql
+
+## v3.0.22
+
+- Run migration 010-recordings-table-add-meta-column.sql
+
 ## v3.0.21
 
 - Run migration 009-recordings-table-add-datetime-local-column.sql

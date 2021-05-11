@@ -21,6 +21,8 @@ var queryHandler = dbpool.queryHandler;
 var APIError = require('../utils/apierror');
 var species = require('./species');
 var songtypes = require('./songtypes');
+var users = require('./users')
+var roles = require('./roles')
 
 const projectSchema = joi.object().keys({
     name: joi.string(),
@@ -149,7 +151,7 @@ var Projects = {
         if(typeof project_id !== 'number'){
             return q.reject(new Error("invalid type for 'project_id'"));
         }
-        return dbpool.query(
+        return dbpool.query({ sql:
                 "SELECT s.site_id as id, \n"+
                 "       s.name, \n"+
                 "       s.lat, \n"+
@@ -163,8 +165,7 @@ var Projects = {
                 "       s.token_created_on \n" +
                 "FROM sites AS s \n"+
                 "LEFT JOIN project_imported_sites as pis ON s.site_id = pis.site_id AND pis.project_id = ? \n"+
-                "WHERE (s.project_id = ? OR pis.project_id = ?) \n"+
-                "ORDER BY s.name ASC",
+                "WHERE (s.project_id = ? OR pis.project_id = ?)",  typeCast: sqlutil.parseUtcDatetime },
                 [project_id, project_id, project_id, project_id]
         ).then(function(sites){
             if(sites.length && options && options.compute){
@@ -693,6 +694,60 @@ var Projects = {
             q = util.format(q, role_id, user_id, project_id);
             queryHandler(q, callback);
         });
+    },
+
+    updateUserRoleInCoreAPI: async function(userProjectRole, idToken) {
+        const project = await this.findById(userProjectRole.project_id)
+        if (!project.external_id) {
+            return
+        }
+
+        const user = await users.findById(userProjectRole.user_id)
+        const email = user[0].email
+
+        const role = roles.getCoreRoleById(userProjectRole.role_id)
+        var body = {
+            email: email,
+            role: role
+        }
+
+        const options = {
+            method: 'PUT',
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
+            },
+            body: JSON.stringify(body)
+        }
+        return rp(options)
+    },
+
+    removeUserRoleInCoreAPI: async function(user_id, project_id, idToken) {
+        const project = await this.findById(project_id)
+        if (!project.external_id) {
+            return
+        }
+
+        const user = await users.findById(user_id)
+        const email = user[0].email
+
+        var body = {
+            email: email
+        }
+
+        const options = {
+            method: 'DELETE',
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
+            },
+            body: JSON.stringify(body)
+        }
+        return rp(options)
     },
 
     modelList: function(project_url, callback) {

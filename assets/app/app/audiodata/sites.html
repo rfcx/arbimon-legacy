@@ -48,7 +48,7 @@
         <a2-table rows="sites" on-select="sel(row)" data-checked="checked" search="search" no-checkbox>
             <field title="Name" key="name" className="name hidelongtext">
                 {{ row.name }}
-                <i ng-if="row.external_id" class="fa fa-info-circle text-warning" title="Uploader/Companion site"></i>
+                <span class="badge" title="ARBIMON ONLY" ng-if="!row.external_id">ARBIMON ONLY</span>
             </field>
             <ng-container ng-if="!row.imported && (row.has_logs || row.token_created_on)">
                 <field>
@@ -69,7 +69,7 @@
                 {{ row.alt | number:2 }}
             </field>
             <field title="Last updated" key="date" className="date hidelongtext">
-                {{ row.updated_at | momentTz : 'lll' : row.timezone }}
+                {{ row.updated_at | moment : 'lll' : row.timezone }}
             </field>
         </a2-table>
         <div class="jumbotron" ng-show="(!sites || !sites.length > 0) && !loading">
