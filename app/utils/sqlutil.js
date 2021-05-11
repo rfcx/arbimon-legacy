@@ -24,7 +24,7 @@ transaction.prototype = {
             callback(new Error("Transaction begin called without a connection."));
             return;
         }
-        
+
         return q.ninvoke(this.connection, 'query', "BEGIN").then((function(){
             this.in_tx = true;
         }).bind(this)).nodeify(callback);
@@ -39,8 +39,8 @@ transaction.prototype = {
     },
     end : function(callback){
         return (
-            (!this.in_tx || !this.connection) ? 
-            q.resolve() : 
+            (!this.in_tx || !this.connection) ?
+            q.resolve() :
             q.ninvoke(this.connection, 'query', this.success ? "COMMIT" : "ROLLBACK").then((function(){
                 this.in_tx = false;
             }).bind(this))
@@ -49,15 +49,15 @@ transaction.prototype = {
 };
 
 var sqlutil = {
-    
+
     transaction : transaction,
-    
+
     /** Returns a properly escaped SQL comparison expression.
      *  @param {String} field - the field name (or the lhs of the expression).
      *                        this is assumed to be clean, and therefore not escaped.
-     *  @param {String} op - the comparisson operation. Can be one of 
+     *  @param {String} op - the comparisson operation. Can be one of
      *                     ['IN','=','==','===','!=','!==','<','<=','>','>=']
-     *                     If op is 'IN' and value is an array of length > 1, 
+     *                     If op is 'IN' and value is an array of length > 1,
      *                     then the comparisson is of the mode lhs IN (rhs[0], ...),
      *                     with each rhs[0] properly escaped.
      *  @param {Object} value - the value to compare to (the rhs of the expression).
@@ -68,7 +68,7 @@ var sqlutil = {
      *        and comparissons against undefined rhs are automatically false.
      *        the expression is wrapped in parenthesis.
      */
-    escape_compare : function(field, op, value){        
+    escape_compare : function(field, op, value){
         if(op == 'IN'){
             if(value instanceof Array){
                 if(value.length == 1){
@@ -80,28 +80,28 @@ var sqlutil = {
                     value = undefined;
                 }
             }
-            
+
             op = '=';
         }
         if(!/^(=|==|===|!=|!==|<|<=|>|>=)$/.test(op)){
             op = '=';
         }
-        
+
         if(value !== undefined){
             return '('+field+' '+op+' '+mysql.escape(value)+')';
         } else {
             return '(1 = 0)';
         }
-        
+
     },
-    
+
     /** Returns a logical expression on a subject, given a query constraint.
      *  @param {String} subject - the lhs of the expression.
      *  @param {Object} query - the query constraint object. Must have only one attribute
      *                          as defined below.
      *  @param {Object} query['='] - if set, then the expression resolves to lhs = escape(rhs)
      *  @param {Object} query.IN   - if set, then the expression resolves to lhs IN (escape(rhs))
-     *  @param {Object} query.BETWEEN  - if set, it must be an array of size two and 
+     *  @param {Object} query.BETWEEN  - if set, it must be an array of size two and
      *                               the expression resolves to lhs BETWEEN escape(rhs[0]) AND escape(rhs[1])
      *  @return a logical expression resulting from applying the query constraint to the given subject.
      *          or undefined, if the query constraint does not define a proper constraint.
@@ -166,7 +166,7 @@ var sqlutil = {
         };
         var auto_compute = (level == 'auto' || level == 'next');
         var field;
-        
+
         for(var i in query_contraints){
             field = fields[i];
             var constraint = sqlutil.apply_query_contraint(field && field.subject, query_contraints[i]);
@@ -215,10 +215,9 @@ var sqlutil = {
         }
         return group_by;
     },
-    
+
     parseUtcDatetime: function (field, next) {
-        if (field.type !== 'DATETIME') return next(); // 1 = true, 0 = false
-        
+        if (field.type !== 'DATETIME' || field.name === 'datetime_utc') return next(); // 1 = true, 0 = false
         return new Date(field.string() + ' GMT');
     },
 };

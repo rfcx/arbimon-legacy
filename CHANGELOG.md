@@ -5,6 +5,19 @@
 New features:
 
 - CE-499 Display top projects in the Explore Projects tab
+- CE-503 Users added to arbimon needs to access project site list throughout platform
+
+Resolved issues:
+
+- Fix site name and coordinates not updated in Arbimon when edited in the Companion app
+
+## v3.0.22-hotfix.0 - May 09, 2021
+
+Resolved issues:
+
+- CE-673 Add timezone offsets to recordings datetime ingested from Companion/Uploader apps
+- CE-673 Add datetime_utc column and use it for assets
+- Hotfix adding external_id in async function for imported sites
 
 ## v3.0.22 - May 04, 2021
 

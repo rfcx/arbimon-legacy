@@ -37,7 +37,7 @@ router.post('/create', function(req, res, next) {
 
         site.project_id = project.project_id;
 
-        model.sites.insert(site, function(err, result) {
+        model.sites.insert(site, async function(err, result) {
             if(err) return next(err);
 
             if (rfcxConfig.coreAPIEnabled) {
@@ -51,7 +51,7 @@ router.post('/create', function(req, res, next) {
                 if (project.external_id) {
                     coreSite.project_id = project.external_id
                 }
-                model.sites.createInCoreAPI(coreSite, req.session.idToken)
+                await model.sites.createInCoreAPI(coreSite, req.session.idToken)
                     .then((externalSiteId) => model.sites.setExternalId(result.insertId, externalSiteId))
                     .catch((err) => console.error(`Failed to create site in Core: ${err.message}`))
             }
@@ -90,18 +90,11 @@ router.post('/update', function(req, res, next) {
 
     site.project_id = site.project? site.project.project_id : project.project_id;
 
-    model.sites.update(site, function(err, rows) {
+    model.sites.update(site, async function(err, rows) {
         if(err) return next(err);
 
-        model.projects.insertNews({
-            news_type_id: 3, // site updated
-            user_id: req.session.user.id,
-            project_id: site.project_id,
-            data: JSON.stringify({ site: site.name })
-        });
-
         if (rfcxConfig.coreAPIEnabled) {
-            model.projects.findOrCreatePersonalProject({ ...req.session.user, user_id: req.session.user.id })
+            await model.projects.findOrCreatePersonalProject({ ...req.session.user, user_id: req.session.user.id })
                 .then((personalProject) => {
                     return model.sites.updateInCoreAPI({
                         site_id: site.site_id,
