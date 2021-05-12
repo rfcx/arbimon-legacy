@@ -8,7 +8,7 @@
             <div class="col-sm-4">
                 0
                 -
-                <input type="number" min="1" ng-model="data.visual_max" style="width:4em" ng-disabled="data.normalized" />
+                <input type="number" min="1" ng-model="data.visual_max" style="width:4em; color: #000;" ng-disabled="data.normalized" />
                 (default: {{soundscape.max_value}})
             </div>
             <label class="col-sm-5 control-label" style="font-weight: normal; text-align: left">
@@ -48,17 +48,17 @@
                 </div>
             </div>
         </div>
-        <a2-soundscape-drawer class="crisp-image" style="width:100%; height:300px; padding:0px 50px" 
+        <a2-soundscape-drawer class="crisp-image" style="width:100%; height:300px; padding:0px 50px"
             soundscape="soundscape" visual-max="data.visual_max" palette="palettes[data.palette]" normalized="data.normalized"
             amplitude-threshold="data.amplitudeThreshold" amplitude-threshold-type="data.amplitudeReference.value" ></a2-soundscape-drawer>
     </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" 
+    <button class="btn btn-primary"
         ng-click="ok() | trackEvent:'Visualizer-Sample-Soundscape-Region':'Ok'">
             <i class="fa fa-floppy"></i> Save & close
     </button>
-    <button class="btn btn-default" 
+    <button class="btn btn-default"
         ng-click="$dismiss() | trackEvent:'Visualizer-Sample-Soundscape-Region':'Cancel'">
         Close
     </button>
