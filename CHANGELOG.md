@@ -11,6 +11,7 @@ New features:
 Resolved issues:
 
 - Fix site name and coordinates not updated in Arbimon when edited in the Companion app
+- CE-520 Fix font color in soundscapes pop-up scale value
 
 ## v3.0.22-hotfix.0 - May 09, 2021
 
