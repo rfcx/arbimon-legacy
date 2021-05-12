@@ -62,9 +62,6 @@ spec:
             agent {
                 label 'slave'
             }
-            options {
-                skipDefaultCheckout true
-            }
             when {
                  expression { BRANCH_NAME ==~ /(develop|master)/ }
             }
