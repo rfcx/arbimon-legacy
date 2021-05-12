@@ -9,7 +9,7 @@
                 <ui-select-match placeholder="Site name">{{ $select.selected.name }}</ui-select-match>
                 <ui-select-choices class="has-badges" repeat="site in sites | filter:$select.search">
                     {{ site.name }}
-                    <span class="badge-lable" title="ARBIMON ONLY" ng-if="!site.external_id">ARBIMON ONLY</span>
+                    <span class="a2-badge" title="ARBIMON ONLY" ng-if="!site.external_id">ARBIMON ONLY</span>
                 </ui-select-choices>
             </ui-select>
         </div>
