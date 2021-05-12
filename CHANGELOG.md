@@ -11,6 +11,7 @@ New features:
 Resolved issues:
 
 - Fix site name and coordinates not updated in Arbimon when edited in the Companion app
+- CE-696 Hotfix Arbimon only badge in the batch info popup
 - Hotfix scrolling down for the recordings list with several items
 - CE-520 Fix font color in soundscapes pop-up scale value
 
