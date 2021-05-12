@@ -1,8 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.23 - May xx, 2021
+## v3.0.23 - May XX, 2021
 
 New features:
+
+- CE-501 Ability to delete project
+- CE-499 Display top projects in the Explore Projects tab
+- CE-503 Users added to arbimon needs to access project site list throughout platform
 
 Resolved issues:
 

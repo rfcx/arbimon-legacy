@@ -21,6 +21,8 @@ var queryHandler = dbpool.queryHandler;
 var APIError = require('../utils/apierror');
 var species = require('./species');
 var songtypes = require('./songtypes');
+var users = require('./users')
+var roles = require('./roles')
 
 const projectSchema = joi.object().keys({
     name: joi.string(),
@@ -87,9 +89,19 @@ var Projects = {
             joinExtra += 'LEFT JOIN (SELECT project_id, lat, lon, MAX(site_id) as maxSiteId FROM sites GROUP BY project_id) site ON p.project_id = site.project_id \n'
             whereExp.push("1 = 1");
         }
+        if(query.hasOwnProperty('q')) {
+            whereExp.push("(p.name LIKE '%"+query.q+"%' OR p.description LIKE '%"+query.q+"%')");
+        }
+        if(query.hasOwnProperty('featured')) {
+            whereExp.push("p.featured = 1");
+        }
 
         if(!whereExp.length) {
             return q.reject(new Error('no query params'));
+        }
+
+        if (query.hasOwnProperty('allAccessibleProjects')) {
+            whereExp.push('p.deleted_at IS NULL');
         }
 
         if(!query.basicInfo){
@@ -688,6 +700,60 @@ var Projects = {
         });
     },
 
+    updateUserRoleInCoreAPI: async function(userProjectRole, idToken) {
+        const project = await this.findById(userProjectRole.project_id)
+        if (!project.external_id) {
+            return
+        }
+
+        const user = await users.findById(userProjectRole.user_id)
+        const email = user[0].email
+
+        const role = roles.getCoreRoleById(userProjectRole.role_id)
+        var body = {
+            email: email,
+            role: role
+        }
+
+        const options = {
+            method: 'PUT',
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
+            },
+            body: JSON.stringify(body)
+        }
+        return rp(options)
+    },
+
+    removeUserRoleInCoreAPI: async function(user_id, project_id, idToken) {
+        const project = await this.findById(project_id)
+        if (!project.external_id) {
+            return
+        }
+
+        const user = await users.findById(user_id)
+        const email = user[0].email
+
+        var body = {
+            email: email
+        }
+
+        const options = {
+            method: 'DELETE',
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project.external_id}/users`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
+            },
+            body: JSON.stringify(body)
+        }
+        return rp(options)
+    },
+
     modelList: function(project_url, callback) {
         var q = "(\n" +
                 "SELECT m.model_id, \n"+
@@ -923,6 +989,21 @@ var Projects = {
           return rp(options)
     },
 
+    deleteInCoreAPI: async function(project_id, idToken) {
+        let body = {}
+        const options = {
+            method: 'DELETE',
+            url: `${rfcxConfig.apiBaseUrl}/projects/${project_id}`,
+            headers: {
+                'content-type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
+                source: 'arbimon'
+            },
+            body: JSON.stringify(body)
+          }
+          return rp(options)
+    },
+
     findInCoreAPI: async function (guid) {
         const token = await auth0Service.getToken();
         const options = {
@@ -986,6 +1067,36 @@ var Projects = {
         });
         const id = await q.ninvoke(this, "create", projectData, userId)
         return this.find({ id }).get(0)
+    },
+
+    removeProject: async function(options) {
+        let db;
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                db = connection
+                await db.beginTransaction()
+                await this.deleteInArbimobDb(options.project_id, connection)
+                if (rfcxConfig.coreAPIEnabled) {
+                    await this.deleteInCoreAPI(options.external_id, options.idToken)
+                }
+                await db.commit()
+                await db.release()
+            })
+            .catch(async (err) => {
+                console.log('err', err)
+                if (db) {
+                    await db.rollback()
+                    await db.release()
+                }
+            })
+    },
+
+    deleteInArbimobDb: async function(project_id, db) {
+        return db.query(
+            "UPDATE projects SET deleted_at = NOW() \n"+
+            "WHERE project_id = ?",[
+                project_id
+            ]);
     },
 
     /**
