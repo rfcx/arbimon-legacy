@@ -848,7 +848,7 @@ var Recordings = {
             upload_time:     joi.date(),
             datetime_local:  joi.date(),
             datetime_utc:    joi.date(),
-            meta:  joi.string().optional(),
+            meta:  joi.optional(),
         };
 
         joi.validate(recording, schema, { stripUnknown: true }, function(err, rec) {
