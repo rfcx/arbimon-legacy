@@ -5,6 +5,11 @@
 Performance improvements:
 
 - CE-639 Optimize recordings tags query to use proper indexes
+- CE-639 Optimize recordings count query for sites list; do not request counts when they are not needed
+
+Resolved issues:
+
+- Show spinner while search is processing on Projects page; Hide "Add project" button on Explore projects page. Do not show search form for guests.
 
 ## v3.0.23 - May XX, 2021
 
