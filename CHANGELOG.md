@@ -11,7 +11,7 @@ Resolved issues:
 
 - Show spinner while search is processing on Projects page; Hide "Add project" button on Explore projects page. Do not show search form for guests.
 
-## v3.0.23 - May XX, 2021
+## v3.0.23 - May 14, 2021
 
 New features:
 
