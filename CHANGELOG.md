@@ -1,6 +1,6 @@
 # Arbimon Release Notes
 
-## v3.0.23 - May XX, 2021
+## v3.0.23 - May 14, 2021
 
 New features:
 
