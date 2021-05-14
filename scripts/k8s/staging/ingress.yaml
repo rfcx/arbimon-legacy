@@ -13,7 +13,7 @@ metadata:
       app: "arbimon"
 spec:
   rules:
-  - host: staging-arbimon.rfcx.org
+  - host: qa-arbimon.rfcx.org
     http:
       paths:
       - backend:

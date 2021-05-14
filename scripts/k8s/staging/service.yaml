@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: arbimon-service
+spec:
+  selector:
+    app: arbimon
+  type: ClusterIP 
+  ports:
+  - name: node
+    port: 80
+    targetPort: 3000

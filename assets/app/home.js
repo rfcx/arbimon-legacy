@@ -45,9 +45,16 @@ angular.module('a2.home', [
     this.loadProjectList = function() {
         var config = {
             params: {
-                include_location: true
+                include_location: true,
+                allAccessibleProjects: true
             }
         };
+        if ($scope.search !== '') {
+            config.params.q = $scope.search;
+        }
+        else {
+            config.params.featured = true;
+        }
         if ($window.location.pathname === '/home' && !this.isAnonymousGuest) {
             config.params.type = 'my'
         }
@@ -61,6 +68,7 @@ angular.module('a2.home', [
                 p.mapUrl = "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/" + lon + "," + lat + "," + zoom + ",0,60/274x180?access_token=" + a2InjectedData.mapbox_access_token
             });
             this.projects = data;
+            this.previousSearch = this.search
         }).bind(this));
     };
 
@@ -116,12 +124,21 @@ angular.module('a2.home', [
     };
 
     this.searchChanged = function() {
-        if ($scope.search === '') {
-            this.deleteAllRank();
-            this.projectSort = projectSorts['history-down'];
-            return;
-        }
-        $scope.regExp = new RegExp($scope.search, 'gi');
+        clearTimeout($scope.timeout);
+        $scope.timeout = setTimeout(() => {
+            if (!$scope.search || $scope.search.trim() === '') {
+                this.loadProjectList();
+            }
+            if ($scope.search.length < 3) {
+                this.deleteAllRank();
+                this.projectSort = projectSorts['history-down'];
+                return;
+            }
+            if ($scope.search.length >= 3) {
+                if ($scope.search === this.previousSearch) { return; }
+                this.loadProjectList();
+            }
+        }, 1500);
         this.projectSort = projectSorts['rank-down'];
     }
 

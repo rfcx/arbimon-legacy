@@ -1,12 +1,20 @@
 # Arbimon Release Notes
 
-## v3.0.23 - May xx, 2021
+## v3.0.23 - May 14, 2021
 
 New features:
+
+- CE-501 Ability to delete project
+- CE-499 Display top projects in the Explore Projects tab
+- CE-503 Users added to arbimon needs to access project site list throughout platform
 
 Resolved issues:
 
 - Fix site name and coordinates not updated in Arbimon when edited in the Companion app
+- CE-696 Hotfix Arbimon only badge in the batch info popup
+- Hotfix scrolling down for the recordings list with several items
+- CE-520 Fix font color in soundscapes pop-up scale value
+
 ## v3.0.22-hotfix.0 - May 09, 2021
 
 Resolved issues:

@@ -312,6 +312,7 @@ angular.module('a2.browser_recordings_by_site', [
             if (!self.lovo) return;
             if (self.lovo && self.lovo.loading === true) return;
             if ($scope.browser.currentRecording && $scope.browser.annotations) return;
+            if (self.lovo.list && self.lovo.list.length < 7) return;
             self.lovo.loadNext();
         }
     }

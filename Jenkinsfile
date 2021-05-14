@@ -33,7 +33,7 @@ spec:
 
         stage("Build") {
             when {
-                 expression { BRANCH_NAME ==~ /(develop)/ }
+                 expression { BRANCH_NAME ==~ /(develop|master)/ }
             }
             steps {
                 slackSend (channel: "#${slackChannel}", color: '#FF9800', message: "*Arbimon Web*: Build started <${env.BUILD_URL}|#${env.BUILD_NUMBER}> commit ${env.GIT_COMMIT[0..6]} branch ${env.BRANCH_NAME}")
@@ -62,13 +62,11 @@ spec:
             agent {
                 label 'slave'
             }
-            options {
-                skipDefaultCheckout true
-            }
             when {
-                 expression { BRANCH_NAME ==~ /(develop)/ }
+                 expression { BRANCH_NAME ==~ /(develop|master)/ }
             }
             steps {
+                sh "kubectl -n ${PHASE} apply -k scripts/k8s/${PHASE}"
                 sh "kubectl set image deployment ${APP} ${APP}=${ECR}/${APP}/${PHASE}:v$BUILD_NUMBER --namespace ${PHASE}"
             }
 
@@ -81,7 +79,7 @@ spec:
                 skipDefaultCheckout true
             }
             when {
-                 expression { BRANCH_NAME ==~ /(develop)/ }
+                 expression { BRANCH_NAME ==~ /(develop|master)/ }
             }
             steps {
             catchError {
