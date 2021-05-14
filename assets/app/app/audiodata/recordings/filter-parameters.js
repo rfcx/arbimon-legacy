@@ -14,7 +14,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             maxDate : '=',
             minDate : '=',
             recTotal: '=',
-            isLoading: '>',
+            isLoading: '=',
             onApplyFilters : '&',
             onCreatePlaylist : '&',
         },
@@ -287,7 +287,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         Project.getSites()
             .then(function(data) {
                 sites = data
-                if (sites.length < 100 && $scope.recTotal < 100000) {
+                if (sites.length < 50 && $scope.recTotal < 100000) {
                     return self.getRecordingsStatsPerSite(sites, filters, options)
                 } else {
                     return self.setRecStatsStatic(sites, { min: $scope.minDate.toISOString(), max: $scope.maxDate.toISOString() }, options)
