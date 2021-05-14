@@ -1051,10 +1051,15 @@ var Recordings = {
             var constraints = [];
             var data = [];
 
-            constraints.push("r.site_id IN (?)");
-            data.push(Object.values(siteData).map(function(site){
+            const siteIds = Object.values(siteData).map(function(site){
                 return site.site_id;
-            }));
+            })
+            if (siteIds.length) {
+                constraints.push("r.site_id IN (?)");
+                data.push(siteIds);
+            } else {
+                constraints.push('1 = 2')
+            }
 
             if(parameters.range) {
                 console.log(parameters.range);

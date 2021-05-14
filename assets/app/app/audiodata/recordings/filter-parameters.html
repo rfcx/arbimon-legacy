@@ -1,5 +1,5 @@
 <div class="a2-filter-row">
-    <span class="pr-3" ng-if="controller.loading && controller.loading.sites">
+    <span class="pr-3" ng-if="(controller.loading && controller.loading.sites) || isLoading">
         <i class="fa fa-spinner fa-spin" style="font-size: 26px; margin-top: 2px;"></i>
     </span>
     <div class="a2-filter a2-filter-text">
@@ -195,16 +195,16 @@
     </div>
 </div>
 <div class="a2-filter-row">
-    <button class="btn btn-default" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'">
+    <button class="btn btn-default" ng-click="applyFilters() | trackEvent:'Audiodata-Recordings':'applyFilters'" ng-disabled="isLoading">
         Apply filters
     </button>
-    <button class="btn btn-default" ng-click="resetFilters() | trackEvent:'Audiodata-Recordings':'resetFilters'">
+    <button class="btn btn-default" ng-click="resetFilters() | trackEvent:'Audiodata-Recordings':'resetFilters'" ng-disabled="isLoading">
         <i class="fa fa-undo"></i> Reset
     </button>
     <button class="btn btn-default"
         ng-click="createPlaylist() | trackEvent:'Audiodata-Recordings':'createPlaylist'"
         tooltip="Save filtered results as playlist"
-        tooltip-trigger="mouseenter">
+        tooltip-trigger="mouseenter" ng-disabled="isLoading">
         <i class="fa fa-list-alt"></i> Save to Playlist
     </button>
 </div>
