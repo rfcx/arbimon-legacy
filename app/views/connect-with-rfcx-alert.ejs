@@ -1,11 +1,12 @@
-<div class="modal migration-modal" style="display: block">
+<div class="modal migration-modal" ng-hide="hidePopup" style="display: block">
     <div class="modal-dialog" style="display: flex; align-items: center; min-height: 75%;">
         <div class="modal-content">
-            <div class="modal-header alert-danger">
+            <div class="modal-header alert-danger" style="display: flex; justify-content: space-between; align-items: baseline;">
                 <h3 class="modal-title">
                     <i class="fa fa-exclamation-triangle text-warning mr-1"></i>
                     Migrate now before your credentials expire
                 </h3>
+                <a href="#" class="close btn-close" style="font-size: 24px; opacity: 0.7;" data-dismiss="modal" aria-label="Close" ng-click="hidePopup = true">&times;</a>
             </div>
             <div class="modal-body" style="min-height: 150px;">
                 Your account credentials <b>will expire on May 31, 2021</b> unless you migrate to an RFCx account.
