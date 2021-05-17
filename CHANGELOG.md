@@ -7,6 +7,7 @@ Performance improvements:
 - CE-639 Optimize recordings tags query to use proper indexes
 - CE-639 Optimize recordings count query for sites list; do not request counts when they are not needed
 - CE-639 Recordings page filters: do not request time bounds and recordings count separately - get them from main recordings query result.
+- CE-639 Refactor playlist creation to support large playlists (up to 1 million recordings)
 
 Resolved issues:
 

@@ -290,24 +290,56 @@ var Playlists = {
      * @param {Function} callback - callback function (optional)
      * @return {Promise} resolving to created playlists' insert_id
      */
-    create: function(data, callback) {
-        data.params.project_id = data.project_id;
-        data.params.sortBy = 'site_id, datetime'
-        var paramsProm = data.is_manually_created ? Promise.resolve(data.params) : model.recordings.findProjectRecordings(data.params).then(function(rows) {
-            return rows.map(function(rec){
-                return rec.id;
-            });
-        })
-        return q.all([
-            dbpool.query(
-                "INSERT INTO playlists(project_id, name, playlist_type_id) \n"+
-                "VALUES (?, ?, 1)", [ data.project_id, data.name ]).get('insertId'),
-            paramsProm
-        ]).spread(function (playlist_id, rec_ids){
-            return Playlists.addRecs(playlist_id, rec_ids).thenResolve({
-                id: playlist_id
-            });
-        }).nodeify(callback);
+    create: async function(data, callback) {
+        let db
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                db = connection
+                await db.beginTransaction()
+                const query = util.promisify(db.query).bind(db);
+                const playlistId = (await query(`INSERT INTO playlists(project_id, name, playlist_type_id) VALUES (?, ?, ?)`, [data.project_id, data.name, 1])).insertId
+                if (data.recIdsIncluded) {
+                    await this.addRecs(query, playlistId, data.params)
+                } else {
+                    data.params.project_id = data.project_id;
+                    data.params.sortBy = 'site_id, datetime'
+                    data.params.output = ['list', 'sql']
+                    const sqlParts = await model.recordings.findProjectRecordings(data.params)
+                    await query(`INSERT INTO playlist_recordings(playlist_id, recording_id) SELECT ${playlistId}, r.recording_id ${sqlParts[1]} ${sqlParts[2]}`)
+                }
+                await db.commit()
+                await db.release()
+                return playlistId
+            })
+            .catch(async (err) => {
+                if (db) {
+                    await db.rollback()
+                    await db.release()
+                }
+                throw err
+            })
+            .nodeify(callback)
+    },
+
+    /** Adds recordings to a given playlist.
+     * @param {object} query - promisified version of connection.query method (used in transaction)
+     * @param {Integer} playlistId - id of the associated playlist.
+     * @param {Array} recIds - array of recording ids to add to playlist.
+     * @return {Promise} resolved after the recordings are added to the playlist.
+     */
+    addRecs: async function(query, playlistId, recIds) {
+        const chunkSize = 10000
+        let splittedRecs = []
+        if (recIds.length < chunkSize) {
+            splittedRecs = [recIds]
+        } else {
+            while (recIds.length > 0) {
+                splittedRecs.push(recIds.splice(0, chunkSize))
+            }
+        }
+        for (let arr of splittedRecs) {
+            await query("INSERT INTO playlist_recordings(playlist_id, recording_id) VALUES" + arr.map(recId => `(${playlistId}, ${recId})`).join(", "))
+        }
     },
 
     /** Combines two playlists (from the same project) into one.
@@ -399,51 +431,6 @@ var Playlists = {
                 ]);
             }
         },
-    },
-    /** Adds recordings to a given playlist.
-     * @param {Integer} playlist_id - id of the associated playlist.
-     * @param {Array} rec_ids - array of recording ids to add to playlist.
-     * @param {Function} callback - callback function (optional).
-     * @return {Promise} resolved after the recordings are added to the playlist.
-     */
-    addRecs: function(playlist_id, rec_ids, callback) {
-        var schema =  Joi.array().items(Joi.number());
-
-        return q.ninvoke(Joi, 'validate', rec_ids, schema)
-            .then(function(recs) {
-                const chunkSize = 10000
-                let splittedRecs = []
-                if (recs.length < chunkSize) {
-                    splittedRecs = [recs]
-                } else {
-                    while (recs.length > 0) {
-                        splittedRecs.push(recs.splice(0, chunkSize))
-                    }
-                }
-                let db
-                return dbpool.getConnection()
-                    .then(async (connection) => {
-                        db = connection
-                        await db.beginTransaction()
-                        for (let arr of splittedRecs) {
-                            await connection.query(
-                                "INSERT INTO playlist_recordings(playlist_id, recording_id) \n"+
-                                "VALUES " + arr.map(function(rec_id) {
-                                    return "(" + (playlist_id|0) + "," + (rec_id|0) + ")";
-                                }).join(",\n       ")
-                            )
-                        }
-                        await db.commit()
-                        await db.release()
-                    })
-                    .catch(async (err) => {
-                        if (db) {
-                            await db.rollback()
-                            await db.release()
-                        }
-                        throw err
-                    })
-            }).nodeify(callback);
     },
 
     attachAedToPlaylist: function(playlist_id, aed, callback) {
