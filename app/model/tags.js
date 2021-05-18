@@ -144,37 +144,25 @@ tags.resourceDefs.recording = {
      *  @param {String} options.project - limit tags to resources in the given project.
      *  @returns {Promise} Promise resolving to fetched tags.
      */
-    getForType: function(options){
+    getForType: async function(options){
         var tables = ['tags T', 'JOIN recording_tags RT ON RT.tag_id = T.tag_id'];
         var constraints = [];
-        var data = [];
-        var promise;
 
         if(options && options.project){
-            promise = projects.getProjectSites(options.project).then(function(sites){
-                tables.push(
-                    'JOIN recordings R ON R.recording_id = RT.recording_id',
-                    'JOIN sites S ON S.site_id = R.site_id'
-                );
-                constraints.push('S.site_id IN (' + dbpool.escape(sites.map(function(site){
-                    return site.id;
-                })) + ')');
-            });
+            const sites = await projects.getProjectSites(options.project)
+            if (sites && sites.length) {
+                tables.push('JOIN recordings R ON R.recording_id = RT.recording_id');
+                constraints.push('R.site_id IN (' + dbpool.escape(sites.map(s => s.id)) + ')');
+                constraints.push("R.datetime > '1970-01-01 00:00:00'");
+            }
         }
-
-        if(!promise){
-            promise = q();
-        }
-
-        return promise.then(function(){
-            return q.ninvoke(dbpool, 'queryHandler',
-                "SELECT T.tag_id, T.tag, COUNT(*) as count\n" +
-                "FROM " + tables.join("\n") + "\n" +
-                (constraints.length ? ("WHERE " + constraints.join(' AND ') + "\n") : "") +
-                'GROUP BY T.tag_id',
-                data
-            ).get(0);
-        });
+        return q.ninvoke(dbpool, 'queryHandler',
+            "SELECT T.tag_id, T.tag, COUNT(*) as count\n" +
+            "FROM " + tables.join("\n") + "\n" +
+            (constraints.length ? ("WHERE " + constraints.join(' AND ') + "\n") : "") +
+            'GROUP BY T.tag_id',
+            []
+        ).get(0);
     },
     /** Adds a tag to a given recording.
      *  @param {String} id - the id of the recording to add the tag to.

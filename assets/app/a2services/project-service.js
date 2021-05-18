@@ -44,12 +44,18 @@ angular.module('a2.srv.project', [
             getUsage: function() {
                 return $http.get('/api/project/'+url+'/usage');
             },
-            getSites: function(callback) {
-                return a2APIService.get('/sites').then(function(data) {
+            getSites: function(options, callback) {
+                if(typeof options == 'function') {
+                    callback = options;
+                    options = {};
+                }
+                return $q.when($http.get('/api/project/'+url+'/sites', {
+                    params: options
+                })).then(function(response){
                     if(callback){
-                        callback(data);
+                        callback(response.data);
                     }
-                    return data;
+                    return response.data;
                 });
             },
             getClasses: function(options, callback) {

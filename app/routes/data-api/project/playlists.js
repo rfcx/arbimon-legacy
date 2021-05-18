@@ -117,20 +117,20 @@ router.post('/create', function(req, res, next) {
         if(rows.length > 0) {
             return res.json({
                 error: "Playlist name in use",
-                ...req.body.isManuallyCreated && { playlist_id: rows[0].id }
+                playlist_id: rows[0].id
             });
         }
         var opts = {
             project_id: req.project.project_id,
             name:    req.body.playlist_name,
             params:  req.body.params,
+            recIdsIncluded: req.body.recIdsIncluded === true
         };
-        if (req.body.isManuallyCreated) opts.is_manually_created = req.body.isManuallyCreated
-        model.playlists.create(opts).then(function(new_tset) {
-            debug("playlist added", new_tset);
+        model.playlists.create(opts).then(function(plist) {
+            debug("playlist added", plist);
             res.json({
                 success: true,
-                ...req.body.isManuallyCreated && { playlist_id: new_tset.id }
+                playlist_id: plist.id
             });
         }).catch(next);
     });
