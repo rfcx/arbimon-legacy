@@ -2,6 +2,10 @@
 
 ## v3.0.24 - May XX, 2021
 
+New features:
+
+- CE-694 Change migration banner to popup
+
 Performance improvements:
 
 - CE-639 Optimize recordings tags query to use proper indexes

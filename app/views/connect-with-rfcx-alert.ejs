@@ -1,10 +1,21 @@
-<div class="container">
-  <div class="row">
-      <div class="alert alert-info alert-dismissable" role="alert" ng-hide="hideAlertBar">
-        <a href="#" class="close" data-dismiss="alert" aria-label="close" ng-click="hideAlertBar = true">&times;</a>
-        <h4>Arbimon II account migration</h4>
-        Upgrade your account now to access the RFCx platform.
-        <a href="/connect-with-rfcx" class="alert-link" >Find out more and start migration</a>.
-      </div>
-  </div>
+<div class="modal migration-modal" ng-hide="hidePopup" style="display: block">
+    <div class="modal-dialog" style="display: flex; align-items: center; min-height: 75%;">
+        <div class="modal-content">
+            <div class="modal-header alert-danger" style="display: flex; justify-content: space-between; align-items: baseline;">
+                <h3 class="modal-title">
+                    <i class="fa fa-exclamation-triangle text-warning mr-1"></i>
+                    Migrate now before your credentials expire
+                </h3>
+                <a href="#" class="close btn-close" style="font-size: 24px; opacity: 0.7;" data-dismiss="modal" aria-label="Close" ng-click="hidePopup = true">&times;</a>
+            </div>
+            <div class="modal-body" style="min-height: 150px;">
+                Your account credentials <b>will expire on May 31, 2021</b> unless you migrate to an RFCx account.
+                To avoid issues logging in, please migrate your account right now.
+                <br>It only takes a couple of minutes!
+            </div>
+            <div class="modal-footer">
+                <a href="/connect-with-rfcx" class="btn btn-primary alert-link" style="background-color: #e12323; border: #e12323">Migrate Now</a>
+            </div>
+        </div>
+    </div>
 </div>
