@@ -222,7 +222,7 @@ angular.module('a2.browser_recordings_by_site', [
     this.activate = function(){
         var defer = $q.defer();
         self.loading.sites = true;
-        project.getSites(function(sites){
+        project.getSites({ count: true, logs: true }, function(sites){
             self.sites = sites;
             self.loading.sites = false;
             $timeout(function(){

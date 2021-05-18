@@ -12,8 +12,8 @@ router.get('/', function(req, res, next) {
     res.type('json');
     model.projects.getProjectSites(req.project.project_id, {
         compute:{
-            rec_count:true,
-            has_logs:true
+            rec_count: !!req.query.count,
+            has_logs: !!req.query.logs
         }
     }).then(function(rows) {
         res.json(rows);
