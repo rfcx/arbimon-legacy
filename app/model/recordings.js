@@ -940,20 +940,24 @@ var Recordings = {
     },
 
     __parse_comments_data : function(data) {
-        const parsedData = JSON.parse(data);
-        if (parsedData && !parsedData.ARTIST) {
-            return {};
+        try {
+            const parsedData = JSON.parse(data);
+            if (parsedData && !parsedData.ARTIST) {
+                return null;
+            }
+            let comment = '';
+            const regArtist = /AudioMoth (\w+)/.exec(parsedData.ARTIST);
+            comment += regArtist && regArtist[1] ? regArtist[1] : '';
+            const regGain = /at (\w+) gain/.exec(data);
+            comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : '';
+            const regState = /state was (.*?) and/.exec(data);
+            comment += regState && regState[1] ? ` / ${regState[1]}` : '';
+            const regTemperature = /temperature was (.*?).","/.exec(data);
+            comment += regTemperature && regTemperature[1] ? ` / ${regTemperature[1]}` : '';
+            return comment;
+        } catch (e) {
+            return null
         }
-        let comment = '';
-        const regArtist = /AudioMoth (\w+)/.exec(parsedData.ARTIST);
-        comment += regArtist && regArtist[1] ? regArtist[1] : '';
-        const regGain = /at (\w+) gain/.exec(data);
-        comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : '';
-        const regState = /state was (.*?) and/.exec(data);
-        comment += regState && regState[1] ? ` / ${regState[1]}` : '';
-        const regTemperature = /temperature was (.*?).","/.exec(data);
-        comment += regTemperature && regTemperature[1] ? ` / ${regTemperature[1]}` : '';
-        return comment;
     },
     __compute_thumbnail_path : async function(recording, callback){
         await Recordings.__compute_thumbnail_path_async(recording)
