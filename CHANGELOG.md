@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+Other:
+
+- CE-686 Save source file name from Core API into recordings
+
 ## v3.0.23 - May 14, 2021
 
 New features:

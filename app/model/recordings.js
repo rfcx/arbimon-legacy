@@ -956,11 +956,15 @@ var Recordings = {
         return comment;
     },
     __parse_filename_data : function(data) {
-        const parsedData = JSON.parse(data);
-        if (parsedData && !parsedData.filename) {
-            return {};
+        try {
+            const parsedData = JSON.parse(data);
+            if (parsedData && !parsedData.filename) {
+                return null;
+            }
+            return parsedData.filename;
+        } catch (e) {
+            return null;
         }
-        return parsedData.filename;
     },
     __compute_thumbnail_path : async function(recording, callback){
         await Recordings.__compute_thumbnail_path_async(recording)
