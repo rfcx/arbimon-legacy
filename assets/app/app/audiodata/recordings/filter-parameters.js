@@ -13,6 +13,8 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             isOpen : '=',
             maxDate : '=',
             minDate : '=',
+            recTotal: '=',
+            isLoading: '=',
             onApplyFilters : '&',
             onCreatePlaylist : '&',
         },
@@ -246,7 +248,6 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 options.months.sort(sort);
                 options.days.sort(sort);
                 options.hours.sort(sort);
-                console.log('options', options)
             });
     }
 
@@ -264,7 +265,6 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         options.months = staticMonths
         options.days = staticDays
         options.hours = staticHours
-        console.log('options', options)
     }
 
     this.fetchOptions = function(filters) {
@@ -277,19 +277,20 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
         var loading = this.loading;
         loading.sites = true
         var sites
+        if ($scope.recTotal === undefined || $scope.minDate === undefined || $scope.maxDate === undefined) {
+            // wait until all inputs are populated to make proper decision in a condition below
+            setTimeout(function() {
+                this.fetchOptions(filters)
+            }.bind(this), 1000)
+            return
+        }
         Project.getSites()
             .then(function(data) {
                 sites = data
-                return Project.getRecTotalQty()
-            })
-            .then(function(recTotal) {
-                if (sites.length < 100 && recTotal < 100000) {
+                if (sites.length < 50 && $scope.recTotal < 100000) {
                     return self.getRecordingsStatsPerSite(sites, filters, options)
                 } else {
-                    return Project.getProjectTimeBounds()
-                        .then(function (bounds) {
-                            return self.setRecStatsStatic(sites, bounds, options)
-                        })
+                    return self.setRecStatsStatic(sites, { min: $scope.minDate.toISOString(), max: $scope.maxDate.toISOString() }, options)
                 }
             })
             .finally(() => {
@@ -305,7 +306,6 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             }
         );
         a2Playlists.getList().then(function(playlists){
-            console.log("a2Playlists", playlists);
             options.playlists = playlists;
         });
         a2Tags.getForType('recording').then((function(tags){

@@ -26,6 +26,7 @@ angular.module('a2.home', [
     $scope
 ) {
     $scope.search = '';
+    $scope.isExplorePage = $window.location.pathname === '/home/all'
     function getProjectSelectCache(){
         try{
             return JSON.parse($localStorage.getItem('home.project.select.cache')) || {};
@@ -52,14 +53,16 @@ angular.module('a2.home', [
         if ($scope.search !== '') {
             config.params.q = $scope.search;
         }
-        else {
+        if (this.isAnonymousGuest || $scope.isExplorePage && !$scope.search) {
             config.params.featured = true;
         }
-        if ($window.location.pathname === '/home' && !this.isAnonymousGuest) {
+        if (!this.isAnonymousGuest && !$scope.isExplorePage && !$scope.search) {
             config.params.type = 'my'
         }
         var psCache = getProjectSelectCache();
-        $http.get('/api/user/projectlist', config).success((function(data) {
+        this.projects = []
+        this.isLoading = true
+        $http.get('/api/user/projectlist', config).success(function(data) {
             data.forEach(function(p){
                 p.lastAccessed = psCache[p.id] || 0;
                 var lat = p.lat && p.lat >= -85.0511 && p.lat <= 85.0511? p.lat : 37.773972;
@@ -67,9 +70,13 @@ angular.module('a2.home', [
                 var zoom = p.lat && p.lon ? 5.33 : 4
                 p.mapUrl = "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/" + lon + "," + lat + "," + zoom + ",0,60/274x180?access_token=" + a2InjectedData.mapbox_access_token
             });
+            this.isLoading = false
             this.projects = data;
             this.previousSearch = this.search
-        }).bind(this));
+        }.bind(this))
+        .error(function() {
+            this.isLoading = false
+        }.bind(this))
     };
 
     this.createProject = function() {
@@ -108,21 +115,6 @@ angular.module('a2.home', [
         this.projectSort = sorting || projectSorts.default;
     };
 
-    this.toggleSearchVis = function() {
-        this.showSearch = !this.showSearch;
-        if (!this.showSearch) {
-            this.search = '';
-        }
-        else {
-            setTimeout(function() { // if we do it immidiately, element is not yet shown
-                var el = document.getElementById('projectsSearch')
-                if (el) {
-                    el.focus();
-                }
-            }, 100)
-        }
-    };
-
     this.searchChanged = function() {
         clearTimeout($scope.timeout);
         $scope.timeout = setTimeout(() => {
@@ -138,7 +130,7 @@ angular.module('a2.home', [
                 if ($scope.search === this.previousSearch) { return; }
                 this.loadProjectList();
             }
-        }, 1500);
+        }, 1000);
         this.projectSort = projectSorts['rank-down'];
     }
 
@@ -148,19 +140,6 @@ angular.module('a2.home', [
                 delete project['rank'];
             })
         }
-    }
-
-    this.customSearch = function(item) {
-        if (!$scope.search) return true;
-        if (item.name.match($scope.regExp)) {
-            item.rank = 1;
-            return true;
-        }
-        else if (item.description && item.description.match($scope.regExp)) {
-            item.rank = 2;
-            return true;
-        }
-        return false
     }
 
     var projectSorts = [

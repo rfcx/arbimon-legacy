@@ -180,11 +180,11 @@ var Projects = {
 
                 return q.all([
                     options.compute.rec_count ? dbpool.query(
-                        "SELECT r.site_id, COUNT(r.recording_id ) as rec_count\n"+
-                        "FROM recordings AS r INNER JOIN sites s ON s.site_id = r.site_id\n"+
-                        "WHERE s.project_id = ?\n" +
-                        "GROUP BY r.site_id",
-                        [project_id]
+                        "SELECT site_id, COUNT(recording_id) as rec_count "+
+                        "FROM recordings "+
+                        "WHERE site_id IN (?) " +
+                        "GROUP BY site_id",
+                        [siteIds]
                     ).then(function(results){
                         sites.forEach(function(site){
                             site.rec_count=0;

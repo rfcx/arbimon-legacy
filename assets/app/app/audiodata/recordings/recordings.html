@@ -4,7 +4,7 @@
             <button class="btn btn-default" dropdown-toggle ng-disabled="loading"><i class="fa fa-filter"></i> Filters <i class="fa fa-caret-down"></i></button>
             <div class="dropdown-form dropdown-menu a2-filters-box-dropdown datepicker" role="menu">
                 <recording-filter-parameters on-apply-filters="controller.applyFilters(filters)" on-create-playlist="controller.createPlaylist(filters)"
-                    max-date="maxDate" min-date="minDate"
+                    max-date="maxDate" min-date="minDate" rec-total="totalRecs" is-loading="loading"
                 ></recording-filter-parameters>
             </div>
         </span>

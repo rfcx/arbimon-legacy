@@ -6,6 +6,25 @@ Resolved issues:
 
 - CE-697 Convert datetime with timezone offsets for browser AudioMoth recordings
 
+## v3.0.24 - May 18, 2021
+
+New features:
+
+- CE-694 Change migration banner to popup
+
+Performance improvements:
+
+- CE-639 Optimize recordings tags query to use proper indexes
+- CE-639 Optimize recordings count query for sites list; do not request counts when they are not needed
+- CE-639 Recordings page filters: do not request time bounds and recordings count separately - get them from main recordings query result.
+- CE-639 Refactor playlist creation to support large playlists (up to 1 million recordings)
+
+Resolved issues:
+
+- Show spinner while search is processing on Projects page; Hide "Add project" button on Explore projects page. Do not show search form for guests.
+- CE-639 Fix recordings query for project which does not have any sites
+- CE-639 Disable filter buttons on Recordings page while recordings are loading from server
+
 ## v3.0.23 - May 14, 2021
 
 New features:
