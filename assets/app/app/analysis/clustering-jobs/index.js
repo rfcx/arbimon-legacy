@@ -732,7 +732,7 @@ angular.module('a2.analysis.clustering-jobs', [
             a2Playlists.create({
                 playlist_name: $scope.playlistData.playlistName,
                 params: Object.keys($scope.selectedRois),
-                isManuallyCreated: true
+                recIdsIncluded: true
             },
             function(data) {
                 console.log('data', data);

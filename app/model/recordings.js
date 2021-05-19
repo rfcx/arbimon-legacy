@@ -940,20 +940,24 @@ var Recordings = {
     },
 
     __parse_comments_data : function(data) {
-        const parsedData = JSON.parse(data);
-        if (parsedData && !parsedData.ARTIST) {
-            return {};
+        try {
+            const parsedData = JSON.parse(data);
+            if (parsedData && !parsedData.ARTIST) {
+                return null;
+            }
+            let comment = '';
+            const regArtist = /AudioMoth (\w+)/.exec(parsedData.ARTIST);
+            comment += regArtist && regArtist[1] ? regArtist[1] : '';
+            const regGain = /at (\w+) gain/.exec(data);
+            comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : '';
+            const regState = /state was (.*?) and/.exec(data);
+            comment += regState && regState[1] ? ` / ${regState[1]}` : '';
+            const regTemperature = /temperature was (.*?).","/.exec(data);
+            comment += regTemperature && regTemperature[1] ? ` / ${regTemperature[1]}` : '';
+            return comment;
+        } catch (e) {
+            return null
         }
-        let comment = '';
-        const regArtist = /AudioMoth (\w+)/.exec(parsedData.ARTIST);
-        comment += regArtist && regArtist[1] ? regArtist[1] : '';
-        const regGain = /at (\w+) gain/.exec(data);
-        comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : '';
-        const regState = /state was (.*?) and/.exec(data);
-        comment += regState && regState[1] ? ` / ${regState[1]}` : '';
-        const regTemperature = /temperature was (.*?).","/.exec(data);
-        comment += regTemperature && regTemperature[1] ? ` / ${regTemperature[1]}` : '';
-        return comment;
     },
     __parse_filename_data : function(data) {
         try {
@@ -1031,6 +1035,7 @@ var Recordings = {
         }).then(function (parameters) {
             var siteData = parameters.siteData
             var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
+            var sqlOnly = outputs.length === 2 && outputs[0] === 'list' && outputs[1] === 'sql'
 
             var projection=[];
             var steps=[];
@@ -1062,10 +1067,15 @@ var Recordings = {
             var constraints = [];
             var data = [];
 
-            constraints.push("r.site_id IN (?)");
-            data.push(Object.values(siteData).map(function(site){
+            const siteIds = Object.values(siteData).map(function(site){
                 return site.site_id;
-            }));
+            })
+            if (siteIds.length) {
+                constraints.push("r.site_id IN (?)");
+                data.push(siteIds);
+            } else {
+                constraints.push('1 = 2')
+            }
 
             if(parameters.range) {
                 console.log(parameters.range);
@@ -1178,6 +1188,10 @@ var Recordings = {
                 var order_clause = 'ORDER BY ' + dbpool.escapeId(parameters.sortBy || 'datetime') + ' ' + (parameters.sortRev ? 'DESC' : '');
                 var limit_clause = (parameters.limit) ? dbpool.escape(parameters.offset || 0) + ', ' + dbpool.escape(parameters.limit) : '';
 
+                if (sqlOnly) {
+                    return [select_clause.list, from_clause, where_clause]
+                }
+
                 return Q.all(outputs.map(function(output){
                     var query=[
                         select_clause[output],
@@ -1198,6 +1212,9 @@ var Recordings = {
                     });
                 }));
             }).then(function (results) {
+                if (sqlOnly) {
+                    return results
+                }
                 results = outputs.reduce(function(obj, output, i){
                     var r = results[i][0];
                     if(output == "count"){
@@ -1260,7 +1277,7 @@ var Recordings = {
             offset: joi.number(),
             sortBy: joi.string(),
             sortRev: joi.boolean(),
-            output:  arrayOrSingle(joi.string().valid('count','list','date_range')).default('list')
+            output:  arrayOrSingle(joi.string().valid('count','list','date_range','sql')).default('list')
         },
         exportProjections: {
             recording:arrayOrSingle(joi.string().valid(
