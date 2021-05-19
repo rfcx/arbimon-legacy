@@ -1,5 +1,10 @@
 # Arbimon Deployment Notes
 
+## v3.0.25
+
+- Run migration 014-projects-table-add-image-column.sql
+- Run query to add featured=2 and add the images for 3 top projects
+
 ## v3.0.23
 
 - Run migration 012-projects-table-add-deleted-column.sql

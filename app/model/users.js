@@ -199,7 +199,8 @@ var Users = {
             whereExp.push("p.name LIKE '%"+query.q+"%' OR p.description LIKE '%"+query.q+"%'");
         }
         if(query.hasOwnProperty('featured')) {
-            whereExp.push("p.featured = 1");
+            selectExtra += ', featured, image'
+            whereExp.push("p.featured = 1 OR p.featured = 2");
         }
         if (query.hasOwnProperty('allAccessibleProjects')) {
             whereExp.push('p.deleted_at IS NULL');

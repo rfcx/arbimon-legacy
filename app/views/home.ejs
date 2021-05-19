@@ -20,8 +20,20 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
+                    <% if (user && user.isAnonymousGuest) { %>
+                        <div class="row mb-5">
+                            <div class="col-md-12 seconds-div-center">
+                                <h1>RFCx Arbimon</h1>
+                                <h3 style="text-align: left; margin-bottom: 20px;">Upload and analyze an unlimited amount of audio from your AudioMoth, SongMeter, or other recording device, with our free cloud-based analytical tool.
+                                    Learn more about our Ecoacoustic tools <a href="https://rfcx.org/ecoacoustics">here</a></h3>
+                                <div class="button-group">
+                                    <a class="btn btn-lg btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Start Analyzing Now!</a>
+                                </div>
+                            </div>
+                        </div>
+                    <% } %>
                     <div class="row">
-                        <div class="col-xs-5 col-md-5 pb-3" ng-if="!search">
+                        <div class="col-xs-5 col-md-5 pb-3" ng-if="!search && !controller.isAnonymousGuest">
                             <% if (state === 'home.all' || (user && user.isAnonymousGuest)) { %>
                                 <h3>Explore Projects</h3>
                             <% } else { %>
@@ -39,6 +51,28 @@
                             </div>
                         </div>
                     </div>
+                    <%if (state === 'home.all' || (user && user.isAnonymousGuest)) { %>
+                        <div class="row">
+                            <div class="col-md-12" style="text-align: center; padding: 0; min-height: 200px;">
+                                <ul class="projects-list" style="justify-content: center;">
+                                    <li class="ng-cloak projects-list-item highlighted-item"
+                                        ng-repeat="project in controller.highlightedProjects"
+                                        style="background: url({{project.image}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project)">
+                                        <div class="text-left">
+                                            <div class="title" title="{{ project.name }}">
+                                                {{ project.name }}
+                                            </div>
+                                        </div>
+                                        <div class="text-left">
+                                            <div class="word-wrap line-ellipsis" style="height: 40px;">
+                                                {{ project.description }}
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    <% } %>
                     <div ng-if="controller.isLoading" class="row ng-cloak text-center" style="padding: 64px 0;" >
                         <i class="fa fa-spinner fa-spin" style="font-size: 32px;"></i>
                     </div>
@@ -51,7 +85,7 @@
                                     <div>New Project</div>
                                 </li>
                                 <li class="ng-cloak projects-list-item" ng-class="{'disabled': !project.is_enabled }"
-                                    ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort ) | paginate: controller.currentPage : (!isExplorePage && !controller.isAnonymousGuest ? 11 : 12)"
+                                    ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort )"
                                     style="background: url({{project.mapUrl}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project)">
                                     <div class="text-left">
                                         <div class="last-accessed" title="{{ project.lastAccessed | moment:'lll' }}">
@@ -67,7 +101,6 @@
                                     </div>
                                 </li>
                             </ul>
-                            <pagination ng-show="results.length > (!isExplorePage && !controller.isAnonymousGuest ? 11 : 12)" total-items="results.length" ng-model="controller.currentPage" max-size="5" rotate="false"></pagination>
                         </div>
                     </div>
                 </div>

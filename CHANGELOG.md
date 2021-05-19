@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-504 Revamp Arbimon homepage
+
 ## v3.0.24 - May XX, 2021
 
 New features:

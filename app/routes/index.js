@@ -83,6 +83,7 @@ router.get('/home', function(req, res) {
     res.render('home', {
         title: "Home",
         user: req.session.user,
+        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
         state: 'home.my',
         inject_data: {
             mapbox_access_token: config('mapbox-api').accessToken
@@ -95,6 +96,7 @@ router.get('/home/all', function(req, res) {
     res.render('home', {
         title: "Home",
         user: req.session.user,
+        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
         state: 'home.all',
         inject_data: {
             mapbox_access_token: config('mapbox-api').accessToken
