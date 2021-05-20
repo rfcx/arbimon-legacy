@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-623 Extend amount of time users can stay logged into Arbimon
+
 ## v3.0.24 - May XX, 2021
 
 New features:

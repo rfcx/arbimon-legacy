@@ -10,7 +10,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
-var SessionStore = require('express-mysql-session');
+var SessionStore = require('express-mysql-session')(session);
 var busboy = require('connect-busboy');
 var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
@@ -107,7 +107,8 @@ var sessionConfig = {
         host     : config('db').host,
         user     : config('db').user,
         password : config('db').password,
-        database : config('db').database
+        database : config('db').database,
+        expiration: config('db').expiration
     })
 };
 
