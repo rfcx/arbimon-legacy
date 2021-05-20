@@ -38,16 +38,23 @@
       width: 100%;
       height: 100%;
       z-index: 1;
-      background: @gray-darkest;
+      border-radius: 8px;
+      background: linear-gradient(to top, @gray-darkest, @gray-darker);
       opacity: 0.4;
     }
     .text-left {
       z-index: 2;
     }
-    &.highlighted-item {
-      width: 350px;
-      height: 250px;
+    .highlighted-list {
       justify-content: space-between;
+      @media (max-width: @screen-tablet) {
+        justify-content: center;
+      }
+    }
+    &.highlighted-item {
+      width: 370px;
+      height: 260px;
+      justify-content: flex-end;
     }
     &.projects-list-item-add {
       padding-top: @space-projects-list-base * 3;

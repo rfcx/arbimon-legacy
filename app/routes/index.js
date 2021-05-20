@@ -69,7 +69,7 @@ router.use(function(req, res, next) {
 // TODO[gio]:: this route is unused, since / gets handled in login, maybe delete?
 router.get('/', function(req, res) {
     res.type('html');
-    res.redirect('/home');
+    res.redirect('/home/all');
 });
 
 router.get('/process-order/:orderId', function(req, res, next) {
@@ -114,7 +114,7 @@ router.get('/user-settings', function(req, res) {
             state: ''
         });
     } else {
-        res.redirect('/home');
+        res.redirect('/home/all');
     }
 });
 
