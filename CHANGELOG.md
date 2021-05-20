@@ -1,10 +1,16 @@
 # Arbimon Release Notes
 
+## v3.0.25 - May XX, 2021
+
+Resolved issues:
+
+- CE-697 Convert datetime with timezone offsets for browser AudioMoth recordings
+
 Other:
 
 - CE-686 Save source file name from Core API into recordings
 
-## v3.0.24 - May XX, 2021
+## v3.0.24 - May 18, 2021
 
 New features:
 
