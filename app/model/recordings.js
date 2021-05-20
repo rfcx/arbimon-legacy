@@ -959,6 +959,17 @@ var Recordings = {
             return null
         }
     },
+    __parse_filename_data : function(data) {
+        try {
+            const parsedData = JSON.parse(data);
+            if (parsedData && !parsedData.filename) {
+                return null;
+            }
+            return parsedData.filename;
+        } catch (e) {
+            return null;
+        }
+    },
     __compute_thumbnail_path : async function(recording, callback){
         await Recordings.__compute_thumbnail_path_async(recording)
         callback();
@@ -1217,6 +1228,7 @@ var Recordings = {
                             _1.timezone = siteData[_1.site_id].timezone;
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
                             _1.meta = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
+                            _1.filename = _1.meta ? Recordings.__parse_filename_data(_1.meta) : null;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!_1.legacy) {
                                 _1.file = `${moment.utc(_1.datetime_utc ? _1.datetime_utc : _1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;

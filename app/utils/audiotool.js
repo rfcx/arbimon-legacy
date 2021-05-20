@@ -60,6 +60,8 @@ var audiotools = {
             var info = {};
             for(var i = 0, e = lines.length; i < e; ++i){
                 var m = /^\s*([^:]+?)\s*:\s*(.*)$/.exec(lines[i]);
+                const regArtist = /Artist=AudioMoth (\w+)/gmi.exec(lines[i]);
+                if (regArtist) info.isUTC = true;
                 if (m) {
                     var param = m[1].toLowerCase().replace(/ /g, '_');
                     var value = m[2];
