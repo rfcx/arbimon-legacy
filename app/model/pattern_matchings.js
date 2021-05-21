@@ -523,6 +523,17 @@ var PatternMatchings = {
         );
     },
 
+    getSitesForPM (pmId) {
+        return dbpool.query(`
+            SELECT DISTINCT(S.site_id), S.name
+            FROM playlists AS P
+            JOIN pattern_matchings AS PM ON PM.playlist_id = P.playlist_id
+            JOIN playlist_recordings AS PR ON PR.playlist_id = P.playlist_id
+            JOIN recordings AS R ON PR.recording_id = R.recording_id
+            JOIN sites AS S ON R.site_id = S.site_id
+            WHERE PM.pattern_matching_id = ?;`, [pmId])
+    },
+
     getRoiAudioFile(patternMatching, roiId, options){
         options = options || {};
         return dbpool.query(
