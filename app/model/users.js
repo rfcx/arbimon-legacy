@@ -439,7 +439,7 @@ var Users = {
         var password = auth.password || '';
         var ip = auth.ip;
         var captchaResponse = auth.captcha;
-        var redirectUrl = options.redirect || '/home';
+        var redirectUrl = options.redirect || '/';
 
         var permitedRetries = 10;
         var captchaRequired = 3;
@@ -584,7 +584,7 @@ var Users = {
 
             return {
                 success: true,
-                redirect : req.query.redirect || '/home',
+                redirect : req.query.redirect || '/',
                 captchaNeeded: result.captchaNeeded
             };
         });

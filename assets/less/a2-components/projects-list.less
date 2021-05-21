@@ -15,6 +15,12 @@
   @media (max-width: 1200px) {
     justify-content: center;
   }
+  &.highlighted-list {
+    justify-content: space-between;
+    @media (max-width: @screen-tablet) {
+      justify-content: center;
+    }
+  }
   .projects-list-item {
     position: relative;
     width: 274px;
@@ -39,17 +45,10 @@
       height: 100%;
       z-index: 1;
       border-radius: 8px;
-      background: linear-gradient(to top, @gray-darkest, @gray-darker);
-      opacity: 0.4;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 85%, rgba(0,0,0,0.5) 100%);
     }
     .text-left {
       z-index: 2;
-    }
-    .highlighted-list {
-      justify-content: space-between;
-      @media (max-width: @screen-tablet) {
-        justify-content: center;
-      }
     }
     &.highlighted-item {
       width: 370px;

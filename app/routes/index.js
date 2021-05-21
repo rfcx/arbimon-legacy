@@ -66,38 +66,32 @@ router.use(function(req, res, next) {
     res.render('get_fragment_hack.ejs');
 });
 
-// TODO[gio]:: this route is unused, since / gets handled in login, maybe delete?
-router.get('/', function(req, res) {
-    res.type('html');
-    res.redirect('/home/all');
-});
-
 router.get('/process-order/:orderId', function(req, res, next) {
     res.type('html');
     // render view to show progress
     res.render('processing-order');
 });
 
-router.get('/home', function(req, res) {
+router.get('/projects', function(req, res) {
     res.type('html');
     res.render('home', {
-        title: "Home",
+        title: "Projects",
         user: req.session.user,
         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        state: 'home.my',
+        state: 'projects',
         inject_data: {
             mapbox_access_token: config('mapbox-api').accessToken
         },
     });
 });
 
-router.get('/home/all', function(req, res) {
+router.get('/', function(req, res) {
     res.type('html');
     res.render('home', {
-        title: "Home",
+        title: "Projects",
         user: req.session.user,
         auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        state: 'home.all',
+        state: 'home',
         inject_data: {
             mapbox_access_token: config('mapbox-api').accessToken
         },
@@ -114,7 +108,7 @@ router.get('/user-settings', function(req, res) {
             state: ''
         });
     } else {
-        res.redirect('/home/all');
+        res.redirect('/');
     }
 });
 

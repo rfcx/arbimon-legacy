@@ -8,7 +8,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a href="/home/all" class="navbar-brand navbar-brand-center">
+            <a href="/" class="navbar-brand navbar-brand-center">
                 <img src="/images/favicon/rfcx-logo.svg">
                 <span class="navbar-title">Arbimon</span>
             </a>
@@ -25,7 +25,7 @@
         <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
             <ul class="nav navbar-nav navbar-left">
                 <% if (user && !user.isAnonymousGuest) { %>
-                <li class="<%- state === 'home.my'? 'active' : '' %>"><a href="/home">My Projects</a></li>
+                <li class="<%- state === 'projects'? 'active' : '' %>"><a href="/projects">My Projects</a></li>
                 <% } %>
                 <% if (user && user.isSuper) { %>
                 <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>

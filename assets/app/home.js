@@ -27,7 +27,7 @@ angular.module('a2.home', [
 ) {
     $scope.search = '';
     this.highlightedProjects = [];
-    $scope.isExplorePage = $window.location.pathname === '/home/all'
+    $scope.isExplorePage = $window.location.pathname === '/'
     function getProjectSelectCache(){
         try{
             return JSON.parse($localStorage.getItem('home.project.select.cache')) || {};
@@ -73,8 +73,14 @@ angular.module('a2.home', [
                 p.mapUrl = "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/" + lon + "," + lat + "," + zoom + ",0,60/274x180?access_token=" + a2InjectedData.mapbox_access_token
             });
             this.isLoading = false
-            if (isFeatured) this.highlightedProjects = data.filter(item => item.featured === 2);
-            this.projects = data.filter(item => item.featured !== 2);
+            if ($scope.search !== '') {
+                this.highlightedProjects = [];
+                this.projects = data;
+            }
+            else {
+                if (isFeatured) this.highlightedProjects = data.filter(item => item.featured === 2);
+                this.projects = data.filter(item => item.featured !== 2);
+            }
             this.previousSearch = this.search
         }.bind(this))
         .error(function() {
