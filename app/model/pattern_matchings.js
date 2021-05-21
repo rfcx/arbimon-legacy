@@ -525,7 +525,7 @@ var PatternMatchings = {
 
     getSitesForPM (pmId) {
         return dbpool.query(`
-            SELECT DISTINCT(S.site_id), S.name
+            SELECT DISTINCT(S.site_id), S.name as site
             FROM playlists AS P
             JOIN pattern_matchings AS PM ON PM.playlist_id = P.playlist_id
             JOIN playlist_recordings AS PR ON PR.playlist_id = P.playlist_id
