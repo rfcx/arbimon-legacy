@@ -88,16 +88,13 @@ router.get('/:patternMatching/site-index', function(req, res, next) {
     res.type('json');
     model.patternMatchings.getRoisForId({
         patternMatchingId: req.params.patternMatching,
-        perSiteCount: true,
+        perSite: true,
+        noSort: true,
         wherePresent: req.query.search == 'present',
         whereNotPresent: req.query.search == 'not_present',
         whereUnvalidated: req.query.search == 'unvalidated',
     }).then(function(rois) {
-        res.json(rois.reduce(function(_, item){
-            item.offset = _.accum;
-            _.accum += item.count;
-            return _;
-        }, {list:rois, accum:0}).list);
+        res.json(rois)
     }).catch(next);
 });
 
