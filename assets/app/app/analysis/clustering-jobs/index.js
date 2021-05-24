@@ -274,7 +274,7 @@ angular.module('a2.analysis.clustering-jobs', [
         // function to get color
         function getColor(n) {
             const rgb = [0, 0, 0];
-            for (let i = 0; i < 24; i++) {
+            for (var i = 0; i < 24; i++) {
                 rgb[i%3] <<= 1;
                 rgb[i%3] |= n & 0x01;
                 n >>= 1;
