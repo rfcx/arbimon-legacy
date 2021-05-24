@@ -4,6 +4,5 @@
     "port": "3306",
     "password": "",
     "database": "",
-    "timezone": "Z",
-    "expiration": 604800000
+    "timezone": "Z"
 }
