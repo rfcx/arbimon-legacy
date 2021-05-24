@@ -219,7 +219,6 @@ var PatternMatchings = {
         perUserCSValidations: joi.boolean(),
         hideNormalValidations: joi.boolean(),
         countCSValidations: joi.boolean(),
-        perSite: joi.boolean(),
         perSiteCount: joi.boolean(),
         whereConflicted: joi.boolean(),
         whereExpert: joi.boolean(),
@@ -372,13 +371,6 @@ var PatternMatchings = {
                 }
             }
 
-            if(parameters.perSite){
-                builder.select = [
-                    'DISTINCT(S.site_id)',
-                    'S.`name` as `site`'
-                ]
-            }
-
             if(parameters.perSiteCount){
                 builder.select = [
                     'S.site_id',
@@ -493,12 +485,8 @@ var PatternMatchings = {
         else if (options.byScore) {
             sortBy = [['PMR.score', 0]]
         }
-        else if (options.noSort) {
-            sortBy = []
-        }
         return this.buildRoisQuery({
             patternMatching: options.patternMatchingId,
-            perSite: options.perSite,
             perSiteCount: options.perSiteCount,
             csValidationsFor: options.csValidationsFor,
             expertCSValidations: options.expertCSValidations,
