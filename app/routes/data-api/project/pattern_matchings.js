@@ -58,7 +58,6 @@ router.get('/count', function(req, res, next) {
 
 router.param('paging', function(req, res, next, paging){
     const components = paging.split('_');
-    console.log('paging components', components);
     req.paging = {
         offset: (components[0] | 0),
         limit: (components[1] | 0),
