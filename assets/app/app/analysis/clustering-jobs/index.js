@@ -270,18 +270,21 @@ angular.module('a2.analysis.clustering-jobs', [
                 color: 'white'
             }
         }
-        // function to get random color
-        var random_color = function() {
-            var letters = '0123456789ABCDEF';
-            var color = '#';
-            for (var i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
+        
+        // function to get color
+        function getColor(n) {
+            const rgb = [0, 0, 0];
+            for (var i = 0; i < 24; i++) {
+                rgb[i%3] <<= 1;
+                rgb[i%3] |= n & 0x01;
+                n >>= 1;
             }
-            return color;
+            return '#' + rgb.reduce((a, c) => (c > 0x0f ? c.toString(16) : '0' + c.toString(16)) + a, '')
         }
+        
         // make random color for shapes and points
         $scope.layout.shapes.forEach((shape, i) => {
-            var color = random_color();
+            var color = getColor(i+1);
             data[i].marker = {
                 color: color
             };
