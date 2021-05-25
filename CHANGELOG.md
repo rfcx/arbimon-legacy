@@ -8,6 +8,8 @@ Resolved issues:
 
 Performance improvements:
 
+- CE-623 Extend amount of time users can stay logged into Arbimon
+- CE-686 Save source file name from Core API into recordings
 - CE-639 Optimize query which gets list if sites on Pattern Matching ROIs list page
 
 ## v3.0.24 - May 21, 2021
