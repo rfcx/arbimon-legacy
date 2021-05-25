@@ -93,6 +93,9 @@ module.exports = {
             },
             function(result, callback) {
                 upload_row.datetime_local = result? result : upload_row.datetime;
+                if (upload.info && upload.info.isUTC) {
+                    upload_row.datetime = result? result : upload_row.datetime;
+                }
                 model.uploads.insertRecToList(upload_row, callback);
             },
             function(result, fields, callback) {
