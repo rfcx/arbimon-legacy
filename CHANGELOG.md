@@ -5,6 +5,8 @@
 Resolved issues:
 
 - CE-697 Convert datetime with timezone offsets for browser AudioMoth recordings
+- CE-683 Fix creating soundscape composition classes
+- CE-683 Display system classes with project soundscape composition classes
 
 Other:
 

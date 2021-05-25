@@ -6,14 +6,14 @@
         <loader ng-if="controller.loading"></loader>
         <div>
             <div ng-repeat="classGroup in controller.classes">
-                <div>
+                <div class="mb-1">
                     {{classGroup.type}}
                 </div>
                 <div class="list-group">
                     <div class="list-group-item" ng-repeat="scClass in classGroup.list">
                         {{scClass.name}}
                         <div class="pull-right col-sm-1">
-                            <span class="badge">{{scClass.tally || ''}}</span>
+                            <span class="badge">{{scClass.tally || 0}}</span>
                         </div>
                         <div class="pull-right" ng-if="!scClass.system && controller.canManageClasses">
                             <button class="btn btn-xs btn-default" ng-click="controller.removeClass(scClass)"><i class="fa fa-trash"></i></button>
@@ -30,8 +30,5 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div class="jumbotron seconds-div-center" ng-show="(controller.classes && !controller.classes.length) && !loading">
-        <h3>{{ controller.infopanedata }}</h3>
     </div>
 </div>

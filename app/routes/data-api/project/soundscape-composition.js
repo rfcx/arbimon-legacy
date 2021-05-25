@@ -5,11 +5,24 @@ var model = require('../../../model');
 
 router.get('/classes', function(req, res, next){
     res.type('json');
+    let classes = [];
     model.SoundscapeComposition.getClassesFor({
         project: req.project.project_id,
         tally: !!req.query.tally,
-    }).then(function(classes){
-        res.json(classes);
+    }).then((data) => {
+        classes = data;
+        model.SoundscapeComposition.getClassesFor({
+            project: req.project.project_id,
+            tally: !!req.query.tally,
+            isSystemClass: !!req.query.isSystemClass
+        }).then((systemClasses) => {
+            systemClasses.forEach(obj => {
+                if (!classes.find((c) => c.id === obj.id)) {
+                    classes.push(obj)
+                }
+            });
+            res.json(classes);
+        })
     }).catch(next);
 });
 
@@ -20,7 +33,7 @@ router.post('/add-class', function(req, res, next) {
         next(new APIError("You don't have permission to 'add soundscape composition classes'"));
         return;
     }
-    
+
     model.SoundscapeComposition.addClass(
         req.body.name,
         req.body.type,
@@ -32,12 +45,12 @@ router.post('/add-class', function(req, res, next) {
 
 router.post('/remove-class', function(req, res, next) {
     res.type('json');
-    
+
     if(!req.haveAccess(req.project.project_id, "manage project species")) {
         next(new APIError("You don't have permission to 'remove soundscape composition classes'"));
         return;
     }
-    
+
     model.SoundscapeComposition.removeClassFrom(
         req.body.id,
         req.project.project_id
@@ -56,7 +69,7 @@ router.get('/annotations/:id', function(req, res, next) {
     }).catch(next);
 });
 
-router.use(function(req, res, next) { 
+router.use(function(req, res, next) {
     // TODO: use another permission, instead of borrowing this one.
     if(!req.haveAccess(req.project.project_id, "validate species")){
         return res.json({ error: "you dont have permission to add soundscape composition annotations." });
