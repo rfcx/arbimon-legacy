@@ -9,6 +9,7 @@ Resolved issues:
 Performance improvements:
 
 - CE-639 Optimize query which gets list if sites on Pattern Matching ROIs list page
+- CE-740 Optimize query which gets all project jobs progress
 
 ## v3.0.24 - May 21, 2021
 
