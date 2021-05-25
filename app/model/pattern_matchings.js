@@ -214,28 +214,6 @@ var PatternMatchings = {
 
     SEARCH_ROIS_SCHEMA : {
         patternMatching: joi.number().required(),
-        // project_id: joi.number().required(),
-        // range: joi.object().keys({
-        //     from: joi.date(),
-        //     to: joi.date()
-        // }).and('from', 'to'),
-        // sites:  arrayOrSingle(joi.string()),
-        // imported: joi.boolean(),
-        // years:  arrayOrSingle(joi.number()),
-        // months: arrayOrSingle(joi.number()),
-        // days:   arrayOrSingle(joi.number()),
-        // hours:  arrayOrSingle(joi.number()),
-        // validations:  arrayOrSingle(joi.number()),
-        // presence:  arrayOrSingle(joi.string().valid('absent', 'present')),
-        // soundscape_composition:  arrayOrSingle(joi.number()),
-        // soundscape_composition_annotation:  arrayOrSingle(joi.string().valid('absent', 'present')),
-        // tags: arrayOrSingle(joi.number()),
-        // playlists: arrayOrSingle(joi.number()),
-        // classifications: arrayOrSingle(joi.number()),
-        // classification_results: arrayOrSingle(joi.object().keys({
-        //     model: joi.number(),
-        //     th: joi.number()
-        // }).optionalKeys('th')),
         csValidationsFor: joi.number().integer(),
         expertCSValidations: joi.boolean(),
         perUserCSValidations: joi.boolean(),
@@ -262,9 +240,7 @@ var PatternMatchings = {
         }),
         limit:  joi.number(),
         offset: joi.number(),
-        sortBy: joi.array().items(joi.any()),
-        // sortRev: joi.boolean(),
-        // output:  arrayOrSingle(joi.string().valid('count','list','date_range')).default('list')
+        sortBy: joi.array().items(joi.any())
     },
 
     buildRoisQuery(parameters){
@@ -302,11 +278,6 @@ var PatternMatchings = {
                 builder.addProjection('R.`datetime`');
             }
 
-            builder.addTable("JOIN species", "Sp", "Sp.species_id = PMR.species_id");
-            builder.addProjection('Sp.`scientific_name` as species');
-
-            builder.addTable("JOIN songtypes", "St", "St.songtype_id = PMR.songtype_id");
-            builder.addProjection('St.`songtype`');
             if(!show.names){
                 builder.addProjection(
                     'PMR.`recording_id`',
@@ -470,7 +441,7 @@ var PatternMatchings = {
                 builder.addConstraint("PMR.expert_validated IS NOT NULL", []);
             }
 
-            if(parameters.sortBy){
+            if(parameters.sortBy && parameters.sortBy.length){
                 parameters.sortBy.forEach(item => builder.addOrderBy(item[0], item[1]));
             }
 
@@ -538,6 +509,17 @@ var PatternMatchings = {
         }).then(
             builder => dbpool.query(builder.getSQL())
         );
+    },
+
+    getSitesForPM (pmId) {
+        return dbpool.query(`
+            SELECT DISTINCT(S.site_id), S.name as site
+            FROM playlists AS P
+            JOIN pattern_matchings AS PM ON PM.playlist_id = P.playlist_id
+            JOIN playlist_recordings AS PR ON PR.playlist_id = P.playlist_id
+            JOIN recordings AS R ON PR.recording_id = R.recording_id
+            JOIN sites AS S ON R.site_id = S.site_id
+            WHERE PM.pattern_matching_id = ?;`, [pmId])
     },
 
     getRoiAudioFile(patternMatching, roiId, options){

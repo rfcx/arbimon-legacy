@@ -58,7 +58,6 @@ router.get('/count', function(req, res, next) {
 
 router.param('paging', function(req, res, next, paging){
     const components = paging.split('_');
-    console.log('paging components', components);
     req.paging = {
         offset: (components[0] | 0),
         limit: (components[1] | 0),
@@ -86,19 +85,10 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
 
 router.get('/:patternMatching/site-index', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.getRoisForId({
-        patternMatchingId: req.params.patternMatching,
-        perSiteCount: true,
-        wherePresent: req.query.search == 'present',
-        whereNotPresent: req.query.search == 'not_present',
-        whereUnvalidated: req.query.search == 'unvalidated',
-    }).then(function(rois) {
-        res.json(rois.reduce(function(_, item){
-            item.offset = _.accum;
-            _.accum += item.count;
-            return _;
-        }, {list:rois, accum:0}).list);
-    }).catch(next);
+    model.patternMatchings.getSitesForPM(req.params.patternMatching)
+        .then(function(sites) {
+            res.json(sites)
+        }).catch(next);
 });
 
 router.get('/:patternMatching/rois.csv', function(req, res, next) {
