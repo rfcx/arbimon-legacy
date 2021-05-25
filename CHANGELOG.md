@@ -2,6 +2,10 @@
 
 ## v3.0.25 - May XX, 2021
 
+New features:
+
+- CE-742 You can only add users to a project who are RFCx-connected
+
 Resolved issues:
 
 - CE-697 Convert datetime with timezone offsets for browser AudioMoth recordings
