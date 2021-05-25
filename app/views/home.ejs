@@ -97,10 +97,6 @@
                                     ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort )"
                                     style="background: url({{project.mapUrl}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project)">
                                     <div class="text-left">
-                                        <div class="last-accessed" title="{{ project.lastAccessed | moment:'lll' }}">
-                                            {{project.lastAccessed | timeFromNow}}
-                                        </div>
-                                        <i class="fa project-type" ng-class="project.is_private ? 'fa-lock' :'fa-globe'"></i>
                                         <div class="title" title="{{ project.name }}">
                                             {{ project.name }}
                                         </div>

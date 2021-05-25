@@ -33,52 +33,6 @@ router.get('/:classiId', function(req, res, next) {
         model.classifications.detail(req.params.classiId, function(err, rows) {
             if(err) return next(err);
 
-            // var i = 0;
-            // var data = [];
-            // var total = [];
-            // var species =[];
-            // var songtype =[];
-            // var th = '';
-            //
-            // console.log(rows);
-            //
-            // while(i < rows.length) {
-            //     var row = rows[i];
-            //     th = row.th;
-            //
-            //     var index = row.species_id + '_' + row.songtype_id;
-            //     if (typeof data[index]  == 'number')
-            //     {
-            //         data[index] = data[index] + parseInt(row.present);
-            //         total[index] = total[index] + 1;
-            //     }
-            //     else
-            //     {
-            //         data[index] = parseInt(row.present);
-            //         species[index] = row.scientific_name;
-            //         songtype[index] = row.songtype;
-            //         total[index] = 1;
-            //     }
-            //     i = i + 1;
-            // }
-            //
-            // var results = [];
-            //
-            // for (var key in species)
-            // {
-            //     var per = Math.round( (data[key]/total[key])*100);
-            //     var rr = {
-            //         err: rowsRecs.count,
-            //         species: species[key],
-            //         songtype: songtype[key],
-            //         total: total[key],
-            //         data: data[key],
-            //         percentage: per,
-            //         th: th
-            //     };
-            //     results.push(rr);
-            // }
-
             var classifiacationDetails = rows[0];
 
             classifiacationDetails.errCount = rowsRecs.count;

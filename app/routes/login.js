@@ -107,15 +107,10 @@ router.get('/api/email_available', function(req, res, next) {
     });
 });
 
-// router.get('/', function(req, res) {
-//     res.type('html');
-//     res.redirect('/projects');
-// });
-
 router.get('/login', function(req, res) {
     res.type('html');
     if(req.session) {
-        if(req.session.loggedIn) return res.redirect('/');
+        if(req.session.loggedIn) return res.redirect('/projects');
     }
     res.render('login', {
         message: '',
@@ -155,7 +150,7 @@ router.post('/oauth-login', function(req, res, next) {
     }).then(function(){
         res.json({
             success:true,
-            redirect:'/'
+            redirect:'/projects'
         });
     }, next);
 });

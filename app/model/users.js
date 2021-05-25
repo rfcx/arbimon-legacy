@@ -439,7 +439,7 @@ var Users = {
         var password = auth.password || '';
         var ip = auth.ip;
         var captchaResponse = auth.captcha;
-        var redirectUrl = options.redirect || '/';
+        var redirectUrl = options.redirect || '/projects';
 
         var permitedRetries = 10;
         var captchaRequired = 3;
@@ -584,7 +584,7 @@ var Users = {
 
             return {
                 success: true,
-                redirect : req.query.redirect || '/',
+                redirect : req.query.redirect || '/projects',
                 captchaNeeded: result.captchaNeeded
             };
         });
