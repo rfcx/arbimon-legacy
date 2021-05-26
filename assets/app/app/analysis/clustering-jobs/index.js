@@ -225,6 +225,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 x: clusters[c].x,
                 y: clusters[c].y,
                 mode: 'markers',
+                hoverinfo: 'none',
                 name: c
             });
             // collect data for shapes
