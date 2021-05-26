@@ -609,7 +609,7 @@ angular.module('a2.analysis.clustering-jobs', [
             {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
         ]
     };
-    $scope.search = $scope.lists.search[0];
+    $scope.search = $scope.lists.search[1];
     $scope.playlistData = {};
     $scope.aedData = {
         count: 0,
