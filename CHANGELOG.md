@@ -9,6 +9,7 @@ New features:
 Resolved issues:
 
 - CE-697 Convert datetime with timezone offsets for browser AudioMoth recordings
+- CE-730 Don't show coordinates of points in Clustering scatter plot when hovering over
 
 Performance improvements:
 
