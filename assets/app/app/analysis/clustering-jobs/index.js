@@ -604,6 +604,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.lists = {
         search: [
             {value:'all', text:'All', description: 'Show all matched rois.'},
+            {value:'per_cluster', text:'Sort per Cluster', description: 'Show all rois ranked per Cluster.'},
             {value:'per_site', text:'Sort per Site', description: 'Show all rois ranked per Site.'},
             {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
         ]
@@ -659,6 +660,19 @@ angular.module('a2.analysis.clustering-jobs', [
                     }
                 })
                 $scope.rows = Object.values(sites);
+            }
+            else if (data && $scope.search.value === 'per_cluster') {
+                $scope.ids = {};
+                var grids = []
+                $scope.gridData.forEach((row) => { grids.push([row]) })
+                
+                grids.forEach((row, index) => {
+                    $scope.ids[index] = {
+                        site: index + 1,
+                        rois: data.filter((a, i) => {return row[0].aed.includes(a.aed_id)})
+                    }
+                })
+                $scope.rows = Object.values($scope.ids);
             }
             else {
                 if ($scope.search.value === 'per_date') {
