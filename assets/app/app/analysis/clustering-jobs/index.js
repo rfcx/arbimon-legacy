@@ -371,7 +371,8 @@ angular.module('a2.analysis.clustering-jobs', [
                 $scope.gridContext[i] = {
                     aed: $scope.originalData[i].aed.filter((a, i) => {
                         return row.includes(i);
-                    })
+                    }),
+                    name: $scope.originalData[i].cluster
                 }
             })
         }
@@ -616,6 +617,7 @@ angular.module('a2.analysis.clustering-jobs', [
         id: []
     };
     if ($scope.gridContext && $scope.gridContext.aed) {
+        $scope.gridData = $scope.gridContext
         $scope.aedData.count = 1;
         $scope.gridContext.aed.forEach(i => $scope.aedData.id.push(i));
     }
@@ -663,15 +665,21 @@ angular.module('a2.analysis.clustering-jobs', [
             }
             else if (data && $scope.search.value === 'per_cluster') {
                 $scope.ids = {};
-                var grids = []
-                $scope.gridData.forEach((row) => { grids.push([row]) })
-                
-                grids.forEach((row, index) => {
-                    $scope.ids[index] = {
-                        cluster: index + 1,
-                        rois: data.filter((a, i) => {return row[0].aed.includes(a.aed_id)})
+                if($scope.aedData.count > 1) {
+                    var grids = []
+                    $scope.gridData.forEach((row) => { grids.push([row]) })
+                    grids.forEach((row, index) => {
+                        $scope.ids[index] = {
+                            cluster: row[0].name,
+                            rois: data.filter((a, i) => {return row[0].aed.includes(a.aed_id)})
+                        }
+                    })
+                } else {
+                    $scope.ids[0] = {
+                        cluster: $scope.gridData.cluster,
+                        rois: data
                     }
-                })
+                }
                 $scope.rows = Object.values($scope.ids);
             }
             else {
