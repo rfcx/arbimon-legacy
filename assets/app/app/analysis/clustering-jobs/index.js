@@ -225,6 +225,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 x: clusters[c].x,
                 y: clusters[c].y,
                 mode: 'markers',
+                hoverinfo: 'none',
                 name: c
             });
             // collect data for shapes
@@ -249,7 +250,7 @@ angular.module('a2.analysis.clustering-jobs', [
         // shapes layout
         $scope.layout = {
             shapes: shapes,
-            height: 500,
+            height: el ? el.offsetWidth - el.offsetWidth/3 : 800,
             width: el ? el.offsetWidth : 1390,
             showlegend: true,
             legend: {
@@ -274,7 +275,7 @@ angular.module('a2.analysis.clustering-jobs', [
         // function to get color
         function getColor(n) {
             const rgb = [0, 0, 0];
-            for (let i = 0; i < 24; i++) {
+            for (var i = 0; i < 24; i++) {
                 rgb[i%3] <<= 1;
                 rgb[i%3] |= n & 0x01;
                 n >>= 1;

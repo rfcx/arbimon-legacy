@@ -1,5 +1,7 @@
 # Arbimon Deployment Notes
 
+- Add `"expiration": 604800000` to `config/db.local.json`
+
 ## v3.0.23
 
 - Run migration 012-projects-table-add-deleted-column.sql
