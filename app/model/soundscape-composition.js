@@ -46,11 +46,15 @@ var SoundscapeComposition = {
             }
         }
 
-        if(options.project){
+        if(options.project && !options.isSystemClass){
             tables.push("JOIN project_soundscape_composition_classes PSCC ON PSCC.scclassId = SCC.id");
-            where.push("PSCC.projectId = ? OR (PSCC.projectId IS NULL AND SCC.isSystemClass)");
+            where.push("PSCC.projectId = ?");
             data.push(options.project);
             order.push("PSCC.`order`");
+        }
+
+        if (options.isSystemClass) {
+            where.push("SCC.isSystemClass");
         }
 
         if(options.id){

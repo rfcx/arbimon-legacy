@@ -9,6 +9,8 @@ New features:
 Resolved issues:
 
 - CE-697 Convert datetime with timezone offsets for browser AudioMoth recordings
+- CE-683 Fix creating soundscape composition classes
+- CE-683 Display system classes with project soundscape composition classes
 - CE-730 Don't show coordinates of points in Clustering scatter plot when hovering over
 
 Performance improvements:
