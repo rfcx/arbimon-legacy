@@ -91,6 +91,9 @@ angular.module('a2.srv.project', [
                     });
             },
             getRecCounts: function(query) {
+                if (query && query.project_url) {
+                    delete query.project_url;
+                }
                 return a2APIService.get('/recordings/search-count', {params:query || {}});
             },
             getRecordingDataUrl: function(filters, projection){

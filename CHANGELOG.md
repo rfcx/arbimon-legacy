@@ -6,6 +6,7 @@ New features:
 
 - CE-504 Revamp Arbimon homepage
 - CE-742 The user can only add users to a project who are RFCx-connected
+- CE-763 Add info to top highlighted project cards
 
 Resolved issues:
 

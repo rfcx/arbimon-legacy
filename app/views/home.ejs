@@ -66,10 +66,18 @@
                                             <div class="title" style="font-size: 20px;" title="{{ project.name }}">
                                                 {{ project.name }}
                                             </div>
-                                        </div>
-                                        <div class="text-left">
-                                            <div class="word-wrap line-ellipsis" style="height: 40px;">
-                                                {{ project.description }}
+                                            <span class="line-clamp mb-2">{{ project.description }}</span>
+                                            <div class="text-center" style="height: 40px;">
+                                                <i ng-show="project.isLoading" class="fa fa-spinner fa-spin" style="font-size: 24px; position: relative; top: 8px;"></i>
+                                                <div class="text-left" ng-show="!project.isLoading && project.recCount && project.patternMatchingsTotal">
+                                                    <div class="word-wrap line-ellipsis">
+                                                        <i class="fa fa-caret-down mr-2"></i>
+                                                        {{ project.recCount }} recordings
+                                                    </div>
+                                                    <div class="word-wrap line-ellipsis">
+                                                        <i class="fa fa-caret-down mr-2"></i>{{ project.patternMatchingsTotal }} Pattern Matching templates
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </li>

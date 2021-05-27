@@ -78,7 +78,20 @@ angular.module('a2.home', [
                 this.projects = data;
             }
             else {
-                if (isFeatured) this.highlightedProjects = data.filter(item => item.featured === 2);
+                if (isFeatured) {
+                    this.highlightedProjects = data.filter(item => item.featured === 2);
+                    this.highlightedProjects.forEach(project => {
+                        project.isLoading = true;
+                        $http.get('/api/project/' + project.url + '/pattern-matchings/count').success(function(data) {
+                            project.patternMatchingsTotal = data.count || 0;
+                            project.isLoading = false;
+                        });
+                        $http.get('/api/project/' + project.url + '/recordings/search-count', {project_id: project.id}).success(function(data) {
+                            project.recCount = data.map((item) => { return item.count }).reduce((a, b) => a + b, 0);
+                            project.isLoading = false;
+                        })
+                    })
+                }
                 this.projects = data.filter(item => item.featured !== 2);
             }
             this.previousSearch = this.search
