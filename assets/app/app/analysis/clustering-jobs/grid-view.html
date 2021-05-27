@@ -61,6 +61,9 @@
             </div>
         </div>
     </div>
+    <div ng-if="!loading && isRoisLoading" class="row ng-cloak text-center" style="padding: 50px 0;" >
+        <i class="fa fa-spinner fa-spin" style="font-size: 32px;"></i>
+    </div>
     <div ng-if="!loading && !infopanedata && rows && rows.length">
         <span ng-repeat="row in rows">
             <div ng-if="row.site" class="h3" id="site-{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>

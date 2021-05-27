@@ -640,12 +640,14 @@ angular.module('a2.analysis.clustering-jobs', [
 
     $scope.getRoisDetails = function() {
         $scope.rows = [];
+        $scope.isRoisLoading = true;
         return a2ClusteringJobs.getRoisDetails({
             jobId: $scope.clusteringJobId,
             aed: $scope.aedData.id,
             search: $scope.selectedFilterData.value
         }).then(function(data) {
             $scope.loading = false;
+            $scope.isRoisLoading = false;
             if (data && $scope.selectedFilterData.value === 'per_site') {
                 var sites = {};
                 data.forEach((item) => {
@@ -675,6 +677,7 @@ angular.module('a2.analysis.clustering-jobs', [
         }).catch(err => {
             console.log(err);
             $scope.loading = false;
+            $scope.isRoisLoading = false;
             $scope.infopanedata = 'No data for clustering job found.';
         });
     }
