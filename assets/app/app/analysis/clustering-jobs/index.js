@@ -271,7 +271,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 color: 'white'
             }
         }
-        
+
         // function to get color
         function getColor(n) {
             const rgb = [0, 0, 0];
@@ -282,7 +282,7 @@ angular.module('a2.analysis.clustering-jobs', [
             }
             return '#' + rgb.reduce((a, c) => (c > 0x0f ? c.toString(16) : '0' + c.toString(16)) + a, '')
         }
-        
+
         // make random color for shapes and points
         $scope.layout.shapes.forEach((shape, i) => {
             var color = getColor(i+1);
@@ -609,7 +609,7 @@ angular.module('a2.analysis.clustering-jobs', [
             {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
         ]
     };
-    $scope.search = $scope.lists.search[0];
+    $scope.selectedFilterData = $scope.lists.search[0];
     $scope.playlistData = {};
     $scope.aedData = {
         count: 0,
@@ -633,19 +633,20 @@ angular.module('a2.analysis.clustering-jobs', [
         console.log(err);
     });
 
-    $scope.onSearchChanged = function(value) {
-        $scope.search.value = value;
+    $scope.onSearchChanged = function(item) {
+        $scope.selectedFilterData = item;
         $scope.getRoisDetails();
     }
 
     $scope.getRoisDetails = function() {
+        $scope.rows = [];
         return a2ClusteringJobs.getRoisDetails({
             jobId: $scope.clusteringJobId,
             aed: $scope.aedData.id,
-            search: $scope.search.value
+            search: $scope.selectedFilterData.value
         }).then(function(data) {
             $scope.loading = false;
-            if (data && $scope.search.value === 'per_site') {
+            if (data && $scope.selectedFilterData.value === 'per_site') {
                 var sites = {};
                 data.forEach((item) => {
                     if (!sites[item.site_id]) {
@@ -662,12 +663,11 @@ angular.module('a2.analysis.clustering-jobs', [
                 $scope.rows = Object.values(sites);
             }
             else {
-                if ($scope.search.value === 'per_date') {
+                if ($scope.selectedFilterData.value === 'per_date') {
                     data.sort(function(a, b) {
                         return (a.date_created < b.date_created) ? 1 : -1;
                     });
                 }
-                $scope.rows = [];
                 $scope.rows.push({
                     rois: data
                 });
