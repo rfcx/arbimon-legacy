@@ -271,7 +271,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 color: 'white'
             }
         }
-        
+
         // function to get color
         function getColor(n) {
             const rgb = [0, 0, 0];
@@ -282,7 +282,7 @@ angular.module('a2.analysis.clustering-jobs', [
             }
             return '#' + rgb.reduce((a, c) => (c > 0x0f ? c.toString(16) : '0' + c.toString(16)) + a, '')
         }
-        
+
         // make random color for shapes and points
         $scope.layout.shapes.forEach((shape, i) => {
             var color = getColor(i+1);
@@ -692,7 +692,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.getRoiVisualizerUrl = function(roi){
         var projecturl = Project.getUrl();
         var box = ['box', roi.time_min, roi.frequency_min, roi.time_max, roi.frequency_max].join(',');
-        return roi ? '/visualizer/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
+        return roi ? '/project/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
     };
 
     $scope.togglePopup = function() {
