@@ -12,6 +12,7 @@ Resolved issues:
 - CE-683 Fix creating soundscape composition classes
 - CE-683 Display system classes with project soundscape composition classes
 - CE-730 Don't show coordinates of points in Clustering scatter plot when hovering over
+- CE-729 Remove redundant icon in cluster selector
 
 Performance improvements:
 
