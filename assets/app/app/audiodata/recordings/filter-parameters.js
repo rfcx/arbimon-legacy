@@ -334,7 +334,7 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
                 return c;
             });
         }).bind(this));
-        a2SoundscapeCompositionService.getClassList().then((function(classes){
+        a2SoundscapeCompositionService.getClassList({isSystemClass:1}).then((function(classes){
             options.soundscape_composition = classes;
         }).bind(this));
     };

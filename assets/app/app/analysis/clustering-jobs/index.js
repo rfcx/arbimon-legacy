@@ -225,6 +225,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 x: clusters[c].x,
                 y: clusters[c].y,
                 mode: 'markers',
+                hoverinfo: 'none',
                 name: c
             });
             // collect data for shapes
@@ -249,7 +250,7 @@ angular.module('a2.analysis.clustering-jobs', [
         // shapes layout
         $scope.layout = {
             shapes: shapes,
-            height: 500,
+            height: el ? el.offsetWidth - el.offsetWidth/3 : 800,
             width: el ? el.offsetWidth : 1390,
             showlegend: true,
             legend: {
@@ -270,18 +271,21 @@ angular.module('a2.analysis.clustering-jobs', [
                 color: 'white'
             }
         }
-        // function to get random color
-        var random_color = function() {
-            var letters = '0123456789ABCDEF';
-            var color = '#';
-            for (var i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
+
+        // function to get color
+        function getColor(n) {
+            const rgb = [0, 0, 0];
+            for (var i = 0; i < 24; i++) {
+                rgb[i%3] <<= 1;
+                rgb[i%3] |= n & 0x01;
+                n >>= 1;
             }
-            return color;
+            return '#' + rgb.reduce((a, c) => (c > 0x0f ? c.toString(16) : '0' + c.toString(16)) + a, '')
         }
+
         // make random color for shapes and points
         $scope.layout.shapes.forEach((shape, i) => {
-            var color = random_color();
+            var color = getColor(i+1);
             data[i].marker = {
                 color: color
             };
@@ -605,7 +609,7 @@ angular.module('a2.analysis.clustering-jobs', [
             {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
         ]
     };
-    $scope.search = $scope.lists.search[0];
+    $scope.selectedFilterData = $scope.lists.search[0];
     $scope.playlistData = {};
     $scope.aedData = {
         count: 0,
@@ -629,19 +633,22 @@ angular.module('a2.analysis.clustering-jobs', [
         console.log(err);
     });
 
-    $scope.onSearchChanged = function(value) {
-        $scope.search.value = value;
+    $scope.onSearchChanged = function(item) {
+        $scope.selectedFilterData = item;
         $scope.getRoisDetails();
     }
 
     $scope.getRoisDetails = function() {
+        $scope.rows = [];
+        $scope.isRoisLoading = true;
         return a2ClusteringJobs.getRoisDetails({
             jobId: $scope.clusteringJobId,
             aed: $scope.aedData.id,
-            search: $scope.search.value
+            search: $scope.selectedFilterData.value
         }).then(function(data) {
             $scope.loading = false;
-            if (data && $scope.search.value === 'per_site') {
+            $scope.isRoisLoading = false;
+            if (data && $scope.selectedFilterData.value === 'per_site') {
                 var sites = {};
                 data.forEach((item) => {
                     if (!sites[item.site_id]) {
@@ -658,12 +665,11 @@ angular.module('a2.analysis.clustering-jobs', [
                 $scope.rows = Object.values(sites);
             }
             else {
-                if ($scope.search.value === 'per_date') {
+                if ($scope.selectedFilterData.value === 'per_date') {
                     data.sort(function(a, b) {
                         return (a.date_created < b.date_created) ? 1 : -1;
                     });
                 }
-                $scope.rows = [];
                 $scope.rows.push({
                     rois: data
                 });
@@ -671,6 +677,7 @@ angular.module('a2.analysis.clustering-jobs', [
         }).catch(err => {
             console.log(err);
             $scope.loading = false;
+            $scope.isRoisLoading = false;
             $scope.infopanedata = 'No data for clustering job found.';
         });
     }
@@ -688,7 +695,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.getRoiVisualizerUrl = function(roi){
         var projecturl = Project.getUrl();
         var box = ['box', roi.time_min, roi.frequency_min, roi.time_max, roi.frequency_max].join(',');
-        return roi ? '/visualizer/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
+        return roi ? '/project/' + projecturl + '/#/visualizer/rec/' + roi.recording_id + '?a=' + box : '';
     };
 
     $scope.togglePopup = function() {

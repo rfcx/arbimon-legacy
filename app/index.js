@@ -10,12 +10,13 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
-var SessionStore = require('express-mysql-session');
+var SessionStore = require('express-mysql-session')(session);
 var busboy = require('connect-busboy');
 var AWS = require('aws-sdk');
 var jwt = require('express-jwt');
 var paypal = require('paypal-rest-sdk');
-
+const db = require('./utils/dbpool');
+const pool = db.getPool();
 var config = require('./config');
 AWS.config.update({
     accessKeyId: config('aws').accessKeyId,
@@ -104,11 +105,8 @@ var sessionConfig = {
     resave : true,
     saveUninitialized : false,
     store: new SessionStore({
-        host     : config('db').host,
-        user     : config('db').user,
-        password : config('db').password,
-        database : config('db').database
-    })
+        expiration : config('session').expiration
+    }, pool)
 };
 
 if (app.get('env') === 'production') {

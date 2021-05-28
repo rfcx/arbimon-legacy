@@ -9,6 +9,9 @@ angular.module('a2.srv.soundscape-composition', [
             if(options.tally){
                 params.tally=1;
             }
+            if(options.isSystemClass){
+                params.isSystemClass=1;
+            }
             return a2APIService.get('/soundscape-composition/classes', {params:params}).then(function(classList){
                 if(options.groupByType){
                     return classList.reduce(function(_, item){

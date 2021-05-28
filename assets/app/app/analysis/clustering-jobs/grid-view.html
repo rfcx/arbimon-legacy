@@ -47,7 +47,7 @@
                     </div>
                     <div class="btn-group">
                         <button class="btn btn-default not-active" ><i class="fa fa-search"></i></button>
-                        <ui-select ng-model="search" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected.value)">
+                        <ui-select ng-model="selectedFilterData" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onSearchChanged($select.selected)">
                             <ui-select-match class="right-corners">
                                 <i ng-class="$select.selected.class"></i>{{$select.selected.text}}
                             </ui-select-match>
@@ -61,12 +61,20 @@
             </div>
         </div>
     </div>
+    <div ng-if="!loading && isRoisLoading" class="row ng-cloak text-center" style="padding: 50px 0;" >
+        <i class="fa fa-spinner fa-spin" style="font-size: 32px;"></i>
+    </div>
     <div ng-if="!loading && !infopanedata && rows && rows.length">
         <span ng-repeat="row in rows">
             <div ng-if="row.site" class="h3" id="site-{row.id}}"><i class="fa fa-map-marker"></i> {{row.site}}</div>
             <span ng-repeat="roi in row.rois"
                 class="btn btn-default roi-thumbnail {{roi.selected ? 'active' : ''}}"
                 ng-click="roi.selected = !roi.selected"
+                popover-html="'Frequency Max (Hz): {{(roi.frequency_max) || '(Missing)'}} <br>
+                                Frequency Min (Hz): {{(roi.frequency_min) || '(Missing)'}} <br>
+                                Duration (s): {{(roi.time_max - roi.time_min).toFixed(2)}}'"
+                    popover-trigger="mouseenter"
+                    popover-append-to-body="true"
                 popover-trigger="mouseenter"
                 popover-append-to-body="true"
             >

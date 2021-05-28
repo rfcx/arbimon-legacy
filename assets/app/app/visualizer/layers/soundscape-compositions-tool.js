@@ -6,7 +6,7 @@ angular.module('a2.visualizer.layers.soundscape-composition-tool', [
     /**
      * @ngdoc object
      * @name a2.visualizer.layer.soundscape-composition-tool.object:soundscape-composition-tool
-     * @description Recording tags layer. 
+     * @description Recording tags layer.
      * adds the soundscape-composition-tool layer_type to layer_types. This layer uses
      * a2.visualizer.layer.soundscape-composition-tool.controller:a2VisualizerSoundscapeCompositionToolController as controller,
      * and requires a visobject of type recording to be selected.
@@ -30,27 +30,27 @@ angular.module('a2.visualizer.layers.soundscape-composition-tool', [
 /**
  * @ngdoc controller
  * @name a2.visualizer.layer.soundscape-composition-tool.controller:a2VisualizerSoundscapeCompositionToolController
- * @description Controller for recording tags layer in visualizer. 
+ * @description Controller for recording tags layer in visualizer.
  * Gets injected an instance of VisualizerCtrl representing the visualizer control.
  * Responds to VisualizerCtrl.event::visobject by loading the visobject tags, if it is a
  * recording.
  */
 .controller('a2VisualizerSoundscapeCompositionToolController', function(
     $q,
-    VisualizerCtrl, 
+    VisualizerCtrl,
     a2UserPermit, notify,
     a2SoundscapeCompositionService
 ){
     this.initialize = function(){
         VisualizerCtrl.on('visobject', (this.setVisobject).bind(this));
-        a2SoundscapeCompositionService.getClassList({groupByType:true}).then((function(classesByType){
+        a2SoundscapeCompositionService.getClassList({groupByType:true, isSystemClass:1}).then((function(classesByType){
             this.classTypes = classesByType;
             this.classesByType = classesByType.reduce(function(_, type){
                 _[type.type] = type;
                 return _;
             }, {});
         }).bind(this));
-        
+
         this.annotations = {};
 
         this.annotationToolbar = [
@@ -62,16 +62,16 @@ angular.module('a2.visualizer.layers.soundscape-composition-tool', [
                 {value:2, caption:"Clear Annotation"},
             ]
         ];
-        
+
 
     };
-    
+
     this.annotate = function(val, classId) {
         if(!a2UserPermit.can('validate species')) {
             notify.log('You do not have permission to add soundscape composition annotations.');
             return;
         }
-        
+
         var keys = [classId];
 
         if (keys.length > 0) {
@@ -90,7 +90,7 @@ angular.module('a2.visualizer.layers.soundscape-composition-tool', [
             }).bind(this));
         }
     };
-    
+
     this.setVisobject = function(visobject){
         this.visobject = visobject;
         return this.loadAnnotations();
@@ -102,7 +102,7 @@ angular.module('a2.visualizer.layers.soundscape-composition-tool', [
             this.annotations = {};
             return $q.resolve(this.annotations);
         }
-        
+
         this.loading = true;
         this.visobject = visobject;
         return a2SoundscapeCompositionService.getAnnotationsFor(visobject).then((function(annotations){
@@ -112,9 +112,9 @@ angular.module('a2.visualizer.layers.soundscape-composition-tool', [
             this.loading = false;
         }).bind(this));
     };
-    
-    
+
+
     this.initialize();
-    
+
 })
 ;

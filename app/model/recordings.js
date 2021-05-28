@@ -1078,7 +1078,6 @@ var Recordings = {
             }
 
             if(parameters.range) {
-                console.log(parameters.range);
                 constraints.push('r.datetime BETWEEN ? AND ?');
                 data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }

@@ -87,10 +87,6 @@ router.get('/:projecturl?/', function(req, res, next) {
                     return _;
                 }, {});
 
-                console.log("permissionsMap", permissionsMap);
-                console.log(project.is_private, permissionsMap['view project'], req.session.user.isSuper);
-                console.log(permissionsMap['use citizen scientist interface']);
-
                 if(!project.is_private || permissionsMap['view project'] || req.session.user.isSuper){
                     // pass
                 } else if(permissionsMap['use citizen scientist interface']){

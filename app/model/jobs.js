@@ -11,6 +11,7 @@ var dbpool = require('../utils/dbpool');
 var sqlutil = require('../utils/sqlutil');
 var arrays_util  = require('../utils/arrays');
 var queryHandler = dbpool.queryHandler;
+const { capitalize } = require('../utils/string')
 
 
 // TODO define jobs as module that are require, and user db identifier field to
@@ -35,7 +36,7 @@ var Jobs = {
             },
             sql : {
                 report : {
-                    projections : ['CONCAT(UCASE(LEFT( JPT.`name`, 1)), SUBSTRING( JPT.`name`, 2)) as name'],
+                    projections : ['JPT.name as name'],
                     tables      : ['JOIN `job_params_training` as JPT ON J.job_id = JPT.job_id'],
                 }
             }
@@ -53,7 +54,7 @@ var Jobs = {
             },
             sql : {
                 report : {
-                    projections : ['CONCAT(UCASE(LEFT( JPT.`name`, 1)), SUBSTRING( JPT.`name`, 2)) as name'],
+                    projections : ['JPT.name as name'],
                     tables      : ['JOIN `job_params_classification` as JPT ON J.job_id = JPT.job_id'],
                 }
             }
@@ -73,7 +74,7 @@ var Jobs = {
             },
             sql : {
                 report : {
-                    projections : ['CONCAT(UCASE(LEFT( JPT.`name`, 1)), SUBSTRING( JPT.`name`, 2)) as name'],
+                    projections : ['JPT.name as name'],
                     tables      : ['JOIN `job_params_soundscape` as JPT ON J.job_id = JPT.job_id'],
                 }
             }
@@ -99,7 +100,7 @@ var Jobs = {
             },
             sql : {
                 report : {
-                    projections : ['CONCAT(UCASE(LEFT( JPT.`name`, 1)), SUBSTRING( JPT.`name`, 2)) as name'],
+                    projections : ['JPT.name as name'],
                     tables      : ['JOIN `job_params_audio_event_detection` as JPT ON J.job_id = JPT.job_id'],
                 }
             }
@@ -128,7 +129,7 @@ var Jobs = {
             },
             sql : {
                 report : {
-                    projections : ['CONCAT(UCASE(LEFT( PMS.`name`, 1)), SUBSTRING( PMS.`name`, 2)) as name'],
+                    projections : ['PMS.name as name'],
                     tables      : ['JOIN `pattern_matchings` as PMS ON J.job_id = PMS.job_id'],
                 }
             }
@@ -140,7 +141,7 @@ var Jobs = {
             },
             sql : {
                 report : {
-                    projections : ['CONCAT(UCASE(LEFT( CNN.`name`, 1)), SUBSTRING( CNN.`name`, 2)) as name'],
+                    projections : ['CNN.name as name'],
                     tables      : ['JOIN `job_params_cnn` as CNN ON J.job_id = CNN.job_id'],
                 }
             }
@@ -152,7 +153,7 @@ var Jobs = {
             },
             sql : {
                 report : {
-                    projections : ['CONCAT(UCASE(LEFT( AED.`name`, 1)), SUBSTRING( AED.`name`, 2)) as name'],
+                    projections : ['AED.name as name'],
                     tables      : ['JOIN `job_params_audio_event_detection_clustering` as AED ON J.job_id = AED.job_id'],
                 }
             }
@@ -164,7 +165,7 @@ var Jobs = {
             },
             sql : {
                 report : {
-                    projections : ['CONCAT(UCASE(LEFT( CL.`name`, 1)), SUBSTRING( CL.`name`, 2)) as name'],
+                    projections : ['CL.name as name'],
                     tables      : ['JOIN `job_params_audio_event_clustering` as CL ON J.job_id = CL.job_id'],
                 }
             }
@@ -327,24 +328,26 @@ var Jobs = {
 
         var union = Object.keys(this.job_types).map(i => {
             var job_type = this.job_types[i];
-            var jt_projections = job_type.sql && job_type.sql.report && job_type.sql.report.projections;
-            var jt_tables      = job_type.sql && job_type.sql.report && job_type.sql.report.tables;
+            var selects = job_type.sql && job_type.sql.report && job_type.sql.report.projections || [];
+            var joins = job_type.sql && job_type.sql.report && job_type.sql.report.tables || [];
             return (
-                "SELECT J.`progress`, J.`progress_steps`, J.`job_type_id`, JT.name as type, J.`job_id`, J.state, J.remarks, J.completed, J.last_update,\n" +
-                (jt_projections && jt_projections.length ?
-                    "    "+jt_projections.join(", ")+",\n" : ""
-                ) +
-                "    round(100*(J.`progress`/J.`progress_steps`),1) as percentage\n"+
-                "FROM `jobs` as J \n" +
-                (jt_tables && jt_tables.length ?
-                    "    "+jt_tables.join("\n")+"\n" : ""
-                ) +
-                "    " + tables.join("\n") + "\n" +
-                "WHERE "+constraints.join(" AND ") + "\n" +
-                "  AND J.job_type_id = " + (job_type.type_id|0)
+                `SELECT J.progress, J.progress_steps, J.job_type_id, JT.name as type, J.job_id, J.state, J.remarks, J.completed, J.last_update, J.progress, J.progress_steps ${selects.length? ', ' + selects.join(', ') : ''}
+                FROM jobs as J ${joins.join(' ')} ${tables.join(" ")}
+                WHERE ${constraints.join(' AND ')} AND J.job_type_id = ${job_type.type_id}`
             );
         });
-        queryHandler("(\n" + union.join("\n) UNION (\n") + "\n) ORDER BY last_update DESC", callback);
+        const sql = `(${union.join(") UNION (")})`
+        return dbpool.query(sql, [])
+            .then((jobs) => {
+                jobs.sort((a, b) => b.last_update - a.last_update)
+                    .forEach(j => {
+                        j.name = capitalize(j.name)
+                        j.percentage = j.progress_steps ? Math.round(j.progress/j.progress_steps * 1000)/10 : 0
+                        delete j.progress
+                        delete j.progress_steps
+                    })
+                return jobs
+            }).nodeify(callback)
     },
 
 
