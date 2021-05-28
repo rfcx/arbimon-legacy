@@ -2,13 +2,27 @@
 
 ## v3.0.25 - May XX, 2021
 
+New features:
+
+- CE-742 User can only add users to a project who are RFCx-connected
+
 Resolved issues:
 
 - CE-697 Convert datetime with timezone offsets for browser AudioMoth recordings
+- CE-683 Fix creating soundscape composition classes
+- CE-683 Display system classes with project soundscape composition classes
+- CE-730 Don't show coordinates of points in Clustering scatter plot when hovering over
+- CE-729 Remove redundant icon in cluster selector
+- Fix sorting issue on the Grid View page
+- CE-723 Selected visualizer link in Grid View opens ROI in the Visualizer
 
 Performance improvements:
 
+- CE-623 Extend amount of time users can stay logged into Arbimon
+- CE-686 Save source file name from Core API into recordings
 - CE-639 Optimize query which gets list if sites on Pattern Matching ROIs list page
+- CE-740 Optimize query which gets all project jobs progress
+- CE-740 Optimize query which gets cnn rois by adding missing index
 
 ## v3.0.24 - May 21, 2021
 

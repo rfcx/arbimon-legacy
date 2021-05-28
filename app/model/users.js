@@ -112,8 +112,9 @@ var Users = {
                 "       email, \n"+
                 "       login AS username \n"+
                 "FROM users \n"+
-                "WHERE login LIKE %s \n"+
-                "OR email LIKE %s";
+                "WHERE (login LIKE %s \n"+
+                "OR email LIKE %s) \n"+
+                "AND rfcx_id IS NOT NULL";
 
         q = util.format(q, query, query);
         queryHandler(q, callback);
