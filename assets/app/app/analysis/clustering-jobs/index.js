@@ -372,7 +372,8 @@ angular.module('a2.analysis.clustering-jobs', [
                 $scope.gridContext[i] = {
                     aed: $scope.originalData[i].aed.filter((a, i) => {
                         return row.includes(i);
-                    })
+                    }),
+                    name: $scope.originalData[i].cluster
                 }
             })
         }
@@ -605,17 +606,21 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.lists = {
         search: [
             {value:'all', text:'All', description: 'Show all matched rois.'},
+            {value:'per_cluster', text:'Sort per Cluster', description: 'Show all rois ranked per Cluster.'},
             {value:'per_site', text:'Sort per Site', description: 'Show all rois ranked per Site.'},
             {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
         ]
     };
-    $scope.selectedFilterData = $scope.lists.search[0];
+
+    $scope.selectedFilterData = $scope.lists.search[1];
+
     $scope.playlistData = {};
     $scope.aedData = {
         count: 0,
         id: []
     };
     if ($scope.gridContext && $scope.gridContext.aed) {
+        $scope.gridData = $scope.gridContext
         $scope.aedData.count = 1;
         $scope.gridContext.aed.forEach(i => $scope.aedData.id.push(i));
     }
@@ -663,6 +668,25 @@ angular.module('a2.analysis.clustering-jobs', [
                     }
                 })
                 $scope.rows = Object.values(sites);
+            }
+            else if (data && $scope.search.value === 'per_cluster') {
+                $scope.ids = {};
+                if($scope.aedData.count > 1) {
+                    var grids = []
+                    $scope.gridData.forEach((row) => { grids.push([row]) })
+                    grids.forEach((row, index) => {
+                        $scope.ids[index] = {
+                            cluster: row[0].name,
+                            rois: data.filter((a, i) => {return row[0].aed.includes(a.aed_id)})
+                        }
+                    })
+                } else {
+                    $scope.ids[0] = {
+                        cluster: $scope.gridData.cluster,
+                        rois: data
+                    }
+                }
+                $scope.rows = Object.values($scope.ids);
             }
             else {
                 if ($scope.selectedFilterData.value === 'per_date') {
