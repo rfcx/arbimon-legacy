@@ -70,7 +70,7 @@
                 popover-trigger="mouseenter"
                 popover-append-to-body="true"
             >
-                <div class="roi-btn-tl" ng-if="roi.selected" ng-model="roi.selected"><i class="fa val-0"></i></div>
+                <div class="roi-btn-tl" ng-if="roi.selected"><i class="fa val-0"></i></div>
                 <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
                     <i tooltip-placement="left"
                         tooltip-append-to-body="true"
