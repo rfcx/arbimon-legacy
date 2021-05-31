@@ -91,7 +91,7 @@
                 popover-trigger="mouseenter"
                 popover-append-to-body="true"
             >
-                <input class="roi-btn-tl" type="checkbox" ng-model="roi.selected" ng-click="$event.stopPropagation()">
+                <div class="roi-btn-tl" ng-if="roi.selected"><i class="fa val-0"></i></div>
                 <a class="roi-btn-bl" ng-href="{{getRoiVisualizerUrl(roi)}}" ng-click="$event.stopPropagation();">
                     <i tooltip-placement="left"
                         tooltip-append-to-body="true"
