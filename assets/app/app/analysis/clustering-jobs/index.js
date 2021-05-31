@@ -372,7 +372,8 @@ angular.module('a2.analysis.clustering-jobs', [
                 $scope.gridContext[i] = {
                     aed: $scope.originalData[i].aed.filter((a, i) => {
                         return row.includes(i);
-                    })
+                    }),
+                    name: $scope.originalData[i].cluster
                 }
             })
         }
@@ -610,17 +611,21 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.lists = {
         search: [
             {value:'all', text:'All', description: 'Show all matched rois.'},
+            {value:'per_cluster', text:'Sort per Cluster', description: 'Show all rois ranked per Cluster.'},
             {value:'per_site', text:'Sort per Site', description: 'Show all rois ranked per Site.'},
             {value:'per_date', text:'Sort per Date', description: 'Show all rois sorted per Date.'}
         ]
     };
-    $scope.search = $scope.lists.search[0];
+
+    $scope.selectedFilterData = $scope.lists.search[1];
+
     $scope.playlistData = {};
     $scope.aedData = {
         count: 0,
         id: []
     };
     if ($scope.gridContext && $scope.gridContext.aed) {
+        $scope.gridData = $scope.gridContext
         $scope.aedData.count = 1;
         $scope.gridContext.aed.forEach(i => $scope.aedData.id.push(i));
     }
@@ -638,25 +643,29 @@ angular.module('a2.analysis.clustering-jobs', [
         console.log(err);
     });
 
-    $scope.onSearchChanged = function(value) {
-        $scope.search.value = value;
+    $scope.onSearchChanged = function(item) {
+        $scope.selectedFilterData = item;
         $scope.getRoisDetails();
     }
 
     $scope.getRoisDetails = function() {
+        $scope.rows = [];
+        $scope.isRoisLoading = true;
         return a2ClusteringJobs.getRoisDetails({
             jobId: $scope.clusteringJobId,
             aed: $scope.aedData.id,
-            search: $scope.search.value
+            search: $scope.selectedFilterData.value
         }).then(function(data) {
             $scope.loading = false;
             $scope.allRois = data
             $scope.total.rois = data.length
             $scope.total.pages = Math.ceil(data.length / $scope.limit)
+            $scope.isRoisLoading = false;
             $scope.getRoisDetailsSegment($scope.limit, $scope.offset)
         }).catch(err => {
             console.log(err);
             $scope.loading = false;
+            $scope.isRoisLoading = false;
             $scope.infopanedata = 'No data for clustering job found.';
         });
     }
@@ -672,7 +681,7 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.getRoisDetailsSegment = function(limit, offset) {
         const end = (offset + limit) > $scope.total.rois ? $scope.total.rois : (offset + limit)
         const data = $scope.allRois.slice(offset, end)
-        if (data && $scope.search.value === 'per_site') {
+        if (data && $scope.selectedFilterData.value === 'per_site') {
             let sites = {};
             data.forEach((item) => {
                 if (!sites[item.site_id]) {
@@ -688,7 +697,7 @@ angular.module('a2.analysis.clustering-jobs', [
             })
             $scope.rows = Object.values(sites);
         } else {
-            if ($scope.search.value === 'per_date') {
+            if ($scope.selectedFilterData.value === 'per_date') {
                 data.sort(function(a, b) {
                     return (a.date_created < b.date_created) ? 1 : -1;
                 });
