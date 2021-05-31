@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.26 - June XX, 2021
+
+Resolved issues:
+- CE-827 Set the limit to the number of boxes show on one Grid View page
+
 ## v3.0.25 - May XX, 2021
 
 New features:

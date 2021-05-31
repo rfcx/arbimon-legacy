@@ -602,6 +602,11 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.loading = true;
     $scope.infopanedata = '';
     $scope.projectUrl = Project.getUrl();
+    $scope.allRois = []
+    $scope.total = { rois: 0, pages: 0 }
+    $scope.limit = 100
+    $scope.offset = 0
+    $scope.selected = { page: 0 }
 
     $scope.lists = {
         search: [
@@ -652,52 +657,11 @@ angular.module('a2.analysis.clustering-jobs', [
             search: $scope.selectedFilterData.value
         }).then(function(data) {
             $scope.loading = false;
+            $scope.allRois = data
+            $scope.total.rois = data.length
+            $scope.total.pages = Math.ceil(data.length / $scope.limit)
             $scope.isRoisLoading = false;
-            if (data && $scope.selectedFilterData.value === 'per_site') {
-                var sites = {};
-                data.forEach((item) => {
-                    if (!sites[item.site_id]) {
-                        sites[item.site_id] = {
-                            id: item.site_id,
-                            site: item.site,
-                            rois: [item]
-                        }
-                    }
-                    else {
-                        sites[item.site_id].rois.push(item);
-                    }
-                })
-                $scope.rows = Object.values(sites);
-            }
-            else if (data && $scope.search.value === 'per_cluster') {
-                $scope.ids = {};
-                if($scope.aedData.count > 1) {
-                    var grids = []
-                    $scope.gridData.forEach((row) => { grids.push([row]) })
-                    grids.forEach((row, index) => {
-                        $scope.ids[index] = {
-                            cluster: row[0].name,
-                            rois: data.filter((a, i) => {return row[0].aed.includes(a.aed_id)})
-                        }
-                    })
-                } else {
-                    $scope.ids[0] = {
-                        cluster: $scope.gridData.cluster,
-                        rois: data
-                    }
-                }
-                $scope.rows = Object.values($scope.ids);
-            }
-            else {
-                if ($scope.selectedFilterData.value === 'per_date') {
-                    data.sort(function(a, b) {
-                        return (a.date_created < b.date_created) ? 1 : -1;
-                    });
-                }
-                $scope.rows.push({
-                    rois: data
-                });
-            }
+            $scope.getRoisDetailsSegment($scope.limit, $scope.offset)
         }).catch(err => {
             console.log(err);
             $scope.loading = false;
@@ -707,6 +671,52 @@ angular.module('a2.analysis.clustering-jobs', [
     }
 
     $scope.getRoisDetails();
+
+    $scope.onPageChanged = function(value) {
+        $scope.selected.page = value
+        $scope.offset = $scope.limit * value
+        $scope.getRoisDetailsSegment($scope.limit, $scope.offset)
+    }
+
+    $scope.getRoisDetailsSegment = function(limit, offset) {
+        const end = (offset + limit) > $scope.total.rois ? $scope.total.rois : (offset + limit)
+        const data = $scope.allRois.slice(offset, end)
+        if (data && $scope.selectedFilterData.value === 'per_site') {
+            let sites = {};
+            data.forEach((item) => {
+                if (!sites[item.site_id]) {
+                    sites[item.site_id] = {
+                        id: item.site_id,
+                        site: item.site,
+                        rois: [item]
+                    }
+                }
+                else {
+                    sites[item.site_id].rois.push(item);
+                }
+            })
+            $scope.rows = Object.values(sites);
+        } else {
+            if ($scope.selectedFilterData.value === 'per_date') {
+                data.sort(function(a, b) {
+                    return (a.date_created < b.date_created) ? 1 : -1;
+                });
+            }
+            $scope.rows = [];
+            $scope.rows.push({
+                rois: data
+            });
+        }
+    }
+
+    // ------------ Pagination ------------
+    $scope.next = function() {
+        $scope.onPageChanged($scope.selected.page + 1)
+    }
+
+    $scope.prev = function() {
+        $scope.onPageChanged($scope.selected.page - 1)
+    }
 
     $scope.playRoiAudio = function(recId, aedId, $event) {
         if ($event) {
