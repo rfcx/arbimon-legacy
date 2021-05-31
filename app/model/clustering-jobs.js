@@ -92,8 +92,7 @@ var ClusteringJobs = {
             options = {};
         }
         select.push(
-            "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id",
-            "A.`uri_image` as `uri`"
+            "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id, A.`uri_image` as `uri`"
         );
 
         if (options.aed) {
@@ -110,6 +109,13 @@ var ClusteringJobs = {
             select.push('C.`date_created`');
             tables.push("JOIN job_params_audio_event_clustering C ON A.job_id = C.audio_event_detection_job_id");
             groupby.push('A.aed_id');
+        }
+
+        if (options.rec_id) {
+            select.push("PL.`name` as `playlist_name`, PL.`playlist_id`");
+            tables.push('JOIN playlist_aed PLE ON A.aed_id = PLE.aed_id');
+            tables.push('JOIN playlists PL ON PLE.playlist_id = PL.playlist_id');
+            constraints.push('A.recording_id = ' + dbpool.escape(options.rec_id));
         }
 
         return dbpool.query(

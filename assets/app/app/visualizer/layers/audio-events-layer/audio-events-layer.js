@@ -10,20 +10,52 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
             selection: true
         },
         visible: true,
+        hide_visibility: true
     });
 })
-.controller('a2VisualizerAudioEventsController', function($scope, a2AudioEventDetectionsClustering, Project){
+.controller('a2VisualizerAudioEventsController', function($scope, a2AudioEventDetectionsClustering, a2ClusteringJobs, $localStorage){
     var self = this;
     self.audioEvents = null;
+    self.clusteringEvents = null;
+    self.isAudioEventsPlaylist = null;
+    self.selectedAudioEventJob = null;
+    self.clusterPlaylists = null;
     self.isPlaylist = false;
+    self.toggleAudioEvents = function(isJobsBoxes, id, opacity) {
+        (isJobsBoxes? self.audioEvents : self.clusteringEvents).forEach(item => {
+            if ((isJobsBoxes? item.job_id : item.playlist_id) === id) {
+                item.opacity = opacity === false ? 0 : 1;
+            }
+        })
+    };
     self.fetchAudioEvents = function() {
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
         if (rec) {
             self.isPlaylist = $scope.visobject.extra && $scope.visobject.extra.playlist;
+            // Check local storage on selected job from the audio events details page.
+            try {
+                self.selectedAudioEventJob = $localStorage.getItem('analysis.audioEventJob');
+                self.isAudioEventsPlaylist = !isNaN(self.selectedAudioEventJob);
+            } catch (e) {}
+            // Get Detections Jobs data.
             a2AudioEventDetectionsClustering.list(
                 $scope.visobject.extra && $scope.visobject.extra.playlist && $scope.visobject.extra.playlist.id ?
-                {playlist: $scope.visobject.extra.playlist.id} : {rec_id: rec}).then(function(audioEvents) {
+                {playlist: $scope.visobject.extra.playlist.id, isAudioEventsPlaylist: true} : {rec_id: rec}).then(function(audioEvents) {
                 if (audioEvents) {
+                    self.audioEventJobs = {};
+                    // Collect detections jobs data for audio events layer.
+                    if (audioEvents.length) {
+                        audioEvents.forEach(event => {
+                            if (!self.audioEventJobs[event.job_id]) {
+                                self.audioEventJobs[event.job_id] = {
+                                    job_id: event.job_id,
+                                    name: event.name, count: 1,
+                                    visible: self.isAudioEventsPlaylist? Number(self.selectedAudioEventJob) === event.job_id : false // Job not visible by default, except selected job from the audio events details page.
+                                };
+                            };
+                            self.audioEventJobs[event.job_id].count += 1;
+                        });
+                    }
                     self.audioEvents = audioEvents.map(event => {
                         return {
                             rec_id: event.rec_id,
@@ -31,10 +63,45 @@ angular.module('a2.visualizer.layers.audio-events-layer', [
                             x2: event.time_max,
                             y1: event.freq_min,
                             y2: event.freq_max,
-                            display: event.rec_id === rec? "block" : "none"
+                            job_id: event.job_id || null,
+                            display: event.rec_id === rec? "block" : "none",
+                            opacity: self.isAudioEventsPlaylist ? (Number(self.selectedAudioEventJob) === event.job_id ? 1 : 0) : 0 // Boxes not visible by default, except selected job from the audio events details page.
                         }
                     });
-                    return audioEvents;
+                    // Remove selected job from the audio events details page.
+                    if (!isNaN(self.selectedAudioEventJob)) {
+                        $localStorage.setItem('analysis.audioEventJob', null);
+                    }
+                    a2ClusteringJobs.getRoisDetails({rec_id: $scope.visobject.id}).then(function(clusteringEvents) {
+                        if (clusteringEvents) {
+                            // Collect clustering playlists for audio events layer.
+                            self.clusterPlaylists = {};
+                            clusteringEvents.forEach(event => {
+                                if (!self.clusterPlaylists[event.playlist_id]) {
+                                    self.clusterPlaylists[event.playlist_id] = {
+                                        rec_id: event.recording_id,
+                                        playlist_name: event.playlist_name,
+                                        playlist_id: event.playlist_id,
+                                        count: 1,
+                                        visible: false // Playlist is hidden by default.
+                                    };
+                                };
+                                self.clusterPlaylists[event.playlist_id].count += 1;
+                            });
+                            self.clusteringEvents = clusteringEvents.map(event => {
+                                return {
+                                    rec_id: event.recording_id,
+                                    x1: event.time_min,
+                                    x2: event.time_max,
+                                    y1: event.frequency_min,
+                                    y2: event.frequency_max,
+                                    playlist_id: event.playlist_id || null,
+                                    display: event.recording_id === rec? "block" : "none",
+                                    opacity: 0 // Boxes not visible by default.
+                                }
+                            });
+                        }
+                    })
                 }
             });
         }
