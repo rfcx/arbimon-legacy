@@ -21,12 +21,9 @@ angular.module('a2.audiodata.soundscape-composition-classes', [
         this.loading = true;
         this.newClass = {};
         this.canManageClasses = a2UserPermit.can("manage project species");
-        a2SoundscapeCompositionService.getClassList({tally:1, groupByType:true}).then((function(classes){
+        a2SoundscapeCompositionService.getClassList({tally:1, groupByType:true, isSystemClass:1}).then((function(classes){
             this.classes = classes;
             this.loading = false;
-            if(this.classes && !this.classes.length) {
-                this.infopanedata = "No Soundscape Composition Classes found.";
-            }
         }).bind(this));
     };
 

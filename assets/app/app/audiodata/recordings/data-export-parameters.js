@@ -69,7 +69,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             identifier:'soundscapeComposition',
             placeholder: 'Wind, Birds, ...',
             getList: function(a2SoundscapeCompositionService){
-                return a2SoundscapeCompositionService.getClassList().then(function(classes){
+                return a2SoundscapeCompositionService.getClassList({isSystemClass:1}).then(function(classes){
                     return classes.map(function(cls){
                         return {value:cls.id, caption:cls.name, group:cls.type};
                     });
@@ -97,28 +97,28 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
     $scope,
     recordingDataFieldTypes
 ){
-    
+
     this.initialize = function(options){
         options = options || {};
-        
+
         if(options.onExport){
             this.onExport = options.onExport;
         }
-        
+
         this.parameter_set_list = recordingDataFieldTypes;
         this.selected = [];
         this.lists = this.parameter_set_list.map(function(){
             return [];
         });
-        
+
         function getList(parameter_set){
             return $q.resolve(parameter_set.getList ?
                 $injector.invoke(parameter_set.getList) :
                 (parameter_set.list || [])
             );
         }
-        
-        
+
+
         $q.all(this.parameter_set_list.map(getList)).then((function(allLists){
             this.lists = allLists;
             this.selected = this.parameter_set_list.map(function(parameter_set, idx){
@@ -127,7 +127,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                         _[item.value] = item;
                         return _;
                     }, {});
-                    
+
                     return (parameter_set.preselected || []).map(function(value){
                         return listByValue[value];
                     }).filter(function(_){
@@ -151,7 +151,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             return _;
         }, {}));
     };
-    
+
     this.onExport = function(parameters){
         console.log("export parameters : ", parameters);
     };
