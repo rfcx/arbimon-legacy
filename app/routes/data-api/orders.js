@@ -611,7 +611,7 @@ router.get('/cancel/:orderId', function(req, res, next) {
     // set order as canceled
 
     if(req.order.status != 'created') {
-        return res.redirect('/home');
+        return res.redirect('/');
     }
 
     model.orders.update(
@@ -622,7 +622,7 @@ router.get('/cancel/:orderId', function(req, res, next) {
         function(err, result) {
             if(err) return next(err);
 
-            res.redirect('/home');
+            res.redirect('/');
         }
     );
 });

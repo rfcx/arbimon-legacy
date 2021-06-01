@@ -200,7 +200,8 @@ var Users = {
             whereExp.push("p.name LIKE '%"+query.q+"%' OR p.description LIKE '%"+query.q+"%'");
         }
         if(query.hasOwnProperty('featured')) {
-            whereExp.push("p.featured = 1");
+            selectExtra += ', featured, image'
+            whereExp.push("p.featured = 1 OR p.featured = 2");
         }
         if (query.hasOwnProperty('allAccessibleProjects')) {
             whereExp.push('p.deleted_at IS NULL');
@@ -439,7 +440,7 @@ var Users = {
         var password = auth.password || '';
         var ip = auth.ip;
         var captchaResponse = auth.captcha;
-        var redirectUrl = options.redirect || '/home';
+        var redirectUrl = options.redirect || '/projects';
 
         var permitedRetries = 10;
         var captchaRequired = 3;
@@ -584,7 +585,7 @@ var Users = {
 
             return {
                 success: true,
-                redirect : req.query.redirect || '/home',
+                redirect : req.query.redirect || '/projects',
                 captchaNeeded: result.captchaNeeded
             };
         });

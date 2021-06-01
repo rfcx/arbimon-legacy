@@ -1,9 +1,17 @@
 # Arbimon Release Notes
 
+## v3.0.26 - June XX, 2021
+
+Resolved issues:
+- CE-827 Set the limit to the number of boxes show on one Grid View page
+
 ## v3.0.25 - May XX, 2021
 
 New features:
 
+- CE-504 Revamp Arbimon homepage
+- CE-742 The user can only add users to a project who are RFCx-connected
+- CE-763 Add info to top highlighted project cards
 - CE-742 User can only add users to a project who are RFCx-connected
 
 Resolved issues:

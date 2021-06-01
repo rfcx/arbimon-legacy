@@ -26,7 +26,8 @@ angular.module('a2.home', [
     $scope
 ) {
     $scope.search = '';
-    $scope.isExplorePage = $window.location.pathname === '/home/all'
+    this.highlightedProjects = [];
+    $scope.isExplorePage = $window.location.pathname === '/'
     function getProjectSelectCache(){
         try{
             return JSON.parse($localStorage.getItem('home.project.select.cache')) || {};
@@ -44,6 +45,7 @@ angular.module('a2.home', [
     }
 
     this.loadProjectList = function() {
+        const isFeatured = this.isAnonymousGuest || $scope.isExplorePage && !$scope.search;
         var config = {
             params: {
                 include_location: true,
@@ -53,7 +55,7 @@ angular.module('a2.home', [
         if ($scope.search !== '') {
             config.params.q = $scope.search;
         }
-        if (this.isAnonymousGuest || $scope.isExplorePage && !$scope.search) {
+        if (isFeatured) {
             config.params.featured = true;
         }
         if (!this.isAnonymousGuest && !$scope.isExplorePage && !$scope.search) {
@@ -71,7 +73,27 @@ angular.module('a2.home', [
                 p.mapUrl = "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/" + lon + "," + lat + "," + zoom + ",0,60/274x180?access_token=" + a2InjectedData.mapbox_access_token
             });
             this.isLoading = false
-            this.projects = data;
+            if ($scope.search !== '') {
+                this.highlightedProjects = [];
+                this.projects = data;
+            }
+            else {
+                if (isFeatured) {
+                    this.highlightedProjects = data.filter(item => item.featured === 2);
+                    this.highlightedProjects.forEach(project => {
+                        project.isLoading = true;
+                        $http.get('/api/project/' + project.url + '/pattern-matchings/count').success(function(data) {
+                            project.patternMatchingsTotal = data.count || 0;
+                            project.isLoading = false;
+                        });
+                        $http.get('/api/project/' + project.url + '/recordings/search-count', {project_id: project.id}).success(function(data) {
+                            project.recCount = data.map((item) => { return item.count }).reduce((a, b) => a + b, 0);
+                            project.isLoading = false;
+                        })
+                    })
+                }
+                this.projects = data.filter(item => item.featured !== 2);
+            }
             this.previousSearch = this.search
         }.bind(this))
         .error(function() {
