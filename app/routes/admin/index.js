@@ -10,24 +10,28 @@ var csv_stringify = require("csv-stringify");
 
 var config = require('../../config');
 var model = require('../../model');
+const auth0Service = require('../../model/auth0')
 
 // only super user can access admin section
 router.use(function(req, res, next) {
     if(
-        req.session && 
-        req.session.user && 
+        req.session &&
+        req.session.user &&
         req.session.user.isSuper === 1
     ) {
         return next();
     }
-    
+
     res.status(404).render('not-found', { user: req.session.user });
 });
 
 
 router.get('/', function(req, res) {
     res.type('html');
-    res.render('admin', { user: req.session.user });
+    res.render('admin', {
+        user: req.session.user,
+        auth0UniversalLoginUrl: auth0Service.universalLoginUrl
+    });
 });
 
 
@@ -41,11 +45,11 @@ router.get('/dashboard-stats', function(req, res, next) {
         model.projects.countAllProjects,
         model.sites.countAllSites,
         model.users.countAllUsers
-    ], 
+    ],
     function(err, results) {
         if(err) return next(err);
-        
-        
+
+
         var stats = {
             jobsStatus: results[0],
             newProjects: results[1][0][0].count,
@@ -55,7 +59,7 @@ router.get('/dashboard-stats', function(req, res, next) {
             allSites: results[5][0][0].count,
             allUsers: results[6][0][0].count
         };
-        
+
         res.json(stats);
     });
 });
@@ -69,14 +73,14 @@ router.get('/plot-data/data.txt', function(req, res, next) {
             output='json';
             groupby='dates';
         } else {
-            if(req.query.stat){ 
-                query.stat = req.query.stat; //.split(','); 
+            if(req.query.stat){
+                query.stat = req.query.stat; //.split(',');
             }
             if(req.query.from){
-                query.from = new Date(+req.query.from); 
+                query.from = new Date(+req.query.from);
             }
             if(req.query.to){
-                query.to = new Date(+req.query.to); 
+                query.to = new Date(+req.query.to);
             }
             if (req.query.date) {
                 query.dates = req.query.date.split(',');
@@ -112,7 +116,7 @@ router.get('/plot-data/data.txt', function(req, res, next) {
                 res.type('text/plain');
                 datastream
                     .pipe(csv_stringify({
-                        header:true, 
+                        header:true,
                         columns:fields
                     }))
                     .pipe(res);
@@ -134,7 +138,7 @@ router.get('/jobs', function(req, res, next) {
     res.type('json');
     model.jobs.find(req.query, function(err, jobs) {
         if(err) return next(err);
-        
+
         res.json(jobs);
     });
 });
@@ -143,21 +147,21 @@ router.get('/system-settings', function(req, res, next) {
     res.type('json');
     model.settings.get(function(err, rows) {
         if(err) return next(err);
-        
-        
+
+
         console.log(rows);
-        
+
         var settings = {};
-        async.each(rows, 
+        async.each(rows,
             function(s, callback) {
                 settings[s.key] = s.value;
                 callback();
-            }, 
+            },
             function done() {
                 res.json(settings);
             }
         );
-        
+
     });
 });
 
@@ -166,7 +170,7 @@ router.put('/system-settings', function(req, res, next) {
     res.type('json');
     model.settings.set(req.body.setting, req.body.value, function(err, results) {
         if(err) return next(err);
-        
+
         debug('setting update:', results);
         res.sendStatus(200);
     });
