@@ -6,6 +6,7 @@ var router = express.Router();
 
 var cardStack = require('./resource-cards');
 var cardResolver = require('../utils/card-resolver')(cardStack);
+const auth0Service = require('../model/auth0')
 
 var injected_data = {
     facebook_api: config('facebook-api').public,
@@ -137,6 +138,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                             card: card,
                             planAlert: project.plan_due < new Date() ? 'expired' : '',
                             perms: perms,
+                            auth0UniversalLoginUrl: auth0Service.universalLoginUrl
                         });
                     }
                 });
