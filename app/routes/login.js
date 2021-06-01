@@ -115,7 +115,7 @@ router.get('/login', function(req, res) {
     res.render('login', {
         message: '',
         user: null,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
+        auth0UniversalLoginUrl: `${auth0Service.universalLoginUrl}`,
         inject_data: {
             facebook_api: config('facebook-api').public,
             google_oauth_client: config('google-api').oauthId

@@ -1,7 +1,7 @@
 <% if (!user || user.isAnonymousGuest) { %>
 <li>
     <div>
-        <a class="navbar-btn btn btn-primary navbar-rfcx-link-m collapsed" href="/login">
+        <a class="navbar-btn btn btn-primary navbar-rfcx-link-m collapsed" href="<%- auth0UniversalLoginUrl %>">
             Sign In
         </a>
     </div>

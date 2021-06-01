@@ -25,7 +25,7 @@
                         </a>
                         <% if (!user || user.isAnonymousGuest) { %>
                         <a class="navbar-btn btn btn-primary navbar-toggle-right collapse-menu-hide collapsed"
-                            href="/login">
+                            href="<%- auth0UniversalLoginUrl %>">
                             Sign In
                         </a>
                         <% } else { %>
