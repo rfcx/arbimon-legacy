@@ -24,8 +24,14 @@ angular.module('a2.srv.clustering-jobs', [
                 return response.data;
             }).catch(notify.serverError);
         },
-        getClusteringDetails: function(jobId) {
-            return $http.get('/api/project/' + Project.getUrl() + '/clustering-jobs/' + jobId + '/clustering-details').then(function(response){
+        getClusteringDetails: function(opts) {
+            var config = {
+                params: {}
+            };
+            if (opts.type) {
+                config.params.type = opts.type;
+            }
+            return $http.get('/api/project/' + Project.getUrl() + '/clustering-jobs/' + opts.job_id + '/clustering-details', config).then(function(response){
                 return response.data;
             });
         },
