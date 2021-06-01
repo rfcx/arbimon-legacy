@@ -682,7 +682,7 @@ angular.module('a2.analysis.clustering-jobs', [
         const end = (offset + limit) > $scope.total.rois ? $scope.total.rois : (offset + limit)
         const data = $scope.allRois.slice(offset, end)
         if (data && $scope.selectedFilterData.value === 'per_site') {
-            let sites = {};
+            var sites = {};
             data.forEach((item) => {
                 if (!sites[item.site_id]) {
                     sites[item.site_id] = {
