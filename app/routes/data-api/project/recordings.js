@@ -42,7 +42,7 @@ router.get('/search-count', function(req, res, next) {
     res.type('json');
     var params = req.query;
 
-    params.project_id = req.project.project_id;
+    params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
 
     model.recordings.countProjectRecordings(params).then(function(rows) {
         res.json(rows);

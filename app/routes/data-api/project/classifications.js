@@ -27,62 +27,16 @@ router.get('/:classiId', function(req, res, next) {
     res.type('json');
     model.classifications.errorsCount(req.params.classiId, function(err, rowsRecs) {
         if(err) return next(err);
-        
+
         rowsRecs =  rowsRecs[0];
 
         model.classifications.detail(req.params.classiId, function(err, rows) {
             if(err) return next(err);
 
-            // var i = 0;
-            // var data = [];
-            // var total = [];
-            // var species =[];
-            // var songtype =[];
-            // var th = '';
-            // 
-            // console.log(rows);
-            // 
-            // while(i < rows.length) {
-            //     var row = rows[i];
-            //     th = row.th;
-            // 
-            //     var index = row.species_id + '_' + row.songtype_id;
-            //     if (typeof data[index]  == 'number')
-            //     {
-            //         data[index] = data[index] + parseInt(row.present);
-            //         total[index] = total[index] + 1;
-            //     }
-            //     else
-            //     {
-            //         data[index] = parseInt(row.present);
-            //         species[index] = row.scientific_name;
-            //         songtype[index] = row.songtype;
-            //         total[index] = 1;
-            //     }
-            //     i = i + 1;
-            // }
-            // 
-            // var results = [];
-            // 
-            // for (var key in species)
-            // {
-            //     var per = Math.round( (data[key]/total[key])*100);
-            //     var rr = {
-            //         err: rowsRecs.count,
-            //         species: species[key],
-            //         songtype: songtype[key],
-            //         total: total[key],
-            //         data: data[key],
-            //         percentage: per,
-            //         th: th
-            //     };
-            //     results.push(rr);
-            // }
-            
             var classifiacationDetails = rows[0];
-            
+
             classifiacationDetails.errCount = rowsRecs.count;
-            
+
             res.json(classifiacationDetails);
         });
     });
@@ -92,18 +46,18 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
     res.type('json');
     model.classifications.moreDetails(req.params.classiId, req.params.from, req.params.total, function(err, rows) {
         if(err) return next(err);
-                
+
         rows.forEach(function(classiInfo) {
             console.log(classiInfo);
             classiInfo.stats = JSON.parse(classiInfo.json_stats);
             delete classiInfo.json_stats;
-            
+
             var thumbnail = classiInfo.uri.replace('.flac', '.thumbnail.png');
-            
+
             classiInfo.rec_image_url = "https://"+ config('aws').bucketName + ".s3.amazonaws.com/"+ thumbnail;
             delete classiInfo.uri;
         });
-        
+
         res.json(rows);
     });
 });
@@ -125,7 +79,7 @@ router.post('/new', function(req, res, next) {
     res.type('json');
     var response_already_sent;
     var params, job_id;
-    
+
     async.waterfall([
         function gather_job_params(next){
             var project_id = req.project.project_id;
@@ -190,20 +144,20 @@ router.post('/new', function(req, res, next) {
 
 router.get('/:classiId/vector/:recId', function(req, res, next) {
     res.type('json');
-    
+
     if(!req.params.classiId || !req.params.recId) {
         return res.status(400).json({ error: 'missing parameters'});
     }
-    
+
     model.classifications.getRecVector(req.params.classiId, req.params.recId, function(err, rows) {
         if(err) return next(err);
-        
-        if(!rows.length) { 
+
+        if(!rows.length) {
             return res.status(404).json({ error: 'data not found'});
         }
-        
+
         var vectorUri = rows[0].vect;
-        
+
         s3.getObject({
             Key: vectorUri,
             Bucket: config('aws').bucketName
@@ -217,7 +171,7 @@ router.get('/:classiId/vector/:recId', function(req, res, next) {
                     return next(err);
                 }
             }
-            
+
             async.map(String(data.Body).split(','), function(number, next) {
                 next(null, parseFloat(number));
             }, function done(err, vector) {
@@ -237,13 +191,13 @@ router.get('/csv/:classiId', function(req, res) {
 
         var cname = row[0].name;
         var pid = row[0].pid;
- 
+
         if(!req.haveAccess(pid, "manage models and classification")) {
             // TODO use std error message json, presentation is a frontend task
-            return res.send('<html><body><a href="/home" class="navbar-brand">'+
+            return res.send('<html><body><a href="/" class="navbar-brand">'+
                             '<img src="/images/logo.svg"></a>'+
                             '<hr><div style="font-size:14px;font-family:Helvetica,Arial,sans-serif;">Error: Cannot download CSV file. You dont have permission to \'manage models and classifications\'</div></body>');
-        }    
+        }
 
         res.set({
             'Content-Disposition' : 'attachment; filename="'+cname+'.csv"',
@@ -253,11 +207,11 @@ router.get('/csv/:classiId', function(req, res) {
         model.classifications.getCsvData(req.params.classiId, function(err, row) {
             if(err) throw err;
             var data = [];
-            
+
             var thisrow;
             thisrow = row[0];
             var th = thisrow.threshold;
-            
+
             if(th) {
                 var fields = [
                     "rec",
@@ -274,7 +228,7 @@ router.get('/csv/:classiId', function(req, res) {
                     "species",
                     "songtype"
                 ];
-                
+
                 data.push(fields.join(','));
 
                 for(var i = 0 ; i < row.length ; i++)
@@ -285,7 +239,7 @@ router.get('/csv/:classiId', function(req, res) {
                         if(maxVal >= th )
                         {
                             tprec = 1;
-                        }                     
+                        }
 
                         data.push( '"'+ thisrow.rec +'",'+ thisrow.present+','+tprec +','+th+','+maxVal+','+
                            thisrow.name+',' + thisrow.year+',' + thisrow.month+','+
@@ -300,7 +254,7 @@ router.get('/csv/:classiId', function(req, res) {
                 for(var j = 0; j < row.length; j++)
                 {
                     thisrow = row[j];
-    
+
                     data.push( '"'+ thisrow.rec+'",'+ thisrow.present+','+
                             thisrow.name+',' + thisrow.year+',' + thisrow.month+','+
                             thisrow.day+',' + thisrow.hour+','+ thisrow.min+',"' +

@@ -42,7 +42,7 @@ router.get('/:projecturl?/', function(req, res, next) {
             if(project){
                 return model.users.getPermissions(req.session.user.id, project.project_id);
             }
-            return res.redirect('/home');
+            return res.redirect('/');
         }).then(function(rows) {
             if(!project || (project.is_private && !rows.length && req.session.user.isSuper === 0)){
                 // if not authorized to see project send 404
@@ -57,7 +57,7 @@ router.get('/:projecturl?/', function(req, res, next) {
 
     // redirect to home if no project is given
     if(!project_url){
-        res.redirect('/home');
+        res.redirect('/');
         return;
     }
 
@@ -99,7 +99,7 @@ router.get('/:projecturl?/', function(req, res, next) {
                     }
                 } else {
                     // if not authorized to see project send 404
-                    return res.redirect('/home');
+                    return res.redirect('/');
                 }
 
                 if(!req.session.user.permissions)

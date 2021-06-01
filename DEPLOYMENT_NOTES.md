@@ -1,6 +1,10 @@
 # Arbimon Deployment Notes
 
-- Add `"expiration": 604800000` to `config/db.local.json`
+## v3.0.25
+
+- Run migration 014-projects-table-add-image-column.sql
+- Run query to add featured=2 and add the images for 3 top projects
+- Add `"expiration": 604800000` to `config/session.json`
 
 ## v3.0.23
 

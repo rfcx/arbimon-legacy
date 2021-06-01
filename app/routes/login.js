@@ -107,26 +107,10 @@ router.get('/api/email_available', function(req, res, next) {
     });
 });
 
-router.get('/', function(req, res) {
-    res.type('html');
-    if(req.session) {
-        if(req.session.loggedIn) return res.redirect('/home');
-    }
-    res.render('landing-page', {
-        message: '',
-        user: null,
-        auth0UniversalLoginUrl: auth0Service.universalLoginUrl,
-        inject_data: {
-            facebook_api: config('facebook-api').public,
-            google_oauth_client: config('google-api').oauthId
-        },
-    });
-});
-
 router.get('/login', function(req, res) {
     res.type('html');
     if(req.session) {
-        if(req.session.loggedIn) return res.redirect('/home');
+        if(req.session.loggedIn) return res.redirect('/projects');
     }
     res.render('login', {
         message: '',
@@ -166,7 +150,7 @@ router.post('/oauth-login', function(req, res, next) {
     }).then(function(){
         res.json({
             success:true,
-            redirect:'/home'
+            redirect:'/projects'
         });
     }, next);
 });
@@ -197,7 +181,7 @@ router.get('/auth0-login', async function(req, res, next) {
         model.users.sendTouchAPI(tokens.id_token) // no need to wait for response
         if (!req.session || !req.session.user || req.session.user.username === 'guest') { // user user is not logged in and is authenticating with Auth0
             await model.users.auth0Login(req, profile, tokens);
-            res.redirect('/home');
+            res.redirect('/projects');
         }
         else {
             await model.users.connectRFCx(req, profile, tokens); // if user is logged in and is authenticating with Auth0 ("Connect with RFCx feature")

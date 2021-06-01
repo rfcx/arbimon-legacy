@@ -26,12 +26,12 @@
                         <div class="col-sm-12 col-md-8 col-md-offset-2">
                             <div class="panel panel-default">
                                 <div class="panel-body">
-        
+
                                     <h3 style="margin:0;" ng-show="processing">
                                         <loader></loader>
                                         Processing your order
                                     </h3>
-        
+
                                     <h3 ng-hide="success">
                                         <span ng-show="notFound">
                                             Order not found
@@ -49,7 +49,7 @@
                                             An error occurred, please contact us before trying to repeat the order
                                         </span>
                                     </h3>
-        
+
                                     <div ng-show="success">
                                         <h3>Order successfully processed</h3>
                                         <p>
@@ -61,7 +61,7 @@
                                             </span>
                                             For status update on items ordered check your paypal account, you can also contact us.
                                         </p>
-                                        <a href="/home" class="btn btn-primary">
+                                        <a href="/" class="btn btn-primary">
                                             Go to Home
                                         </a>
                                     </div>
@@ -72,7 +72,7 @@
                     </div>
                 </div>
             </div>
-        
+
             <div class="container" ng-show="success">
                 <div class="row">
                     <div class="col-sm-12 col-md-8 col-md-offset-2">
@@ -83,12 +83,12 @@
                                 San Juan, PR 00911 US
                             </address>
                         </div>
-        
+
                         <h3>Invoice #{{ invoice.number }}</h3>
                         <hr>
-        
+
                         <div class="row">
-        
+
                             <div class="col-sm-6">
                                 <div class="section">
                                     <div class="title">Bill to</div>
@@ -98,7 +98,7 @@
                                     </p>
                                 </div>
                             </div>
-        
+
                             <div class="col-sm-6">
                                 <div class="section" ng-show="invoice.address">
                                     <div class="title">Ship to</div>
@@ -119,9 +119,9 @@
                                     </div>
                                 </div>
                             </div>
-        
+
                         </div>
-        
+
                         <table class="table">
                             <thead>
                                 <tr>
@@ -152,12 +152,12 @@
                                 </tr>
                             </tbody>
                         </table>
-        
+
                         <!-- <table class="table item-list-total">
                         </table> -->
                     </div>
-        
-        
+
+
                 </div>
             </div>
         </div>
