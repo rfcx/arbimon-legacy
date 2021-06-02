@@ -25,7 +25,7 @@
                             <div class="col-md-12 seconds-div-center">
                                 <h1>RFCx Arbimon</h1>
                                 <h3 style="text-align: left; margin-bottom: 30px; line-height: 1.6;">Upload and analyze an unlimited amount of audio from your AudioMoth, SongMeter, or other recording device, with our free cloud-based analytical tool.
-                                    Learn more about our Ecoacoustic tools <a href="https://rfcx.org/ecoacoustics">here</a></h3>
+                                    Learn more about our <a href="https://rfcx.org/ecoacoustics">Ecoacoustic tools</a>.</h3>
                                 <div class="button-group">
                                     <% if (user && user.isAnonymousGuest) { %>
                                         <a class="btn btn-lg btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Start Analyzing Now!</a>
@@ -37,11 +37,11 @@
                         </div>
                     <% } %>
                     <div class="row">
-                        <div class="col-xs-5 col-md-5 pb-3" ng-if="!search && !controller.isAnonymousGuest">
+                        <div class="col-xs-5 col-md-5" ng-if="!search && !controller.isAnonymousGuest">
                             <% if (user && user.isAnonymousGuest) { %>
-                                <h3>Explore Projects</h3>
+                                <h3 class="mt-2">Explore Projects</h3>
                             <% } else if (state === 'projects') { %>
-                                <h3>My Projects</h3>
+                                <h3 class="mt-2">My Projects</h3>
                             <% } %>
                         </div>
                         <div class="col-xs-5 col-md-5" ng-if="search">
@@ -50,7 +50,7 @@
                         <div class="col-xs-7 col-md-7 pb-1 mb-3">
                             <div class="form-inline pull-right" ng-show="!controller.isAnonymousGuest">
                                 <div class="form-group has-feedback">
-                                    <input id="projectsSearch" type="search" maxlength="100" class="form-control input-sm" ng-model="search" placeholder="Search projects" ng-change="controller.searchChanged()">
+                                    <input id="projectsSearch" type="search" maxlength="100" class="form-control input-sm" ng-model="search" placeholder="Search All Projects" ng-change="controller.searchChanged()">
                                 </div>
                             </div>
                         </div>
@@ -67,16 +67,11 @@
                                                 {{ project.name }}
                                             </div>
                                             <span class="line-clamp mb-2">{{ project.description }}</span>
-                                            <div class="text-center" style="height: 40px;">
-                                                <i ng-show="project.isLoading" class="fa fa-spinner fa-spin" style="font-size: 24px; position: relative; top: 8px;"></i>
+                                            <div class="text-center" style="height: 20px;">
+                                                <i ng-show="project.isLoading" class="fa fa-spinner fa-spin" style="font-size: 18px; position: relative;"></i>
                                                 <div class="text-left" ng-show="!project.isLoading && project.recCount && project.patternMatchingsTotal">
-                                                    <div class="word-wrap line-ellipsis">
-                                                        <i class="fa fa-caret-down mr-2"></i>
-                                                        {{ project.recCount }} recordings
-                                                    </div>
-                                                    <div class="word-wrap line-ellipsis">
-                                                        <i class="fa fa-caret-down mr-2"></i>{{ project.patternMatchingsTotal }} pattern matching templates
-                                                    </div>
+                                                    <span class="a2-badge" style="background-color: rgb(110, 111, 126, 0.5); color: white; margin-left: 0;">{{ project.recCount | number }} recordings</span>
+                                                    <span class="a2-badge" style="background-color: rgb(110, 111, 126, 0.5); color: white">{{ project.patternMatchingsTotal }} templates</span>
                                                 </div>
                                             </div>
                                         </div>
