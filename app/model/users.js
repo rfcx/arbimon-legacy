@@ -611,12 +611,12 @@ var Users = {
         return profile.email || `${profile.guid}@rfcx.org`;
     },
 
-    makeUserObject: function(user, options){
+    makeUserObject: function(user, profile, options){
         options = options || {};
         var userObj = {
             id: user.user_id,
             username: user.login,
-            imageUrl: gravatar.url(user.email, { d: 'monsterid', s: 60 }, !!(options && options.secure)),
+            imageUrl: profile.picture,
             isSuper: user.is_super,
         };
         if(options.all){
@@ -699,7 +699,7 @@ var Users = {
         // set session
         req.session.loggedIn = true;
         req.session.isAnonymousGuest = false;
-        req.session.user = Users.makeUserObject(user, {secure: req.secure, all:true});
+        req.session.user = Users.makeUserObject(user, profile, {secure: req.secure, all:true});
         req.session.idToken = tokens.id_token
         return user
     },
