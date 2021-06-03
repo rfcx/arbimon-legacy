@@ -34,7 +34,7 @@
                 </field>
                 <field class="is-v-middle">
                     <a class="btn btn-default btn-xs"
-                        ng-href="/project/{{projectUrl}}/visualizer/playlist/{{row.playlist_id}}"
+                        ng-click="onSelectedJob(row.playlist_id, row.job_id)"
                         title="View in Visualizer">
                         <i class="fa fa-cubes"></i>
                     </a>

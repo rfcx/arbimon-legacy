@@ -7,7 +7,23 @@
                 top:layout.hz2y(roi.y2, 1) + 'px',
                 width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px',
                 height:layout.dhz2height(roi.y2, roi.y1) + 'px',
-                display: roi.display || ''
+                display: roi.display || '',
+                opacity: roi.opacity
+            }">
+        </div>
+    </div>
+</div>
+<div>
+    <div ng-repeat="roi in layer.audio_events.clusteringEvents">
+        <div class="roi audio-event"
+            ng-class="roi.class || ''"
+            ng-style="{
+                left:layout.sec2x(roi.x1, 1) + 'px',
+                top:layout.hz2y(roi.y2, 1) + 'px',
+                width:layout.dsec2width(roi.x2, roi.x1, 1) + 'px',
+                height:layout.dhz2height(roi.y2, roi.y1) + 'px',
+                display: roi.display || '',
+                opacity: roi.opacity
             }">
         </div>
     </div>

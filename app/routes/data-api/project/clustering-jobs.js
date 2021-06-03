@@ -44,7 +44,8 @@ router.get('/:job_id/job-details', function (req, res, next) {
 router.get('/:job_id/rois-details', function(req, res, next) {
     res.type('json');
     var params = {
-        aed: req.query.aed
+        aed: req.query.aed,
+        rec_id: req.query.rec_id
     };
     if (req.query.perSite) params.perSite = req.query.perSite;
     if (req.query.perDate) params.perDate = req.query.perDate;

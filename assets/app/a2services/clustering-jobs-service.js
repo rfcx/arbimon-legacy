@@ -42,6 +42,9 @@ angular.module('a2.srv.clustering-jobs', [
             if (opts.aed) {
                 config.params.aed = opts.aed;
             }
+            if (opts.rec_id) {
+                config.params.rec_id = opts.rec_id;
+            }
             if (opts.search && opts.search == 'per_site')  {
                 config.params.perSite = true;
             }

@@ -29,6 +29,7 @@ Resolved issues:
 - CE-729 Remove redundant icon in cluster selector
 - Fix sorting issue on the Grid View page
 - CE-723 Selected visualizer link in Grid View opens ROI in the Visualizer
+- CE-724 Can view results from specific AED job if multiple have been run on the same playlist
 
 Performance improvements:
 
