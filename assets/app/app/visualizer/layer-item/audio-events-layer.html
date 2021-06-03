@@ -7,7 +7,7 @@
         <div ng-if="!layer.audio_events.audioEvents || !layer.audio_events.clusteringEvents" class="row ng-cloak text-center py-2">
             <i class="fa fa-spinner fa-spin" style="font-size: 16px;"></i>
         </div>
-        <div ng-if="layer.audio_events.audioEvents && !layer.audio_events.audioEvents.length && !layer.audio_events.clusteringEvents && layer.audio_events.clusteringEvents.length">
+        <div ng-if="layer.audio_events.audioEvents && !layer.audio_events.audioEvents.length && layer.audio_events.clusteringEvents && !layer.audio_events.clusteringEvents.length">
             There are no audio events in this {{ layer.audio_events.isPlaylist? 'playlist' : 'recording' }}.
         </div>
         <div ng-if="layer.audio_events.audioEvents && layer.audio_events.clusteringEvents">
