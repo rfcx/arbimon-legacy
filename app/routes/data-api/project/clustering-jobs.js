@@ -68,7 +68,7 @@ router.get('/:recId/audio/:aedId', function(req, res, next) {
 router.get('/:job_id/clustering-details', function (req, res, next) {
     res.type('json');
 
-    var uri = `audio_events/${config('aws').env}/clustering/${req.params.job_id}/${req.params.job_id}.json`;
+    var uri = `audio_events/${config('aws').env}/clustering/${req.params.job_id}/${req.params.job_id}_${req.query.type? req.query.type : 'lda'}.json`;
     if (!s3) {
         s3 = new AWS.S3();
     }

@@ -1,11 +1,17 @@
 # Arbimon Release Notes
 
-## v3.0.26 - June XX, 2021
+## v3.0.27 - June XX, 2021
+
+New features:
+
+- CE-731 Add button to select Clustering Visualization Type
+
+## v3.0.26 - June 01, 2021
 
 Resolved issues:
 - CE-827 Set the limit to the number of boxes show on one Grid View page
 
-## v3.0.25 - May XX, 2021
+## v3.0.25 - May 28, 2021
 
 New features:
 
