@@ -32,6 +32,10 @@ router.get('/alive', function(req, res, next) { // for health checks
 
 router.use('/', login);
 
+router.get('/home', function(req, res) {
+    res.redirect('/');
+});
+
 router.get('/support', function(req, res) {
     res.redirect(config('hosts').support);
 });
