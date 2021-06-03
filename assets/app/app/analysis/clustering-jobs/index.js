@@ -554,7 +554,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 aed_job: {},
                 params: {
                     minPoints: 2,
-                    distanceThreshold: 10
+                    distanceThreshold: 0.1
                 }
             };
 
@@ -576,13 +576,13 @@ angular.module('a2.analysis.clustering-jobs', [
                     name: this.data.name,
                     aed_job: this.data.aed_job,
                     params: this.data.params
-                }).then(function(clusteringModel) {
+                }).then((function(clusteringModel) {
                     this.loading.saving = false;
                     $modalInstance.close({create:true, clusteringModel: clusteringModel});
-                }).catch(notify.serverError);
+                }).bind(this));
             } catch(error) {
                 this.loading.saving = false;
-                console.error("a2ClusteringJobs.create error: " + error);
+                console.error(error);
             }
         },
         cancel: function (url) {
