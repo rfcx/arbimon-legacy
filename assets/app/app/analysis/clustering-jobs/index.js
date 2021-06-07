@@ -112,6 +112,17 @@ angular.module('a2.analysis.clustering-jobs', [
     $scope.infopanedata = '';
     $scope.selectedCluster = null;
     var timeout;
+    $scope.lists = {
+        types: [
+            { value: 'lda', text: 'LDA' },
+            { value: 'umap', text: 'UMAP' },
+        ]
+    };
+
+    $scope.selectedType = $scope.lists.types[0];
+    $scope.onTypeSelect = function(type) {
+        getClusteringDetails(type.value);
+    }
     $scope.decrementClusters = function() {
         if ($scope.selectedCluster === 1) return
         $scope.selectedCluster -= 1;
@@ -148,14 +159,14 @@ angular.module('a2.analysis.clustering-jobs', [
             }
         }, 2000);
     };
-    var getClusteringDetails = function() {
+    var getClusteringDetails = function(type) {
         a2ClusteringJobs.getJobDetails($scope.clusteringJobId).then(function(data) {
             if (data) $scope.job_details = data;
         }).catch(err => {
             console.log(err);
         });
         // get json file with aed_id, clusters x, y points
-        a2ClusteringJobs.getClusteringDetails($scope.clusteringJobId).then(function(res) {
+        a2ClusteringJobs.getClusteringDetails({job_id: $scope.clusteringJobId, type: type}).then(function(res) {
             $scope.loading = false;
             if (res && res.aed_id) {
                 $scope.countAudioEventDetected = res.aed_id.length;
@@ -471,7 +482,7 @@ angular.module('a2.analysis.clustering-jobs', [
             size        : 'sm',
             resolve     : {
                 data : function() { return {
-                    recording: $scope.clusters[0].records[0].rec_id,
+                    recording: Object.values($scope.clusters)[0].records[0].rec_id,
                     frequency: $scope.frequencyFilter
                 }; }
             }
@@ -543,7 +554,7 @@ angular.module('a2.analysis.clustering-jobs', [
                 aed_job: {},
                 params: {
                     minPoints: 2,
-                    distanceThreshold: 10
+                    distanceThreshold: 0.1
                 }
             };
 
@@ -565,13 +576,13 @@ angular.module('a2.analysis.clustering-jobs', [
                     name: this.data.name,
                     aed_job: this.data.aed_job,
                     params: this.data.params
-                }).then(function(clusteringModel) {
+                }).then((function(clusteringModel) {
                     this.loading.saving = false;
                     $modalInstance.close({create:true, clusteringModel: clusteringModel});
-                }).catch(notify.serverError);
+                }).bind(this));
             } catch(error) {
                 this.loading.saving = false;
-                console.error("a2ClusteringJobs.create error: " + error);
+                console.error(error);
             }
         },
         cancel: function (url) {

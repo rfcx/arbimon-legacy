@@ -92,8 +92,7 @@ var ClusteringJobs = {
             options = {};
         }
         select.push(
-            "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id",
-            "A.`uri_image` as `uri`"
+            "A.aed_id, A.time_min, A.time_max, A.frequency_min, A.frequency_max, A.recording_id, A.`uri_image` as `uri`"
         );
 
         if (options.aed) {
@@ -110,6 +109,13 @@ var ClusteringJobs = {
             select.push('C.`date_created`');
             tables.push("JOIN job_params_audio_event_clustering C ON A.job_id = C.audio_event_detection_job_id");
             groupby.push('A.aed_id');
+        }
+
+        if (options.rec_id) {
+            select.push("PL.`name` as `playlist_name`, PL.`playlist_id`");
+            tables.push('JOIN playlist_aed PLE ON A.aed_id = PLE.aed_id');
+            tables.push('JOIN playlists PL ON PLE.playlist_id = PL.playlist_id');
+            constraints.push('A.recording_id = ' + dbpool.escape(options.rec_id));
         }
 
         return dbpool.query(
@@ -232,7 +238,7 @@ var ClusteringJobs = {
         return q.ninvoke(joi, 'validate', payload, ClusteringJobs.JOB_SCHEMA)
             .then(() => dbpool.query(
                 jobQuery, [
-                    9, data.project_id, data.user_id, 'processing', 0, 0, 1, 0, 0
+                    9, data.project_id, data.user_id, 'processing', 0, 0, 4, 0, 0
                 ]
             ).then(result => {
                 data.id = job_id = result.insertId;
@@ -257,33 +263,6 @@ var ClusteringJobs = {
                     aedJobId: `${data.audioEventDetectionJob.jobId}`
                 });
                 await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs.post({ body: jobParam });
-                // TODO: remove when clustering job will update db by itself
-                return new Promise((resolve, reject) => {
-                    let counter = 0
-                    let interval = setInterval(async () => {
-                        // clear interval in 2 minutes
-                        if (counter === 24) {
-                            clearInterval(interval)
-                            reject(new Error(`${data.kubernetesJobName} processing time exceeded.`))
-                        }
-                        const status = await k8sClient.apis.batch.v1.namespaces(k8sConfig.namespace).jobs(data.kubernetesJobName).status.get();
-                        console.log('status', status)
-                        if (status && status.body && status.body.status &&  status.body.status.completionTime) {
-                            clearInterval(interval)
-                            resolve()
-                        }
-                        counter++
-                    }, 5000)
-                })
-            }).then(() => {
-                var jobdata = {
-                    'progress': 1,
-                    'status': 'completed',
-                    'completed': true,
-                    'progress_steps': 1,
-                    'ncpu': 1
-                }
-                ClusteringJobs.updateProgressOfClusteringJob(jobdata, job_id);
             }).then(() => {
                 return job_id;
             })
@@ -291,19 +270,6 @@ var ClusteringJobs = {
             console.log('APIError', err)
             throw new APIError(err.message);
         }).nodeify(callback);
-    },
-
-    updateProgressOfClusteringJob: function(jobdata, job_id){
-        return jobdata ? dbpool.query(
-            "UPDATE jobs\n" +
-            "SET progress = ?, last_update = NOW(), state = ?, progress_steps = ?, ncpu = ?\n" +
-            "WHERE job_id = ?\n", [
-            jobdata['progress'],
-            jobdata['status'],
-            jobdata['progress_steps'],
-            jobdata['ncpu'],
-            job_id
-        ]) : Promise.resolve();
     },
 };
 

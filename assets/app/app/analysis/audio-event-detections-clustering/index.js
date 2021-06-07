@@ -13,7 +13,7 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
             templateUrl: '/app/analysis/audio-event-detections-clustering/list.html'
         })
 })
-.controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering, Project) {
+.controller('AudioEventDetectionsClusteringModelCtrl' , function($scope, $modal, $location, JobsData, notify, a2AudioEventDetectionsClustering, Project, $localStorage, $window) {
     $scope.loadAudioEventDetections = function() {
         $scope.loading = true;
         $scope.projectUrl = Project.getUrl();
@@ -31,6 +31,11 @@ angular.module('a2.analysis.audio-event-detections-clustering', [
     };
 
     $scope.loadAudioEventDetections();
+
+    $scope.onSelectedJob = function(playlist_id, job_id) {
+        $localStorage.setItem('analysis.audioEventJob',  job_id);
+        $window.location.href = '/project/'+Project.getUrl()+'/visualizer/playlist/'+playlist_id;
+    }
 
     $scope.createNewClusteringModel = function () {
       var modalInstance = $modal.open({

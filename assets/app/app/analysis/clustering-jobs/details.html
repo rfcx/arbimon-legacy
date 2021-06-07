@@ -8,13 +8,11 @@
     <div ng-if="job_details && showDetailsPage()" class="panel-body a2-page-header clearfix">
         <div class="row row-flex flex-align-top">
             <div class="col-sm-6 flex-self-align-top">
-                <div class="row row-flex flex-align-top">
-                    Job Name: {{ job_details.name }}
-                    <br>User: {{ job_details.user }}
-                    <br>Date: {{ job_details.timestamp | moment : 'lll' }}
-                    <br>Number of audio event detected: {{ countAudioEventDetected || 'no data' }}
-                    <br>Number of clusters detected: {{ countClustersDetected || 'no data' }}
-                </div>
+                Job Name: {{ job_details.name }}
+                <br>User: {{ job_details.user }}
+                <br>Date: {{ job_details.timestamp | moment : 'lll' }}
+                <br>Number of audio event detected: {{ countAudioEventDetected || 'no data' }}
+                <br>Number of clusters detected: {{ countClustersDetected || 'no data' }}
             </div>
             <div class="col-sm-6 flex-self-align-bottom panel-body">
                 <div class="pull-right">
@@ -32,10 +30,20 @@
                 </div>
                 <div class="pull-right">
                     <div class="btn-group btn-group-margin">
-                        <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!clusters[0].records[0]">
+                        <button class="btn btn-sm btn-default" ng-class="audio_player.freq_filter ? 'active' : ''" ng-click="openFreqFilterModal()" ng-disabled="!clusters.frequency && !clusters.frequency.freq_high && !clusters.frequency.freq_high.length">
                             <i class="fa fa-filter" ></i>
                             <span class="fa fa-ellipsis-h fa-concat-sub"></span>
                         </button>
+                    </div>
+                    <div class="btn-group btn-group-margin">
+                        <ui-select ng-model="selectedType" theme="bootstrap" class="btn-group-item border-left-radius" on-select="onTypeSelect($select.selected)">
+                            <ui-select-match class="right-corners">
+                                <i></i>{{$select.selected.text}}
+                            </ui-select-match>
+                            <ui-select-choices style="z-index: 10000;" repeat="$item in lists.types | filter:$select.search">
+                                <i ng-class="$item.class"></i> {{$item.text}}
+                            </ui-select-choices>
+                        </ui-select>
                     </div>
                 </div>
             </div>

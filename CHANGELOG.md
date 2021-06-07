@@ -1,18 +1,39 @@
 # Arbimon Release Notes
 
-## v3.0.26 - June XX, 2021
+## v3.0.27 - June 07, 2021
 
 Resolved issues:
-- CE-827 Set the limit to the number of boxes show on one Grid View page
 
-## v3.0.25 - May XX, 2021
+- CE-851 Fix issue with recordings names uploaded using Uploader App
+
+## v3.0.27 - June 07, 2021
+
+New features:
+
+- CE-731 Add button to select Clustering Visualization Type
+- CE-824 Replace monster profile picture with RFCx profile pic if available
+- CE-724 Can view results from specific AED job if multiple have been run on the same playlist
+
+Resolved issues:
+
+- CE-788 Fix export data in the Data Recordings tab
+- Hotfix styles in the home page
+
+## v3.0.26 - June 01, 2021
 
 New features:
 
 - CE-504 Revamp Arbimon homepage
-- CE-742 The user can only add users to a project who are RFCx-connected
 - CE-763 Add info to top highlighted project cards
-- CE-742 User can only add users to a project who are RFCx-connected
+
+Resolved issues:
+- CE-827 Set the limit to the number of boxes show on one Grid View page
+
+## v3.0.25 - May 28, 2021
+
+New features:
+
+- CE-742 The user can only add users to a project who are RFCx-connected
 
 Resolved issues:
 
