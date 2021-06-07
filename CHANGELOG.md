@@ -18,6 +18,7 @@ Resolved issues:
 
 - CE-788 Fix export data in the Data Recordings tab
 - Hotfix styles in the home page
+- Hotfix creating a new playlist after filtering species with presence validations
 
 ## v3.0.26 - June 01, 2021
 
