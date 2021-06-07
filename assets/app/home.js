@@ -58,7 +58,8 @@ angular.module('a2.home', [
         if (isFeatured) {
             config.params.featured = true;
         }
-        if (!this.isAnonymousGuest && !$scope.isExplorePage && !$scope.search) {
+        var isMyProjects = !this.isAnonymousGuest && !$scope.isExplorePage && !$scope.search;
+        if (isMyProjects) {
             config.params.type = 'my'
         }
         var psCache = getProjectSelectCache();
@@ -92,7 +93,7 @@ angular.module('a2.home', [
                         })
                     })
                 }
-                this.projects = data.filter(item => item.featured !== 2);
+                this.projects = isMyProjects? data : data.filter(item => item.featured !== 2);
             }
             this.previousSearch = this.search
         }.bind(this))

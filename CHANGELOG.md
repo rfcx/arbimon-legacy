@@ -5,6 +5,7 @@
 Resolved issues:
 
 - CE-851 Fix issue with recordings names uploaded using Uploader App
+- CE-853 Display featured projects on the My Projects tab if the user has the role in this project
 
 ## v3.0.27 - June 07, 2021
 
