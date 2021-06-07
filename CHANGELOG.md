@@ -12,6 +12,7 @@ Resolved issues:
 
 - CE-788 Fix export data in the Data Recordings tab
 - Hotfix styles in the home page
+- CE-837 Use pagination instead of dropdown on Pattern Matching details page
 
 ## v3.0.26 - June 01, 2021
 
