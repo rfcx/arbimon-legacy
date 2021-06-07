@@ -1230,7 +1230,7 @@ var Recordings = {
                             _1.filename = _1.meta ? Recordings.__parse_filename_data(_1.meta) : null;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!_1.legacy) {
-                                _1.file = `${moment.utc(_1.datetime_utc ? _1.datetime_utc : _1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
+                                _1.file = `${moment.utc(_1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
                             }
                         }
                     } else {

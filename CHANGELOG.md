@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.27 - June XX, 2021
+## v3.0.27 - June 07, 2021
+
+Resolved issues:
+
+- CE-851 Fix issue with recordings names uploaded using Uploader App
+
+## v3.0.27 - June 07, 2021
 
 New features:
 
