@@ -305,7 +305,7 @@ var Playlists = {
                     data.params.sortBy = 'site_id, datetime'
                     data.params.output = ['list', 'sql']
                     const sqlParts = await model.recordings.findProjectRecordings(data.params)
-                    await query(`INSERT INTO playlist_recordings(playlist_id, recording_id) SELECT DISTINCT ${playlistId}, r.recording_id ${sqlParts[1]} ${sqlParts[2]}`)
+                    await query(`INSERT INTO playlist_recordings(recording_id, playlist_id) SELECT DISTINCT r.recording_id, ${playlistId} ${sqlParts[1]} ${sqlParts[2]}`)
                 }
                 await db.commit()
                 await db.release()
