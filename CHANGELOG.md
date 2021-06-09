@@ -2,6 +2,10 @@
 
 ## v3.0.27 - June 07, 2021
 
+New features:
+
+- CE-715 Add tool tip over recording column name
+
 Resolved issues:
 
 - CE-851 Fix issue with recordings names uploaded using Uploader App
