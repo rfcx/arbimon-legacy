@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-791 Modify export feature
+
 ## v3.0.27 - June 07, 2021
 
 Resolved issues:
