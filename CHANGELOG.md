@@ -5,6 +5,7 @@
 New features:
 
 - CE-715 Add tool tip over recording column name
+- CE-884 Remove monster profile picture on Project Users page
 
 Resolved issues:
 
