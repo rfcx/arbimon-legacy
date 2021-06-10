@@ -17,7 +17,8 @@ angular.module('a2.directive.a2-table', [
                 width: clone.attr('width'),
                 filter: clone.attr('filter') !== undefined ? (clone.attr('filter') || clone.attr('key')) : undefined,
                 content: clone.html(),
-                show: clone.attr('show')
+                show: clone.attr('show'),
+                tooltip: clone.attr('tooltip')
             };
         });
     }
@@ -64,7 +65,7 @@ angular.module('a2.directive.a2-table', [
             options.selectExpand = compileSelectExpand(element, options);
             options.fields.forEach(function(field, index){
                 tplHead.append(
-                    angular.element('<th ng-click="a2TableController.sortBy(' + index+ ')" class="cs-pointer"' + (field && field.show !== undefined ? ' ng-if="' + field.show + '"' : '') + '></th>').addClass(field.className).text(field.title).append(
+                    angular.element('<th ng-click="a2TableController.sortBy(' + index+ ')" class="cs-pointer"' + (field && field.tooltip !== undefined ? ' title="' + field.tooltip + '"' : '') + (field && field.show !== undefined ? ' ng-if="' + field.show + '"' : '') + '></th>').addClass(field.className).text(field.title).append(
                         field.key ?
                         '    <i ng-if="sortKey == ' + index + '" class="fa" ng-class="reverse ? \'fa-chevron-up\': \'fa-chevron-down\'"></i>\n' :
                         ''
