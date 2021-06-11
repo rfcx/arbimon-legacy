@@ -2,11 +2,12 @@
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="!selectedClusteringJobId">
         <h3>
             Clustering Jobs
-            <a class="btn btn-sm btn-default"
+            <span class="beta-badge">BETA</span>
+            <a class="btn btn-sm btn-default ml-2"
                 tooltip="Create Clustering Job"
                 tooltip-placement="right"
                 ng-click="createNewClusteringJob() | trackEvent:'Analysis-ClusteringModel-List':'Create new Clustering Job'" >
-                <i class="fa fa-plus" ></i>
+                <i class="fa fa-plus mr-1" ></i> New Clustering Jobs
             </a>
         </h3>
         <loader ng-if="loading"></loader>

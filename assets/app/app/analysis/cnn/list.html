@@ -1,12 +1,13 @@
 <div class="row">
     <div class="col-sm-12 col-lg-11 padded-view-div" ng-if="!selectedCNNId">
         <h3>
-            Convolutional Neural Networks
-            <a class="btn btn-sm btn-default"
+            Convolutional Neural Networks 
+            <span class="beta-badge">BETA</span>
+            <a class="btn btn-sm btn-default ml-2"
                 tooltip="Create CNN"
                 tooltip-placement="right"
                 ng-click="createNewCNN() | trackEvent:'Analysis-CNN-List':'Create new CNN'" >
-                <i class="fa fa-plus" ></i>
+                <i class="fa fa-plus mr-1" ></i> New CNN Analysis
             </a>
         </h3>
 
