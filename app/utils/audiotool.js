@@ -44,7 +44,6 @@ var audiotools = {
             debug('sox ended with code : ', code);
             debug('stdout : \n  >> ', stdout.value.replace(/\n/g, '\n  >> '));
             debug('stderr : \n  >> ', stderr.value.replace(/\n/g, '\n  >> '));
-            console.log('\n\n-----stdout.value, stderr.value------', code, stdout.value, stderr.value);
             callback(code, stdout.value, stderr.value);
         });
     },
@@ -177,7 +176,7 @@ var audiotools = {
         var args = [];
         args.push(source_path);
         args.push('-n');
-        args.push('remix');
+        args.push('remix'); // 'remix -' performs a mix-down of all input channels to mono
         args.push('-');
         if(options.maxfreq) {
             args.push('rate', (options.maxfreq/2)|0); // maximum frequency to show in spectrogram
