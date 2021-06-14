@@ -5,6 +5,7 @@
 Performance improvements:
 
 - Improve project tags query
+- Load full list of sites for Pattern Matching ROIs list instead of playlist-related sites
 
 ## v3.0.27-hotfix.0 - June 14, 2021
 
