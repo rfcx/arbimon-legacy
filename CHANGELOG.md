@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.27-hotfix.1 - June 15, 2021
+
+Performance improvements:
+
+- Improve project tags query
+
 ## v3.0.27-hotfix.0 - June 14, 2021
 
 Resolved issues:
