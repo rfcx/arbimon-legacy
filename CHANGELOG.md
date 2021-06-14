@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.27-hotfix.0 - June 14, 2021
+
+Resolved issues:
+
+- CE-935 Disable denorm-* calculation for pattern matching rois on best per site / best per day queries
+
 ## v3.0.27 - June 07, 2021
 
 Resolved issues:
