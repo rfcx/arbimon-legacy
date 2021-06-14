@@ -244,10 +244,11 @@ var Recordings = {
                     return [[], []];
                 } else {
                     const base = `SELECT ${selection} FROM recordings R JOIN sites S ON S.site_id = ? WHERE R.site_id = ?`
-                    const replacements = [recording.site_id, recording.site_id, recording.datetime]
+                    const replacements = [recording.site_id, recording.site_id, recording.datetime, recording.recording_id];
                     const proms = [
-                        dbpool.query({ sql: `${base} AND datetime < ? ORDER BY datetime DESC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements),
-                        dbpool.query({ sql:`${base} AND datetime >= ? ORDER BY datetime ASC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements)
+                        dbpool.query({ sql: `${base} AND datetime <= ? AND recording_id != ? ORDER BY datetime DESC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements),
+                        dbpool.query({ sql: `${base}  AND datetime = ? AND recording_id = ?`, typeCast: sqlutil.parseUtcDatetime }, replacements),
+                        dbpool.query({ sql:`${base} AND datetime >= ? AND recording_id != ? ORDER BY datetime ASC LIMIT 4`, typeCast: sqlutil.parseUtcDatetime }, replacements),
                     ]
                     return Q.all(proms);
                 }

@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-751 Display selected recording if the site has many recordings with the similar datetime
+
 ## v3.0.29 - June 10, 2021
 
 Resolved issues:
