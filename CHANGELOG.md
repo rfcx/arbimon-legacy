@@ -1,14 +1,6 @@
 # Arbimon Release Notes
 
-## v3.0.29 - June 10, 2021
-
-Resolved issues:
-
-- CE-853 Display featured projects on the My Projects tab if the user has the role in this project
-- CE-837 Use pagination instead of dropdown on Pattern Matching details page
-- Show correct year in the footer (now based on js code)
-
-## v3.0.28 - June 07, 2021
+## v3.0.29 - June 14, 2021
 
 New features:
 
@@ -17,7 +9,16 @@ New features:
 
 Resolved issues:
 
-- CE-851 Fix issue with recordings names uploaded using Uploader App
+- CE-853 Display featured projects on the My Projects tab if the user has the role in this project
+- CE-837 Use pagination instead of dropdown on Pattern Matching details page
+- Show correct year in the footer (now based on js code)
+- CE-928 Do not cut templates in half or displaying other regions of the spectrogram
+
+## v3.0.28 - June 07, 2021
+
+Resolved issues:
+
+- CE-875 Hotfix creating a new playlist after filtering species with presence validations
 
 ## v3.0.27 - June 07, 2021
 
