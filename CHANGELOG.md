@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.30 - June XX, 2021
+
+- CE-880 Beta tag on CNN, AE & clustering
+- CE-689 Map should default back to showing all pins for all sites
+
 ## v3.0.29 - June 15, 2021
 
 Resolved issues:
@@ -7,7 +12,6 @@ Resolved issues:
 - CE-853 Display featured projects on the My Projects tab if the user has the role in this project
 - CE-837 Use pagination instead of dropdown on Pattern Matching details page
 - Show correct year in the footer (now based on js code)
-- CE-689 Map should default back to showing all pins for all sites
 
 ## v3.0.28-hotfix.0 - June 14, 2021
 
