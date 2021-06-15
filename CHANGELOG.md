@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-790 Add pattern matching filter to view top 200 scores per each site
+
 ## v3.0.29 - June 10, 2021
 
 Resolved issues:

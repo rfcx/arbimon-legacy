@@ -178,6 +178,7 @@ angular.module('a2.analysis.patternmatching', [
             {value:'best_per_site_day', text:'Best per Site, Day', description: 'Show the best scored roi per site and day.'},
             {value:'by_score', text:'Score', description: 'Show all Region of Interest ranked by score.'},
             {value:'by_score_per_site', text:'Score per Site', description: 'Show all Region of Interest ranked by score per site.'},
+            {value:'by_scores_per_site', text:'200 Top Scores per Site', description: 'Show Top 200 Region of Interest ranked by score per each site.'}
         ],
         selection: [
             {value:'all', text:'All'},
@@ -242,6 +243,10 @@ angular.module('a2.analysis.patternmatching', [
         var bookmark = 'site-' + site.site_id;
         $anchorScroll.yOffset = $('.a2-page-header').height() + 60;
         $anchorScroll(bookmark)
+    },
+
+    isTopRoisResults: function(){
+        return this.search && this.search.value === 'by_scores_per_site';
     },
 
     loadPage: function(pageNumber){
