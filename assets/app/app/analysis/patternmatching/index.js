@@ -210,7 +210,6 @@ angular.module('a2.analysis.patternmatching', [
     onSearchChanged: function(){
         this.selected.page = 1;
         this.loadPage(1);
-        this.loadSiteIndex();
     },
 
     setupExportUrl: function(){
