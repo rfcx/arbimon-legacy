@@ -1,13 +1,23 @@
 # Arbimon Release Notes
 
-## v3.0.29 - June 10, 2021
+## v3.0.30 - June XX, 2021
+
+- CE-880 Beta tag on CNN, AE & clustering
+- CE-689 Map should default back to showing all pins for all sites
+
+## v3.0.29 - June 15, 2021
 
 Resolved issues:
 
 - CE-853 Display featured projects on the My Projects tab if the user has the role in this project
 - CE-837 Use pagination instead of dropdown on Pattern Matching details page
 - Show correct year in the footer (now based on js code)
-- CE-880 Beta tag on CNN, AE & clustering
+
+## v3.0.28-hotfix.0 - June 14, 2021
+
+Resolved issues:
+
+- CE-935 Disable denorm-* calculation for pattern matching rois on best per site / best per day queries
 
 ## v3.0.28 - June 07, 2021
 
@@ -15,6 +25,8 @@ New features:
 
 - CE-715 Add tool tip over recording column name
 - CE-884 Remove monster profile picture on Project Users page
+
+## v3.0.27 - June 07, 2021
 
 Resolved issues:
 
