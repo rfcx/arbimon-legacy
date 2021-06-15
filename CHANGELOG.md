@@ -1,12 +1,24 @@
 # Arbimon Release Notes
 
-- CE-725 Fixed issue with rois audio playback on the Grid View page
-
 ## v3.0.30 - June XX, 2021
 
-- CE-880 Beta tag on CNN, AE & clustering
+Resolved issues:
+
+- CE-725 Fixed issue with rois audio playback on the Grid View page
 - CE-689 Map should default back to showing all pins for all sites
 - CE-928 Do not cut templates in half or displaying other regions of the spectrogram
+
+Other:
+
+- CE-880 Beta tag on CNN, AE & clustering
+
+## v3.0.29-hotfix.0 - June 16, 2021
+
+Performance improvements:
+
+- Improve project tags query
+- Load full list of sites for Pattern Matching ROIs list instead of playlist-related sites
+- Re-implement Pattern Matching Best Per Site and Best Per site Day queries
 
 ## v3.0.29 - June 14, 2021
 

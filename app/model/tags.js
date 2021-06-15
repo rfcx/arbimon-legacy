@@ -2,6 +2,7 @@ var q = require('q');
 var dbpool = require('../utils/dbpool');
 var APIError = require('../utils/apierror');
 var projects = require('./projects');
+var recordings = require('./recordings')
 
 /** Tags model.
  *  Holds all functions for manipulating tags.
@@ -151,9 +152,7 @@ tags.resourceDefs.recording = {
         if(options && options.project){
             const sites = await projects.getProjectSites(options.project)
             if (sites && sites.length) {
-                tables.push('JOIN recordings R ON R.recording_id = RT.recording_id');
-                constraints.push('R.site_id IN (' + dbpool.escape(sites.map(s => s.id)) + ')');
-                constraints.push("R.datetime > '1970-01-01 00:00:00'");
+                constraints.push('RT.site_id IN (' + dbpool.escape(sites.map(s => s.id)) + ')');
             }
         }
         return q.ninvoke(dbpool, 'queryHandler',
@@ -191,11 +190,15 @@ tags.resourceDefs.recording = {
             ).get(0).get(0);
         });
 
-        return tagIdPromise.then(function(tagId){
+        return tagIdPromise.then(async function(tagId){
+            const recording = await recordings.findByIdAsync(id)
+            if (!recording || !recording.length) {
+                throw new Error('Recording not found')
+            }
             return q.ninvoke(dbpool, 'queryHandler',
-                "INSERT INTO recording_tags(recording_id, tag_id, user_id, datetime, t0, f0, t1, f1)\n"+
-                "VALUES (?, ?, ?, NOW(), ?, ?, ?, ?)", [
-                    id, tagId, userId,
+                "INSERT INTO recording_tags(recording_id, site_id, tag_id, user_id, datetime, t0, f0, t1, f1)\n"+
+                "VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)", [
+                    id, recording[0].site_id, tagId, userId,
                     tag.t0 || null, tag.f0 || null,
                     tag.t1 || null, tag.f1 || null
                 ]
