@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+## v3.0.30 - June XX, 2021
+
 New features:
 
 - CE-791 Changed export attributes for the recording data
@@ -9,9 +11,19 @@ Resolved issues:
 
 - CE-791 Fixed MySQL issue to process more than 61 validations in the user selection
 - CE-791 Fixed MySQL issue with ordering from the default site to datetime if the site attribute is excluded
+- CE-689 Map should default back to showing all pins for all sites
+- CE-928 Do not cut templates in half or displaying other regions of the spectrogram
 
+Other:
 
-## v3.0.29 - June 10, 2021
+- CE-880 Beta tag on CNN, AE & clustering
+
+## v3.0.29 - June 14, 2021
+
+New features:
+
+- CE-715 Add tool tip over recording column name
+- CE-884 Remove monster profile picture on Project Users page
 
 New features:
 
@@ -23,11 +35,17 @@ Resolved issues:
 - CE-837 Use pagination instead of dropdown on Pattern Matching details page
 - Show correct year in the footer (now based on js code)
 
+## v3.0.28-hotfix.0 - June 14, 2021
+
+Resolved issues:
+
+- CE-935 Disable denorm-* calculation for pattern matching rois on best per site / best per day queries
+
 ## v3.0.28 - June 07, 2021
 
 Resolved issues:
 
-- CE-851 Fix issue with recordings names uploaded using Uploader App
+- CE-875 Hotfix creating a new playlist after filtering species with presence validations
 
 ## v3.0.27 - June 07, 2021
 
