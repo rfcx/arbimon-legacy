@@ -1,6 +1,6 @@
 # Arbimon Release Notes
 
-## v3.0.29 - June 10, 2021
+## v3.0.29 - June 15, 2021
 
 Resolved issues:
 
@@ -8,12 +8,20 @@ Resolved issues:
 - CE-837 Use pagination instead of dropdown on Pattern Matching details page
 - Show correct year in the footer (now based on js code)
 
+## v3.0.28-hotfix.0 - June 14, 2021
+
+Resolved issues:
+
+- CE-935 Disable denorm-* calculation for pattern matching rois on best per site / best per day queries
+
 ## v3.0.28 - June 07, 2021
 
 New features:
 
 - CE-715 Add tool tip over recording column name
 - CE-884 Remove monster profile picture on Project Users page
+
+## v3.0.27 - June 07, 2021
 
 Resolved issues:
 
