@@ -4,8 +4,14 @@
 
 - CE-880 Beta tag on CNN, AE & clustering
 - CE-689 Map should default back to showing all pins for all sites
+- CE-928 Do not cut templates in half or displaying other regions of the spectrogram
 
-## v3.0.29 - June 15, 2021
+## v3.0.29 - June 14, 2021
+
+New features:
+
+- CE-715 Add tool tip over recording column name
+- CE-884 Remove monster profile picture on Project Users page
 
 Resolved issues:
 
@@ -21,16 +27,9 @@ Resolved issues:
 
 ## v3.0.28 - June 07, 2021
 
-New features:
-
-- CE-715 Add tool tip over recording column name
-- CE-884 Remove monster profile picture on Project Users page
-
-## v3.0.27 - June 07, 2021
-
 Resolved issues:
 
-- CE-851 Fix issue with recordings names uploaded using Uploader App
+- CE-875 Hotfix creating a new playlist after filtering species with presence validations
 
 ## v3.0.27 - June 07, 2021
 
