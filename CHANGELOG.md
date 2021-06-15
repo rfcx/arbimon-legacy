@@ -1,5 +1,12 @@
 # Arbimon Release Notes
 
+## v3.0.29-hotfix.0 - June 15, 2021
+
+Performance improvements:
+
+- Improve project tags query
+- Load full list of sites for Pattern Matching ROIs list instead of playlist-related sites
+
 ## v3.0.29 - June 15, 2021
 
 Resolved issues:
