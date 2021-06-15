@@ -6,7 +6,7 @@ Performance improvements:
 
 - Improve project tags query
 - Load full list of sites for Pattern Matching ROIs list instead of playlist-related sites
-- Re-implement Pattern Matching Best Per Site query
+- Re-implement Pattern Matching Best Per Site and Best Per site Day queries
 
 ## v3.0.29 - June 15, 2021
 

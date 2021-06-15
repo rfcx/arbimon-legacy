@@ -496,7 +496,7 @@ var PatternMatchings = {
         );
     },
 
-    getRoisBestPerSiteForId (pmId) {
+    getRoisBestPerSiteForId (pmId, byDay) {
         return dbpool.query(`
             SELECT S.site_id, S.name as site, PMR.score,
                 R.uri as recording,
@@ -512,16 +512,20 @@ var PatternMatchings = {
                 PMR.validated
             FROM sites S
             JOIN (
-                SELECT
-                    denorm_site_id, MAX(score) as score, recording_id, pattern_matching_roi_id,
-                    pattern_matching_id, denorm_recording_datetime, species_id, songtype_id,
-                    validated, uri, x1, y1, x2, y2
-                FROM pattern_matching_rois
-                WHERE pattern_matching_id = ?
-                GROUP BY denorm_site_id
+                SELECT pmr1.denorm_site_id, pmr1.score, pmr1.recording_id, pmr1.pattern_matching_roi_id,
+                    pmr1.pattern_matching_id, pmr1.denorm_recording_datetime, pmr1.species_id, pmr1.songtype_id,
+                    pmr1.validated, pmr1.uri, pmr1.x1, pmr1.y1, pmr1.x2, pmr1.y2
+                FROM pattern_matching_rois pmr1
+                INNER JOIN (
+                    SELECT MAX(score) as score, denorm_site_id${byDay? ', denorm_recording_date' : ''}
+                    FROM pattern_matching_rois
+                    WHERE pattern_matching_id = ?
+                    GROUP BY denorm_site_id${byDay? ', denorm_recording_date' : ''}
+                ) pmr2
+                ON pattern_matching_id = ? AND pmr1.denorm_site_id = pmr2.denorm_site_id ${byDay? 'AND pmr1.denorm_recording_date = pmr2.denorm_recording_date ' : ''} AND pmr1.score = pmr2.score
             ) PMR ON S.site_id = PMR.denorm_site_id
             JOIN recordings R ON PMR.recording_id = R.recording_id
-            ORDER BY S.name;`, [pmId])
+            ORDER BY S.name, R.datetime;`, [pmId, pmId])
         .then((pmrs) => {
             pmrs.forEach((pmr) => {
                 const d = pmr.datetime.toISOString()
