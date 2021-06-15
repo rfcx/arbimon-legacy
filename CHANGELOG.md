@@ -4,6 +4,7 @@
 
 - CE-880 Beta tag on CNN, AE & clustering
 - CE-689 Map should default back to showing all pins for all sites
+- Fix sort per cluster not working
 
 ## v3.0.29 - June 15, 2021
 
