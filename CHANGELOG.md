@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-725 Fixed issue with rois audio playback on the Grid View page
+
 ## v3.0.30 - June XX, 2021
 
 - CE-880 Beta tag on CNN, AE & clustering
