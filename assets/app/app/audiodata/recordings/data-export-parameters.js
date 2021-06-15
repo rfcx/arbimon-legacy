@@ -131,10 +131,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
     };
 
     this.checkSelectedValue = function(selected) {
-        var allValues = selected.find(function(row){ return row.value === -1 })
-        if (selected && selected && allValues) {
-            return true;
-        }
+        return selected && selected.find(function(row){ return row.value === -1 });
     }
 
     this.onSelected = function (selectedItem) {

@@ -1,6 +1,15 @@
 # Arbimon Release Notes
 
-- CE-791 Modify export feature
+New features:
+
+- CE-791 Changed export attributes for the recording data
+- CE-791 Added item `Select all species` to the validations dropdown
+
+Resolved issues:
+
+- CE-791 Fixed MySQL issue to process more than 61 validations in the user selection
+- CE-791 Fixed MySQL issue with ordering from the default site to datetime if the site attribute is excluded
+
 
 ## v3.0.27 - June 07, 2021
 

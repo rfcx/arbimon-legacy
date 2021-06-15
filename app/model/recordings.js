@@ -1407,7 +1407,7 @@ var Recordings = {
     },
 
     exportRecordingData: function(projection, filters){
-        var summaryBuilders = [];
+        let summaryBuilders = [];
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
             .then(async (all) => {
                 var projection_parameters = all;
