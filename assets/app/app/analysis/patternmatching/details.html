@@ -97,31 +97,15 @@
                         </div>
                     </div>
                     <div class="pull-right">
-                        <div class="btn-group btn-group-margin" ng-show="controller.total.pages > 1">
-                            <a class="btn btn-default" ng-click="controller.prev() | trackEvent:'Pattern Matching Details':'prevPage'">Previous</a>
-                            <ui-select class="btn-group-item border-radius" ng-model="controller.selected.page" theme="bootstrap"
-                                ng-change="controller.setPage($select.selected, true)"
-                            >
-                                <ui-select-match>
-                                    {{$select.selected | a2PageNumberToTitle}} of {{controller.total.pages}}
-                                </ui-select-match>
-                                <ui-select-choices repeat="$item in controller.total.pages | a2Range | filter:($select.search | a2PageTitleToNumber)">
-                                    {{$item | a2PageNumberToTitle}}
+                        <div class="btn-group btn-group-margin">
+                            <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width:4em;"
+                                ng-change="controller.setSiteBookmark($select.selected)">
+                                <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
+                                <ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
+                                    <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
                                 </ui-select-choices>
                             </ui-select>
-                            <a class="btn btn-default" ng-click="controller.next() | trackEvent:'Pattern Matching Details':'nextPage'">Next</a>
-						</div>
-
-						<div class="btn-group btn-group-margin">
-							<ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width:4em;"
-							ng-change="controller.setSiteBookmark($select.selected)"
-						>
-							<ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
-							<ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
-								<span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
-							</ui-select-choices>
-						</ui-select>
-						</div>
+                        </div>
 
                         <div class="btn-group btn-group-margin">
                             <button class="btn btn-default"
@@ -181,6 +165,21 @@
                     <img ng-src="{{ roi.uri }}" class="roi-img {{controller.thumbnailClass}}"/>
                 </span>
             </span>
+        </div>
+        <div class="row" ng-if="controller.patternMatching && controller.patternMatching.matches > 100">
+            <div class="col-sm-12 text-center">
+                <pagination
+                    total-items="controller.patternMatching.matches"
+                    ng-model="controller.selected.page"
+                    ng-change="controller.setPage(controller.selected.page, true)"
+                    class="pagination-sm"
+                    boundary-links="true"
+                    max-size="5"
+                    rotate="false"
+                    ng-disabled="controller.loading.rois"
+                    items-per-page="100">
+                </pagination>
+            </div>
         </div>
     </div>
 

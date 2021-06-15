@@ -11,7 +11,19 @@ Resolved issues:
 - CE-791 Fixed MySQL issue with ordering from the default site to datetime if the site attribute is excluded
 
 
-## v3.0.27 - June 07, 2021
+## v3.0.29 - June 10, 2021
+
+New features:
+
+- CE-715 Add tool tip over recording column name
+
+Resolved issues:
+
+- CE-853 Display featured projects on the My Projects tab if the user has the role in this project
+- CE-837 Use pagination instead of dropdown on Pattern Matching details page
+- Show correct year in the footer (now based on js code)
+
+## v3.0.28 - June 07, 2021
 
 Resolved issues:
 

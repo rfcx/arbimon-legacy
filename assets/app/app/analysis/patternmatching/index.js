@@ -150,7 +150,7 @@ angular.module('a2.analysis.patternmatching', [
         this.id = patternMatchingId;
         this.offset = 0;
         this.limit = 100;
-        this.selected = {roi_index:0, roi:null, page:0};
+        this.selected = { roi_index: 0, roi: null, page: 1 };
         this.siteIndex = [];
         this.total = {rois:0, pages:0};
         this.loading = {details: false, rois:false};
@@ -208,8 +208,8 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     onSearchChanged: function(){
-        this.selected.page = 0;
-        this.loadPage(0);
+        this.selected.page = 1;
+        this.loadPage(1);
         this.loadSiteIndex();
     },
 
@@ -240,17 +240,8 @@ angular.module('a2.analysis.patternmatching', [
 
     setSiteBookmark: function(site){
         var bookmark = 'site-' + site.site_id;
-        var sitePage = (site.offset / this.limit) | 0;
-
-        console.log({
-            site:site,
-            bookmark:bookmark,
-            sitePage:sitePage,
-        })
-        this.setPage(sitePage).then(function(){
-            $anchorScroll.yOffset = $('.a2-page-header').height() + 60;
-            $anchorScroll(bookmark)
-        });
+        $anchorScroll.yOffset = $('.a2-page-header').height() + 60;
+        $anchorScroll(bookmark)
     },
 
     loadPage: function(pageNumber){
@@ -260,7 +251,7 @@ angular.module('a2.analysis.patternmatching', [
         return a2PatternMatching.getRoisFor(
             this.id,
             this.limit,
-            pageNumber * this.limit,
+            (pageNumber - 1) * this.limit,
             { search: this.search && this.search.value }
         ).then((function(rois){
             this.loading.rois = false;
@@ -329,11 +320,10 @@ angular.module('a2.analysis.patternmatching', [
 
     setPage: function(page, force){
         if(this.total.rois <= 0){
-            this.selected.page = 0;
+            this.selected.page = 1;
             this.rois = [];
             return $q.resolve(this.rois);
         } else {
-            page = Math.max(0, Math.min(page, (this.total.rois / this.limit) | 0));
             if(page != this.selected.page || force){
                 this.selected.page = page;
                 return this.loadPage(page);
@@ -395,33 +385,7 @@ angular.module('a2.analysis.patternmatching', [
             this.patternMatching.absent += val_delta[0];
             this.patternMatching.present += val_delta[1];
         }).bind(this));
-    },
-
-    nextMatch: function(step) {
-        return this.setRoi(this.selected.roi_index + (step || 1));
-    },
-
-    prevMatch: function (step) {
-        return this.setRoi(this.selected.roi_index - (step || 1));
-    },
-
-    nextPage: function(step) {
-        return this.setPage(this.selected.page + (step || 1));
-    },
-
-    prevPage: function(step) {
-        return this.setPage(this.selected.page - (step || 1));
-    },
-
-    next: function(step) {
-        if(!step){step = 1;}
-        this.nextPage(step);
-    },
-
-    prev: function(step) {
-        if(!step){step = 1;}
-        return this.next(-step);
-    },
+    }
 
 }); this.initialize($scope.patternMatchingId);
 })
