@@ -667,8 +667,18 @@ angular.module('a2.analysis.clustering-jobs', [
             aed: $scope.aedData.id,
             search: $scope.selectedFilterData.value
         }).then(function(data) {
+            const groupedData = []
+            for (const [key, value] of Object.entries($scope.gridData)) {
+                value.aed.forEach(id => {
+                    const matched = data.find(aed => aed.aed_id === id)
+                    if (matched) {
+                        groupedData.push(matched)
+                    }
+                })
+            }
+            
             $scope.loading = false;
-            $scope.allRois = data
+            $scope.allRois = groupedData
             $scope.total.rois = data.length
             $scope.total.pages = Math.ceil(data.length / $scope.limit)
             $scope.isRoisLoading = false;
