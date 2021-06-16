@@ -496,6 +496,51 @@ var PatternMatchings = {
         );
     },
 
+    getRoisBestPerSiteForId (pmId, byDay) {
+        return dbpool.query(`
+            SELECT S.site_id, S.name as site, PMR.score,
+                R.uri as recording,
+                PMR.pattern_matching_roi_id as id,
+                PMR.pattern_matching_id,
+                PMR.denorm_recording_datetime as datetime,
+                PMR.recording_id,
+                PMR.species_id,
+                PMR.songtype_id,
+                PMR.x1, PMR.y1, PMR.x2, PMR.y2,
+                PMR.uri,
+                PMR.score,
+                PMR.validated
+            FROM sites S
+            JOIN (
+                SELECT pmr1.denorm_site_id, pmr1.score, pmr1.recording_id, pmr1.pattern_matching_roi_id,
+                    pmr1.pattern_matching_id, pmr1.denorm_recording_datetime, pmr1.species_id, pmr1.songtype_id,
+                    pmr1.validated, pmr1.uri, pmr1.x1, pmr1.y1, pmr1.x2, pmr1.y2
+                FROM pattern_matching_rois pmr1
+                INNER JOIN (
+                    SELECT MAX(score) as score, denorm_site_id${byDay? ', denorm_recording_date' : ''}
+                    FROM pattern_matching_rois
+                    WHERE pattern_matching_id = ?
+                    GROUP BY denorm_site_id${byDay? ', denorm_recording_date' : ''}
+                ) pmr2
+                ON pattern_matching_id = ? AND pmr1.denorm_site_id = pmr2.denorm_site_id ${byDay? 'AND pmr1.denorm_recording_date = pmr2.denorm_recording_date ' : ''} AND pmr1.score = pmr2.score
+            ) PMR ON S.site_id = PMR.denorm_site_id
+            JOIN recordings R ON PMR.recording_id = R.recording_id
+            ORDER BY S.name, R.datetime;`, [pmId, pmId])
+        .then((pmrs) => {
+            pmrs.forEach((pmr) => {
+                const d = pmr.datetime.toISOString()
+                const namePartials = pmr.recording.split('/')
+                pmr.recording = namePartials[namePartials.length - 1]
+                pmr.year = parseInt(d.substring(0, 4))
+                pmr.month = parseInt(d.substring(5, 7))
+                pmr.day = parseInt(d.substring(8, 10))
+                pmr.hour = parseInt(d.substring(11, 13))
+                pmr.minute = parseInt(d.substring(14, 16))
+            })
+            return pmrs
+        })
+    },
+
     getSitesForPM (pmId) {
         return dbpool.query(`
             SELECT DISTINCT(S.site_id), S.name as site
