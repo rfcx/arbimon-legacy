@@ -6,6 +6,7 @@ Resolved issues:
 
 - CE-725 Fixed issue with rois audio playback on the Grid View page
 - CE-689 Map should default back to showing all pins for all sites
+- Fix sort per cluster not working
 - CE-928 Do not cut templates in half or displaying other regions of the spectrogram
 
 Other:
