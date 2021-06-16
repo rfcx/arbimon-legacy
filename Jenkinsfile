@@ -54,6 +54,7 @@ spec:
                failure {
                    slackSend (channel: "#${slackChannel}", color: '#F44336', message: "*Arbimon Web*: Image build failed <${env.BUILD_URL}|#${env.BUILD_NUMBER}> branch ${env.BRANCH_NAME}")
                    echo 'Compile Stage Failed'
+                   sh "exit 1"
                }
 
            }
