@@ -1179,7 +1179,6 @@ var Recordings = {
                 }
             }
 
-            // console.log(outputs);
             return Q.all(steps).then(function(){
 
                 var from_clause  = "FROM " + tables.join('\n');
@@ -1226,7 +1225,7 @@ var Recordings = {
                             _1.site_external_id = siteData[_1.site_id].external_id;
                             _1.timezone = siteData[_1.site_id].timezone;
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
-                            _1.meta = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
+                            _1.comments = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
                             _1.filename = _1.meta ? Recordings.__parse_filename_data(_1.meta) : null;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!_1.legacy) {
