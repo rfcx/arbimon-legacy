@@ -668,14 +668,18 @@ angular.module('a2.analysis.clustering-jobs', [
             search: $scope.selectedFilterData.value
         }).then(function(data) {
             const groupedData = []
-            for (const [key, value] of Object.entries($scope.gridData)) {
-                value.aed.forEach(id => {
-                    const matched = data.find(aed => aed.aed_id === id)
-                    if (matched) {
-                        groupedData.push(matched)
+            Object.values($scope.gridData).forEach(value => {
+                Object.entries(value).forEach(entry => {
+                    if(entry[0] == "aed") {
+                        entry[1].forEach(id => {
+                            const matched = data.find(aed => aed.aed_id === id)
+                            if (matched) {
+                                groupedData.push(matched)
+                            }
+                        })
                     }
                 })
-            }
+            })
             
             $scope.loading = false;
             $scope.allRois = groupedData
