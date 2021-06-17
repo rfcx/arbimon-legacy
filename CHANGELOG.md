@@ -9,6 +9,7 @@ Resolved issues:
 - Fix sort per cluster not working
 - CE-928 Do not cut templates in half or displaying other regions of the spectrogram
 - CE-851 Hotfix parsing filename from the meta column
+- Display the original filenames in models
 
 Other:
 

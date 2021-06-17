@@ -287,7 +287,7 @@ var Recordings = {
             projection = "COUNT(*) as count";
         } else {
             projection = "R.recording_id AS id, \n"+
-                        "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
+                        "SUBSTRING_INDEX(R.uri,'/',-1) as file, R.meta, \n"+
                         "S.name as site, \n"+
                         "S.timezone, \n"+
                         "R.uri, \n"+
@@ -369,7 +369,9 @@ var Recordings = {
                     });
                 } else {
                     data.forEach((d) => {
-                        d.legacy = Recordings.isLegacy(d)
+                        d.legacy = Recordings.isLegacy(d);
+                        d.meta = d.meta ? Recordings.__parse_meta_data(d.meta) : null;
+                        d.file = d.meta && d.meta.filename? d.meta.filename : d.file;
                     })
                     return data;
                 }

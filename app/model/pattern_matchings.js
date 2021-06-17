@@ -263,7 +263,7 @@ var PatternMatchings = {
             builder.addTable("JOIN recordings", "R", "R.recording_id = PMR.recording_id");
             builder.addTable("JOIN sites", "S", "S.site_id = R.site_id");
             builder.addProjection(
-                'SUBSTRING_INDEX(R.`uri`, "/", -1) as `recording`',
+                'SUBSTRING_INDEX(R.`uri`, "/", -1) as `recording`, R.meta ',
                 'S.`name` as `site`',
                 'S.`site_id`',
                 'EXTRACT(year FROM R.`datetime`) as `year`',
@@ -462,6 +462,18 @@ var PatternMatchings = {
         );
     },
 
+    __parse_meta_data : function(data) {
+        try {
+            const parsedData = JSON.parse(data);
+            if (!parsedData) {
+                return data;
+            }
+            return parsedData;
+        } catch (e) {
+            return null;
+        }
+    },
+
     getRoisForId(options) {
         let sortBy = [['S.name', 1], ['R.datetime', 1]] // default sorting
         if (options.byScorePerSite) {
@@ -493,7 +505,14 @@ var PatternMatchings = {
             sortBy,
         }).then(
             builder => dbpool.query(builder.getSQL())
-        );
+        ).then(function (results) {
+            // Fill the original filename from the meta column.
+            for (let _1 of results) {
+                _1.meta = _1.meta ? PatternMatchings.__parse_meta_data(_1.meta) : null;
+                _1.recording = _1.meta && _1.meta.filename? _1.meta.filename :  _1.recording;
+            }
+            return results;
+        });
     },
 
     getRoisBestPerSiteForId (pmId, byDay) {
