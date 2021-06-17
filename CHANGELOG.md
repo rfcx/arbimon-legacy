@@ -10,6 +10,7 @@ Resolved issues:
 - CE-928 Do not cut templates in half or displaying other regions of the spectrogram
 - CE-851 Hotfix parsing filename from the meta column
 - CE-785 Spinner in recordings filter not stop when have 0 recording
+- CE-751 Display selected recording if the site has many recordings with the similar datetime
 
 Other:
 
@@ -22,6 +23,10 @@ Performance improvements:
 - Improve project tags query
 - Load full list of sites for Pattern Matching ROIs list instead of playlist-related sites
 - Re-implement Pattern Matching Best Per Site and Best Per site Day queries
+
+Other:
+
+- CE-880 Beta tag on CNN, AE & clustering
 
 ## v3.0.29 - June 14, 2021
 
