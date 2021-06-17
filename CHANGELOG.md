@@ -10,6 +10,7 @@ Resolved issues:
 - CE-928 Do not cut templates in half or displaying other regions of the spectrogram
 - CE-851 Hotfix parsing filename from the meta column
 - Display the original filenames in models
+- CE-785 Spinner in recordings filter not stop when have 0 recording
 
 Other:
 
