@@ -275,7 +275,6 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
 
         var options = this.options;
         var loading = this.loading;
-        loading.sites = true
         var sites
         if ($scope.recTotal === undefined || $scope.minDate === undefined || $scope.maxDate === undefined) {
             // wait until all inputs are populated to make proper decision in a condition below
@@ -284,6 +283,9 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             }.bind(this), 1000)
             return
         }
+        
+        loading.sites = true
+        
         Project.getSites()
             .then(function(data) {
                 sites = data
