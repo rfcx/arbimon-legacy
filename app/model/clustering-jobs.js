@@ -157,8 +157,8 @@ var ClusteringJobs = {
                 uri: rec.rec_uri,
                 site_id: rec.site_id
             }, {
-                maxFreq: rec.frequency_min,
-                minFreq: rec.frequency_max,
+                maxFreq: rec.frequency_max,
+                minFreq: rec.frequency_min,
                 gain: options.gain || 15,
                 trim: {
                     from: rec.time_min,

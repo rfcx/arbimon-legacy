@@ -54,6 +54,7 @@ spec:
                failure {
                    slackSend (channel: "#${slackChannel}", color: '#F44336', message: "*Arbimon Web*: Image build failed <${env.BUILD_URL}|#${env.BUILD_NUMBER}> branch ${env.BRANCH_NAME}")
                    echo 'Compile Stage Failed'
+                   sh "exit 1"
                }
 
            }
@@ -99,48 +100,6 @@ def branchToConfig(branch) {
         if (branch == 'develop') {
             result = "staging"
         slackChannel = "alerts-deployment"
-        withCredentials([file(credentialsId: 'arbimon_staging_db', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/db.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_aws', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/aws.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_auth0-backend', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/auth0-backend.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_auth0', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/auth0.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_aws-rfcx', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/aws-rfcx.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_email', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/email.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_google-api', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/google-api.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_hosts', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/hosts.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_job-queue', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/job-queue.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_lambdas', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/lambdas.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_mandrill-key', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/mandrill-key.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_mapbox-api', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/mapbox-api.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_rfcx', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/rfcx.local.json"
-        }
-        withCredentials([file(credentialsId: 'arbimon_staging_tmpfilecache', variable: 'PRIVATE_ENV')]) {
-        sh "cp $PRIVATE_ENV config/tmpfilecache.local.json"
-        }
         }
         echo "BRANCH:${branch} -> CONFIGURATION:${result}"
     }

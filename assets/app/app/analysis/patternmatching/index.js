@@ -210,7 +210,6 @@ angular.module('a2.analysis.patternmatching', [
     onSearchChanged: function(){
         this.selected.page = 1;
         this.loadPage(1);
-        this.loadSiteIndex();
     },
 
     setupExportUrl: function(){
@@ -233,8 +232,19 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     loadSiteIndex: function(){
-        return a2PatternMatching.getSiteIndexFor(this.id, { search: this.search && this.search.value }).then((function(siteIndex){
-            this.siteIndex = siteIndex;
+        return Project.getSites().then((function(sites){
+            this.siteIndex = sites
+                .map(function (site) {
+                    return {
+                        site_id: site.id,
+                        site: site.name
+                    }
+                })
+                .sort((a, b) => {
+                    if(a.site < b.site) { return -1; }
+                    if(a.site > b.site) { return 1; }
+                    return 0;
+                });
         }).bind(this));
     },
 
