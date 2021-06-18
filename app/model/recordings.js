@@ -244,10 +244,11 @@ var Recordings = {
                     return [[], []];
                 } else {
                     const base = `SELECT ${selection} FROM recordings R JOIN sites S ON S.site_id = ? WHERE R.site_id = ?`
-                    const replacements = [recording.site_id, recording.site_id, recording.datetime]
+                    const replacements = [recording.site_id, recording.site_id, recording.datetime, recording.recording_id];
                     const proms = [
-                        dbpool.query({ sql: `${base} AND datetime < ? ORDER BY datetime DESC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements),
-                        dbpool.query({ sql:`${base} AND datetime >= ? ORDER BY datetime ASC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements)
+                        dbpool.query({ sql: `${base} AND datetime <= ? AND recording_id != ? ORDER BY datetime DESC LIMIT 5`, typeCast: sqlutil.parseUtcDatetime }, replacements),
+                        dbpool.query({ sql: `${base}  AND datetime = ? AND recording_id = ?`, typeCast: sqlutil.parseUtcDatetime }, replacements),
+                        dbpool.query({ sql:`${base} AND datetime >= ? AND recording_id != ? ORDER BY datetime ASC LIMIT 4`, typeCast: sqlutil.parseUtcDatetime }, replacements),
                     ]
                     return Q.all(proms);
                 }
@@ -287,7 +288,7 @@ var Recordings = {
             projection = "COUNT(*) as count";
         } else {
             projection = "R.recording_id AS id, \n"+
-                        "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
+                        "SUBSTRING_INDEX(R.uri,'/',-1) as file, R.meta, \n"+
                         "S.name as site, \n"+
                         "S.timezone, \n"+
                         "R.uri, \n"+
@@ -369,7 +370,9 @@ var Recordings = {
                     });
                 } else {
                     data.forEach((d) => {
-                        d.legacy = Recordings.isLegacy(d)
+                        d.legacy = Recordings.isLegacy(d);
+                        d.meta = d.meta ? Recordings.__parse_meta_data(d.meta) : null;
+                        d.file = d.meta && d.meta.filename? d.meta.filename : d.file;
                     })
                     return data;
                 }
@@ -959,13 +962,13 @@ var Recordings = {
             return null
         }
     },
-    __parse_filename_data : function(data) {
+    __parse_meta_data : function(data) {
         try {
             const parsedData = JSON.parse(data);
-            if (parsedData && !parsedData.filename) {
-                return null;
+            if (!parsedData) {
+                return data;
             }
-            return parsedData.filename;
+            return parsedData;
         } catch (e) {
             return null;
         }
@@ -1179,7 +1182,6 @@ var Recordings = {
                 }
             }
 
-            // console.log(outputs);
             return Q.all(steps).then(function(){
 
                 var from_clause  = "FROM " + tables.join('\n');
@@ -1226,8 +1228,9 @@ var Recordings = {
                             _1.site_external_id = siteData[_1.site_id].external_id;
                             _1.timezone = siteData[_1.site_id].timezone;
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
-                            _1.meta = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
-                            _1.filename = _1.meta ? Recordings.__parse_filename_data(_1.meta) : null;
+                            _1.comments = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
+                            _1.meta = _1.meta ? Recordings.__parse_meta_data(_1.meta) : null;
+                            _1.filename = _1.meta && _1.meta.filename? _1.meta.filename : null;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!_1.legacy) {
                                 _1.file = `${moment.utc(_1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
@@ -1470,6 +1473,7 @@ var Recordings = {
                             console.log("recParam", recParam, recParamMap[recParam]);
                             return recParamMap[recParam];
                         }));
+                        builder.addProjection('r.meta');
                         // Change the order to datetime if the site attribute is excluded.
                         if (!projection_parameters.recording.includes('site')) {
                             summaryBuilders[c].setOrderBy('r.datetime');

@@ -164,6 +164,18 @@ var Classifications = {
         });
     },
 
+    __parse_meta_data : function(data) {
+        try {
+            const parsedData = JSON.parse(data);
+            if (!parsedData) {
+                return data;
+            }
+            return parsedData;
+        } catch (e) {
+            return null;
+        }
+    },
+
     // classificationCsvData: function(classiJobId, callback) {
     getCsvData: function(classiJobId, callback) {
         var q = "SELECT extract(year from r.`datetime`) year, \n"+
@@ -173,7 +185,7 @@ var Classifications = {
                 "   extract(minute from r.`datetime`) min,  \n"+
                 "   m.`threshold`, \n"+
                 "   m.`uri`, \n"+
-                "   r.`uri` as ruri, \n"+
+                "   r.`uri` as ruri, r.meta, \n"+
                 "   cr.`max_vector_value` as mvv, \n"+
                 "   SUBSTRING_INDEX(r.`uri` ,'/',-1 ) rec, \n"+
                 "   cr.`present`, \n"+
@@ -195,7 +207,17 @@ var Classifications = {
                 "AND sp.`species_id` = cr.`species_id` \n"+
                 "AND cr.`songtype_id` = st.`songtype_id` ";
 
-        queryHandler(dbpool.format(q, [classiJobId]), callback);
+        queryHandler(dbpool.format(q, [classiJobId]), function(err, rows) {
+            if (err) return callback(err);
+            if (rows.length) {
+                for (let _1 of rows) {
+                    // Fill the original filename from the meta column.
+                    _1.meta = _1.meta ? Classifications.__parse_meta_data(_1.meta) : null;
+                    _1.rec = _1.meta && _1.meta.filename? _1.meta.filename :  _1.rec;
+                }
+                callback(null, rows);
+            }
+        });
     },
 
     // classificationErrorsCount
@@ -248,7 +270,7 @@ var Classifications = {
                 "           SUBSTRING_INDEX( r.`uri` , '.', 1 ), \n"+
                 "           '/', \n"+
                 "           -1  \n"+
-                "        ) as recname, \n"+
+                "        ) as recname, r.meta, \n"+
                 "       CONCAT( \n"+
                 "           UCASE(LEFT(st.`songtype`, 1)), \n"+
                 "           SUBSTRING(st.`songtype`, 2) \n"+
@@ -269,7 +291,17 @@ var Classifications = {
                 "AND r.`recording_id` = c.`recording_id` \n"+
                 "ORDER BY present DESC LIMIT ?,?";
 
-        queryHandler(dbpool.format(q,[cid, parseInt(from), parseInt(total)]), callback);
+        queryHandler(dbpool.format(q,[cid, parseInt(from), parseInt(total)]), function(err, rows) {
+            if (err) return callback(err);
+            if (rows.length) {
+                for (let _1 of rows) {
+                    // Fill the original filename from the meta column.
+                    _1.meta = _1.meta ? Classifications.__parse_meta_data(_1.meta) : null;
+                    _1.recname = _1.meta && _1.meta.filename? _1.meta.filename :  _1.recname;
+                }
+                callback(null, rows);
+            }
+        });
     },
 
     getRecVector: function(c12nId, recId, callback) {
