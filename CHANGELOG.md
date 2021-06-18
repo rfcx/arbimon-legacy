@@ -11,6 +11,12 @@ Resolved issues:
 
 - CE-791 Fixed MySQL issue to process more than 61 validations in the user selection
 - CE-791 Fixed MySQL issue with ordering from the default site to datetime if the site attribute is excluded
+- CE-689 Map should default back to showing all pins for all sites
+- CE-928 Do not cut templates in half or displaying other regions of the spectrogram
+
+Other:
+
+- CE-880 Beta tag on CNN, AE & clustering
 
 ## v3.0.30 - June 18, 2021
 
