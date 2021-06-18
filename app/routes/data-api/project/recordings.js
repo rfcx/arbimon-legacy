@@ -4,7 +4,7 @@ var AWS = require('aws-sdk');
 var csv_stringify = require("csv-stringify");
 var path   = require('path');
 var model = require('../../../model');
-
+const stream = require('stream');
 
 router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
     res.type('json');
@@ -71,6 +71,10 @@ router.get('/recordings-export.csv', function(req, res, next) {
     model.recordings.exportRecordingData(projection, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name;});
+        const metaIndex = fields.indexOf('meta');
+        if (metaIndex !== -1) {
+            fields.splice(metaIndex, 1);
+        }
         var colOrder={filename:-3,site:-2,time:-1};
         fields.sort(function(a, b){
             var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
@@ -81,7 +85,22 @@ router.get('/recordings-export.csv', function(req, res, next) {
                     0
             )));
         });
-
+        datastream
+            .pipe(new stream.Transform({
+                objectMode: true,
+                transform: function (row, encoding, callback) {
+                    if (row.meta && row.filename) {
+                        try {
+                            const parsedMeta = JSON.parse(row.meta);
+                            row.filename = parsedMeta && parsedMeta.filename? parsedMeta.filename :  row.filename;
+                            delete row.meta;
+                        } catch (e) {
+                            delete row.meta;
+                        }
+                    }
+                    callback();
+                }
+            }))
         datastream
             .pipe(csv_stringify({header:true, columns:fields}))
             .pipe(res);

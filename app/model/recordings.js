@@ -1433,6 +1433,7 @@ var Recordings = {
                     console.log("recParam", recParam, recParamMap[recParam]);
                     return recParamMap[recParam];
                 }));
+                builder.addProjection('r.meta');
             }
 
             if(projection_parameters.validation){

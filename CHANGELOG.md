@@ -12,6 +12,7 @@ Resolved issues:
 - Display the original filenames in models
 - CE-785 Spinner in recordings filter not stop when have 0 recording
 - CE-751 Display selected recording if the site has many recordings with the similar datetime
+- Hotfix displaying the original filename in the export recordings report
 
 Other:
 
