@@ -93,10 +93,8 @@ router.get('/recordings-export.csv', function(req, res, next) {
                         try {
                             const parsedMeta = JSON.parse(row.meta);
                             row.filename = parsedMeta && parsedMeta.filename? parsedMeta.filename :  row.filename;
-                            delete row.meta;
-                        } catch (e) {
-                            delete row.meta;
-                        }
+                        } catch (e) {}
+                        delete row.meta;
                     }
                     callback();
                 }
