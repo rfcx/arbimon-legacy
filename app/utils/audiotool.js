@@ -176,6 +176,7 @@ var audiotools = {
         var args = [];
         args.push(source_path);
         args.push('-n');
+        args.push('remix', '-'); // 'remix -' performs a mix-down of all input channels to mono
         if(options.maxfreq) {
             args.push('rate', (options.maxfreq/2)|0); // maximum frequency to show in spectrogram
         }

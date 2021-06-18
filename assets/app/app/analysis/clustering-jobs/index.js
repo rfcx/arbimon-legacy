@@ -667,8 +667,22 @@ angular.module('a2.analysis.clustering-jobs', [
             aed: $scope.aedData.id,
             search: $scope.selectedFilterData.value
         }).then(function(data) {
+            const groupedData = []
+            Object.values($scope.gridData).forEach(value => {
+                Object.entries(value).forEach(entry => {
+                    if(entry[0] == "aed") {
+                        entry[1].forEach(id => {
+                            const matched = data.find(aed => aed.aed_id === id)
+                            if (matched) {
+                                groupedData.push(matched)
+                            }
+                        })
+                    }
+                })
+            })
+            
             $scope.loading = false;
-            $scope.allRois = data
+            $scope.allRois = groupedData
             $scope.total.rois = data.length
             $scope.total.pages = Math.ceil(data.length / $scope.limit)
             $scope.isRoisLoading = false;
@@ -707,6 +721,24 @@ angular.module('a2.analysis.clustering-jobs', [
                 }
             })
             $scope.rows = Object.values(sites);
+        } else if (data && $scope.selectedFilterData.value === 'per_cluster') {
+            $scope.ids = {};
+            if($scope.aedData.count > 1) {
+                var grids = []
+                $scope.gridData.forEach((row) => { grids.push([row]) })
+                grids.forEach((row, index) => {
+                    $scope.ids[index] = {
+                        cluster: row[0].name,
+                        rois: data.filter((a, i) => {return row[0].aed.includes(a.aed_id)})
+                    }
+                })
+            } else {
+                $scope.ids[0] = {
+                    cluster: $scope.gridData.cluster,
+                    rois: data
+                }
+            }
+            $scope.rows = Object.values($scope.ids);
         } else {
             if ($scope.selectedFilterData.value === 'per_date') {
                 data.sort(function(a, b) {

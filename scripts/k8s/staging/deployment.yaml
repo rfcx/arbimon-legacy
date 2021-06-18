@@ -14,6 +14,9 @@ spec:
       containers:
       - name: arbimon
         image: 887044485231.dkr.ecr.eu-west-1.amazonaws.com/arbimon/staging:latest
+        envFrom:
+        - secretRef:
+            name: arbimon2-secrets
         resources:
           requests:
             memory: "1Gi"

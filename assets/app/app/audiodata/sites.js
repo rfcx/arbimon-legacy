@@ -456,6 +456,27 @@ angular.module('a2.audiodata.sites', [
                     }
                     $scope.map.panTo(position);
                 });
+            } else {
+                var bounds = new google.maps.LatLngBounds();
+                angular.forEach($scope.sites, function(site) {
+                    if (site.lat > 85 || site.lat < -85 || site.lon > 180 || site.lon < -180) {
+                        return;
+                    }
+                    var position = new google.maps.LatLng(site.lat, site.lon);
+                    var marker = new google.maps.Marker({
+                        position: position,
+                        title: site.name
+                    });
+
+                    $scope.markers.push(marker);
+                    bounds.extend(position);
+                });
+
+                $scope.map.fitBounds(bounds);
+
+                if ($scope.markers.length) {
+                    $scope.setMapOnAll($scope.map);
+                };
             }
         });
     };
