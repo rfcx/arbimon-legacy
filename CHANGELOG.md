@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+## v3.0.31 - June XX, 2021\
+
+- CE-940 Change "Storage: " to "Recordings:"
+
 ## v3.0.30 - June XX, 2021
 
 Resolved issues:
