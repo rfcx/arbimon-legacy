@@ -23,6 +23,11 @@ angular.module('a2.admin.dashboard', [
 .controller('AdminDashboardCtrl', function($scope, $http, $q, $controller) {
 
     $scope.plots = $controller('AdminDashboardPlotterController', {'$scope':$scope});
+    
+    $http.get('/admin/all-users')
+    .success(function(data) {
+        console.log(data)
+    });
 
     $http.get('/admin/dashboard-stats')
         .success(function(data) {
