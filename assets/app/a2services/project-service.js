@@ -110,7 +110,7 @@ angular.module('a2.srv.project', [
 
                 var serializedParams = $httpParamSerializer(params);
 
-                return '/api/project/'+url+'/recordings/recordings-export.csv' + (serializedParams.length ? '?'+serializedParams : '');
+                return '/api/project/'+url+'/recordings/'+ (projection && projection.species ? 'occupancy-models-export/'+projection.species_name+'.csv' : 'recordings-export.csv') + (serializedParams.length ? '?'+serializedParams : '');
             },
             getRecTotalQty: function(callback) {
                 return a2APIService.get('/recordings/count').then(function(data) {

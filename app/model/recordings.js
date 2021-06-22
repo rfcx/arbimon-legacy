@@ -1285,6 +1285,7 @@ var Recordings = {
             recording:arrayOrSingle(joi.string().valid(
                 'filename', 'site', 'day', 'hour'
             )),
+            species: arrayOrSingle(joi.number()),
             validation:  arrayOrSingle(joi.number()),
             classification:  arrayOrSingle(joi.number()),
             soundscapeComposition:  arrayOrSingle(joi.number()),
@@ -1409,6 +1410,21 @@ var Recordings = {
         });
     },
 
+    exportOccupancyModels: async function(projection, filters){
+        let query = `SELECT S.name as site, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(rv.present=1) as count
+            FROM recordings R
+            JOIN sites S ON S.site_id = R.site_id
+            LEFT JOIN project_imported_sites AS pis ON S.site_id = pis.site_id AND pis.project_id = ${filters.project_id}
+            LEFT JOIN recording_validations AS rv ON R.recording_id = rv.recording_id
+            WHERE rv.species_id = ${projection.species} AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id})
+            GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC`;
+        let queryResult = await dbpool.query({
+            sql: query,
+            typeCast: sqlutil.parseUtcDatetime,
+        })
+        return queryResult;
+    },
+
     exportRecordingData: function(projection, filters){
         let summaryBuilders = [];
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
@@ -1464,16 +1480,16 @@ var Recordings = {
                         var recParamMap = {
                             'filename' : "SUBSTRING_INDEX(r.uri,'/',-1) as filename",
                             'site' : 's.name as site',
-                            'day' : 'DATE_FORMAT(r.datetime, "%d") as `(day)`',
-                            'month' : 'DATE_FORMAT(r.datetime, "%m") as `(month)`',
-                            'year' : 'DATE_FORMAT(r.datetime, "%y") as `(year)`',
+                            'day' : 'DATE_FORMAT(r.datetime, "%d") as `day`',
+                            'month' : 'DATE_FORMAT(r.datetime, "%m") as `month`',
+                            'year' : 'DATE_FORMAT(r.datetime, "%y") as `year`',
                             'hour' : 'DATE_FORMAT(r.datetime, "%T") as hour'
                         };
                         summaryBuilders[c].addProjection.apply(summaryBuilders[c], projection_parameters.recording.map(function(recParam){
                             console.log("recParam", recParam, recParamMap[recParam]);
                             return recParamMap[recParam];
                         }));
-                        builder.addProjection('r.meta');
+                        summaryBuilders[c].addProjection('r.meta');
                         // Change the order to datetime if the site attribute is excluded.
                         if (!projection_parameters.recording.includes('site')) {
                             summaryBuilders[c].setOrderBy('r.datetime');

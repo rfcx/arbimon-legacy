@@ -6,6 +6,7 @@ New features:
 
 - CE-791 Changed export attributes for the recording data
 - CE-791 Added item `Select all species` to the validations dropdown
+- The ability to export Occupancy models format is added for each species
 
 Resolved issues:
 

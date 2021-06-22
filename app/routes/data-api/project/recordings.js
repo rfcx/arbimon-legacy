@@ -49,15 +49,28 @@ router.get('/search-count', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/occupancy-models-export/:species?', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+    processFiltersData(req, res, next);
+});
+
 router.get('/recordings-export.csv', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
     } else {
         res.type('text/csv');
     }
+    processFiltersData(req, res, next);
+});
 
+processFiltersData = async function(req, res, next) {
     try{
         var filters = req.query.filters ? JSON.parse(req.query.filters) : {}
+        let projectionFilter = req.query.show ? JSON.parse(req.query.show) : {};
     } catch(e){
         return next(e);
     }
@@ -68,6 +81,36 @@ router.get('/recordings-export.csv', function(req, res, next) {
 
     var projection = req.query.show;
 
+    if (projectionFilter && projectionFilter.species) {
+        return model.recordings.exportOccupancyModels(projectionFilter, filters).then(function(results) {
+            let fields = ['site'];
+            for (let row of results) {
+                if (!fields.includes(row.date)) {
+                    fields.push(row.date)
+                }
+            }
+            let streamArray = [];
+            for (let row of results) {
+                let tempRow = {};
+                fields.forEach((item) => {
+                    tempRow.site = row.site;
+                    let jdays = (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed();
+                    tempRow[item] = item === row.date? (row.count === 0 ? `0 / ${jdays} JD` : `1 / ${jdays} JD`) : 'NA';
+                })
+                streamArray.push(tempRow);
+            }
+            let datastream = new stream.Readable({objectMode: true});
+                for (let row of streamArray) {
+                    datastream.push(row);
+                }
+                datastream.push(null);
+
+                datastream
+                    .pipe(csv_stringify({header:true, columns:fields}))
+                    .pipe(res);
+        }).catch(next);
+    }
+
     model.recordings.exportRecordingData(projection, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name;});
@@ -75,7 +118,7 @@ router.get('/recordings-export.csv', function(req, res, next) {
         if (metaIndex !== -1) {
             fields.splice(metaIndex, 1);
         }
-        var colOrder={filename:-3,site:-2,time:-1};
+        let colOrder={filename:-6,site:-5,time:-4, day:-4, month:-3, year:-2, hour:-1};
         fields.sort(function(a, b){
             var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
             return ca < cb ? -1 : (
@@ -103,7 +146,7 @@ router.get('/recordings-export.csv', function(req, res, next) {
             .pipe(csv_stringify({header:true, columns:fields}))
             .pipe(res);
     }).catch(next);
-});
+}
 
 
 router.get('/count', function(req, res, next) {

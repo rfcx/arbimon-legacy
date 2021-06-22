@@ -76,6 +76,17 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                 }).bind(this));
             },
         },
+        {   title:'Occupancy models format',
+            identifier:'species',
+            placeholder: 'Species...',
+            getList: function(Project){
+                return Project.getClasses().then(function(classes){
+                    return classes.map(function(cls){
+                        return {value:cls.species, caption:cls.species_name, name: cls.species_name.split(' ').join('_')};
+                    });
+                });
+            },
+        },
     ];
 })
 .controller('recordingDataExportParametersController', function(
@@ -140,6 +151,10 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
         }
     }
 
+    this.resetFilters = function() {
+        this.selected = [];
+    };
+
     this.exportData = function(){
         var selected = this.selected;
         if (selected[1] && selected[1] && selected[1].find(function(row){ return row.value === -1 })) {
@@ -150,6 +165,10 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                 _[parameter_set.identifier] = selected[index].map(function(item){
                     return item.value;
                 });
+            }
+            if(selected[index] && parameter_set.identifier==='species' && selected[index].value){
+                _[parameter_set.identifier] = selected[index].value;
+                _['species_name'] = selected[index].name;
             }
             return _;
         }, {}));

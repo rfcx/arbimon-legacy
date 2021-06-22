@@ -8,7 +8,7 @@
             <div>
                 {{parameter_set.title}}:
             </div>
-            <div class="a2-filter" ng-init="parameter_set.index=$index">
+            <div class="a2-filter" ng-init="parameter_set.index=$index" ng-if="parameter_set.identifier !== 'species'">
                 <ui-select multiple ng-model="controller.selected[parameter_set.index]" on-select="controller.onSelected($item)" theme="bootstrap" style="width:300px;">
                     <ui-select-match placeholder="{{parameter_set.placeholder}}">
                         <span tooltip="{{$item.tooltip}}" tooltip-append-to-body="true">{{($item.group ? $item.group + ' / ' : '') + $item.caption}}</span>
@@ -24,11 +24,25 @@
                     </ui-select-choices>
                 </ui-select>
             </div>
+            <div class="a2-filter" ng-init="parameter_set.index=$index" ng-if="parameter_set.identifier === 'species'">
+                <ui-select ng-model="controller.selected[parameter_set.index]" on-select="controller.onSelected($item)" theme="bootstrap" style="width:300px;">
+                    <ui-select-match placeholder="Select species...">
+                        <span tooltip="{{$item.tooltip}}" tooltip-append-to-body="true">{{controller.selected[parameter_set.index].caption}}</span>
+                    </ui-select-match>
+                    <ui-select-choices repeat="$item in controller.lists[parameter_set.index] | filter:$select.search">
+                        {{$item.caption}}
+                    </ui-select-choices>
+                </ui-select>
+            </div>
         </li>
     </ul>
 
-    <div class="panel-footer">
-        <button class="btn btn-block btn-primary" ng-click="controller.exportData() | trackEvent:'Audiodata-Recordings-Export':'export'">
+    <div class="mx-2">
+        <button class="btn btn-default" style="width: 49%;" ng-click="controller.resetFilters()" ng-disabled="controller.isLoading">
+            <i class="fa fa-undo"></i>
+            Reset
+        </button>
+        <button class="btn btn-primary" style="width: 49%;" ng-click="controller.exportData() | trackEvent:'Audiodata-Recordings-Export':'export'">
             <i class="fa fa-download"></i>
             Export Data
         </button>
