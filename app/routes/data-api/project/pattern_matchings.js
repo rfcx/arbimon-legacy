@@ -23,6 +23,16 @@ router.use(function(req, res, next) {
  */
 router.get('/', function(req, res, next) {
     res.type('json');
+
+    if (req.query.rec_id) {
+        return model.patternMatchings.getPatternMatchingRois({
+            rec_id: req.query.rec_id
+        })
+        .then(function(data){
+            res.json(data);
+        }).catch(next);
+    }
+
     model.patternMatchings.find({
         project:req.project.project_id,
         deleted:0,
@@ -161,10 +171,29 @@ router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
 
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.validateRois(req.params.patternMatching, req.body.rois, req.body.validation).then(function(rois) {
-        res.json({
-            rois: req.body.rois,
-            validation: req.body.validation,
+    model.patternMatchings.validateRois(req.params.patternMatching, req.body.rois, req.body.validation)
+        .then(function(rois){
+            // Save validated rois in the recording validations table if the roi is validated.
+            // TODO: remove the recording validation row if the roi is absent. Check it logic!
+            if (req.body.rois && req.body.rois.length && req.body.validation === 1) {
+                return model.patternMatchings.getPatternMatchingRois(req.body.rois).then(async function(rois) {
+                    for (let roi of rois) {
+                        await model.recordings.validate(
+                            {id: roi.recording_id},
+                            req.session.user.id,
+                            req.project.project_id,
+                            { class: `${roi.species_id}-${roi.songtype_id}`, val: 1 },
+                            function(err, validations) {
+                                if(err) return next(err);
+                                return validations;
+                        })
+                    }
+                })
+            }
+        }).then(function(rois) {
+            res.json({
+                rois: req.body.rois,
+                validation: req.body.validation,
         });
     }).catch(next);
 });

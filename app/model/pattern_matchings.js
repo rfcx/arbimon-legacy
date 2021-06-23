@@ -633,6 +633,16 @@ var PatternMatchings = {
         ]) : Promise.resolve();
     },
 
+    getPatternMatchingRois: function(options) {
+        const base = `SELECT * FROM pattern_matching_rois`;
+        if (options.rois) {
+            return dbpool.query({ sql: `${base} WHERE pattern_matching_roi_id IN (?)` , typeCast: sqlutil.parseUtcDatetime }, [options.rois]);
+        }
+        if (options.rec_id) {
+            return dbpool.query({ sql: `${base} WHERE recording_id = ?` , typeCast: sqlutil.parseUtcDatetime }, [options.rec_id]);
+        }
+    },
+
     JOB_SCHEMA : joi.object().keys({
         project    : joi.number().integer(),
         user       : joi.number().integer(),
