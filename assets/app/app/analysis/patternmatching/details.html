@@ -166,7 +166,11 @@
                 </span>
             </span>
         </div>
+<<<<<<< HEAD
         <div class="row" ng-if="controller.patternMatching && controller.patternMatching.matches > 100 && !controller.isTopRoisResults()">
+=======
+        <div class="row" ng-if="controller.patternMatching && controller.patternMatching.matches > 100 && (controller.search && controller.search.value !== 'best_per_site' && controller.search.value !== 'best_per_site_day')">
+>>>>>>> develop
             <div class="col-sm-12 text-center">
                 <pagination
                     total-items="controller.patternMatching.matches"
