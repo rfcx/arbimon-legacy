@@ -475,8 +475,8 @@ var PatternMatchings = {
     },
 
     getRoisForId(options) {
-        if (options.byScoresPerSite) {
-            return this.getTopRoisByScoresPerSite(options.patternMatchingId)
+        if (options.byScoresPerSite && options.site) {
+            return this.getTopRoisByScoresPerSite(options.patternMatchingId, options.site)
         }
         let sortBy = [['S.name', 1], ['R.datetime', 1]] // default sorting
         if (options.byScorePerSite) {
@@ -574,47 +574,32 @@ var PatternMatchings = {
             WHERE PM.pattern_matching_id = ? ORDER BY S.name;`, [pmId])
     },
 
-    getTopRoisByScoresPerSite: function (pmId) {
-        return this.getSitesForPM(pmId)
-            .then((sites) => {
-                if (!sites) {
-                    return [];
-                } else {
-                    let proms = [];
-                    const base = `SELECT
-                        PMR.pattern_matching_roi_id as id,
-                        PMR.pattern_matching_id,
-                        SUBSTRING_INDEX(R.uri, "/", -1) as recording,
-                        S.name as site,
-                        S.site_id,
-                        EXTRACT(year FROM R.datetime) as year,
-                        EXTRACT(month FROM R.datetime) as month,
-                        EXTRACT(day FROM R.datetime) as day,
-                        EXTRACT(hour FROM R.datetime) as hour,
-                        EXTRACT(minute FROM R.datetime) as min,
-                        R.datetime,
-                        PMR.recording_id,
-                        PMR.species_id,
-                        PMR.songtype_id,
-                        PMR.x1, PMR.y1, PMR.x2, PMR.y2,
-                        PMR.uri,
-                        PMR.score,
-                        PMR.validated
-                    FROM pattern_matching_rois AS PMR
-                    JOIN recordings AS R ON R.recording_id = PMR.recording_id
-                    JOIN sites AS S ON R.site_id = S.site_id
-                    WHERE PMR.pattern_matching_id = ? AND S.site_id = ?
-                    ORDER BY S.name, PMR.score DESC LIMIT 200`
-                    sites.forEach(site => {
-                        proms.push(dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, site.site_id]))
-                    })
-                    return q.all(proms);
-                }
-            }).then(async (data) => {
-                let array = [];
-                await data.forEach(siteGroup => array.push(...siteGroup));
-                return array;
-            })
+    getTopRoisByScoresPerSite: function (pmId, siteId) {
+        const base = `SELECT
+            PMR.pattern_matching_roi_id as id,
+            PMR.pattern_matching_id,
+            SUBSTRING_INDEX(R.uri, "/", -1) as recording,
+            S.name as site,
+            S.site_id,
+            EXTRACT(year FROM R.datetime) as year,
+            EXTRACT(month FROM R.datetime) as month,
+            EXTRACT(day FROM R.datetime) as day,
+            EXTRACT(hour FROM R.datetime) as hour,
+            EXTRACT(minute FROM R.datetime) as min,
+            R.datetime,
+            PMR.recording_id,
+            PMR.species_id,
+            PMR.songtype_id,
+            PMR.x1, PMR.y1, PMR.x2, PMR.y2,
+            PMR.uri,
+            PMR.score,
+            PMR.validated
+        FROM pattern_matching_rois AS PMR
+        JOIN recordings AS R ON R.recording_id = PMR.recording_id
+        JOIN sites AS S ON R.site_id = S.site_id
+        WHERE PMR.pattern_matching_id = ? AND S.site_id = ?
+        ORDER BY PMR.score DESC LIMIT 200`
+        return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, siteId]);
     },
 
     getRoiAudioFile(patternMatching, roiId, options){
