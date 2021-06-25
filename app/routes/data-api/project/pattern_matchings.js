@@ -173,16 +173,28 @@ router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     model.patternMatchings.validateRois(req.params.patternMatching, req.body.rois, req.body.validation)
         .then(function(rois){
-            // Save validated rois in the recording validations table if the roi is validated.
-            // TODO: remove the recording validation row if the roi is absent. Check it logic!
-            if (req.body.rois && req.body.rois.length && req.body.validation === 1) {
-                return model.patternMatchings.getPatternMatchingRois(req.body.rois).then(async function(rois) {
+            if (req.body.rois && req.body.rois.length) {
+                return model.patternMatchings.getPatternMatchingRois({rois: req.body.rois}).then(async function(rois) {
                     for (let roi of rois) {
+                        let count;
+                        // Remove the recording validation row if the roi is absent or not validated and,
+                        // another rois haven't that recording/species/songtype interrelation.
+                        if ((!req.body.validation || req.body.validation === 0)) {
+                            count = await model.patternMatchings.getCountRoisMatchByAttr(
+                                req.params.patternMatching,
+                                roi.recording_id,
+                                { speciesId: roi.species_id, songtypeId: roi.songtype_id },
+                            )
+                        }
+                        if (count && count.count > 0) {
+                            return;
+                        }
+                        // Save validated rois in the recording validations table if the roi is validated.
                         await model.recordings.validate(
                             {id: roi.recording_id},
                             req.session.user.id,
                             req.project.project_id,
-                            { class: `${roi.species_id}-${roi.songtype_id}`, val: 1 },
+                            { class: `${roi.species_id}-${roi.songtype_id}`, val: (req.body.validation === 1)? 1 : 2},
                             function(err, validations) {
                                 if(err) return next(err);
                                 return validations;
@@ -236,17 +248,6 @@ router.post('/new', function(req, res, next) {
             playlist   : req.body.playlist,
             params   : req.body.params,
         });
-    //     return model.jobs.newJob({
-    //         project    : project_id,
-    //         user       : req.session.user.id,
-    //         name       : req.body.name,
-    //         template   : req.body.template,
-    //         playlist   : req.body.playlist,
-    //         params   : req.body.params,
-    //     }, 'pattern_matching_job');
-    // }).then(function get_job_id(job_id){
-    //     pokeDaMonkey(); // this happens in 'parallel'
-    //     return job_id;
 }).then(function(result){
         res.json({ ok: true, result: result });
     }).catch(next);

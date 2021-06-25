@@ -633,6 +633,16 @@ var PatternMatchings = {
         ]) : Promise.resolve();
     },
 
+    getCountRoisMatchByAttr(patternMatchingId, recordingId, validation){
+        return dbpool.query(
+            "SELECT count(*) as count\n" +
+            "FROM pattern_matching_rois\n" +
+            "WHERE pattern_matching_id = ? AND recording_id = ?\n" +
+            "AND species_id = ? AND songtype_id = ?", [
+            patternMatchingId, recordingId, validation.speciesId, validation.songtypeId,
+        ]);
+    },
+
     getPatternMatchingRois: function(options) {
         const base = `SELECT * FROM pattern_matching_rois`;
         if (options.rois) {
