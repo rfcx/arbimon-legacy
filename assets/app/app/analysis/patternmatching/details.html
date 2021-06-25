@@ -131,7 +131,6 @@
         </div>
         <div class="panel-body" ng-class="{ 'panel-body_combined': controller.splitAllSites }">
             <div ng-if="controller.loading.rois" class="loading">Loading <loader></loader></div>
-            <div ng-if="!controller.loading.rois && controller.isTopRoisResults() && !controller.rois.length">Please select the site in the filters.</div>
             <span class="pattern-matching-site" ng-repeat="site in controller.rois" ng-class="{ 'pattern-matching-site_block': !controller.splitAllSites }">
                 <div ng-if="!controller.splitAllSites && site.name" class="h3" id="site-{{site.id}}"><i class="fa fa-map-marker"></i> {{site.name}}</div>
 
@@ -167,7 +166,10 @@
                 </span>
             </span>
         </div>
-        <div class="row" ng-if="controller.rois.length && controller.patternMatching && controller.patternMatching.matches > 100 && !controller.isTopRoisResults() && this.search.value !== 'best_per_site' && this.search.value !== 'best_per_site_day'">
+        <div class="row panel-body" style="text-align: center;" ng-if="!controller.loading.rois && !controller.rois.length && controller.isTopRoisResults()">
+            No results found per selected site.
+        </div>
+        <div class="row" ng-if="controller.rois.length && controller.patternMatching && controller.patternMatching.matches > 100 && this.search.value !== 'best_per_site' && this.search.value !== 'best_per_site_day'">
             <div class="col-sm-12 text-center">
                 <pagination
                     total-items="controller.patternMatching.matches"
@@ -178,7 +180,7 @@
                     max-size="5"
                     rotate="false"
                     ng-disabled="controller.loading.rois"
-                    items-per-page="100">
+                    items-per-page="{{controller.isTopRoisResults()? 200 : 100}}">
                 </pagination>
             </div>
         </div>

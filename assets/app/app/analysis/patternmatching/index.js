@@ -210,11 +210,6 @@ angular.module('a2.analysis.patternmatching', [
 
     onSearchChanged: function(){
         this.selected.page = 1;
-        // Load top 200 rois per site once the user will select the site.
-        if (this.isTopRoisResults()) {
-            this.rois = [];
-            return;
-        }
         this.loadPage(1);
     },
 
@@ -256,11 +251,6 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     setSiteBookmark: function(site){
-        this.siteIndex.forEach(function(site) { site.selected = false });
-        if (this.isTopRoisResults()) {
-            site.selected = true;
-            this.loadPage(1);
-        }
         var bookmark = 'site-' + site.site_id;
         $anchorScroll.yOffset = $('.a2-page-header').height() + 60;
         $anchorScroll(bookmark)
@@ -276,7 +266,7 @@ angular.module('a2.analysis.patternmatching', [
         this.splitAllSites = this.search && this.search.value === 'by_score';
         var opts = { search: this.search && this.search.value };
         if (this.isTopRoisResults()) {
-            var selectedSite = this.siteIndex.find(site => {return site.selected});
+            var selectedSite = this.siteIndex[pageNumber - 1];
             opts.site = selectedSite && selectedSite.site_id;
         }
         return a2PatternMatching.getRoisFor(
