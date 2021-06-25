@@ -2,7 +2,8 @@
 
 ## v3.0.31 - June XX, 2021\
 
-- CE-940 Change "Storage: " to "Recordings:"
+- CE-940 Update the text for the Recordings data in the Summary page
+- CE-792 Save validated rois in the recording validations table
 
 ## v3.0.30 - June XX, 2021
 
