@@ -464,7 +464,7 @@ var Recordings = {
      * @param {Function} callback(err, validations) function called back with the queried results.
      */
     fetchValidations: function (recording, callback) {
-        var query = "SELECT recording_validation_id as id, user_id as user, species_id as species, songtype_id as songtype, present \n" +
+        var query = "SELECT recording_validation_id as id, user_id as user, species_id as species, songtype_id as songtype, present, present_review as presentReview \n" +
             "FROM recording_validations \n" +
             "WHERE recording_id = " + dbpool.escape(recording.id);
         return queryHandler(query, callback);

@@ -23,7 +23,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             
             var add_validation = function(validation){
                 var key     = [validation.species, validation.songtype].join('-');
-                var present =  validation.present;
+                var present =  validation.presentReview;
                 $scope.validations[key] = present | 0;
             };
 
@@ -156,8 +156,13 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                 if(typeof val === 'undefined') {
                     return;
                 }
-                else{
-                    return val_options.filter(function(v) { return v.val == val; })[0];
+                else {
+                    if(val > 0) {
+                        return val_options[1]
+                    } 
+                    else {
+                        return
+                    }
                 }
             };
             
