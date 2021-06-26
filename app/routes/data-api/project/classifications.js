@@ -53,8 +53,8 @@ router.get('/:classiId/more/:from/:total', function(req, res, next) {
             delete classiInfo.json_stats;
 
             var thumbnail = classiInfo.uri.replace('.flac', '.thumbnail.png');
-
-            classiInfo.rec_image_url = "https://"+ config('aws').bucketName + ".s3.amazonaws.com/"+ thumbnail;
+            
+            classiInfo.rec_image_url = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + thumbnail;
             delete classiInfo.uri;
         });
 
