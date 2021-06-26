@@ -4,6 +4,10 @@
 
 - CE-940 Change "Storage: " to "Recordings:"
 
+Resolved issues:
+
+- CE-988 The datime_local column is removed
+
 ## v3.0.30 - June XX, 2021
 
 Resolved issues:
