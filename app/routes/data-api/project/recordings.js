@@ -5,6 +5,7 @@ var csv_stringify = require("csv-stringify");
 var path   = require('path');
 var model = require('../../../model');
 const stream = require('stream');
+const moment = require('moment');
 
 router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
     res.type('json');
@@ -70,7 +71,7 @@ router.get('/recordings-export.csv', function(req, res, next) {
 processFiltersData = async function(req, res, next) {
     try{
         var filters = req.query.filters ? JSON.parse(req.query.filters) : {}
-        let projectionFilter = req.query.show ? JSON.parse(req.query.show) : {};
+        var projectionFilter = req.query.show ? JSON.parse(req.query.show) : {};
     } catch(e){
         return next(e);
     }
@@ -83,19 +84,22 @@ processFiltersData = async function(req, res, next) {
 
     if (projectionFilter && projectionFilter.species) {
         return model.recordings.exportOccupancyModels(projectionFilter, filters).then(function(results) {
+            let dates  = results.map(item => { return item.date })
+            let maxDate = new Date(Math.max(...dates.map(d=>new Date(d))));
+            let minDate = new Date(Math.min(...dates.map(d=>new Date(d))));
             let fields = ['site'];
-            for (let row of results) {
-                if (!fields.includes(row.date)) {
-                    fields.push(row.date)
-                }
-            }
+            while (minDate <= maxDate) {
+                fields.push(moment(minDate).format('YYYY/MM/DD'));
+                minDate = new Date(minDate.setDate(minDate.getDate() + 1));
+            };
             let streamArray = [];
             for (let row of results) {
                 let tempRow = {};
                 fields.forEach((item) => {
                     tempRow.site = row.site;
                     let jdays = (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed();
-                    tempRow[item] = item === row.date? (row.count === 0 ? `0 / ${jdays} JD` : `1 / ${jdays} JD`) : 'NA';
+                    tempRow[item] = item === row.date? (row.count === 0 ? `0 / ${jdays} JD` : `1 / ${jdays} JD`) :
+                        (dates.includes(item) ? 'NA' : 'NI');
                 })
                 streamArray.push(tempRow);
             }

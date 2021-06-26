@@ -157,7 +157,7 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
 
     this.exportData = function(){
         var selected = this.selected;
-        if (selected[1] && selected[1] && selected[1].find(function(row){ return row.value === -1 })) {
+        if (selected[1] && selected[1].find(function(row){ return row.value === -1 })) {
             selected[1] = this.lists[1].filter(function(item) { if (item.value !== -1) { return item } });
         }
         this.onExport(this.parameter_set_list.reduce(function(_, parameter_set, index){

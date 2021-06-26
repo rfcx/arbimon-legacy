@@ -12,8 +12,6 @@ Resolved issues:
 
 - CE-791 Fixed MySQL issue to process more than 61 validations in the user selection
 - CE-791 Fixed MySQL issue with ordering from the default site to datetime if the site attribute is excluded
-- CE-689 Map should default back to showing all pins for all sites
-- CE-928 Do not cut templates in half or displaying other regions of the spectrogram
 
 Other:
 
@@ -55,10 +53,6 @@ New features:
 
 - CE-715 Add tool tip over recording column name
 - CE-884 Remove monster profile picture on Project Users page
-
-New features:
-
-- CE-715 Add tool tip over recording column name
 
 Resolved issues:
 
