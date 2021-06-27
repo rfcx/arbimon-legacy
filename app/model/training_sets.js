@@ -435,7 +435,7 @@ TrainingSets.types.roi_set = {
     create_data_image : function (training_set, rdata, callback){
         debug('create_data_image');
         var s3key = 'project_'+training_set.project+'/training_sets/'+training_set.id+'/'+rdata.id+'.png';
-        rdata.uri = 'https://s3.amazonaws.com/'+config('aws').bucketName+'/' + s3key;
+        rdata.uri = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + s3key;
         var roi_file = tmpfilecache.key2File(s3key);
         var rec_data;
         var rec_stats;
@@ -530,7 +530,7 @@ TrainingSets.types.roi_set = {
         ], callback);
     },
     get_rois : function(training_set, options, callback) {
-        var uri_prefix = 'https://s3.amazonaws.com/' + config('aws').bucketName + '/';
+        var uri_prefix = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/';
         var fields=["TSD.roi_set_data_id as id"];
         var tables=["training_set_roi_set_data TSD"];
         if(options && options.resolveIds){
@@ -597,7 +597,7 @@ TrainingSets.types.roi_set = {
                 "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
                 "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
                 "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 , \n"+
-                "   CONCAT('https://s3.amazonaws.com/','"+config('aws').bucketName+"','/',TSD.uri) as uri \n" +
+                "   CONCAT('https://"+config('aws').bucketName+".s3."+config('aws').region+".amazonaws.com/',TSD.uri) as uri \n" +
                 "FROM "   + tables.join(" \n" +
                 "JOIN ")+ " \n" +
                 "WHERE " + constraints.join(" \n" +
@@ -616,7 +616,7 @@ TrainingSets.types.roi_set = {
                     "SELECT TSD.roi_set_data_id as id, TSD.recording_id as recording,\n"+
                     "   TSD.species_id as species, TSD.songtype_id as songtype,  \n" +
                     "   TSD.x1, TSD.y1, TSD.x2, TSD.y2 , \n"+
-                    "   CONCAT('https://s3.amazonaws.com/','"+config('aws').bucketName+"','/',TSD.uri) as uri \n" +
+                    "   CONCAT('https://"+config('aws').bucketName+".s3."+config('aws').region+".amazonaws.com/',TSD.uri) as uri \n" +
                     "FROM "   + tables.join(" \n" +
                     "JOIN ")+ " \n" +
                     "WHERE " + constraints.join(" \n" +
