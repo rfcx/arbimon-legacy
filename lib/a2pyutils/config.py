@@ -31,7 +31,8 @@ class Config(object):
             self.awsConfig['bucketName'],
             self.awsConfig['accessKeyId'],
             self.awsConfig['secretAccessKey'],
-            self.spectrogramsConfig['spectrograms']
+            self.spectrogramsConfig['spectrograms'],
+            self.awsConfig['region']
         ]
 
     def load(self, cfg):

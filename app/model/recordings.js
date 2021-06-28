@@ -989,7 +989,7 @@ var Recordings = {
         }
         const legacy = this.isLegacy(recording)
         if (legacy) {
-            recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
+            recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
         }
         else {
             const momentStart = moment.utc(recording.datetime_utc ? recording.datetime_utc : recording.datetime)
