@@ -1,8 +1,11 @@
 # Arbimon Release Notes
 
-## v3.0.31 - June XX, 2021\
+## v3.0.31 - June XX, 2021
+
+Resolved issues:
 
 - CE-940 Change "Storage: " to "Recordings:"
+- CE-981 Combine user data from firstname and lastname on the RFM page
 
 ## v3.0.30 - June XX, 2021
 

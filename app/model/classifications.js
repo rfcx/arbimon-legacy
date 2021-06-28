@@ -50,7 +50,7 @@ var Classifications = {
 
         if(options.showUser){
             builder.addTable("JOIN `users`", "U", "U.`user_id` = J.`user_id`");
-            builder.addProjection("U.login as muser");
+            builder.addProjection("CONCAT(CONCAT(UCASE(LEFT(U.firstname, 1)), SUBSTRING(U.firstname, 2)), ' ', CONCAT(UCASE(LEFT(U.lastname, 1)), SUBSTRING(U.lastname, 2))) as muser");
         }
 
         if(options.showPlaylist){
