@@ -50,9 +50,9 @@
 <div class="row">
     <div class="col-sm-12">
         <a2-table rows="recs" data-checked="checked" ext-sort="controller.sortRecs(sortBy, reverse)" default-sort="site">
-            <field title="Filename" key="file">{{ row.filename? row.filename : row.file }}</field>
             <field title="Site" key="site">{{ row.site }}</field>
             <field title="Recorded Time" key="datetime" >{{ (row.datetime | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
+            <field title="Filename" key="file">{{ row.filename? row.filename : row.file }}</field>
             <field title="Uploaded Time" key="upload_time" >{{ (row.upload_time | momentUtc : 'YYYY-MM-DD HH:mm:ss') }}</field>
             <field title="Recorder" key="recorder">{{ row.recorder }}</field>
             <field title="Comments" key="comments" className="comments hidelongtext seconds-div-center">
