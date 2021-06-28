@@ -3,6 +3,7 @@
 ## v3.0.31 - June XX, 2021\
 
 - CE-940 Change "Storage: " to "Recordings:"
+- CE-971 Update regex function to parsing AudioMoth data in different cases
 
 ## v3.0.30 - June XX, 2021
 
