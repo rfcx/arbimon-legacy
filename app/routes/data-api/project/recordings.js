@@ -84,10 +84,10 @@ processFiltersData = async function(req, res, next) {
 
     if (projectionFilter && projectionFilter.species) {
         return model.recordings.exportOccupancyModels(projectionFilter, filters).then(function(results) {
-            let dates  = results.map(item => { return item.date })
+            let dates  = results.map(item => { return item.date });
             let maxDate = new Date(Math.max(...dates.map(d=>new Date(d))));
             let minDate = new Date(Math.min(...dates.map(d=>new Date(d))));
-            let fields = ['site'];
+            let fields = [];
             while (minDate <= maxDate) {
                 fields.push(moment(minDate).format('YYYY/MM/DD'));
                 minDate = new Date(minDate.setDate(minDate.getDate() + 1));
@@ -95,14 +95,19 @@ processFiltersData = async function(req, res, next) {
             let streamArray = [];
             for (let row of results) {
                 let tempRow = {};
+                let tempJdays = {};
                 fields.forEach((item) => {
                     tempRow.site = row.site;
+                    tempRow[item] = item === row.date? (row.count === 0 ? 0 : 1) :
+                        (dates.includes(item) ? 'NI' : 'NA');
                     let jdays = (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed();
-                    tempRow[item] = item === row.date? (row.count === 0 ? `0 / ${jdays} JD` : `1 / ${jdays} JD`) :
-                        (dates.includes(item) ? 'NA' : 'NI');
+                    tempJdays[item] = item === row.date? jdays :
+                        (dates.includes(item) ? 'NI' : 'NA');
                 })
-                streamArray.push(tempRow);
+                streamArray.push([...Object.values(tempRow), ...Object.values(tempJdays)]);
             }
+            fields = [...fields, ...fields];
+            fields.unshift('site');
             let datastream = new stream.Readable({objectMode: true});
                 for (let row of streamArray) {
                     datastream.push(row);
