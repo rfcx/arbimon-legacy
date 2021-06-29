@@ -247,6 +247,7 @@ angular.module('a2.analysis.patternmatching', [
                     if(a.site > b.site) { return 1; }
                     return 0;
                 });
+            this.topSitesResults = this.siteIndex.length * 200;
         }).bind(this));
     },
 
