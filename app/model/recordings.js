@@ -1425,6 +1425,19 @@ var Recordings = {
         return queryResult;
     },
 
+    getCountSitesRecPerDates: async function(project_id){
+        let query = `SELECT S.name as site, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
+            FROM sites S
+            LEFT JOIN recordings R ON S.site_id = R.site_id
+            WHERE S.project_id = ${project_id}
+            GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);`;
+        let queryResult = await dbpool.query({
+            sql: query,
+            typeCast: sqlutil.parseUtcDatetime,
+        })
+        return queryResult;
+    },
+
     exportRecordingData: function(projection, filters){
         let summaryBuilders = [];
         return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)

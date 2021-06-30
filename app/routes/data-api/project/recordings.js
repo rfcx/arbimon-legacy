@@ -83,8 +83,11 @@ processFiltersData = async function(req, res, next) {
     var projection = req.query.show;
 
     if (projectionFilter && projectionFilter.species) {
-        return model.recordings.exportOccupancyModels(projectionFilter, filters).then(function(results) {
-            let dates  = results.map(item => { return item.date });
+        return model.recordings.exportOccupancyModels(projectionFilter, filters).then(async function(results) {
+            let sitesData = await model.recordings.getCountSitesRecPerDates(filters.project_id);
+            let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
+            // Get the first/last recording/date per project.
+            let dates  = sitesData.map(item => { return moment(new Date(`${item.year}/${item.month}/${item.day}`)).format('YYYY/MM/DD') });
             let maxDate = new Date(Math.max(...dates.map(d=>new Date(d))));
             let minDate = new Date(Math.min(...dates.map(d=>new Date(d))));
             let fields = [];
@@ -92,24 +95,61 @@ processFiltersData = async function(req, res, next) {
                 fields.push(moment(minDate).format('YYYY/MM/DD'));
                 minDate = new Date(minDate.setDate(minDate.getDate() + 1));
             };
-            let streamArray = [];
+            let streamObject = {};
             for (let row of results) {
-                let tempRow = {};
-                let tempJdays = {};
-                fields.forEach((item) => {
-                    tempRow.site = row.site;
-                    tempRow[item] = item === row.date? (row.count === 0 ? 0 : 1) :
-                        (dates.includes(item) ? 'NI' : 'NA');
-                    let jdays = (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed();
-                    tempJdays[item] = item === row.date? jdays :
-                        (dates.includes(item) ? 'NI' : 'NA');
-                })
-                streamArray.push([...Object.values(tempRow), ...Object.values(tempJdays)]);
+                // Combine repeating sites with existing data in the report.
+                if (streamObject[row.site]) {
+                    let index = fields.findIndex(date => date === row.date);
+                    streamObject[row.site][index+1] = row.count === 0 ? 0 : 1;
+                    streamObject[row.site][fields.length+index+1] = (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed();
+                }
+                else {
+                    let tempRow = {};
+                    let tempJdays = {};
+                    // Fill each cell in the report.
+                    fields.forEach((item) => {
+                        tempRow.site = row.site;
+                        let site = sitesData.find(site => {
+                            if (site.site === row.site) {
+                                return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
+                            }
+                        });
+                        // Occupancy parameter:
+                        // 1 (present); 0 (absent);
+                        // NA ( device was not active in that day, in other words, there are no recordings for this day);
+                        // NI ( no information from the user if species is present or absent).
+                        tempRow[item] = item === row.date? (row.count === 0 ? 0 : 1) : (site ? 'NI' : 'NA');
+                        // Detection parameter:
+                        // The julian day when there are recordings for that day;
+                        // NA if the recorder was not active in that day (i.e there is no recordings associated with that day).
+                        tempJdays[item] = item === row.date? (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed() : (site ? (new Date(item).getTime()/86400000 + 2440587.5).toFixed() : 'NA');
+                    });
+                    streamObject[row.site] = [...Object.values(tempRow), ...Object.values(tempJdays)];
+                }
+            };
+            // Get sites without validations.
+            let notValidated = allSites.filter(site => !results.find(res => site === res.site ));
+            if (notValidated && notValidated.length) {
+                for (let row of notValidated) {
+                    let notValidatedRow = {};
+                    let notValidatedDays = {};
+                    fields.forEach((item) => {
+                        notValidatedRow.site = row;
+                        let site = sitesData.find(site => {
+                            if (site.site === row) {
+                                return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
+                            }
+                        });
+                        notValidatedRow[item] = site ? 'NI' : 'NA';
+                        notValidatedDays[item] = site ? (moment(new Date(`${site.year}/${site.month}/${site.day}`)).valueOf()/86400000 + 2440587.5).toFixed() : 'NA';
+                    });
+                    streamObject[row] = [...Object.values(notValidatedRow), ...Object.values(notValidatedDays)];
+                }
             }
             fields = [...fields, ...fields];
             fields.unshift('site');
             let datastream = new stream.Readable({objectMode: true});
-                for (let row of streamArray) {
+                for (let row of Object.values(streamObject)) {
                     datastream.push(row);
                 }
                 datastream.push(null);
