@@ -581,12 +581,12 @@ var PatternMatchings = {
             SUBSTRING_INDEX(R.uri, "/", -1) as recording,
             S.name as site,
             S.site_id,
-            EXTRACT(year FROM R.datetime) as year,
-            EXTRACT(month FROM R.datetime) as month,
-            EXTRACT(day FROM R.datetime) as day,
-            EXTRACT(hour FROM R.datetime) as hour,
-            EXTRACT(minute FROM R.datetime) as min,
-            R.datetime,
+            EXTRACT(year FROM PMR.denorm_recording_datetime) as year,
+            EXTRACT(month FROM PMR.denorm_recording_datetime) as month,
+            EXTRACT(day FROM PMR.denorm_recording_datetime) as day,
+            EXTRACT(hour FROM PMR.denorm_recording_datetime) as hour,
+            EXTRACT(minute FROM PMR.denorm_recording_datetime) as min,
+            PMR.denorm_recording_datetime,
             PMR.recording_id,
             PMR.species_id,
             PMR.songtype_id,
@@ -596,7 +596,7 @@ var PatternMatchings = {
             PMR.validated
         FROM pattern_matching_rois AS PMR
         JOIN recordings AS R ON R.recording_id = PMR.recording_id
-        JOIN sites AS S ON R.site_id = S.site_id
+        JOIN sites AS S ON PMR.denorm_site_id = S.site_id
         WHERE PMR.pattern_matching_id = ? AND S.site_id = ?
         ORDER BY PMR.score DESC LIMIT 200`
         return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, siteId]);

@@ -252,6 +252,11 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     setSiteBookmark: function(site){
+        if (this.isTopRoisResults()) {
+            console.log(this.siteIndex.indexOf(site)+1);
+            this.selected.page = this.siteIndex.indexOf(site)+1;
+            return this.loadPage(this.selected.page);
+        }
         var bookmark = 'site-' + site.site_id;
         $anchorScroll.yOffset = $('.a2-page-header').height() + 60;
         $anchorScroll(bookmark)
