@@ -945,16 +945,16 @@ var Recordings = {
     __parse_comments_data : function(data) {
         try {
             const parsedData = JSON.parse(data);
-            if (parsedData && !parsedData.ARTIST) {
-                return null;
-            }
             let comment = '';
-            const regArtist = /AudioMoth (\w+)/.exec(parsedData.ARTIST);
-            comment += regArtist && regArtist[1] ? regArtist[1] : '';
+            const regArtist = /AudioMoth (\w+)/.exec(parsedData && parsedData.ARTIST? parsedData.ARTIST : parsedData.artist);
+            const regArtistFromComment = /by AudioMoth (.*?) at gain/.exec(data);
+            comment += regArtist && regArtist[1] ? regArtist[1] : regArtistFromComment && regArtistFromComment[1] ? regArtistFromComment[1] : '';
             const regGain = /at (\w+) gain/.exec(data);
-            comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : '';
+            const regGainFromComment = /at gain setting (\w+) while/.exec(data);
+            comment += regGain && regGain[1] ? ` / ${regGain[1]} gain` : regGainFromComment && regGainFromComment[1] ? ` / ${regGainFromComment[1]} gain` : '';
             const regState = /state was (.*?) and/.exec(data);
-            comment += regState && regState[1] ? ` / ${regState[1]}` : '';
+            const regStateFromComment = /state was (.*?).","/.exec(data);
+            comment += regState && regState[1] ? ` / ${regState[1]}` : regStateFromComment && regStateFromComment[1] ? ` / ${regStateFromComment[1]}` : '';
             const regTemperature = /temperature was (.*?).","/.exec(data);
             comment += regTemperature && regTemperature[1] ? ` / ${regTemperature[1]}` : '';
             return comment;
@@ -1229,6 +1229,9 @@ var Recordings = {
                             _1.timezone = siteData[_1.site_id].timezone;
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
                             _1.comments = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
+                            if (_1.comments && _1.recorder === "Unknown") {
+                                _1.recorder = "AudioMoth";
+                            }
                             _1.meta = _1.meta ? Recordings.__parse_meta_data(_1.meta) : null;
                             _1.filename = _1.meta? (_1.meta.filename? _1.meta.filename : 'Unknown') : null;
                             Recordings.__compute_thumbnail_path_async(_1);
