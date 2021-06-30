@@ -1230,7 +1230,7 @@ var Recordings = {
                             _1.imported = siteData[_1.site_id].project_id !== parameters.project_id;
                             _1.comments = _1.meta ? Recordings.__parse_comments_data(_1.meta) : null;
                             _1.meta = _1.meta ? Recordings.__parse_meta_data(_1.meta) : null;
-                            _1.filename = _1.meta && _1.meta.filename? _1.meta.filename : null;
+                            _1.filename = _1.meta? (_1.meta.filename? _1.meta.filename : 'Unknown') : null;
                             Recordings.__compute_thumbnail_path_async(_1);
                             if (!_1.legacy) {
                                 _1.file = `${moment.utc(_1.datetime).format('YYYYMMDD_HHmmss')}${path.extname(_1.file)}`;
