@@ -2,6 +2,8 @@
 
 ## v3.0.31 - June XX, 2021\
 
+- CE-940 Update the text for the Recordings data in the Summary page
+- CE-792 Save validated rois in the recording validations table
 - CE-940 Change "Storage: " to "Recordings:"
 - CE-971 Update regex function to parsing AudioMoth data in different cases
 - CE-856 Add feature to export names/emails of all users
