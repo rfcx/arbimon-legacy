@@ -104,7 +104,7 @@ var CNN = {
                     delete row.lastname;
                 }
                 if (options.resolveModelUri) {
-                    row.model_uri = 'https://s3.amazonaws.com/' + config('aws').bucketName + '/' + row.model_uri;
+                    row.model_uri = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + row.model_uri;
                 }
                 try {
                     row.parameters = JSON.parse(row.parameters);
@@ -162,7 +162,7 @@ var CNN = {
         postprocess.push((rows) => {
             rows.forEach(row => {
                 if (row.uri) {
-                    row.uri = 'https://s3.amazonaws.com/' + config('aws').bucketName + '/' + row.uri;
+                    row.uri = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + row.uri;
                 }
                 try {
                     row.parameters = JSON.parse(row.parameters);
@@ -188,7 +188,7 @@ var CNN = {
     // copied from recordings.js in express model
     // if that changes this should change as well
     __compute_thumbnail_path : function(recording, callback){
-        recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
+        recording.thumbnail = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + encodeURIComponent(recording.uri.replace(/\.([^.]*)$/, '.thumbnail.png'));
         if (callback){callback()};
     },
     listResults: function (job_id, options) {

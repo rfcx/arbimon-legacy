@@ -155,7 +155,7 @@ module.exports = {
                     lowfreq: data.json.roilowfreq,
                     highfreq: data.json.roihighfreq,
                     samplerate: data.json.roisamplerate,
-                    thumbnail: "https://"+ config('aws').bucketName + ".s3.amazonaws.com/"+ data.json.roipng,
+                    thumbnail: 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + data.json.roipng,
                 }
             };
             callback(null, model);

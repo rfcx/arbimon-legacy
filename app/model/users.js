@@ -377,6 +377,16 @@ var Users = {
 
         queryHandler(q, callback);
     },
+    
+    listUser: function(callback) {
+        var q = 'SELECT user_id AS id, \n' +
+                'firstname, \n' +
+                'lastname, \n' +
+                'email \n' +
+                'FROM users';
+
+        queryHandler(q, callback);
+    },
 
     countCreatedToday: function(callback) {
         var q = 'SELECT count(*) AS count \n'+

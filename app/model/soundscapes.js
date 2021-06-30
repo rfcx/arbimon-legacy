@@ -624,7 +624,7 @@ var Soundscapes = {
 
 
     __compute_thumbnail_path : function(soundscape, callback){
-        soundscape.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + soundscape.uri;
+        soundscape.thumbnail = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + soundscape.uri;
         callback();
     },
     __compute_region_tags : function(region, callback){
