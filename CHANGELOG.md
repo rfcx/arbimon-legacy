@@ -4,6 +4,11 @@
 
 - CE-940 Change "Storage: " to "Recordings:"
 - CE-971 Update regex function to parsing AudioMoth data in different cases
+- CE-856 Add feature to export names/emails of all users
+
+Other:
+- The columns order is changed on the recording page
+- Show "Unknown" if the recording hasn't in the file name data
 
 ## v3.0.30 - June XX, 2021
 
