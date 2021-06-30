@@ -3,6 +3,7 @@
 ## v3.0.31 - June XX, 2021\
 
 - CE-940 Change "Storage: " to "Recordings:"
+- CE-856 Add feature to export names/emails of all users
 
 ## v3.0.30 - June XX, 2021
 
