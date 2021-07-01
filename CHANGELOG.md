@@ -1,20 +1,23 @@
 # Arbimon Release Notes
 
-## v3.0.30 - June XX, 2021
+## v3.0.31 - June XX, 2021
 
 New features:
 
-- CE-940 Update the text for the Recordings data in the Summary page
-- CE-792 Save validated rois in the recording validations table
-- CE-940 Change "Storage: " to "Recordings:"
-- CE-971 Update regex function to parsing AudioMoth data in different cases
+- CE-790 Add pattern matching filter to view top 200 scores per each site
 - CE-856 Add feature to export names/emails of all users
 
+Resolved issues:
+
+- CE-981 Combine user data from firstname and lastname on the RFM page
+- CE-971 Update regex function to parsing AudioMoth data in different cases
+
 Other:
+
 - The columns order is changed on the recording page
 - Show "Unknown" if the recording hasn't in the file name data
-
-- CE-790 Add pattern matching filter to view top 200 scores per each site
+- CE-940 Update the text for the Recordings data in the Summary page
+- CE-792 Save validated rois in the recording validations table
 
 Resolved issues:
 
