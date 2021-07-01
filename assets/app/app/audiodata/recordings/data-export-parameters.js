@@ -31,12 +31,10 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             list:[
                 {value:'filename'  , caption:'Filename'  , tooltip:'The recording filename'  },
                 {value:'site'      , caption:'Site'      , tooltip:'The recording site'      },
-                {value:'time'      , caption:'Time'      , tooltip:'The recording time'      },
-                {value:'recorder'  , caption:'Recorder'  , tooltip:'The recording recorder'  },
-                {value:'microphone', caption:'Microphone', tooltip:'The recording microphone'},
-                {value:'software'  , caption:'Software'  , tooltip:'The recording software'  },
+                {value:'day'       , caption:'Day'       , tooltip:'The recording day'       },
+                {value:'hour'      , caption:'Hour'      , tooltip:'The recording hour'      }
             ],
-            preselected:['filename', 'site', 'time']
+            preselected:['filename', 'site', 'day']
         },
         {   title:'Validations',
             identifier:'validation',
@@ -50,17 +48,6 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                             {icon:'val-1', value:cls.vals_present},
                             {icon:'val-0', value:cls.vals_absent},
                         ]};
-                    });
-                });
-            },
-        },
-        {   title:'Classifications',
-            identifier:'classification',
-            placeholder: 'Classifications...',
-            getList: function(a2Classi){
-                return a2Classi.list().then(function(classifications) {
-                    return classifications.map(function(classification){
-                        return {value:classification.job_id, caption:classification.cname};
                     });
                 });
             },
@@ -87,6 +74,17 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                         ]};
                     });
                 }).bind(this));
+            },
+        },
+        {   title:'Occupancy models format',
+            identifier:'species',
+            placeholder: 'Species...',
+            getList: function(Project){
+                return Project.getClasses().then(function(classes){
+                    return classes.map(function(cls){
+                        return {value:cls.species, caption:cls.species_name, name: cls.species_name.split(' ').join('_')};
+                    });
+                });
             },
         },
     ];
@@ -121,6 +119,9 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
 
         $q.all(this.parameter_set_list.map(getList)).then((function(allLists){
             this.lists = allLists;
+            if (this.lists[1]) {
+                this.lists[1].splice(0,0,{value: -1, caption: 'Select all species'});
+            }
             this.selected = this.parameter_set_list.map(function(parameter_set, idx){
                 if(parameter_set.preselected){
                     var listByValue = allLists[idx].reduce(function(_, item){
@@ -140,13 +141,34 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
         }).bind(this));
     };
 
+    this.checkSelectedValue = function(selected) {
+        return selected && selected.find(function(row){ return row.value === -1 });
+    }
+
+    this.onSelected = function (selectedItem) {
+        if (selectedItem && selectedItem.value === -1 ) {
+            this.selected[1] = [selectedItem]
+        }
+    }
+
+    this.resetFilters = function() {
+        this.selected = [];
+    };
+
     this.exportData = function(){
         var selected = this.selected;
+        if (selected[1] && selected[1].find(function(row){ return row.value === -1 })) {
+            selected[1] = this.lists[1].filter(function(item) { if (item.value !== -1) { return item } });
+        }
         this.onExport(this.parameter_set_list.reduce(function(_, parameter_set, index){
             if(selected[index] && selected[index].length){
                 _[parameter_set.identifier] = selected[index].map(function(item){
                     return item.value;
                 });
+            }
+            if(selected[index] && parameter_set.identifier==='species' && selected[index].value){
+                _[parameter_set.identifier] = selected[index].value;
+                _['species_name'] = selected[index].name;
             }
             return _;
         }, {}));

@@ -4,11 +4,16 @@
 
 New features:
 
+- CE-791 Changed export attributes for the recording data
+- CE-791 Added item `Select all species` to the validations dropdown
+- The ability to export Occupancy models format is added for each species
 - CE-790 Add pattern matching filter to view top 200 scores per each site
 - CE-856 Add feature to export names/emails of all users
 
 Resolved issues:
 
+- CE-791 Fixed MySQL issue to process more than 61 validations in the user selection
+- CE-791 Fixed MySQL issue with ordering from the default site to datetime if the site attribute is excluded
 - CE-981 Combine user data from firstname and lastname on the RFM page
 - CE-971 Update regex function to parsing AudioMoth data in different cases
 
@@ -18,6 +23,9 @@ Other:
 - Show "Unknown" if the recording hasn't in the file name data
 - CE-940 Update the text for the Recordings data in the Summary page
 - CE-792 Save validated rois in the recording validations table
+
+
+## v3.0.30 - June 18, 2021
 
 Resolved issues:
 

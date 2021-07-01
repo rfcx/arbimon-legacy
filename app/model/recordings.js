@@ -1286,12 +1286,13 @@ var Recordings = {
         },
         exportProjections: {
             recording:arrayOrSingle(joi.string().valid(
-                'filename', 'site', 'time', 'recorder', 'microphone', 'software'
+                'filename', 'site', 'day', 'hour'
             )),
+            species: arrayOrSingle(joi.number()),
             validation:  arrayOrSingle(joi.number()),
             classification:  arrayOrSingle(joi.number()),
             soundscapeComposition:  arrayOrSingle(joi.number()),
-            tag:  arrayOrSingle(joi.number()),
+            tag:  arrayOrSingle(joi.number())
         }
     },
 
@@ -1412,95 +1413,154 @@ var Recordings = {
         });
     },
 
+    exportOccupancyModels: async function(projection, filters){
+        let query = `SELECT S.name as site, DATE_FORMAT(R.datetime, "%Y/%m/%d") as date, SUM(rv.present=1) as count
+            FROM recordings R
+            JOIN sites S ON S.site_id = R.site_id
+            LEFT JOIN project_imported_sites AS pis ON S.site_id = pis.site_id AND pis.project_id = ${filters.project_id}
+            LEFT JOIN recording_validations AS rv ON R.recording_id = rv.recording_id
+            WHERE rv.species_id = ${projection.species} AND (S.project_id = ${filters.project_id} OR pis.project_id = ${filters.project_id})
+            GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime) ORDER BY R.datetime ASC`;
+        let queryResult = await dbpool.query({
+            sql: query,
+            typeCast: sqlutil.parseUtcDatetime,
+        })
+        return queryResult;
+    },
+
+    getCountSitesRecPerDates: async function(project_id){
+        let query = `SELECT S.name as site, YEAR(R.datetime) as year, MONTH(R.datetime) as month, DAY(R.datetime) as day,COUNT(*) as count
+            FROM sites S
+            LEFT JOIN recordings R ON S.site_id = R.site_id
+            WHERE S.project_id = ${project_id}
+            GROUP BY S.name, YEAR(R.datetime), MONTH(R.datetime), DAY(R.datetime);`;
+        let queryResult = await dbpool.query({
+            sql: query,
+            typeCast: sqlutil.parseUtcDatetime,
+        })
+        return queryResult;
+    },
+
     exportRecordingData: function(projection, filters){
-        var builder;
-
-        return Q.all([
-            this.buildSearchQuery(filters),
-            Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
-        ]).then(function(all){
-            builder = all[0];
-            var projection_parameters = all[1];
-            var promises=[];
-
-            if(projection_parameters.recording){
-                var recParamMap = {
-                    'filename' : "SUBSTRING_INDEX(r.uri,'/',-1) as filename",
-                    'site' : 's.name as site',
-                    'time' : 'DATE_FORMAT(r.datetime, "%Y/%m/%d %T") as time',
-                    'recorder' : 'r.recorder',
-                    'microphone' : 'r.mic as microphone',
-                    'software' : 'r.version as software',
-                };
-                builder.addProjection.apply(builder, projection_parameters.recording.map(function(recParam){
-                    console.log("recParam", recParam, recParamMap[recParam]);
-                    return recParamMap[recParam];
-                }));
-                builder.addProjection('r.meta');
-            }
-
-            if(projection_parameters.validation){
-                promises.push(models.projects.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(function(classes){
-                    classes.forEach(function(cls, idx){
-                        var clsid = "p_PVAL_" + idx;
-                        builder.addTable("LEFT JOIN recording_validations", clsid,
-                            "r.recording_id = " + clsid + ".recording_id " +
-                            "AND " + clsid + ".songtype_id = ? " +
-                            "AND " + clsid + ".species_id = ? " +
-                            "AND " + clsid + ".project_id = ? ", [
-                            cls.songtype,
-                            cls.species,
-                            cls.project,
-                        ]);
-                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
-                    });
-                }));
-            }
-            if(projection_parameters.classification){
-                promises.push(models.classifications.getFor({id:projection_parameters.classification, showModel:true}).then(function(classifications){
-                    classifications.forEach(function(classification, idx){
-                        var clsid = "p_CR_" + idx;
-                        builder.addTable("LEFT JOIN classification_results", clsid,
-                            "r.recording_id = " + clsid + ".recording_id " +
-                            "AND " + clsid + ".job_id = ?", [
-                            classification.job_id
-                        ]);
-                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("cr<" + classification.cname + ">"));
-                        if(classification.threshold){
-                            builder.addProjection("IF(ISNULL("+clsid+".max_vector_value), '---', "+clsid+".max_vector_value > " + dbpool.escape(classification.threshold) + ")  AS " + dbpool.escapeId("cr<" + classification.cname + "> threshold (" + String(classification.threshold).replace('.',',') + ")"));
+        let summaryBuilders = [];
+        return Q.ninvoke(joi, 'validate', projection, Recordings.SCHEMAS.exportProjections)
+            .then(async (all) => {
+                var projection_parameters = all;
+                var promises=[];
+                if (projection_parameters.recording.includes('day')) {
+                    projection_parameters.recording.push('month');
+                    projection_parameters.recording.push('year');
+                }
+                if (projection_parameters.validation) {
+                    let classPromise = await models.projects.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(async (classes) => {
+                        if (classes && classes.length) {
+                            // Divide the results of the validations if the count more than 50 tables.
+                            let classesArray = classes.reduce((resultArray, item, index) => {
+                                const chunkIndex = Math.floor(index/50);
+                                if (!resultArray[chunkIndex]) {
+                                    resultArray[chunkIndex] = [];
+                                }
+                                resultArray[chunkIndex].push(item);
+                                return resultArray;
+                            }, []);
+                            let index = 0;
+                            for (let c in classesArray) {
+                                // Create a new builder for each parts of validations arrays.
+                                let builder = await this.buildSearchQuery(filters)
+                                summaryBuilders.push(builder);
+                                classesArray[c].forEach(function(cls, idx){
+                                    index++;
+                                    let clsid = "p_PVAL_" + index;
+                                    summaryBuilders[c].addTable("LEFT JOIN recording_validations", clsid,
+                                        "r.recording_id = " + clsid + ".recording_id " +
+                                        "AND " + clsid + ".songtype_id = ? " +
+                                        "AND " + clsid + ".species_id = ? " +
+                                        "AND " + clsid + ".project_id = ? ", [
+                                        cls.songtype,
+                                        cls.species,
+                                        cls.project,
+                                    ]);
+                                    summaryBuilders[c].addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("val<" + cls.species_name + "/" + cls.songtype_name + ">"));
+                                })
+                            }
                         }
-                    });
-                }));
-            }
-            if(projection_parameters.soundscapeComposition){
-                promises.push(models.SoundscapeComposition.getClassesFor({id:projection_parameters.soundscapeComposition}).then(function(classes){
-                    classes.forEach(function(cls, idx){
-                        var clsid = "p_SCC_" + idx;
-                        builder.addTable("LEFT JOIN recording_soundscape_composition_annotations", clsid,
-                            "r.recording_id = " + clsid + ".recordingId " +
-                            "AND " + clsid + ".scclassId = ?", [
-                            cls.id
-                        ]);
-                        builder.addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("scc<" + cls.type + "/" + cls.name + ">"));
-                    });
-                }));
-            }
-            if(projection_parameters.tag){
-                promises.push(models.tags.getFor({id:projection_parameters.tag}).then(function(tags){
-                    tags.forEach(function(tag, idx){
-                        var prtid = "p_RT_" + idx;
-                        builder.addProjection("(SELECT COUNT(*) FROM recording_tags AS " + prtid + " WHERE r.recording_id = " + prtid + ".recording_id AND " + prtid + ".tag_id = " + dbpool.escape(tag.id)+ "  ) AS " + dbpool.escapeId("tag<" + tag.tag + ">"));
-                    });
-                }));
-            }
-
-            return Q.all(promises);
-        }).then(function(){
-            return dbpool.streamQuery({
-                sql: builder.getSQL(),
-                typeCast: sqlutil.parseUtcDatetime,
-            });
-        });
+                    })
+                    promises.push(classPromise)
+                }
+                if (!summaryBuilders.length) {
+                    let builder = await this.buildSearchQuery(filters)
+                    summaryBuilders.push(builder);
+                }
+                for (let c in summaryBuilders) {
+                    if (projection_parameters.recording) {
+                        var recParamMap = {
+                            'filename' : "SUBSTRING_INDEX(r.uri,'/',-1) as filename",
+                            'site' : 's.name as site',
+                            'day' : 'DATE_FORMAT(r.datetime, "%d") as `day`',
+                            'month' : 'DATE_FORMAT(r.datetime, "%m") as `month`',
+                            'year' : 'DATE_FORMAT(r.datetime, "%y") as `year`',
+                            'hour' : 'DATE_FORMAT(r.datetime, "%T") as hour'
+                        };
+                        summaryBuilders[c].addProjection.apply(summaryBuilders[c], projection_parameters.recording.map(function(recParam){
+                            console.log("recParam", recParam, recParamMap[recParam]);
+                            return recParamMap[recParam];
+                        }));
+                        summaryBuilders[c].addProjection('r.meta');
+                        // Change the order to datetime if the site attribute is excluded.
+                        if (!projection_parameters.recording.includes('site')) {
+                            summaryBuilders[c].setOrderBy('r.datetime');
+                        }
+                    }
+                    if (projection_parameters.classification) {
+                        promises.push(models.classifications.getFor({id:projection_parameters.classification, showModel:true}).then(function(classifications){
+                            classifications.forEach(function(classification, idx){
+                                var clsid = "p_CR_" + idx;
+                                summaryBuilders[c].addTable("LEFT JOIN classification_results", clsid,
+                                    "r.recording_id = " + clsid + ".recording_id " +
+                                    "AND " + clsid + ".job_id = ?", [
+                                    classification.job_id
+                                ]);
+                                summaryBuilders[c].addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("cr<" + classification.cname + ">"));
+                                if(classification.threshold){
+                                    summaryBuilders[c].addProjection("IF(ISNULL("+clsid+".max_vector_value), '---', "+clsid+".max_vector_value > " + dbpool.escape(classification.threshold) + ")  AS " + dbpool.escapeId("cr<" + classification.cname + "> threshold (" + String(classification.threshold).replace('.',',') + ")"));
+                                }
+                            });
+                        }));
+                    }
+                    if (projection_parameters.soundscapeComposition) {
+                        promises.push(models.SoundscapeComposition.getClassesFor({id:projection_parameters.soundscapeComposition}).then(function(classes){
+                            classes.forEach(function(cls, idx){
+                                var clsid = "p_SCC_" + idx;
+                                summaryBuilders[c].addTable("LEFT JOIN recording_soundscape_composition_annotations", clsid,
+                                    "r.recording_id = " + clsid + ".recordingId " +
+                                    "AND " + clsid + ".scclassId = ?", [
+                                    cls.id
+                                ]);
+                                summaryBuilders[c].addProjection("IF(ISNULL("+clsid+".present), '---', "+clsid+".present)  AS " + dbpool.escapeId("scc<" + cls.type + "/" + cls.name + ">"));
+                            });
+                        }));
+                    }
+                    if(projection_parameters.tag){
+                        promises.push(models.tags.getFor({id:projection_parameters.tag}).then(function(tags){
+                            tags.forEach(function(tag, idx){
+                                var prtid = "p_RT_" + idx;
+                                summaryBuilders[c].addProjection("(SELECT COUNT(*) FROM recording_tags AS " + prtid + " WHERE r.recording_id = " + prtid + ".recording_id AND " + prtid + ".tag_id = " + dbpool.escape(tag.id)+ "  ) AS " + dbpool.escapeId("tag<" + tag.tag + ">"));
+                            });
+                        }));
+                    }
+                }
+                return Q.all(promises);
+            }).then(async function() {
+                let results = [];
+                for (let builder in summaryBuilders) {
+                    let queryResult = await dbpool.streamQuery({
+                        sql: summaryBuilders[builder].getSQL(),
+                        typeCast: sqlutil.parseUtcDatetime,
+                    })
+                    results = [...new Set(queryResult)];
+                }
+                return Q.all(results);
+            })
     },
 
 
