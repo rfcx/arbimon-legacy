@@ -774,8 +774,8 @@ var Recordings = {
             }
             else {
                 queryHandler(
-                    "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id) \n" +
-                    " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id]) + ") \n" +
+                    "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
+                    " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, 1]) + ") \n" +
                     " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
                     if (err) { callback(err); return; }
                     callback(null, valobj);
