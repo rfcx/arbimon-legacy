@@ -127,7 +127,7 @@ var AudioEventDetections = {
         if(options.showThumbnail){
             postprocess.push(function(aeds){
                 aeds.forEach(function(aed){
-                    aed.thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/aed/' + aed.id + '.png';
+                    aed.thumbnail = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/aed/' + aed.id + '.png';
                 });
             });
         }
@@ -464,7 +464,7 @@ var AudioEventDetections = {
                     params.aed
                 ]);
             }).then(function(){
-                return 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + encodeURI(plotkey);
+                return 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + encodeURI(plotkey);
             });
             
         });

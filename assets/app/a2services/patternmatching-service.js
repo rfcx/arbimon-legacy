@@ -19,6 +19,9 @@ angular.module('a2.srv.patternmatching', [
             if (opts && opts.completed) {
                 config.params.completed = opts.completed;
             }
+            if (opts && opts.rec_id) {
+                config.params.rec_id = opts.rec_id;
+            }
             return $http.get('/api/project/'+Project.getUrl()+'/pattern-matchings', config).then(function(response){
                 return response.data;
             }).catch(notify.serverError);

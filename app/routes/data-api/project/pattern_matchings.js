@@ -23,6 +23,16 @@ router.use(function(req, res, next) {
  */
 router.get('/', function(req, res, next) {
     res.type('json');
+
+    if (req.query.rec_id) {
+        return model.patternMatchings.getPatternMatchingRois({
+            rec_id: req.query.rec_id
+        })
+        .then(function(data){
+            res.json(data);
+        }).catch(next);
+    }
+
     model.patternMatchings.find({
         project:req.project.project_id,
         deleted:0,
@@ -77,6 +87,8 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
             whereNotPresent: req.query.search == 'not_present',
             whereUnvalidated: req.query.search == 'unvalidated',
             byScorePerSite: req.query.search == 'by_score_per_site',
+            byScoresPerSite: req.query.search == 'by_scores_per_site',
+            site: req.query.site,
             byScore: req.query.search == 'by_score',
             limit: req.paging.limit || 100,
             offset: req.paging.offset || 0,
@@ -161,10 +173,41 @@ router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
 
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.validateRois(req.params.patternMatching, req.body.rois, req.body.validation).then(function(rois) {
-        res.json({
-            rois: req.body.rois,
-            validation: req.body.validation,
+    model.patternMatchings.validateRois(req.params.patternMatching, req.body.rois, req.body.validation)
+        .then(function(rois){
+            if (req.body.rois && req.body.rois.length) {
+                return model.patternMatchings.getPatternMatchingRois({rois: req.body.rois}).then(async function(rois) {
+                    for (let roi of rois) {
+                        let count;
+                        // Remove the recording validation row if the roi is absent or not validated and,
+                        // another rois haven't that recording/species/songtype interrelation.
+                        if ((!req.body.validation || req.body.validation === 0)) {
+                            count = await model.patternMatchings.getCountRoisMatchByAttr(
+                                req.params.patternMatching,
+                                roi.recording_id,
+                                { speciesId: roi.species_id, songtypeId: roi.songtype_id },
+                            )
+                        }
+                        if (count && count.count > 0) {
+                            return;
+                        }
+                        // Save validated rois in the recording validations table if the roi is validated.
+                        await model.recordings.validate(
+                            {id: roi.recording_id},
+                            req.session.user.id,
+                            req.project.project_id,
+                            { class: `${roi.species_id}-${roi.songtype_id}`, val: (req.body.validation === 1)? 1 : 2},
+                            function(err, validations) {
+                                if(err) return next(err);
+                                return validations;
+                        })
+                    }
+                })
+            }
+        }).then(function(rois) {
+            res.json({
+                rois: req.body.rois,
+                validation: req.body.validation,
         });
     }).catch(next);
 });
@@ -207,17 +250,6 @@ router.post('/new', function(req, res, next) {
             playlist   : req.body.playlist,
             params   : req.body.params,
         });
-    //     return model.jobs.newJob({
-    //         project    : project_id,
-    //         user       : req.session.user.id,
-    //         name       : req.body.name,
-    //         template   : req.body.template,
-    //         playlist   : req.body.playlist,
-    //         params   : req.body.params,
-    //     }, 'pattern_matching_job');
-    // }).then(function get_job_id(job_id){
-    //     pokeDaMonkey(); // this happens in 'parallel'
-    //     return job_id;
 }).then(function(result){
         res.json({ ok: true, result: result });
     }).catch(next);

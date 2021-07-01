@@ -66,9 +66,16 @@ angular.module('a2.analysis.random-forest-models.classification', [
         $scope.loading = false;
     };
 
+    $scope.capitalize = function(row) {
+        return row[0].toUpperCase() + row.slice(1);
+    };
+
     $scope.loadClassifications = function() {
         a2Classi.list(function(data) {
             $scope.classificationsOriginal = data;
+            data.forEach(function(row) {
+                row.muser = $scope.capitalize(row.firstname) + " " + $scope.capitalize(row.lastname);
+            });
             $scope.classificationsData = data;
             $scope.infoInfo = "";
             $scope.showInfo = false;

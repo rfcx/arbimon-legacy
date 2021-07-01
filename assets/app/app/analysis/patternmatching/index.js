@@ -178,6 +178,7 @@ angular.module('a2.analysis.patternmatching', [
             {value:'best_per_site_day', text:'Best per Site, Day', description: 'Show the best scored roi per site and day.'},
             {value:'by_score', text:'Score', description: 'Show all Region of Interest ranked by score.'},
             {value:'by_score_per_site', text:'Score per Site', description: 'Show all Region of Interest ranked by score per site.'},
+            {value:'by_scores_per_site', text:'200 Top Scores per Site', description: 'Show Top 200 Region of Interest ranked by score per each site.'}
         ],
         selection: [
             {value:'all', text:'All'},
@@ -237,7 +238,8 @@ angular.module('a2.analysis.patternmatching', [
                 .map(function (site) {
                     return {
                         site_id: site.id,
-                        site: site.name
+                        site: site.name,
+                        selected: false
                     }
                 })
                 .sort((a, b) => {
@@ -245,24 +247,39 @@ angular.module('a2.analysis.patternmatching', [
                     if(a.site > b.site) { return 1; }
                     return 0;
                 });
+            this.topSitesResults = this.siteIndex.length * 200;
         }).bind(this));
     },
 
     setSiteBookmark: function(site){
+        if (this.isTopRoisResults()) {
+            console.log(this.siteIndex.indexOf(site)+1);
+            this.selected.page = this.siteIndex.indexOf(site)+1;
+            return this.loadPage(this.selected.page);
+        }
         var bookmark = 'site-' + site.site_id;
         $anchorScroll.yOffset = $('.a2-page-header').height() + 60;
         $anchorScroll(bookmark)
+    },
+
+    isTopRoisResults: function(){
+        return this.search && this.search.value === 'by_scores_per_site';
     },
 
     loadPage: function(pageNumber){
         this.rois = [];
         this.loading.rois = true;
         this.splitAllSites = this.search && this.search.value === 'by_score';
+        var opts = { search: this.search && this.search.value };
+        if (this.isTopRoisResults()) {
+            var selectedSite = this.siteIndex[pageNumber - 1];
+            opts.site = selectedSite && selectedSite.site_id;
+        }
         return a2PatternMatching.getRoisFor(
             this.id,
             this.limit,
             (pageNumber - 1) * this.limit,
-            { search: this.search && this.search.value }
+            opts
         ).then((function(rois){
             this.loading.rois = false;
             if (this.splitAllSites) {

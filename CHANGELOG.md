@@ -7,21 +7,28 @@ New features:
 - CE-791 Changed export attributes for the recording data
 - CE-791 Added item `Select all species` to the validations dropdown
 - The ability to export Occupancy models format is added for each species
+- CE-790 Add pattern matching filter to view top 200 scores per each site
+- CE-856 Add feature to export names/emails of all users
 
 Resolved issues:
 
 - CE-791 Fixed MySQL issue to process more than 61 validations in the user selection
 - CE-791 Fixed MySQL issue with ordering from the default site to datetime if the site attribute is excluded
+- CE-981 Combine user data from firstname and lastname on the RFM page
+- CE-971 Update regex function to parsing AudioMoth data in different cases
 
 Other:
 
-- CE-880 Beta tag on CNN, AE & clustering
+- The columns order is changed on the recording page
+- Show "Unknown" if the recording hasn't in the file name data
+- CE-940 Update the text for the Recordings data in the Summary page
+- CE-792 Save validated rois in the recording validations table
+
 
 ## v3.0.30 - June 18, 2021
 
 Resolved issues:
 
-- CE-725 Fixed issue with rois audio playback on the Grid View page
 - CE-689 Map should default back to showing all pins for all sites
 - Fix sort per cluster not working
 - CE-928 Do not cut templates in half or displaying other regions of the spectrogram
@@ -42,6 +49,10 @@ Performance improvements:
 - Improve project tags query
 - Load full list of sites for Pattern Matching ROIs list instead of playlist-related sites
 - Re-implement Pattern Matching Best Per Site and Best Per site Day queries
+
+Other:
+
+- CE-880 Beta tag on CNN, AE & clustering
 
 Other:
 
