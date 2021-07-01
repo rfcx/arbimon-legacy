@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+## v3.0.32 - June XX, 2021\
+
+- CE-753 Pattern Matching results are saved as species validations
+
 ## v3.0.31 - June XX, 2021\
 
 - CE-940 Update the text for the Recordings data in the Summary page
