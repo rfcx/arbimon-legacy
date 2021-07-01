@@ -4,26 +4,45 @@ angular.module('a2.visualizer.layers.species-presence', [
     /**
      * @ngdoc object
      * @name a2.visualizer.layers.species-presence.object:species-presence
-     * @description species presence validation layer. 
-     * Adds the species-presence layer_type to layer_types. This layer shows a 
+     * @description species presence validation layer.
+     * Adds the species-presence layer_type to layer_types. This layer shows a
      * species presence validation interface.
-     * The layer has no spectrogram component.
+     * The layer has spectrogram component.
      * The layer requires a selected visobject of recording type.
-     * The layer has no visibility button.
+     * The layer has visibility button.
      */
     layer_typesProvider.addLayerType({
         type: "species-presence",
         title: "",
+        controller: 'a2VisualizerSpeciesPresenceController as species_presence',
         require: {
             type: 'recording',
             selection: true
         },
-        display: {
-            spectrogram: false
-        },
-        sidebar_only: true,
-        visible: false,
-        hide_visibility: true,
+        visible: true
     });
 })
-;
+.controller('a2VisualizerSpeciesPresenceController', function($scope, a2PatternMatching){
+    var self = this;
+    self.speciesPresence = null;
+    self.fetchSpeciesPresence = function() {
+        var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
+        if (rec) {
+            a2PatternMatching.list({rec_id: rec}).then(function(rois) {
+                if (rois && rois.length) {
+                    self.speciesPresence = rois.map(roi => {
+                        return {
+                            rec_id: roi.recording_id,
+                            x1: roi.x1,
+                            x2: roi.x2,
+                            y1: roi.y1,
+                            y2: roi.y2,
+                            display: roi.recording_id === rec? "block" : "none"
+                        }
+                    });
+                }
+            });
+        }
+    };
+    $scope.$watch('visobject', self.fetchSpeciesPresence);
+});
