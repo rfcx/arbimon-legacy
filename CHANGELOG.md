@@ -1,6 +1,6 @@
 # Arbimon Release Notes
 
-## v3.0.31 - June XX, 2021
+## v3.0.31 - June 01, 2021
 
 New features:
 
@@ -9,6 +9,7 @@ New features:
 - The ability to export Occupancy models format is added for each species
 - CE-790 Add pattern matching filter to view top 200 scores per each site
 - CE-856 Add feature to export names/emails of all users
+- CE-753 Pattern Matching results are saved as species validations
 
 Resolved issues:
 

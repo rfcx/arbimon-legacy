@@ -464,7 +464,7 @@ var Recordings = {
      * @param {Function} callback(err, validations) function called back with the queried results.
      */
     fetchValidations: function (recording, callback) {
-        var query = "SELECT recording_validation_id as id, user_id as user, species_id as species, songtype_id as songtype, present \n" +
+        var query = "SELECT recording_validation_id as id, user_id as user, species_id as species, songtype_id as songtype, present, present_review as presentReview \n" +
             "FROM recording_validations \n" +
             "WHERE recording_id = " + dbpool.escape(recording.id);
         return queryHandler(query, callback);
@@ -774,8 +774,8 @@ var Recordings = {
             }
             else {
                 queryHandler(
-                    "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id) \n" +
-                    " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id]) + ") \n" +
+                    "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
+                    " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, 1]) + ") \n" +
                     " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
                     if (err) { callback(err); return; }
                     callback(null, valobj);
