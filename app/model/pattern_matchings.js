@@ -475,6 +475,9 @@ var PatternMatchings = {
     },
 
     getRoisForId(options) {
+        if (options.byScoresPerSite && options.site) {
+            return this.getTopRoisByScoresPerSite(options.patternMatchingId, options.site)
+        }
         let sortBy = [['S.name', 1], ['R.datetime', 1]] // default sorting
         if (options.byScorePerSite) {
             sortBy = [['S.name', 1], ['PMR.score', 0]]
@@ -568,7 +571,35 @@ var PatternMatchings = {
             JOIN playlist_recordings AS PR ON PR.playlist_id = P.playlist_id
             JOIN recordings AS R ON PR.recording_id = R.recording_id
             JOIN sites AS S ON R.site_id = S.site_id
-            WHERE PM.pattern_matching_id = ?;`, [pmId])
+            WHERE PM.pattern_matching_id = ? ORDER BY S.name;`, [pmId])
+    },
+
+    getTopRoisByScoresPerSite: function (pmId, siteId) {
+        const base = `SELECT
+            PMR.pattern_matching_roi_id as id,
+            PMR.pattern_matching_id,
+            SUBSTRING_INDEX(R.uri, "/", -1) as recording,
+            S.name as site,
+            S.site_id,
+            EXTRACT(year FROM PMR.denorm_recording_datetime) as year,
+            EXTRACT(month FROM PMR.denorm_recording_datetime) as month,
+            EXTRACT(day FROM PMR.denorm_recording_datetime) as day,
+            EXTRACT(hour FROM PMR.denorm_recording_datetime) as hour,
+            EXTRACT(minute FROM PMR.denorm_recording_datetime) as min,
+            PMR.denorm_recording_datetime,
+            PMR.recording_id,
+            PMR.species_id,
+            PMR.songtype_id,
+            PMR.x1, PMR.y1, PMR.x2, PMR.y2,
+            PMR.uri,
+            PMR.score,
+            PMR.validated
+        FROM pattern_matching_rois AS PMR
+        JOIN recordings AS R ON R.recording_id = PMR.recording_id
+        JOIN sites AS S ON PMR.denorm_site_id = S.site_id
+        WHERE PMR.pattern_matching_id = ? AND S.site_id = ?
+        ORDER BY PMR.score DESC LIMIT 200`
+        return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, siteId]);
     },
 
     getRoiAudioFile(patternMatching, roiId, options){

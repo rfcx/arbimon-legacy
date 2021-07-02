@@ -87,6 +87,8 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
             whereNotPresent: req.query.search == 'not_present',
             whereUnvalidated: req.query.search == 'unvalidated',
             byScorePerSite: req.query.search == 'by_score_per_site',
+            byScoresPerSite: req.query.search == 'by_scores_per_site',
+            site: req.query.site,
             byScore: req.query.search == 'by_score',
             limit: req.paging.limit || 100,
             offset: req.paging.offset || 0,

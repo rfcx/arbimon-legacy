@@ -5,6 +5,7 @@ var csv_stringify = require("csv-stringify");
 var path   = require('path');
 var model = require('../../../model');
 const stream = require('stream');
+const moment = require('moment');
 
 router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
     res.type('json');
@@ -49,15 +50,28 @@ router.get('/search-count', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/occupancy-models-export/:species?', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+    processFiltersData(req, res, next);
+});
+
 router.get('/recordings-export.csv', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
     } else {
         res.type('text/csv');
     }
+    processFiltersData(req, res, next);
+});
 
+processFiltersData = async function(req, res, next) {
     try{
         var filters = req.query.filters ? JSON.parse(req.query.filters) : {}
+        var projectionFilter = req.query.show ? JSON.parse(req.query.show) : {};
     } catch(e){
         return next(e);
     }
@@ -68,6 +82,84 @@ router.get('/recordings-export.csv', function(req, res, next) {
 
     var projection = req.query.show;
 
+    if (projectionFilter && projectionFilter.species) {
+        return model.recordings.exportOccupancyModels(projectionFilter, filters).then(async function(results) {
+            let sitesData = await model.recordings.getCountSitesRecPerDates(filters.project_id);
+            let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
+            // Get the first/last recording/date per project.
+            let dates  = sitesData.map(item => { return moment(new Date(`${item.year}/${item.month}/${item.day}`)).format('YYYY/MM/DD') });
+            let maxDate = new Date(Math.max(...dates.map(d=>new Date(d))));
+            let minDate = new Date(Math.min(...dates.map(d=>new Date(d))));
+            let fields = [];
+            while (minDate <= maxDate) {
+                fields.push(moment(minDate).format('YYYY/MM/DD'));
+                minDate = new Date(minDate.setDate(minDate.getDate() + 1));
+            };
+            let streamObject = {};
+            for (let row of results) {
+                // Combine repeating sites with existing data in the report.
+                if (streamObject[row.site]) {
+                    let index = fields.findIndex(date => date === row.date);
+                    streamObject[row.site][index+1] = row.count === 0 ? 0 : 1;
+                    streamObject[row.site][fields.length+index+1] = (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed();
+                }
+                else {
+                    let tempRow = {};
+                    let tempJdays = {};
+                    // Fill each cell in the report.
+                    fields.forEach((item) => {
+                        tempRow.site = row.site;
+                        let site = sitesData.find(site => {
+                            if (site.site === row.site) {
+                                return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
+                            }
+                        });
+                        // Occupancy parameter:
+                        // 1 (present); 0 (absent);
+                        // NA ( device was not active in that day, in other words, there are no recordings for this day);
+                        // NI ( no information from the user if species is present or absent).
+                        tempRow[item] = item === row.date? (row.count === 0 ? 0 : 1) : (site ? 'NI' : 'NA');
+                        // Detection parameter:
+                        // The julian day when there are recordings for that day;
+                        // NA if the recorder was not active in that day (i.e there is no recordings associated with that day).
+                        tempJdays[item] = item === row.date? (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed() : (site ? (new Date(item).getTime()/86400000 + 2440587.5).toFixed() : 'NA');
+                    });
+                    streamObject[row.site] = [...Object.values(tempRow), ...Object.values(tempJdays)];
+                }
+            };
+            // Get sites without validations.
+            let notValidated = allSites.filter(site => !results.find(res => site === res.site ));
+            if (notValidated && notValidated.length) {
+                for (let row of notValidated) {
+                    let notValidatedRow = {};
+                    let notValidatedDays = {};
+                    fields.forEach((item) => {
+                        notValidatedRow.site = row;
+                        let site = sitesData.find(site => {
+                            if (site.site === row) {
+                                return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
+                            }
+                        });
+                        notValidatedRow[item] = site ? 'NI' : 'NA';
+                        notValidatedDays[item] = site ? (moment(new Date(`${site.year}/${site.month}/${site.day}`)).valueOf()/86400000 + 2440587.5).toFixed() : 'NA';
+                    });
+                    streamObject[row] = [...Object.values(notValidatedRow), ...Object.values(notValidatedDays)];
+                }
+            }
+            fields = [...fields, ...fields];
+            fields.unshift('site');
+            let datastream = new stream.Readable({objectMode: true});
+                for (let row of Object.values(streamObject)) {
+                    datastream.push(row);
+                }
+                datastream.push(null);
+
+                datastream
+                    .pipe(csv_stringify({header:true, columns:fields}))
+                    .pipe(res);
+        }).catch(next);
+    }
+
     model.recordings.exportRecordingData(projection, filters).then(function(results) {
         var datastream = results[0];
         var fields = results[1].map(function(f){return f.name;});
@@ -75,7 +167,7 @@ router.get('/recordings-export.csv', function(req, res, next) {
         if (metaIndex !== -1) {
             fields.splice(metaIndex, 1);
         }
-        var colOrder={filename:-3,site:-2,time:-1};
+        let colOrder={filename:-6,site:-5,time:-4, day:-4, month:-3, year:-2, hour:-1};
         fields.sort(function(a, b){
             var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
             return ca < cb ? -1 : (
@@ -103,7 +195,7 @@ router.get('/recordings-export.csv', function(req, res, next) {
             .pipe(csv_stringify({header:true, columns:fields}))
             .pipe(res);
     }).catch(next);
-});
+}
 
 
 router.get('/count', function(req, res, next) {
