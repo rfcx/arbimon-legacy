@@ -26,7 +26,8 @@ router.get('/', function(req, res, next) {
 
     if (req.query.rec_id) {
         return model.patternMatchings.getPatternMatchingRois({
-            rec_id: req.query.rec_id
+            rec_id: req.query.rec_id,
+            validated: req.query.validated
         })
         .then(function(data){
             res.json(data);
@@ -179,19 +180,18 @@ router.post('/:patternMatching/validate', function(req, res, next) {
                 return model.patternMatchings.getPatternMatchingRois({rois: req.body.rois}).then(async function(rois) {
                     for (let roi of rois) {
                         let count;
-                        // Remove the recording validation row if the roi is absent or not validated and,
-                        // another rois haven't that recording/species/songtype interrelation.
                         if ((!req.body.validation || req.body.validation === 0)) {
                             count = await model.patternMatchings.getCountRoisMatchByAttr(
                                 req.params.patternMatching,
                                 roi.recording_id,
-                                { speciesId: roi.species_id, songtypeId: roi.songtype_id },
+                                { speciesId: roi.species_id, songtypeId: roi.songtype_id }
                             )
                         }
-                        if (count && count.count > 0) {
+                        if (count && count.count < 0) {
                             return;
                         }
-                        // Save validated rois in the recording validations table if the roi is validated.
+                        // Save validated rois in the recording validations table if the roi is validated;
+                        // Remove the recording validation row if the roi is absent or not validated and, the row exists.
                         await model.recordings.validate(
                             {id: roi.recording_id},
                             req.session.user.id,
