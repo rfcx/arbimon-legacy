@@ -679,7 +679,10 @@ var PatternMatchings = {
         if (options.rois) {
             return dbpool.query({ sql: `${base} WHERE pattern_matching_roi_id IN (?)` , typeCast: sqlutil.parseUtcDatetime }, [options.rois]);
         }
-        if (options.rec_id) {
+        if (options.rec_id && options.validated) {
+            return dbpool.query({ sql: `${base} WHERE recording_id = ? AND validated = ?` , typeCast: sqlutil.parseUtcDatetime }, [options.rec_id, options.validated]);
+        }
+        if (options.rec_id && !options.validated) {
             return dbpool.query({ sql: `${base} WHERE recording_id = ?` , typeCast: sqlutil.parseUtcDatetime }, [options.rec_id]);
         }
     },

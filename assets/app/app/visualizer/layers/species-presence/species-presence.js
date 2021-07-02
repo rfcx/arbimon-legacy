@@ -28,7 +28,7 @@ angular.module('a2.visualizer.layers.species-presence', [
     self.fetchSpeciesPresence = function() {
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
         if (rec) {
-            a2PatternMatching.list({rec_id: rec}).then(function(rois) {
+            a2PatternMatching.list({rec_id: rec, validated: 1}).then(function(rois) {
                 if (rois && rois.length) {
                     self.speciesPresence = rois.map(roi => {
                         return {
