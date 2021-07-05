@@ -91,6 +91,10 @@ angular.module('a2.home', [
                             project.recCount = data.map((item) => { return item.count }).reduce((a, b) => a + b, 0);
                             project.isLoading = false;
                         })
+                        $http.get('/api/project/' + project.url + '/recordings/species-count', {project_id: project.id}).success(function(data) {
+                            project.speciesCount = data.count || 0;
+                            project.isLoading = false;
+                        })
                     })
                 }
                 this.projects = isMyProjects? data : data.filter(item => item.featured !== 2);
