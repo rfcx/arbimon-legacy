@@ -11,6 +11,7 @@ New features:
 - CE-856 Add feature to export names/emails of all users
 - CE-753 Pattern Matching results are saved as species validations
 - CE-987 Add the number of species validated on the Summary page
+- Display the name of species on the spectrogram
 
 Resolved issues:
 
