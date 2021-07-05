@@ -24,6 +24,11 @@ angular.module('a2.app.dashboard',[
 
     Project.getInfo(function(info){
         $scope.project = info;
+        
+        Project.getProjectTotalSpecies(info.project_id, function(data) {
+            $scope.speciesQty = data || 0;
+        });
+        
         done();
     });
 

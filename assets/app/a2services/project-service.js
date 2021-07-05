@@ -120,6 +120,12 @@ angular.module('a2.srv.project', [
                     return data.count;
                 });
             },
+            getProjectTotalSpecies: function(projectId, callback) {
+                $http.get('/api/project/' + url + '/recordings/species-count', {project_id: projectId})
+                    .success(function(data) {
+                        callback(data.count);
+                    });
+            },
             getProjectTimeBounds: function(callback) {
                 return a2APIService.get('/recordings/time-bounds').then(function(data) {
                     if(callback){
