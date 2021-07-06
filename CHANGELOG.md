@@ -6,10 +6,12 @@ New features:
 
 - CE-791 Changed export attributes for the recording data
 - CE-791 Added item `Select all species` to the validations dropdown
-- The ability to export Occupancy models format is added for each species
+- The ability to export Occupancy Model Format is added for each species
 - CE-790 Add pattern matching filter to view top 200 scores per each site
 - CE-856 Add feature to export names/emails of all users
 - CE-753 Pattern Matching results are saved as species validations
+- The ability to export Detections grouped by site, date, hour
+- The Date attribute is included in the Recording data
 - CE-987 Add the number of species validated on the Summary page
 - Display the name of species on the spectrogram
 

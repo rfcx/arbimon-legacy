@@ -87,6 +87,15 @@ router.get('/recordings-export.csv', function(req, res, next) {
     processFiltersData(req, res, next);
 });
 
+router.get('/grouped-detections-export.csv', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+    processFiltersData(req, res, next);
+});
+
 processFiltersData = async function(req, res, next) {
     try{
         var filters = req.query.filters ? JSON.parse(req.query.filters) : {}
@@ -100,15 +109,17 @@ processFiltersData = async function(req, res, next) {
     console.log(JSON.stringify(filters));
 
     var projection = req.query.show;
-
+    // Combine Occupancy models report.
     if (projectionFilter && projectionFilter.species) {
         return model.recordings.exportOccupancyModels(projectionFilter, filters).then(async function(results) {
             let sitesData = await model.recordings.getCountSitesRecPerDates(filters.project_id);
             let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
-            // Get the first/last recording/date per project.
-            let dates  = sitesData.map(item => { return moment(new Date(`${item.year}/${item.month}/${item.day}`)).format('YYYY/MM/DD') });
-            let maxDate = new Date(Math.max(...dates.map(d=>new Date(d))));
-            let minDate = new Date(Math.min(...dates.map(d=>new Date(d))));
+            // Get the first/last recording/date per project, not include invalid dates.
+            let dates = sitesData
+                .filter(s => s.year && s.month && s.day && s.year > '1970')
+                .map(s => new Date(`${s.year}/${s.month}/${s.day}`).valueOf())
+            let maxDate = new Date(Math.max(...dates));
+            let minDate = new Date(Math.min(...dates));
             let fields = [];
             while (minDate <= maxDate) {
                 fields.push(moment(minDate).format('YYYY/MM/DD'));
@@ -178,6 +189,43 @@ processFiltersData = async function(req, res, next) {
                     .pipe(res);
         }).catch(next);
     }
+    // Combine grouped detections report.
+    if (projectionFilter && projectionFilter.grouped && projectionFilter.validation && !projectionFilter.species) {
+        return model.recordings.exportRecordingData(projectionFilter, filters).then(async function(results) {
+            let gKey = projectionFilter.grouped;
+            let fields = [gKey];
+            fields.push(...Object.keys(results[0]).filter(f => f !== gKey));
+            let data = {};
+            results.forEach((r) => {
+                const s = r[gKey]
+                if (!data[s]) {
+                    data[s] = {};
+                    data[s][gKey] = s;
+                };
+                fields
+                    .filter(f => f !== gKey)
+                    .forEach((f) => {
+                        if (data[s][f] === undefined) { data[s][f] = 0 };
+                        data[s][f] += r[f] === '---' ? 0 : +r[f];
+                    })
+            });
+            let datastream = new stream.Readable({objectMode: true});
+                let streamArray = Object.values(data);
+                if (gKey === 'hour') {
+                    streamArray.sort(function(a, b) {
+                        return a.hour - b.hour;
+                    });
+                };
+                for (let row of streamArray) {
+                    datastream.push(row);
+                };
+                datastream.push(null);
+
+                datastream
+                    .pipe(csv_stringify({header:true, columns:fields}))
+                    .pipe(res);
+        }).catch(next);
+    }
 
     model.recordings.exportRecordingData(projection, filters).then(function(results) {
         var datastream = results[0];
@@ -186,7 +234,7 @@ processFiltersData = async function(req, res, next) {
         if (metaIndex !== -1) {
             fields.splice(metaIndex, 1);
         }
-        let colOrder={filename:-6,site:-5,time:-4, day:-4, month:-3, year:-2, hour:-1};
+        let colOrder={filename:-6,site:-5,time:-4, day:-4, month:-3, year:-2, hour:-1, date: 0};
         fields.sort(function(a, b){
             var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
             return ca < cb ? -1 : (
