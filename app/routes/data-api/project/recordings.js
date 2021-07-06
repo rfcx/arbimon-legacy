@@ -95,10 +95,12 @@ processFiltersData = async function(req, res, next) {
         return model.recordings.exportOccupancyModels(projectionFilter, filters).then(async function(results) {
             let sitesData = await model.recordings.getCountSitesRecPerDates(filters.project_id);
             let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
-            // Get the first/last recording/date per project.
-            let dates  = sitesData.map(item => { return moment(new Date(`${item.year}/${item.month}/${item.day}`)).format('YYYY/MM/DD') });
-            let maxDate = new Date(Math.max(...dates.map(d=>new Date(d))));
-            let minDate = new Date(Math.min(...dates.map(d=>new Date(d))));
+            // Get the first/last recording/date per project, not include invalid dates.
+            let dates = sitesData
+                .filter(s => s.year && s.month && s.day && s.year > '1970')
+                .map(s => new Date(`${s.year}/${s.month}/${s.day}`).valueOf())
+            let maxDate = new Date(Math.max(...dates));
+            let minDate = new Date(Math.min(...dates));
             let fields = [];
             while (minDate <= maxDate) {
                 fields.push(moment(minDate).format('YYYY/MM/DD'));
@@ -171,49 +173,33 @@ processFiltersData = async function(req, res, next) {
     // Combine grouped detections report.
     if (projectionFilter && projectionFilter.grouped && projectionFilter.validation && !projectionFilter.species) {
         return model.recordings.exportRecordingData(projectionFilter, filters).then(async function(results) {
-            let groupingKey = projectionFilter.grouped;
-            let fields = [groupingKey];
-            for (let row of results) {
-                for (const [key, value] of Object.entries(row)) {
-                    if (key !== groupingKey && !fields.includes(key)) {
-                        fields.push(key);
-                    }
-                }
-            };
-            let streamObject = {};
-            for (let row of results) {
-                if (streamObject[row[groupingKey]]) {
-                    for (const [key, value] of Object.entries(row)) {
-                        if (key !== groupingKey) {
-                            fields.forEach((item) => {
-                                if (value === '---') return
-                                streamObject[row[groupingKey]][item] += Number(value);
-                                streamObject[row[groupingKey]][groupingKey] = row[groupingKey];
-                            })
-                        }
-                    }
-                }
-                else {
-                    streamObject[row[groupingKey]] = {};
-                    for (const [key, value] of Object.entries(row)) {
-                    if (key !== groupingKey) {
-                        fields.forEach((item) => {
-                            streamObject[row[groupingKey]][item] = value === '---'? +0 : Number(value);
-                            streamObject[row[groupingKey]][groupingKey] = row[groupingKey];
-                        })
-                    }
-                }}
-            };
+            let gKey = projectionFilter.grouped;
+            let fields = [gKey];
+            fields.push(...Object.keys(results[0]).filter(f => f !== gKey));
+            let data = {};
+            results.forEach((r) => {
+                const s = r[gKey]
+                if (!data[s]) {
+                    data[s] = {};
+                    data[s][gKey] = s;
+                };
+                fields
+                    .filter(f => f !== gKey)
+                    .forEach((f) => {
+                        if (data[s][f] === undefined) { data[s][f] = 0 };
+                        data[s][f] += r[f] === '---' ? 0 : +r[f];
+                    })
+            });
             let datastream = new stream.Readable({objectMode: true});
-                let streamArray = Object.values(streamObject);
-                if (groupingKey === 'hour') {
+                let streamArray = Object.values(data);
+                if (gKey === 'hour') {
                     streamArray.sort(function(a, b) {
                         return a.hour - b.hour;
-                    })
+                    });
                 };
                 for (let row of streamArray) {
                     datastream.push(row);
-                }
+                };
                 datastream.push(null);
 
                 datastream

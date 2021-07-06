@@ -1570,12 +1570,12 @@ var Recordings = {
             }).then(async function() {
                 let results = [];
                 for (let builder in summaryBuilders) {
-                    console.log('summaryBuilders[builder].getSQL()', summaryBuilders[builder].getSQL())
                     let queryResult = await (projection.grouped ? dbpool.query : dbpool.streamQuery)({
                         sql: summaryBuilders[builder].getSQL(),
                         typeCast: sqlutil.parseUtcDatetime,
                     })
-                    results = [...new Set(queryResult)];
+                    results = projection.grouped? [...results, ...queryResult] : [...new Set(queryResult)];
+                    return results;
                 }
                 return Q.all(results);
             })
