@@ -17,6 +17,9 @@ spec:
         envFrom:
         - secretRef:
             name: arbimon-secrets
+        env:
+        - name: DEBUG
+          value: "arbimon2:*"
         resources:
           requests:
             memory: "1Gi"
