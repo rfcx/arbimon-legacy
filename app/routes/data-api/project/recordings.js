@@ -68,6 +68,15 @@ router.get('/recordings-export.csv', function(req, res, next) {
     processFiltersData(req, res, next);
 });
 
+router.get('/grouped-detections-export.csv', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+    processFiltersData(req, res, next);
+});
+
 processFiltersData = async function(req, res, next) {
     try{
         var filters = req.query.filters ? JSON.parse(req.query.filters) : {}
@@ -81,7 +90,7 @@ processFiltersData = async function(req, res, next) {
     console.log(JSON.stringify(filters));
 
     var projection = req.query.show;
-
+    // Combine Occupancy models report.
     if (projectionFilter && projectionFilter.species) {
         return model.recordings.exportOccupancyModels(projectionFilter, filters).then(async function(results) {
             let sitesData = await model.recordings.getCountSitesRecPerDates(filters.project_id);
@@ -159,6 +168,59 @@ processFiltersData = async function(req, res, next) {
                     .pipe(res);
         }).catch(next);
     }
+    // Combine grouped detections report.
+    if (projectionFilter && projectionFilter.grouped && projectionFilter.validation && !projectionFilter.species) {
+        return model.recordings.exportRecordingData(projectionFilter, filters).then(async function(results) {
+            let groupingKey = projectionFilter.grouped;
+            let fields = [groupingKey];
+            for (let row of results) {
+                for (const [key, value] of Object.entries(row)) {
+                    if (key !== groupingKey && !fields.includes(key)) {
+                        fields.push(key);
+                    }
+                }
+            };
+            let streamObject = {};
+            for (let row of results) {
+                if (streamObject[row[groupingKey]]) {
+                    for (const [key, value] of Object.entries(row)) {
+                        if (key !== groupingKey) {
+                            fields.forEach((item) => {
+                                if (value === '---') return
+                                streamObject[row[groupingKey]][item] += Number(value);
+                                streamObject[row[groupingKey]][groupingKey] = row[groupingKey];
+                            })
+                        }
+                    }
+                }
+                else {
+                    streamObject[row[groupingKey]] = {};
+                    for (const [key, value] of Object.entries(row)) {
+                    if (key !== groupingKey) {
+                        fields.forEach((item) => {
+                            streamObject[row[groupingKey]][item] = value === '---'? +0 : Number(value);
+                            streamObject[row[groupingKey]][groupingKey] = row[groupingKey];
+                        })
+                    }
+                }}
+            };
+            let datastream = new stream.Readable({objectMode: true});
+                let streamArray = Object.values(streamObject);
+                if (groupingKey === 'hour') {
+                    streamArray.sort(function(a, b) {
+                        return a.hour - b.hour;
+                    })
+                };
+                for (let row of streamArray) {
+                    datastream.push(row);
+                }
+                datastream.push(null);
+
+                datastream
+                    .pipe(csv_stringify({header:true, columns:fields}))
+                    .pipe(res);
+        }).catch(next);
+    }
 
     model.recordings.exportRecordingData(projection, filters).then(function(results) {
         var datastream = results[0];
@@ -167,7 +229,7 @@ processFiltersData = async function(req, res, next) {
         if (metaIndex !== -1) {
             fields.splice(metaIndex, 1);
         }
-        let colOrder={filename:-6,site:-5,time:-4, day:-4, month:-3, year:-2, hour:-1};
+        let colOrder={filename:-6,site:-5,time:-4, day:-4, month:-3, year:-2, hour:-1, date: 0};
         fields.sort(function(a, b){
             var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
             return ca < cb ? -1 : (

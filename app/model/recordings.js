@@ -1292,7 +1292,8 @@ var Recordings = {
             validation:  arrayOrSingle(joi.number()),
             classification:  arrayOrSingle(joi.number()),
             soundscapeComposition:  arrayOrSingle(joi.number()),
-            tag:  arrayOrSingle(joi.number())
+            tag:  arrayOrSingle(joi.number()),
+            grouped: joi.string(),
         }
     },
 
@@ -1450,6 +1451,7 @@ var Recordings = {
                 if (projection_parameters.recording.includes('day')) {
                     projection_parameters.recording.push('month');
                     projection_parameters.recording.push('year');
+                    projection_parameters.recording.push('date');
                 }
                 if (projection_parameters.validation) {
                     let classPromise = await models.projects.getProjectClasses(null,null,{noProject:true, ids:projection_parameters.validation}).then(async (classes) => {
@@ -1492,14 +1494,29 @@ var Recordings = {
                     summaryBuilders.push(builder);
                 }
                 for (let c in summaryBuilders) {
-                    if (projection_parameters.recording) {
+                    // Get rows for the detections grouped by site.
+                    if (projection.grouped && projection.grouped === 'site') {
+                        summaryBuilders[c].addProjection('s.name as site');
+                    }
+                    // Get rows for the detections grouped by date.
+                    if (projection.grouped && projection.grouped === 'date') {
+                        summaryBuilders[c].addProjection('DATE_FORMAT(r.datetime, "%Y/%m/%d") as date');
+                        summaryBuilders[c].setOrderBy('r.datetime');
+                    }
+                    // Get rows for the detections grouped by hour.
+                    if (projection.grouped && projection.grouped === 'hour') {
+                        summaryBuilders[c].addProjection('DATE_FORMAT(r.datetime, "%H") as hour');
+                        summaryBuilders[c].setOrderBy('r.datetime');
+                    }
+                    if (projection_parameters.recording && !projection.grouped) {
                         var recParamMap = {
                             'filename' : "SUBSTRING_INDEX(r.uri,'/',-1) as filename",
                             'site' : 's.name as site',
                             'day' : 'DATE_FORMAT(r.datetime, "%d") as `day`',
                             'month' : 'DATE_FORMAT(r.datetime, "%m") as `month`',
                             'year' : 'DATE_FORMAT(r.datetime, "%y") as `year`',
-                            'hour' : 'DATE_FORMAT(r.datetime, "%T") as hour'
+                            'hour' : 'DATE_FORMAT(r.datetime, "%T") as hour',
+                            'date' : 'DATE_FORMAT(r.datetime, "%Y/%m/%d") as `date`',
                         };
                         summaryBuilders[c].addProjection.apply(summaryBuilders[c], projection_parameters.recording.map(function(recParam){
                             console.log("recParam", recParam, recParamMap[recParam]);
@@ -1511,7 +1528,7 @@ var Recordings = {
                             summaryBuilders[c].setOrderBy('r.datetime');
                         }
                     }
-                    if (projection_parameters.classification) {
+                    if (projection_parameters.classification && !projection.grouped) {
                         promises.push(models.classifications.getFor({id:projection_parameters.classification, showModel:true}).then(function(classifications){
                             classifications.forEach(function(classification, idx){
                                 var clsid = "p_CR_" + idx;
@@ -1527,7 +1544,7 @@ var Recordings = {
                             });
                         }));
                     }
-                    if (projection_parameters.soundscapeComposition) {
+                    if (projection_parameters.soundscapeComposition && !projection.grouped) {
                         promises.push(models.SoundscapeComposition.getClassesFor({id:projection_parameters.soundscapeComposition}).then(function(classes){
                             classes.forEach(function(cls, idx){
                                 var clsid = "p_SCC_" + idx;
@@ -1540,7 +1557,7 @@ var Recordings = {
                             });
                         }));
                     }
-                    if(projection_parameters.tag){
+                    if(projection_parameters.tag && !projection.grouped){
                         promises.push(models.tags.getFor({id:projection_parameters.tag}).then(function(tags){
                             tags.forEach(function(tag, idx){
                                 var prtid = "p_RT_" + idx;
@@ -1553,7 +1570,8 @@ var Recordings = {
             }).then(async function() {
                 let results = [];
                 for (let builder in summaryBuilders) {
-                    let queryResult = await dbpool.streamQuery({
+                    console.log('summaryBuilders[builder].getSQL()', summaryBuilders[builder].getSQL())
+                    let queryResult = await (projection.grouped ? dbpool.query : dbpool.streamQuery)({
                         sql: summaryBuilders[builder].getSQL(),
                         typeCast: sqlutil.parseUtcDatetime,
                     })

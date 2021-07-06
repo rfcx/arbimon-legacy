@@ -76,7 +76,16 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
                 }).bind(this));
             },
         },
-        {   title:'Occupancy models format',
+        {   title:'Grouping of Detections',
+            identifier:'grouped',
+            placeholder: 'Detections grouped by...',
+            list: [
+                {value:'site', caption:'Site', tooltip:'Detections grouped by Site'},
+                {value:'hour', caption:'Hour', tooltip:'Detections grouped by Hour'},
+                {value:'date', caption:'Date', tooltip:'Detections grouped by Date'},
+            ],
+        },
+        {   title:'Occupancy Model Format',
             identifier:'species',
             placeholder: 'Species...',
             getList: function(Project){
@@ -169,6 +178,10 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             if(selected[index] && parameter_set.identifier==='species' && selected[index].value){
                 _[parameter_set.identifier] = selected[index].value;
                 _['species_name'] = selected[index].name;
+            }
+            if(selected[index] && parameter_set.identifier==='grouped' && selected[index].value){
+                _[parameter_set.identifier] = selected[index].value;
+                _['grouped'] = selected[index].value;
             }
             return _;
         }, {}));
