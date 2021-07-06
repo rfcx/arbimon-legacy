@@ -50,6 +50,25 @@ router.get('/search-count', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/species-count', function(req, res, next) {
+    res.type('json');
+    var params = req.query;
+    params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
+
+    model.recordings.countProjectSpecies(params, function(err, rows) {
+        if(err) return next(err);
+        var species = []
+        const result = Object.values(JSON.parse(JSON.stringify(rows)))
+        result.map(s => {
+            if(!species.includes(s.species)) {
+                species.push(s.species)
+            }
+        })
+        
+        res.json({count: species.length});
+    });
+});
+
 router.get('/occupancy-models-export/:species?', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');

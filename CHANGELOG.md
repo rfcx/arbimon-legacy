@@ -12,6 +12,7 @@ New features:
 - CE-753 Pattern Matching results are saved as species validations
 - The ability to export Detections grouped by site, date, hour
 - The Date attribute is included in the Recording data
+- CE-987 Add the number of species validated on the Summary page
 - Display the name of species on the spectrogram
 
 Resolved issues:
