@@ -679,11 +679,18 @@ var PatternMatchings = {
         if (options.rois) {
             return dbpool.query({ sql: `${base} WHERE pattern_matching_roi_id IN (?)` , typeCast: sqlutil.parseUtcDatetime }, [options.rois]);
         }
-        if (options.rec_id && options.validated) {
-            return dbpool.query({ sql: `${base} WHERE recording_id = ? AND validated = ?` , typeCast: sqlutil.parseUtcDatetime }, [options.rec_id, options.validated]);
-        }
         if (options.rec_id && !options.validated) {
             return dbpool.query({ sql: `${base} WHERE recording_id = ?` , typeCast: sqlutil.parseUtcDatetime }, [options.rec_id]);
+        }
+        if (options.rec_id && options.validated) {
+            return dbpool.query(
+                { sql: `SELECT PMR.*, SP.scientific_name as species_name, ST.songtype as songtype_name
+                FROM pattern_matching_rois PMR
+                JOIN species SP ON PMR.species_id = SP.species_id
+                JOIN songtypes ST ON PMR.songtype_id = ST.songtype_id
+                WHERE recording_id = ? AND validated = ?`,
+                typeCast: sqlutil.parseUtcDatetime }, [options.rec_id, options.validated]
+            );
         }
     },
 

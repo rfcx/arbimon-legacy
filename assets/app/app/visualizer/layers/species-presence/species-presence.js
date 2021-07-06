@@ -33,6 +33,7 @@ angular.module('a2.visualizer.layers.species-presence', [
                     self.speciesPresence = rois.map(roi => {
                         return {
                             rec_id: roi.recording_id,
+                            name: roi.species_name + ' ' + roi.songtype_name,
                             x1: roi.x1,
                             x2: roi.x2,
                             y1: roi.y1,
