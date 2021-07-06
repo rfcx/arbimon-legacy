@@ -1562,7 +1562,13 @@ var Recordings = {
                 return Q.all(results);
             })
     },
-
+    
+    countProjectSpecies: function(filters, callback){
+        var q = "SELECT species_id as species \n" +
+        "FROM recording_validations\n"+
+        "WHERE project_id = " + dbpool.escape(filters.project_id) + " AND present = 1";
+        queryHandler(q, callback);
+    },
 
     /* fetch count of project recordings.
     */
