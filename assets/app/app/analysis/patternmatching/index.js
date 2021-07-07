@@ -25,6 +25,7 @@ angular.module('a2.analysis.patternmatching', [
 })
 .controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
+    $scope.loading = {rows: false};
 
     $scope.getTemplateVisualizerUrl = function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
@@ -44,21 +45,18 @@ angular.module('a2.analysis.patternmatching', [
 
 
     $scope.loadPatternMatchings = function() {
-        $scope.loading = false;
-        $scope.infoInfo = "Loading...";
+        $scope.loading.rows = true;
         $scope.showInfo = true;
         $scope.splitAllSites = false;
 
         return a2PatternMatching.list({completed: true}).then(function(data) {
             $scope.patternmatchingsOriginal = data;
             $scope.patternmatchingsData = data;
-            $scope.infoInfo = "";
             $scope.showInfo = false;
-            $scope.loading = false;
+            $scope.loading.rows = false;
             $scope.infopanedata = "";
 
-            if(data.length > 0) {
-            } else {
+            if(data && !data.length) {
                 $scope.infopanedata = "No pattern matchings found.";
             }
         });
