@@ -1574,13 +1574,16 @@ var Recordings = {
                         sql: summaryBuilders[builder].getSQL(),
                         typeCast: sqlutil.parseUtcDatetime,
                     })
-                    results = projection.grouped? [...results, ...queryResult] : [...new Set(queryResult)];
-                    return results;
+                    if (projection.grouped) {
+                        results = [...results, ...queryResult];
+                        return results;
+                    }
+                    results = [...new Set(queryResult)];
                 }
                 return Q.all(results);
             })
     },
-    
+
     countProjectSpecies: function(filters, callback){
         var q = "SELECT species_id as species \n" +
         "FROM recording_validations\n"+
