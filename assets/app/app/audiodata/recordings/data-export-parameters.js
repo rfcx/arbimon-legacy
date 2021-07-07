@@ -77,6 +77,8 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             },
         },
         {   title:'Grouping of Detections',
+            subtitle: 'Please select one from the list.',
+            subtitle2: 'Linked only with Validations field in the form.',
             identifier:'grouped',
             placeholder: 'Detections grouped by...',
             list: [
@@ -86,6 +88,8 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             ],
         },
         {   title:'Occupancy Model Format',
+            subtitle: 'Please select one from the list.',
+            subtitle2: 'Not linked to other fields in the form.',
             identifier:'species',
             placeholder: 'Species...',
             getList: function(Project){
