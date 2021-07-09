@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.32 - June XX, 2021
+
+Resolved issues:
+
+- The synchronization to work in transactions between Arbimon and RFCx is updated
+
 ## v3.0.31 - June 01, 2021
 
 New features:

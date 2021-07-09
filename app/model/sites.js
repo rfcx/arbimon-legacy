@@ -13,7 +13,7 @@ var s3;
 var dbpool = require('../utils/dbpool');
 var queryHandler = dbpool.queryHandler;
 const moment = require('moment');
-
+let APIError = require('../utils/apierror');
 var site_log_processor = require('../utils/site_log_processor');
 const projects = require('./projects')
 
@@ -64,7 +64,7 @@ var Sites = {
         return find(site_id)
     },
 
-    insert: function(site, callback) {
+    insert: function(site, db, callback) {
         var values = [];
 
         var schema = {
@@ -109,15 +109,15 @@ var Sites = {
                 'SET %s';
 
         q = util.format(q, values.join(", "));
-        queryHandler(q, callback);
+        db ? db.query(q, callback) : queryHandler(q, callback);
     },
 
-    insertAsync: function(site) {
+    insertAsync: function(site, connection) {
         let insert = util.promisify(this.insert)
-        return insert(site)
+        return insert(site, connection)
     },
 
-    update: async function(site, callback) {
+    update: async function(site, connection, callback) {
         var values = [];
 
         if(site.id)
@@ -169,12 +169,12 @@ var Sites = {
 
         q = util.format(q, values.join(", "), site.site_id);
 
-        queryHandler(q, callback);
+        connection ? connection.query(q, callback) : queryHandler(q, callback);
     },
 
-    updateAsync: function (site) {
+    updateAsync: function (site, connection) {
         let update = util.promisify(this.update)
-        return update(site)
+        return update(site, connection)
     },
 
     exists: function(site_name, project_id, callback) {
@@ -195,7 +195,7 @@ var Sites = {
         });
     },
 
-    removeFromProject: function(site_id, project_id, callback) {
+    removeFromProject: function(site_id, project_id, connection, callback) {
         if(!site_id || !project_id)
             return callback(new Error("required field missing"));
 
@@ -220,7 +220,7 @@ var Sites = {
                                 'WHERE site_id = %s';
 
                         q = util.format(q, dbpool.escape(site_id));
-                        queryHandler(q, callback);
+                        connection? connection.query(q, callback): queryHandler(q, callback);
                     }
                 });
             }
@@ -230,14 +230,14 @@ var Sites = {
                         'AND project_id = %s';
 
                 q = util.format(q, dbpool.escape(site_id), dbpool.escape(project_id));
-                queryHandler(q, callback);
+                connection? connection.query(q, callback): queryHandler(q, callback);
             }
         });
     },
 
-    removeFromProjectAsync: function (siteId, projectId) {
+    removeFromProjectAsync: function (siteId, projectId, connection) {
         let remove = util.promisify(this.removeFromProject)
-        return remove(siteId, projectId)
+        return remove(siteId, projectId, connection)
     },
 
     listPublished: function(callback) {
@@ -654,6 +654,40 @@ var Sites = {
         callback);
     },
 
+    createSiteInArbimonAndCoreAPI: async function(site, projectExternalId, token) {
+        var connection;
+        return dbpool.getConnection()
+            .then(async (con) => {
+                connection = con;
+                await connection.beginTransaction();
+                let result = await this.insertAsync(site, connection);
+                if (rfcxConfig.coreAPIEnabled) {
+                    const coreSite = {
+                        site_id: result.insertId,
+                        name: site.name,
+                        lat: site.lat,
+                        lon: site.lon,
+                        alt: site.alt
+                    }
+                    if (projectExternalId) {
+                        coreSite.project_id = projectExternalId;
+                    }
+                    let siteExternalId = await this.createInCoreAPI(coreSite, token);
+                    await this.setExternalId(result.insertId, siteExternalId, connection);
+                }
+                await connection.commit();
+                await connection.release();
+            })
+            .catch(async (err) => {
+                console.log('Failed to create site', err);
+                if (connection) {
+                    await connection.rollback();
+                    await connection.release();
+                    throw new APIError('Failed to create site');
+                }
+            })
+    },
+
     createInCoreAPI: async function(site, idToken) {
         const body = {
             name: site.name,
@@ -686,6 +720,37 @@ var Sites = {
         })
     },
 
+    updateSite: async function(site, user, idToken) {
+        let db;
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                db = connection;
+                await db.beginTransaction();
+                await this.updateAsync(site, connection);
+                let personalProject = await model.projects.findOrCreatePersonalProject(user);
+                if (rfcxConfig.coreAPIEnabled) {
+                    await this.updateInCoreAPI({
+                        site_id: site.site_id,
+                        name: site.name,
+                        lat: site.lat,
+                        lon: site.lon,
+                        alt: site.alt,
+                        ...personalProject && personalProject.project_id === site.project_id ? {} : { project_id: site.project_id }
+                    }, idToken)
+                };
+                await db.commit();
+                await db.release();
+            })
+            .catch(async (err) => {
+                console.log('Failed to update site', err);
+                if (db) {
+                    await db.rollback();
+                    await db.release();
+                    throw new APIError('Failed to update site');
+                }
+            })
+    },
+
     updateInCoreAPI: async function(data, idToken) {
         let body = {}
         data.name !== undefined && (body.name = data.name)
@@ -702,8 +767,35 @@ var Sites = {
                 source: 'arbimon'
             },
             body: JSON.stringify(body)
-          }
-          return rp(options)
+        }
+        return rp(options).then((response) => {
+            if (response.statusCode === 403) {
+                throw new Error('Forbidden error.')
+            }
+        })
+    },
+
+    removeSite: async function(site_id, project_id, idToken) {
+        let db;
+        return dbpool.getConnection()
+            .then(async (connection) => {
+                db = connection;
+                await db.beginTransaction();
+                await this.removeFromProjectAsync(site_id, project_id, connection);
+                if (rfcxConfig.coreAPIEnabled) {
+                    await this.deleteInCoreAPI(site_id, idToken)
+                };
+                await db.commit();
+                await db.release();
+            })
+            .catch(async (err) => {
+                console.log('Failed to delete site', err);
+                if (db) {
+                    await db.rollback();
+                    await db.release();
+                    throw new APIError('Failed to delete site');
+                }
+            })
     },
 
     deleteInCoreAPI: async function(site_id, idToken) {
@@ -716,7 +808,11 @@ var Sites = {
                 source: 'arbimon'
             }
           }
-          return rp(options)
+        return rp(options).then((response) => {
+            if (response.statusCode === 403) {
+                throw new Error('Forbidden error.')
+            }
+        })
     },
 
     findInCoreAPI: async function (guid) {
@@ -734,8 +830,8 @@ var Sites = {
         return rp(options).then(({ body }) => body)
     },
 
-    setExternalId: function (siteId, externalId) {
-        return dbpool.query(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
+    setExternalId: function (siteId, externalId, connection) {
+        return (connection? connection.query : dbpool.query)(`UPDATE sites SET external_id = "${externalId}" WHERE site_id = ${siteId}`, [])
     },
 
     /**
