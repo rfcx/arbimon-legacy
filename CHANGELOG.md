@@ -1,5 +1,14 @@
 # Arbimon Release Notes
 
+## v3.0.32 - July XX, 2021
+
+Performance improvements:
+
+- CE-1062 Site list on PM details page shows only those sites which have ROIs
+- CE-1062 Load only one site per page for "Best per Site" filter
+- CE-1062 Load only one site per page for "Best per Site, Day" filter
+
+
 ## v3.0.31 - June 01, 2021
 
 New features:

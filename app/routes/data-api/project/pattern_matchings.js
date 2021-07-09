@@ -79,25 +79,28 @@ router.param('paging', function(req, res, next, paging){
 router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     res.type('json');
     let prom
-    if (req.query.search == 'best_per_site' || req.query.search == 'best_per_site_day') {
-        prom = model.patternMatchings.getRoisBestPerSiteForId(req.params.patternMatching, req.query.search == 'best_per_site_day')
-    } else {
-        prom = model.patternMatchings.getRoisForId({
-            patternMatchingId: req.params.patternMatching,
-            wherePresent: req.query.search == 'present',
-            whereNotPresent: req.query.search == 'not_present',
-            whereUnvalidated: req.query.search == 'unvalidated',
-            byScorePerSite: req.query.search == 'by_score_per_site',
-            byScoresPerSite: req.query.search == 'by_scores_per_site',
-            site: req.query.site,
-            byScore: req.query.search == 'by_score',
-            limit: req.paging.limit || 100,
-            offset: req.paging.offset || 0,
-        })
+    switch (req.query.search) {
+        case 'best_per_site':
+        case 'top_200_per_site':
+            prom = model.patternMatchings.getTopRoisByScoresPerSite(req.params.patternMatching, req.query.site, req.paging.limit);
+            break;
+        case 'best_per_site_day':
+            prom = model.patternMatchings.getTopRoisByScoresPerSiteDay(req.params.patternMatching, req.query.site, req.paging.limit);
+            break;
+        default:
+            prom = model.patternMatchings.getRoisForId({
+                patternMatchingId: req.params.patternMatching,
+                wherePresent: req.query.search == 'present',
+                whereNotPresent: req.query.search == 'not_present',
+                whereUnvalidated: req.query.search == 'unvalidated',
+                byScorePerSite: req.query.search == 'by_score_per_site',
+                site: req.query.site,
+                byScore: req.query.search == 'by_score',
+                limit: req.paging.limit || 100,
+                offset: req.paging.offset || 0,
+            })
     }
-    prom.then(function(rois) {
-            res.json(rois);
-        })
+    prom.then((json) => res.json(json))
         .catch(next);
 });
 
