@@ -14,6 +14,7 @@ New features:
 - The Date attribute is included in the Recording data
 - CE-987 Add the number of species validated on the Summary page
 - Display the name of species on the spectrogram
+- CE-1035 Loading filename in visualizer still shows funky code
 
 Resolved issues:
 
