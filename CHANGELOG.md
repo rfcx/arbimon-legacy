@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-1093 The color of Species boxes is changed on the spectrogram
+
 ## v3.0.31 - June 01, 2021
 
 New features:
