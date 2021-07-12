@@ -783,13 +783,23 @@ var Recordings = {
                 });
             }
             else {
-                queryHandler(
-                    "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
-                    " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, 1]) + ") \n" +
-                    " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
-                    if (err) { callback(err); return; }
-                    callback(null, valobj);
-                });
+                if (validation.determinedFrom == 'patternMatching') {
+                    queryHandler(
+                        "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
+                        " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, 1]) + ") \n" +
+                        " ON DUPLICATE KEY UPDATE present = VALUES(present), present_review = present_review + 1", function(err, data){
+                        if (err) { callback(err); return; }
+                        callback(null, valobj);
+                    });
+                } else {
+                    queryHandler(
+                        "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
+                        " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, 0]) + ") \n" +
+                        " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
+                        if (err) { callback(err); return; }
+                        callback(null, valobj);
+                    });
+                }
             }
         };
 

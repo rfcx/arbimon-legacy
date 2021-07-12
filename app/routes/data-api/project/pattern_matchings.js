@@ -196,7 +196,7 @@ router.post('/:patternMatching/validate', function(req, res, next) {
                             {id: roi.recording_id},
                             req.session.user.id,
                             req.project.project_id,
-                            { class: `${roi.species_id}-${roi.songtype_id}`, val: (req.body.validation === 1)? 1 : 2},
+                            { class: `${roi.species_id}-${roi.songtype_id}`, val: (req.body.validation === 1)? 1 : 2, determinedFrom: 'patternMatching'},
                             function(err, validations) {
                                 if(err) return next(err);
                                 return validations;
