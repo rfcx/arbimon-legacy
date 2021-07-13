@@ -642,7 +642,7 @@ var Projects = {
         return getUsers(project_id)
     },
 
-    addUser: function(userProjectRole, callback) {
+    addUser: function(userProjectRole, connection, callback) {
         var schema = {
             user_id: joi.number().required(),
             project_id: joi.number().required(),
@@ -670,14 +670,19 @@ var Projects = {
                     var q = 'INSERT INTO user_project_role \n'+
                     'SET user_id = %s, role_id = %s, project_id = %s';
                     q = util.format(q, user_id, role_id, project_id);
-                    queryHandler(q, callback);
+                    connection ? connection.query(q, callback) : queryHandler(q, callback);
                 }
             });
         });
 
     },
 
-    changeUserRole: function(userProjectRole, callback) {
+    addUserAsync: function(userProjectRole, connection) {
+        let addUser = util.promisify(this.addUser)
+        return addUser(userProjectRole, connection)
+    },
+
+    changeUserRole: function(userProjectRole, connection, callback) {
         var schema = {
             user_id: joi.number().required(),
             project_id: joi.number().required(),
@@ -697,8 +702,52 @@ var Projects = {
                     "AND project_id = %s";
 
             q = util.format(q, role_id, user_id, project_id);
-            queryHandler(q, callback);
+            connection ? connection.query(q, callback) : queryHandler(q, callback);
         });
+    },
+
+    changeUserRoleAsync: function(userProjectRole, connection) {
+        let changeUserRole = util.promisify(this.changeUserRole);
+        return changeUserRole(userProjectRole, connection);
+    },
+
+    updateUserRoleInArbimonAndCoreAPI: async function(options, token, action) {
+        let connection;
+        return dbpool.getConnection()
+            .then(async (con) => {
+                connection = con;
+                await connection.beginTransaction();
+                switch (action) {
+                    case 'add':
+                        await this.addUserAsync(options.userRole, connection);
+                        if (rfcxConfig.coreAPIEnabled) {
+                            await this.updateUserRoleInCoreAPI(options.userRole, token);
+                        }
+                        break;
+                    case 'change':
+                        await this.changeUserRoleAsync(options.userRole, connection);
+                        if (rfcxConfig.coreAPIEnabled) {
+                            await this.updateUserRoleInCoreAPI(options.userRole, token);
+                        }
+                        break;
+                    case 'remove':
+                      await this.removeUserRoleAsync(options.user_id, options.project_id, connection);
+                      if (rfcxConfig.coreAPIEnabled) {
+                        await this.removeUserRoleInCoreAPI(options.user_id, options.project_id, token);
+                    }
+                      break;
+                }
+                await connection.commit();
+                await connection.release();
+            })
+            .catch(async (err) => {
+                console.log('err', err);
+                if (connection) {
+                    await connection.rollback();
+                    await connection.release();
+                }
+                throw new APIError('Failed to update user project role');
+            })
     },
 
     updateUserRoleInCoreAPI: async function(userProjectRole, idToken) {
@@ -889,7 +938,7 @@ var Projects = {
         queryHandler(q, callback);
     },
 
-    removeUser: function(user_id, project_id, callback) {
+    removeUser: function(user_id, project_id, connection, callback) {
         if(typeof project_id !== 'number')
             return callback(new Error("invalid type for 'project_id'"));
 
@@ -900,7 +949,12 @@ var Projects = {
                 "WHERE user_id = %s AND project_id = %s";
 
         q = util.format(q, dbpool.escape(user_id), dbpool.escape(project_id));
-        queryHandler(q, callback);
+        connection ? connection.query(q, callback) : queryHandler(q, callback);
+    },
+
+    removeUserRoleAsync: function(user_id, project_id, connection) {
+        let removeUser = util.promisify(this.removeUser)
+        return removeUser(user_id, project_id, connection)
     },
 
     availableRoles: function(callback) {

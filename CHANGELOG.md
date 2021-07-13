@@ -1,6 +1,7 @@
 # Arbimon Release Notes
 
 - CE-1093 The color of Species boxes is changed on the spectrogram
+- CE-323 When user creates/edits/deletes a project role for another user in Arbimon it's synced with Core API in transactions
 
 ## v3.0.31 - June 01, 2021
 

@@ -312,21 +312,9 @@ router.post('/:projectUrl/user/add', async function(req, res, next) {
         user_id: req.body.user_id,
         role_id: 2 // default to normal user
     }
-    model.projects.addUser(userRole,
-    async function(err, result){
-        if (err) {
-            if (err.status === 404) {
-                return res.json({ error: err.message});
-            }
-            return next(err);
-        }
-
-        debug("add user:", result);
-        if (rfcxConfig.coreAPIEnabled) {
-            await model.projects.updateUserRoleInCoreAPI(userRole, req.session.idToken)
-        }
+    model.projects.updateUserRoleInArbimonAndCoreAPI({userRole: userRole}, req.session.idToken, 'add').then(function() {
         res.json({ success: true });
-    });
+    }).catch(next);
 });
 
 router.post('/:projectUrl/user/role', async function(req, res, next) {
@@ -345,16 +333,9 @@ router.post('/:projectUrl/user/role', async function(req, res, next) {
         user_id: req.body.user_id,
         role_id: req.body.role_id
     }
-    model.projects.changeUserRole(userRole,
-    async function(err, result){
-        if(err) return next(err);
-
-        debug("change user role:", result);
-        if (rfcxConfig.coreAPIEnabled) {
-            await model.projects.updateUserRoleInCoreAPI(userRole, req.session.idToken)
-        }
+    model.projects.updateUserRoleInArbimonAndCoreAPI({userRole: userRole}, req.session.idToken, 'change').then(function() {
         res.json({ success: true });
-    });
+    }).catch(next);
 });
 
 router.post('/:projectUrl/user/del', async function(req, res, next) {
@@ -367,15 +348,9 @@ router.post('/:projectUrl/user/del', async function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
-    model.projects.removeUser(req.body.user_id, req.project.project_id, async function(err, result){
-        if(err) return next(err);
-
-        debug("remove user:", result);
-        if (rfcxConfig.coreAPIEnabled) {
-            await model.projects.removeUserRoleInCoreAPI(req.body.user_id, req.project.project_id, req.session.idToken)
-        }
+    model.projects.updateUserRoleInArbimonAndCoreAPI({user_id: req.body.user_id, project_id: req.project.project_id}, req.session.idToken, 'remove').then(function() {
         res.json({ success: true });
-    });
+    }).catch(next);
 });
 
 router.post('/:projectUrl/remove', function(req, res, next) {
