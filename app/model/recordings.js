@@ -219,7 +219,7 @@ var Recordings = {
 
     getPrevAndNextRecordingsAsync: function (recording_id) {
         var selection = "R.recording_id AS id, \n"+
-            "SUBSTRING_INDEX(R.uri,'/',-1) as file, \n"+
+            "SUBSTRING_INDEX(R.uri,'/',-1) as file, R.meta, \n"+
             "S.name as site, \n"+
             "S.site_id, \n"+
             "S.timezone, \n"+
@@ -253,6 +253,12 @@ var Recordings = {
                     return Q.all(proms);
                 }
             }).then((data) => {
+                data.forEach((d) => {
+                    if(d.length) {
+                        d[0].meta = d[0].meta ? Recordings.__parse_meta_data(d[0].meta) : null;
+                        d[0].file = d[0].meta && d[0].meta.filename ? d[0].meta.filename : d[0].file;
+                    }
+                })
                 return arrays_util.compute_row_properties(data.reduce((arr1, arr2) => [...arr1, ...arr2], []), 'thumbnail-path', function(property){
                     return Recordings['__compute_' + property.replace(/-/g,'_')];
                 });
@@ -365,6 +371,10 @@ var Recordings = {
                 if(group_by.levels.length > 0) {
                     return arrays_util.group_rows_by(data, group_by.levels, options);
                 } else if(options.compute){
+                    data.forEach((d) => {
+                        d.meta = d.meta ? Recordings.__parse_meta_data(d.meta) : null;
+                        d.file = d.meta && d.meta.filename? d.meta.filename : d.file;
+                    })
                     return arrays_util.compute_row_properties(data, options.compute, function(property){
                         return Recordings['__compute_' + property.replace(/-/g,'_')];
                     });
@@ -773,13 +783,23 @@ var Recordings = {
                 });
             }
             else {
-                queryHandler(
-                    "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
-                    " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, 1]) + ") \n" +
-                    " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
-                    if (err) { callback(err); return; }
-                    callback(null, valobj);
-                });
+                if (validation.determinedFrom == 'patternMatching') {
+                    queryHandler(
+                        "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
+                        " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, valobj.val]) + ") \n" +
+                        " ON DUPLICATE KEY UPDATE present = VALUES(present), present_review = CASE WHEN present = 0 AND present_review = 0 THEN 0 WHEN present = 0 THEN present_review - 1 ELSE present_review + 1 END", function(err, data){
+                        if (err) { callback(err); return; }
+                        callback(null, valobj);
+                    });
+                } else {
+                    queryHandler(
+                        "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
+                        " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, 0]) + ") \n" +
+                        " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
+                        if (err) { callback(err); return; }
+                        callback(null, valobj);
+                    });
+                }
             }
         };
 
