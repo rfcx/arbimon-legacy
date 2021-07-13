@@ -184,10 +184,10 @@
                 </pagination>
             </div>
         </div>
-        <div class="row" ng-if="controller.topSitesResults && controller.isTopRoisResults()">
+        <div class="row" ng-if="controller.sitesTotal && controller.isTopRoisResults()">
             <div class="col-sm-12 text-center">
                 <pagination
-                    total-items="controller.topSitesResults"
+                    total-items="controller.sitesTotal"
                     ng-model="controller.selected.page"
                     ng-change="controller.setPage(controller.selected.page, true)"
                     class="pagination-sm"
