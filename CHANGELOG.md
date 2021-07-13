@@ -1,7 +1,5 @@
 # Arbimon Release Notes
 
-- CE-1093 The color of Species boxes is changed on the spectrogram
-
 ## v3.0.31 - June 01, 2021
 
 New features:
@@ -17,6 +15,7 @@ New features:
 - CE-987 Add the number of species validated on the Summary page
 - Display the name of species on the spectrogram
 - CE-1035 Loading filename in visualizer still shows funky code
+- CE-1093 The color of Species boxes is changed on the spectrogram
 
 Resolved issues:
 
@@ -24,6 +23,13 @@ Resolved issues:
 - CE-791 Fixed MySQL issue with ordering from the default site to datetime if the site attribute is excluded
 - CE-981 Combine user data from firstname and lastname on the RFM page
 - CE-971 Update regex function to parsing AudioMoth data in different cases
+
+Performance improvements:
+
+- CE-1062 Site list on PM details page shows only those sites which have ROIs
+- CE-1062 Load only one site per page for "Best per Site" filter
+- CE-1062 Load only one site per page for "Best per Site, Day" filter
+- CE-1064 Update Pattern Matching query for Citizen Scientist PM list page
 
 Other:
 
