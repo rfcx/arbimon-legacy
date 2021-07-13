@@ -5,7 +5,7 @@
 
     <ul class="list-group mb-2">
         <li class="list-group-item" ng-repeat="parameter_set in controller.parameter_set_list">
-            <div ng-hide="(parameter_set.identifier === 'species' && !controller.isSuper) || (parameter_set.identifier === 'grouped' && !controller.isSuper)">
+            <div ng-hide="(parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped') && !controller.isSuper">
                 {{parameter_set.title}}:
             </div>
             <div class="a2-filter" ng-init="parameter_set.index=$index" ng-if="parameter_set.identifier !== 'species' && parameter_set.identifier !== 'grouped'">
