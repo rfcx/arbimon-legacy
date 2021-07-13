@@ -15,6 +15,7 @@ New features:
 - CE-987 Add the number of species validated on the Summary page
 - Display the name of species on the spectrogram
 - CE-1035 Loading filename in visualizer still shows funky code
+- CE-1095 Heavy exports are only possible by super admins
 - CE-1093 The color of Species boxes is changed on the spectrogram
 
 Resolved issues:
