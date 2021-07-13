@@ -786,8 +786,8 @@ var Recordings = {
                 if (validation.determinedFrom == 'patternMatching') {
                     queryHandler(
                         "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
-                        " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, 1]) + ") \n" +
-                        " ON DUPLICATE KEY UPDATE present = VALUES(present), present_review = CASE WHEN present = 0 THEN 0 ELSE present_review + 1 END", function(err, data){
+                        " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, valobj.val]) + ") \n" +
+                        " ON DUPLICATE KEY UPDATE present = VALUES(present), present_review = CASE WHEN present = 0 AND present_review = 0 THEN 0 WHEN present = 0 THEN present_review - 1 ELSE present_review + 1 END", function(err, data){
                         if (err) { callback(err); return; }
                         callback(null, valobj);
                     });
