@@ -151,14 +151,17 @@ var PatternMatchings = {
         }
 
         if(options.showUserStatsFor) {
-            select.push(
-                "SUM(IF(PMR.consensus_validated IS NULL AND PMR.expert_validated IS NULL, 1, 0)) as cs_total",
-            );
-            select.push(
-                "SUM(IF(PMV.validated = 1, 1, 0)) as cs_present",
-                "SUM(IF(PMV.validated = 0, 1, 0)) as cs_absent",
-                "SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated"
-            );
+            const stats = {
+                cs_total: 'SUM(IF(PMR.consensus_validated IS NULL AND PMR.expert_validated IS NULL, 1, 0)) as cs_total',
+                cs_present: 'SUM(IF(PMV.validated = 1, 1, 0)) as cs_present',
+                cs_absent: 'SUM(IF(PMV.validated = 0, 1, 0)) as cs_absent',
+                validated: 'SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated'
+            }
+            for (let key in stats) {
+                if (!options.userStats || options.userStats && options.userStats.includes(key)) {
+                    select.push(stats[key])
+                }
+            }
             tables.push("LEFT JOIN pattern_matching_validations PMV ON (PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id AND PMV.user_id = " + (options.showUserStatsFor | 0) + ")");
             groupby.push("PM.pattern_matching_id");
         }
