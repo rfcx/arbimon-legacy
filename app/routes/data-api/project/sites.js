@@ -44,7 +44,6 @@ router.post('/create', function(req, res, next) {
         catch(e) {
             return next(err);
         }
-        res.json({ message: "New site created" });
     });
 });
 

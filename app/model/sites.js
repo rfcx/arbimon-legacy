@@ -683,8 +683,8 @@ var Sites = {
                 if (connection) {
                     await connection.rollback();
                     await connection.release();
-                    throw new APIError('Failed to create site');
                 }
+                throw new APIError('Failed to create site');
             })
     },
 
@@ -727,7 +727,6 @@ var Sites = {
                 db = connection;
                 await db.beginTransaction();
                 await this.updateAsync(site, connection);
-                let personalProject = await model.projects.findOrCreatePersonalProject(user);
                 if (rfcxConfig.coreAPIEnabled) {
                     await this.updateInCoreAPI({
                         site_id: site.site_id,
@@ -735,19 +734,19 @@ var Sites = {
                         lat: site.lat,
                         lon: site.lon,
                         alt: site.alt,
-                        ...personalProject && personalProject.project_id === site.project_id ? {} : { project_id: site.project_id }
+                        project_id: site.project_id
                     }, idToken)
                 };
                 await db.commit();
                 await db.release();
             })
             .catch(async (err) => {
-                console.log('Failed to update site', err);
+                console.log('err', err);
                 if (db) {
                     await db.rollback();
                     await db.release();
-                    throw new APIError('Failed to update site');
                 }
+                throw new APIError('Failed to update site');
             })
     },
 
@@ -769,9 +768,12 @@ var Sites = {
             body: JSON.stringify(body)
         }
         return rp(options).then((response) => {
-            if (response.statusCode === 403) {
-                throw new Error('Forbidden error.')
-            }
+            try {
+                const body = JSON.parse(response.body);
+                if (body && body.error) {
+                    throw new APIError('Failed to update site');
+                }
+            } catch (e) { }
         })
     },
 
@@ -789,12 +791,12 @@ var Sites = {
                 await db.release();
             })
             .catch(async (err) => {
-                console.log('Failed to delete site', err);
+                console.log('err', err);
                 if (db) {
                     await db.rollback();
                     await db.release();
-                    throw new APIError('Failed to delete site');
                 }
+                throw new APIError('Failed to delete site');
             })
     },
 
@@ -809,9 +811,14 @@ var Sites = {
             }
           }
         return rp(options).then((response) => {
-            if (response.statusCode === 403) {
-                throw new Error('Forbidden error.')
-            }
+            console.log('response', response)
+            try {
+                const body = JSON.parse(response.body);
+                console.log('body', body)
+                if (body && body.error) {
+                    throw new APIError('Failed to delete site');
+                }
+            } catch (e) { }
         })
     },
 
