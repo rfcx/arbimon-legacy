@@ -123,7 +123,8 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                 if (keys.length > 0) {
                     Project.validateRecording($scope.recording.id, {
                         'class': keys.join(','),
-                        val: val
+                        val: val,
+                        determinedFrom: 'visualizer'
                     }, function(validations) {
                         validations.forEach(function(validation) {
                             var key = class2key(validation);
