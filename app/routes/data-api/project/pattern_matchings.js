@@ -39,7 +39,7 @@ router.get('/', function(req, res, next) {
         deleted:0,
         showUser:true,
         showTemplate: true,
-        showPlaylist:true,
+        showPlaylistName: true,
         ...!!req.query.completed && { completed: req.query.completed }
     }).then(function(count) {
         res.json(count);
@@ -52,7 +52,10 @@ router.get('/:patternMatching/details', function(req, res, next) {
     res.type('json');
     model.patternMatchings.findOne({
         id: req.params.patternMatching,
-        showTemplate: true, showPlaylist:true, showCounts: true,
+        showTemplate: true,
+        showPlaylistName: true,
+        showPlaylistCount: true,
+        showCounts: true,
         showSpecies: true,
     }).then(function(pm) {
         res.json(pm);
@@ -184,7 +187,7 @@ router.post('/:patternMatching/validate', function(req, res, next) {
                     for (let roi of rois) {
                         var validation = 2
                         if(req.body.validation != null) {
-                            validation = req.body.validation 
+                            validation = req.body.validation
                         }
                         // Save validated rois in the recording validations table if the roi is validated;
                         // Remove the recording validation row if the roi is absent or not validated and, the row exists.

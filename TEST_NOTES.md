@@ -3,6 +3,14 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.32
 
+- CE-1065 Patten Matching list loads quickly
+  - Pattern Matching list page: all data is still shown correctly and table loads quickly
+  - Patten Matching details page: all details are still shown correctly (especially total recordings list)
+  - Citizen Scientist Pattern Matching list page: all data is still shown correctly
+  - Citizen Scientist Pattern Matching details page: all details are still shown correctly
+
+## v3.0.31
+
 - CE-1062 Site list on PM details page shows only those sites which have ROIs
   - Patten Matching details page: dropdown with sites list (button with map pin icon)
   - Patten Matching details page: a list of ROIs which are shown when item from dropdown is selected.

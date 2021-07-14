@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.31 - June 01, 2021
+## v3.0.32 - July XX, 2021
+
+Performance improvements:
+
+- CE-1065 Patten Matching list loads quickly
+
+## v3.0.31 - July 14, 2021
 
 New features:
 
