@@ -5,6 +5,7 @@ var csv_stringify = require("csv-stringify");
 var path   = require('path');
 var model = require('../../../model');
 const stream = require('stream');
+const moment = require('moment');
 
 router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
     res.type('json');
@@ -49,15 +50,56 @@ router.get('/search-count', function(req, res, next) {
     }).catch(next);
 });
 
+router.get('/species-count', function(req, res, next) {
+    res.type('json');
+    var params = req.query;
+    params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
+
+    model.recordings.countProjectSpecies(params, function(err, rows) {
+        if(err) return next(err);
+        var species = []
+        const result = Object.values(JSON.parse(JSON.stringify(rows)))
+        result.map(s => {
+            if(!species.includes(s.species)) {
+                species.push(s.species)
+            }
+        })
+        
+        res.json({count: species.length});
+    });
+});
+
+router.get('/occupancy-models-export/:species?', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+    processFiltersData(req, res, next);
+});
+
 router.get('/recordings-export.csv', function(req, res, next) {
     if(req.query.out=="text"){
         res.type('text/plain');
     } else {
         res.type('text/csv');
     }
+    processFiltersData(req, res, next);
+});
 
+router.get('/grouped-detections-export.csv', function(req, res, next) {
+    if(req.query.out=="text"){
+        res.type('text/plain');
+    } else {
+        res.type('text/csv');
+    }
+    processFiltersData(req, res, next);
+});
+
+processFiltersData = async function(req, res, next) {
     try{
         var filters = req.query.filters ? JSON.parse(req.query.filters) : {}
+        var projectionFilter = req.query.show ? JSON.parse(req.query.show) : {};
     } catch(e){
         return next(e);
     }
@@ -67,6 +109,123 @@ router.get('/recordings-export.csv', function(req, res, next) {
     console.log(JSON.stringify(filters));
 
     var projection = req.query.show;
+    // Combine Occupancy models report.
+    if (projectionFilter && projectionFilter.species) {
+        return model.recordings.exportOccupancyModels(projectionFilter, filters).then(async function(results) {
+            let sitesData = await model.recordings.getCountSitesRecPerDates(filters.project_id);
+            let allSites = sitesData.map(item => { return item.site }).filter((v, i, s) => s.indexOf(v) === i);
+            // Get the first/last recording/date per project, not include invalid dates.
+            let dates = sitesData
+                .filter(s => s.year && s.month && s.day && s.year > '1970')
+                .map(s => new Date(`${s.year}/${s.month}/${s.day}`).valueOf())
+            let maxDate = new Date(Math.max(...dates));
+            let minDate = new Date(Math.min(...dates));
+            let fields = [];
+            while (minDate <= maxDate) {
+                fields.push(moment(minDate).format('YYYY/MM/DD'));
+                minDate = new Date(minDate.setDate(minDate.getDate() + 1));
+            };
+            let streamObject = {};
+            for (let row of results) {
+                // Combine repeating sites with existing data in the report.
+                if (streamObject[row.site]) {
+                    let index = fields.findIndex(date => date === row.date);
+                    streamObject[row.site][index+1] = row.count === 0 ? 0 : 1;
+                    streamObject[row.site][fields.length+index+1] = (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed();
+                }
+                else {
+                    let tempRow = {};
+                    let tempJdays = {};
+                    // Fill each cell in the report.
+                    fields.forEach((item) => {
+                        tempRow.site = row.site;
+                        let site = sitesData.find(site => {
+                            if (site.site === row.site) {
+                                return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
+                            }
+                        });
+                        // Occupancy parameter:
+                        // 1 (present); 0 (absent);
+                        // NA ( device was not active in that day, in other words, there are no recordings for this day);
+                        // NI ( no information from the user if species is present or absent).
+                        tempRow[item] = item === row.date? (row.count === 0 ? 0 : 1) : (site ? 'NI' : 'NA');
+                        // Detection parameter:
+                        // The julian day when there are recordings for that day;
+                        // NA if the recorder was not active in that day (i.e there is no recordings associated with that day).
+                        tempJdays[item] = item === row.date? (new Date(row.date).getTime()/86400000 + 2440587.5).toFixed() : (site ? (new Date(item).getTime()/86400000 + 2440587.5).toFixed() : 'NA');
+                    });
+                    streamObject[row.site] = [...Object.values(tempRow), ...Object.values(tempJdays)];
+                }
+            };
+            // Get sites without validations.
+            let notValidated = allSites.filter(site => !results.find(res => site === res.site ));
+            if (notValidated && notValidated.length) {
+                for (let row of notValidated) {
+                    let notValidatedRow = {};
+                    let notValidatedDays = {};
+                    fields.forEach((item) => {
+                        notValidatedRow.site = row;
+                        let site = sitesData.find(site => {
+                            if (site.site === row) {
+                                return item === moment(new Date(`${site.year}/${site.month}/${site.day}`)).format('YYYY/MM/DD');
+                            }
+                        });
+                        notValidatedRow[item] = site ? 'NI' : 'NA';
+                        notValidatedDays[item] = site ? (moment(new Date(`${site.year}/${site.month}/${site.day}`)).valueOf()/86400000 + 2440587.5).toFixed() : 'NA';
+                    });
+                    streamObject[row] = [...Object.values(notValidatedRow), ...Object.values(notValidatedDays)];
+                }
+            }
+            fields = [...fields, ...fields];
+            fields.unshift('site');
+            let datastream = new stream.Readable({objectMode: true});
+                for (let row of Object.values(streamObject)) {
+                    datastream.push(row);
+                }
+                datastream.push(null);
+
+                datastream
+                    .pipe(csv_stringify({header:true, columns:fields}))
+                    .pipe(res);
+        }).catch(next);
+    }
+    // Combine grouped detections report.
+    if (projectionFilter && projectionFilter.grouped && projectionFilter.validation && !projectionFilter.species) {
+        return model.recordings.exportRecordingData(projectionFilter, filters).then(async function(results) {
+            let gKey = projectionFilter.grouped;
+            let fields = [gKey];
+            fields.push(...Object.keys(results[0]).filter(f => f !== gKey));
+            let data = {};
+            results.forEach((r) => {
+                const s = r[gKey]
+                if (!data[s]) {
+                    data[s] = {};
+                    data[s][gKey] = s;
+                };
+                fields
+                    .filter(f => f !== gKey)
+                    .forEach((f) => {
+                        if (data[s][f] === undefined) { data[s][f] = 0 };
+                        data[s][f] += r[f] === '---' ? 0 : +r[f];
+                    })
+            });
+            let datastream = new stream.Readable({objectMode: true});
+                let streamArray = Object.values(data);
+                if (gKey === 'hour') {
+                    streamArray.sort(function(a, b) {
+                        return a.hour - b.hour;
+                    });
+                };
+                for (let row of streamArray) {
+                    datastream.push(row);
+                };
+                datastream.push(null);
+
+                datastream
+                    .pipe(csv_stringify({header:true, columns:fields}))
+                    .pipe(res);
+        }).catch(next);
+    }
 
     model.recordings.exportRecordingData(projection, filters).then(function(results) {
         var datastream = results[0];
@@ -75,7 +234,7 @@ router.get('/recordings-export.csv', function(req, res, next) {
         if (metaIndex !== -1) {
             fields.splice(metaIndex, 1);
         }
-        var colOrder={filename:-3,site:-2,time:-1};
+        let colOrder={filename:-6,site:-5,time:-4, day:-4, month:-3, year:-2, hour:-1, date: 0};
         fields.sort(function(a, b){
             var ca = colOrder[a] || 0, cb = colOrder[b] || 0;
             return ca < cb ? -1 : (
@@ -103,7 +262,7 @@ router.get('/recordings-export.csv', function(req, res, next) {
             .pipe(csv_stringify({header:true, columns:fields}))
             .pipe(res);
     }).catch(next);
-});
+}
 
 
 router.get('/count', function(req, res, next) {

@@ -34,6 +34,14 @@ router.get('/', function(req, res) {
     });
 });
 
+router.get('/all-users', function(req, res) {
+    res.type('json');
+    model.users.listUser(function(err, rows) {
+        if(err) return next(err);
+        
+        res.json(rows);
+    });
+});
 
 router.get('/dashboard-stats', function(req, res, next) {
     res.type('json');

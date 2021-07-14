@@ -166,7 +166,10 @@
                 </span>
             </span>
         </div>
-        <div class="row" ng-if="controller.patternMatching && controller.patternMatching.matches > 100 && (controller.search && controller.search.value !== 'best_per_site' && controller.search.value !== 'best_per_site_day')">
+        <div class="row panel-body" style="text-align: center;" ng-if="!controller.loading.rois && !controller.rois.length && controller.isTopRoisResults()">
+            No results found per selected site.
+        </div>
+        <div class="row" ng-if="controller.patternMatching && controller.patternMatching.matches > 100 && this.search.value !== 'best_per_site' && this.search.value !== 'best_per_site_day' && !controller.isTopRoisResults()">
             <div class="col-sm-12 text-center">
                 <pagination
                     total-items="controller.patternMatching.matches"
@@ -178,6 +181,21 @@
                     rotate="false"
                     ng-disabled="controller.loading.rois"
                     items-per-page="100">
+                </pagination>
+            </div>
+        </div>
+        <div class="row" ng-if="controller.sitesTotal && controller.isTopRoisResults()">
+            <div class="col-sm-12 text-center">
+                <pagination
+                    total-items="controller.sitesTotal"
+                    ng-model="controller.selected.page"
+                    ng-change="controller.setPage(controller.selected.page, true)"
+                    class="pagination-sm"
+                    boundary-links="true"
+                    max-size="5"
+                    rotate="false"
+                    ng-disabled="controller.loading.rois"
+                    items-per-page="200">
                 </pagination>
             </div>
         </div>

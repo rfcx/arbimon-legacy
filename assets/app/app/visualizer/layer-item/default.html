@@ -6,7 +6,7 @@
     <div class="layer-btns">
         <button class="layer-btn" ng-click="layer.visible = !layer.visible | trackEvent:'Visualizer-Default':'layer visibility'"
             ng-class="{'layer-btn_active': layer.templates && (layer.templates.recordingTemplates && layer.templates.recordingTemplates.length)
-                || (layer.training_data.data.rois.length || layer.training_data.data.editor.roi)}">
+                || (layer.training_data.data.rois.length || layer.training_data.data.editor.roi) || (layer.species_presence.speciesPresence.length && layer.species_presence.speciesPresence)}">
             <i class="fa" ng-class="{'fa-eye': layer.visible, 'fa-eye-slash':!layer.visible}"></i>
         </button>
     </div>

@@ -79,9 +79,10 @@
                                         </div>
                                     </li>
                                     <li class="list-group-item">Sites: {{ sites.length }}</li>
-                                    <li class="list-group-item">Recordings: {{ recsQty | number }} recordings of unlimited</li>
+                                    <li class="list-group-item">Recordings: {{ recsQty | number }}</li>
                                     <li class="list-group-item">Templates: {{ templateQty }}</li>
                                     <li class="list-group-item">Pattern Matchings: {{ pmQty }}</li>
+                                    <li class="list-group-item">Validated species: <i ng-show="isSpeciesLoading" class="fa fa-spinner fa-spin ng-hide" style="font-size: 18px; position: relative;"></i>{{ speciesQty }}</li>
                                     <!-- <li class="list-group-item">
                                         Species (Validated*: {{ (validatedSpecies === -1 ? "-" : validatedSpecies) + "/" + species.length }}, Templates: {{ templateQty }}):
                                         <ul>
