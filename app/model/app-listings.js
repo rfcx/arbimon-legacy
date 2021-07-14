@@ -32,7 +32,7 @@ var AppListings = {
                     var m = /([^\/]+)-(\d+\.\d+\.\d+)\.(msi|deb|dmg)$/.exec(item.Key);
                     if(m){
                         (_[app] || (_[app] = [])).push({
-                            url : 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + item.Key,
+                            url : 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + item.Key,
                             file : m[0],
                             version : m[2],
                             type : AppListings.types[m[3]]

@@ -43,7 +43,7 @@ var Templates = {
             "T.`species_id` as species",
             "T.`songtype_id` as songtype",
             "T.`name`",
-            "CONCAT('https://s3.amazonaws.com/', '"+config('aws').bucketName+"', '/', T.`uri`) as `uri`",
+            "CONCAT('https://"+config('aws').bucketName+".s3."+config('aws').region+".amazonaws.com/', T.`uri`) as `uri`",
             "T.`x1`", "T.`y1`", "T.`x2`", "T.`y2`",
             "T.`date_created`",
             "T.user_id"
@@ -257,7 +257,7 @@ var Templates = {
      */
     createTemplateImage : function (template){
         var s3key = 'project_'+template.project+'/templates/'+template.id+'.png';
-        template.uri = 'https://s3.amazonaws.com/'+config('aws').bucketName+'/' + s3key;
+        template.uri = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + s3key;
         var roi_file = tmpfilecache.key2File(s3key);
         var rec_data;
         var rec_stats;

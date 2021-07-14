@@ -1,10 +1,49 @@
 # Arbimon Release Notes
 
-## v3.0.30 - June XX, 2021
+## v3.0.31 - June 01, 2021
+
+New features:
+
+- CE-791 Changed export attributes for the recording data
+- CE-791 Added item `Select all species` to the validations dropdown
+- The ability to export Occupancy Model Format is added for each species
+- CE-790 Add pattern matching filter to view top 200 scores per each site
+- CE-856 Add feature to export names/emails of all users
+- CE-753 Pattern Matching results are saved as species validations
+- The ability to export Detections grouped by site, date, hour
+- The Date attribute is included in the Recording data
+- CE-987 Add the number of species validated on the Summary page
+- Display the name of species on the spectrogram
+- CE-1035 Loading filename in visualizer still shows funky code
+- CE-1095 Heavy exports are only possible by super admins
+- CE-1093 The color of Species boxes is changed on the spectrogram
 
 Resolved issues:
 
-- CE-725 Fixed issue with rois audio playback on the Grid View page
+- CE-791 Fixed MySQL issue to process more than 61 validations in the user selection
+- CE-791 Fixed MySQL issue with ordering from the default site to datetime if the site attribute is excluded
+- CE-981 Combine user data from firstname and lastname on the RFM page
+- CE-971 Update regex function to parsing AudioMoth data in different cases
+
+Performance improvements:
+
+- CE-1062 Site list on PM details page shows only those sites which have ROIs
+- CE-1062 Load only one site per page for "Best per Site" filter
+- CE-1062 Load only one site per page for "Best per Site, Day" filter
+- CE-1064 Update Pattern Matching query for Citizen Scientist PM list page
+
+Other:
+
+- The columns order is changed on the recording page
+- Show "Unknown" if the recording hasn't in the file name data
+- CE-940 Update the text for the Recordings data in the Summary page
+- CE-792 Save validated rois in the recording validations table
+
+
+## v3.0.30 - June 18, 2021
+
+Resolved issues:
+
 - CE-689 Map should default back to showing all pins for all sites
 - Fix sort per cluster not working
 - CE-928 Do not cut templates in half or displaying other regions of the spectrogram
@@ -25,6 +64,10 @@ Performance improvements:
 - Improve project tags query
 - Load full list of sites for Pattern Matching ROIs list instead of playlist-related sites
 - Re-implement Pattern Matching Best Per Site and Best Per site Day queries
+
+Other:
+
+- CE-880 Beta tag on CNN, AE & clustering
 
 Other:
 

@@ -23,6 +23,17 @@ router.use(function(req, res, next) {
  */
 router.get('/', function(req, res, next) {
     res.type('json');
+
+    if (req.query.rec_id) {
+        return model.patternMatchings.getPatternMatchingRois({
+            rec_id: req.query.rec_id,
+            validated: req.query.validated
+        })
+        .then(function(data){
+            res.json(data);
+        }).catch(next);
+    }
+
     model.patternMatchings.find({
         project:req.project.project_id,
         deleted:0,
@@ -68,23 +79,28 @@ router.param('paging', function(req, res, next, paging){
 router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     res.type('json');
     let prom
-    if (req.query.search == 'best_per_site' || req.query.search == 'best_per_site_day') {
-        prom = model.patternMatchings.getRoisBestPerSiteForId(req.params.patternMatching, req.query.search == 'best_per_site_day')
-    } else {
-        prom = model.patternMatchings.getRoisForId({
-            patternMatchingId: req.params.patternMatching,
-            wherePresent: req.query.search == 'present',
-            whereNotPresent: req.query.search == 'not_present',
-            whereUnvalidated: req.query.search == 'unvalidated',
-            byScorePerSite: req.query.search == 'by_score_per_site',
-            byScore: req.query.search == 'by_score',
-            limit: req.paging.limit || 100,
-            offset: req.paging.offset || 0,
-        })
+    switch (req.query.search) {
+        case 'best_per_site':
+        case 'top_200_per_site':
+            prom = model.patternMatchings.getTopRoisByScoresPerSite(req.params.patternMatching, req.query.site, req.paging.limit);
+            break;
+        case 'best_per_site_day':
+            prom = model.patternMatchings.getTopRoisByScoresPerSiteDay(req.params.patternMatching, req.query.site, req.paging.limit);
+            break;
+        default:
+            prom = model.patternMatchings.getRoisForId({
+                patternMatchingId: req.params.patternMatching,
+                wherePresent: req.query.search == 'present',
+                whereNotPresent: req.query.search == 'not_present',
+                whereUnvalidated: req.query.search == 'unvalidated',
+                byScorePerSite: req.query.search == 'by_score_per_site',
+                site: req.query.site,
+                byScore: req.query.search == 'by_score',
+                limit: req.paging.limit || 100,
+                offset: req.paging.offset || 0,
+            })
     }
-    prom.then(function(rois) {
-            res.json(rois);
-        })
+    prom.then((json) => res.json(json))
         .catch(next);
 });
 
@@ -161,10 +177,33 @@ router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
 
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.validateRois(req.params.patternMatching, req.body.rois, req.body.validation).then(function(rois) {
-        res.json({
-            rois: req.body.rois,
-            validation: req.body.validation,
+    model.patternMatchings.validateRois(req.params.patternMatching, req.body.rois, req.body.validation)
+        .then(function(rois){
+            if (req.body.rois && req.body.rois.length) {
+                return model.patternMatchings.getPatternMatchingRois({rois: req.body.rois}).then(async function(rois) {
+                    for (let roi of rois) {
+                        var validation = 2
+                        if(req.body.validation != null) {
+                            validation = req.body.validation 
+                        }
+                        // Save validated rois in the recording validations table if the roi is validated;
+                        // Remove the recording validation row if the roi is absent or not validated and, the row exists.
+                        await model.recordings.validate(
+                            {id: roi.recording_id},
+                            req.session.user.id,
+                            req.project.project_id,
+                            { class: `${roi.species_id}-${roi.songtype_id}`, val: validation, determinedFrom: 'patternMatching'},
+                            function(err, validations) {
+                                if(err) return next(err);
+                                return validations;
+                        })
+                    }
+                })
+            }
+        }).then(function(rois) {
+            res.json({
+                rois: req.body.rois,
+                validation: req.body.validation,
         });
     }).catch(next);
 });
@@ -207,17 +246,6 @@ router.post('/new', function(req, res, next) {
             playlist   : req.body.playlist,
             params   : req.body.params,
         });
-    //     return model.jobs.newJob({
-    //         project    : project_id,
-    //         user       : req.session.user.id,
-    //         name       : req.body.name,
-    //         template   : req.body.template,
-    //         playlist   : req.body.playlist,
-    //         params   : req.body.params,
-    //     }, 'pattern_matching_job');
-    // }).then(function get_job_id(job_id){
-    //     pokeDaMonkey(); // this happens in 'parallel'
-    //     return job_id;
 }).then(function(result){
         res.json({ ok: true, result: result });
     }).catch(next);

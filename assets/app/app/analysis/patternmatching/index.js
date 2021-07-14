@@ -25,6 +25,7 @@ angular.module('a2.analysis.patternmatching', [
 })
 .controller('PatternMatchingCtrl' , function($scope, $modal, $filter, Project, JobsData, a2Playlists, $location, notify, $q, a2PatternMatching, a2UserPermit, $state, $stateParams) {
     $scope.selectedPatternMatchingId = $stateParams.patternMatchingId;
+    $scope.loading = {rows: false};
 
     $scope.getTemplateVisualizerUrl = function(template){
         var box = ['box', template.x1, template.y1, template.x2, template.y2].join(',');
@@ -44,21 +45,18 @@ angular.module('a2.analysis.patternmatching', [
 
 
     $scope.loadPatternMatchings = function() {
-        $scope.loading = false;
-        $scope.infoInfo = "Loading...";
+        $scope.loading.rows = true;
         $scope.showInfo = true;
         $scope.splitAllSites = false;
 
         return a2PatternMatching.list({completed: true}).then(function(data) {
             $scope.patternmatchingsOriginal = data;
             $scope.patternmatchingsData = data;
-            $scope.infoInfo = "";
             $scope.showInfo = false;
-            $scope.loading = false;
+            $scope.loading.rows = false;
             $scope.infopanedata = "";
 
-            if(data.length > 0) {
-            } else {
+            if(data && !data.length) {
                 $scope.infopanedata = "No pattern matchings found.";
             }
         });
@@ -158,10 +156,13 @@ angular.module('a2.analysis.patternmatching', [
         this.thumbnailClass = this.lists.thumbnails[0].value;
         this.search = this.lists.search[6];
         this.projecturl = Project.getUrl();
-        this.fetchDetails().then((function(){
-            this.loadSiteIndex();
-            this.loadPage(this.selected.page);
-        }).bind(this));
+        this.fetchDetails()
+            .then(function() {
+                return this.loadSiteIndex();
+            }.bind(this))
+            .then(function() {
+                return this.loadPage(this.selected.page);
+            }.bind(this));
     },
 
     lists: {
@@ -178,6 +179,7 @@ angular.module('a2.analysis.patternmatching', [
             {value:'best_per_site_day', text:'Best per Site, Day', description: 'Show the best scored roi per site and day.'},
             {value:'by_score', text:'Score', description: 'Show all Region of Interest ranked by score.'},
             {value:'by_score_per_site', text:'Score per Site', description: 'Show all Region of Interest ranked by score per site.'},
+            {value:'top_200_per_site', text:'200 Top Scores per Site', description: 'Show Top 200 Region of Interest ranked by score per each site.'}
         ],
         selection: [
             {value:'all', text:'All'},
@@ -231,39 +233,54 @@ angular.module('a2.analysis.patternmatching', [
         this.select($item.value);
     },
 
-    loadSiteIndex: function(){
-        return Project.getSites().then((function(sites){
-            this.siteIndex = sites
-                .map(function (site) {
-                    return {
-                        site_id: site.id,
-                        site: site.name
-                    }
-                })
-                .sort((a, b) => {
-                    if(a.site < b.site) { return -1; }
-                    if(a.site > b.site) { return 1; }
-                    return 0;
-                });
-        }).bind(this));
+    loadSiteIndex: function() {
+        return a2PatternMatching.getSiteIndexFor(this.id)
+            .then(function (index) {
+                this.siteIndex = index;
+                this.sitesTotal = this.siteIndex.length * 200;
+            }.bind(this))
     },
 
     setSiteBookmark: function(site){
+        if (this.isTopRoisResults()) {
+            console.log(this.siteIndex.indexOf(site)+1);
+            this.selected.page = this.siteIndex.indexOf(site)+1;
+            return this.loadPage(this.selected.page);
+        }
         var bookmark = 'site-' + site.site_id;
         $anchorScroll.yOffset = $('.a2-page-header').height() + 60;
         $anchorScroll(bookmark)
     },
 
+    isTopRoisResults: function(){
+        return this.search && (this.search.value === 'top_200_per_site' || this.search.value === 'best_per_site' || this.search.value === 'best_per_site_day');
+    },
+
     loadPage: function(pageNumber){
         this.rois = [];
         this.loading.rois = true;
-        this.splitAllSites = this.search && this.search.value === 'by_score';
-        return a2PatternMatching.getRoisFor(
-            this.id,
-            this.limit,
-            (pageNumber - 1) * this.limit,
-            { search: this.search && this.search.value }
-        ).then((function(rois){
+        var search = this.search && this.search.value ? this.search.value : undefined
+        this.splitAllSites = search === 'by_score';
+        var opts = { search: search };
+        if (this.isTopRoisResults()) {
+            var selectedSite = this.siteIndex[pageNumber - 1];
+            opts.site = selectedSite && selectedSite.site_id;
+        }
+        var limit, offset;
+        switch (search) {
+            case 'top_200_per_site':
+                limit = 200;
+                offset = 0
+                break;
+            case 'best_per_site':
+                limit = 1;
+                offset = 0
+                break;
+            default:
+                limit = this.limit
+                offset = (pageNumber - 1) * this.limit
+        }
+        return a2PatternMatching.getRoisFor(this.id, limit, offset, opts).then((function(rois){
             this.loading.rois = false;
             if (this.splitAllSites) {
                 this.rois = [{

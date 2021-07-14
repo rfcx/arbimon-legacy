@@ -9,14 +9,14 @@
                 <i class="fa fa-plus" ></i>
             </a>
         </h3>
-        <loader ng-show="loading"></loader>
+        <loader ng-show="loading.rows"></loader>
         <button class="btn btn-default pull-right"
             tooltip="Refresh list"
             ng-click="loadPatternMatchings()">
                 <i class="fa fa-refresh"></i>
         </button>
 
-        <div ng-hide="loading">
+        <div ng-hide="loading.rows">
             <a2-table rows="patternmatchingsData" no-checkbox="true" on-select="selectItem(row.id) | trackEvent:'Analysis-Pattern-Matching-List':' show pattern matching details'">
                 <field title="Name" class="hidelongtext widthtd" key="name" filter>
                     <div class="roi-thumbnail" >
@@ -60,7 +60,7 @@
                     </button>
                 </field>
             </a2-table>
-            <div class="jumbotron seconds-div-center" ng-show="(!patternmatchingsOriginal || !patternmatchingsOriginal.length > 0) && !loading">
+            <div class="jumbotron seconds-div-center" ng-show="patternmatchingsOriginal && !patternmatchingsOriginal.length && !loading.rows">
                 <h3>{{ infopanedata }}</h3>
             </div>
         </div>

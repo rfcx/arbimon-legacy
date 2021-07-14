@@ -111,7 +111,7 @@ var Playlists = {
                     if(sr){
                         playlist.region     = sr.region;
                         playlist.soundscape = sr.soundscape;
-                        playlist.soundscape_thumbnail = 'https://' + config('aws').bucketName + '.s3.amazonaws.com/' + sr.uri;
+                        playlist.soundscape_thumbnail = 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + sr.uri;
                     }
                 });
             } else if(/union|intersection|subtraction/.test(playlist.type) && playlist.metadata){

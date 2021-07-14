@@ -214,7 +214,7 @@ router.get('/project/:projectUrl/models/:modelId/validation-list', function(req,
                         presence: prec,
                         model: modelprec,
                         id: recData[0].id,
-                        url: "https://"+ config('aws').bucketName + ".s3.amazonaws.com/" + recUriThumb,
+                        url: 'https://' + config('aws').bucketName + '.s3.' + config('aws').region + '.amazonaws.com/' + recUriThumb,
                         type: entryType
                     };
                     
