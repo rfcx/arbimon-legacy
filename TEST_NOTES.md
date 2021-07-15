@@ -3,11 +3,15 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.32
 
-- CE-1065 Patten Matching list loads quickly
+- CE-1065 Patten Matching list loads quicker
   - Pattern Matching list page: all data is still shown correctly and table loads quickly
   - Patten Matching details page: all details are still shown correctly (especially total recordings list)
   - Citizen Scientist Pattern Matching list page: all data is still shown correctly
   - Citizen Scientist Pattern Matching details page: all details are still shown correctly
+- CE-1068 CNN list page loads quicker
+  - CNN list page: all data is still shown correctly and table loads quickly
+- CE-1069 CNN job details loads quicker
+  - CNN details page: all data is still shown correctly and default filter works quicker
 
 ## v3.0.31
 
