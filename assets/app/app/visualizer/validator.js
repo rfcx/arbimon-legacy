@@ -23,8 +23,8 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
             
             var add_validation = function(validation){
                 var key     = [validation.species, validation.songtype].join('-');
-                var present =  validation.present;
-                $scope.validations[key] = present | 0;
+                var present = Object.values(validation);
+                $scope.validations[key] = present;
             };
 
             var load_project_classes = function(){
@@ -133,7 +133,7 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                                 delete $scope.validations[key];
                             }
                             else {
-                                $scope.validations[key] = validation.val;
+                                $scope.validations[key] = validation;
                             }
                         });
                     });
@@ -157,7 +157,12 @@ angular.module('a2.speciesValidator', ['a2.utils', 'a2.infotags'])
                     return;
                 }
                 else {
-                    return val_options.filter(function(v) { return v.val == val; })[0];
+                    if (val[4] == 1 || val[5] > 0) {
+                        val_options[1].showDropdown = (val[5] > 0)
+                        return val_options[1];
+                    } else {
+                        return val_options[2];
+                    }
                 }
             };
             
