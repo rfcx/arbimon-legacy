@@ -53,7 +53,7 @@ router.get('/expert', function(req, res, next) {
         showUserStatsFor: req.session.user.id,
         showSpecies: true,
         showTemplate: true,
-        showPlaylist:true
+        showPlaylistName: true
     }).then(function(count) {
         res.json(count);
     }).catch(next);
@@ -67,7 +67,9 @@ router.get('/:patternMatching/details', function(req, res, next) {
     model.patternMatchings.findOne({
         id: req.params.patternMatching,
         showUserStatsFor: user.id,
-        showTemplate: true, showPlaylist:true, showCounts: true,
+        showTemplate: true,
+        showPlaylistName: true,
+        showCounts: true,
         showSpecies: true,
     }).then(function(pm) {
         res.json(pm);

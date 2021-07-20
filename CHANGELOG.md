@@ -1,8 +1,15 @@
 # Arbimon Release Notes
 
+## v3.0.32 - July XX, 2021
+
+Performance improvements:
+
+- CE-1065 Patten Matching list loads quicker
+- CE-1068 CNN list page loads quicker
+- CE-1069 CNN job details loads quicker
 - CE-323 When user creates/edits/deletes a project role for another user in Arbimon it's synced with Core API in transactions
 
-## v3.0.31 - June 01, 2021
+## v3.0.31 - July 14, 2021
 
 New features:
 
