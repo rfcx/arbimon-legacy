@@ -177,7 +177,6 @@ router.get('/:projectUrl/classes', function(req, res, next) {
         options.countValidations = true;
     }
 
-    console.log(classId, options);
     model.projects.getProjectClasses(req.project.project_id, classId, options, function(err, classes){
         if(err) return next(err);
         res.json(classes);
