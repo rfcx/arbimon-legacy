@@ -1,10 +1,10 @@
 ## ✅ DoD
 
-- [x] Resolves [PI-XXX](https://jira.rfcx.org/browse/PI-XXX)
+- [x] Resolves [CE-XXXX](https://jira.rfcx.org/browse/CE-XXXX)
 - [ ] Release notes updated
-- [ ] Deployment notes updated
-- [ ] DB migrations updated/na
-- [ ] ...
+- [ ] Test notes notes updated
+- [ ] Deployment notes updated / na
+- [ ] DB migrations updated / na
 
 ## 📝 Summary
 

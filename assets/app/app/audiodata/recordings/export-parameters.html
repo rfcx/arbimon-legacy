@@ -5,11 +5,8 @@
 
     <ul class="list-group mb-2">
         <li class="list-group-item" ng-repeat="parameter_set in controller.parameter_set_list">
-            <div>
+            <div ng-hide="(parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped') && !controller.isSuper">
                 {{parameter_set.title}}:
-            </div>
-            <div ng-if="parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped'" class="small em mb-1">
-                {{parameter_set.subtitle}}<br>{{parameter_set.subtitle2}}
             </div>
             <div class="a2-filter" ng-init="parameter_set.index=$index" ng-if="parameter_set.identifier !== 'species' && parameter_set.identifier !== 'grouped'">
                 <ui-select multiple ng-model="controller.selected[parameter_set.index]" on-select="controller.onSelected($item)" theme="bootstrap" style="width:300px;">
@@ -27,7 +24,7 @@
                     </ui-select-choices>
                 </ui-select>
             </div>
-            <div class="a2-filter" ng-init="parameter_set.index=$index" ng-if="parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped'">
+            <div class="a2-filter" ng-init="parameter_set.index=$index" ng-if="(parameter_set.identifier === 'species' || parameter_set.identifier === 'grouped') && controller.isSuper">
                 <ui-select ng-model="controller.selected[parameter_set.index]" on-select="controller.onSelected($item)" theme="bootstrap" style="width:300px;">
                     <ui-select-match placeholder="{{parameter_set.identifier === 'species'? 'Select species...' : 'Detections grouped by...'}}">
                         <span tooltip="{{$item.tooltip}}" tooltip-append-to-body="true">{{controller.selected[parameter_set.index].caption}}</span>
