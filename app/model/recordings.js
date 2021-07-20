@@ -1478,7 +1478,7 @@ var Recordings = {
                         if (classes && classes.length) {
                             // Divide the results of the validations if the count more than 50 tables.
                             let classesArray = classes.reduce((resultArray, item, index) => {
-                                const chunkIndex = Math.floor(index/50);
+                                const chunkIndex = Math.floor(index/20);
                                 if (!resultArray[chunkIndex]) {
                                     resultArray[chunkIndex] = [];
                                 }
@@ -1595,12 +1595,13 @@ var Recordings = {
                         typeCast: sqlutil.parseUtcDatetime,
                     })
                     if (projection.grouped) {
-                        results = [...results, ...queryResult];
-                        return results;
+                        results = results.concat([...new Set(queryResult)]);
                     }
-                    results = [...new Set(queryResult)];
+                    else {
+                        results = [...new Set(queryResult)];
+                    }
                 }
-                return Q.all(results);
+                return projection.grouped? results : Q.all(results);
             })
     },
 

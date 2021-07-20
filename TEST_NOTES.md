@@ -16,3 +16,5 @@ Test Notes are used to list what pages / components / features / user flows are 
   - Patten Matching details page: When site from sites list (button with map pin icon) is selected, it loads results for selected site
 - CE-1064 Update Pattern Matching query for Citizen Scientist PM list page
   - Citizen Scientist section: Patten Matching page: the list with pattern matchings should load relatively quick
+- CE-1110 User can scale spectrogram in Visualizer to standard frequencies
+  - Visualizer page: ability of choosing the original Y-scale or 24 Khz scale

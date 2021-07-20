@@ -10,16 +10,24 @@ angular.module('a2.visobjects.recording', [
         }]
     });
 })
-.service('VisualizerObjectRecordingTypeLoader', function ($q, Project) {
+.service('VisualizerObjectRecordingTypeLoader', function ($q, Project, $localStorage) {
     var khz_format = function(v){return (v/1000) | 0; };
+
+    var getSelectedFrequencyCache = function() {
+        try {
+            return JSON.parse($localStorage.getItem('visuilizer.select.cache')) || {originalScale: true};
+        } catch(e){
+            return {originalScale: true};
+        }
+    };
+    var scaleCache = getSelectedFrequencyCache();
 
     var recording = function(data, extra){
         for(var i in data){ this[i] = data[i]; }
         this.sampling_rate = this.sample_rate;
         this.extra  = extra;
-        // fix up some stuff
         this.max_freq = this.sampling_rate / 2;
-        // setup the domains
+        this.span = scaleCache && scaleCache.originalScale ? this.max_freq : (this.max_freq > 24000 ? this.max_freq : 24000);
         this.domain = {
             x : {
                 from : 0,
@@ -30,8 +38,8 @@ angular.module('a2.visobjects.recording', [
             },
             y : {
                 from : 0,
-                to   : this.max_freq,
-                span : this.max_freq,
+                to   : this.span,
+                span : this.span,
                 unit : 'Frequency ( kHz )',
                 tick_format : khz_format
             }

@@ -319,6 +319,7 @@ angular.module('a2.visualizer', [
                     $scope.loading_visobject = false;
                     $scope.visobject = visobject;
                     $scope.visobject_type = visobject.type;
+                    $scope.setYScaleOptions();
                 }).bind(this));
             } else {
                 $scope.visobject = null;
@@ -332,6 +333,62 @@ angular.module('a2.visualizer', [
         $localStorage.setItem('analysis.clusters', null);
         $localStorage.setItem('analysis.clusters.playlist', null);
         $state.params.clusters = '';
+    }
+
+    // Resize Y scale.
+
+    $scope.getSelectedFrequencyCache = function() {
+        try {
+            return JSON.parse($localStorage.getItem('visuilizer.select.cache')) || {originalScale: true};
+        } catch(e){
+            return {originalScale: true};
+        }
+    };
+
+    $scope.deselectFrequencyOptions = function() {
+        $scope.yAxisOptions.forEach(item => item.active = false);
+    }
+
+    $scope.setYScaleOptions = function() {
+        // Get selected frequency.
+        $scope.scaleCache = $scope.getSelectedFrequencyCache();
+        // Get recording frequency.
+        $scope.convertedScale = $scope.visobject && $scope.visobject.max_freq ? +$scope.visobject.max_freq/1000 : 'X';
+        // Set frequency options with default y-scale value.
+        $scope.yAxisOptions = [
+            { title: '24 kHz scale', value: '24_scale', active: false },
+            { title: 'Original scale (' + $scope.convertedScale + ' kHz)', value: 'original_scale', active: true }
+        ];
+        // Set frequency options with saved frequency.
+        if ($scope.scaleCache && !$scope.scaleCache.originalScale && $scope.convertedScale < 24) {
+            $scope.deselectFrequencyOptions();
+            $scope.yAxisOptions[0].active = true;
+        }
+        // Display original frequency for recording whith 24kHz or more.
+        if ($scope.convertedScale >= 24) {
+            $scope.deselectFrequencyOptions();
+            $scope.yAxisOptions[1].active = true;
+        }
+    }
+
+
+    $scope.resizeYScale = function (item) {
+        $scope.deselectFrequencyOptions();
+        item.active = true;
+        var originalScale = item.value === 'original_scale';
+        $scope.setSelectedFrequencyCache({originalScale: originalScale});
+        $scope.layout.scale.originalScale = originalScale;
+        var span = originalScale ? $scope.visobject.sampling_rate / 2 : 24000;
+        $scope.visobject.domain.y.to = span;
+        $scope.visobject.domain.y.span = span;
+    };
+
+    $scope.setSelectedFrequencyCache = function(psCache) {
+        try{
+            $localStorage.setItem('visuilizer.select.cache', JSON.stringify(psCache));
+        } catch(e){
+            $localStorage.setItem('visuilizer.select.cache', {originalScale: true});
+        }
     }
 
     $scope.audio_player = new a2AudioPlayer($scope, initial_state_params);
@@ -375,7 +432,7 @@ angular.module('a2-visualizer-spectrogram-Layout',[
  * @description
  * The layout manager for the spectrogram.
  */
-.factory('VisualizerLayout', function(a2BrowserMetrics, makeClass, VisualizerLayoutSpecs){
+.factory('VisualizerLayout', function(a2BrowserMetrics, makeClass, VisualizerLayoutSpecs, $localStorage){
     var align_to_interval = function(unit, domain, align){
         if(align === undefined || !domain || !domain.unit_interval){
             return unit;
@@ -433,7 +490,8 @@ angular.module('a2-visualizer-spectrogram-Layout',[
                 max_hz2px  : 100 / (5000.0 / 8),
                 zoom   : {x:0, y:0},
                 sec2px : 100 / 1.0,
-                hz2px  : 100 / 5000.0
+                hz2px  : 100 / 5000.0,
+                originalScale: null
             };
             this.offset = {
                 sec : 0,

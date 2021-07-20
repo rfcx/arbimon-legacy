@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-1110 User can scale spectrogram in Visualizer to standard frequencies
+
 ## v3.0.31 - June 01, 2021
 
 New features:
