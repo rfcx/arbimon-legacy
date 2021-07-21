@@ -181,24 +181,26 @@ router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     var roiList = []
+    var roiIdList = []
     model.patternMatchings.getRoi(req.params.patternMatching, req.body.rois).then(function(rois){
         for (let roi of rois) {
             if (roi.validated != req.body.validation) {
-                roiList.push(roi.pattern_matching_roi_id)
+                roiList.push(roi)
+                roiIdList.push(roi.pattern_matching_roi_id)
             }
         }
         
-        model.patternMatchings.validateRois(req.params.patternMatching, roiList, req.body.validation)
-            .then(function(rois){
+        model.patternMatchings.validateRois(req.params.patternMatching, roiIdList, req.body.validation)
+            .then(async function(rois){
                 if (roiList && roiList.length) {
-                    return model.patternMatchings.getPatternMatchingRois({rois: roiList}).then(async function(rois) {
-                        for (let roi of rois) {
-                            var validation = 2
-                            if(req.body.validation != null) {
-                                validation = req.body.validation
-                            }
-                            // Save validated rois in the recording validations table if the roi is validated;
-                            // Remove the recording validation row if the roi is absent or not validated and, the row exists.
+                    for (let roi of roiList) {
+                        var validation = 2
+                        if(req.body.validation != null) {
+                            validation = req.body.validation
+                        }
+                        // Save validated rois in the recording validations table if the roi is validated;
+                        // Remove the recording validation row if the roi is absent or not validated and, the row exists.
+                        if(req.body.validation != 0 && roi.validated != null) { //  check it not changes the state from “clear” to “absent”
                             await model.recordings.validate(
                                 {id: roi.recording_id},
                                 req.session.user.id,
@@ -209,11 +211,11 @@ router.post('/:patternMatching/validate', function(req, res, next) {
                                     return validations;
                             })
                         }
-                    })
+                    }
                 }
             }).then(function(rois) {
                 res.json({
-                    rois: roiList,
+                    rois: roiIdList,
                     validation: req.body.validation,
             });
         }).catch(next);
