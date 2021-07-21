@@ -185,11 +185,9 @@ router.post('/:patternMatching/validate', function(req, res, next) {
 
         const updatedRois = rois.filter(function(roi) { return roi.validated != validation });
         const updatedRoiIds = updatedRois.map(function(roi) { return roi.pattern_matching_roi_id });
-        console.log(updatedRois);
         
         model.patternMatchings.validateRois(req.params.patternMatching, updatedRoiIds, validation)
             .then(async function(validatedRois) {
-                console.log(validatedRois);
                 for (let roi of updatedRois) {
                     const previousValidation = roi.validated;
                     await model.recordings.validate({id: roi.recording_id}, req.session.user.id, req.project.project_id,
