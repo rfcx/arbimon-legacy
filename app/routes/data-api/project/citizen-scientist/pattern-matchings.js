@@ -8,22 +8,37 @@ var model = require('../../../../model');
 var APIError = require('../../../../utils/apierror');
 var csv_stringify = require("csv-stringify");
 
-
-
-/** Return a list of all the pattern matchings in a project.
+/**
+ * Return a list of all the pattern matchings in a project.
  */
 router.get('/', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.find({
+    const opts = {
         project:req.project.project_id,
-        citizen_scientist:1,
-        deleted:0,
+        citizen_scientist: 1,
+        deleted: 0,
+    }
+    // get stats for validated vs total rois first
+    model.patternMatchings.find({
+        ...opts,
         showUserStatsFor: req.session.user.id,
-        showSpecies: true,
-        showTemplate: true,
-        showPlaylist:true
-    }).then(function(count) {
-        res.json(count);
+        userStats: ['validated'],
+        showTemplate: true
+    }).then(async function(pms1) {
+        // then get additional data about species and songtype
+        const pms2 = await model.patternMatchings.find({
+            ...opts,
+            showSpecies: true,
+        })
+        // match first set of data with second set
+        const result = pms1.map((pm1) => {
+            const additionalPm = pms2.find(pm2 => pm2.id === pm1.id)
+            return {
+                ...pm1,
+                ...additionalPm
+            }
+        })
+        res.json(result);
     }).catch(next);
 });
 
@@ -38,7 +53,7 @@ router.get('/expert', function(req, res, next) {
         showUserStatsFor: req.session.user.id,
         showSpecies: true,
         showTemplate: true,
-        showPlaylist:true
+        showPlaylistName: true
     }).then(function(count) {
         res.json(count);
     }).catch(next);
@@ -52,7 +67,9 @@ router.get('/:patternMatching/details', function(req, res, next) {
     model.patternMatchings.findOne({
         id: req.params.patternMatching,
         showUserStatsFor: user.id,
-        showTemplate: true, showPlaylist:true, showCounts: true,
+        showTemplate: true,
+        showPlaylistName: true,
+        showCounts: true,
         showSpecies: true,
     }).then(function(pm) {
         res.json(pm);

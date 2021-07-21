@@ -39,7 +39,7 @@ router.get('/', function(req, res, next) {
         deleted:0,
         showUser:true,
         showTemplate: true,
-        showPlaylist:true,
+        showPlaylistName: true,
         ...!!req.query.completed && { completed: req.query.completed }
     }).then(function(count) {
         res.json(count);
@@ -52,7 +52,10 @@ router.get('/:patternMatching/details', function(req, res, next) {
     res.type('json');
     model.patternMatchings.findOne({
         id: req.params.patternMatching,
-        showTemplate: true, showPlaylist:true, showCounts: true,
+        showTemplate: true,
+        showPlaylistName: true,
+        showPlaylistCount: true,
+        showCounts: true,
         showSpecies: true,
     }).then(function(pm) {
         res.json(pm);
@@ -79,25 +82,28 @@ router.param('paging', function(req, res, next, paging){
 router.get('/:patternMatching/rois/:paging', function(req, res, next) {
     res.type('json');
     let prom
-    if (req.query.search == 'best_per_site' || req.query.search == 'best_per_site_day') {
-        prom = model.patternMatchings.getRoisBestPerSiteForId(req.params.patternMatching, req.query.search == 'best_per_site_day')
-    } else {
-        prom = model.patternMatchings.getRoisForId({
-            patternMatchingId: req.params.patternMatching,
-            wherePresent: req.query.search == 'present',
-            whereNotPresent: req.query.search == 'not_present',
-            whereUnvalidated: req.query.search == 'unvalidated',
-            byScorePerSite: req.query.search == 'by_score_per_site',
-            byScoresPerSite: req.query.search == 'by_scores_per_site',
-            site: req.query.site,
-            byScore: req.query.search == 'by_score',
-            limit: req.paging.limit || 100,
-            offset: req.paging.offset || 0,
-        })
+    switch (req.query.search) {
+        case 'best_per_site':
+        case 'top_200_per_site':
+            prom = model.patternMatchings.getTopRoisByScoresPerSite(req.params.patternMatching, req.query.site, req.paging.limit);
+            break;
+        case 'best_per_site_day':
+            prom = model.patternMatchings.getTopRoisByScoresPerSiteDay(req.params.patternMatching, req.query.site, req.paging.limit);
+            break;
+        default:
+            prom = model.patternMatchings.getRoisForId({
+                patternMatchingId: req.params.patternMatching,
+                wherePresent: req.query.search == 'present',
+                whereNotPresent: req.query.search == 'not_present',
+                whereUnvalidated: req.query.search == 'unvalidated',
+                byScorePerSite: req.query.search == 'by_score_per_site',
+                site: req.query.site,
+                byScore: req.query.search == 'by_score',
+                limit: req.paging.limit || 100,
+                offset: req.paging.offset || 0,
+            })
     }
-    prom.then(function(rois) {
-            res.json(rois);
-        })
+    prom.then((json) => res.json(json))
         .catch(next);
 });
 
@@ -179,16 +185,9 @@ router.post('/:patternMatching/validate', function(req, res, next) {
             if (req.body.rois && req.body.rois.length) {
                 return model.patternMatchings.getPatternMatchingRois({rois: req.body.rois}).then(async function(rois) {
                     for (let roi of rois) {
-                        let count;
-                        if ((!req.body.validation || req.body.validation === 0)) {
-                            count = await model.patternMatchings.getCountRoisMatchByAttr(
-                                req.params.patternMatching,
-                                roi.recording_id,
-                                { speciesId: roi.species_id, songtypeId: roi.songtype_id }
-                            )
-                        }
-                        if (count && count.count < 0) {
-                            return;
+                        var validation = 2
+                        if(req.body.validation != null) {
+                            validation = req.body.validation
                         }
                         // Save validated rois in the recording validations table if the roi is validated;
                         // Remove the recording validation row if the roi is absent or not validated and, the row exists.
@@ -196,7 +195,7 @@ router.post('/:patternMatching/validate', function(req, res, next) {
                             {id: roi.recording_id},
                             req.session.user.id,
                             req.project.project_id,
-                            { class: `${roi.species_id}-${roi.songtype_id}`, val: (req.body.validation === 1)? 1 : 2},
+                            { class: `${roi.species_id}-${roi.songtype_id}`, val: validation, determinedFrom: 'patternMatching'},
                             function(err, validations) {
                                 if(err) return next(err);
                                 return validations;

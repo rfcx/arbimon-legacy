@@ -285,66 +285,32 @@ var Projects = {
         project.processing_usage = 0;
         project.pattern_matching_enabled = 1;
 
-        var projectId;
-
-        if (db) {
-            projectId = await this.summaryFunctions(db, project, owner_id, plan);
-            return projectId;
-        } else {
-            dbpool.getConnection(function(err, db) {
-                db.beginTransaction(async function(err){
-                    if(err) return callback(err);
-
-                    db.release();
-
-                    projectId = await this.summaryFunctions(db, project, owner_id, plan);
-
-                    if (!result) {
-                        db.rollback(function() {
-                            callback(err);
-                        });
-                        return;
-                    }
-
-                    return projectId;
-                });
-            });
+        if (!db) {
+            db = await dbpool.getConnection()
+            await db.beginTransaction()
+        }
+        try {
+            return await this.runProjectCreationQueue(db, project, owner_id, plan);
+        } catch (e) {
+            await db.rollback();
+            await connection.release();
         }
     },
 
-    insertProjectAsync: async function(project, connection) {
-        let insert = util.promisify(connection.query);
-        return insert('INSERT INTO projects SET ?', project);
-    },
-
-    insertOwnerAsync: async function(values, connection) {
-        let insert = util.promisify(connection.query);
-        return insert('INSERT INTO user_project_role SET ?', values);
-    },
-
-    insertPlanAsync: async function(plan, connection) {
-        let insert = util.promisify(connection.query);
-        return insert('INSERT INTO project_plans SET ?', plan);
-    },
-
-    updateCurrentPlanAsync: async function(result, projectId, connection) {
-        let insert = util.promisify(connection.query);
-        return insert('UPDATE projects SET current_plan = ? WHERE project_id = ?', [result.insertId, projectId]);
-    },
-
-    summaryFunctions: async function(db, project, owner_id, plan) {
-        let result = await this.insertProjectAsync(project, db);
+    runProjectCreationQueue: async function(connection, project, owner_id, plan) {
+        let queryAsync = util.promisify(connection.query);
+        let result = await queryAsync('INSERT INTO projects SET ?', project);
         let projectId = result.insertId;
         let values = {
             user_id: owner_id,
             project_id: projectId,
             role_id: 4
         };
-        await this.insertOwnerAsync(values, db);
+        await queryAsync('INSERT INTO user_project_role SET ?', values);
         plan.project_id = projectId;
         plan.created_on = new Date();
-        let newPlan = await this.insertPlanAsync(plan, db);
-        await this.updateCurrentPlanAsync(newPlan, projectId, db);
+        let newPlan = await queryAsync('INSERT INTO project_plans SET ?', plan);
+        await queryAsync('UPDATE projects SET current_plan = ? WHERE project_id = ?', [newPlan.insertId, projectId]);
         return projectId;
     },
 

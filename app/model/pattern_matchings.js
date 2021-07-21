@@ -121,10 +121,14 @@ var PatternMatchings = {
             });
         }
 
-        if (options.showPlaylist) {
-            select.push("P.`name` as `playlist_name`");
-            select.push("(SELECT COUNT(*) FROM playlist_recordings PR WHERE PR.playlist_id=P.playlist_id) as `playlist_count`");
+        if (options.showPlaylistName || options.showPlaylistCount) {
             tables.push("JOIN playlists P ON P.playlist_id = PM.playlist_id");
+        }
+        if (options.showPlaylistName) {
+            select.push("P.`name` as `playlist_name`");
+        }
+        if (options.showPlaylistCount) {
+            select.push("(SELECT COUNT(*) FROM playlist_recordings PR WHERE PR.playlist_id=P.playlist_id) as `playlist_count`");
         }
 
         if(options.showSpecies){
@@ -151,14 +155,17 @@ var PatternMatchings = {
         }
 
         if(options.showUserStatsFor) {
-            select.push(
-                "SUM(IF(PMR.consensus_validated IS NULL AND PMR.expert_validated IS NULL, 1, 0)) as cs_total",
-            );
-            select.push(
-                "SUM(IF(PMV.validated = 1, 1, 0)) as cs_present",
-                "SUM(IF(PMV.validated = 0, 1, 0)) as cs_absent",
-                "SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated"
-            );
+            const stats = {
+                cs_total: 'SUM(IF(PMR.consensus_validated IS NULL AND PMR.expert_validated IS NULL, 1, 0)) as cs_total',
+                cs_present: 'SUM(IF(PMV.validated = 1, 1, 0)) as cs_present',
+                cs_absent: 'SUM(IF(PMV.validated = 0, 1, 0)) as cs_absent',
+                validated: 'SUM(IF(PMV.pattern_matching_roi_id IS NULL, 0, 1)) as validated'
+            }
+            for (let key in stats) {
+                if (!options.userStats || options.userStats && options.userStats.includes(key)) {
+                    select.push(stats[key])
+                }
+            }
             tables.push("LEFT JOIN pattern_matching_validations PMV ON (PMR.pattern_matching_roi_id = PMV.pattern_matching_roi_id AND PMV.user_id = " + (options.showUserStatsFor | 0) + ")");
             groupby.push("PM.pattern_matching_id");
         }
@@ -475,9 +482,6 @@ var PatternMatchings = {
     },
 
     getRoisForId(options) {
-        if (options.byScoresPerSite && options.site) {
-            return this.getTopRoisByScoresPerSite(options.patternMatchingId, options.site)
-        }
         let sortBy = [['S.name', 1], ['R.datetime', 1]] // default sorting
         if (options.byScorePerSite) {
             sortBy = [['S.name', 1], ['PMR.score', 0]]
@@ -518,88 +522,61 @@ var PatternMatchings = {
         });
     },
 
-    getRoisBestPerSiteForId (pmId, byDay) {
-        return dbpool.query(`
-            SELECT S.site_id, S.name as site, PMR.score,
-                R.uri as recording,
-                PMR.pattern_matching_roi_id as id,
-                PMR.pattern_matching_id,
-                PMR.denorm_recording_datetime as datetime,
-                PMR.recording_id,
-                PMR.species_id,
-                PMR.songtype_id,
-                PMR.x1, PMR.y1, PMR.x2, PMR.y2,
-                PMR.uri,
-                PMR.score,
-                PMR.validated
-            FROM sites S
-            JOIN (
-                SELECT pmr1.denorm_site_id, pmr1.score, pmr1.recording_id, pmr1.pattern_matching_roi_id,
-                    pmr1.pattern_matching_id, pmr1.denorm_recording_datetime, pmr1.species_id, pmr1.songtype_id,
-                    pmr1.validated, pmr1.uri, pmr1.x1, pmr1.y1, pmr1.x2, pmr1.y2
-                FROM pattern_matching_rois pmr1
-                INNER JOIN (
-                    SELECT MAX(score) as score, denorm_site_id${byDay? ', denorm_recording_date' : ''}
-                    FROM pattern_matching_rois
-                    WHERE pattern_matching_id = ?
-                    GROUP BY denorm_site_id${byDay? ', denorm_recording_date' : ''}
-                ) pmr2
-                ON pattern_matching_id = ? AND pmr1.denorm_site_id = pmr2.denorm_site_id ${byDay? 'AND pmr1.denorm_recording_date = pmr2.denorm_recording_date ' : ''} AND pmr1.score = pmr2.score
-            ) PMR ON S.site_id = PMR.denorm_site_id
-            JOIN recordings R ON PMR.recording_id = R.recording_id
-            ORDER BY S.name, R.datetime;`, [pmId, pmId])
-        .then((pmrs) => {
-            pmrs.forEach((pmr) => {
-                const d = pmr.datetime.toISOString()
-                const namePartials = pmr.recording.split('/')
-                pmr.recording = namePartials[namePartials.length - 1]
-                pmr.year = parseInt(d.substring(0, 4))
-                pmr.month = parseInt(d.substring(5, 7))
-                pmr.day = parseInt(d.substring(8, 10))
-                pmr.hour = parseInt(d.substring(11, 13))
-                pmr.minute = parseInt(d.substring(14, 16))
-            })
-            return pmrs
-        })
-    },
-
     getSitesForPM (pmId) {
-        return dbpool.query(`
-            SELECT DISTINCT(S.site_id), S.name as site
-            FROM playlists AS P
-            JOIN pattern_matchings AS PM ON PM.playlist_id = P.playlist_id
-            JOIN playlist_recordings AS PR ON PR.playlist_id = P.playlist_id
-            JOIN recordings AS R ON PR.recording_id = R.recording_id
-            JOIN sites AS S ON R.site_id = S.site_id
-            WHERE PM.pattern_matching_id = ? ORDER BY S.name;`, [pmId])
+        return dbpool.query(`SELECT site_id, name as site FROM sites
+            WHERE site_id IN (SELECT DISTINCT denorm_site_id FROM pattern_matching_rois WHERE pattern_matching_id = ?);`, [pmId])
+            .then((sites) => {
+                return sites.sort((a, b) => a.site.localeCompare(b.site))
+            })
     },
 
-    getTopRoisByScoresPerSite: function (pmId, siteId) {
-        const base = `SELECT
-            PMR.pattern_matching_roi_id as id,
-            PMR.pattern_matching_id,
-            SUBSTRING_INDEX(R.uri, "/", -1) as recording,
-            S.name as site,
-            S.site_id,
-            EXTRACT(year FROM PMR.denorm_recording_datetime) as year,
-            EXTRACT(month FROM PMR.denorm_recording_datetime) as month,
-            EXTRACT(day FROM PMR.denorm_recording_datetime) as day,
-            EXTRACT(hour FROM PMR.denorm_recording_datetime) as hour,
-            EXTRACT(minute FROM PMR.denorm_recording_datetime) as min,
-            PMR.denorm_recording_datetime,
-            PMR.recording_id,
-            PMR.species_id,
-            PMR.songtype_id,
-            PMR.x1, PMR.y1, PMR.x2, PMR.y2,
-            PMR.uri,
-            PMR.score,
-            PMR.validated
-        FROM pattern_matching_rois AS PMR
-        JOIN recordings AS R ON R.recording_id = PMR.recording_id
-        JOIN sites AS S ON PMR.denorm_site_id = S.site_id
-        WHERE PMR.pattern_matching_id = ? AND S.site_id = ?
-        ORDER BY PMR.score DESC LIMIT 200`
-        return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, siteId]);
+    pmrSqlSelect: `SELECT S.site_id, S.name as site, PMR.score, R.uri as recording, PMR.pattern_matching_roi_id as id, PMR.pattern_matching_id,
+        PMR.denorm_recording_datetime as datetime, PMR.recording_id, PMR.species_id, PMR.songtype_id, PMR.x1, PMR.y1, PMR.x2, PMR.y2, PMR.uri,
+        PMR.score, PMR.validated FROM pattern_matching_rois AS PMR`,
+
+    completePMRResults (pmrs) {
+        pmrs.forEach((pmr) => {
+            const d = pmr.datetime.toISOString()
+            const namePartials = pmr.recording.split('/')
+            pmr.recording = namePartials[namePartials.length - 1]
+            pmr.year = parseInt(d.substring(0, 4))
+            pmr.month = parseInt(d.substring(5, 7))
+            pmr.day = parseInt(d.substring(8, 10))
+            pmr.hour = parseInt(d.substring(11, 13))
+            pmr.minute = parseInt(d.substring(14, 16))
+        })
+        return pmrs
+    },
+
+    getTopRoisByScoresPerSite (pmId, siteId, limit = 200) {
+        const base = `${this.pmrSqlSelect}
+            JOIN recordings AS R ON R.recording_id = PMR.recording_id
+            JOIN sites AS S ON PMR.denorm_site_id = S.site_id
+            WHERE PMR.pattern_matching_id = ? AND PMR.denorm_site_id = ?
+            ORDER BY PMR.score DESC LIMIT ?`
+        return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, siteId, limit])
+            .then(this.completePMRResults)
+    },
+
+    getTopRoisByScoresPerSiteDay (pmId, siteId) {
+        const base = `${this.pmrSqlSelect}
+            JOIN (
+                SELECT MAX(score) as max_score, denorm_recording_date
+                FROM pattern_matching_rois
+                WHERE pattern_matching_id = ? AND denorm_site_id = ?
+                GROUP BY denorm_recording_date
+            ) pmr2
+            ON PMR.denorm_recording_date = pmr2.denorm_recording_date AND PMR.score = pmr2.max_score
+            JOIN recordings AS R ON R.recording_id = PMR.recording_id
+            JOIN sites AS S ON PMR.denorm_site_id = S.site_id
+            WHERE PMR.pattern_matching_id = ? AND PMR.denorm_site_id = ?;`
+        return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, siteId, pmId, siteId])
+            .then((data) => {
+                const pmrs = this.completePMRResults(data)
+                return pmrs.sort((a, b) => {
+                    return a.datetime.valueOf() - b.datetime.valueOf();
+                })
+            })
     },
 
     getRoiAudioFile(patternMatching, roiId, options){

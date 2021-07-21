@@ -77,8 +77,6 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             },
         },
         {   title:'Grouping of Detections',
-            subtitle: 'Please select one from the list.',
-            subtitle2: 'Linked only with Validations field in the form.',
             identifier:'grouped',
             placeholder: 'Detections grouped by...',
             list: [
@@ -88,8 +86,6 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             ],
         },
         {   title:'Occupancy Model Format',
-            subtitle: 'Please select one from the list.',
-            subtitle2: 'Not linked to other fields in the form.',
             identifier:'species',
             placeholder: 'Species...',
             getList: function(Project){
@@ -106,7 +102,8 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
     $q,
     $injector,
     $scope,
-    recordingDataFieldTypes
+    recordingDataFieldTypes,
+    a2UserPermit
 ){
 
     this.initialize = function(options){
@@ -153,6 +150,8 @@ angular.module('a2.audiodata.recordings.data-export-parameters', [
             });
         }).bind(this));
     };
+
+    this.isSuper = a2UserPermit.isSuper();
 
     this.checkSelectedValue = function(selected) {
         return selected && selected.find(function(row){ return row.value === -1 });
