@@ -520,8 +520,8 @@ var Projects = {
 
         if(options && options.countValidations) {
             select_clause.push(
-                "coalesce(SUM(rv.present), 0) as vals_present",
-                "coalesce((COUNT(rv.present) - SUM(rv.present)), 0) as vals_absent"
+                "coalesce(SUM(CASE WHEN rv.present_review > 0 THEN 1 ELSE rv.present END), 0) as vals_present",
+                "coalesce(SUM(CASE WHEN rv.present = 0 AND rv.present_review = 0 THEN 1 ELSE 0 END), 0) as vals_absent"
             );
             from_clause.push(
                 "LEFT JOIN recording_validations AS rv ON (\n"+

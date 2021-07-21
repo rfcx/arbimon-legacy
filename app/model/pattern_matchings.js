@@ -640,6 +640,15 @@ var PatternMatchings = {
             rois,
         ]) : Promise.resolve();
     },
+    
+    getRoi(patternMatchingId, roisId){
+        return dbpool.query(
+            "SELECT *\n" +
+            "FROM pattern_matching_rois\n" +
+            "WHERE pattern_matching_id = ? AND pattern_matching_roi_id IN (?)", [
+            patternMatchingId, roisId
+        ]);
+    },
 
     getCountRoisMatchByAttr(patternMatchingId, recordingId, validation){
         return dbpool.query(
