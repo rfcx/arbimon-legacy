@@ -200,17 +200,23 @@ router.post('/:patternMatching/validate', function(req, res, next) {
                         }
                         // Save validated rois in the recording validations table if the roi is validated;
                         // Remove the recording validation row if the roi is absent or not validated and, the row exists.
-                        if(req.body.validation != 0 && roi.validated != null) { //  check it not changes the state from “clear” to “absent”
-                            await model.recordings.validate(
-                                {id: roi.recording_id},
-                                req.session.user.id,
-                                req.project.project_id,
-                                { class: `${roi.species_id}-${roi.songtype_id}`, val: validation, determinedFrom: 'patternMatching'},
-                                function(err, validations) {
-                                    if(err) return next(err);
-                                    return validations;
-                            })
+                        console.log(req.body.validation)
+                        console.log(roi.validated)
+                        console.log((req.body.validation != 0 && roi.validated != null))
+                        
+                        if(req.body.validation == 0 && roi.validated == null) { //  check it not changes the state from “clear” to “absent”
+                            return next();
                         }
+                        
+                        await model.recordings.validate(
+                            {id: roi.recording_id},
+                            req.session.user.id,
+                            req.project.project_id,
+                            { class: `${roi.species_id}-${roi.songtype_id}`, val: validation, determinedFrom: 'patternMatching'},
+                            function(err, validations) {
+                                if(err) return next(err);
+                                return validations;
+                        })
                     }
                 }
             }).then(function(rois) {
