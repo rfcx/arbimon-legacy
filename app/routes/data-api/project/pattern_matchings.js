@@ -180,48 +180,24 @@ router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
 
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
-    var roiList = []
-    var roiIdList = []
-    model.patternMatchings.getRoi(req.params.patternMatching, req.body.rois).then(function(rois){
-        for (let roi of rois) {
-            if (roi.validated != req.body.validation) {
-                roiList.push(roi)
-                roiIdList.push(roi.pattern_matching_roi_id)
-            }
-        }
+    const validation = req.body.validation
+    model.patternMatchings.getRoi(req.params.patternMatching, req.body.rois).then(function(rois) {
+
+        const updatedRois = rois.filter(function(roi) { return roi.validated != validation });
+        const updatedRoiIds = updatedRois.map(function(roi) { return roi.pattern_matching_roi_id });
+        console.log(updatedRois);
         
-        model.patternMatchings.validateRois(req.params.patternMatching, roiIdList, req.body.validation)
-            .then(async function(rois){
-                if (roiList && roiList.length) {
-                    for (let roi of roiList) {
-                        var validation = 2
-                        if(req.body.validation != null) {
-                            validation = req.body.validation
-                        }
-                        // Save validated rois in the recording validations table if the roi is validated;
-                        // Remove the recording validation row if the roi is absent or not validated and, the row exists.
-                        console.log(req.body.validation)
-                        console.log(roi.validated)
-                        console.log((req.body.validation != 0 && roi.validated != null))
-                        
-                        if(req.body.validation == 0 && roi.validated == null) { //  check it not changes the state from “clear” to “absent”
-                            return next();
-                        }
-                        
-                        await model.recordings.validate(
-                            {id: roi.recording_id},
-                            req.session.user.id,
-                            req.project.project_id,
-                            { class: `${roi.species_id}-${roi.songtype_id}`, val: validation, determinedFrom: 'patternMatching'},
-                            function(err, validations) {
-                                if(err) return next(err);
-                                return validations;
-                        })
-                    }
+        model.patternMatchings.validateRois(req.params.patternMatching, updatedRoiIds, validation)
+            .then(async function(validatedRois) {
+                console.log(validatedRois);
+                for (let roi of updatedRois) {
+                    const previousValidation = roi.validated;
+                    await model.recordings.validate({id: roi.recording_id}, req.session.user.id, req.project.project_id,
+                        { class: `${roi.species_id}-${roi.songtype_id}`, val: validation, oldVal: previousValidation, review: true})
                 }
-            }).then(function(rois) {
+            }).then(function() {
                 res.json({
-                    rois: roiIdList,
+                    rois: updatedRoiIds,
                     validation: req.body.validation,
             });
         }).catch(next);
