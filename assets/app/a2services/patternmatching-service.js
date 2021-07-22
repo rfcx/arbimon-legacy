@@ -47,7 +47,7 @@ angular.module('a2.srv.patternmatching', [
 
             return a2APIService.get('/pattern-matchings/' + patternMatchingId + '/rois/' + (offset||0) + '_' + (limit||0) + (query ? '?'+query : '')).catch(notify.serverError);
         },
-        getSiteIndexFor: function(patternMatchingId, options) {
+        getSitesListFor: function(patternMatchingId, options) {
             var query = Object.keys(options || {}).map(function(option){
                 return option + '=' + encodeURIComponent(options[option]);
             }).join('&');

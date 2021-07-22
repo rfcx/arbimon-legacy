@@ -93,11 +93,11 @@ router.get('/:patternMatching/rois/:paging', function(req, res, next) {
         default:
             prom = model.patternMatchings.getRoisForId({
                 patternMatchingId: req.params.patternMatching,
+                site: req.query.site,
                 wherePresent: req.query.search == 'present',
                 whereNotPresent: req.query.search == 'not_present',
                 whereUnvalidated: req.query.search == 'unvalidated',
                 byScorePerSite: req.query.search == 'by_score_per_site',
-                site: req.query.site,
                 byScore: req.query.search == 'by_score',
                 limit: req.paging.limit || 100,
                 offset: req.paging.offset || 0,
@@ -185,7 +185,7 @@ router.post('/:patternMatching/validate', function(req, res, next) {
 
         const updatedRois = rois.filter(function(roi) { return roi.validated != validation });
         const updatedRoiIds = updatedRois.map(function(roi) { return roi.pattern_matching_roi_id });
-        
+
         model.patternMatchings.validateRois(req.params.patternMatching, updatedRoiIds, validation)
             .then(async function(validatedRois) {
                 for (let roi of updatedRois) {

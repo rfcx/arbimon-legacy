@@ -149,7 +149,7 @@ angular.module('a2.analysis.patternmatching', [
         this.offset = 0;
         this.limit = 100;
         this.selected = { roi_index: 0, roi: null, page: 1 };
-        this.siteIndex = [];
+        this.sitesList = [];
         this.total = {rois:0, pages:0};
         this.loading = {details: false, rois:false};
         this.validation = this.lists.validation[2];
@@ -158,7 +158,7 @@ angular.module('a2.analysis.patternmatching', [
         this.projecturl = Project.getUrl();
         this.fetchDetails()
             .then(function() {
-                return this.loadSiteIndex();
+                return this.loadSitesList();
             }.bind(this))
             .then(function() {
                 return this.loadPage(this.selected.page);
@@ -233,18 +233,18 @@ angular.module('a2.analysis.patternmatching', [
         this.select($item.value);
     },
 
-    loadSiteIndex: function() {
-        return a2PatternMatching.getSiteIndexFor(this.id)
+    loadSitesList: function() {
+        return a2PatternMatching.getSitesListFor(this.id)
             .then(function (index) {
-                this.siteIndex = index;
-                this.sitesTotal = this.siteIndex.length * 200;
+                this.sitesList = index;
+                this.sitesTotal = this.sitesList.length * 200;
             }.bind(this))
     },
 
     setSiteBookmark: function(site){
         if (this.shouldGetPerSite()) {
-            console.log(this.siteIndex.indexOf(site)+1);
-            this.selected.page = this.siteIndex.indexOf(site)+1;
+            console.log(this.sitesList.indexOf(site)+1);
+            this.selected.page = this.sitesList.indexOf(site)+1;
             return this.loadPage(this.selected.page);
         }
         var bookmark = 'site-' + site.site_id;
@@ -253,7 +253,7 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     shouldGetPerSite: function() {
-        return this.search && ['unvalidated', 'top_200_per_site', 'best_per_site', 'best_per_site_day'].includes(this.search.value);
+        return this.search && ['all', 'present', 'not_present', 'unvalidated', 'top_200_per_site', 'best_per_site', 'best_per_site_day', 'by_score_per_site'].includes(this.search.value);
     },
 
     loadPage: function(pageNumber){
@@ -263,7 +263,7 @@ angular.module('a2.analysis.patternmatching', [
         this.splitAllSites = search === 'by_score';
         var opts = { search: search };
         if (this.shouldGetPerSite()) {
-            var selectedSite = this.siteIndex[pageNumber - 1];
+            var selectedSite = this.sitesList[pageNumber - 1];
             opts.site = selectedSite && selectedSite.site_id;
         }
         var limit, offset;
@@ -276,7 +276,11 @@ angular.module('a2.analysis.patternmatching', [
                 limit = 1;
                 offset = 0
                 break;
+            case 'all':
+            case 'present':
+            case 'not_present':
             case 'unvalidated':
+            case 'by_score_per_site':
                 limit = 100000000;
                 offset = 0;
                 break;

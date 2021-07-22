@@ -481,10 +481,7 @@ var PatternMatchings = {
 
     getRoisForId(options) {
         let sortBy = [['S.name', 1], ['R.datetime', 1]] // default sorting
-        if (options.byScorePerSite) {
-            sortBy = [['S.name', 1], ['PMR.score', 0]]
-        }
-        else if (options.byScore) {
+        if (options.byScore || options.byScorePerSite) {
             sortBy = [['PMR.score', 0]]
         }
         return this.buildRoisQuery({
