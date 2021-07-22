@@ -121,10 +121,14 @@ var PatternMatchings = {
             });
         }
 
-        if (options.showPlaylist) {
-            select.push("P.`name` as `playlist_name`");
-            select.push("(SELECT COUNT(*) FROM playlist_recordings PR WHERE PR.playlist_id=P.playlist_id) as `playlist_count`");
+        if (options.showPlaylistName || options.showPlaylistCount) {
             tables.push("JOIN playlists P ON P.playlist_id = PM.playlist_id");
+        }
+        if (options.showPlaylistName) {
+            select.push("P.`name` as `playlist_name`");
+        }
+        if (options.showPlaylistCount) {
+            select.push("(SELECT COUNT(*) FROM playlist_recordings PR WHERE PR.playlist_id=P.playlist_id) as `playlist_count`");
         }
 
         if(options.showSpecies){
@@ -635,6 +639,15 @@ var PatternMatchings = {
             patternMatchingId,
             rois,
         ]) : Promise.resolve();
+    },
+    
+    getRoi(patternMatchingId, roisId){
+        return dbpool.query(
+            "SELECT *\n" +
+            "FROM pattern_matching_rois\n" +
+            "WHERE pattern_matching_id = ? AND pattern_matching_roi_id IN (?)", [
+            patternMatchingId, roisId
+        ]);
     },
 
     getCountRoisMatchByAttr(patternMatchingId, recordingId, validation){

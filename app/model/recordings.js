@@ -771,30 +771,78 @@ var Recordings = {
                 return;
             }
 
-            // 0 is not present , 1 is present and 2 is clear
-            if (valobj.val == 2) {
-                queryHandler(
-                    "DELETE FROM `recording_validations` "+
-                    " WHERE `recording_id` = "+dbpool.escape(valobj.recording)+" and `project_id` = "+dbpool.escape(valobj.project_id)+"  " +
-                    " and `species_id` = "+dbpool.escape(valobj.species)+" and `songtype_id` = "+dbpool.escape(valobj.songtype)+" ",
-                    function(err, data){
-                    if (err) { callback(err); return; }
-                    callback(null, valobj);
-                });
-            }
-            else {
-                if (validation.determinedFrom == 'patternMatching') {
+            if (validation.review) {
+                const q = "SELECT present, present_review FROM recording_validations \n"+
+                        "WHERE recording_id = ? AND species_id = ? AND songtype_id = ?";
+
+                queryHandler(dbpool.format(q, [recording.id, valobj.species, valobj.songtype]), function(err, rows) {
+                    if(err) return  next(err);
+
+                    const hasValidationRow = rows.length > 0;
+                    if (validation.oldVal === 1) {
+                        // Update review from present to clear or absent
+                        if (hasValidationRow) {
+                            const validationRow = rows[0];
+                            if (validationRow.present_review <= 1 && validationRow.present === null) {
+                                // Delete row
+                                queryHandler(
+                                    "DELETE FROM `recording_validations` "+
+                                    " WHERE `recording_id` = "+dbpool.escape(valobj.recording)+"  " +
+                                    " and `species_id` = "+dbpool.escape(valobj.species)+" and `songtype_id` = "+dbpool.escape(valobj.songtype)+" ",
+                                    function(err, data){
+                                    if (err) { callback(err); return; }
+                                    callback(null, valobj);
+                                });
+                            } else {
+                                // Decrement present_review
+                                queryHandler(
+                                    "UPDATE `recording_validations` SET present_review = present_review - 1"+
+                                    " WHERE `recording_id` = "+dbpool.escape(valobj.recording)+"  " +
+                                    " and `species_id` = "+dbpool.escape(valobj.species)+" and `songtype_id` = "+dbpool.escape(valobj.songtype)+" ",
+                                    function(err, data){
+                                    if (err) { callback(err); return; }
+                                    callback(null, valobj);
+                                });
+                            }
+                        }
+                    } else if (valobj.val === 1) {
+                        // Newly reviewed as present
+                        if (hasValidationRow) {
+                            queryHandler(
+                                "UPDATE `recording_validations` SET present_review = present_review + 1"+
+                                " WHERE `recording_id` = "+dbpool.escape(valobj.recording)+"  " +
+                                " and `species_id` = "+dbpool.escape(valobj.species)+" and `songtype_id` = "+dbpool.escape(valobj.songtype)+" ",
+                                function(err, data){
+                                if (err) { callback(err); return; }
+                                callback(null, valobj);
+                            });
+                        } else {
+                            queryHandler(
+                                "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, project_id, present_review) \n" +
+                                " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.project_id, 1]) + ") \n" +
+                                " ON DUPLICATE KEY UPDATE present_review = present_review + 1", function(err, data){
+                                    if (err) { callback(err); return; }
+                                    callback(null, valobj);
+                                });
+                        }
+                    }
+                })
+            } else {
+                // 0 is not present , 1 is present and 2 is clear
+                if (valobj.val == 2) {
                     queryHandler(
-                        "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
-                        " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, valobj.val]) + ") \n" +
-                        " ON DUPLICATE KEY UPDATE present = VALUES(present), present_review = CASE WHEN present = 0 AND present_review = 0 THEN 0 WHEN present = 0 THEN present_review - 1 ELSE present_review + 1 END", function(err, data){
+                        "DELETE FROM `recording_validations` "+
+                        " WHERE `recording_id` = "+dbpool.escape(valobj.recording)+" and `project_id` = "+dbpool.escape(valobj.project_id)+"  " +
+                        " and `species_id` = "+dbpool.escape(valobj.species)+" and `songtype_id` = "+dbpool.escape(valobj.songtype)+" ",
+                        function(err, data){
                         if (err) { callback(err); return; }
                         callback(null, valobj);
                     });
-                } else {
+                }
+                else {
                     queryHandler(
-                        "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id, present_review) \n" +
-                        " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id, 0]) + ") \n" +
+                        "INSERT INTO recording_validations(recording_id, user_id, species_id, songtype_id, present, project_id) \n" +
+                        " VALUES (" + dbpool.escape([valobj.recording, valobj.user, valobj.species, valobj.songtype, valobj.val, valobj.project_id]) + ") \n" +
                         " ON DUPLICATE KEY UPDATE present = VALUES(present)", function(err, data){
                         if (err) { callback(err); return; }
                         callback(null, valobj);

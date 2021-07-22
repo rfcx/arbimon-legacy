@@ -21,7 +21,8 @@ router.post('/projects', verifyToken(), hasRole(['appUser', 'rfcxUser']), async 
     const user = await model.users.ensureUserExistFromAuth0(req.user);
     const url = await model.projects.findUniqueUrl(params.name, params.external_id, user.user_id)
     const { name, description, is_private, external_id } = params
-    const project = await model.projects.createProject({ name, description, is_private, external_id, url }, user.user_id)
+    const projectId = await model.projects.createProject({ name, description, is_private, external_id, url }, user.user_id);
+    const project = await model.projects.find({ projectId }).get(0);
     res.status(201).json(project);
   } catch (e) {
     httpErrorHandler(req, res, 'Failed creating a site')(e);

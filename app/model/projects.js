@@ -250,9 +250,8 @@ var Projects = {
      * @param {Number} project.owner_id - creator id
      * @param {Number} project.project_type_id
      * @param {Boolean} project.is_private
-     * @param {Function} callback(err, projectId)
     */
-    create: function(project, owner_id, callback) {
+    create: async function(project, owner_id, db) {
         var schema = joi.object().keys({
             name: joi.string(),
             url: joi.string(),
@@ -286,66 +285,33 @@ var Projects = {
         project.processing_usage = 0;
         project.pattern_matching_enabled = 1;
 
-        var q = 'INSERT INTO projects \n'+
-                'SET ?';
+        if (!db) {
+            db = await dbpool.getConnection()
+            await db.beginTransaction()
+        }
+        try {
+            return await this.runProjectCreationQueue(db, project, owner_id, plan);
+        } catch (e) {
+            await db.rollback();
+            await connection.release();
+        }
+    },
 
-        var q2 = 'INSERT INTO user_project_role \n'+
-                 'SET ?';
-
-        var createPlan = 'INSERT INTO project_plans \n'+
-                         'SET ?';
-
-        var updatePlan = 'UPDATE projects \n'+
-                         'SET current_plan = ? \n'+
-                         'WHERE project_id = ?';
-
-        dbpool.getConnection(function(err, db) {
-            db.beginTransaction(function(err){
-                if(err) return callback(err);
-
-                var projectId;
-
-                async.waterfall([
-                    function insertProject(cb) {
-                        db.query(q, project, cb);
-                    },
-                    function insertOwner(result, fields, cb) {
-                        projectId = result.insertId;
-
-                        var values = {
-                            user_id: owner_id,
-                            project_id: projectId,
-                            role_id: 4 // owner role id
-                        };
-
-                        db.query(q2, values, cb);
-                    },
-                    function insertPlan(result, fields, cb) {
-                        plan.project_id = projectId;
-                        plan.created_on = new Date();
-
-                        db.query(createPlan, plan, cb);
-                    },
-                    function updateCurrentPlan(result, fields, cb) {
-                        db.query(updatePlan, [result.insertId, projectId], cb);
-                    },
-                    function commit(result, fields, cb) {
-                        db.commit(cb);
-                    }
-                ],
-                function(err) {
-                    db.release();
-                    if(err) {
-                        db.rollback(function() {
-                            callback(err);
-                        });
-                        return;
-                    }
-
-                    callback(null, projectId);
-                });
-            });
-        });
+    runProjectCreationQueue: async function(connection, project, owner_id, plan) {
+        let queryAsync = util.promisify(connection.query);
+        let result = await queryAsync('INSERT INTO projects SET ?', project);
+        let projectId = result.insertId;
+        let values = {
+            user_id: owner_id,
+            project_id: projectId,
+            role_id: 4
+        };
+        await queryAsync('INSERT INTO user_project_role SET ?', values);
+        plan.project_id = projectId;
+        plan.created_on = new Date();
+        let newPlan = await queryAsync('INSERT INTO project_plans SET ?', plan);
+        await queryAsync('UPDATE projects SET current_plan = ? WHERE project_id = ?', [newPlan.insertId, projectId]);
+        return projectId;
     },
 
     /**
@@ -365,7 +331,7 @@ var Projects = {
      *
      * @return {Promise} resolved after the update.
     */
-    update: function(project, callback) {
+    update: function(project, db, callback) {
 
         var schema = {
             project_id: joi.number().required(),
@@ -400,13 +366,13 @@ var Projects = {
             delete projectInfo.plan;
 
             return q.all([
-                dbpool.query(
+                (db? db.query : dbpool.query)(
                     'UPDATE projects\n'+
                     'SET ?\n'+
                     'WHERE project_id = ?', [
                     projectInfo, projectId
                 ]),
-                projectInfoPlan && dbpool.query(
+                projectInfoPlan && (db? db.query : dbpool.query)(
                     "UPDATE project_plans\n"+
                     "SET ?\n" +
                     "WHERE project_id=?", [
@@ -520,8 +486,8 @@ var Projects = {
 
         if(options && options.countValidations) {
             select_clause.push(
-                "coalesce(SUM(rv.present), 0) as vals_present",
-                "coalesce((COUNT(rv.present) - SUM(rv.present)), 0) as vals_absent"
+                "coalesce(SUM(CASE WHEN rv.present_review > 0 THEN 1 ELSE rv.present END), 0) as vals_present",
+                "coalesce(SUM(CASE WHEN rv.present = 0 AND rv.present_review = 0 THEN 1 ELSE 0 END), 0) as vals_absent"
             );
             from_clause.push(
                 "LEFT JOIN recording_validations AS rv ON (\n"+
@@ -642,7 +608,7 @@ var Projects = {
         return getUsers(project_id)
     },
 
-    addUser: function(userProjectRole, callback) {
+    addUser: function(userProjectRole, connection, callback) {
         var schema = {
             user_id: joi.number().required(),
             project_id: joi.number().required(),
@@ -670,14 +636,19 @@ var Projects = {
                     var q = 'INSERT INTO user_project_role \n'+
                     'SET user_id = %s, role_id = %s, project_id = %s';
                     q = util.format(q, user_id, role_id, project_id);
-                    queryHandler(q, callback);
+                    connection ? connection.query(q, callback) : queryHandler(q, callback);
                 }
             });
         });
 
     },
 
-    changeUserRole: function(userProjectRole, callback) {
+    addUserAsync: function(userProjectRole, connection) {
+        let addUser = util.promisify(this.addUser)
+        return addUser(userProjectRole, connection)
+    },
+
+    changeUserRole: function(userProjectRole, connection, callback) {
         var schema = {
             user_id: joi.number().required(),
             project_id: joi.number().required(),
@@ -697,8 +668,52 @@ var Projects = {
                     "AND project_id = %s";
 
             q = util.format(q, role_id, user_id, project_id);
-            queryHandler(q, callback);
+            connection ? connection.query(q, callback) : queryHandler(q, callback);
         });
+    },
+
+    changeUserRoleAsync: function(userProjectRole, connection) {
+        let changeUserRole = util.promisify(this.changeUserRole);
+        return changeUserRole(userProjectRole, connection);
+    },
+
+    updateUserRoleInArbimonAndCoreAPI: async function(options, token, action) {
+        let connection;
+        return dbpool.getConnection()
+            .then(async (con) => {
+                connection = con;
+                await connection.beginTransaction();
+                switch (action) {
+                    case 'add':
+                        await this.addUserAsync(options.userRole, connection);
+                        if (rfcxConfig.coreAPIEnabled) {
+                            await this.updateUserRoleInCoreAPI(options.userRole, token);
+                        }
+                        break;
+                    case 'change':
+                        await this.changeUserRoleAsync(options.userRole, connection);
+                        if (rfcxConfig.coreAPIEnabled) {
+                            await this.updateUserRoleInCoreAPI(options.userRole, token);
+                        }
+                        break;
+                    case 'remove':
+                      await this.removeUserRoleAsync(options.user_id, options.project_id, connection);
+                      if (rfcxConfig.coreAPIEnabled) {
+                        await this.removeUserRoleInCoreAPI(options.user_id, options.project_id, token);
+                    }
+                      break;
+                }
+                await connection.commit();
+                await connection.release();
+            })
+            .catch(async (err) => {
+                console.log('err', err);
+                if (connection) {
+                    await connection.rollback();
+                    await connection.release();
+                }
+                throw new APIError('Failed to update user project role');
+            })
     },
 
     updateUserRoleInCoreAPI: async function(userProjectRole, idToken) {
@@ -889,7 +904,7 @@ var Projects = {
         queryHandler(q, callback);
     },
 
-    removeUser: function(user_id, project_id, callback) {
+    removeUser: function(user_id, project_id, connection, callback) {
         if(typeof project_id !== 'number')
             return callback(new Error("invalid type for 'project_id'"));
 
@@ -900,7 +915,12 @@ var Projects = {
                 "WHERE user_id = %s AND project_id = %s";
 
         q = util.format(q, dbpool.escape(user_id), dbpool.escape(project_id));
-        queryHandler(q, callback);
+        connection ? connection.query(q, callback) : queryHandler(q, callback);
+    },
+
+    removeUserRoleAsync: function(user_id, project_id, connection) {
+        let removeUser = util.promisify(this.removeUser)
+        return removeUser(user_id, project_id, connection)
     },
 
     availableRoles: function(callback) {
@@ -942,6 +962,31 @@ var Projects = {
         ).get(0);
     },
 
+    createProjectInArbimonAndCoreAPI: async function(project, userId, token) {
+        let connection;
+        return dbpool.getConnection()
+            .then(async (con) => {
+                connection = con;
+                await connection.beginTransaction();
+                let newProjectId = await this.createProject(project, userId, connection);
+                project.project_id = newProjectId;
+                if (rfcxConfig.coreAPIEnabled) {
+                    let externalProjectId = await this.createInCoreAPI(project, token);
+                    await this.setExternalId(project.project_id, externalProjectId, connection);
+                }
+                await connection.commit()
+                await connection.release()
+            })
+            .catch(async (err) => {
+                console.log('Failed to create project', err);
+                if (connection) {
+                    await connection.rollback();
+                    await connection.release();
+                }
+                throw new APIError('Failed to create project');
+            })
+    },
+
     createInCoreAPI: async function(project, idToken) {
         const body = {
             name: project.name,
@@ -972,6 +1017,30 @@ var Projects = {
         })
     },
 
+    updateProjectInArbimonAndCoreAPI: async function(data, token) {
+        let connection;
+        return dbpool.getConnection()
+            .then(async (con) => {
+                connection = con;
+                await connection.beginTransaction();
+                await this.update(data, connection);
+                if (rfcxConfig.coreAPIEnabled) {
+                    await this.updateInCoreAPI(data, token);
+                }
+                await connection.commit()
+                await connection.release()
+            })
+            .catch(async (err) => {
+                console.log('Failed to update project', err);
+                if (connection) {
+                    await connection.rollback();
+                    await connection.release();
+                }
+                throw new APIError('Failed to update project');
+            })
+    },
+
+
     updateInCoreAPI: async function(data, idToken) {
         let body = {}
         data.name !== undefined && (body.name = data.name)
@@ -986,8 +1055,15 @@ var Projects = {
                 source: 'arbimon'
             },
             body: JSON.stringify(body)
-          }
-          return rp(options)
+        }
+        return rp(options).then((response) => {
+            try {
+                const body = JSON.parse(response.body);
+                if (body && body.error) {
+                    throw new APIError('Failed to update project');
+                }
+            } catch (e) { }
+        })
     },
 
     deleteInCoreAPI: async function(project_id, idToken) {
@@ -1001,8 +1077,15 @@ var Projects = {
                 source: 'arbimon'
             },
             body: JSON.stringify(body)
-          }
-          return rp(options)
+        }
+        return rp(options).then((response) => {
+            try {
+                const body = JSON.parse(response.body);
+                if (body && body.error) {
+                    throw new APIError('Failed to delete project');
+                }
+            } catch (e) { }
+        })
     },
 
     findInCoreAPI: async function (guid) {
@@ -1025,8 +1108,8 @@ var Projects = {
         })
     },
 
-    setExternalId: function (projectId, externalId) {
-        return dbpool.query(`UPDATE projects SET external_id = "${externalId}" WHERE project_id = ${projectId}`, [])
+    setExternalId: function (projectId, externalId, connection) {
+        return (connection? connection.query : dbpool.query)(`UPDATE projects SET external_id = "${externalId}" WHERE project_id = ${projectId}`, [])
     },
 
     /**
@@ -1056,7 +1139,7 @@ var Projects = {
      * @param {boolean} data.is_private
      * @param {integer} userId
      */
-    createProject: async function (data, userId) {
+    createProject: async function (data, userId, connection) {
         const projectData = {
             plan: this.plans.free,
             project_type_id: 1,
@@ -1066,29 +1149,30 @@ var Projects = {
             stripUnknown: true,
             presence: 'required',
         });
-        const id = await q.ninvoke(this, "create", projectData, userId)
-        return this.find({ id }).get(0)
+        const id = await this.create(projectData, userId, connection);
+        return id;
     },
 
     removeProject: async function(options) {
         let db;
         return dbpool.getConnection()
             .then(async (connection) => {
-                db = connection
-                await db.beginTransaction()
-                await this.deleteInArbimobDb(options.project_id, connection)
+                db = connection;
+                await db.beginTransaction();
+                await this.deleteInArbimobDb(options.project_id, connection);
                 if (rfcxConfig.coreAPIEnabled) {
                     await this.deleteInCoreAPI(options.external_id, options.idToken)
-                }
-                await db.commit()
-                await db.release()
+                };
+                await db.commit();
+                await db.release();
             })
             .catch(async (err) => {
                 console.log('err', err)
                 if (db) {
-                    await db.rollback()
-                    await db.release()
+                    await db.rollback();
+                    await db.release();
                 }
+                throw new APIError('Failed to delete project');
             })
     },
 

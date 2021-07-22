@@ -154,17 +154,9 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
             }
         },
         function(urlChanged, callback) {
-            model.projects.update(newProjectInfo, function(err, result){
-                if(err) return next(err);
-
-                var url = urlChanged ? newProjectInfo.url : undefined;
-
-                debug("update project:", result);
-                if (rfcxConfig.coreAPIEnabled) {
-                    model.projects.updateInCoreAPI(newProjectInfo, req.session.idToken)
-                }
-                res.json({ success: true , url: url });
-            });
+            model.projects.updateProjectInArbimonAndCoreAPI(newProjectInfo, req.session.idToken);
+            var url = urlChanged ? newProjectInfo.url : undefined;
+            res.json({ success: true , url: url });
         }
     ]);
 });
@@ -177,7 +169,6 @@ router.get('/:projectUrl/classes', function(req, res, next) {
         options.countValidations = true;
     }
 
-    console.log(classId, options);
     model.projects.getProjectClasses(req.project.project_id, classId, options, function(err, classes){
         if(err) return next(err);
         res.json(classes);
@@ -312,21 +303,9 @@ router.post('/:projectUrl/user/add', async function(req, res, next) {
         user_id: req.body.user_id,
         role_id: 2 // default to normal user
     }
-    model.projects.addUser(userRole,
-    async function(err, result){
-        if (err) {
-            if (err.status === 404) {
-                return res.json({ error: err.message});
-            }
-            return next(err);
-        }
-
-        debug("add user:", result);
-        if (rfcxConfig.coreAPIEnabled) {
-            await model.projects.updateUserRoleInCoreAPI(userRole, req.session.idToken)
-        }
+    model.projects.updateUserRoleInArbimonAndCoreAPI({userRole: userRole}, req.session.idToken, 'add').then(function() {
         res.json({ success: true });
-    });
+    }).catch(next);
 });
 
 router.post('/:projectUrl/user/role', async function(req, res, next) {
@@ -345,16 +324,9 @@ router.post('/:projectUrl/user/role', async function(req, res, next) {
         user_id: req.body.user_id,
         role_id: req.body.role_id
     }
-    model.projects.changeUserRole(userRole,
-    async function(err, result){
-        if(err) return next(err);
-
-        debug("change user role:", result);
-        if (rfcxConfig.coreAPIEnabled) {
-            await model.projects.updateUserRoleInCoreAPI(userRole, req.session.idToken)
-        }
+    model.projects.updateUserRoleInArbimonAndCoreAPI({userRole: userRole}, req.session.idToken, 'change').then(function() {
         res.json({ success: true });
-    });
+    }).catch(next);
 });
 
 router.post('/:projectUrl/user/del', async function(req, res, next) {
@@ -367,15 +339,9 @@ router.post('/:projectUrl/user/del', async function(req, res, next) {
         return res.json({ error: "you don't have permission to manage project settings and users" });
     }
 
-    model.projects.removeUser(req.body.user_id, req.project.project_id, async function(err, result){
-        if(err) return next(err);
-
-        debug("remove user:", result);
-        if (rfcxConfig.coreAPIEnabled) {
-            await model.projects.removeUserRoleInCoreAPI(req.body.user_id, req.project.project_id, req.session.idToken)
-        }
+    model.projects.updateUserRoleInArbimonAndCoreAPI({user_id: req.body.user_id, project_id: req.project.project_id}, req.session.idToken, 'remove').then(function() {
         res.json({ success: true });
-    });
+    }).catch(next);
 });
 
 router.post('/:projectUrl/remove', function(req, res, next) {

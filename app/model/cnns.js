@@ -316,62 +316,56 @@ var CNN = {
         )
     },
 
-    countROIsBySites: function(job_id, options) {
-        var constraints = "";
-        if (options.search){
-            if (options.search=="present"){
-                constraints = "AND CRR.`validated` = 1\n";
-            } else if (options.search=="not_present"){
-                constraints = "AND CRR.`validated` = 0\n";
-            } else if (options.search=="unvalidated"){
-                constraints = "AND CRR.`validated` is NULL\n";
-            }
+    getValidatedConstraint: function (search) {
+        let constraint = "";
+        switch (search) {
+            case 'present':
+                constraint = 'AND CRR.`validated` = 1';
+                break;
+            case 'not_present':
+                constraint = 'AND CRR.`validated` = 0';
+                break;
+            case 'unvalidated':
+                constraint = 'AND CRR.`validated` is NULL'
+                break;
         }
-        var queryStr = "SELECT COUNT(CRR.cnn_result_roi_id) as N,\n" +
-        "S.name,\n" +
-        "S.site_id\n" +
-        "FROM cnn_results_rois CRR\n" +
-        "JOIN recordings R ON R.recording_id = CRR.recording_id\n" +
-        "JOIN sites S ON S.site_id = R.site_id\n" +
-        "WHERE job_id = ?\n" +
-        constraints +
-        "GROUP BY S.site_id;\n";
-        return dbpool.query(queryStr, [job_id]
-        )
+        return constraint
+    },
+
+    countROIsBySites: function(job_id, options) {
+        let constraint = this.getValidatedConstraint(options.search);
+        var queryStr = `
+            SELECT COUNT(CRR.cnn_result_roi_id) as N,
+            S.name,
+            S.site_id
+            FROM cnn_results_rois CRR
+            JOIN sites S ON S.site_id = CRR.denorm_site_id
+            WHERE job_id = ?
+            ${constraint}
+            GROUP BY S.site_id;`
+        return dbpool.query(queryStr, [job_id])
     },
 
     countROIsBySpeciesSites: function(job_id, options) {
-        var constraints = "";
-        if (options.search){
-            if (options.search=="present"){
-                constraints = "AND CRR.`validated` = 1\n";
-            } else if (options.search=="not_present"){
-                constraints = "AND CRR.`validated` = 0\n";
-            } else if (options.search=="unvalidated"){
-                constraints = "AND CRR.`validated` is NULL\n";
-            }
-        }
-        var site_sql = "";
-        //[", SUM(CASE WHEN S.site_id=922 THEN 1 ELSE 0 END) site_922\n";]
-        return this.countROIsBySites(job_id, options).then(function(data) {
-            var rois_by_sites = data;
-            console.log("TCL: data", data)
+        let constraint = this.getValidatedConstraint(options.search);
+        return this.countROIsBySites(job_id, options)
+        .then(function(data) {
+            let site_sql = '';
             data.forEach(function(row) {
-                site_sql = site_sql + ", SUM(CASE WHEN S.site_id=" + row.site_id + " THEN 1 ELSE 0 END) `site_" + row.site_id + "_" + row.name + "`\n";
+                site_sql += `, SUM(CASE WHEN S.site_id="${row.site_id}" THEN 1 ELSE 0 END) site_${row.site_id}_${row.name}`;
             })
-
             return dbpool.query(
-                "SELECT CRR.species_id, SP.scientific_name, COUNT(*) `total`\n" +
-                site_sql +
-                "FROM cnn_results_rois CRR\n" +
-                "JOIN recordings R ON R.recording_id=CRR.recording_id\n" +
-                "JOIN sites S ON S.site_id=R.site_id\n" +
-                "JOIN species SP ON SP.species_id=CRR.species_id\n" +
-                "WHERE job_id = ?\n" +
-                constraints +
-                "GROUP BY CRR.species_id;\n", [job_id]
+                `SELECT CRR.species_id, SP.scientific_name, COUNT(*) as total
+                ${site_sql}
+                FROM cnn_results_rois CRR
+                JOIN sites S ON S.site_id = CRR.denorm_site_id
+                JOIN species SP ON SP.species_id = CRR.species_id
+                WHERE job_id = ?
+                ${constraint}
+                GROUP BY CRR.species_id;`,
+                [job_id]
             );
-        })
+        });
     },
 
     validateRois(job_id, rois, validation){
