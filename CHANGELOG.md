@@ -17,6 +17,10 @@ Resolved issues:
 
 - CE-1160 The opacity of PM' results is decreased on the Visualizer page
 
+Resolved issues:
+
+- CE-1004 Fixed issue with pixelated ROI boxes in Safari browser
+
 ## v3.0.31 - July 14, 2021
 
 New features:

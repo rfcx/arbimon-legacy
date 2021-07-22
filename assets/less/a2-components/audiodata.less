@@ -201,7 +201,6 @@
     }
 
     .roi-img {
-        image-rendering: -webkit-optimize-contrast;
         width:125px;
         height:125px;
         margin:2px;
@@ -210,6 +209,16 @@
             height:64px;
         }
     }
+
+    @media screen and (-webkit-min-device-pixel-ratio:0) {
+        .roi-img {
+            image-rendering: -webkit-optimize-contrast;
+        }
+        _::-webkit-full-page-media, _:future, :root, .roi-img {
+            image-rendering: optimizeQuality; // Safari
+        }
+    }
+
 
     .roi-img-cnn {
         height: 125px;
