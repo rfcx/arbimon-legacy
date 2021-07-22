@@ -13,7 +13,8 @@ Test Notes are used to list what pages / components / features / user flows are 
 - CE-1069 CNN job details loads quicker
   - CNN details page: all data is still shown correctly and default filter works quicker
 - CE-1046 The synchronization to work in transactions between Arbimon and RFCx is updated
-  - Projects page/Sites page: When the user creates/edits/deleted a new project/site and the issue (authentication, validation issues, etc) is happened it is not add/change the db data in the Arbimon/Core API side
+  - Projects page/Sites page: When the user creates/edits/deleted a new project/site and the issue (authentication, validation issues, etc) is happened it is not add/change the db data in the Arbimon/Core API side.
+  - Test that user is still able to create / update / delete projects and create / update / delete sites.
 
 ## v3.0.31
 
