@@ -339,7 +339,7 @@ angular.module('a2.visualizer', [
 
     $scope.getSelectedFrequencyCache = function() {
         try {
-            return JSON.parse($localStorage.getItem('visuilizer.select.cache')) || {originalScale: true};
+            return JSON.parse($localStorage.getItem('visuilizer.frequencies.cache')) || {originalScale: true};
         } catch(e){
             return {originalScale: true};
         }
@@ -376,20 +376,12 @@ angular.module('a2.visualizer', [
         $scope.deselectFrequencyOptions();
         item.active = true;
         var originalScale = item.value === 'original_scale';
-        $scope.setSelectedFrequencyCache({originalScale: originalScale});
+        $localStorage.setItem('visuilizer.frequencies.cache', JSON.stringify({originalScale: originalScale}));
         $scope.layout.scale.originalScale = originalScale;
         var span = originalScale ? $scope.visobject.sampling_rate / 2 : 24000;
         $scope.visobject.domain.y.to = span;
         $scope.visobject.domain.y.span = span;
     };
-
-    $scope.setSelectedFrequencyCache = function(psCache) {
-        try{
-            $localStorage.setItem('visuilizer.select.cache', JSON.stringify(psCache));
-        } catch(e){
-            $localStorage.setItem('visuilizer.select.cache', {originalScale: true});
-        }
-    }
 
     $scope.audio_player = new a2AudioPlayer($scope, initial_state_params);
 

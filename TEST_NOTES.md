@@ -18,3 +18,7 @@ Test Notes are used to list what pages / components / features / user flows are 
   - Citizen Scientist section: Patten Matching page: the list with pattern matchings should load relatively quick
 - CE-1110 User can scale spectrogram in Visualizer to standard frequencies
   - Visualizer page: ability of choosing the original Y-scale or 24 Khz scale
+  - When the user is switching between frequencies detection boxes are still shown correctly
+  - When the user reloads the page it keeps the selected Y-scale so the user does not have to change it on every recording
+  - When the recording frequency is 24 kHz or more it shows original Y-scale and the one button with the active state
+  - When the user selects 24 Khz scale and the recording frequencies are less than 24 kHz spectrogram is resized and the background has a gray-darker color from the Arbimon color scheme
