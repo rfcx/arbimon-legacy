@@ -354,7 +354,30 @@ angular.module('a2.visualizer', [
         $scope.setVisObject($scope.visobject, $scope.visobject_type, $scope.visobject_location);
     });
 })
-;
+.filter('filterPresentCount', function() {
+    return function(validations) {
+        if (!validations) return 0;
+        var count = 0
+        validations.forEach(function(validation) {
+            if (validation.presentReview > 0 || validation.present == 1) {
+                count++;
+            }
+        })
+        return count;
+    }
+})
+.filter('filterAbsentCount', function() {
+    return function(validations) {
+        if (!validations) return 0;
+        var count = 0
+        validations.forEach(function(validation) {
+            if (validation.presentReview == 0 && validation.present == 0) {
+                count++;
+            }
+        })
+        return count;
+    }
+});
 
 /**
  * @ngdoc overview

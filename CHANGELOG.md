@@ -1,12 +1,21 @@
 # Arbimon Release Notes
 
-## v3.0.32 - July XX, 2021
+## v3.0.32 - June XX, 2021
+
+Resolved issues:
+
+- CE-1046 The synchronization to work in transactions between Arbimon and RFCx is updated
 
 Performance improvements:
 
 - CE-1065 Patten Matching list loads quicker
 - CE-1068 CNN list page loads quicker
 - CE-1069 CNN job details loads quicker
+- CE-323 When user creates/edits/deletes a project role for another user in Arbimon it's synced with Core API in transactions
+
+Resolved issues:
+
+- CE-1160 The opacity of PM' results is decreased on the Visualizer page
 
 Resolved issues:
 
