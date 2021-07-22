@@ -1,5 +1,9 @@
 # Arbimon Release Notes
 
+## v3.0.33 - July XX, 2021
+
+- CE-1143 Update "unvalidated" filter on Pattern Matching details page to return results per site
+
 ## v3.0.32 - June XX, 2021
 
 Resolved issues:

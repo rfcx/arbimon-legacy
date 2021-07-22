@@ -221,6 +221,7 @@ var PatternMatchings = {
 
     SEARCH_ROIS_SCHEMA : {
         patternMatching: joi.number().required(),
+        site: joi.string(),
         csValidationsFor: joi.number().integer(),
         expertCSValidations: joi.boolean(),
         perUserCSValidations: joi.boolean(),
@@ -253,7 +254,6 @@ var PatternMatchings = {
     buildRoisQuery(parameters){
         var builder = new SQLBuilder();
         return q.ninvoke(joi, 'validate', parameters, PatternMatchings.SEARCH_ROIS_SCHEMA).then(function(parameters){
-            var outputs = parameters.output instanceof Array ? parameters.output : [parameters.output];
             var show = parameters.show || {};
             var presteps=[];
 
@@ -269,15 +269,11 @@ var PatternMatchings = {
 
             builder.addTable("JOIN recordings", "R", "R.recording_id = PMR.recording_id");
             builder.addTable("JOIN sites", "S", "S.site_id = R.site_id");
+
             builder.addProjection(
-                'SUBSTRING_INDEX(R.`uri`, "/", -1) as `recording`, R.meta ',
-                'S.`name` as `site`',
-                'S.`site_id`',
-                'EXTRACT(year FROM R.`datetime`) as `year`',
-                'EXTRACT(month FROM R.`datetime`) as `month`',
-                'EXTRACT(day FROM R.`datetime`) as `day`',
-                'EXTRACT(hour FROM R.`datetime`) as `hour`',
-                'EXTRACT(minute FROM R.`datetime`) as `min`'
+                'R.uri as recording, R.meta ',
+                'S.name as site, S.site_id',
+                'PMR.denorm_recording_datetime as datetime',
             );
 
             if(show.datetime){
@@ -312,9 +308,11 @@ var PatternMatchings = {
                 }
             }
 
-            builder.addConstraint("PMR.pattern_matching_id = ?", [
-                parameters.patternMatching
-            ]);
+            builder.addConstraint("PMR.pattern_matching_id = ?", [ parameters.patternMatching ]);
+
+            if (parameters.site) {
+                builder.addConstraint("PMR.denorm_site_id = ?", [ parameters.site ]);
+            }
 
             if(parameters.expertCSValidations){
                 if(show.names){
@@ -491,6 +489,7 @@ var PatternMatchings = {
         }
         return this.buildRoisQuery({
             patternMatching: options.patternMatchingId,
+            site: options.site,
             perSiteCount: options.perSiteCount,
             csValidationsFor: options.csValidationsFor,
             expertCSValidations: options.expertCSValidations,
@@ -510,9 +509,11 @@ var PatternMatchings = {
             offset: options.offset,
             show: { patternMatchingId: true, datetime: true, names: options.showNames },
             sortBy,
-        }).then(
-            builder => dbpool.query(builder.getSQL())
-        ).then(function (results) {
+        }).then((builder) => {
+            return dbpool.query(builder.getSQL())
+        })
+        .then(this.completePMRResults)
+        .then(function (results) {
             // Fill the original filename from the meta column.
             for (let _1 of results) {
                 _1.meta = _1.meta ? PatternMatchings.__parse_meta_data(_1.meta) : null;
@@ -640,7 +641,7 @@ var PatternMatchings = {
             rois,
         ]) : Promise.resolve();
     },
-    
+
     getRoi(patternMatchingId, roisId){
         return dbpool.query(
             "SELECT *\n" +

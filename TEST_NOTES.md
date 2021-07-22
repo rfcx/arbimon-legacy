@@ -1,6 +1,13 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.33
+
+- CE-1143 Update "unvalidated" filter on Pattern Matching details page to return results per site
+  - Check that "unvalidated" filter still returns correct data
+  - Check that "unvalidated" filter works quicker than before
+  - Check that other filters still work correctly
+
 ## v3.0.32
 
 - CE-1065 Patten Matching list loads quicker

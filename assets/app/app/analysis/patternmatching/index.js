@@ -242,7 +242,7 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     setSiteBookmark: function(site){
-        if (this.isTopRoisResults()) {
+        if (this.shouldGetPerSite()) {
             console.log(this.siteIndex.indexOf(site)+1);
             this.selected.page = this.siteIndex.indexOf(site)+1;
             return this.loadPage(this.selected.page);
@@ -252,8 +252,8 @@ angular.module('a2.analysis.patternmatching', [
         $anchorScroll(bookmark)
     },
 
-    isTopRoisResults: function(){
-        return this.search && (this.search.value === 'top_200_per_site' || this.search.value === 'best_per_site' || this.search.value === 'best_per_site_day');
+    shouldGetPerSite: function() {
+        return this.search && ['unvalidated', 'top_200_per_site', 'best_per_site', 'best_per_site_day'].includes(this.search.value);
     },
 
     loadPage: function(pageNumber){
@@ -262,7 +262,7 @@ angular.module('a2.analysis.patternmatching', [
         var search = this.search && this.search.value ? this.search.value : undefined
         this.splitAllSites = search === 'by_score';
         var opts = { search: search };
-        if (this.isTopRoisResults()) {
+        if (this.shouldGetPerSite()) {
             var selectedSite = this.siteIndex[pageNumber - 1];
             opts.site = selectedSite && selectedSite.site_id;
         }
@@ -275,6 +275,10 @@ angular.module('a2.analysis.patternmatching', [
             case 'best_per_site':
                 limit = 1;
                 offset = 0
+                break;
+            case 'unvalidated':
+                limit = 100000000;
+                offset = 0;
                 break;
             default:
                 limit = this.limit
