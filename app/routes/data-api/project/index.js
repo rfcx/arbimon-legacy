@@ -154,17 +154,9 @@ router.post('/:projectUrl/info/update', function(req, res, next) {
             }
         },
         function(urlChanged, callback) {
-            model.projects.update(newProjectInfo, function(err, result){
-                if(err) return next(err);
-
-                var url = urlChanged ? newProjectInfo.url : undefined;
-
-                debug("update project:", result);
-                if (rfcxConfig.coreAPIEnabled) {
-                    model.projects.updateInCoreAPI(newProjectInfo, req.session.idToken)
-                }
-                res.json({ success: true , url: url });
-            });
+            model.projects.updateProjectInArbimonAndCoreAPI(newProjectInfo, req.session.idToken);
+            var url = urlChanged ? newProjectInfo.url : undefined;
+            res.json({ success: true , url: url });
         }
     ]);
 });

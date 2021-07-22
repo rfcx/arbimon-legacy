@@ -250,9 +250,8 @@ var Projects = {
      * @param {Number} project.owner_id - creator id
      * @param {Number} project.project_type_id
      * @param {Boolean} project.is_private
-     * @param {Function} callback(err, projectId)
     */
-    create: function(project, owner_id, callback) {
+    create: async function(project, owner_id, db) {
         var schema = joi.object().keys({
             name: joi.string(),
             url: joi.string(),
@@ -286,66 +285,33 @@ var Projects = {
         project.processing_usage = 0;
         project.pattern_matching_enabled = 1;
 
-        var q = 'INSERT INTO projects \n'+
-                'SET ?';
+        if (!db) {
+            db = await dbpool.getConnection()
+            await db.beginTransaction()
+        }
+        try {
+            return await this.runProjectCreationQueue(db, project, owner_id, plan);
+        } catch (e) {
+            await db.rollback();
+            await connection.release();
+        }
+    },
 
-        var q2 = 'INSERT INTO user_project_role \n'+
-                 'SET ?';
-
-        var createPlan = 'INSERT INTO project_plans \n'+
-                         'SET ?';
-
-        var updatePlan = 'UPDATE projects \n'+
-                         'SET current_plan = ? \n'+
-                         'WHERE project_id = ?';
-
-        dbpool.getConnection(function(err, db) {
-            db.beginTransaction(function(err){
-                if(err) return callback(err);
-
-                var projectId;
-
-                async.waterfall([
-                    function insertProject(cb) {
-                        db.query(q, project, cb);
-                    },
-                    function insertOwner(result, fields, cb) {
-                        projectId = result.insertId;
-
-                        var values = {
-                            user_id: owner_id,
-                            project_id: projectId,
-                            role_id: 4 // owner role id
-                        };
-
-                        db.query(q2, values, cb);
-                    },
-                    function insertPlan(result, fields, cb) {
-                        plan.project_id = projectId;
-                        plan.created_on = new Date();
-
-                        db.query(createPlan, plan, cb);
-                    },
-                    function updateCurrentPlan(result, fields, cb) {
-                        db.query(updatePlan, [result.insertId, projectId], cb);
-                    },
-                    function commit(result, fields, cb) {
-                        db.commit(cb);
-                    }
-                ],
-                function(err) {
-                    db.release();
-                    if(err) {
-                        db.rollback(function() {
-                            callback(err);
-                        });
-                        return;
-                    }
-
-                    callback(null, projectId);
-                });
-            });
-        });
+    runProjectCreationQueue: async function(connection, project, owner_id, plan) {
+        let queryAsync = util.promisify(connection.query);
+        let result = await queryAsync('INSERT INTO projects SET ?', project);
+        let projectId = result.insertId;
+        let values = {
+            user_id: owner_id,
+            project_id: projectId,
+            role_id: 4
+        };
+        await queryAsync('INSERT INTO user_project_role SET ?', values);
+        plan.project_id = projectId;
+        plan.created_on = new Date();
+        let newPlan = await queryAsync('INSERT INTO project_plans SET ?', plan);
+        await queryAsync('UPDATE projects SET current_plan = ? WHERE project_id = ?', [newPlan.insertId, projectId]);
+        return projectId;
     },
 
     /**
@@ -365,7 +331,7 @@ var Projects = {
      *
      * @return {Promise} resolved after the update.
     */
-    update: function(project, callback) {
+    update: function(project, db, callback) {
 
         var schema = {
             project_id: joi.number().required(),
@@ -400,13 +366,13 @@ var Projects = {
             delete projectInfo.plan;
 
             return q.all([
-                dbpool.query(
+                (db? db.query : dbpool.query)(
                     'UPDATE projects\n'+
                     'SET ?\n'+
                     'WHERE project_id = ?', [
                     projectInfo, projectId
                 ]),
-                projectInfoPlan && dbpool.query(
+                projectInfoPlan && (db? db.query : dbpool.query)(
                     "UPDATE project_plans\n"+
                     "SET ?\n" +
                     "WHERE project_id=?", [
@@ -942,6 +908,31 @@ var Projects = {
         ).get(0);
     },
 
+    createProjectInArbimonAndCoreAPI: async function(project, userId, token) {
+        let connection;
+        return dbpool.getConnection()
+            .then(async (con) => {
+                connection = con;
+                await connection.beginTransaction();
+                let newProjectId = await this.createProject(project, userId, connection);
+                project.project_id = newProjectId;
+                if (rfcxConfig.coreAPIEnabled) {
+                    let externalProjectId = await this.createInCoreAPI(project, token);
+                    await this.setExternalId(project.project_id, externalProjectId, connection);
+                }
+                await connection.commit()
+                await connection.release()
+            })
+            .catch(async (err) => {
+                console.log('Failed to create project', err);
+                if (connection) {
+                    await connection.rollback();
+                    await connection.release();
+                }
+                throw new APIError('Failed to create project');
+            })
+    },
+
     createInCoreAPI: async function(project, idToken) {
         const body = {
             name: project.name,
@@ -972,6 +963,30 @@ var Projects = {
         })
     },
 
+    updateProjectInArbimonAndCoreAPI: async function(data, token) {
+        let connection;
+        return dbpool.getConnection()
+            .then(async (con) => {
+                connection = con;
+                await connection.beginTransaction();
+                await this.update(data, connection);
+                if (rfcxConfig.coreAPIEnabled) {
+                    await this.updateInCoreAPI(data, token);
+                }
+                await connection.commit()
+                await connection.release()
+            })
+            .catch(async (err) => {
+                console.log('Failed to update project', err);
+                if (connection) {
+                    await connection.rollback();
+                    await connection.release();
+                }
+                throw new APIError('Failed to update project');
+            })
+    },
+
+
     updateInCoreAPI: async function(data, idToken) {
         let body = {}
         data.name !== undefined && (body.name = data.name)
@@ -986,8 +1001,15 @@ var Projects = {
                 source: 'arbimon'
             },
             body: JSON.stringify(body)
-          }
-          return rp(options)
+        }
+        return rp(options).then((response) => {
+            try {
+                const body = JSON.parse(response.body);
+                if (body && body.error) {
+                    throw new APIError('Failed to update project');
+                }
+            } catch (e) { }
+        })
     },
 
     deleteInCoreAPI: async function(project_id, idToken) {
@@ -1001,8 +1023,15 @@ var Projects = {
                 source: 'arbimon'
             },
             body: JSON.stringify(body)
-          }
-          return rp(options)
+        }
+        return rp(options).then((response) => {
+            try {
+                const body = JSON.parse(response.body);
+                if (body && body.error) {
+                    throw new APIError('Failed to delete project');
+                }
+            } catch (e) { }
+        })
     },
 
     findInCoreAPI: async function (guid) {
@@ -1025,8 +1054,8 @@ var Projects = {
         })
     },
 
-    setExternalId: function (projectId, externalId) {
-        return dbpool.query(`UPDATE projects SET external_id = "${externalId}" WHERE project_id = ${projectId}`, [])
+    setExternalId: function (projectId, externalId, connection) {
+        return (connection? connection.query : dbpool.query)(`UPDATE projects SET external_id = "${externalId}" WHERE project_id = ${projectId}`, [])
     },
 
     /**
@@ -1056,7 +1085,7 @@ var Projects = {
      * @param {boolean} data.is_private
      * @param {integer} userId
      */
-    createProject: async function (data, userId) {
+    createProject: async function (data, userId, connection) {
         const projectData = {
             plan: this.plans.free,
             project_type_id: 1,
@@ -1066,29 +1095,30 @@ var Projects = {
             stripUnknown: true,
             presence: 'required',
         });
-        const id = await q.ninvoke(this, "create", projectData, userId)
-        return this.find({ id }).get(0)
+        const id = await this.create(projectData, userId, connection);
+        return id;
     },
 
     removeProject: async function(options) {
         let db;
         return dbpool.getConnection()
             .then(async (connection) => {
-                db = connection
-                await db.beginTransaction()
-                await this.deleteInArbimobDb(options.project_id, connection)
+                db = connection;
+                await db.beginTransaction();
+                await this.deleteInArbimobDb(options.project_id, connection);
                 if (rfcxConfig.coreAPIEnabled) {
                     await this.deleteInCoreAPI(options.external_id, options.idToken)
-                }
-                await db.commit()
-                await db.release()
+                };
+                await db.commit();
+                await db.release();
             })
             .catch(async (err) => {
                 console.log('err', err)
                 if (db) {
-                    await db.rollback()
-                    await db.release()
+                    await db.rollback();
+                    await db.release();
                 }
+                throw new APIError('Failed to delete project');
             })
     },
 

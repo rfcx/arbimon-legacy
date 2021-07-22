@@ -50,13 +50,14 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
             const user = (await model.users.findByEmailAsync('support@rfcx.org'))[0];
             // Create missing project
             const url = await model.projects.findUniqueUrl(externalProject.name, externalProject.id, user.user_id)
-            project = await model.projects.createProject({
+            let projectId = await model.projects.createProject({
               name: externalProject.name,
               description: externalProject.description,
               is_private: true,
               external_id: externalProject.id,
               url: externalSite.site.guid
             }, user.user_id)
+            project = await model.projects.find({ projectId }).get(0);
           }
           // Create missing site
           const siteInsertData = await model.sites.insertAsync({
