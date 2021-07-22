@@ -11,6 +11,7 @@ Performance improvements:
 - CE-1065 Patten Matching list loads quicker
 - CE-1068 CNN list page loads quicker
 - CE-1069 CNN job details loads quicker
+- CE-323 When user creates/edits/deletes a project role for another user in Arbimon it's synced with Core API in transactions
 
 Resolved issues:
 
