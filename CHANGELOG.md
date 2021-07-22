@@ -8,6 +8,10 @@ Performance improvements:
 - CE-1068 CNN list page loads quicker
 - CE-1069 CNN job details loads quicker
 
+Resolved issues:
+
+- CE-1160 The opacity of PM' results is decreased on the Visualizer page
+
 ## v3.0.31 - July 14, 2021
 
 New features:
