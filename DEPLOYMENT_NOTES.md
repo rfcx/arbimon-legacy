@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.32
+
+- Add `explorerBaseUrl` in `config/rfcx.local.json` file
+
 ## v3.0.25
 
 - Run migration 014-projects-table-add-image-column.sql

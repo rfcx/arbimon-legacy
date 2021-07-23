@@ -24,7 +24,7 @@ var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
-
+const rfcxConfig = config('rfcx');
 const moment = require('moment');
 const Projects = require('./projects');
 
@@ -297,6 +297,7 @@ var Recordings = {
                         "SUBSTRING_INDEX(R.uri,'/',-1) as file, R.meta, \n"+
                         "S.name as site, \n"+
                         "S.timezone, \n"+
+                        "S.external_id, \n"+
                         "R.uri, \n"+
                         "R.datetime, \n"+
                         "R.datetime_utc, \n"+
@@ -383,6 +384,7 @@ var Recordings = {
                         d.legacy = Recordings.isLegacy(d);
                         d.meta = d.meta ? Recordings.__parse_meta_data(d.meta) : null;
                         d.file = d.meta && d.meta.filename? d.meta.filename : d.file;
+                        d.explorerUrl = d.legacy ? null : `${rfcxConfig.explorerBaseUrl}/explorer/${d.external_id}?t=${moment(d.datetime_utc).format('YYYYMMDDTHHmmssSSS')}Z`;
                     })
                     return data;
                 }

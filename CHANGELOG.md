@@ -2,6 +2,10 @@
 
 ## v3.0.32 - June XX, 2021
 
+New features:
+
+- CE-1109 User can open Explorer from Arbimon Visualizer (only recordings uploaded with Uploader App)
+
 Resolved issues:
 
 - CE-1046 The synchronization to work in transactions between Arbimon and RFCx is updated
