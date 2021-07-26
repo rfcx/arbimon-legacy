@@ -352,7 +352,7 @@ var CNN = {
         .then(function(data) {
             let site_sql = '';
             data.forEach(function(row) {
-                site_sql += `, SUM(CASE WHEN S.site_id="${row.site_id}" THEN 1 ELSE 0 END) site_${row.site_id}_${row.name}`;
+                site_sql += `, SUM(CASE WHEN S.site_id="${row.site_id}" THEN 1 ELSE 0 END) \`site_${row.site_id}_${row.name}\``;
             })
             return dbpool.query(
                 `SELECT CRR.species_id, SP.scientific_name, COUNT(*) as total
