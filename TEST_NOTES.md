@@ -3,6 +3,23 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.32
 
+- CE-1065 Patten Matching list loads quicker
+  - Pattern Matching list page: all data is still shown correctly and table loads quickly
+  - Patten Matching details page: all details are still shown correctly (especially total recordings list)
+  - Citizen Scientist Pattern Matching list page: all data is still shown correctly
+  - Citizen Scientist Pattern Matching details page: all details are still shown correctly
+- CE-1068 CNN list page loads quicker
+  - CNN list page: all data is still shown correctly and table loads quickly
+- CE-1069 CNN job details loads quicker
+  - CNN details page: all data is still shown correctly and default filter works quicker
+- CE-1004 Fixed issue with pixelated ROI boxes in Safari browser
+ - PM details page: all boxes are not pixelated in Safari browser
+- CE-1046 The synchronization to work in transactions between Arbimon and RFCx is updated
+  - Projects page/Sites page: When the user creates/edits/deleted a new project/site and the issue (authentication, validation issues, etc) is happened it is not add/change the db data in the Arbimon/Core API side.
+  - Test that user is still able to create / update / delete projects and create / update / delete sites.
+
+## v3.0.31
+
 - CE-1062 Site list on PM details page shows only those sites which have ROIs
   - Patten Matching details page: dropdown with sites list (button with map pin icon)
   - Patten Matching details page: a list of ROIs which are shown when item from dropdown is selected.
@@ -16,3 +33,5 @@ Test Notes are used to list what pages / components / features / user flows are 
   - Patten Matching details page: When site from sites list (button with map pin icon) is selected, it loads results for selected site
 - CE-1064 Update Pattern Matching query for Citizen Scientist PM list page
   - Citizen Scientist section: Patten Matching page: the list with pattern matchings should load relatively quick
+- CE-323 When user creates/edits/deletes a project role for another user in Arbimon it's synced with Core API in transactions
+  - Settings section: Users page: When the user creates/edits/deleted a project role for another user and the issue (authentication, validation issues, etc) is happened it is not change the db data the action in the Arbimon/Core API side

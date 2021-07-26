@@ -296,7 +296,7 @@ angular.module('a2.audiodata.sites', [
                 Project.getSites({ count: true, logs: true }, function(sites) {
                     $scope.sortByLastUpdated(sites);
                 });
-                notify.log("site removed");
+                notify.log('Site removed');
             });
         });
     };

@@ -29,7 +29,7 @@ router.post('/create', function(req, res, next) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
 
-    model.sites.exists(site.name, project.project_id, function(err, exists) {
+    model.sites.exists(site.name, project.project_id, async function(err, exists) {
         if(err) return next(err);
 
         if(exists)
@@ -37,27 +37,13 @@ router.post('/create', function(req, res, next) {
 
         site.project_id = project.project_id;
 
-        model.sites.insert(site, async function(err, result) {
-            if(err) return next(err);
-
-            if (rfcxConfig.coreAPIEnabled) {
-                const coreSite = {
-                    site_id: result.insertId,
-                    name: site.name,
-                    lat: site.lat,
-                    lon: site.lon,
-                    alt: site.alt
-                }
-                if (project.external_id) {
-                    coreSite.project_id = project.external_id
-                }
-                await model.sites.createInCoreAPI(coreSite, req.session.idToken)
-                    .then((externalSiteId) => model.sites.setExternalId(result.insertId, externalSiteId))
-                    .catch((err) => console.error(`Failed to create site in Core: ${err.message}`))
-            }
-
+        try {
+            await model.sites.createSiteInArbimonAndCoreAPI(site, project.external_id, req.session.idToken);
             res.json({ message: "New site created" });
-        });
+        }
+        catch(e) {
+            return next(err);
+        }
     });
 });
 
@@ -90,25 +76,9 @@ router.post('/update', function(req, res, next) {
 
     site.project_id = site.project? site.project.project_id : project.project_id;
 
-    model.sites.update(site, async function(err, rows) {
-        if(err) return next(err);
-
-        if (rfcxConfig.coreAPIEnabled) {
-            await model.projects.findOrCreatePersonalProject({ ...req.session.user, user_id: req.session.user.id })
-                .then((personalProject) => {
-                    return model.sites.updateInCoreAPI({
-                        site_id: site.site_id,
-                        name: site.name,
-                        lat: site.lat,
-                        lon: site.lon,
-                        alt: site.alt,
-                        ...personalProject && personalProject.project_id === site.project_id ? {} : { project_id: site.project_id }
-                    }, req.session.idToken)
-                })
-        }
-
-        res.json({ message: "site updated" });
-    });
+    model.sites.updateSite(site, { ...req.session.user, user_id: req.session.user.id }, req.session.idToken).then(function() {
+        res.json({ message: 'Site updated' });
+    }).catch(next);
 });
 
 router.post('/delete', function(req, res, next) {
@@ -120,22 +90,9 @@ router.post('/delete', function(req, res, next) {
         return res.json({ error: "you dont have permission to 'manage project sites'" });
     }
 
-    model.sites.removeFromProject(site.id, project.project_id, function(err, rows) {
-        if(err) return next(err);
-
-        model.projects.insertNews({
-            news_type_id: 4, // site deleted
-            user_id: req.session.user.id,
-            project_id: project.project_id,
-            data: JSON.stringify({ sites: site.name })
-        });
-
-        if (rfcxConfig.coreAPIEnabled) {
-            model.sites.deleteInCoreAPI(site.id, req.session.idToken)
-        }
-
-        res.json(rows);
-    });
+    model.sites.removeSite(site.id, project.project_id, req.session.idToken).then(function() {
+        res.json({ message: 'Site removed' });
+    }).catch(next);
 });
 
 router.param('siteid', function(req, res, next, siteid){
