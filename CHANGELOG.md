@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.32 - June XX, 2021
+## v3.0.33 - June 01, 2021
+
+Performance improvements:
+
+- CE-988 The datime_local column is removed
+
+## v3.0.32 - June 26, 2021
 
 New feature:
 
@@ -51,15 +57,14 @@ Performance improvements:
 - CE-1062 Load only one site per page for "Best per Site, Day" filter
 - CE-1064 Update Pattern Matching query for Citizen Scientist PM list page
 
+## v3.0.30 - June XX, 2021
+
 Other:
 
 - The columns order is changed on the recording page
 - Show "Unknown" if the recording hasn't in the file name data
 - CE-940 Update the text for the Recordings data in the Summary page
 - CE-792 Save validated rois in the recording validations table
-
-
-## v3.0.30 - June 18, 2021
 
 Resolved issues:
 
@@ -71,10 +76,6 @@ Resolved issues:
 - CE-785 Spinner in recordings filter not stop when have 0 recording
 - CE-751 Display selected recording if the site has many recordings with the similar datetime
 - Hotfix displaying the original filename in the export recordings report
-
-Other:
-
-- CE-880 Beta tag on CNN, AE & clustering
 
 ## v3.0.29-hotfix.0 - June 16, 2021
 
