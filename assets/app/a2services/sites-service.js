@@ -1,7 +1,8 @@
 angular.module('a2.srv.sites', [
     'a2.srv.project',
+    'humane'
 ])
-.factory('a2Sites',function($http, $q, Project){
+.factory('a2Sites',function($http, $q, Project, notify){
     return {
         listPublished: function(callback) {
             $http.get('/api/sites/published')
@@ -21,21 +22,24 @@ angular.module('a2.srv.sites', [
             $http.post('/api/project/'+ Project.getUrl() +'/sites/update', {
                 site: site,
             })
-            .success(callback);
+            .success(callback)
+            .error(notify.serverError);
         },
 
         create: function(site, callback) {
             $http.post('/api/project/'+ Project.getUrl() +'/sites/create', {
                 site: site,
             })
-            .success(callback);
+            .success(callback)
+            .error(notify.serverError);
         },
 
         delete: function(site, callback) {
             $http.post('/api/project/'+ Project.getUrl() +'/sites/delete', {
                 site: site
             })
-            .success(callback);
+            .success(callback)
+            .error(notify.serverError);
         },
 
         // Uses Promises :-)

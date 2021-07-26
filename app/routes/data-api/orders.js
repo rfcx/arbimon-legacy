@@ -21,22 +21,6 @@ var ordersUtils = require('../../utils/orders.js');
 var countries = require('../../utils/countries.js');
 var shippingCalculator = require('../../utils/shipping-calculator.js');
 
-/**
-    creates a new project an create news about project creation
-*/
-var createProject = function(project, userId) {
-    return q.ninvoke(model.projects, "create", project, userId).then(function(projectId) {
-        model.projects.insertNews({
-            news_type_id: 1, // project created
-            user_id: userId,
-            project_id: projectId,
-            data: JSON.stringify({})
-        });
-
-        return projectId;
-    });
-};
-
 var findLinkObject = function(links, linkRelation) {
     var approvalLink = links.filter(function(link) {
         if(link.rel == linkRelation)
@@ -208,22 +192,11 @@ router.post('/create-project', function(req, res, next) {
                         tier : 'paid',
                     };
 
-                    return createProject(project, req.session.user.id)
+                    return model.projects.createProjectInArbimonAndCoreAPI(project, req.session.user.id, req.session.idToken)
                         .then(async function (projectId) {
                             await model.ActivationCodes.consumeCode(coupon, req.session.user.id);
-                            return projectId
-                        }).then(function (projectId) {
-                            if (req.session.user && req.session.user.rfcx_id) {
-                                project.project_id = projectId
-                                if (rfcxConfig.coreAPIEnabled) {
-                                    return model.projects.createInCoreAPI(project, req.session.idToken)
-                                        .then((externalProjectId) => {
-                                            return model.projects.setExternalId(project.project_id, externalProjectId)
-                                        })
-                                        .catch((err) => console.error(`Failed to create project in Core: ${err.message}`))
-                                }
-                            }
-                        }).then(function () {
+                        })
+                        .then(function () {
                             res.json({
                                 message: util.format("Project '%s' successfully created!", project.name)
                             });
@@ -243,19 +216,8 @@ router.post('/create-project', function(req, res, next) {
                         }
                     }).then(function(){
                         project.plan = plan;
-                        return createProject(project, req.session.user.id);
+                        return model.projects.createProjectInArbimonAndCoreAPI(project, req.session.user.id, req.session.idToken)
                     }).then(function (projectId) {
-                        if (req.session.user && req.session.user.rfcx_id) {
-                            project.project_id = projectId
-                            if (rfcxConfig.coreAPIEnabled) {
-                                return model.projects.createInCoreAPI(project, req.session.idToken)
-                                    .then((externalProjectId) => {
-                                        return model.projects.setExternalId(project.project_id, externalProjectId)
-                                    })
-                                    .catch((err) => console.error(`Failed to create project in Core: ${err.message}`))
-                            }
-                        }
-                    }).then(function () {
                         res.json({
                             message: util.format("Project '%s' successfully created!", project.name)
                         });
@@ -534,10 +496,7 @@ router.post('/process/:orderId', function(req, res, next) {
 
             // create project and plan for it
             if(req.order.action == 'create-project') {
-                createProject(
-                    req.order.data.project,
-                    req.session.user.id
-                ).nodeify(cb);
+                model.projects.createProjectInArbimonAndCoreAPI(req.order.data.project, req.session.user.id, req.session.idToken).nodeify(cb);
             }
 
             // update project plan
