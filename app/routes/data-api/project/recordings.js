@@ -64,7 +64,7 @@ router.get('/species-count', function(req, res, next) {
                 species.push(s.species)
             }
         })
-        
+
         res.json({count: species.length});
     });
 });
@@ -193,22 +193,25 @@ processFiltersData = async function(req, res, next) {
     if (projectionFilter && projectionFilter.grouped && projectionFilter.validation && !projectionFilter.species) {
         return model.recordings.exportRecordingData(projectionFilter, filters).then(async function(results) {
             let gKey = projectionFilter.grouped;
-            let fields = [gKey];
-            fields.push(...Object.keys(results[0]).filter(f => f !== gKey));
+            let fields = [];
+            results.forEach(result => {
+                fields.push(...Object.keys(result).filter(f => f !== gKey && !fields.includes(f)))
+            });
             let data = {};
-            results.forEach((r) => {
+            results.forEach((r, i) => {
                 const s = r[gKey]
+                // Create empty row for each grouped key.
                 if (!data[s]) {
                     data[s] = {};
                     data[s][gKey] = s;
                 };
-                fields
-                    .filter(f => f !== gKey)
-                    .forEach((f) => {
-                        if (data[s][f] === undefined) { data[s][f] = 0 };
-                        data[s][f] += r[f] === '---' ? 0 : +r[f];
-                    })
+                fields.forEach((f) => {
+                    // Fill for each cell 0 as default value.
+                    if (data[s][f] === undefined) { data[s][f] = 0 };
+                    data[s][f] += r[f] === '---' || r[f] === undefined ? 0 : +r[f];
+                })
             });
+            fields.unshift(gKey);
             let datastream = new stream.Readable({objectMode: true});
                 let streamArray = Object.values(data);
                 if (gKey === 'hour') {

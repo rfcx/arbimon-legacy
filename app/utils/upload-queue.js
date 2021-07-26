@@ -92,7 +92,6 @@ module.exports = {
                 model.recordings.calculateLocalTime(upload_row.site_id, upload_row.datetime, callback);
             },
             function(result, callback) {
-                upload_row.datetime_local = result? result : upload_row.datetime;
                 if (upload.info && upload.info.isUTC) {
                     upload_row.datetime = result? result : upload_row.datetime;
                 }
