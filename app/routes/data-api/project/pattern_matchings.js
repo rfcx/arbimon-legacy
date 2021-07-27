@@ -79,31 +79,10 @@ router.param('paging', function(req, res, next, paging){
     return next();
 });
 
-router.get('/:patternMatching/rois/:paging', function(req, res, next) {
+router.get('/:patternMatching/rois/:paging', async function(req, res, next) {
     res.type('json');
-    let prom
-    switch (req.query.search) {
-        case 'best_per_site':
-        case 'top_200_per_site':
-            prom = model.patternMatchings.getTopRoisByScoresPerSite(req.params.patternMatching, req.query.site, req.paging.limit);
-            break;
-        case 'best_per_site_day':
-            prom = model.patternMatchings.getTopRoisByScoresPerSiteDay(req.params.patternMatching, req.query.site, req.paging.limit);
-            break;
-        default:
-            prom = model.patternMatchings.getRoisForId({
-                patternMatchingId: req.params.patternMatching,
-                site: req.query.site,
-                wherePresent: req.query.search == 'present',
-                whereNotPresent: req.query.search == 'not_present',
-                whereUnvalidated: req.query.search == 'unvalidated',
-                byScorePerSite: req.query.search == 'by_score_per_site',
-                byScore: req.query.search == 'by_score',
-                limit: req.paging.limit || 100,
-                offset: req.paging.offset || 0,
-            })
-    }
-    prom.then((json) => res.json(json))
+    model.patternMatchings.getPmRois(req)
+        .then((json) => res.json(json))
         .catch(next);
 });
 

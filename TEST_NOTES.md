@@ -3,10 +3,17 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.33
 
-- CE-1143 Update "unvalidated" filter on Pattern Matching details page to return results per site
-  - Check that "unvalidated" filter still returns correct data
-  - Check that "unvalidated" filter works quicker than before
+- CE-1143 Update "Unvalidated", "All", "Present", "Not present", "200 top scores per site", "Score per site" filters on Pattern Matching details page to return results per site
+  - Check that all filters still return correct data
+  - Check that pagination works correctly for every filter
+  - Check that selecting a site with Site List dropdown (icon with map pin) works fine
+  - Check that switching between filters does not break any logic
+  - Check that you validation feature still works correctly
+- CE-1158 update PM filters logic so "Best per Site" and "Best per Site, Day" return results by 20 sites batches
+  - Check that these two filters return 20 sites per page (or less if project is small)
+  - Check that pagination works correctly for these two filters
   - Check that other filters still work correctly
+  - Check that switching between filters, pages, sites, etc works correctly
 
 ## v3.0.32
 

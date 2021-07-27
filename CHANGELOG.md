@@ -2,7 +2,8 @@
 
 ## v3.0.33 - July XX, 2021
 
-- CE-1143 Update "unvalidated" filter on Pattern Matching details page to return results per site
+- CE-1143 Update "Unvalidated", "All", "Present", "Not present", "200 top scores per site", "Score per site" filters on Pattern Matching details page to return results per site
+- CE-1158 update PM filters logic so "Best per Site" and "Best per Site, Day" return results by 20 sites batches
 
 ## v3.0.32 - June XX, 2021
 

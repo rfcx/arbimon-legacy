@@ -150,6 +150,8 @@ angular.module('a2.analysis.patternmatching', [
         this.limit = 100;
         this.selected = { roi_index: 0, roi: null, page: 1 };
         this.sitesList = [];
+        this.sitesListBatchSize = 20;
+        this.sitesBatches = [];
         this.total = {rois:0, pages:0};
         this.loading = {details: false, rois:false};
         this.validation = this.lists.validation[2];
@@ -161,7 +163,7 @@ angular.module('a2.analysis.patternmatching', [
                 return this.loadSitesList();
             }.bind(this))
             .then(function() {
-                return this.loadPage(this.selected.page);
+                return this.loadData(1);
             }.bind(this));
     },
 
@@ -211,7 +213,8 @@ angular.module('a2.analysis.patternmatching', [
 
     onSearchChanged: function(){
         this.selected.page = 1;
-        this.loadPage(1);
+        this.recalculateSiteListBatch();
+        this.loadData(1);
     },
 
     setupExportUrl: function(){
@@ -235,17 +238,44 @@ angular.module('a2.analysis.patternmatching', [
 
     loadSitesList: function() {
         return a2PatternMatching.getSitesListFor(this.id)
-            .then(function (index) {
-                this.sitesList = index;
-                this.sitesTotal = this.sitesList.length * 200;
+            .then(function (list) {
+                this.sitesList = list;
+                this.sitesTotal = this.sitesBatches.length
+                this.splitSitesListIntoBatches();
             }.bind(this))
     },
 
-    setSiteBookmark: function(site){
+    splitSitesListIntoBatches: function () {
+        var batches = [];
+        for (var i = 0; i< this.sitesList.length; i += this.sitesListBatchSize) {
+            batches.push(this.sitesList.slice(i, i + this.sitesListBatchSize));
+        }
+        this.sitesBatches = batches
+    },
+
+    recalculateSiteListBatch: function () {
+        var search = this.search && this.search.value ? this.search.value : undefined;
+        var shouldRecalculate = false
+        if (['all', 'present', 'not_present', 'unvalidated', 'top_200_per_site', 'by_score_per_site'].includes(search)) {
+            if (this.sitesListBatchSize !== 1) {
+                shouldRecalculate = true
+            }
+            this.sitesListBatchSize = 1;
+        } else if (['best_per_site', 'best_per_site_day'].includes(search)) {
+            if (this.sitesListBatchSize !== 20) {
+                shouldRecalculate = true
+            }
+            this.sitesListBatchSize = 20;
+        }
+        if (shouldRecalculate) {
+            this.splitSitesListIntoBatches();
+        }
+    },
+
+    setSiteBookmark: function(site) {
         if (this.shouldGetPerSite()) {
-            console.log(this.sitesList.indexOf(site)+1);
-            this.selected.page = this.sitesList.indexOf(site)+1;
-            return this.loadPage(this.selected.page);
+            this.selected.page = this.getSiteBatchIndexBySiteId(site.site_id) + 1
+            return this.loadData();
         }
         var bookmark = 'site-' + site.site_id;
         $anchorScroll.yOffset = $('.a2-page-header').height() + 60;
@@ -256,15 +286,40 @@ angular.module('a2.analysis.patternmatching', [
         return this.search && ['all', 'present', 'not_present', 'unvalidated', 'top_200_per_site', 'best_per_site', 'best_per_site_day', 'by_score_per_site'].includes(this.search.value);
     },
 
-    loadPage: function(pageNumber){
-        this.rois = [];
-        this.loading.rois = true;
+    getSiteBatchIndexBySiteId: function (siteId) {
+        if (!this.sitesBatches || !this.sitesBatches.length) {
+            return undefined
+        }
+        return this.sitesBatches.findIndex(function (batch) {
+            return !!batch.find(function (site) {
+                return site.site_id === siteId
+            })
+        })
+    },
+
+    getSiteBatchBySiteId: function (siteId) {
+        const batchIndex = this.getSiteBatchIndexBySiteId(siteId);
+        if (batchIndex === undefined) {
+            return undefined
+        }
+        return this.sitesBatches[batchIndex]
+    },
+
+    getSiteBatchByPageNumber: function (page) {
+        if (!this.sitesBatches || !this.sitesBatches.length) {
+            return undefined
+        }
+        return this.sitesBatches[page - 1]
+    },
+
+    combOpts: function (data) {
         var search = this.search && this.search.value ? this.search.value : undefined
-        this.splitAllSites = search === 'by_score';
         var opts = { search: search };
-        if (this.shouldGetPerSite()) {
-            var selectedSite = this.sitesList[pageNumber - 1];
-            opts.site = selectedSite && selectedSite.site_id;
+        if (data.site) {
+            opts.site = data.site;
+        }
+        if (data.sites) {
+            opts.sites = data.sites
         }
         var limit, offset;
         switch (search) {
@@ -286,38 +341,64 @@ angular.module('a2.analysis.patternmatching', [
                 break;
             default:
                 limit = this.limit
-                offset = (pageNumber - 1) * this.limit
+                offset = (data.pageNumber - 1) * this.limit
         }
-        return a2PatternMatching.getRoisFor(this.id, limit, offset, opts).then((function(rois){
-            this.loading.rois = false;
-            if (this.splitAllSites) {
-                this.rois = [{
-                    list: rois
-                }]
-            }
-            else {
-                this.rois = rois.reduce(function(_, roi){
-                    var site_id = roi.site_id;
-                    var sitename = roi.site;
-                    var recname = roi.recording;
+        return {
+            limit: limit,
+            offset: offset,
+            opts: opts
+        }
+    },
 
-                    if(!_.idx[sitename]){
-                        _.idx[sitename] = {list:[], idx:{}, name:sitename, id:site_id};
-                        _.list.push(_.idx[sitename]);
-                    }
+    parseRoisResult: function (rois) {
+        console.log('rois', rois)
+        var search = this.search && this.search.value ? this.search.value : undefined
+        this.splitAllSites = search === 'by_score';
+        if (this.splitAllSites) {
+            return [{ list: rois }]
+        }
+        else {
+            return  rois.reduce(function(_, roi){
+                var site_id = roi.site_id;
+                var sitename = roi.site;
 
-                    var site = _.idx[sitename];
-                    site.list.push(roi);
+                if(!_.idx[sitename]){
+                    _.idx[sitename] = {list:[], idx:{}, name:sitename, id:site_id};
+                    _.list.push(_.idx[sitename]);
+                }
 
-                    return _;
-                }, {list:[], idx:{}}).list;
-            }
-            this.selected.roi = Math.min()
-            return rois;
-        }).bind(this)).catch((function(err){
-            this.loading.rois = false;
-            return notify.serverError(err);
-        }).bind(this));
+                var site = _.idx[sitename];
+                site.list.push(roi);
+
+                return _;
+            }, { list:[], idx:{} }).list;
+        }
+    },
+
+    loadData: function (page) {
+        var params;
+        if (this.shouldGetPerSite()) {
+            page = page || this.selected.page
+            var siteBatch = this.getSiteBatchByPageNumber(page)
+            var siteIds = siteBatch.map(function(s) {
+                return s.site_id;
+            })
+            params = this.combOpts({ sites: siteIds });
+        } else {
+            params = this.combOpts({ pageNumber: this.selected.page });
+        }
+        this.rois = [];
+        this.loading.rois = true;
+        return a2PatternMatching.getRoisFor(this.id, params.limit, params.offset, params.opts)
+            .then(function (rois) {
+                this.loading.rois = false;
+                this.rois = this.parseRoisResult(rois);
+                this.selected.roi = Math.min()
+            }.bind(this))
+            .catch((function(err){
+                this.loading.rois = false;
+                return notify.serverError(err);
+            }).bind(this));
     },
 
     playRoiAudio: function(roi, $event){
@@ -361,7 +442,7 @@ angular.module('a2.analysis.patternmatching', [
         } else {
             if(page != this.selected.page || force){
                 this.selected.page = page;
-                return this.loadPage(page);
+                return this.loadData(page);
             }
         }
 

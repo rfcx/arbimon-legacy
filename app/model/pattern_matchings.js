@@ -222,6 +222,7 @@ var PatternMatchings = {
     SEARCH_ROIS_SCHEMA : {
         patternMatching: joi.number().required(),
         site: joi.string(),
+        sites: joi.array().items(joi.string()),
         csValidationsFor: joi.number().integer(),
         expertCSValidations: joi.boolean(),
         perUserCSValidations: joi.boolean(),
@@ -312,6 +313,10 @@ var PatternMatchings = {
 
             if (parameters.site) {
                 builder.addConstraint("PMR.denorm_site_id = ?", [ parameters.site ]);
+            }
+
+            if (parameters.sites) {
+                builder.addConstraint("PMR.denorm_site_id IN ?", [ parameters.sites ]);
             }
 
             if(parameters.expertCSValidations){
@@ -487,6 +492,7 @@ var PatternMatchings = {
         return this.buildRoisQuery({
             patternMatching: options.patternMatchingId,
             site: options.site,
+            sites: options.sites,
             perSiteCount: options.perSiteCount,
             csValidationsFor: options.csValidationsFor,
             expertCSValidations: options.expertCSValidations,
@@ -528,6 +534,45 @@ var PatternMatchings = {
             })
     },
 
+    async getPmRois (req) {
+        // let prom
+        let rois = []
+        let sites = [undefined] // a hack to make a loop workable even if no sites are specified
+        if (req.query.site) {
+            sites = [req.query.site]
+        }
+        if (req.query.sites) {
+            sites = req.query.sites.split(',')
+        }
+        for (let site of sites) {
+            const opts = {
+                patternMatchingId: req.params.patternMatching,
+                site: site,
+                limit: req.paging.limit || 100
+            }
+            switch (req.query.search) {
+                case 'best_per_site':
+                case 'top_200_per_site':
+                    rois = rois.concat(await this.getTopRoisByScoresPerSite(opts));
+                    break;
+                case 'best_per_site_day':
+                    rois = rois.concat(await this.getTopRoisByScoresPerSiteDay(opts));
+                    break;
+                default:
+                    rois = rois.concat(await this.getRoisForId({
+                        ...opts,
+                        wherePresent: req.query.search == 'present',
+                        whereNotPresent: req.query.search == 'not_present',
+                        whereUnvalidated: req.query.search == 'unvalidated',
+                        byScorePerSite: req.query.search == 'by_score_per_site',
+                        byScore: req.query.search == 'by_score',
+                        offset: req.paging.offset || 0,
+                    }))
+            }
+        }
+        return rois
+    },
+
     pmrSqlSelect: `SELECT S.site_id, S.name as site, PMR.score, R.uri as recording, PMR.pattern_matching_roi_id as id, PMR.pattern_matching_id,
         PMR.denorm_recording_datetime as datetime, PMR.recording_id, PMR.species_id, PMR.songtype_id, PMR.x1, PMR.y1, PMR.x2, PMR.y2, PMR.uri,
         PMR.score, PMR.validated FROM pattern_matching_rois AS PMR`,
@@ -546,17 +591,19 @@ var PatternMatchings = {
         return pmrs
     },
 
-    getTopRoisByScoresPerSite (pmId, siteId, limit = 200) {
+    getTopRoisByScoresPerSite (opts) {
         const base = `${this.pmrSqlSelect}
             JOIN recordings AS R ON R.recording_id = PMR.recording_id
             JOIN sites AS S ON PMR.denorm_site_id = S.site_id
             WHERE PMR.pattern_matching_id = ? AND PMR.denorm_site_id = ?
             ORDER BY PMR.score DESC LIMIT ?`
-        return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, siteId, limit])
+        return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [opts.patternMatchingId, opts.site, opts.limit || 200])
             .then(this.completePMRResults)
     },
 
-    getTopRoisByScoresPerSiteDay (pmId, siteId) {
+    getTopRoisByScoresPerSiteDay (opts) {
+        const pmId = opts.patternMatchingId
+        const site = opts.site
         const base = `${this.pmrSqlSelect}
             JOIN (
                 SELECT MAX(score) as max_score, denorm_recording_date
@@ -568,7 +615,7 @@ var PatternMatchings = {
             JOIN recordings AS R ON R.recording_id = PMR.recording_id
             JOIN sites AS S ON PMR.denorm_site_id = S.site_id
             WHERE PMR.pattern_matching_id = ? AND PMR.denorm_site_id = ?;`
-        return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, siteId, pmId, siteId])
+        return dbpool.query({ sql: base, typeCast: sqlutil.parseUtcDatetime }, [pmId, site, pmId, site])
             .then((data) => {
                 const pmrs = this.completePMRResults(data)
                 return pmrs.sort((a, b) => {
