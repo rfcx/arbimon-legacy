@@ -335,7 +335,7 @@ var Recordings = {
                 constraints.push('R.`recording_id` = ' + dbpool.escape(Number(options.recording_id)));
             }
 
-            if(!urlquery.id) {
+            if(!urlquery.id && !urlquery.site) {
                 steps.push(
                     dbpool.query("(\n" +
                 "   SELECT site_id FROM sites WHERE project_id = ?\n" +
@@ -352,15 +352,10 @@ var Recordings = {
         }).then(function(){
             return Q.all(steps);
         }).then(function(){
+            const sql = `SELECT ${group_by.project_part} ${projection} FROM recordings R JOIN sites S ON S.site_id = R.site_id
+                WHERE (${constraints.join(") AND (")}) ${group_by.clause} ${order_clause} ${limit_clause}`;
             return Q.nfcall(queryHandler, {
-                sql:
-                    "SELECT " + group_by.project_part + projection + " \n" +
-                    "FROM recordings R \n" +
-                    "JOIN sites S ON S.site_id = R.site_id \n" +
-                    "WHERE (" + constraints.join(") AND (") + ")" +
-                    group_by.clause +
-                    order_clause +
-                    limit_clause,
+                sql,
                 typeCast: sqlutil.parseUtcDatetime,
             }, data);
         }).then(function(query_results){
@@ -1139,8 +1134,10 @@ var Recordings = {
                 return site.site_id;
             })
             if (siteIds.length) {
-                constraints.push("r.site_id IN (?)");
-                data.push(siteIds);
+                if (!parameters.sites) {
+                    constraints.push("r.site_id IN (?)");
+                    data.push(siteIds);
+                }
             } else {
                 constraints.push('1 = 2')
             }
