@@ -26,11 +26,19 @@
                     Sign In
                 </a>
                 <% } else { %>
+                <div ng-click="toggleSearch = !toggleSearch"
+                    style="position: absolute; right: 60px; top: 13px; cursor: pointer;" class="collapse-menu-hide">
+                    <i class="fa fa-search" style="font-size: 20px; position: relative;"></i>
+                </div>
                 <button ng-init="rightCollapsedMenu = true" ng-click="rightCollapsedMenu = !rightCollapsedMenu; leftCollapsedMenu = true" type="button"
                     class="navbar-toggle navbar-toggle-right collapsed fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
                     style="background-image:url('<%- user.imageUrl %>')">
                 </button>
                 <% } %>
+            </div>
+            <div ng-show="toggleSearch" class="navbar-collapse search-input-mobile"
+                style="padding: 10px 15px; position: relative;">
+                <% include fragments/nav-search %>
             </div>
             <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
                 <ul class="nav navbar-nav navbar-left hide-tooltip-lg">
@@ -44,15 +52,21 @@
                 <hr class="navbar-divider-collapse">
                 <ul class="nav navbar-nav navbar-right navbar-menu-hide hide-tooltip-lg">
                     <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
-                        <a class="dropdown-toggle" dropdown-toggle>
-                            <i class="fa fa-sitemap"></i>
-                            <span class="visible-lg-inline visible-xs-inline"><%=  project.name  %></span>
+                        <a class="text-overflow" style="cursor: default;">
+                            <span><%=  project.name  %></span>
                         </a>
                     </li>
-                    <% include fragments/user-dropdown %>
-                </ul>
-                <ul class="nav navbar-nav navbar-right mr-0">
-                    <% include fragments/other-rfcx-apps %>
+                    <% if (user && !user.isAnonymousGuest) { %>
+                        <li style="padding: 11px 15px 9px; position: relative;" class="search-input">
+                            <% include fragments/nav-search %>
+                        </li>
+                    <% } %>
+                    <li>
+                        <% include fragments/other-rfcx-apps %>
+                    </li>
+                    <ul class="nav navbar-nav navbar-menu-hide hide-tooltip-lg mr-0">
+                        <% include fragments/user-dropdown %>
+                    </ul>
                 </ul>
             </div>
             <% if (user && !user.isAnonymousGuest) { %>
@@ -85,6 +99,12 @@
     <% } %>
     <div id="body">
         <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
-    </div>
+    </div><script type="text/ng-template" id="customSearchTemplate.html">
+        <a>
+            <span tooltip="{{match.label}}" ng-bind-html="match.label | typeaheadHighlight:query" class="ng-binding"></span>
+            <br><span class="input-search-desc"> {{match.model.description}}</span>
+        </a>
+    </script>
+
 </body>
 </html>

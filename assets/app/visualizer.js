@@ -32,11 +32,40 @@ var a2 = angular.module('a2.visualizer-app', [
     $locationProvider.html5Mode(true);
     $urlRouterProvider.otherwise("/visualizer");
 })
-.controller('MainCtrl', function($scope, $state, Project){
+.controller('MainCtrl', function($scope, $state, Project, $http, $window){
     $scope.$state = $state;
     $scope.getUrlFor = function(page){
         if(page == 'visualizer'){
             return '/visualizer/' + Project.getUrl() + '/';
         }
     }
+    $scope.q = '';
+
+    $scope.findProject = function() {
+        if (!$scope.q || $scope.q.trim() === '') return;
+        if ($scope.q && $scope.q.length < 2) return;
+        var config = {
+            params: {
+                allAccessibleProjects: true
+            }
+        };
+        if ($scope.q !== '') {
+            config.params.q = $scope.q;
+        }
+        $scope.projects = [];
+        $scope.isLoading = true;
+        return $http.get('/api/user/projectlist', config).then(function(result) {
+            $scope.isLoading = false;
+            $scope.projects = result.data;
+            return result.data;
+        })
+
+    };
+
+    $scope.selectProject = function() {
+        if (!$scope.q || $scope.q && !$scope.q.is_enabled) {
+            return;
+        }
+        $window.location.assign('/project/' + $scope.q.url + '/');
+    };
 });

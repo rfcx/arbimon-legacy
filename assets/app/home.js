@@ -44,6 +44,34 @@ angular.module('a2.home', [
         }
     }
 
+    $scope.q = '';
+
+    $scope.findProject = function() {
+        if (!$scope.q || $scope.q.trim() === '') return;
+        if ($scope.q && $scope.q.length < 2) return;
+        var config = {
+            params: {
+                allAccessibleProjects: true
+            }
+        };
+        if ($scope.q !== '') {
+            config.params.q = $scope.q;
+        }
+        $scope.projectsLoading = true;
+        return $http.get('/api/user/projectlist', config).then(function(result) {
+            $scope.projectsLoading = false;
+            return result.data;
+        })
+
+    };
+
+    $scope.selectProject = function() {
+        if (!$scope.q || $scope.q && !$scope.q.is_enabled) {
+            return;
+        }
+        $window.location.assign("/project/" + $scope.q.url + "/");
+    };
+
     this.loadProjectList = function() {
         const isFeatured = this.isAnonymousGuest || $scope.isExplorePage && !$scope.search;
         var config = {
