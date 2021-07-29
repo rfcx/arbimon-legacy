@@ -9,6 +9,7 @@ Performance improvements:
 - CE-1158 update PM filters logic so "Best per Site" and "Best per Site, Day" return results by 20 sites batches
 - CE-1067 Speed up recordings queries which search by selected sites on Recordings and Visualizer pages
 - CE-1070 Speed up recordings total count endpoint
+- CE-1063 Delete project stats bar from Summary page
 
 ## v3.0.32 - June 26, 2021
 

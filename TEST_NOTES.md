@@ -21,6 +21,8 @@ Test Notes are used to list what pages / components / features / user flows are 
 - CE-1070 Speed up recordings total count endpoint
   - Check that total recordings count is still correctly calculated on the homepage
   - Check that total recordings count is still correctly calculated on Project summary page
+- CE-1063 Delete project stats bar from Summary page
+  - Check that summary page still works correctly
 
 ## v3.0.32
 
