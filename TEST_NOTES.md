@@ -14,10 +14,13 @@ Test Notes are used to list what pages / components / features / user flows are 
   - Check that pagination works correctly for these two filters
   - Check that other filters still work correctly
   - Check that switching between filters, pages, sites, etc works correctly
-- CE-1067 Speed up recordings queries which search by selected sites
+- CE-1067 Speed up recordings queries which search by selected sites on Recordings and Visualizer pages
   - Check that filters on Recordings page still work correctly
   - Check that pagination on Recordings page still work correctly
   - Check that site list and recordings list on Visualizer page still works correctly
+- CE-1070 Speed up recordings total count endpoint
+  - Check that total recordings count is still correctly calculated on the homepage
+  - Check that total recordings count is still correctly calculated on Project summary page
 
 ## v3.0.32
 

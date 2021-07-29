@@ -983,7 +983,7 @@ var Recordings = {
         if(!recording.site_id || !recording.filename)
             callback(new Error("Missing fields"));
 
-        var q = "SELECT count(*) as count \n"+
+        var q = "SELECT count(recording_id) as count \n"+
                 "FROM recordings \n"+
                 "WHERE site_id = %s \n"+
                 "AND uri LIKE %s";
@@ -1660,7 +1660,7 @@ var Recordings = {
         return this.buildSearchQuery(filters).then(function(builder){
             builder.addProjection.apply(builder, [
                 's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
-                'COUNT(*) as count'
+                'COUNT(recording_id) as count'
             ]);
             delete builder.orderBy;
             builder.setGroupBy('s.site_id');

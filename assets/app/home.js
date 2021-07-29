@@ -87,8 +87,8 @@ angular.module('a2.home', [
                             project.patternMatchingsTotal = data.count || 0;
                             project.isLoading = false;
                         });
-                        $http.get('/api/project/' + project.url + '/recordings/search-count', {project_id: project.id}).success(function(data) {
-                            project.recCount = data.map((item) => { return item.count }).reduce((a, b) => a + b, 0);
+                        $http.get('/api/project/' + project.url + '/recordings/count', {project_id: project.id}).success(function(data) {
+                            project.recCount = data.count;
                             project.isLoading = false;
                         })
                         $http.get('/api/project/' + project.url + '/recordings/species-count', {project_id: project.id}).success(function(data) {

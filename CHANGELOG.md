@@ -7,7 +7,8 @@ Performance improvements:
 - CE-988 The datime_local column is removed
 - CE-1143 Update "Unvalidated", "All", "Present", "Not present", "200 top scores per site", "Score per site" filters on Pattern Matching details page to return results per site
 - CE-1158 update PM filters logic so "Best per Site" and "Best per Site, Day" return results by 20 sites batches
-- CE-1067 Speed up recordings queries which search by selected sites
+- CE-1067 Speed up recordings queries which search by selected sites on Recordings and Visualizer pages
+- CE-1070 Speed up recordings total count endpoint
 
 ## v3.0.32 - June 26, 2021
 
