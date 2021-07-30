@@ -2,6 +2,11 @@
 
 ## v3.0.33 - July XX, 2021
 
+New features:
+
+- CE-1109 User can open Explorer from Arbimon Visualizer (only recordings uploaded with Uploader App)
+- CE-1110 User can scale spectrogram in Visualizer to standard frequencies
+
 Performance improvements:
 
 - CE-988 The datime_local column is removed
@@ -9,10 +14,6 @@ Performance improvements:
 - CE-1158 update PM filters logic so "Best per Site" and "Best per Site, Day" return results by 20 sites batches
 
 ## v3.0.32 - June 26, 2021
-
-New feature:
-
-- CE-1110 User can scale spectrogram in Visualizer to standard frequencies
 
 Performance improvements:
 
