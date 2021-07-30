@@ -1657,6 +1657,14 @@ var Recordings = {
         queryHandler(q, callback);
     },
 
+    countAllSpecies: function(callback) {
+        queryHandler('SELECT count(*) AS count FROM recording_validations WHERE present=1', callback);
+    },
+
+    countAllRecordings: function(callback) {
+        queryHandler('SELECT count(*) AS count FROM recordings', callback);
+    },
+
     /* fetch count of project recordings.
     */
     countProjectRecordings: function(filters){

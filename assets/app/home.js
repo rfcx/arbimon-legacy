@@ -17,14 +17,66 @@ angular.module('a2.home', [
 .run(function(Angularytics) {
     Angularytics.init();
 })
+.service('homeSummaryStatsData', function() {
+    return [
+        {   title:'projects created',
+            getData: function($http){
+                return $http.get('/api/project/projects-count').then(function(projects) {
+                    return projects.data;
+                });
+            },
+        },
+        {   title:'recordings uploaded',
+            getData: function($http){
+                return $http.get('/api/project/recordings-count').then(function(recordings) {
+                    return recordings.data;
+                });
+            },
+        },
+        {   title:'analyses executed',
+            getData: function($http){
+                return $http.get('/api/project/jobs-count').then(function(jobs) {
+                    return jobs.data;
+                });
+            },
+        },
+        {   title: 'species identified',
+            getData: function($http){
+                return $http.get('/api/project/recordings-species-count').then(function(species) {
+                    return species.data;
+                });
+            },
+        }
+    ];
+})
 .controller('HomeCtrl', function(
     $http,
     $window,
     $localStorage,
     notify, a2order,
     a2InjectedData,
-    $scope
+    $scope,
+    $q,
+    $injector,
+    homeSummaryStatsData
 ) {
+    $scope.summaryDataLoading = true;
+    $scope.list_summary_data = homeSummaryStatsData;
+    $scope.summary_data = $scope.list_summary_data.map(function(){
+        return [];
+    });
+
+    function getSummaryData(summary_item){
+        return $q.resolve(summary_item.getData ?
+            $injector.invoke(summary_item.getData) : []
+        );
+    }
+
+    $q.all($scope.list_summary_data.map(getSummaryData)).then((function(allData){
+        $scope.summaryDataLoading = false;
+        $scope.summary_data = allData;
+    }).bind(this));
+
     $scope.search = '';
     this.highlightedProjects = [];
     $scope.isExplorePage = $window.location.pathname === '/'

@@ -96,6 +96,42 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
 
 });
 
+router.get('/projects-count', function(req, res, next) {
+    res.type('json');
+
+    model.projects.countAllProjects(function(err, results) {
+        if(err) return next(err);
+        res.json(results[0].count);
+    });
+});
+
+router.get('/jobs-count', function(req, res, next) {
+    res.type('json');
+
+    model.jobs.countAllCompletedJobs(function(err, results) {
+        if(err) return next(err);
+        res.json(results[0].count);
+    });
+});
+
+router.get('/recordings-species-count', function(req, res, next) {
+    res.type('json');
+
+    model.recordings.countAllSpecies(function(err, results) {
+        if(err) return next(err);
+        res.json(results[0].count);
+    });
+});
+
+router.get('/recordings-count', function(req, res, next) {
+    res.type('json');
+
+    model.recordings.countAllRecordings(function(err, results) {
+        if(err) return next(err);
+        res.json(results[0].count);
+    });
+});
+
 router.post('/:projectUrl/info/update', function(req, res, next) {
     res.type('json');
     if(!req.haveAccess(req.project.project_id, "manage project settings")) {
