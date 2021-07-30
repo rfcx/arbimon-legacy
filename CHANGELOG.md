@@ -15,6 +15,7 @@ Performance improvements:
 - CE-1067 Speed up recordings queries which search by selected sites on Recordings and Visualizer pages
 - CE-1070 Speed up recordings total count endpoint
 - CE-1063 Delete project stats bar from Summary page
+- CE-1066 Add database index for soundscape composition classes annotations table
 
 ## v3.0.32 - June 26, 2021
 

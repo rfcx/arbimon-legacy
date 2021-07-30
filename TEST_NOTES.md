@@ -23,6 +23,8 @@ Test Notes are used to list what pages / components / features / user flows are 
   - Check that total recordings count is still correctly calculated on Project summary page
 - CE-1063 Delete project stats bar from Summary page
   - Check that summary page still works correctly
+- CE-1066 Add database index for soundscape composition classes annotations table
+  - Check that Data -> Soundscape composition classes page works relatively fast
 
 ## v3.0.32
 
