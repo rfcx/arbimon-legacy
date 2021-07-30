@@ -1,14 +1,19 @@
 # Arbimon Release Notes
 
-## v3.0.32 - June XX, 2021
+## v3.0.33 - July XX, 2021
 
 New features:
 
 - CE-1109 User can open Explorer from Arbimon Visualizer (only recordings uploaded with Uploader App)
+- CE-1110 User can scale spectrogram in Visualizer to standard frequencies
 
-Resolved issues:
+Performance improvements:
 
-- CE-1046 The synchronization to work in transactions between Arbimon and RFCx is updated
+- CE-988 The datime_local column is removed
+- CE-1143 Update "Unvalidated", "All", "Present", "Not present", "200 top scores per site", "Score per site" filters on Pattern Matching details page to return results per site
+- CE-1158 update PM filters logic so "Best per Site" and "Best per Site, Day" return results by 20 sites batches
+
+## v3.0.32 - June 26, 2021
 
 Performance improvements:
 
@@ -16,13 +21,11 @@ Performance improvements:
 - CE-1068 CNN list page loads quicker
 - CE-1069 CNN job details loads quicker
 - CE-323 When user creates/edits/deletes a project role for another user in Arbimon it's synced with Core API in transactions
+- CE-1046 The synchronization to work in transactions between Arbimon and RFCx is updated
 
 Resolved issues:
 
 - CE-1160 The opacity of PM' results is decreased on the Visualizer page
-
-Resolved issues:
-
 - CE-1004 Fixed issue with pixelated ROI boxes in Safari browser
 
 ## v3.0.31 - July 14, 2021
@@ -57,15 +60,14 @@ Performance improvements:
 - CE-1062 Load only one site per page for "Best per Site, Day" filter
 - CE-1064 Update Pattern Matching query for Citizen Scientist PM list page
 
+## v3.0.30 - June XX, 2021
+
 Other:
 
 - The columns order is changed on the recording page
 - Show "Unknown" if the recording hasn't in the file name data
 - CE-940 Update the text for the Recordings data in the Summary page
 - CE-792 Save validated rois in the recording validations table
-
-
-## v3.0.30 - June 18, 2021
 
 Resolved issues:
 
@@ -77,10 +79,6 @@ Resolved issues:
 - CE-785 Spinner in recordings filter not stop when have 0 recording
 - CE-751 Display selected recording if the site has many recordings with the similar datetime
 - Hotfix displaying the original filename in the export recordings report
-
-Other:
-
-- CE-880 Beta tag on CNN, AE & clustering
 
 ## v3.0.29-hotfix.0 - June 16, 2021
 

@@ -226,7 +226,6 @@ var Recordings = {
             "R.uri, \n"+
             "R.datetime, \n"+
             "R.datetime_utc, \n"+
-            "R.datetime_local, \n"+
             "R.mic, \n"+
             "R.recorder, \n"+
             "R.version, \n"+
@@ -301,7 +300,6 @@ var Recordings = {
                         "R.uri, \n"+
                         "R.datetime, \n"+
                         "R.datetime_utc, \n"+
-                        "R.datetime_local, \n"+
                         "R.mic, \n"+
                         "R.recorder, \n"+
                         "R.version, \n"+
@@ -919,7 +917,6 @@ var Recordings = {
             bit_rate:        joi.string(),
             sample_encoding: joi.string(),
             upload_time:     joi.date(),
-            datetime_local:  joi.date(),
             datetime_utc:    joi.date(),
             meta:  joi.optional(),
         };
@@ -929,10 +926,10 @@ var Recordings = {
 
             queryHandler('INSERT INTO recordings (\n' +
                 '`site_id`, `uri`, `datetime`, `mic`, `recorder`, `version`, `sample_rate`, \n'+
-                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_local`, `datetime_utc`, `meta`\n' +
-            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
+                '`precision`, `duration`, `samples`, `file_size`, `bit_rate`, `sample_encoding`, `upload_time`, `datetime_utc`, `meta`\n' +
+            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', [
                 rec.site_id, rec.uri, rec.datetime, rec.mic || '(not specified)', rec.recorder || '(not specified)', rec.version || '(not specified)', rec.sample_rate,
-                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_local, rec.datetime_utc, rec.meta
+                rec.precision, rec.duration, rec.samples, rec.file_size, rec.bit_rate, rec.sample_encoding, rec.upload_time, rec.datetime_utc, rec.meta
             ], callback);
         });
     },
@@ -1528,7 +1525,7 @@ var Recordings = {
                         if (classes && classes.length) {
                             // Divide the results of the validations if the count more than 50 tables.
                             let classesArray = classes.reduce((resultArray, item, index) => {
-                                const chunkIndex = Math.floor(index/50);
+                                const chunkIndex = Math.floor(index/20);
                                 if (!resultArray[chunkIndex]) {
                                     resultArray[chunkIndex] = [];
                                 }
@@ -1645,12 +1642,13 @@ var Recordings = {
                         typeCast: sqlutil.parseUtcDatetime,
                     })
                     if (projection.grouped) {
-                        results = [...results, ...queryResult];
-                        return results;
+                        results = results.concat([...new Set(queryResult)]);
                     }
-                    results = [...new Set(queryResult)];
+                    else {
+                        results = [...new Set(queryResult)];
+                    }
                 }
-                return Q.all(results);
+                return projection.grouped? results : Q.all(results);
             })
     },
 
