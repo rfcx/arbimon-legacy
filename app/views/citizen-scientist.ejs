@@ -21,7 +21,7 @@
                         </button>
                         <a href="/" class="navbar-brand navbar-brand-center">
                             <img src="/images/favicon/rfcx-logo.svg">
-                            <span class="navbar-title">Arbimon</span>
+                            <span class="navbar-title hide-for-tablet">Arbimon</span>
                         </a>
                         <% if (!user || user.isAnonymousGuest) { %>
                         <a class="navbar-btn btn btn-primary navbar-toggle-right collapse-menu-hide collapsed"
@@ -44,25 +44,56 @@
                         <% include fragments/nav-search %>
                     </div>
                     <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
-                        <ul class="nav navbar-nav navbar-left">
+                        <ul class="nav navbar-nav navbar-left hide-tooltip-lg">
                             <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
-                                <a class="text-overflow" style="cursor: default;">
+                                <a class="text-overflow navbar-link" style="cursor: default;">
                                     <span><%=  project.name  %></span>
                                 </a>
                             </li>
-                        </ul>
-                        <ul class="nav navbar-nav navbar-left hide-tooltip-lg">
-                            <li ui-sref="citizen-scientist.my-stats" ui-sref-active="active"><a>My Stats</a></li>
-                            <li ui-sref="citizen-scientist.patternmatching" ng-class="{active: $state.includes('citizen-scientist.patternmatching-details') || $state.includes('citizen-scientist.patternmatching')}"><a>Pattern Matching</a></li>
+                            <li ui-sref="citizen-scientist.my-stats" ui-sref-active="active">
+                                <a tooltip="My Stats" tooltip-placement="bottom">
+                                    <i class="fa fa-dashboard"></i>
+                                    <span class="visible-lg-inline visible-xs-inline">My Stats</span>
+                                </a>
+                            </li>
+                            <li ui-sref="citizen-scientist.patternmatching" ng-class="{active: $state.includes('citizen-scientist.patternmatching-details') || $state.includes('citizen-scientist.patternmatching')}">
+                                <a tooltip="Pattern Matching" tooltip-placement="bottom">
+                                    <i class="fa fa-pencil-square-o"></i>
+                                    <span class="visible-lg-inline visible-xs-inline">Pattern Matching</span>
+                                </a>
+                            </li>
                             <li ui-sref="citizen-scientist.expert" ng-class=" ('citizen-scientist.expert' | includedByState) ? 'active' : ''"
-                                ng-if="userPermit.can(['manage pattern matchings', 'view citizen scientist expert interface'])"
-                            ><a>Expert</a></li>
+                                ng-if="userPermit.can(['manage pattern matchings', 'view citizen scientist expert interface'])">
+                                <a tooltip="Expert" tooltip-placement="bottom">
+                                    <i class="fa fa-cubes"></i>
+                                    <span class="visible-lg-inline visible-xs-inline">Expert</span>
+                                </a>
+                            </li>
                             <li ui-sref="citizen-scientist.admin.classification-stats" ng-class=" ('citizen-scientist.admin' | includedByState) ? 'active' : ''"
-                                ng-if="userPermit.can(['view project', 'manage pattern matchings', 'view citizen scientist admin interface'])"
-                            ><a>Admin</a></li>
-                            <li ui-sref="citizen-scientist.admin.classification-stats" ui-sref-active="active"  ng-if="userPermit.can(['view project', 'view citizen scientist admin interface'])" ><a>Classification Stats</a></li>
-                            <li ui-sref="citizen-scientist.admin.user-stats" ui-sref-active="active"  ng-if="userPermit.can(['view project', 'view citizen scientist admin interface'])" ><a>User Stats</a></li>
-                            <li ui-sref="citizen-scientist.admin.settings" ui-sref-active="active" ng-if="userPermit.can(['manage pattern matchings', 'view citizen scientist admin interface'])" ><a>Settings</a></li>
+                                ng-if="userPermit.can(['view project', 'manage pattern matchings', 'view citizen scientist admin interface'])">
+                                <a tooltip="Admin" tooltip-placement="bottom">
+                                    <i class="fa fa-wrench"></i>
+                                    <span class="visible-lg-inline visible-xs-inline">Admin</span>
+                                </a>
+                            </li>
+                            <li ui-sref="citizen-scientist.admin.classification-stats" ui-sref-active="active"  ng-if="userPermit.can(['view project', 'view citizen scientist admin interface'])">
+                                <a tooltip="Classification Stats" tooltip-placement="bottom">
+                                    <i class="fa fa-list-ol"></i>
+                                    <span class="visible-lg-inline visible-xs-inline">Classification Stats</span>
+                                </a>
+                            </li>
+                            <li ui-sref="citizen-scientist.admin.user-stats" ui-sref-active="active"  ng-if="userPermit.can(['view project', 'view citizen scientist admin interface'])">
+                                <a tooltip="User Stats" tooltip-placement="bottom">
+                                    <i class="fa fa-list"></i>
+                                    <span class="visible-lg-inline visible-xs-inline">User Stats</span>
+                                </a>
+                            </li>
+                            <li ui-sref="citizen-scientist.admin.settings" ui-sref-active="active" ng-if="userPermit.can(['manage pattern matchings', 'view citizen scientist admin interface'])">
+                                <a tooltip="Settings" tooltip-placement="bottom">
+                                    <i class="fa fa-cogs"></i>
+                                    <span class="visible-lg-inline visible-xs-inline">Settings</span>
+                                </a>
+                            </li>
                         </ul>
                         <hr class="navbar-divider-collapse">
                         <ul class="nav navbar-nav navbar-right">

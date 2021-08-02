@@ -1597,12 +1597,22 @@ img.outlined {
   }
 }
 
+.nav > li > a {
+  @media (min-width: 767px) {
+    padding: 15px 10px;
+  }
+}
+
 .search-input {
+  padding: 11px 15px 9px;
   input {
     width: 150px;
   }
-  @media (max-width: @screen-tablet) {
+  @media (max-width: 767px) {
     display: none !important;
+  }
+  @media (min-width: 767px) {
+    padding: 11px 5px 9px;
   }
 }
 
@@ -1628,7 +1638,7 @@ img.outlined {
 }
 
 .search-input-mobile {
-  @media (min-width: @screen-tablet) {
+  @media (min-width: 767px) {
     display: none !important;
   }
 }
@@ -1638,7 +1648,7 @@ img.outlined {
   right: 60px;
   top: 13px;
   cursor: pointer;
-  @media (min-width: @screen-tablet) {
+  @media (min-width: 767px) {
     display: none !important;
   }
 }
@@ -1652,6 +1662,25 @@ img.outlined {
 
   &:hover,&:focus {
     background-color: transparent !important;
+  }
+}
+
+.navbar-link {
+  @media (min-width: 767px) and (max-width: 1345px) {
+    padding: 15px 5px !important;
+    max-width: 118px !important;
+  }
+}
+
+.navbar-brand {
+  @media (min-width: 767px) and (max-width: 1345px)  {
+    padding-right: 5px !important;
+  }
+}
+
+.hide-for-tablet {
+  @media (min-width: 767px) and (max-width: 1345px)  {
+    display: none !important;
   }
 }
 
@@ -1739,7 +1768,7 @@ img.outlined {
   .navbar-brand-center {
     position: absolute;
     left: 50%;
-    margin-left: -70px !important;
+    margin-left: -30px !important;
     display: block;
   }
 

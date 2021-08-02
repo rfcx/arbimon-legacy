@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.33 - June XX, 2021
+
+New features:
+
+- CE-1101 A search bar is updated for projects across Arbimon
+
 ## v3.0.32 - June XX, 2021
 
 Resolved issues:

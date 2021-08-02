@@ -1,6 +1,14 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.33
+
+- CE-1101 A search bar is updated for projects across Arbimon
+  - Test that user sees the the search input in navbar and can search all projects across Arbimon. Any public projects or ones the user has access to.
+  - The search input text should say “Search projects”
+  - The user can see scroll bar to see other projects
+  - The mobile works correct for different headers/pages. The search bar changes to the search icon for mobile styles. When the user clicks on the search icon it will display the search row below the navbar bar
+
 ## v3.0.32
 
 - CE-1065 Patten Matching list loads quicker

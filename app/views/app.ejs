@@ -21,7 +21,7 @@
                         </button>
                         <a href="/" class="navbar-brand navbar-brand-center">
                             <img src="/images/favicon/rfcx-logo.svg">
-                            <span class="navbar-title">Arbimon</span>
+                            <span class="navbar-title hide-for-tablet">Arbimon</span>
                         </a>
                         <% if (!user || user.isAnonymousGuest) { %>
                         <a class="navbar-btn btn btn-primary navbar-toggle-right collapse-menu-hide collapsed mr-0"
@@ -46,11 +46,11 @@
                         <ul class="nav navbar-nav navbar-left hide-tooltip-lg">
                             <% if (user && !user.isAnonymousGuest) { %>
                                 <li ng-if="!citizenScientistUser">
-                                    <a href="/projects">My Projects</a>
+                                    <a class="navbar-link" href="/projects">My Projects</a>
                                 </li>
                             <% } %>
                             <li tooltip-placement="bottom" tooltip="<%=  project.name  %>">
-                                <a class="text-overflow" style="cursor: default">
+                                <a class="text-overflow navbar-link" style="cursor: default">
                                     <span><%=  project.name  %></span>
                                 </a>
                             </li>
@@ -108,14 +108,12 @@
                         </ul>
                         <ul class="nav navbar-nav navbar-right">
                             <% if (user && !user.isAnonymousGuest) { %>
-                                <li style="padding: 11px 15px 9px; position: relative;" class="search-input">
+                                <li style="position: relative;" class="search-input">
                                     <% include fragments/nav-search %>
                                 </li>
                             <% } %>
                             <hr class="navbar-divider-collapse">
-                            <li>
-                                <% include fragments/other-rfcx-apps %>
-                            </li>
+                            <% include fragments/other-rfcx-apps %>
                             <ul class="nav navbar-nav navbar-menu-hide hide-tooltip-lg mr-0">
                                 <% include fragments/user-dropdown %>
                             </ul>
