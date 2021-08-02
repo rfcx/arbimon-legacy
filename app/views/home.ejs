@@ -38,7 +38,7 @@
                                     <% } %>
                                 </div>
                             </div>
-                            <div class="col-xs-5 col-md-5" style="margin-top: 55px" ng-class="{active: }">
+                            <div class="col-xs-5 col-md-5" style="margin-top: 55px">
                                 <div class="row-flex" style="justify-content: space-between; flex-wrap: wrap;" ng-if="list_summary_data && list_summary_data.length && summary_data">
                                     <div class="mb-3 text-center" style="width: 50%;" ng-repeat="data in list_summary_data">
                                         <h1 ng-if="data.title" ng-init="data.index=$index" style="margin-bottom: 0;">
@@ -68,7 +68,7 @@
                                 <ul class="projects-list highlighted-list">
                                     <li class="ng-cloak projects-list-item highlighted-item"
                                         ng-repeat="project in controller.highlightedProjects"
-                                        style="background: url({{project.image}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project)">
+                                        style="background: url({{project.image}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project) | trackEvent:'Home':'select project'">
                                         <div class="text-left">
                                             <div class="title" style="font-size: 20px;" title="{{ project.name }}">
                                                 {{ project.name }}
@@ -100,13 +100,13 @@
                         <div class="col-md-12" style="text-align: center; padding: 0; min-height: 600px;">
                             <ul class="projects-list">
                                 <li ng-if="!controller.isAnonymousGuest && !controller.isLoading && !isExplorePage" class="projects-list-item projects-list-item-add"
-                                    ng-click="controller.createProject() | trackEvent:'Home':'createProject'">
+                                    ng-click="controller.createProject() | trackEvent:'Home':'create a new project'">
                                     <div class="title">+</div>
                                     <div>New Project</div>
                                 </li>
                                 <li class="ng-cloak projects-list-item" ng-class="{'disabled': !project.is_enabled }"
                                     ng-repeat="project in results = ( controller.projects | orderBy: controller.projectSort.sort )"
-                                    style="background: url({{project.mapUrl}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project)">
+                                    style="background: url({{project.mapUrl}}) no-repeat top center; background-size: cover;" ng-click="controller.selectProject(project) | trackEvent:'Home':'select project'">
                                     <div class="text-left">
                                         <div class="title" title="{{ project.name }}">
                                             {{ project.name }}

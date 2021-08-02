@@ -12,6 +12,26 @@ var paypal = require('paypal-rest-sdk');
 var uuid = require('node-uuid');
 var config = require('../../../config');
 const rfcxConfig = config('rfcx');
+const dayInMs = 24 * 60 * 60 * 1000;
+
+let summaryData = {
+    projects: {
+        count: 0,
+        time: (new Date()).valueOf()
+    },
+    species: {
+        count: 0,
+        time: (new Date()).valueOf()
+    },
+    rec: {
+        count: 0,
+        time: (new Date()).valueOf()
+    },
+    jobs: {
+        count: 0,
+        time: (new Date()).valueOf()
+    }
+};
 
 var model = require('../../../model');
 
@@ -99,37 +119,58 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
 router.get('/projects-count', function(req, res, next) {
     res.type('json');
 
-    model.projects.countAllProjects(function(err, results) {
-        if(err) return next(err);
-        res.json(results[0].count);
-    });
+    if (summaryData.projects.count === 0 || ((new Date()).valueOf() - summaryData.projects.time > dayInMs)) {
+        model.projects.countAllProjects(function(err, results) {
+            if(err) return next(err);
+            summaryData.projects.count = results[0].count;
+            res.json(results[0].count);
+        });
+    }
+    else {
+        return res.json(summaryData.projects.count);
+    }
 });
 
 router.get('/jobs-count', function(req, res, next) {
     res.type('json');
-
-    model.jobs.countAllCompletedJobs(function(err, results) {
-        if(err) return next(err);
-        res.json(results[0].count);
-    });
+    if (summaryData.jobs.count === 0 || ((new Date()).valueOf() - summaryData.jobs.time > dayInMs)) {
+        model.jobs.countAllCompletedJobs(function(err, results) {
+            if(err) return next(err);
+            summaryData.jobs.count = results[0].count;
+            res.json(results[0].count);
+        });
+    }
+    else {
+        return res.json(summaryData.jobs.count);
+    }
 });
 
 router.get('/recordings-species-count', function(req, res, next) {
     res.type('json');
-
-    model.recordings.countAllSpecies(function(err, results) {
-        if(err) return next(err);
-        res.json(results[0].count);
-    });
+    if (summaryData.species.count === 0 || ((new Date()).valueOf() - summaryData.species.time > dayInMs)) {
+        model.recordings.countAllSpecies(function(err, results) {
+            if(err) return next(err);
+            summaryData.species.count = results[0].count;
+            res.json(results[0].count);
+        });
+    }
+    else {
+        return res.json(summaryData.species.count);
+    }
 });
 
 router.get('/recordings-count', function(req, res, next) {
     res.type('json');
-
-    model.recordings.countAllRecordings(function(err, results) {
-        if(err) return next(err);
-        res.json(results[0].count);
-    });
+    if (summaryData.rec.count === 0 || ((new Date()).valueOf() - summaryData.rec.time > dayInMs)) {
+        model.recordings.countAllRecordings(function(err, results) {
+            if(err) return next(err);
+            summaryData.rec.count = results[0].count;
+            res.json(results[0].count);
+        });
+    }
+    else {
+        return res.json(summaryData.rec.count);
+    }
 });
 
 router.post('/:projectUrl/info/update', function(req, res, next) {
