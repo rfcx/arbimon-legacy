@@ -1616,25 +1616,18 @@ img.outlined {
   }
 }
 
-.search-input-mobile > .dropdown-menu,
-.search-input > .dropdown-menu {
-  max-height: 275px;
-  overflow: scroll;
-  z-index: 10000;
-  > li > a {
-    text-overflow: ellipsis;
-    overflow: hidden;
-    cursor: pointer;
+search-bar {
+  .dropdown-menu {
+    > li > a {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    max-width: 300px;
+    max-height: 275px;
+    overflow: scroll;
+    z-index: 10000;
   }
-}
-
-.search-input-mobile > .dropdown-menu {
-  > li > a {
-    text-overflow: ellipsis;
-    overflow: hidden;
-    cursor: pointer;
-  }
-  max-width: 300px;
 }
 
 .search-input-mobile {
@@ -1768,7 +1761,7 @@ img.outlined {
   .navbar-brand-center {
     position: absolute;
     left: 50%;
-    margin-left: -30px !important;
+    margin-left: -70px !important;
     display: block;
   }
 

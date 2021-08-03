@@ -17,8 +17,7 @@
                 Sign In
             </a>
             <% } else { %>
-            <div ng-click="toggleSearch = !toggleSearch;"
-                style="position: absolute; right: 60px; top: 13px; cursor: pointer;" class="collapse-menu-hide">
+            <div ng-click="toggleSearch = !toggleSearch;" class="search-nav-mobile">
                 <i class="fa fa-search" style="font-size: 20px; position: relative;"></i>
             </div>
             <button ng-init="rightCollapsedMenu = true" ng-click="rightCollapsedMenu = !rightCollapsedMenu; leftCollapsedMenu = true" type="button"
@@ -28,7 +27,7 @@
         </div>
         <div ng-show="toggleSearch" class="navbar-collapse search-input-mobile"
             style="padding: 10px 15px; position: relative;" ng-controller="HomeCtrl as controller">
-            <% include nav-search %>
+            <search-bar></search-bar>
         </div>
         <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
             <ul class="nav navbar-nav navbar-left">
@@ -42,7 +41,7 @@
             <ul class="nav navbar-nav navbar-right">
                 <% if (user && !user.isAnonymousGuest) { %>
                     <li style="padding: 11px 15px 9px; position: relative;" class="search-input">
-                        <% include nav-search %>
+                        <search-bar></search-bar>
                     </li>
                 <% } %>
                 <hr class="navbar-divider-collapse">

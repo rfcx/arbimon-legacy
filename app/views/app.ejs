@@ -38,9 +38,8 @@
                         </button>
                         <% } %>
                     </div>
-                    <div ng-show="toggleSearch" class="navbar-collapse search-input-mobile"
-                        style="padding: 10px 15px; position: relative;">
-                        <% include fragments/nav-search %>
+                    <div ng-show="toggleSearch" class="navbar-collapse search-input-mobile" style="padding: 10px 15px; position: relative;">
+                        <search-bar></search-bar>
                     </div>
                     <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
                         <ul class="nav navbar-nav navbar-left hide-tooltip-lg">
@@ -109,7 +108,7 @@
                         <ul class="nav navbar-nav navbar-right">
                             <% if (user && !user.isAnonymousGuest) { %>
                                 <li style="position: relative;" class="search-input">
-                                    <% include fragments/nav-search %>
+                                    <search-bar></search-bar>
                                 </li>
                             <% } %>
                             <hr class="navbar-divider-collapse">

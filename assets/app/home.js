@@ -10,6 +10,7 @@ angular.module('a2.home', [
     'ui.router',
     'a2.srv.local-storage',
     'a2.filter.time-from-now',
+    'a2.directive.search-bar'
 ])
 .config(function(AngularyticsProvider, $locationProvider) {
     AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
@@ -43,34 +44,6 @@ angular.module('a2.home', [
             // meh..
         }
     }
-
-    $scope.q = '';
-
-    $scope.findProject = function() {
-        if (!$scope.q || $scope.q.trim() === '') return;
-        if ($scope.q && $scope.q.length < 2) return;
-        var config = {
-            params: {
-                allAccessibleProjects: true
-            }
-        };
-        if ($scope.q !== '') {
-            config.params.q = $scope.q;
-        }
-        $scope.projectsLoading = true;
-        return $http.get('/api/user/projectlist', config).then(function(result) {
-            $scope.projectsLoading = false;
-            return result.data;
-        })
-
-    };
-
-    $scope.selectProject = function() {
-        if (!$scope.q || $scope.q && !$scope.q.is_enabled) {
-            return;
-        }
-        $window.location.assign("/project/" + $scope.q.url + "/");
-    };
 
     this.loadProjectList = function() {
         const isFeatured = this.isAnonymousGuest || $scope.isExplorePage && !$scope.search;

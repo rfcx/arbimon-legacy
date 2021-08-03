@@ -8,7 +8,8 @@ var a2 = angular.module('a2.visualizer-app', [
     'a2.filters',
     'humane',
     'a2.googlemaps',
-    'a2.injected.data'
+    'a2.injected.data',
+    'a2.directive.search-bar'
 ])
 .run(function($rootScope, Angularytics, a2UserPermit, notify, $state) {
     $rootScope.Math = Math; // export math library to angular :-)
@@ -39,33 +40,5 @@ var a2 = angular.module('a2.visualizer-app', [
             return '/visualizer/' + Project.getUrl() + '/';
         }
     }
-    $scope.q = '';
 
-    $scope.findProject = function() {
-        if (!$scope.q || $scope.q.trim() === '') return;
-        if ($scope.q && $scope.q.length < 2) return;
-        var config = {
-            params: {
-                allAccessibleProjects: true
-            }
-        };
-        if ($scope.q !== '') {
-            config.params.q = $scope.q;
-        }
-        $scope.projects = [];
-        $scope.isLoading = true;
-        return $http.get('/api/user/projectlist', config).then(function(result) {
-            $scope.isLoading = false;
-            $scope.projects = result.data;
-            return result.data;
-        })
-
-    };
-
-    $scope.selectProject = function() {
-        if (!$scope.q || $scope.q && !$scope.q.is_enabled) {
-            return;
-        }
-        $window.location.assign('/project/' + $scope.q.url + '/');
-    };
 });
