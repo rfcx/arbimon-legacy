@@ -1,6 +1,12 @@
 # Arbimon Release Notes
 
-## v3.0.33 - July XX, 2021
+## v3.0.33-hotfix.0 - August 03, 2021
+
+Resolved issues:
+- Update "Present", "Not present" filters on Pattern Matching details page to request results for all sites
+- Fix pagination total count calculation for "Present", "Not present", "Score" filters
+
+## v3.0.33 - August 03, 2021
 
 New features:
 

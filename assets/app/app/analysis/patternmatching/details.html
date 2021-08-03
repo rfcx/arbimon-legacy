@@ -131,6 +131,9 @@
         </div>
         <div class="panel-body" ng-class="{ 'panel-body_combined': controller.splitAllSites }">
             <div ng-if="controller.loading.rois" class="loading">Loading <loader></loader></div>
+            <div class="row panel-body" style="text-align: center;" ng-if="!controller.loading.rois && !controller.rois.length && !controller.shouldGetPerSite()">
+                No results found.
+            </div>
             <span class="pattern-matching-site" ng-repeat="site in controller.rois" ng-class="{ 'pattern-matching-site_block': !controller.splitAllSites }">
                 <div ng-if="!controller.splitAllSites && site.name" class="h3" id="site-{{site.id}}"><i class="fa fa-map-marker"></i> {{site.name}}</div>
 
@@ -166,13 +169,13 @@
                 </span>
             </span>
         </div>
-        <div class="row panel-body" style="text-align: center;" ng-if="!controller.loading.rois && !controller.rois.length && controller.isTopRoisResults()">
+        <div class="row panel-body" style="text-align: center;" ng-if="!controller.loading.rois && !controller.rois.length && controller.shouldGetPerSite()">
             No results found per selected site.
         </div>
-        <div class="row" ng-if="controller.patternMatching && controller.patternMatching.matches && !controller.shouldGetPerSite()">
+        <div class="row" ng-if="controller.patternMatching && controller.paginationTotal && controller.paginationTotal > 100 && !controller.shouldGetPerSite()">
             <div class="col-sm-12 text-center">
                 <pagination
-                    total-items="controller.patternMatching.matches"
+                    total-items="controller.paginationTotal"
                     ng-model="controller.selected.page"
                     ng-change="controller.setPage(controller.selected.page, true)"
                     class="pagination-sm"

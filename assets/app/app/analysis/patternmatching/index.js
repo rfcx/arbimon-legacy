@@ -153,7 +153,8 @@ angular.module('a2.analysis.patternmatching', [
         this.sitesListBatchSize = 20;
         this.sitesBatches = [];
         this.total = {rois:0, pages:0};
-        this.loading = {details: false, rois:false};
+        this.paginationTotal = 0;
+        this.loading = {details: false, rois: true};
         this.validation = this.lists.validation[2];
         this.thumbnailClass = this.lists.thumbnails[0].value;
         this.search = this.lists.search[6];
@@ -253,10 +254,27 @@ angular.module('a2.analysis.patternmatching', [
         this.sitesBatches = batches
     },
 
+    recalculateTotalItems: function () {
+        var search = this.search && this.search.value ? this.search.value : undefined;
+        switch (search) {
+            case 'present':
+                this.paginationTotal = this.patternMatching.present;
+                break;
+            case 'not_present':
+                this.paginationTotal = this.patternMatching.absent;
+                break;
+            case 'by_score':
+                this.paginationTotal = this.patternMatching.matches;
+                break;
+            default:
+                this.paginationTotal = 0
+        }
+    },
+
     recalculateSiteListBatch: function () {
         var search = this.search && this.search.value ? this.search.value : undefined;
         var shouldRecalculate = false
-        if (['all', 'present', 'not_present', 'unvalidated', 'top_200_per_site', 'by_score_per_site'].includes(search)) {
+        if (['all', 'unvalidated', 'top_200_per_site', 'by_score_per_site'].includes(search)) {
             if (this.sitesListBatchSize !== 1) {
                 shouldRecalculate = true
             }
@@ -283,7 +301,7 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     shouldGetPerSite: function() {
-        return this.search && ['all', 'present', 'not_present', 'unvalidated', 'top_200_per_site', 'best_per_site', 'best_per_site_day', 'by_score_per_site'].includes(this.search.value);
+        return this.search && ['all', 'unvalidated', 'top_200_per_site', 'best_per_site', 'best_per_site_day', 'by_score_per_site'].includes(this.search.value);
     },
 
     getSiteBatchIndexBySiteId: function (siteId) {
@@ -332,8 +350,6 @@ angular.module('a2.analysis.patternmatching', [
                 offset = 0
                 break;
             case 'all':
-            case 'present':
-            case 'not_present':
             case 'unvalidated':
             case 'by_score_per_site':
                 limit = 100000000;
@@ -351,7 +367,6 @@ angular.module('a2.analysis.patternmatching', [
     },
 
     parseRoisResult: function (rois) {
-        console.log('rois', rois)
         var search = this.search && this.search.value ? this.search.value : undefined
         this.splitAllSites = search === 'by_score';
         if (this.splitAllSites) {
@@ -393,7 +408,8 @@ angular.module('a2.analysis.patternmatching', [
             .then(function (rois) {
                 this.loading.rois = false;
                 this.rois = this.parseRoisResult(rois);
-                this.selected.roi = Math.min()
+                this.selected.roi = Math.min();
+                this.recalculateTotalItems();
             }.bind(this))
             .catch((function(err){
                 this.loading.rois = false;
