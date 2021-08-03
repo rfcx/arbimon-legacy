@@ -6,7 +6,7 @@ angular.module('a2.visualizer.layers.recordings', [
     /**
      * @ngdoc object
      * @name a2.visualizer.layers.recordings.object:recordings-layer
-     * @description Recordings layer. 
+     * @description Recordings layer.
      * adds the recordings-layer layer_type to layer_types. This layer uses
      * a2.visualizer.layers.recordings.controller:a2VisualizerRecordingLayerController as controller,
      * and requires a visobject of type recording to be selected.
@@ -24,7 +24,7 @@ angular.module('a2.visualizer.layers.recordings', [
         hide_visibility: true
     });
 })
-.controller('a2VisualizerRecordingLayerController', function($scope, $modal, $location){
+.controller('a2VisualizerRecordingLayerController', function($scope, $modal, $location, $window){
     this.setGain = function(gain){
         $scope.audio_player.setGain(gain).then(function(){
             var gain=$scope.audio_player.gain;
@@ -32,6 +32,10 @@ angular.module('a2.visualizer.layers.recordings', [
                 gain: gain >= 1 ? gain : undefined
             });
         });
+    };
+    this.explorerUrl = function() {
+        if (!$scope.visobject) return null;
+        return $scope.visobject.explorerUrl;
     };
     this.openFreqFilterModal = function(){
         if(!$scope.visobject){
@@ -60,10 +64,10 @@ angular.module('a2.visualizer.layers.recordings', [
 .controller('a2VisualizerFrequencyFilterModalController', function($scope, $modalInstance, data){
     $scope.recording = data.recording;
     $scope.max_freq = data.recording.sample_rate / 2;
-    
+
     $scope.has_previous_filter = true; //!!data.filter;
     $scope.filter = data.filter ? angular.copy(data.filter) : {min:0, max:$scope.max_freq};
-    
+
     $scope.remove_filter = function(){
         $modalInstance.close();
     };

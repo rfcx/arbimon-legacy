@@ -24,7 +24,7 @@ var audioTools   = require('../utils/audiotool');
 var sqlutil      = require('../utils/sqlutil');
 var dbpool       = require('../utils/dbpool');
 var tyler        = require('../utils/tyler.js');
-
+const rfcxConfig = config('rfcx');
 const moment = require('moment');
 const Projects = require('./projects');
 
@@ -296,6 +296,7 @@ var Recordings = {
                         "SUBSTRING_INDEX(R.uri,'/',-1) as file, R.meta, \n"+
                         "S.name as site, \n"+
                         "S.timezone, \n"+
+                        "S.external_id, \n"+
                         "R.uri, \n"+
                         "R.datetime, \n"+
                         "R.datetime_utc, \n"+
@@ -335,7 +336,7 @@ var Recordings = {
                 constraints.push('R.`recording_id` = ' + dbpool.escape(Number(options.recording_id)));
             }
 
-            if(!urlquery.id) {
+            if(!urlquery.id && !urlquery.site) {
                 steps.push(
                     dbpool.query("(\n" +
                 "   SELECT site_id FROM sites WHERE project_id = ?\n" +
@@ -352,15 +353,10 @@ var Recordings = {
         }).then(function(){
             return Q.all(steps);
         }).then(function(){
+            const sql = `SELECT ${group_by.project_part} ${projection} FROM recordings R JOIN sites S ON S.site_id = R.site_id
+                WHERE (${constraints.join(") AND (")}) ${group_by.clause} ${order_clause} ${limit_clause}`;
             return Q.nfcall(queryHandler, {
-                sql:
-                    "SELECT " + group_by.project_part + projection + " \n" +
-                    "FROM recordings R \n" +
-                    "JOIN sites S ON S.site_id = R.site_id \n" +
-                    "WHERE (" + constraints.join(") AND (") + ")" +
-                    group_by.clause +
-                    order_clause +
-                    limit_clause,
+                sql,
                 typeCast: sqlutil.parseUtcDatetime,
             }, data);
         }).then(function(query_results){
@@ -381,6 +377,7 @@ var Recordings = {
                         d.legacy = Recordings.isLegacy(d);
                         d.meta = d.meta ? Recordings.__parse_meta_data(d.meta) : null;
                         d.file = d.meta && d.meta.filename? d.meta.filename : d.file;
+                        d.explorerUrl = d.legacy ? null : `${rfcxConfig.explorerBaseUrl}/explorer/${d.external_id}?t=${moment(d.datetime_utc).format('YYYYMMDDTHHmmssSSS')}Z`;
                     })
                     return data;
                 }
@@ -988,7 +985,7 @@ var Recordings = {
         if(!recording.site_id || !recording.filename)
             callback(new Error("Missing fields"));
 
-        var q = "SELECT count(*) as count \n"+
+        var q = "SELECT count(recording_id) as count \n"+
                 "FROM recordings \n"+
                 "WHERE site_id = %s \n"+
                 "AND uri LIKE %s";
@@ -1139,8 +1136,10 @@ var Recordings = {
                 return site.site_id;
             })
             if (siteIds.length) {
-                constraints.push("r.site_id IN (?)");
-                data.push(siteIds);
+                if (!parameters.sites) {
+                    constraints.push("r.site_id IN (?)");
+                    data.push(siteIds);
+                }
             } else {
                 constraints.push('1 = 2')
             }
@@ -1673,7 +1672,7 @@ var Recordings = {
         return this.buildSearchQuery(filters).then(function(builder){
             builder.addProjection.apply(builder, [
                 's.site_id', 's.name as site', 'pis.site_id IS NOT NULL as imported',
-                'COUNT(*) as count'
+                'COUNT(recording_id) as count'
             ]);
             delete builder.orderBy;
             builder.setGroupBy('s.site_id');

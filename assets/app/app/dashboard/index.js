@@ -16,7 +16,7 @@ angular.module('a2.app.dashboard',[
     });
 })
 .controller('SummaryCtrl', function($scope, Project, a2Templates, a2GoogleMapsLoader, a2TrainingSets, $timeout, notify, $window, $compile, $templateFetch, a2PatternMatching) {
-    $scope.loading = 6;
+    $scope.loading = 5;
 
     var done = function() {
         if($scope.loading > 0) --$scope.loading;
@@ -25,67 +25,14 @@ angular.module('a2.app.dashboard',[
     Project.getInfo(function(info){
         $scope.project = info;
         $scope.isSpeciesLoading = true
-        
+
         Project.getProjectTotalSpecies(info.project_id, function(data) {
             $scope.speciesQty = data || 0;
             $scope.isSpeciesLoading = false
         });
-        
+
         done();
     });
-
-    Project.getClasses(function(species){
-        $scope.species = species
-        done()
-    //     $scope.validatedSpecies = -1
-
-    //     const promises = species.map(s => {
-    //         return new Promise((resolve) =>
-    //             Project.validationBySpeciesSong(s.species, s.songtype, data => {
-    //                 const idx = $scope.species.findIndex(sp => sp.species === s.species && sp.songtype === s.songtype)
-    //                 if (idx > -1) {
-    //                     $scope.species[idx].validate = data.total > 0
-    //                 }
-    //                 resolve()
-    //             })
-    //         )
-    //     })
-    //     Promise.all(promises).then(() => {
-    //         $scope.$apply(() => {
-    //             $scope.validatedSpecies = $scope.species.reduce((acc, val) => acc + (val.validate ? 1 : 0),0)
-    //         });
-    //     }).catch((e) => {
-    //         console.log("getClasses error", e)
-    //     })
-    });
-
-    // Project.getModels(function(err, models){
-    //     if(err) {
-    //         notify.serverError();
-    //     }
-
-    //     $scope.modelsQty = models.length;
-    //     done();
-    // });
-
-    // Project.getClassi(function(err, classi){
-    //     if(err) {
-    //         notify.serverError();
-    //     }
-
-    //     $scope.classiQty = classi.length;
-    //     done();
-    // });
-
-    // Project.validationsCount(function(count){
-    //     $scope.valsQty = count;
-    //     done();
-    // });
-
-    // a2TrainingSets.getList(function(trainingSets){
-    //     $scope.trainingSetsQty = trainingSets.length;
-    //     done();
-    // });
 
     Project.getSites(function(sites) {
         $scope.sites = sites;
@@ -121,11 +68,6 @@ angular.module('a2.app.dashboard',[
             });
         }, 100);
 
-    });
-
-    Project.getUsage().success(function(data) {
-        $scope.recMins = data.min_usage;
-        done();
     });
 
     Project.getRecTotalQty(function(data) {

@@ -1,20 +1,31 @@
 # Arbimon Release Notes
 
-- CE-1136 A Summary stats data is added to the homepage
+- CE-1136 A Summary stats data is added to the Home page
 
-## v3.0.33 - July XX, 2021
+## v3.0.33-hotfix.0 - August 03, 2021
+
+Resolved issues:
+- Update "Present", "Not present" filters on Pattern Matching details page to request results for all sites
+- Fix pagination total count calculation for "Present", "Not present", "Score" filters
+
+## v3.0.33 - August 03, 2021
+
+New features:
+
+- CE-1109 User can open Explorer from Arbimon Visualizer (only recordings uploaded with Uploader App)
+- CE-1110 User can scale spectrogram in Visualizer to standard frequencies
 
 Performance improvements:
 
 - CE-988 The datime_local column is removed
 - CE-1143 Update "Unvalidated", "All", "Present", "Not present", "200 top scores per site", "Score per site" filters on Pattern Matching details page to return results per site
 - CE-1158 update PM filters logic so "Best per Site" and "Best per Site, Day" return results by 20 sites batches
+- CE-1067 Speed up recordings queries which search by selected sites on Recordings and Visualizer pages
+- CE-1070 Speed up recordings total count endpoint
+- CE-1063 Delete project stats bar from Summary page
+- CE-1066 Add database index for soundscape composition classes annotations table
 
 ## v3.0.32 - June 26, 2021
-
-New feature:
-
-- CE-1110 User can scale spectrogram in Visualizer to standard frequencies
 
 Performance improvements:
 
