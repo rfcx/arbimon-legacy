@@ -483,6 +483,11 @@ var Jobs = {
         return null;
     },
 
+    countAllCompletedJobs: async function() {
+        let queryResult = await dbpool.query("SELECT count(*) AS count FROM jobs WHERE state='completed'");
+        return queryResult;
+    },
+
     /** Computes a summary of the current jobs status, by job type.
     * @param {Function} callback called back current jobs status, by job type.
     */

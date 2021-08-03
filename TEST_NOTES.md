@@ -1,6 +1,11 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+- CE-1136 A Summary stats data is added to the homepage
+  - The spinner is showing while the data is uploading.
+  - The summary stats area the same as in the design doc here:  https://docs.google.com/presentation/d/1QT0oqrvQIqYLuB9TvBwm9nVhnHtIuefgx2N42X0rxiI/edit#slide=id.p
+  - Supports the mobile styles
+
 ## v3.0.33
 
 - CE-1143 Update "Unvalidated", "All", "Present", "Not present", "200 top scores per site", "Score per site" filters on Pattern Matching details page to return results per site

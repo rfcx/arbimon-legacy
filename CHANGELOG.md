@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-1136 A Summary stats data is added to the Home page
+
 ## v3.0.33-hotfix.0 - August 03, 2021
 
 Resolved issues:

@@ -1656,6 +1656,16 @@ var Recordings = {
         queryHandler(q, callback);
     },
 
+    countAllSpecies: async function() {
+        let queryResult = await dbpool.query('SELECT count(*) AS count FROM recording_validations WHERE present=1');
+        return queryResult;
+    },
+
+    countAllRecordings: async function() {
+        let queryResult = await dbpool.query('SELECT count(*) AS count FROM recordings');
+        return queryResult;
+    },
+
     /* fetch count of project recordings.
     */
     countProjectRecordings: function(filters){
