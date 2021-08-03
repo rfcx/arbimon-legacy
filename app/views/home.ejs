@@ -38,13 +38,13 @@
                                     <% } %>
                                 </div>
                             </div>
-                            <div class="summary-stats" style="margin-top: 55px">
+                            <div class="summary-stats" style="margin-top: 45px">
                                 <div class="row-flex flex-space-between" style="flex-wrap: wrap;" ng-if="list_summary_data && list_summary_data.length && summary_data">
                                     <div class="mb-3 text-center" style="width: 50%;" ng-repeat="data in list_summary_data">
-                                        <h1 ng-if="data.title" ng-init="data.index=$index" style="margin-bottom: 0;">
+                                        <p ng-if="data.title" ng-init="data.index=$index" style="font-size: 36px; margin: 10px 0">
                                             <i ng-if="summaryDataLoading" class="fa fa-spinner fa-spin" style="font-size: 36px"></i>
                                             <span ng-if="!summaryDataLoading">{{ summary_data[data.index] | number }}</span>
-                                        </h1>
+                                        </p>
                                         <h3 ng-if="data.title" style="line-height: 1.6; margin-top: 0; margin-bottom: 0;">
                                             {{ data.title }}
                                         </h3>

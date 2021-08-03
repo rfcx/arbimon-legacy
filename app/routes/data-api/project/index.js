@@ -17,19 +17,19 @@ const dayInMs = 24 * 60 * 60 * 1000;
 let summaryData = {
     projects: {
         count: 0,
-        time: (new Date()).valueOf()
+        time: Date.now().valueOf()
     },
     species: {
         count: 0,
-        time: (new Date()).valueOf()
+        time: Date.now().valueOf()
     },
     rec: {
         count: 0,
-        time: (new Date()).valueOf()
+        time: Date.now().valueOf()
     },
     jobs: {
         count: 0,
-        time: (new Date()).valueOf()
+        time: Date.now().valueOf()
     }
 };
 
@@ -119,7 +119,7 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
 router.get('/projects-count', function(req, res, next) {
     res.type('json');
 
-    if (summaryData.projects.count === 0 || ((new Date()).valueOf() - summaryData.projects.time > dayInMs)) {
+    if (summaryData.projects.count === 0 || (Date.now().valueOf() - summaryData.projects.time > dayInMs)) {
         model.projects.countAllProjects(function(err, results) {
             if(err) return next(err);
             summaryData.projects.count = results[0].count;
@@ -133,12 +133,11 @@ router.get('/projects-count', function(req, res, next) {
 
 router.get('/jobs-count', function(req, res, next) {
     res.type('json');
-    if (summaryData.jobs.count === 0 || ((new Date()).valueOf() - summaryData.jobs.time > dayInMs)) {
-        model.jobs.countAllCompletedJobs(function(err, results) {
-            if(err) return next(err);
+    if (summaryData.jobs.count === 0 || (Date.now().valueOf() - summaryData.jobs.time > dayInMs)) {
+        model.jobs.countAllCompletedJobs().then((results) => {
             summaryData.jobs.count = results[0].count;
             res.json(results[0].count);
-        });
+        }).catch(next);
     }
     else {
         return res.json(summaryData.jobs.count);
@@ -147,12 +146,11 @@ router.get('/jobs-count', function(req, res, next) {
 
 router.get('/recordings-species-count', function(req, res, next) {
     res.type('json');
-    if (summaryData.species.count === 0 || ((new Date()).valueOf() - summaryData.species.time > dayInMs)) {
-        model.recordings.countAllSpecies(function(err, results) {
-            if(err) return next(err);
+    if (summaryData.species.count === 0 || (Date.now().valueOf() - summaryData.species.time > dayInMs)) {
+        model.recordings.countAllSpecies().then((results) => {
             summaryData.species.count = results[0].count;
             res.json(results[0].count);
-        });
+        }).catch(next);
     }
     else {
         return res.json(summaryData.species.count);
@@ -161,12 +159,11 @@ router.get('/recordings-species-count', function(req, res, next) {
 
 router.get('/recordings-count', function(req, res, next) {
     res.type('json');
-    if (summaryData.rec.count === 0 || ((new Date()).valueOf() - summaryData.rec.time > dayInMs)) {
-        model.recordings.countAllRecordings(function(err, results) {
-            if(err) return next(err);
+    if (summaryData.rec.count === 0 || (Date.now().valueOf() - summaryData.rec.time > dayInMs)) {
+        model.recordings.countAllRecordings().then((results) => {
             summaryData.rec.count = results[0].count;
             res.json(results[0].count);
-        });
+        }).catch(next);
     }
     else {
         return res.json(summaryData.rec.count);
