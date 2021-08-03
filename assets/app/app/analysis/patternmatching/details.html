@@ -101,7 +101,7 @@
                             <ui-select class="btn-group-item" ng-model="controller.selected.siteBookmark" theme="bootstrap" style="display:inline-block; width:4em;"
                                 ng-change="controller.setSiteBookmark($select.selected)">
                                 <ui-select-match class="a2-uism-btn-icon icon-site"> </ui-select-match>
-                                <ui-select-choices repeat="$item in controller.siteIndex | filter:$select.search">
+                                <ui-select-choices repeat="$item in controller.sitesList | filter:$select.search">
                                     <span class="text-wrap"><i class="fa fa-map-marker"></i> {{$item.site}}</span>
                                 </ui-select-choices>
                             </ui-select>
@@ -169,7 +169,7 @@
         <div class="row panel-body" style="text-align: center;" ng-if="!controller.loading.rois && !controller.rois.length && controller.isTopRoisResults()">
             No results found per selected site.
         </div>
-        <div class="row" ng-if="controller.patternMatching && controller.patternMatching.matches > 100 && this.search.value !== 'best_per_site' && this.search.value !== 'best_per_site_day' && !controller.isTopRoisResults()">
+        <div class="row" ng-if="controller.patternMatching && controller.patternMatching.matches && !controller.shouldGetPerSite()">
             <div class="col-sm-12 text-center">
                 <pagination
                     total-items="controller.patternMatching.matches"
@@ -184,10 +184,10 @@
                 </pagination>
             </div>
         </div>
-        <div class="row" ng-if="controller.sitesTotal && controller.isTopRoisResults()">
+        <div class="row" ng-if="controller.sitesList && controller.shouldGetPerSite()">
             <div class="col-sm-12 text-center">
                 <pagination
-                    total-items="controller.sitesTotal"
+                    total-items="controller.sitesList.length"
                     ng-model="controller.selected.page"
                     ng-change="controller.setPage(controller.selected.page, true)"
                     class="pagination-sm"
@@ -195,7 +195,7 @@
                     max-size="5"
                     rotate="false"
                     ng-disabled="controller.loading.rois"
-                    items-per-page="200">
+                    items-per-page="controller.sitesListBatchSize">
                 </pagination>
             </div>
         </div>

@@ -1,5 +1,11 @@
 # Arbimon Deployment Notes
 
+## v3.0.33
+
+- Add `explorerBaseUrl` in `config/rfcx.local.json` file
+- Update the "upload" lambda to not save datetime_local
+- Run sql migration 018-remove-datetime-local-column-from-recordings-table.sql
+
 ## v3.0.25
 
 - Run migration 014-projects-table-add-image-column.sql
