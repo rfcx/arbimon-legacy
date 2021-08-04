@@ -6,6 +6,12 @@ var path   = require('path');
 var model = require('../../../model');
 const stream = require('stream');
 const moment = require('moment');
+const dayInMs = 24 * 60 * 60 * 1000;
+
+let recordingsCashedData = {
+    counts: { },
+    species: { }
+};
 
 router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
     res.type('json');
@@ -55,18 +61,28 @@ router.get('/species-count', function(req, res, next) {
     var params = req.query;
     params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
 
-    model.recordings.countProjectSpecies(params, function(err, rows) {
-        if(err) return next(err);
-        var species = []
-        const result = Object.values(JSON.parse(JSON.stringify(rows)))
-        result.map(s => {
-            if(!species.includes(s.species)) {
-                species.push(s.species)
-            }
-        })
+    if (!recordingsCashedData.species[params.project_id] || recordingsCashedData.species[params.project_id] && (Date.now() - recordingsCashedData.species[params.project_id].time > dayInMs)) {
 
-        res.json({count: species.length});
-    });
+        model.recordings.countProjectSpecies(params, function(err, rows) {
+            if(err) return next(err);
+            var species = []
+            const result = Object.values(JSON.parse(JSON.stringify(rows)))
+            result.map(s => {
+                if(!species.includes(s.species)) {
+                    species.push(s.species)
+                }
+            })
+
+            recordingsCashedData.species[params.project_id] = {
+                count: species.length,
+                time: Date.now()
+            };
+            res.json({count: species.length});
+        });
+    }
+    else {
+        return res.json(recordingsCashedData.species[params.project_id].count);
+    }
 });
 
 router.get('/occupancy-models-export/:species?', function(req, res, next) {
@@ -270,11 +286,20 @@ processFiltersData = async function(req, res, next) {
 
 router.get('/count', function(req, res, next) {
     res.type('json');
-    model.projects.totalRecordings(req.project.project_id, function(err, count) {
-        if(err) return next(err);
 
-        res.json(count[0]);
-    });
+    if (!recordingsCashedData.counts[req.project.project_id] || recordingsCashedData.counts[req.project.project_id] && (Date.now() - recordingsCashedData.counts[req.project.project_id].time > dayInMs)) {
+        model.projects.totalRecordings(req.project.project_id, function(err, count) {
+            if(err) return next(err);
+            recordingsCashedData.counts[req.project.project_id] = {
+                count: count[0],
+                time: Date.now()
+            };
+            res.json(count[0]);
+        });
+    }
+    else {
+        return res.json(recordingsCashedData.counts[req.project.project_id].count);
+    }
 });
 
 router.get('/time-bounds', function(req, res, next) {

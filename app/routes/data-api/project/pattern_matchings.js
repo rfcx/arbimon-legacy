@@ -7,7 +7,11 @@ var router = express.Router();
 var model = require('../../../model');
 var pokeDaMonkey = require('../../../utils/monkey');
 var csv_stringify = require("csv-stringify");
+const dayInMs = 24 * 60 * 60 * 1000;
 
+let patternMatchingsCashedData = {
+    counts: { }
+};
 
 // global project.pattern_matching_enabled check
 router.use(function(req, res, next) {
@@ -64,10 +68,20 @@ router.get('/:patternMatching/details', function(req, res, next) {
 
 router.get('/count', function(req, res, next) {
     res.type('json');
-    model.patternMatchings.totalPatternMatchings(req.project.project_id, function(err, count) {
-        if(err) return next(err);
-        res.json(count[0]);
-    });
+
+    if (!patternMatchingsCashedData.counts[req.project.project_id] || patternMatchingsCashedData.counts[req.project.project_id] && (Date.now() - patternMatchingsCashedData.counts[req.project.project_id].time > dayInMs)) {
+        model.patternMatchings.totalPatternMatchings(req.project.project_id, function(err, count) {
+            if(err) return next(err);
+            patternMatchingsCashedData.counts[req.project.project_id] = {
+                count: count[0],
+                time: Date.now()
+            };
+            res.json(count[0]);
+        });
+    }
+    else {
+        return res.json(patternMatchingsCashedData.counts[req.project.project_id].count);
+    }
 });
 
 router.param('paging', function(req, res, next, paging){

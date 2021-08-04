@@ -1,6 +1,9 @@
 # Arbimon Release Notes
 
+## v3.0.34 - August XX, 2021
+
 - CE-1136 A Summary stats data is added to the Home page
+- CE-1105 The project list is updated on the Home page
 
 ## v3.0.33-hotfix.0 - August 03, 2021
 
