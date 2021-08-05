@@ -27,7 +27,7 @@
         </div>
         <div ng-show="toggleSearch" class="navbar-collapse search-input-mobile"
             style="padding: 10px 15px; position: relative;" ng-controller="HomeCtrl as controller">
-            <search-bar></search-bar>
+            <search-bar home-page="true"></search-bar>
         </div>
         <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
             <ul class="nav navbar-nav navbar-left">
@@ -41,7 +41,7 @@
             <ul class="nav navbar-nav navbar-right">
                 <% if (user && !user.isAnonymousGuest) { %>
                     <li style="padding: 11px 15px 9px; position: relative;" class="search-input">
-                        <search-bar></search-bar>
+                        <search-bar home-page="true"></search-bar>
                     </li>
                 <% } %>
                 <hr class="navbar-divider-collapse">

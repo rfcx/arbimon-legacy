@@ -97,12 +97,7 @@
     <% } %>
     <div id="body">
         <div ui-view="visualizer" ng-show="$state.includes('visualizer')"></div>
-    </div><script type="text/ng-template" id="customSearchTemplate.html">
-        <a>
-            <span tooltip="{{match.label}}" ng-bind-html="match.label | typeaheadHighlight:query" class="ng-binding"></span>
-            <br><span class="input-search-desc"> {{match.model.description}}</span>
-        </a>
-    </script>
+    </div>
 
 </body>
 </html>
