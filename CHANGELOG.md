@@ -8,6 +8,10 @@ New features:
 - CE-1136 A Summary stats data is added to the Home page
 - CE-1105 The project list is updated on the Home page
 
+Resolved issues:
+
+- CE-1197 Change wording when choosing filename format in the uploads page
+
 ## v3.0.33-hotfix.0 - August 03, 2021
 
 Resolved issues:
