@@ -60,7 +60,7 @@ router.get('/species-count', function(req, res, next) {
     res.type('json');
     var params = req.query;
     params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
-    if (req.query.check_cash && cachedData.species[params.project_id] && (Date.now() - cachedData.species[params.project_id].time < dayInMs)) {
+    if (req.query.cache && cachedData.species[params.project_id] && (Date.now() - cachedData.species[params.project_id].time < dayInMs)) {
         return res.json(cachedData.species[params.project_id].count);
     }
     else {
@@ -283,7 +283,7 @@ processFiltersData = async function(req, res, next) {
 router.get('/count', function(req, res, next) {
     res.type('json');
     let p = req.project.project_id;
-    if (req.query.check_cash && cachedData.counts[p] && (Date.now() - cachedData.counts[p].time < dayInMs)) {
+    if (req.query.cache && cachedData.counts[p] && (Date.now() - cachedData.counts[p].time < dayInMs)) {
         return res.json(cachedData.counts[p].count);
     }
     else {

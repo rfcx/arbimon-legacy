@@ -69,7 +69,7 @@ router.get('/:patternMatching/details', function(req, res, next) {
 router.get('/count', function(req, res, next) {
     res.type('json');
     let p = req.project.project_id;
-    if (req.query.check_cash && cachedData.counts[p] && (Date.now() - cachedData.counts[p].time < dayInMs)) {
+    if (req.query.cache && cachedData.counts[p] && (Date.now() - cachedData.counts[p].time < dayInMs)) {
         return res.json(cachedData.counts[p].count);
     }
     else {

@@ -126,15 +126,15 @@ angular.module('a2.home', [
                 this.highlightedProjects = data.filter(item => item.featured === 1);
                 this.highlightedProjects.forEach(project => {
                     project.isLoading = true;
-                    $http.get('/api/project/' + project.url + '/pattern-matchings/count', {params: {check_cash: true}}).success(function(data) {
+                    $http.get('/api/project/' + project.url + '/pattern-matchings/count', {params: {cache: true}}).success(function(data) {
                         project.patternMatchingsTotal = data.count || 0;
                         project.isLoading = false;
                     });
-                    $http.get('/api/project/' + project.url + '/recordings/count', {params: {check_cash: true}}).success(function(data) {
+                    $http.get('/api/project/' + project.url + '/recordings/count', {params: {cache: true}}).success(function(data) {
                         project.recCount = data.count;
                         project.isLoading = false;
                     })
-                    $http.get('/api/project/' + project.url + '/recordings/species-count', {params: {check_cash: true}}).success(function(data) {
+                    $http.get('/api/project/' + project.url + '/recordings/species-count', {params: {cache: true}}).success(function(data) {
                         project.speciesCount = data.count || 0;
                         project.isLoading = false;
                     })

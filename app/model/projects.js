@@ -937,8 +937,7 @@ var Projects = {
                 "FROM recordings AS r JOIN sites AS s ON s.site_id = r.site_id \n"+
                 "WHERE s.project_id = " + dbpool.escape(project_id);
 
-        let queryResult = await dbpool.query(q);
-        return queryResult;
+        return dbpool.query(q);
     },
 
     recordingsMinMaxDates: function (project_id, callback) {
