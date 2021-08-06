@@ -211,7 +211,7 @@ var PatternMatchings = {
         }).nodeify(callback);
     },
 
-    totalPatternMatchings: async function(project_id) {
+    totalPatternMatchings: function(project_id) {
         var q = "SELECT count(*) as count \n" +
                 "FROM pattern_matchings as PM \n"+
                 "JOIN jobs J ON PM.job_id = J.job_id \n"+

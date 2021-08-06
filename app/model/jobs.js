@@ -483,7 +483,7 @@ var Jobs = {
         return null;
     },
 
-    countAllCompletedJobs: async function() {
+    countAllCompletedJobs: function() {
         return dbpool.query("SELECT count(*) AS count FROM jobs WHERE state='completed'");
     },
 

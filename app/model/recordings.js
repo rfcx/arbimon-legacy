@@ -1649,18 +1649,18 @@ var Recordings = {
             })
     },
 
-    countProjectSpecies: async function(filters){
+    countProjectSpecies: function(filters){
         var q = "SELECT species_id as species \n" +
         "FROM recording_validations\n"+
         "WHERE project_id = " + dbpool.escape(filters.project_id) + " AND present = 1";
         return dbpool.query(q);
     },
 
-    countAllSpecies: async function() {
+    countAllSpecies: function() {
         return dbpool.query('SELECT count(*) AS count FROM recording_validations WHERE present=1');
     },
 
-    countAllRecordings: async function() {
+    countAllRecordings: function() {
         return dbpool.query('SELECT count(*) AS count FROM recordings');
     },
 
