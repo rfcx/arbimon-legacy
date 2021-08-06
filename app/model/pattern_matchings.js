@@ -216,8 +216,7 @@ var PatternMatchings = {
                 "FROM pattern_matchings as PM \n"+
                 "JOIN jobs J ON PM.job_id = J.job_id \n"+
                 "WHERE J.state = 'completed' AND PM.project_id = " + dbpool.escape(project_id);
-        let queryResult = await dbpool.query(q);
-        return queryResult;
+        return dbpool.query(q);
     },
 
     SEARCH_ROIS_SCHEMA : {

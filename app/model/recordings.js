@@ -1653,18 +1653,15 @@ var Recordings = {
         var q = "SELECT species_id as species \n" +
         "FROM recording_validations\n"+
         "WHERE project_id = " + dbpool.escape(filters.project_id) + " AND present = 1";
-        let queryResult = await dbpool.query(q);
-        return queryResult;
+        return dbpool.query(q);
     },
 
     countAllSpecies: async function() {
-        let queryResult = await dbpool.query('SELECT count(*) AS count FROM recording_validations WHERE present=1');
-        return queryResult;
+        return dbpool.query('SELECT count(*) AS count FROM recording_validations WHERE present=1');
     },
 
     countAllRecordings: async function() {
-        let queryResult = await dbpool.query('SELECT count(*) AS count FROM recordings');
-        return queryResult;
+        return dbpool.query('SELECT count(*) AS count FROM recordings');
     },
 
     /* fetch count of project recordings.

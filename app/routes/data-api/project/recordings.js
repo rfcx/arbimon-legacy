@@ -8,7 +8,7 @@ const stream = require('stream');
 const moment = require('moment');
 const dayInMs = 24 * 60 * 60 * 1000;
 
-let cashedData = {
+let cachedData = {
     counts: { },
     species: { }
 };
@@ -60,8 +60,8 @@ router.get('/species-count', function(req, res, next) {
     res.type('json');
     var params = req.query;
     params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
-    if (req.query.check_cash && cashedData.species[params.project_id] && (Date.now() - cashedData.species[params.project_id].time < dayInMs)) {
-        return res.json(cashedData.species[params.project_id].count);
+    if (req.query.check_cash && cachedData.species[params.project_id] && (Date.now() - cachedData.species[params.project_id].time < dayInMs)) {
+        return res.json(cachedData.species[params.project_id].count);
     }
     else {
         model.recordings.countProjectSpecies(params).then((rows) => {
@@ -72,7 +72,7 @@ router.get('/species-count', function(req, res, next) {
                     species.push(s.species)
                 }
             })
-            cashedData.species[params.project_id] = {
+            cachedData.species[params.project_id] = {
                 count: species.length,
                 time: Date.now()
             };
@@ -283,12 +283,12 @@ processFiltersData = async function(req, res, next) {
 router.get('/count', function(req, res, next) {
     res.type('json');
     let p = req.project.project_id;
-    if (req.query.check_cash && cashedData.counts[p] && (Date.now() - cashedData.counts[p].time < dayInMs)) {
-        return res.json(cashedData.counts[p].count);
+    if (req.query.check_cash && cachedData.counts[p] && (Date.now() - cachedData.counts[p].time < dayInMs)) {
+        return res.json(cachedData.counts[p].count);
     }
     else {
         model.projects.totalRecordings(p).then((count) => {
-            cashedData.counts[p] = {
+            cachedData.counts[p] = {
                 count: count[0],
                 time: Date.now()
             };

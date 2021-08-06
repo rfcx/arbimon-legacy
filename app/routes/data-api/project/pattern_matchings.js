@@ -9,7 +9,7 @@ var pokeDaMonkey = require('../../../utils/monkey');
 var csv_stringify = require("csv-stringify");
 const dayInMs = 24 * 60 * 60 * 1000;
 
-let cashedData = {
+let cachedData = {
     counts: { }
 };
 
@@ -69,12 +69,12 @@ router.get('/:patternMatching/details', function(req, res, next) {
 router.get('/count', function(req, res, next) {
     res.type('json');
     let p = req.project.project_id;
-    if (req.query.check_cash && cashedData.counts[p] && (Date.now() - cashedData.counts[p].time < dayInMs)) {
-        return res.json(cashedData.counts[p].count);
+    if (req.query.check_cash && cachedData.counts[p] && (Date.now() - cachedData.counts[p].time < dayInMs)) {
+        return res.json(cachedData.counts[p].count);
     }
     else {
         model.patternMatchings.totalPatternMatchings(p).then((count) => {
-            cashedData.counts[req.project.project_id] = {
+            cachedData.counts[req.project.project_id] = {
                 count: count[0],
                 time: Date.now()
             };
