@@ -7,6 +7,10 @@ New features:
 - CE-1101 A search bar is updated for projects across Arbimon
 - CE-1136 A Summary stats data is added to the Home page
 
+Resolved issues:
+
+- CE-1197 Change wording when choosing filename format in the uploads page
+
 ## v3.0.33-hotfix.0 - August 03, 2021
 
 Resolved issues:
