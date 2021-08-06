@@ -12,6 +12,11 @@ Test Notes are used to list what pages / components / features / user flows are 
   - The spinner is showing while the data is uploading.
   - The summary stats area the same as in the design doc here:  https://docs.google.com/presentation/d/1QT0oqrvQIqYLuB9TvBwm9nVhnHtIuefgx2N42X0rxiI/edit#slide=id.p
   - Supports the mobile styles
+- CE-1105 The project list is updated on the Home page
+  - Instead of having 3 top tiles, we will feature 9 total projects under Project showcase.
+  - The new 6 tiles should be the same format as the top 3.
+  - The other projects that were originally small tiles are removed from this page.
+  - Supports the mobile styles
 
 ## v3.0.33
 

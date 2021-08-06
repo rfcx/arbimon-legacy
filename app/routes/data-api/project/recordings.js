@@ -6,6 +6,12 @@ var path   = require('path');
 var model = require('../../../model');
 const stream = require('stream');
 const moment = require('moment');
+const dayInMs = 24 * 60 * 60 * 1000;
+
+let cachedData = {
+    counts: { },
+    species: { }
+};
 
 router.get('/exists/site/:siteid/file/:filename', function(req, res, next) {
     res.type('json');
@@ -54,19 +60,25 @@ router.get('/species-count', function(req, res, next) {
     res.type('json');
     var params = req.query;
     params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
-
-    model.recordings.countProjectSpecies(params, function(err, rows) {
-        if(err) return next(err);
-        var species = []
-        const result = Object.values(JSON.parse(JSON.stringify(rows)))
-        result.map(s => {
-            if(!species.includes(s.species)) {
-                species.push(s.species)
-            }
-        })
-
-        res.json({count: species.length});
-    });
+    if (req.query.cache && cachedData.species[params.project_id] && (Date.now() - cachedData.species[params.project_id].time < dayInMs)) {
+        return res.json(cachedData.species[params.project_id].count);
+    }
+    else {
+        model.recordings.countProjectSpecies(params).then((rows) => {
+            var species = []
+            const result = Object.values(JSON.parse(JSON.stringify(rows)))
+            result.map(s => {
+                if(!species.includes(s.species)) {
+                    species.push(s.species)
+                }
+            })
+            cachedData.species[params.project_id] = {
+                count: species.length,
+                time: Date.now()
+            };
+            res.json({count: species.length});
+        }).catch(next);
+    }
 });
 
 router.get('/occupancy-models-export/:species?', function(req, res, next) {
@@ -270,11 +282,19 @@ processFiltersData = async function(req, res, next) {
 
 router.get('/count', function(req, res, next) {
     res.type('json');
-    model.projects.totalRecordings(req.project.project_id, function(err, count) {
-        if(err) return next(err);
-
-        res.json(count[0]);
-    });
+    let p = req.project.project_id;
+    if (req.query.cache && cachedData.counts[p] && (Date.now() - cachedData.counts[p].time < dayInMs)) {
+        return res.json(cachedData.counts[p].count);
+    }
+    else {
+        model.projects.totalRecordings(p).then((count) => {
+            cachedData.counts[p] = {
+                count: count[0],
+                time: Date.now()
+            };
+            res.json(count[0]);
+        }).catch(next);
+    }
 });
 
 router.get('/time-bounds', function(req, res, next) {

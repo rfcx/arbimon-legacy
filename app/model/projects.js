@@ -932,11 +932,12 @@ var Projects = {
     },
 
     // this includes recordings processing
-    totalRecordings: function(project_id, callback) {
+    totalRecordings: function(project_id) {
         var q = "SELECT count(recording_id) as count \n" +
                 "FROM recordings AS r JOIN sites AS s ON s.site_id = r.site_id \n"+
                 "WHERE s.project_id = " + dbpool.escape(project_id);
-        queryHandler(q, callback);
+
+        return dbpool.query(q);
     },
 
     recordingsMinMaxDates: function (project_id, callback) {

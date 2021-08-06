@@ -53,18 +53,21 @@
                             </div>
                         </div>
                     <% } %>
-                    <div class="row mb-4">
-                        <div class="col-md-12 showcase-title">
+                    <div ng-if="controller.isLoading" class="row ng-cloak text-center" style="padding: 64px 0;" >
+                        <i class="fa fa-spinner fa-spin" style="font-size: 32px;"></i>
+                    </div>
+                    <div class="row mb-4" ng-if="!controller.isLoading">
+                        <div class="showcase-title">
                             <% if (state === 'projects') { %>
                                 <h3 style="margin-top: 20px;">My Projects</h3>
                             <% } else { %>
-                                <h3 style="margin-top: 50px;">Project Showcase</h3>
+                                <h3 ng-if="controller.highlightedProjects" style="margin-top: 50px;">Project Showcase</h3>
                             <% } %>
                         </div>
                     </div>
                     <%if (state === 'home' || (user && user.isAnonymousGuest)) { %>
-                        <div ng-if="controller.highlightedProjects.length && !controller.isLoading" class="row">
-                            <div class="col-md-12" style="text-align: center; padding: 0; min-height: 200px;">
+                        <div ng-if="controller.highlightedProjects && !controller.isLoading" class="row">
+                            <div ng-if="controller.highlightedProjects.length" style="text-align: center; padding: 0; min-height: 200px;">
                                 <ul class="projects-list highlighted-list">
                                     <li class="ng-cloak projects-list-item highlighted-item"
                                         ng-repeat="project in controller.highlightedProjects"
@@ -76,7 +79,7 @@
                                             <span class="line-clamp mb-2">{{ project.description }}</span>
                                             <div class="text-center" style="height: 20px;">
                                                 <i ng-show="project.isLoading" class="fa fa-spinner fa-spin" style="font-size: 18px; position: relative;"></i>
-                                                <div class="text-left" ng-show="!project.isLoading && project.recCount && project.patternMatchingsTotal">
+                                                <div class="text-left" ng-show="!project.isLoading">
                                                     <span class="a2-badge" style="background-color: rgb(110, 111, 126, 0.5); color: white; margin-left: 0;">{{ project.recCount | number }} recordings</span>
                                                     <span class="a2-badge" style="background-color: rgb(110, 111, 126, 0.5); color: white">{{ project.patternMatchingsTotal }} templates</span>
                                                     <span class="a2-badge" style="background-color: rgb(110, 111, 126, 0.5); color: white">{{ project.speciesCount }} species</span>
@@ -86,12 +89,12 @@
                                     </li>
                                 </ul>
                             </div>
+                            <div ng-if="!controller.highlightedProjects.length && !controller.isLoading">
+                                <h4>No results found</h3>
+                            </div>
                         </div>
                     <% } %>
-                    <div ng-if="controller.isLoading" class="row ng-cloak text-center" style="padding: 64px 0;" >
-                        <i class="fa fa-spinner fa-spin" style="font-size: 32px;"></i>
-                    </div>
-                    <div class="row">
+                    <div class="row" ng-if="!isExplorePage">
                         <div class="col-md-12" style="text-align: center; padding: 0; min-height: 600px;">
                             <ul class="projects-list">
                                 <li ng-if="!controller.isAnonymousGuest && !controller.isLoading && !isExplorePage" class="projects-list-item projects-list-item-add"
@@ -112,6 +115,9 @@
                                     </div>
                                 </li>
                             </ul>
+                        </div>
+                        <div class="row" ng-if="controller.projects && !controller.projects.length && !controller.isLoading">
+                            <h3>No results</h3>
                         </div>
                     </div>
                 </div>

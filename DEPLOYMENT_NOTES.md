@@ -1,5 +1,9 @@
 # Arbimon Deployment Notes
 
+## v3.0.34
+
+- Projects list: Change the values in featured=2 projects to 1. Keep 9 projects as featured=1. Add the projects' images for all 9 projects. Add Tembe project to be one of the highlighted tiles that show up.
+
 ## v3.0.33
 
 - Add `explorerBaseUrl` in `config/rfcx.local.json` file

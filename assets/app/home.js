@@ -79,9 +79,8 @@ angular.module('a2.home', [
         $scope.summary_data = allData;
     }).bind(this));
 
-    $scope.search = '';
-    this.highlightedProjects = [];
-    $scope.isExplorePage = $window.location.pathname === '/'
+    $scope.isExplorePage = $window.location.pathname === '/';
+
     function getProjectSelectCache(){
         try{
             return JSON.parse($localStorage.getItem('home.project.select.cache')) || {};
@@ -93,32 +92,28 @@ angular.module('a2.home', [
     function setProjectSelectCache(psCache){
         try{
             $localStorage.setItem('home.project.select.cache', JSON.stringify(psCache));
-        } catch(e){
-            // meh..
-        }
+        } catch(e) { }
     }
 
     this.loadProjectList = function() {
-        const isFeatured = this.isAnonymousGuest || $scope.isExplorePage && !$scope.search;
+        const isFeatured = this.isAnonymousGuest || $scope.isExplorePage;
+        const isMyProjects = !this.isAnonymousGuest && !$scope.isExplorePage;
         var config = {
             params: {
                 include_location: true,
                 allAccessibleProjects: true
             }
         };
-        if ($scope.search !== '') {
-            config.params.q = $scope.search;
-        }
         if (isFeatured) {
             config.params.featured = true;
         }
-        var isMyProjects = !this.isAnonymousGuest && !$scope.isExplorePage && !$scope.search;
         if (isMyProjects) {
             config.params.type = 'my'
         }
         var psCache = getProjectSelectCache();
-        this.projects = []
-        this.isLoading = true
+        this.isLoading = true;
+        this.projects = [];
+        this.highlightedProjects = [];
         $http.get('/api/user/projectlist', config).success(function(data) {
             data.forEach(function(p){
                 p.lastAccessed = psCache[p.id] || 0;
@@ -128,32 +123,29 @@ angular.module('a2.home', [
                 p.mapUrl = "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/" + lon + "," + lat + "," + zoom + ",0,60/274x180?access_token=" + a2InjectedData.mapbox_access_token
             });
             this.isLoading = false
-            if ($scope.search !== '') {
+            if (isFeatured) {
+                this.projects = [];
+                this.highlightedProjects = data.filter(item => item.featured === 1);
+                this.highlightedProjects.forEach(project => {
+                    project.isLoading = true;
+                    $http.get('/api/project/' + project.url + '/pattern-matchings/count', {params: {cache: true}}).success(function(data) {
+                        project.patternMatchingsTotal = data.count || 0;
+                        project.isLoading = false;
+                    });
+                    $http.get('/api/project/' + project.url + '/recordings/count', {params: {cache: true}}).success(function(data) {
+                        project.recCount = data.count;
+                        project.isLoading = false;
+                    })
+                    $http.get('/api/project/' + project.url + '/recordings/species-count', {params: {cache: true}}).success(function(data) {
+                        project.speciesCount = data.count || 0;
+                        project.isLoading = false;
+                    })
+                });
+            }
+            else if (isMyProjects) {
                 this.highlightedProjects = [];
                 this.projects = data;
             }
-            else {
-                if (isFeatured) {
-                    this.highlightedProjects = data.filter(item => item.featured === 2);
-                    this.highlightedProjects.forEach(project => {
-                        project.isLoading = true;
-                        $http.get('/api/project/' + project.url + '/pattern-matchings/count').success(function(data) {
-                            project.patternMatchingsTotal = data.count || 0;
-                            project.isLoading = false;
-                        });
-                        $http.get('/api/project/' + project.url + '/recordings/count', {project_id: project.id}).success(function(data) {
-                            project.recCount = data.count;
-                            project.isLoading = false;
-                        })
-                        $http.get('/api/project/' + project.url + '/recordings/species-count', {project_id: project.id}).success(function(data) {
-                            project.speciesCount = data.count || 0;
-                            project.isLoading = false;
-                        })
-                    })
-                }
-                this.projects = isMyProjects? data : data.filter(item => item.featured !== 2);
-            }
-            this.previousSearch = this.search
         }.bind(this))
         .error(function() {
             this.isLoading = false
@@ -181,70 +173,7 @@ angular.module('a2.home', [
         $window.location.assign("/project/" + project.url + "/");
     };
 
-    this.sortProjects = function(sortingKey){
-        console.log("sortProjects", sortingKey);
-        var sorting = projectSorts[sortingKey];
-        if(!sorting){
-            if(this.projectSort.type == sortingKey){
-                if(projectSorts[this.projectSort.toggle]){
-                    sorting = projectSorts[this.projectSort.toggle];
-                }
-            } else if(projectSorts[sortingKey + '-down']){
-                sorting = projectSorts[sortingKey + '-down'];
-            }
-        }
-        this.projectSort = sorting || projectSorts.default;
-    };
-
-    this.searchChanged = function() {
-        clearTimeout($scope.timeout);
-        $scope.timeout = setTimeout(() => {
-            if (!$scope.search || $scope.search.trim() === '') {
-                this.loadProjectList();
-            }
-            if ($scope.search.length < 3) {
-                this.deleteAllRank();
-                this.projectSort = projectSorts['history-down'];
-                return;
-            }
-            if ($scope.search.length >= 3) {
-                if ($scope.search === this.previousSearch) { return; }
-                this.loadProjectList();
-            }
-        }, 1000);
-        this.projectSort = projectSorts['rank-down'];
-    }
-
-    this.deleteAllRank = function() {
-        if (this.projects) {
-            this.projects.forEach(project => {
-                delete project['rank'];
-            })
-        }
-    }
-
-    var projectSorts = [
-        {key:'alpha-down', sort:'+name'},
-        {key:'alpha-up', sort:'-name'},
-        {key:'history-down', sort:['+name','-lastAccessed'], default:true},
-        {key:'history-up', sort:['+name','+lastAccessed']},
-        {key:'rank-down', sort:['rank', '+name']}
-    ].reduce(function(_, sorting){
-        var m = /(\w+)-(\w+)/.exec(sorting.key);
-        sorting.type = m[1];
-        sorting.toggle = m[1] + '-' + (m[2] == 'up' ? 'down' : 'up');
-        _[sorting.key] = sorting;
-        if(sorting.default){
-            _.default = sorting;
-        }
-        return _;
-    }, {});
-
-    this.projectSort = projectSorts['history-down'];
-
-    this.currentPage = 1;
     this.isAnonymousGuest = true;
-    this.showSearch = false;
 
     $http.get('/api/user/info').success((function(data) {
         this.isAnonymousGuest = data.isAnonymousGuest;
