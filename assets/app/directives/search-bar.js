@@ -12,7 +12,7 @@ angular.module('a2.directive.search-bar', [])
         scope: {
             projectsLoading:"=?",
             q:"=?",
-            homePage:"@"
+            isUnsafe:"@"
         },
         link: function($scope) {
             $scope.q = q;
