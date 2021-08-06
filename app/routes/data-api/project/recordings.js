@@ -8,7 +8,7 @@ const stream = require('stream');
 const moment = require('moment');
 const dayInMs = 24 * 60 * 60 * 1000;
 
-let recordingsCashedData = {
+let cashedData = {
     counts: { },
     species: { }
 };
@@ -60,11 +60,11 @@ router.get('/species-count', function(req, res, next) {
     res.type('json');
     var params = req.query;
     params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
-
-    if (!recordingsCashedData.species[params.project_id] || recordingsCashedData.species[params.project_id] && (Date.now() - recordingsCashedData.species[params.project_id].time > dayInMs)) {
-
-        model.recordings.countProjectSpecies(params, function(err, rows) {
-            if(err) return next(err);
+    if (req.query.check_cash && cashedData.species[params.project_id] && (Date.now() - cashedData.species[params.project_id].time < dayInMs)) {
+        return res.json(cashedData.species[params.project_id].count);
+    }
+    else {
+        model.recordings.countProjectSpecies(params).then((rows) => {
             var species = []
             const result = Object.values(JSON.parse(JSON.stringify(rows)))
             result.map(s => {
@@ -72,16 +72,12 @@ router.get('/species-count', function(req, res, next) {
                     species.push(s.species)
                 }
             })
-
-            recordingsCashedData.species[params.project_id] = {
+            cashedData.species[params.project_id] = {
                 count: species.length,
                 time: Date.now()
             };
             res.json({count: species.length});
-        });
-    }
-    else {
-        return res.json(recordingsCashedData.species[params.project_id].count);
+        }).catch(next);
     }
 });
 
@@ -286,19 +282,18 @@ processFiltersData = async function(req, res, next) {
 
 router.get('/count', function(req, res, next) {
     res.type('json');
-
-    if (!recordingsCashedData.counts[req.project.project_id] || recordingsCashedData.counts[req.project.project_id] && (Date.now() - recordingsCashedData.counts[req.project.project_id].time > dayInMs)) {
-        model.projects.totalRecordings(req.project.project_id, function(err, count) {
-            if(err) return next(err);
-            recordingsCashedData.counts[req.project.project_id] = {
+    let p = req.project.project_id;
+    if (req.query.check_cash && cashedData.counts[p] && (Date.now() - cashedData.counts[p].time < dayInMs)) {
+        return res.json(cashedData.counts[p].count);
+    }
+    else {
+        model.projects.totalRecordings(p).then((count) => {
+            cashedData.counts[p] = {
                 count: count[0],
                 time: Date.now()
             };
             res.json(count[0]);
-        });
-    }
-    else {
-        return res.json(recordingsCashedData.counts[req.project.project_id].count);
+        }).catch(next);
     }
 });
 

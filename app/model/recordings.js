@@ -1649,11 +1649,12 @@ var Recordings = {
             })
     },
 
-    countProjectSpecies: function(filters, callback){
+    countProjectSpecies: async function(filters){
         var q = "SELECT species_id as species \n" +
         "FROM recording_validations\n"+
         "WHERE project_id = " + dbpool.escape(filters.project_id) + " AND present = 1";
-        queryHandler(q, callback);
+        let queryResult = await dbpool.query(q);
+        return queryResult;
     },
 
     countAllSpecies: async function() {

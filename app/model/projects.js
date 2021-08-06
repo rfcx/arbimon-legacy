@@ -932,11 +932,13 @@ var Projects = {
     },
 
     // this includes recordings processing
-    totalRecordings: function(project_id, callback) {
+    totalRecordings: async function(project_id) {
         var q = "SELECT count(recording_id) as count \n" +
                 "FROM recordings AS r JOIN sites AS s ON s.site_id = r.site_id \n"+
                 "WHERE s.project_id = " + dbpool.escape(project_id);
-        queryHandler(q, callback);
+
+        let queryResult = await dbpool.query(q);
+        return queryResult;
     },
 
     recordingsMinMaxDates: function (project_id, callback) {

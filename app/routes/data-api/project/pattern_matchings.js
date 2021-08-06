@@ -9,7 +9,7 @@ var pokeDaMonkey = require('../../../utils/monkey');
 var csv_stringify = require("csv-stringify");
 const dayInMs = 24 * 60 * 60 * 1000;
 
-let patternMatchingsCashedData = {
+let cashedData = {
     counts: { }
 };
 
@@ -68,19 +68,18 @@ router.get('/:patternMatching/details', function(req, res, next) {
 
 router.get('/count', function(req, res, next) {
     res.type('json');
-
-    if (!patternMatchingsCashedData.counts[req.project.project_id] || patternMatchingsCashedData.counts[req.project.project_id] && (Date.now() - patternMatchingsCashedData.counts[req.project.project_id].time > dayInMs)) {
-        model.patternMatchings.totalPatternMatchings(req.project.project_id, function(err, count) {
-            if(err) return next(err);
-            patternMatchingsCashedData.counts[req.project.project_id] = {
+    let p = req.project.project_id;
+    if (req.query.check_cash && cashedData.counts[p] && (Date.now() - cashedData.counts[p].time < dayInMs)) {
+        return res.json(cashedData.counts[p].count);
+    }
+    else {
+        model.patternMatchings.totalPatternMatchings(p).then((count) => {
+            cashedData.counts[req.project.project_id] = {
                 count: count[0],
                 time: Date.now()
             };
             res.json(count[0]);
-        });
-    }
-    else {
-        return res.json(patternMatchingsCashedData.counts[req.project.project_id].count);
+        }).catch(next);
     }
 });
 
