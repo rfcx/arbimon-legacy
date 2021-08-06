@@ -1,5 +1,10 @@
 # Arbimon Release Notes
 
+## v3.0.34 - June XX, 2021
+
+New features:
+
+- CE-1101 A search bar is updated for projects across Arbimon
 - CE-1136 A Summary stats data is added to the Home page
 
 ## v3.0.33-hotfix.0 - August 03, 2021

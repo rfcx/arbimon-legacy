@@ -10,6 +10,8 @@ angular.module('a2.home', [
     'ui.router',
     'a2.srv.local-storage',
     'a2.filter.time-from-now',
+    'a2.directive.search-bar',
+    'ngSanitize'
 ])
 .config(function(AngularyticsProvider, $locationProvider) {
     AngularyticsProvider.setEventHandlers(['GoogleUniversal']);
