@@ -24,7 +24,6 @@ module.exports = {
                 sver: Joi.string().required()
             }),
             datetime: Joi.date().required(),
-            datetime_local: Joi.date(),
             channels: Joi.number().required()
         };
         Joi.validate(uploadData, schema, function(err, upload) {

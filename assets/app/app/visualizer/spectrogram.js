@@ -293,6 +293,10 @@ angular.module('visualizer-spectrogram', [
                 $scope.layout.apply($element, $scope, $element.width(), $element.height(), true);
             });
 
+            $scope.$watch('layout.scale.originalScale', function (newValue, oldValue) {
+                $scope.layout.apply($element, $scope, $element.width(), $element.height(), true);
+            });
+
             $scope.layout.apply($element, $scope, $element.width(), $element.height());
             $scope.onScrolling();
         }

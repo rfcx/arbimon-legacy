@@ -4,6 +4,32 @@
 @font-size-projects-list-base: 16px;
 @space-projects-list-base: 12px;
 
+.summary-stats-wrapper {
+  .summary-desc {
+    width: 60%;
+  }
+  .summary-stats {
+    width: 40%;
+  }
+  @media (max-width: @screen-tablet) {
+    justify-content: center;
+    flex-direction: column;
+    .summary-desc,
+    .summary-stats {
+      width: 100%;
+      h1, h3, div {
+        text-align: center !important;
+      }
+    }
+  }
+}
+
+.showcase-title {
+  @media (max-width: @screen-tablet) {
+    text-align: center;
+  }
+}
+
 .projects-list {
   text-align: center;
   display: flex;

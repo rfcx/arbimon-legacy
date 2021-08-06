@@ -103,8 +103,6 @@ router.post('/recordings/create', verifyToken(), hasRole(['systemUser']), async 
       }
       const datetimeLocal = await model.recordings.calculateLocalTimeAsync(recordingData.site_id, recordingData.datetime_utc);
       recordingData.datetime = datetimeLocal ? datetimeLocal : moment.utc(recordingData.datetime_utc).format('YYYY-MM-DD HH:mm:ss');
-      // TODO: check that we can remove it and remove
-      recordingData.datetime_local = datetimeLocal ? datetimeLocal : moment.utc(recordingData.datetime_utc).format('YYYY-MM-DD HH:mm:ss');
       await model.recordings.insertAsync(recordingData);
     }
     res.sendStatus(201);
