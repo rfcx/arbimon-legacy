@@ -13,14 +13,21 @@
                 <span class="navbar-title">Arbimon</span>
             </a>
             <% if (!user || user.isAnonymousGuest) { %>
-            <a class="navbar-btn btn btn-primary navbar-toggle-right collapse-menu-hide collapsed" href="<%- auth0UniversalLoginUrl %>">
+            <a class="navbar-btn btn btn-primary navbar-toggle-right collapse-menu-hide collapsed mr-0" href="<%- auth0UniversalLoginUrl %>">
                 Sign In
             </a>
             <% } else { %>
+            <div ng-click="toggleSearch = !toggleSearch;" class="search-nav-mobile">
+                <i class="fa fa-search" style="font-size: 20px; position: relative;"></i>
+            </div>
             <button ng-init="rightCollapsedMenu = true" ng-click="rightCollapsedMenu = !rightCollapsedMenu; leftCollapsedMenu = true" type="button"
                 class="navbar-toggle navbar-toggle-right collapsed fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
                 style="background-image:url('<%- user.imageUrl %>')">
             <% } %>
+        </div>
+        <div ng-show="toggleSearch" class="navbar-collapse search-input-mobile"
+            style="padding: 10px 15px; position: relative;" ng-controller="HomeCtrl as controller">
+            <search-bar is-unsafe="true"></search-bar>
         </div>
         <div class="navbar-collapse navbar-collapse-menu-rfcx" ng-class="{'collapse': leftCollapsedMenu }">
             <ul class="nav navbar-nav navbar-left">
@@ -31,14 +38,19 @@
                 <li><a href="/admin/"><i class="fa fa-cogs"></i> Admin</a></li>
                 <% } %>
             </ul>
-            <% if (user && !user.isAnonymousGuest) { %>
-            <hr class="navbar-divider-collapse">
-            <% } %>
-            <ul class="nav navbar-nav navbar-right navbar-menu-hide">
-                <% include user-dropdown %>
-            </ul>
-            <ul class="nav navbar-nav navbar-right mr-0">
-                <% include other-rfcx-apps %>
+            <ul class="nav navbar-nav navbar-right">
+                <% if (user && !user.isAnonymousGuest) { %>
+                    <li style="padding: 11px 15px 9px; position: relative;" class="search-input">
+                        <search-bar is-unsafe="true"></search-bar>
+                    </li>
+                <% } %>
+                <hr class="navbar-divider-collapse">
+                <li>
+                    <% include other-rfcx-apps %>
+                </li>
+                <ul class="nav navbar-nav navbar-menu-hide hide-tooltip-lg mr-0">
+                    <% include user-dropdown %>
+                </ul>
             </ul>
         </div>
         <% if (user && !user.isAnonymousGuest) { %>

@@ -41,7 +41,8 @@ var a2 = angular.module('a2.app', [
     'a2.filters',
     'humane',
     'a2.googlemaps',
-    'a2.injected.data'
+    'a2.injected.data',
+    'a2.directive.search-bar'
 ])
 .run(function($rootScope, Angularytics, a2UserPermit, notify, $state) {
     $rootScope.Math = Math; // export math library to angular :-)
@@ -83,4 +84,5 @@ var a2 = angular.module('a2.app', [
         }
     }
     $scope.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();
+
 });

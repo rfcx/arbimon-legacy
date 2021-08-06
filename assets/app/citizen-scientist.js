@@ -16,7 +16,8 @@ var a2 = angular.module('a2.cs-app', [
     'a2.filters',
     'humane',
     'a2.googlemaps',
-    'a2.injected.data'
+    'a2.injected.data',
+    'a2.directive.search-bar'
 ])
 .run(function($rootScope, Angularytics, a2UserPermit, notify, $state) {
     $rootScope.Math = Math; // export math library to angular :-)
@@ -52,4 +53,5 @@ var a2 = angular.module('a2.cs-app', [
             return '/citizen-scientist/' + Project.getUrl() + '/';
         }
     }
+
 });

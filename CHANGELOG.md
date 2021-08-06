@@ -2,6 +2,9 @@
 
 ## v3.0.34 - August XX, 2021
 
+New features:
+
+- CE-1101 A search bar is updated for projects across Arbimon
 - CE-1136 A Summary stats data is added to the Home page
 - CE-1105 The project list is updated on the Home page
 

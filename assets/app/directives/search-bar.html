@@ -1,0 +1,16 @@
+<input class="form-control input-sm hidelongtext"
+    maxlength="100"
+    typeahead-on-select="selectProject()"
+    ng-model="q"
+    type="text"
+    placeholder="Search projects"
+    typeahead="project as project.name for project in findProject($viewValue)"
+    typeahead-template-url="customSearchTemplate.html">
+<i ng-show="projectsLoading" class="fa fa-spinner fa-spin" style="font-size: 18px; position: absolute; right: 18px; top: 16px; z-index: 10;"></i>
+<script type="text/ng-template" id="customSearchTemplate.html">
+    <a>
+        <span ng-if="isUnsafe==='true'" tooltip="{{match.label}}" bind-html-unsafe="match.label | typeaheadHighlight:query" class="ng-binding"></span>
+        <span ng-if="isUnsafe!=='true'" tooltip="{{match.label}}" ng-bind-html="match.label | typeaheadHighlight:query" class="ng-binding"></span>
+        <br><span class="input-search-desc">{{match.model.description}}</span>
+    </a>
+</script>

@@ -3,11 +3,15 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.34
 
+- CE-1101 A search bar is updated for projects across Arbimon
+  - Test that user sees the the search input in navbar and can search all projects across Arbimon. Any public projects or ones the user has access to.
+  - The search input text should say “Search projects”
+  - The user can see scroll bar to see other projects
+  - The mobile works correct for different headers/pages. The search bar changes to the search icon for mobile styles. When the user clicks on the search icon it will display the search row below the navbar bar
 - CE-1136 A Summary stats data is added to the homepage
   - The spinner is showing while the data is uploading.
   - The summary stats area the same as in the design doc here:  https://docs.google.com/presentation/d/1QT0oqrvQIqYLuB9TvBwm9nVhnHtIuefgx2N42X0rxiI/edit#slide=id.p
   - Supports the mobile styles
-
 - CE-1105 The project list is updated on the Home page
   - Instead of having 3 top tiles, we will feature 9 total projects under Project showcase.
   - The new 6 tiles should be the same format as the top 3.
