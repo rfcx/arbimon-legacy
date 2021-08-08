@@ -20,8 +20,6 @@ angular.module('a2.directive.search-bar', [])
             $scope.projects = projects;
 
             $scope.findProject = function() {
-                if (!$scope.q || $scope.q.trim() === '') return;
-                if ($scope.q && $scope.q.length < 2) return;
                 var config = {
                     params: {
                         allAccessibleProjects: true
