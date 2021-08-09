@@ -1,6 +1,9 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+- CE-1185 The issue with the end date in the datepicker is fixed
+  - When a user selects a date range, the start and end dates are selected as picked, after pressing "Apply filters". The end date does not select as the next day.
+
 ## v3.0.34
 
 - CE-1101 A search bar is updated for projects across Arbimon

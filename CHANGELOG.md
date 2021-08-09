@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-1185 The issue with the end date in the datepicker is fixed
+
 ## v3.0.34 - August XX, 2021
 
 New features:
