@@ -3,6 +3,7 @@
     typeahead-on-select="selectProject()"
     ng-model="q"
     type="text"
+    typeahead-min-length="3"
     placeholder="Search projects"
     typeahead="project as project.name for project in findProject($viewValue)"
     typeahead-template-url="customSearchTemplate.html">
