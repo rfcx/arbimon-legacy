@@ -1159,8 +1159,7 @@ var Recordings = {
                 constraints.push('YEAR(r.datetime) IN (?)');
                 data.push(parameters.years);
             }
-
-            if(parameters.months) {
+            if(parameters.months !== undefined) {
                 constraints.push('MONTH(r.datetime) IN (?)');
                 data.push((parameters.months instanceof Array) ?
                     parameters.months.map(function(m) { return parseInt(m)+1; }) :

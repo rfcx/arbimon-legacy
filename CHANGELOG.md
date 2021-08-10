@@ -1,5 +1,11 @@
 # Arbimon Release Notes
 
+## v3.0.35 - August XX, 2021
+
+Resolved issues:
+
+- CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
+
 ## v3.0.34 - August XX, 2021
 
 New features:

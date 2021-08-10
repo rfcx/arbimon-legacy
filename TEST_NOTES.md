@@ -1,6 +1,15 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.35
+
+- CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
+  -  The user selects "Date and Time" filter for month of January. The user sees the recordings with the selected date.
+  -  The user selects "Range", "Date and Time" filters for month of January. The user sees the recordings with the selected date.
+  -  The user selects "Date and Time" filter for month of February. The user sees the recordings with the selected date.
+  -  Setting the "Range" filter in February, while keeping January in "Date and Time" filter. The result supposed to be zero records, because January is outside the range.
+  - Setting the "Range" filter in February, while setting month of March in "Date and Time" filter. The result is no records, because March is outside the Range.
+
 ## v3.0.34
 
 - CE-1101 A search bar is updated for projects across Arbimon
