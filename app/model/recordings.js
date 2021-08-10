@@ -1657,7 +1657,7 @@ var Recordings = {
     },
 
     countAllSpecies: function() {
-        return dbpool.query('SELECT count(*) AS count FROM recording_validations WHERE present=1');
+        return dbpool.query('SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE present != 0');
     },
 
     countAllRecordings: function() {
