@@ -61,7 +61,7 @@ router.get('/species-count', function(req, res, next) {
     var params = req.query;
     params.project_id = req.query.project_id? req.query.project_id : req.project.project_id;
     if (req.query.cache && cachedData.species[params.project_id] && (Date.now() - cachedData.species[params.project_id].time < dayInMs)) {
-        return res.json(cachedData.species[params.project_id].count);
+        return res.json({count: cachedData.species[params.project_id].count});
     }
     else {
         model.recordings.countProjectSpecies(params).then((rows) => {
