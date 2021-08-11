@@ -1609,6 +1609,7 @@ img.outlined {
 }
 
 .search-input {
+  position: relative;
   padding: 11px 15px 9px;
   input {
     width: 150px;
@@ -1616,8 +1617,8 @@ img.outlined {
   @media (max-width: 767px) {
     display: none !important;
   }
-  @media (min-width: 767px) {
-    padding: 11px 5px 9px;
+  @media (max-width: @container-md) {
+    padding: 11px 13px 9px 5px;
   }
 }
 
