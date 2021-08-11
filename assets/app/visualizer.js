@@ -8,7 +8,8 @@ var a2 = angular.module('a2.visualizer-app', [
     'a2.filters',
     'humane',
     'a2.googlemaps',
-    'a2.injected.data'
+    'a2.injected.data',
+    'a2.directive.search-bar'
 ])
 .run(function($rootScope, Angularytics, a2UserPermit, notify, $state) {
     $rootScope.Math = Math; // export math library to angular :-)
@@ -32,11 +33,12 @@ var a2 = angular.module('a2.visualizer-app', [
     $locationProvider.html5Mode(true);
     $urlRouterProvider.otherwise("/visualizer");
 })
-.controller('MainCtrl', function($scope, $state, Project){
+.controller('MainCtrl', function($scope, $state, Project, $http, $window){
     $scope.$state = $state;
     $scope.getUrlFor = function(page){
         if(page == 'visualizer'){
             return '/visualizer/' + Project.getUrl() + '/';
         }
     }
+
 });

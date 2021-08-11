@@ -12,6 +12,26 @@ var paypal = require('paypal-rest-sdk');
 var uuid = require('node-uuid');
 var config = require('../../../config');
 const rfcxConfig = config('rfcx');
+const dayInMs = 24 * 60 * 60 * 1000;
+
+let summaryData = {
+    projects: {
+        count: 0,
+        time: Date.now()
+    },
+    species: {
+        count: 0,
+        time: Date.now()
+    },
+    rec: {
+        count: 0,
+        time: Date.now()
+    },
+    jobs: {
+        count: 0,
+        time: Date.now()
+    }
+};
 
 var model = require('../../../model');
 
@@ -94,6 +114,60 @@ router.get('/:projectUrl/info/source-project', function(req, res, next) {
         res.json(result);
     });
 
+});
+
+router.get('/projects-count', function(req, res, next) {
+    res.type('json');
+
+    if (summaryData.projects.count === 0 || (Date.now() - summaryData.projects.time > dayInMs)) {
+        model.projects.countAllProjects(function(err, results) {
+            if(err) return next(err);
+            summaryData.projects.count = results[0].count;
+            res.json(results[0].count);
+        });
+    }
+    else {
+        return res.json(summaryData.projects.count);
+    }
+});
+
+router.get('/jobs-count', function(req, res, next) {
+    res.type('json');
+    if (summaryData.jobs.count === 0 || (Date.now() - summaryData.jobs.time > dayInMs)) {
+        model.jobs.countAllCompletedJobs().then((results) => {
+            summaryData.jobs.count = results[0].count;
+            res.json(results[0].count);
+        }).catch(next);
+    }
+    else {
+        return res.json(summaryData.jobs.count);
+    }
+});
+
+router.get('/recordings-species-count', function(req, res, next) {
+    res.type('json');
+    if (summaryData.species.count === 0 || (Date.now() - summaryData.species.time > dayInMs)) {
+        model.recordings.countAllSpecies().then((results) => {
+            summaryData.species.count = results[0].count;
+            res.json(results[0].count);
+        }).catch(next);
+    }
+    else {
+        return res.json(summaryData.species.count);
+    }
+});
+
+router.get('/recordings-count', function(req, res, next) {
+    res.type('json');
+    if (summaryData.rec.count === 0 || (Date.now() - summaryData.rec.time > dayInMs)) {
+        model.recordings.countAllRecordings().then((results) => {
+            summaryData.rec.count = results[0].count;
+            res.json(results[0].count);
+        }).catch(next);
+    }
+    else {
+        return res.json(summaryData.rec.count);
+    }
 });
 
 router.post('/:projectUrl/info/update', function(req, res, next) {

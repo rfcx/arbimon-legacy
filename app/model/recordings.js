@@ -1159,8 +1159,7 @@ var Recordings = {
                 constraints.push('YEAR(r.datetime) IN (?)');
                 data.push(parameters.years);
             }
-
-            if(parameters.months) {
+            if(parameters.months !== undefined) {
                 constraints.push('MONTH(r.datetime) IN (?)');
                 data.push((parameters.months instanceof Array) ?
                     parameters.months.map(function(m) { return parseInt(m)+1; }) :
@@ -1649,11 +1648,19 @@ var Recordings = {
             })
     },
 
-    countProjectSpecies: function(filters, callback){
+    countProjectSpecies: function(filters){
         var q = "SELECT species_id as species \n" +
         "FROM recording_validations\n"+
         "WHERE project_id = " + dbpool.escape(filters.project_id) + " AND present = 1";
-        queryHandler(q, callback);
+        return dbpool.query(q);
+    },
+
+    countAllSpecies: function() {
+        return dbpool.query('SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE present != 0');
+    },
+
+    countAllRecordings: function() {
+        return dbpool.query('SELECT count(*) AS count FROM recordings');
     },
 
     /* fetch count of project recordings.

@@ -8,11 +8,11 @@
 </li>
 <% } else { %>
 <li class="dropdown navbar-tab-bottom-hide" dropdown>
-    <a class="dropdown-toggle navbar-mrd" dropdown-toggle>
+    <a class="dropdown-toggle" style="padding-right: 10px;" dropdown-toggle>
         <i class="fa user-avatar<% if(user.isSuper) { %> swag-super<% } %>"
             style="background-image:url('<%- user.imageUrl %>')"></i>
     </a>
-    <ul class="dropdown-menu navbar-mrd dropdown-menu-wd" role="menu">
+    <ul class="dropdown-menu dropdown-menu-wd" role="menu">
         <li>
             <a href="/user-settings">
                 <i class="fa fa-wrench"></i> Account Settings
