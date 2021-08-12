@@ -1,5 +1,7 @@
 # Arbimon Release Notes
 
+- CE-834 Fixed issue with the cluster audio frequency filter
+
 ## v3.0.35 - August XX, 2021
 
 Resolved issues:

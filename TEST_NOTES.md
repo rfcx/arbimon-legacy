@@ -1,6 +1,10 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+- CE-834 Fixed issue with the cluster audio frequency filter
+  - Analysis tab: Clustering tab: Clustering job page: The user askes for events between 1 and 9 kHz. The filter is returning events with requiroment frequency. The user srlects the dots and navigates to the Visulizer page. The user sees all selected boxes with the right frequency.
+
+
 ## v3.0.35
 
 - CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
