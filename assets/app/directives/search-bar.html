@@ -7,7 +7,7 @@
     placeholder="Search projects"
     typeahead="project as project.name for project in findProject($viewValue)"
     typeahead-template-url="customSearchTemplate.html"
-    typeahead-wait-ms="3000">
+    typeahead-wait-ms="1500">
 <i ng-show="projectsLoading" class="fa fa-spinner fa-spin" style="font-size: 18px; position: absolute; right: 18px; top: 16px; z-index: 10;"></i>
 <script type="text/ng-template" id="customSearchTemplate.html">
     <a>
