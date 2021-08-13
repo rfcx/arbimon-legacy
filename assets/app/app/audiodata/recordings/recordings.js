@@ -19,12 +19,8 @@ angular.module('a2.audiodata.recordings', [
     $scope,
     Project,
     a2Classi, $http, $modal, notify, a2UserPermit,
-    $downloadResource,
-    $window
+    $downloadResource
 ) {
-    var convertRange = function(range, isStartDay) {
-        return range.getFullYear() + '-' + (range.getMonth()+1).toString().padStart(2, '0') + '-' + range.getDate().toString().padStart(2, '0')+ (isStartDay ? 'T00:00:00.000Z' : 'T23:59:59.999Z');
-    }
     this.getSearchParameters = function(output){
         var params = angular.merge({}, $scope.params);
         output = output || ['list'];
@@ -33,10 +29,8 @@ angular.module('a2.audiodata.recordings', [
         params.offset = output.indexOf('list') >= 0 ? ($scope.currentPage-1) * $scope.limitPerPage : 0;
         params.sortBy = 'site_id DESC, datetime DESC';
         if (params.range) {
-            var rangeFromUTC = new Date(convertRange(params.range.from, true));
-            var rangeToUTC = new Date(convertRange(params.range.to, false));
-            params.range.from = new Date(rangeFromUTC.getTime());
-            params.range.to = new Date(rangeToUTC.getTime());
+            params.range.from = moment(params.range.from).format('YYYY-MM-DD') + 'T00:00:00.000Z';
+            params.range.to = moment(params.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';
         }
         return params;
     };

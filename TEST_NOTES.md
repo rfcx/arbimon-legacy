@@ -3,6 +3,7 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 - CE-1185 The issue with the end date in the datepicker is fixed
   - When a user selects a date range, the start and end dates are selected as picked, after pressing "Apply filters". The end date does not select as the next day.
+  - The date sending to the API should be, like that: range: {"from":"2015-10-01T00:00:00.000Z","to":"2015-10-02T23:59:59.999Z"}
 
 ## v3.0.34
 
