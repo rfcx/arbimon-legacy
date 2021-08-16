@@ -5,6 +5,7 @@
 Resolved issues:
 
 - CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
+- CE-1221 The login page is disabled
 
 ## v3.0.34 - August XX, 2021
 

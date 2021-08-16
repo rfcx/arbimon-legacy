@@ -9,6 +9,9 @@ Test Notes are used to list what pages / components / features / user flows are 
   -  The user selects "Date and Time" filter for month of February. The user sees the recordings with the selected date.
   -  Setting the "Range" filter in February, while keeping January in "Date and Time" filter. The result supposed to be zero records, because January is outside the range.
   - Setting the "Range" filter in February, while setting month of March in "Date and Time" filter. The result is no records, because March is outside the Range.
+- CE-1221 The login page is disabled
+  - The not logged-in user navigates to /login page. The user will see the Homepage.
+  - The logged-in user navigates to /login page. The user will see the Projects page.
 
 ## v3.0.34
 
