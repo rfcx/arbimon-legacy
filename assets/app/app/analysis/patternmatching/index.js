@@ -201,6 +201,11 @@ angular.module('a2.analysis.patternmatching', [
         return a2PatternMatching.getDetailsFor(this.id).then((function(patternMatching){
             this.loading.details = false;
             this.patternMatching = patternMatching;
+            this.patternMatching.templateParameters = {
+                'Threshold': this.patternMatching.parameters.threshold,
+                'Matches/Recording': 1,
+                'Matches/Site': this.patternMatching.parameters.N
+            };
             this.setupExportUrl();
             this.total = {
                 rois: patternMatching.matches,

@@ -2,6 +2,10 @@
 
 ## v3.0.35 - August XX, 2021
 
+New features:
+
+- CE-1224 An UI for the job/template information is updated in the Pattern matching details page
+
 Resolved issues:
 
 - CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
