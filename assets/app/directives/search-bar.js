@@ -20,8 +20,6 @@ angular.module('a2.directive.search-bar', [])
             $scope.projects = projects;
 
             $scope.findProject = function() {
-                if (!$scope.q || $scope.q.trim() === '') return;
-                if ($scope.q && $scope.q.length < 2) return;
                 var config = {
                     params: {
                         allAccessibleProjects: true
@@ -30,7 +28,6 @@ angular.module('a2.directive.search-bar', [])
                 if ($scope.q !== '') {
                     config.params.q = $scope.q;
                 }
-                $scope.projects = [];
                 $scope.projectsLoading = true;
                 return $http.get('/api/user/projectlist', config).then(function(result) {
                     $scope.projectsLoading = false;

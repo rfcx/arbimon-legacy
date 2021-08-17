@@ -30,22 +30,22 @@
                                 </h3>
                                 <div class="button-group">
                                     <% if (user && user.isAnonymousGuest) { %>
-                                        <a class="btn btn-lg btn-primary" style="margin-right: 20px;" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup">Start Analyzing Now</a>
-                                        <a class="btn btn-lg btn-default" href="https://rfcx.org/ecoacoustics">Learn More</a>
+                                        <a class="btn btn-lg btn-primary" href="<%- auth0UniversalLoginUrl %>&screen_hint=signup" ng-click="isEmpty=1 | trackEvent:'Home':'Sing up to rfcx'">Start Analyzing Now</a>
+                                        <a class="btn btn-lg btn-default" href="https://rfcx.org/ecoacoustics" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to Ecoacoustics page'">Learn More</a>
                                     <% } else {%>
-                                        <a class="btn btn-lg btn-primary" style="margin-right: 20px;" href="/projects">Start Analyzing Now</a>
-                                        <a class="btn btn-lg btn-default" href="https://rfcx.org/ecoacoustics">Learn More</a>
+                                        <a class="btn btn-lg btn-primary" href="/projects" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to My Projects'">Start Analyzing Now</a>
+                                        <a class="btn btn-lg btn-default" href="https://rfcx.org/ecoacoustics" ng-click="isEmpty=1 | trackEvent:'Home':'Navigate to Ecoacoustics page'">Learn More</a>
                                     <% } %>
                                 </div>
                             </div>
-                            <div class="summary-stats" style="margin-top: 45px">
+                            <div class="summary-stats" style="margin-top: 45px" ng-view>
                                 <div class="row-flex flex-space-between" style="flex-wrap: wrap;" ng-if="list_summary_data && list_summary_data.length && summary_data">
                                     <div class="mb-3 text-center" style="width: 50%;" ng-repeat="data in list_summary_data">
-                                        <p ng-if="data.title" ng-init="data.index=$index" style="font-size: 36px; margin: 10px 0">
-                                            <i ng-if="summaryDataLoading" class="fa fa-spinner fa-spin" style="font-size: 36px"></i>
-                                            <span ng-if="!summaryDataLoading">{{ summary_data[data.index] | number }}</span>
+                                        <p ng-init="data.index=$index" style="font-size: 36px; margin: 10px 0">
+                                            <i ng-show="summaryDataLoading" class="fa fa-spinner fa-spin" style="font-size: 36px"></i>
+                                            <span class="hide" ng-class="{'show': !summaryDataLoading}">{{ summary_data[data.index] | number }}</span>
                                         </p>
-                                        <h3 ng-if="data.title" style="line-height: 1.6; margin-top: 0; margin-bottom: 0;">
+                                        <h3 class="hide" ng-class="{'show': data.title}" style="line-height: 1.6; margin-top: 0; margin-bottom: 0;">
                                             {{ data.title }}
                                         </h3>
                                     </div>
@@ -89,8 +89,8 @@
                                     </li>
                                 </ul>
                             </div>
-                            <div ng-if="!controller.highlightedProjects.length && !controller.isLoading">
-                                <h4>No results found</h3>
+                            <div ng-if="isExplorePage && !controller.highlightedProjects.length && !controller.isLoading">
+                                <h4>No results</h3>
                             </div>
                         </div>
                     <% } %>
@@ -115,9 +115,6 @@
                                     </div>
                                 </li>
                             </ul>
-                        </div>
-                        <div class="row" ng-if="controller.projects && !controller.projects.length && !controller.isLoading">
-                            <h3>No results</h3>
                         </div>
                     </div>
                 </div>

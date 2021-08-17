@@ -1159,8 +1159,7 @@ var Recordings = {
                 constraints.push('YEAR(r.datetime) IN (?)');
                 data.push(parameters.years);
             }
-
-            if(parameters.months) {
+            if(parameters.months !== undefined) {
                 constraints.push('MONTH(r.datetime) IN (?)');
                 data.push((parameters.months instanceof Array) ?
                     parameters.months.map(function(m) { return parseInt(m)+1; }) :
@@ -1657,7 +1656,7 @@ var Recordings = {
     },
 
     countAllSpecies: function() {
-        return dbpool.query('SELECT count(*) AS count FROM recording_validations WHERE present=1');
+        return dbpool.query('SELECT COUNT(DISTINCT species_id) AS count FROM recording_validations WHERE present != 0');
     },
 
     countAllRecordings: function() {

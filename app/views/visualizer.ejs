@@ -22,6 +22,9 @@
                     <span class="navbar-title">Arbimon</span>
                 </a>
                 <% if (!user || user.isAnonymousGuest) { %>
+                <div ng-click="toggleSearch = !toggleSearch;" class="search-nav-mobile search-nav-mobile-offset">
+                    <i class="fa fa-search" style="font-size: 20px; position: relative;"></i>
+                </div>
                 <a class="navbar-btn btn btn-primary navbar-toggle-right collapse-menu-hide collapsed" href="<%- auth0UniversalLoginUrl %>">
                     Sign In
                 </a>
@@ -54,11 +57,9 @@
                             <span><%=  project.name  %></span>
                         </a>
                     </li>
-                    <% if (user && !user.isAnonymousGuest) { %>
-                        <li style="padding: 11px 15px 9px; position: relative;" class="search-input">
-                            <search-bar></search-bar>
-                        </li>
-                    <% } %>
+                    <li class="search-input">
+                        <search-bar></search-bar>
+                    </li>
                     <li>
                         <% include fragments/other-rfcx-apps %>
                     </li>

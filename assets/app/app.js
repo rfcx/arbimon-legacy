@@ -76,7 +76,7 @@ var a2 = angular.module('a2.app', [
     $locationProvider.html5Mode(true);
     $urlRouterProvider.otherwise("/dashboard");
 })
-.controller('MainCtrl', function($scope, $state, Project, a2UserPermit){
+.controller('MainCtrl', function($scope, $state, Project, a2UserPermit, $window){
     $scope.$state = $state;
     $scope.getUrlFor = function(page){
         if(page == 'citizen-scientist'){
@@ -84,5 +84,5 @@ var a2 = angular.module('a2.app', [
         }
     }
     $scope.citizenScientistUser = a2UserPermit.all && a2UserPermit.all.length === 1 && a2UserPermit.all.includes('use citizen scientist interface') && !a2UserPermit.can('delete project') && !a2UserPermit.isSuper();
-
+    $scope.isAppPage = $window.location.pathname.startsWith('/project/');
 });

@@ -85,7 +85,7 @@ var AudioEventDetectionsClustering = {
         ))
     },
 
-    findClusteredRecords: function (options) {
+    findClusteredDetections: function (options) {
         var constraints=['1=1'];
         var select = [];
         var tables = [

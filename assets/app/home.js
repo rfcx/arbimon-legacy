@@ -96,8 +96,8 @@ angular.module('a2.home', [
     }
 
     this.loadProjectList = function() {
-        const isFeatured = this.isAnonymousGuest || $scope.isExplorePage;
-        const isMyProjects = !this.isAnonymousGuest && !$scope.isExplorePage;
+        const isFeatured = $scope.isAnonymousGuest || $scope.isExplorePage;
+        const isMyProjects = !$scope.isAnonymousGuest && !$scope.isExplorePage;
         var config = {
             params: {
                 include_location: true,
@@ -173,10 +173,10 @@ angular.module('a2.home', [
         $window.location.assign("/project/" + project.url + "/");
     };
 
-    this.isAnonymousGuest = true;
+    $scope.isAnonymousGuest = true;
 
     $http.get('/api/user/info').success((function(data) {
-        this.isAnonymousGuest = data.isAnonymousGuest;
+        $scope.isAnonymousGuest = data.isAnonymousGuest;
         this.loadProjectList();
     }).bind(this));
 })
