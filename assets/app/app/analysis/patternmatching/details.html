@@ -52,9 +52,9 @@
                             <i class="fa" ng-style="{'cursor': 'pointer'}" ng-class="collapsed ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                         </div>
                         <div class="collapse" id="collapseExample">
-                            <p tooltip-placement="left" tooltip="Template Name" class="text mb-0"><img class="mr-2" src="/images/ic-template.svg">{{controller.patternMatching.template.name }}</p>
-                            <p tooltip-placement="left" tooltip="Playlist Name" class="text mb-0"><i ng-style="{'font-size': '13px'}" class="fa fa-list-ul mr-2"></i>{{controller.patternMatching.playlist_name}} ({{controller.patternMatching.playlist_count | number}} recordings)</p>
-                            <p tooltip-placement="left" tooltip="Template Parameters" class="text mb-0"><i ng-style="{'font-size': '15px'}" class="fa fa-sliders mr-2"></i>{{controller.patternMatching.templateParameters | asCSV}}</p>
+                            <p tooltip-placement="left" tooltip="Template Name" class="text mb-0"><img class="mr-3" src="/images/ic-template.svg">{{controller.patternMatching.template.name }}</p>
+                            <p tooltip-placement="left" tooltip="Playlist Name" class="text mb-0"><img class="mr-3" src="/images/ic-playlist.svg">{{controller.patternMatching.playlist_name}} ({{controller.patternMatching.playlist_count | number}} recordings)</p>
+                            <p tooltip-placement="left" tooltip="Template Parameters" class="text mb-0"><img class="mr-3" src="/images/ic-parameters.svg">{{controller.patternMatching.templateParameters | asCSV}}</p>
                         </div>
                     </div>
                     <div class="mb-3">
