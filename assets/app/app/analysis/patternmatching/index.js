@@ -506,6 +506,25 @@ angular.module('a2.analysis.patternmatching', [
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
         var val_delta = {0:0, 1:0, null:0};
+        var cls = {
+            species: this.patternMatching.species_name,
+            songtype: this.patternMatching.songtype_name
+        };
+
+        Project.getClasses(function(classes){
+            var haveClass = classes.filter(function(c) { return c.songtype == rois[0].songtype_id && c.species == rois[0].species_id });
+            if(haveClass.length == 0) {
+                Project.addClass(cls)
+                .success()
+                .error(function(data, status) {
+                    if(status < 500)
+                        notify.error(data.error);
+                    else
+                        notify.serverError();
+                });            
+            }
+        });
+        
         return a2PatternMatching.validateRois(this.id, roiIds, validation).then((function(){
             rois.forEach(function(roi){
                 val_delta[roi.validated] -= 1;
