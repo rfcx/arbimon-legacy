@@ -6,6 +6,7 @@ Resolved issues:
 
 - CE-1185 The issue with the end date in the datepicker is fixed
 - CE-834 Fixed issue with the cluster audio frequency filter
+- CE-1231 Check the logic to add a new species/song to the project_classes table when the user validate PM box from the PM page
 
 ## v3.0.34 - August XX, 2021
 
