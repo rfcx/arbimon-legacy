@@ -4,6 +4,7 @@
 
 Resolved issues:
 
+- CE-1230 Fix the issue with filtered recordings by species
 - CE-1185 The issue with the end date in the datepicker is fixed
 - CE-834 Fixed issue with the cluster audio frequency filter
 

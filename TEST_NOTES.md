@@ -3,12 +3,15 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.35
 
+- CE-1230 Fix the issue with filtered recordings by species
+  - Recordings page: Filers: The user selects any type of Validations with present and absent species count. The User selects Present value. The user clicks on the Apply filters button. The User see the count of Present recordings for selected species type. The count of total recordings equal the count of present value in the filter.
+  - Recordings page: Filers: The user selects any type of Validations with present and absent species count. The User selects Absent value. The user clicks on the Apply filters button. The User see the count of Absent recordings for selected species type. The count of total recordings equal the count of absent value in the filter.
+  - Recordings page: Filers: The user selects any type of Validations with present and absent species count. The User does not select Present or Absent value. The user clicks on the Apply filters button. The User see the count of all Present and Absent recordings for selected species type.
 - CE-1185 The issue with the end date in the datepicker is fixed
   - When a user selects a date range, the start and end dates are selected as picked, after pressing "Apply filters". The end date does not select as the next day.
   - The date sending to the API should be, like that: range: {"from":"2015-10-01T00:00:00.000Z","to":"2015-10-02T23:59:59.999Z"}
 - CE-834 Fixed issue with the cluster audio frequency filter
   - Analysis tab: Clustering tab: Clustering job page: The user asks for events between 1 and 9 kHz. The filter is returning events with requirement frequency. The user selects the dots and navigates to the Visualizer page. The user sees all selected boxes with the right frequency.
-
 
 ## v3.0.34
 
