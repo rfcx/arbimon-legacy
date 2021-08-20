@@ -19,7 +19,7 @@ angular.module('a2.srv.audio-event-detections-clustering', [
                 return response.data;
             }).catch(notify.serverError);
         },
-        searchClusteredRecords: function(opts, callback) {
+        searchClusteredDetections: function(opts, callback) {
             var params = {};
 
             if (opts.aed_id) {

@@ -1188,8 +1188,12 @@ var Recordings = {
                 data.push(parameters.validations);
 
                 if(parameters.presence && !(parameters.presence instanceof Array && parameters.presence.length >= 2)){
-                    constraints.push('rv.present = ?');
-                    data.push(parameters.presence == 'present' ? '1' : '0');
+                    if (parameters.presence == 'present') {
+                        constraints.push('CASE WHEN rv.present_review > 0 THEN 1 ELSE rv.present END');
+                    }
+                    else {
+                        constraints.push('CASE WHEN rv.present = 0 AND rv.present_review = 0 THEN 1 ELSE 0 END');
+                    }
                 }
             }
 

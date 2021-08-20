@@ -22,7 +22,7 @@ router.get('/', function(req, res, next) {
 router.post('/records', function(req, res, next) {
     res.type('json');
 
-    return model.AudioEventDetectionsClustering.findClusteredRecords({
+    return model.AudioEventDetectionsClustering.findClusteredDetections({
         project_id: req.project.project_id,
         aed_id: req.body.aed_id,
         aed_id_in: req.body.aed_id_in

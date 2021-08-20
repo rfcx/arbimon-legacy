@@ -9,8 +9,20 @@ Test Notes are used to list what pages / components / features / user flows are 
   -  The user selects "Date and Time" filter for month of February. The user sees the recordings with the selected date.
   -  Setting the "Range" filter in February, while keeping January in "Date and Time" filter. The result supposed to be zero records, because January is outside the range.
   - Setting the "Range" filter in February, while setting month of March in "Date and Time" filter. The result is no records, because March is outside the Range.
-  - CE-1224 An UI for the job/template information is updated in the Pattern matching details page
-    - Check the UI part with the design document, here: https://www.figma.com/file/ZysU4lDTupV2O1ngysKTfL/Arbimon---PM-Result?node-id=0%3A1.
+ - CE-1224 An UI for the job/template information is updated in the Pattern matching details page
+    - Check the UI part with the design document, here: "www.figma.com/file/ZysU4lDTupV2O1ngysKTfL/Arbimon---PM-Result?node-id=0%3A1"
+- CE-1221 The login page is disabled
+  - The not logged-in user navigates to /login page. The user will see the Homepage.
+  - The logged-in user navigates to /login page. The user will see the Projects page.
+- CE-1230 Fix the issue with filtered recordings by species
+  - Recordings page: Filers: The user selects any type of Validations with present and absent species count. The User selects Present value. The user clicks on the Apply filters button. The User see the count of Present recordings for selected species type. The count of total recordings equal the count of present value in the filter.
+  - Recordings page: Filers: The user selects any type of Validations with present and absent species count. The User selects Absent value. The user clicks on the Apply filters button. The User see the count of Absent recordings for selected species type. The count of total recordings equal the count of absent value in the filter.
+  - Recordings page: Filers: The user selects any type of Validations with present and absent species count. The User does not select Present or Absent value. The user clicks on the Apply filters button. The User see the count of all Present and Absent recordings for selected species type.
+- CE-1185 The issue with the end date in the datepicker is fixed
+  - When a user selects a date range, the start and end dates are selected as picked, after pressing "Apply filters". The end date does not select as the next day.
+  - The date sending to the API should be, like that: range: {"from":"2015-10-01T00:00:00.000Z","to":"2015-10-02T23:59:59.999Z"}
+- CE-834 Fixed issue with the cluster audio frequency filter
+  - Analysis tab: Clustering tab: Clustering job page: The user asks for events between 1 and 9 kHz. The filter is returning events with requirement frequency. The user selects the dots and navigates to the Visualizer page. The user sees all selected boxes with the right frequency.
 
 ## v3.0.34
 
@@ -28,6 +40,12 @@ Test Notes are used to list what pages / components / features / user flows are 
   - The new 6 tiles should be the same format as the top 3.
   - The other projects that were originally small tiles are removed from this page.
   - Supports the mobile styles
+- CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
+  -  The user selects "Date and Time" filter for month of January. The user sees the recordings with the selected date.
+  -  The user selects "Range", "Date and Time" filters for month of January. The user sees the recordings with the selected date.
+  -  The user selects "Date and Time" filter for month of February. The user sees the recordings with the selected date.
+  -  Setting the "Range" filter in February, while keeping January in "Date and Time" filter. The result supposed to be zero records, because January is outside the range.
+  - Setting the "Range" filter in February, while setting month of March in "Date and Time" filter. The result is no records, because March is outside the Range.
 
 ## v3.0.33
 

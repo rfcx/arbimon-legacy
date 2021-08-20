@@ -9,6 +9,10 @@ New features:
 Resolved issues:
 
 - CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
+- CE-1221 The login page is disabled
+- CE-1230 Fix the issue with filtered recordings by species
+- CE-1185 The issue with the end date in the datepicker is fixed
+- CE-834 Fixed issue with the cluster audio frequency filter
 
 ## v3.0.34 - August XX, 2021
 
@@ -21,6 +25,7 @@ New features:
 Resolved issues:
 
 - CE-1197 Change wording when choosing filename format in the uploads page
+- CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
 
 ## v3.0.33-hotfix.0 - August 03, 2021
 
