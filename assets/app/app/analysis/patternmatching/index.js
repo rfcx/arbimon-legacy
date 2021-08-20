@@ -203,8 +203,8 @@ angular.module('a2.analysis.patternmatching', [
             this.patternMatching = patternMatching;
             this.patternMatching.templateParameters = {
                 'Threshold': this.patternMatching.parameters.threshold,
-                'Matches/Recording': 1,
-                'Matches/Site': this.patternMatching.parameters.N
+                'Matches/Recording': this.patternMatching.parameters.N,
+                'Matches/Site': this.patternMatching.parameters.persite || 'no limit'
             };
             this.setupExportUrl();
             this.total = {
