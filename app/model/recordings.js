@@ -326,7 +326,8 @@ var Recordings = {
             if (urlquery && urlquery.site) {
                 constraints.shift()
                 data.push(urlquery.site['='])
-                constraints.push('S.name = ?');
+                constraints.push('S.name = ? AND S.project_id = ?');
+                data.push(project_id);
             }
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
                 count_only : options.count_only
@@ -1151,8 +1152,9 @@ var Recordings = {
 
             if (parameters.sites) {
                 tables.push("JOIN sites AS s ON s.site_id = r.site_id");
-                constraints.push('s.name IN (?)');
+                constraints.push('s.name IN (?) AND s.project_id = ?');
                 data.push(parameters.sites);
+                data.push(parameters.project_id);
             }
 
             if(parameters.years) {
