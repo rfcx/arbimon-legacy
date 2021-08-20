@@ -116,10 +116,6 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
 
     var filterDefs = [
         {name:"range"                 , map: function set_range_bounds(range){
-            if(range && range.from && range.to) {
-                range.from = new Date(range.from.getFullYear() + '-' + (range.from.getMonth()+1).toString().padStart(2, '0') + '-' + range.from.getDate().toString().padStart(2, '0') + 'T00:00:00.000Z')
-                range.to = new Date(range.to.getFullYear() + '-' + (range.to.getMonth()+1).toString().padStart(2, '0') + '-' + range.to.getDate().toString().padStart(2, '0') + 'T23:59:59.999Z')
-            }
             return range;
         }},
         {name:"sites"                 , map: _1_get_value_mapper},
@@ -283,9 +279,9 @@ angular.module('a2.audiodata.recordings.filter-parameters', [
             }.bind(this), 1000)
             return
         }
-        
+
         loading.sites = true
-        
+
         Project.getSites()
             .then(function(data) {
                 sites = data
