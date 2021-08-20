@@ -3,6 +3,15 @@ Test Notes are used to list what pages / components / features / user flows are 
 
 ## v3.0.35
 
+- CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
+  -  The user selects "Date and Time" filter for month of January. The user sees the recordings with the selected date.
+  -  The user selects "Range", "Date and Time" filters for month of January. The user sees the recordings with the selected date.
+  -  The user selects "Date and Time" filter for month of February. The user sees the recordings with the selected date.
+  -  Setting the "Range" filter in February, while keeping January in "Date and Time" filter. The result supposed to be zero records, because January is outside the range.
+  - Setting the "Range" filter in February, while setting month of March in "Date and Time" filter. The result is no records, because March is outside the Range.
+- CE-1221 The login page is disabled
+  - The not logged-in user navigates to /login page. The user will see the Homepage.
+  - The logged-in user navigates to /login page. The user will see the Projects page.
 - CE-1230 Fix the issue with filtered recordings by species
   - Recordings page: Filers: The user selects any type of Validations with present and absent species count. The User selects Present value. The user clicks on the Apply filters button. The User see the count of Present recordings for selected species type. The count of total recordings equal the count of present value in the filter.
   - Recordings page: Filers: The user selects any type of Validations with present and absent species count. The User selects Absent value. The user clicks on the Apply filters button. The User see the count of Absent recordings for selected species type. The count of total recordings equal the count of absent value in the filter.

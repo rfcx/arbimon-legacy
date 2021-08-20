@@ -4,6 +4,8 @@
 
 Resolved issues:
 
+- CE-1183 Fixed filter in the recordings page. The user is able to select the month of January
+- CE-1221 The login page is disabled
 - CE-1230 Fix the issue with filtered recordings by species
 - CE-1185 The issue with the end date in the datepicker is fixed
 - CE-834 Fixed issue with the cluster audio frequency filter
