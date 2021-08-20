@@ -34,7 +34,7 @@
     </div>
 </div>
 <div class="row reclist-wrapper">
-    <div class="col-sm-4 reclist-total text-left">{{ totalRecs }} Recordings</div>
+    <div ng-if="totalRecs !== undefined" class="col-sm-4 reclist-total text-left">{{ totalRecs }} Recordings</div>
     <div class="col-sm-4 reclist-pagelimit text-right">
         <div class="btn-group">
             <button class="btn btn-default btn-sm" ng-model="limitPerPage" ng-change="controller.setLimitPerPage(limitPerPage)" btn-radio="10" ng-disabled="loading">10</button>

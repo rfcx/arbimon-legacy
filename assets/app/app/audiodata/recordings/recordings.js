@@ -19,10 +19,8 @@ angular.module('a2.audiodata.recordings', [
     $scope,
     Project,
     a2Classi, $http, $modal, notify, a2UserPermit,
-    $downloadResource,
-    $window
+    $downloadResource
 ) {
-
     this.getSearchParameters = function(output){
         var params = angular.merge({}, $scope.params);
         output = output || ['list'];
@@ -30,6 +28,10 @@ angular.module('a2.audiodata.recordings', [
         params.limit = $scope.limitPerPage;
         params.offset = output.indexOf('list') >= 0 ? ($scope.currentPage-1) * $scope.limitPerPage : 0;
         params.sortBy = 'site_id DESC, datetime DESC';
+        if (params.range) {
+            params.range.from = moment(params.range.from).format('YYYY-MM-DD') + 'T00:00:00.000Z';
+            params.range.to = moment(params.range.to).format('YYYY-MM-DD') + 'T23:59:59.999Z';
+        }
         return params;
     };
 
