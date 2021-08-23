@@ -511,21 +511,7 @@ angular.module('a2.analysis.patternmatching', [
             songtype: this.patternMatching.songtype_name
         };
 
-        Project.getClasses(function(classes){
-            var haveClass = classes.filter(function(c) { return c.songtype == rois[0].songtype_id && c.species == rois[0].species_id });
-            if(haveClass.length == 0) {
-                Project.addClass(cls)
-                .success()
-                .error(function(data, status) {
-                    if(status < 500)
-                        notify.error(data.error);
-                    else
-                        notify.serverError();
-                });            
-            }
-        });
-        
-        return a2PatternMatching.validateRois(this.id, roiIds, validation).then((function(){
+        return a2PatternMatching.validateRois(this.id, roiIds, validation, cls).then((function(){
             rois.forEach(function(roi){
                 val_delta[roi.validated] -= 1;
                 val_delta[validation] += 1;
