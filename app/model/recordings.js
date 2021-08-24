@@ -1146,7 +1146,7 @@ var Recordings = {
             }
 
             if(parameters.range) {
-                constraints.push('r.datetime BETWEEN ? AND ?');
+                constraints.push('r.datetime BETWEEN ? AND ? AND r.datetime IS NOT NULL');
                 data.push(getUTC(parameters.range.from), getUTC(parameters.range.to));
             }
 
