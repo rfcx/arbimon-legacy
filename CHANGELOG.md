@@ -13,6 +13,7 @@ Resolved issues:
 - CE-1230 Fix the issue with filtered recordings by species
 - CE-1185 The issue with the end date in the datepicker is fixed
 - CE-834 Fixed issue with the cluster audio frequency filter
+- CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
 
 ## v3.0.34 - August XX, 2021
 

@@ -23,6 +23,8 @@ Test Notes are used to list what pages / components / features / user flows are 
   - The date sending to the API should be, like that: range: {"from":"2015-10-01T00:00:00.000Z","to":"2015-10-02T23:59:59.999Z"}
 - CE-834 Fixed issue with the cluster audio frequency filter
   - Analysis tab: Clustering tab: Clustering job page: The user asks for events between 1 and 9 kHz. The filter is returning events with requirement frequency. The user selects the dots and navigates to the Visualizer page. The user sees all selected boxes with the right frequency.
+- CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+ - Pattern Matching details page: Export CSV: The user can see different columns in the report, like a year, month, day, hour, minutes
 
 ## v3.0.34
 
