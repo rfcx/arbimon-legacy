@@ -112,15 +112,7 @@ router.get('/login', function(req, res) {
     if(req.session) {
         if(req.session.loggedIn) return res.redirect('/projects');
     }
-    res.render('login', {
-        message: '',
-        user: null,
-        auth0UniversalLoginUrl: `${auth0Service.universalLoginUrl}`,
-        inject_data: {
-            facebook_api: config('facebook-api').public,
-            google_oauth_client: config('google-api').oauthId
-        }
-    });
+    res.redirect('/');
 });
 
 
