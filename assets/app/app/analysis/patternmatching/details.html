@@ -8,7 +8,7 @@
     >
         <a2-scroll-anchor name="header" class="a2-page-header-placeholder" ng-class="{ 'is-active': controller.scrolledPastHeader }" />
         <div class="panel-body a2-page-header" ng-class="{ 'is-fixed': controller.scrolledPastHeader }">
-            <div class="row row-flex flex-align-middle">
+            <div class="row row-flex flex-self-align-top">
                 <div class="col-sm-3" style="padding-bottom:5px">
                     <div class="roi-thumbnail" >
                         <img ng-src="{{controller.patternMatching.template.uri}}" class="roi-img"/>
@@ -41,18 +41,35 @@
                     </div>
                 </div>
                 <div class="col-sm-4 is-v-middle">
-                    <b>{{controller.patternMatching.name}}</b><br />
-                    {{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}<br />
-                    {{controller.patternMatching.template.name }}<br />
-                    {{controller.patternMatching.timestamp | moment : 'lll' }}<br />
-                    {{controller.patternMatching.playlist_name}} ({{controller.patternMatching.playlist_count}} recordings)<br />
-                    {{controller.patternMatching.parameters | asCSV}}<br />
-                    {{controller.patternMatching.matches}} matches
-                        ({{controller.patternMatching.present || 0}} present,
-                        {{controller.patternMatching.absent || 0}} not present,
-                        {{controller.patternMatching.matches - (controller.patternMatching.present + controller.patternMatching.absent)}} unvalidated)
+                    <div class="mb-3">
+                        <p class="section-header mb-1">{{controller.patternMatching.timestamp | moment : 'lll' }}</p>
+                        <p class="section-header-title mb-0">{{controller.patternMatching.name}}</p>
+                        <p class="section-sub-header mb-0">{{controller.patternMatching.species_name }}, {{controller.patternMatching.songtype_name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <div class="section-header text-uppercase mb-1" ng-style="{'cursor': 'pointer'}" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample" ng-click="collapsed=!collapsed">
+                            Input
+                            <i class="fa" ng-style="{'cursor': 'pointer'}" ng-class="collapsed ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                        </div>
+                        <div class="collapse" id="collapseExample">
+                            <p tooltip-placement="left" tooltip="Template Name" class="text mb-0"><img class="mr-3" src="/images/ic-template.svg">{{controller.patternMatching.template.name }}</p>
+                            <p tooltip-placement="left" tooltip="Playlist Name" class="text mb-0"><img class="mr-3" src="/images/ic-playlist.svg">{{controller.patternMatching.playlist_name}} ({{controller.patternMatching.playlist_count | number}} recordings)</p>
+                            <p tooltip-placement="left" tooltip="Template Parameters" class="text mb-0"><img class="mr-3" src="/images/ic-parameters.svg">{{controller.patternMatching.templateParameters | asCSV}}</p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <p class="section-header text-uppercase mb-1">
+                            Output
+                        </p>
+                        <p class="section-header-title mb-0">{{controller.patternMatching.matches | number}} Matches</p>
+                        <div>
+                            <span class="mr-4"><i class="fa val-1 mr-3"></i>{{controller.patternMatching.present || 0 | number }} present</span>
+                            <span class="mr-4"><i class="fa val-0 mr-3"></i>{{controller.patternMatching.absent || 0 | number}} not present</span>
+                            <span><i class="fa val-null mr-3"></i>{{controller.patternMatching.matches - (controller.patternMatching.present + controller.patternMatching.absent) | number}} unvalidated</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-sm-5 flex-self-align-bottom">
+                <div class="col-sm-5 flex-self-align-top">
                     <div class="pull-right">
                     <div class="pull-right">
                         <div class="btn-group btn-group-margin">

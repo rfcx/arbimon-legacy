@@ -201,6 +201,11 @@ angular.module('a2.analysis.patternmatching', [
         return a2PatternMatching.getDetailsFor(this.id).then((function(patternMatching){
             this.loading.details = false;
             this.patternMatching = patternMatching;
+            this.patternMatching.templateParameters = {
+                'Threshold': this.patternMatching.parameters.threshold,
+                'Matches/Recording': this.patternMatching.parameters.N,
+                'Matches/Site': this.patternMatching.parameters.persite || 'no limit'
+            };
             this.setupExportUrl();
             this.total = {
                 rois: patternMatching.matches,
@@ -506,7 +511,12 @@ angular.module('a2.analysis.patternmatching', [
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
         var val_delta = {0:0, 1:0, null:0};
-        return a2PatternMatching.validateRois(this.id, roiIds, validation).then((function(){
+        var cls = {
+            species: this.patternMatching.species_name,
+            songtype: this.patternMatching.songtype_name
+        };
+
+        return a2PatternMatching.validateRois(this.id, roiIds, validation, cls).then((function(){
             rois.forEach(function(roi){
                 val_delta[roi.validated] -= 1;
                 val_delta[validation] += 1;

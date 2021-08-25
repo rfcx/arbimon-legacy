@@ -11,13 +11,13 @@ angular.module('a2.filter.as-csv', [
                 value = [value];
             }
         }
-        
+
         if(filter){
             value = value.filter(function(v){
                 return !!v;
             });
         }
-        
+
         return value.join(delimiter || ', ');
     };
 });

@@ -326,7 +326,8 @@ var Recordings = {
             if (urlquery && urlquery.site) {
                 constraints.shift()
                 data.push(urlquery.site['='])
-                constraints.push('S.name = ?');
+                constraints.push('S.name = ? AND S.project_id = ?');
+                data.push(project_id);
             }
             group_by = sqlutil.compute_groupby_constraints(urlquery, fields, options.group_by, {
                 count_only : options.count_only
@@ -1151,8 +1152,9 @@ var Recordings = {
 
             if (parameters.sites) {
                 tables.push("JOIN sites AS s ON s.site_id = r.site_id");
-                constraints.push('s.name IN (?)');
+                constraints.push('s.name IN (?) AND s.project_id = ?');
                 data.push(parameters.sites);
+                data.push(parameters.project_id);
             }
 
             if(parameters.years) {
@@ -1185,10 +1187,16 @@ var Recordings = {
                 constraints.push('pc.project_class_id IN (?)');
                 data.push(parameters.validations);
 
-                if(parameters.presence && !(parameters.presence instanceof Array && parameters.presence.length >= 2)){
-                    constraints.push('rv.present = ?');
-                    data.push(parameters.presence == 'present' ? '1' : '0');
+                if(parameters.presence){
+                    if (parameters.presence === 'present') {
+                        constraints.push('CASE WHEN rv.present_review > 0 THEN 1 ELSE rv.present END');
+                    }
+                    else {
+                        constraints.push('CASE WHEN rv.present = 0 AND rv.present_review = 0 THEN 1 ELSE 0 END');
+                    }
                 }
+                constraints.push('rv.project_id = ?');
+                data.push(parameters.project_id);
             }
 
             if(parameters.soundscape_composition) {
