@@ -173,11 +173,33 @@ router.get('/:patternMatching/audio/:roiId', function(req, res, next) {
 router.post('/:patternMatching/validate', function(req, res, next) {
     res.type('json');
     const validation = req.body.validation
-    model.patternMatchings.getRoi(req.params.patternMatching, req.body.rois).then(function(rois) {
-
+    model.patternMatchings.getRoi(req.params.patternMatching, req.body.rois).then(async function(rois) {
         const updatedRois = rois.filter(function(roi) { return roi.validated != validation });
         const updatedRoiIds = updatedRois.map(function(roi) { return roi.pattern_matching_roi_id });
-
+        let options = {};
+        options.speciesId = updatedRois[0].species_id;
+        options.songtypeId = updatedRois[0].songtype_id;
+        let existingClass = await model.projects.getProjectClassesAsync(req.project.project_id, null, options);
+        if (!existingClass.length) {
+            var projectClass = {
+                songtype: req.body.cls.songtype,
+                species: req.body.cls.species,
+                project_id: req.project.project_id
+            };
+            model.projects.insertClass(projectClass, function(err, result){
+                if(err) return next(err);
+                model.projects.insertNews({
+                    news_type_id: 5,
+                    user_id: req.session.user.id,
+                    project_id: req.project.project_id,
+                    data: JSON.stringify({
+                        class: [result.class],
+                        species: [result.species, projectClass.species],
+                        song: [result.songtype, projectClass.songtype]
+                    })
+                });
+            });
+        };
         model.patternMatchings.validateRois(req.params.patternMatching, updatedRoiIds, validation)
             .then(async function(validatedRois) {
                 for (let roi of updatedRois) {
