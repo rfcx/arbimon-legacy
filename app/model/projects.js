@@ -483,7 +483,11 @@ var Projects = {
             where_clause.push("pc.project_class_id IN (?)");
             params.push(options.ids);
         }
-
+        if (options.speciesId && options.songtypeId) {
+            where_clause.push('pc.species_id = ? AND pc.songtype_id = ?');
+            params.push(options.speciesId);
+            params.push(options.songtypeId);
+        }
         if(options && options.countValidations) {
             select_clause.push(
                 "coalesce(SUM(CASE WHEN rv.present_review > 0 THEN 1 ELSE rv.present END), 0) as vals_present",
@@ -506,6 +510,11 @@ var Projects = {
             (groupby_clause.length ? "\nGROUP BY " + groupby_clause.join(",") : ""),
             params)
         ).get(0).nodeify(callback);
+    },
+
+    getProjectClassesAsync: function(projectId, classId, options) {
+        let getProjectClasses = util.promisify(this.getProjectClasses)
+        return getProjectClasses(projectId, classId, options)
     },
 
     insertClass: function(project_class, callback) {
