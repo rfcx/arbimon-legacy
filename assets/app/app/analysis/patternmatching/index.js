@@ -226,6 +226,7 @@ angular.module('a2.analysis.patternmatching', [
     setupExportUrl: function(){
         this.patternMatchingExportUrl = a2PatternMatching.getExportUrl({
             patternMatching: this.patternMatching.id,
+            jobName: this.patternMatching.name,
         });
     },
 
