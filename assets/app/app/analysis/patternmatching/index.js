@@ -512,7 +512,12 @@ angular.module('a2.analysis.patternmatching', [
         }
         var roiIds = rois.map(function(roi){ return roi.id; })
         var val_delta = {0:0, 1:0, null:0};
-        return a2PatternMatching.validateRois(this.id, roiIds, validation).then((function(){
+        var cls = {
+            species: this.patternMatching.species_name,
+            songtype: this.patternMatching.songtype_name
+        };
+
+        return a2PatternMatching.validateRois(this.id, roiIds, validation, cls).then((function(){
             rois.forEach(function(roi){
                 val_delta[roi.validated] -= 1;
                 val_delta[validation] += 1;

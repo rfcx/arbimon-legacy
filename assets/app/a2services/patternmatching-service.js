@@ -60,10 +60,11 @@ angular.module('a2.srv.patternmatching', [
         getAudioUrlFor: function(roi){
             return '/api/project/' + Project.getUrl() + '/pattern-matchings/' + roi.pattern_matching_id + '/audio/' + roi.id;
         },
-        validateRois: function(patternMatchingId, rois, validation) {
+        validateRois: function(patternMatchingId, rois, validation, cls) {
             return $http.post('/api/project/' + Project.getUrl() + '/pattern-matchings/' + patternMatchingId + '/validate', {
                 rois: rois,
                 validation: validation,
+                cls: cls
             }).then(function(response){
                 return response.data;
             });

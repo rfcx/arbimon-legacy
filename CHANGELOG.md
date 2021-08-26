@@ -1,6 +1,10 @@
 # Arbimon Release Notes
 
-## v3.0.35 - August XX, 2021
+## v3.0.36 - August XX, 2021
+
+- CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+
+## v3.0.35 - August 25, 2021
 
 New features:
 
@@ -13,7 +17,7 @@ Resolved issues:
 - CE-1230 Fix the issue with filtered recordings by species
 - CE-1185 The issue with the end date in the datepicker is fixed
 - CE-834 Fixed issue with the cluster audio frequency filter
-- CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+- CE-1231 Check the logic to add a new species/song to the project_classes table when the user validate PM box from the PM page
 
 ## v3.0.34 - August XX, 2021
 
