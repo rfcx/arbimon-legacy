@@ -1,6 +1,11 @@
 # Arbimon Test Notes
 Test Notes are used to list what pages / components / features / user flows are affected by each update.
 
+## v3.0.36
+
+ - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+ - Pattern Matching details page: Export CSV: The user can see different columns in the report, like a year, month, day, hour, minute
+
 ## v3.0.35
 
 - CE-1183 Fixed filter in the recordings page. The user is able to select the month of January

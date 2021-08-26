@@ -577,18 +577,36 @@ var PatternMatchings = {
         PMR.denorm_recording_datetime as datetime, PMR.recording_id, PMR.species_id, PMR.songtype_id, PMR.x1, PMR.y1, PMR.x2, PMR.y2, PMR.uri,
         PMR.score, PMR.validated FROM pattern_matching_rois AS PMR`,
 
+    combineDatetime (pmr) {
+        const d = pmr.datetime.toISOString()
+        pmr.year = parseInt(d.substring(0, 4))
+        pmr.month = parseInt(d.substring(5, 7))
+        pmr.day = parseInt(d.substring(8, 10))
+        pmr.hour = parseInt(d.substring(11, 13))
+        pmr.minute = parseInt(d.substring(14, 16))
+    },
+
     completePMRResults (pmrs) {
-        pmrs.forEach((pmr) => {
-            const d = pmr.datetime.toISOString()
+        pmrs.forEach(function(pmr) {
             const namePartials = pmr.recording.split('/')
             pmr.recording = namePartials[namePartials.length - 1]
-            pmr.year = parseInt(d.substring(0, 4))
-            pmr.month = parseInt(d.substring(5, 7))
-            pmr.day = parseInt(d.substring(8, 10))
-            pmr.hour = parseInt(d.substring(11, 13))
-            pmr.minute = parseInt(d.substring(14, 16))
+            PatternMatchings.combineDatetime(pmr);
         })
         return pmrs
+    },
+
+    exportDatetimeFormatted (pmr) {
+        PatternMatchings.combineDatetime(pmr);
+        delete pmr.datetime;
+        if (pmr.meta && pmr.recording) {
+            try {
+                const parsedMeta = JSON.parse(data.meta);
+                pmr.recording = parsedMeta && parsedMeta.filename? parsedMeta.filename :  pmr.recording;
+            } catch (e) {
+                pmr.recording = pmr.recording;
+            }
+            delete pmr.meta;
+        }
     },
 
     getTopRoisByScoresPerSite (opts) {
@@ -659,8 +677,6 @@ var PatternMatchings = {
 
         return this.buildRoisQuery({
             patternMatching: patternMatchingId,
-            // limit: limit,
-            // offset: offset
             hideNormalValidations: options.hideNormalValidations,
             expertCSValidations: options.expertCSValidations,
             countCSValidations: options.countCSValidations,

@@ -1,6 +1,10 @@
 # Arbimon Release Notes
 
-## v3.0.35 - August XX, 2021
+## v3.0.36 - August XX, 2021
+
+- CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+
+## v3.0.35 - August 25, 2021
 
 New features:
 
