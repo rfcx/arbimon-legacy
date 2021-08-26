@@ -213,7 +213,7 @@ var Sites = {
                             id: site_id,
                             project_id: config('trash-project').id,
                             published: false
-                        }, callback);
+                        }, connection, callback);
                     }
                     else {
                         var q = 'DELETE FROM sites \n'+
