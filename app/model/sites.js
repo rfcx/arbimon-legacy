@@ -726,7 +726,7 @@ var Sites = {
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
-                await this.updateAsync(site, connection);
+                await this.updateAsync(site, db);
                 if (rfcxConfig.coreAPIEnabled) {
                     await this.updateInCoreAPI({
                         site_id: site.site_id,
@@ -783,7 +783,7 @@ var Sites = {
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
-                await this.removeFromProjectAsync(site_id, project_id, connection);
+                await this.removeFromProjectAsync(site_id, project_id, db);
                 if (rfcxConfig.coreAPIEnabled) {
                     await this.deleteInCoreAPI(site_id, idToken)
                 };
