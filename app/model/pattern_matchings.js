@@ -595,7 +595,9 @@ var PatternMatchings = {
         return pmrs
     },
 
-    exportDatetimeFormatted (pmr) {
+    exportDataFormatted (pmr) {
+        const namePartials = pmr.recording.split('/');
+        pmr.recording = namePartials[namePartials.length - 1];
         PatternMatchings.combineDatetime(pmr);
         delete pmr.datetime;
         if (pmr.meta && pmr.recording) {

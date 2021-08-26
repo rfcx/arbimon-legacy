@@ -161,7 +161,7 @@ router.get('/:patternMatching/:jobName?', function(req, res, next) {
 
         datastream
             .on('data', (data) => {
-                model.patternMatchings.exportDatetimeFormatted(data);
+                model.patternMatchings.exportDataFormatted(data);
             })
             .pipe(csv_stringify({header:true, columns:fields}))
             .pipe(res);
