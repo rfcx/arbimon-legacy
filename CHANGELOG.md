@@ -2,7 +2,10 @@
 
 ## v3.0.36 - August XX, 2021
 
+Resolved issues:
+
 - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+- CE-1257 Fixed user role permissions
 
 ## v3.0.35 - August 25, 2021
 
