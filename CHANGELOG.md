@@ -5,7 +5,7 @@
 Resolved issues:
 
 - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
-- CE-1257 Fixed user role permissions
+- CE-1257 User role permissions are changes. The Citizen Scientist role is removed.
 
 ## v3.0.35 - August 25, 2021
 
