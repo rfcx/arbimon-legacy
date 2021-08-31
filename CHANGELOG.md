@@ -3,6 +3,7 @@
 ## v3.0.36 - August XX, 2021
 
 - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+- CE-1251 Minor homepage updates in the Summary section
 
 ## v3.0.35 - August 25, 2021
 
