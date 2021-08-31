@@ -26,13 +26,16 @@ INSERT INTO role_permissions (role_id, permission_id)
 VALUES (5, 20);
 
 DELETE FROM role_permissions
-WHERE role_id=1 AND permission_id not in (1, 24, 23, 6, 7, 8, 9, 10, 13, 15, 16, 17, 18, 21, 19, 20, 12, 22, 5);
+WHERE role_id=1 AND permission_id not in (1, 24, 23, 6, 7, 8, 9, 10, 13, 15, 16, 17, 18, 21, 19, 20, 11, 22, 5);
 
 INSERT INTO role_permissions (role_id, permission_id)
 VALUES (1, 20);
 
 DELETE FROM role_permissions
-WHERE role_id=4 AND permission_id not in (1, 24, 23, 6, 7, 8, 9, 10, 13, 15, 16, 17, 18, 21, 19, 20, 12, 22, 5, 2);
+WHERE role_id=4 AND permission_id not in (1, 24, 23, 6, 7, 8, 9, 10, 13, 15, 16, 17, 18, 21, 19, 20, 11, 22, 5, 2);
+
+INSERT INTO role_permissions (role_id, permission_id)
+VALUES (4, 20);
 
 DELETE FROM roles
 WHERE role_id=7;
