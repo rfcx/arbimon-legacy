@@ -5,6 +5,7 @@
 Resolved issues:
 
 - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
+- CE-1251 Minor homepage updates in the Summary section
 - CE-1321 Users is able to delete sites in Arbimon
 - CE-1312 Fixed filters for hours section on the Recordings page
 
