@@ -2,6 +2,12 @@
 
 ## v3.0.36 - August XX, 2021
 
+New features:
+
+- CE-1225 The URL Column is added to the export record sheet
+
+Resolved issues:
+
 - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
 
 ## v3.0.35 - August 25, 2021
