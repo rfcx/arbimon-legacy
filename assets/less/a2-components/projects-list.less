@@ -19,6 +19,12 @@
   .summary-stats {
     width: 40%;
   }
+  .summary-stats-row {
+      div:first-child,
+      div:nth-child(2) {
+        margin-bottom: 15px;
+      }
+  }
   .show {
     display: block !important;
   }
@@ -50,7 +56,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   width: 100%;
-  padding: 0 3px;
+  padding: 0;
   justify-content: left;
   @media (max-width: 1200px) {
     justify-content: center;
