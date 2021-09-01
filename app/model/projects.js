@@ -1169,7 +1169,7 @@ var Projects = {
             .then(async (connection) => {
                 db = connection;
                 await db.beginTransaction();
-                await this.deleteInArbimobDb(options.project_id, connection);
+                await this.deleteInArbimobDb(options.project_id, db);
                 if (rfcxConfig.coreAPIEnabled) {
                     await this.deleteInCoreAPI(options.external_id, options.idToken)
                 };
