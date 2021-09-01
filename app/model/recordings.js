@@ -1174,7 +1174,7 @@ var Recordings = {
                 data.push(parameters.days);
             }
 
-            if(parameters.hours) {
+            if(parameters.hours !== undefined) {
                 constraints.push('HOUR(r.datetime) IN (?)');
                 data.push(parameters.hours);
             }

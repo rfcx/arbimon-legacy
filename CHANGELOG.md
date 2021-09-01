@@ -2,8 +2,12 @@
 
 ## v3.0.36 - August XX, 2021
 
+Resolved issues:
+
 - CE-1266 Fixed the date and time columns issues in the Pattern Matching Export CSV sheet
 - CE-1251 Minor homepage updates in the Summary section
+- CE-1321 Users is able to delete sites in Arbimon
+- CE-1312 Fixed filters for hours section on the Recordings page
 
 ## v3.0.35 - August 25, 2021
 
