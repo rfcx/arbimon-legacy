@@ -22,9 +22,21 @@ angular.module('a2.visualizer.layers.species-presence', [
         visible: true
     });
 })
-.controller('a2VisualizerSpeciesPresenceController', function($scope, a2PatternMatching){
+.controller('a2VisualizerSpeciesPresenceController', function($scope, a2PatternMatching, Project){
     var self = this;
     self.speciesPresence = null;
+    self.isRemoving = false;
+    self.togglePopup = function(roi) {
+        roi.isPopupOpened = !roi.isPopupOpened;
+    };
+    self.confirmPopup = function(roi) {
+        self.isRemoving = true;
+        return a2PatternMatching.validateRois(roi.pattern_matching_id, roi.pattern_matching_roi_id, null).then(function(){
+            self.isRemoving = false;
+            self.isPopupOpened = false;
+            roi.display = "none"
+        })
+    };
     self.fetchSpeciesPresence = function() {
         var rec = $scope.visobject && ($scope.visobject_type == 'recording') && $scope.visobject.id;
         if (rec) {
@@ -33,12 +45,15 @@ angular.module('a2.visualizer.layers.species-presence', [
                     self.speciesPresence = rois.map(roi => {
                         return {
                             rec_id: roi.recording_id,
+                            pattern_matching_id: roi.pattern_matching_id,
+                            pattern_matching_roi_id: roi.pattern_matching_roi_id,
                             name: roi.species_name + ' ' + roi.songtype_name,
                             x1: roi.x1,
                             x2: roi.x2,
                             y1: roi.y1,
                             y2: roi.y2,
-                            display: roi.recording_id === rec? "block" : "none"
+                            display: roi.recording_id === rec? "block" : "none",
+                            isPopupOpened: false
                         }
                     });
                 }

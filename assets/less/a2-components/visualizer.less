@@ -311,9 +311,8 @@
         z-index:1;
         > .spectrogram-layer {
             position:absolute;
-            pointer-events: none;
+            pointer-events: auto;
             z-index:100;
-
             .roi {
                 position: absolute;
                 border: 1px solid @roi-border-color;
@@ -329,6 +328,17 @@
                 &.species {
                     border-color: @roi-species-border-color;
                     background-color: @roi-species-color;
+                    z-index: 103;
+                    .close {
+                        visibility: hidden !important;
+                    }
+                    &:hover {
+                        border: 1px solid fade(@brand-present, 10%);
+                        cursor: pointer;
+                        .close {
+                            visibility: visible !important;
+                        }
+                    }
                 }
                 &.roi-current{
                     border-color: @roi-current-border-color;
@@ -414,6 +424,9 @@
                 border-left:1px solid blue;
                 width:1px;
             }
+        }
+        .species-presence {
+            z-index: 101;
         }
     }
 
