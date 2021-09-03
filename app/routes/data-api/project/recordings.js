@@ -85,19 +85,12 @@ router.get('/species-count', function(req, res, next) {
         return res.json({count: cachedData.species[params.project_id].count});
     }
     else {
-        model.recordings.countProjectSpecies(params).then((rows) => {
-            var species = []
-            const result = Object.values(JSON.parse(JSON.stringify(rows)))
-            result.map(s => {
-                if(!species.includes(s.species)) {
-                    species.push(s.species)
-                }
-            })
+        model.recordings.countProjectSpecies(params).then((data) => {
             cachedData.species[params.project_id] = {
-                count: species.length,
+                count: data[0].count,
                 time: Date.now()
             };
-            res.json({count: species.length});
+            res.json({count: data[0].count});
         }).catch(next);
     }
 });
