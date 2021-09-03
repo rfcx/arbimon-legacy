@@ -1,6 +1,6 @@
 {
     "accessKeyId": "",
     "secretAccessKey": "",
-    "region": "",
-    "bucketName": ""
+    "region": "eu-west-1",
+    "bucketName": "rfcx-streams-staging"
 }
